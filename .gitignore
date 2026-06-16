@@ -1,0 +1,9 @@
+.nitro/
+.output/
+.tanstack/
+dist-ssr/
+dist/
+node_modules/
+.DS_Store
+.env
+*.local

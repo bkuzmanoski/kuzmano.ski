@@ -1,0 +1,78 @@
+{
+  "name": "kuzmano.ski",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "prepare": "simple-git-hooks",
+    "dev": "vite dev --port 3000",
+    "generate-routes": "tsr generate",
+    "build": "npm run generate-routes && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "prettier . && eslint . && stylelint '**/*.css'",
+    "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css'"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,css,json,md}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,mjs}": [
+      "eslint --fix"
+    ],
+    "*.{css}": [
+      "stylelint --fix"
+    ]
+  },
+  "dependencies": {
+    "@strapi/client": "^1.6.1",
+    "@tanstack/react-devtools": "latest",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-router-devtools": "latest",
+    "@tanstack/react-router-ssr-query": "latest",
+    "@tanstack/react-start": "latest",
+    "@tanstack/router-plugin": "^1.132.0",
+    "clsx": "^2.1.1",
+    "nitro": "npm:nitro-nightly@latest",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "use-debounce": "^10.1.0"
+  },
+  "devDependencies": {
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@tanstack/devtools-vite": "latest",
+    "@tanstack/eslint-config": "latest",
+    "@tanstack/router-cli": "^1.132.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^28.1.0",
+    "lint-staged": "^17.0.7",
+    "postcss": "^8.5.15",
+    "postcss-preset-env": "^11.3.0",
+    "prettier": "^3.8.1",
+    "simple-git-hooks": "^2.13.1",
+    "stylelint": "^17.13.0",
+    "stylelint-config-clean-order": "^10.0.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.1.1",
+    "stylelint-value-no-unknown-custom-properties": "^6.1.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.5"
+  }
+}

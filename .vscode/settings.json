@@ -1,0 +1,32 @@
+{
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true,
+    "package-lock.json": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true,
+    "package-lock.json": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true,
+    "package-lock.json": true
+  },
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.suggest.autoImports": true,
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "eslint.enable": true,
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+  "stylelint.enable": true,
+  "stylelint.validate": ["css", "postcss"],
+  "markdownlint.config": {
+    "MD033": false
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.prettier": "explicit",
+    "source.fixAll.stylelint": "explicit",
+    "source.fixAll.ts": "explicit"
+  }
+}
