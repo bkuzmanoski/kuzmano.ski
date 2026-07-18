@@ -1,10 +1,9 @@
-// @ts-check
+import type { Config } from "prettier";
 
-/** @type {import('prettier').Config} */
 export default {
   overrides: [
     { files: "*.jsonc", options: { trailingComma: "none" } },
     { files: "*.svg", options: { parser: "html" } },
   ],
   printWidth: 120,
-};
+} satisfies Config;

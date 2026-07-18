@@ -1,6 +1,5 @@
-// @ts-check
+import type { Config } from "stylelint";
 
-/** @type {import('stylelint').Config} */
 export default {
   extends: ["stylelint-config-standard", "stylelint-config-clean-order"],
   reportInvalidScopeDisables: true,
@@ -11,4 +10,4 @@ export default {
     "value-keyword-case": ["lower", { ignoreProperties: ["/font-family/"] }],
     "csstools/value-no-unknown-custom-properties": [true, { importFrom: ["./src/styles.css"] }],
   },
-};
+} satisfies Config;

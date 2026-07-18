@@ -16,7 +16,7 @@
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
-  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+  "eslint.validate": ["typescript", "typescriptreact"],
   "stylelint.enable": true,
   "stylelint.validate": ["css", "postcss"],
   "editor.formatOnSave": true,
