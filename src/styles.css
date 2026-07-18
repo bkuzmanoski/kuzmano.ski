@@ -3,8 +3,7 @@
 }
 
 html,
-body,
-#app {
+body {
   min-height: 100%;
 }
 

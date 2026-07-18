@@ -1,18 +1,14 @@
-import { defineConfig } from "vite";
-import { devtools } from "@tanstack/devtools-vite";
-import { nitro } from "nitro/vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import babel from "@rolldown/plugin-babel";
-import postcssPresetEnv from "postcss-preset-env";
+import { devtools } from "@tanstack/devtools-vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import postcssPresetEnv from "postcss-preset-env";
+import { defineConfig } from "vite";
 
-const config = defineConfig({
+export default defineConfig({
   resolve: { tsconfigPaths: true },
-  css: {
-    postcss: {
-      plugins: [postcssPresetEnv()],
-    },
-  },
+  css: { postcss: { plugins: [postcssPresetEnv()] } },
   plugins: [
     devtools(),
     nitro({ rollupConfig: { external: [/^@sentry\//] } }),
@@ -21,5 +17,3 @@ const config = defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
   ],
 });
-
-export default config;

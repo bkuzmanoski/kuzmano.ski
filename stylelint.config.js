@@ -1,4 +1,4 @@
-//  @ts-check
+// @ts-check
 
 /** @type {import('stylelint').Config} */
 export default {
@@ -7,19 +7,8 @@ export default {
   reportNeedlessDisables: true,
   plugins: ["stylelint-value-no-unknown-custom-properties"],
   rules: {
-    "selector-class-pattern":
-      "^[a-z][a-zA-Z0-9]*$|^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
-    "value-keyword-case": [
-      "lower",
-      {
-        ignoreProperties: ["/font-family/"],
-      },
-    ],
-    "csstools/value-no-unknown-custom-properties": [
-      true,
-      {
-        importFrom: ["./src/styles.css"],
-      },
-    ],
+    "selector-class-pattern": "^[a-z][a-zA-Z0-9]*$|^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+    "value-keyword-case": ["lower", { ignoreProperties: ["/font-family/"] }],
+    "csstools/value-no-unknown-custom-properties": [true, { importFrom: ["./src/styles.css"] }],
   },
 };

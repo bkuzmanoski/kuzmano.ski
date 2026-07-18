@@ -2,6 +2,9 @@
   "name": "kuzmano.ski",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "imports": {
     "#/*": "./src/*"
   },
@@ -11,46 +14,45 @@
     "generate-routes": "tsr generate",
     "build": "npm run generate-routes && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "prettier . && eslint . && stylelint '**/*.css'",
-    "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css'"
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "prettier --check . && eslint . && stylelint '**/*.css' && markdownlint-cli2",
+    "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css' && markdownlint-cli2 --fix"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx,mjs,css,json,md}": [
+    "*.{js,ts,tsx,css,json,md}": [
       "prettier --write"
     ],
-    "*.{ts,tsx,mjs}": [
+    "*.{js,ts,tsx}": [
       "eslint --fix"
     ],
-    "*.{css}": [
+    "*.css": [
       "stylelint --fix"
+    ],
+    "*.md": [
+      "markdownlint-cli2 --fix"
     ]
   },
   "dependencies": {
-    "@strapi/client": "^1.6.1",
-    "@tanstack/react-devtools": "latest",
-    "@tanstack/react-router": "latest",
-    "@tanstack/react-router-devtools": "latest",
-    "@tanstack/react-router-ssr-query": "latest",
-    "@tanstack/react-start": "latest",
-    "@tanstack/router-plugin": "^1.132.0",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-start": "^1.168.30",
     "clsx": "^2.1.1",
-    "nitro": "npm:nitro-nightly@latest",
+    "nitro": "3.0.260610-beta",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.0",
-    "use-debounce": "^10.1.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@rolldown/plugin-babel": "^0.2.3",
-    "@tanstack/devtools-vite": "latest",
-    "@tanstack/eslint-config": "latest",
-    "@tanstack/router-cli": "^1.132.0",
+    "@tanstack/devtools-vite": "^0.8.1",
+    "@tanstack/eslint-config": "^0.4.0",
+    "@tanstack/react-devtools": "^0.10.8",
+    "@tanstack/react-router-devtools": "^1.167.0",
+    "@tanstack/router-cli": "^1.167.21",
+    "@tanstack/router-plugin": "^1.168.22",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.10.2",
@@ -62,6 +64,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^28.1.0",
     "lint-staged": "^17.0.7",
+    "markdownlint-cli2": "^0.23.1",
     "postcss": "^8.5.15",
     "postcss-preset-env": "^11.3.0",
     "prettier": "^3.8.1",
@@ -74,5 +77,10 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.5"
+  },
+  "allowScripts": {
+    "simple-git-hooks@2.13.1": true,
+    "fsevents@2.3.3": true,
+    "unrs-resolver@1.12.2": true
   }
 }

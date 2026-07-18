@@ -1,0 +1,8 @@
+{
+  "config": {
+    "MD013": false,
+    "MD033": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules", ".output", ".nitro", ".tanstack"]
+}

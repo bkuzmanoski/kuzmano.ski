@@ -1,12 +1,10 @@
-//  @ts-check
+// @ts-check
 
 /** @type {import('prettier').Config} */
-const config = {
+export default {
   overrides: [
-    {
-      files: "*.svg",
-      options: { parser: "html" },
-    },
+    { files: "*.jsonc", options: { trailingComma: "none" } },
+    { files: "*.svg", options: { parser: "html" } },
   ],
   printWidth: 120,
 };

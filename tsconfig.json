@@ -3,14 +3,14 @@
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "paths": {
-      "#/*": ["./src/*"]
-    },
+    "paths": { "#/*": ["./src/*"] },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "moduleResolution": "bundler",
+    "allowJs": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
     "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,6 +18,7 @@
     "allowUnusedLabels": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true
@@ -28,6 +29,7 @@
     "eslint.config.js",
     "prettier.config.js",
     "stylelint.config.js",
-    "vite.config.js"
+    "vite.config.ts",
+    "vitest.config.ts"
   ]
 }
