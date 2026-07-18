@@ -3,7 +3,7 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig(
   ...tanstackConfig,
-  { ignores: [".output/**/*"] },
+  { ignores: [".output/**/*", "**/routeTree.gen.ts"] },
   {
     name: "kuzmano.ski/imports",
     rules: {

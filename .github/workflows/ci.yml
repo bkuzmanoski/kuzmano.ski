@@ -26,12 +26,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate routes
-        run: npm run generate-routes
-
-      - name: Check for stale generated routes
-        run: git diff --exit-code -- src/routeTree.gen.ts
-
       - name: Lint
         run: npm run lint
 
@@ -43,3 +37,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Check for stale generated routes
+        run: git diff --exit-code -- src/routeTree.gen.ts
