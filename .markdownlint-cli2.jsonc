@@ -3,6 +3,7 @@
     "MD013": false,
     "MD033": false
   },
-  "globs": ["**/*.md"],
+  "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
+  "globs": ["**/*.{md,mdx}"],
   "gitignore": true
 }

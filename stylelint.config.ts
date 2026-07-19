@@ -2,6 +2,7 @@ import type { Config } from "stylelint";
 
 export default {
   extends: ["stylelint-config-standard", "stylelint-config-clean-order"],
+  ignoreFiles: [".output/**/*", "dist/**/*"],
   reportInvalidScopeDisables: true,
   reportNeedlessDisables: true,
   plugins: ["stylelint-value-no-unknown-custom-properties"],

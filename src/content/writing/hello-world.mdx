@@ -1,0 +1,19 @@
+---
+title: Hello World
+description: A first note, and a check that the MDX pipeline is wired up end to end.
+date: 2026-07-19
+---
+
+This file is MDX. It renders through the shared component map, so headings,
+links and code blocks pick up the classic system styling automatically.
+
+Code is highlighted at build time by Shiki — there is no highlighter in the
+client bundle:
+
+```ts
+const greeting: string = "Hello from a prerendered page";
+console.log(greeting);
+```
+
+Because it is MDX rather than plain Markdown, an interactive component can be
+dropped straight into the prose whenever a piece of writing needs one.

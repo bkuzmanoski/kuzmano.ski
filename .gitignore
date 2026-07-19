@@ -1,7 +1,6 @@
-.nitro/
 .output/
 .tanstack/
-dist-ssr/
+.wrangler/
 dist/
 node_modules/
 .DS_Store
