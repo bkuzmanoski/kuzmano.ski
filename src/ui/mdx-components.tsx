@@ -13,7 +13,7 @@ export const mdxComponents: MDXComponents = {
     }
 
     return (
-      <a href={href} rel="noreferrer noopener" target="_blank" {...props}>
+      <a href={href} target="_blank" {...props}>
         {children}
       </a>
     );

@@ -4,12 +4,6 @@ import { expect, test } from "vitest";
 
 import { getRouter } from "#/router";
 
-/**
- * These render the real route tree rather than components in isolation, because
- * the bugs worth catching here live in the wiring: a post that renders correctly
- * in isolation still breaks if its MDX module is resolved via a mechanism that
- * only works when a loader happens to have run first.
- */
 async function renderRoute(path: string) {
   const router = getRouter(createMemoryHistory({ initialEntries: [path] }));
 
@@ -21,7 +15,6 @@ test("a post route renders its frontmatter and compiled MDX body", async () => {
   await renderRoute("/writing/hello-world");
 
   expect(await screen.findByRole("heading", { name: "Hello World" })).toBeDefined();
-  // Prose from the .mdx body: proves the module resolved, not just the loader.
   expect(await screen.findByText(/This file is MDX/)).toBeDefined();
 });
 
