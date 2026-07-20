@@ -10,5 +10,5 @@ export const Route = createFileRoute("/writing/$slug")({
 });
 
 function WritingPost() {
-  return <Post collection={writing} frontmatter={Route.useLoaderData()} showDate slug={Route.useParams().slug} />;
+  return <Post collection={writing} frontmatter={Route.useLoaderData()} slug={Route.useParams().slug} />;
 }
