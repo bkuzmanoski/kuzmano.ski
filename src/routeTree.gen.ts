@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as R404RouteImport } from './routes/404'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
 import { Route as ProjectsSlugRouteImport } from './routes/projects/$slug'
 import { Route as WritingIndexRouteImport } from './routes/writing/index'
@@ -21,9 +21,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const R404Route = R404RouteImport.update({
-  id: '/404',
-  path: '/404',
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
@@ -49,7 +49,7 @@ const WritingSlugRoute = WritingSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/404': typeof R404Route
+  '/$': typeof SplatRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -57,7 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/404': typeof R404Route
+  '/$': typeof SplatRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/projects': typeof ProjectsIndexRoute
@@ -66,7 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/404': typeof R404Route
+  '/$': typeof SplatRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/writing/$slug': typeof WritingSlugRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -76,23 +76,18 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/404'
+    | '/$'
     | '/projects/$slug'
     | '/writing/$slug'
     | '/projects/'
     | '/writing/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/404'
-    | '/projects/$slug'
-    | '/writing/$slug'
-    | '/projects'
-    | '/writing'
+    '/' | '/$' | '/projects/$slug' | '/writing/$slug' | '/projects' | '/writing'
   id:
     | '__root__'
     | '/'
-    | '/404'
+    | '/$'
     | '/projects/$slug'
     | '/writing/$slug'
     | '/projects/'
@@ -101,7 +96,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  R404Route: typeof R404Route
+  SplatRoute: typeof SplatRoute
   ProjectsSlugRoute: typeof ProjectsSlugRoute
   WritingSlugRoute: typeof WritingSlugRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -117,11 +112,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/404': {
-      id: '/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof R404RouteImport
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/': {
@@ -157,7 +152,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  R404Route: R404Route,
+  SplatRoute: SplatRoute,
   ProjectsSlugRoute: ProjectsSlugRoute,
   WritingSlugRoute: WritingSlugRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,

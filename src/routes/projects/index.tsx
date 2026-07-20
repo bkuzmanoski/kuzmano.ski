@@ -1,10 +1,10 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { projects } from "#/content";
+import { indexRoute } from "#/content/routes";
 
 export const Route = createFileRoute("/projects/")({
-  loader: () => projects.list(),
-  head: () => ({ meta: [{ title: "Projects — kuzmano.ski" }] }),
+  ...indexRoute(projects, "Projects"),
   component: ProjectsIndex,
 });
 

@@ -1,28 +1,31 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
-import { ErrorFallback } from "#/components/error-fallback";
-import { NotFound } from "#/components/not-found";
+import { ErrorFallback } from "#/ui/error-fallback";
+import { NotFound } from "#/ui/not-found";
 
 import appCss from "../styles.css?url";
 
-const Devtools = import.meta.env.DEV
-  ? lazy(async () => {
-      const [{ TanStackDevtools }, { TanStackRouterDevtoolsPanel }] = await Promise.all([
-        import("@tanstack/react-devtools"),
-        import("@tanstack/react-router-devtools"),
-      ]);
+// Excluded from tests as well as production: the devtools panel throws while
+// unmounting under jsdom, which fails any test that renders the root route.
+const Devtools =
+  import.meta.env.DEV && import.meta.env.MODE !== "test"
+    ? lazy(async () => {
+        const [{ TanStackDevtools }, { TanStackRouterDevtoolsPanel }] = await Promise.all([
+          import("@tanstack/react-devtools"),
+          import("@tanstack/react-router-devtools"),
+        ]);
 
-      return {
-        default: () => (
-          <TanStackDevtools
-            config={{ position: "bottom-right" }}
-            plugins={[{ name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> }]}
-          />
-        ),
-      };
-    })
-  : null;
+        return {
+          default: () => (
+            <TanStackDevtools
+              config={{ position: "bottom-right" }}
+              plugins={[{ name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> }]}
+            />
+          ),
+        };
+      })
+    : null;
 
 export const Route = createRootRoute({
   head: () => ({

@@ -11,13 +11,13 @@
   "scripts": {
     "prepare": "simple-git-hooks",
     "dev": "vite dev --port 3000",
-    "build": "vite build",
-    "preview": "vite preview",
+    "lint": "prettier --check . && eslint . && stylelint '**/*.css' && markdownlint-cli2",
+    "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css' && markdownlint-cli2 --fix",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "prettier --check . && eslint . && stylelint '**/*.css' && markdownlint-cli2",
-    "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css' && markdownlint-cli2 --fix"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

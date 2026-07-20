@@ -14,24 +14,19 @@ npm run dev      # http://localhost:3000
 | Script               | Purpose                                   |
 | -------------------- | ----------------------------------------- |
 | `npm run dev`        | Dev server on port 3000                   |
-| `npm run build`      | Build and prerender to `dist/client`      |
-| `npm run preview`    | Serve the production build locally        |
-| `npm test`           | Run the test suite once                   |
-| `npm run test:watch` | Run tests in watch mode                   |
-| `npm run typecheck`  | `tsc --noEmit`                            |
 | `npm run lint`       | Prettier, ESLint, Stylelint, markdownlint |
 | `npm run lint:fix`   | Same, applying fixes                      |
+| `npm run typecheck`  | `tsc --noEmit`                            |
+| `npm test`           | Run the test suite once                   |
+| `npm run test:watch` | Run tests in watch mode                   |
+| `npm run build`      | Build and prerender to `dist/client`      |
+| `npm run preview`    | Serve the production build locally        |
 
-`.github/workflows/ci.yml` runs lint, typecheck, test and build on every push
-and pull request, then deploys on `main` only if all of that passed;
-`lint-staged` runs the formatters on commit.
+`.github/workflows/ci.yml` runs lint, typecheck, test and build on every push and pull request, then deploys on `main` only if all of that passed; `lint-staged` runs the formatters on commit.
 
 ## Content
 
-Content lives in `src/content/<collection>/*.mdx` and is picked up
-automatically — there is no registration step. Frontmatter is validated at build
-time by `src/content/schema.ts`; a malformed post fails the build rather than
-reaching the site.
+Content lives in `src/content/<collection>/*.mdx` and is picked up automatically (no registration step). Frontmatter is validated at build time by `src/content/schema.ts`; a malformed post fails the build rather than reaching the site.
 
 ```mdx
 ---
@@ -42,29 +37,19 @@ draft: false # optional; drafts render in dev, are omitted from builds
 ---
 ```
 
-Because the files are MDX rather than plain Markdown, interactive components can
-be dropped straight into prose. HTML elements are mapped to app components in
-`src/ui/mdx-components.tsx`.
+Because the files are MDX rather than plain Markdown, interactive components can be dropped straight into prose. HTML elements are mapped to app components in `src/ui/mdx-components.tsx`.
 
-Code blocks are highlighted by Shiki at build time in both light and dark
-themes; the dark values ride along as `--shiki-dark` custom properties that
-`src/styles.css` swaps under `prefers-color-scheme`. No highlighter ships to the
-client.
+Code blocks are highlighted by Shiki at build time in both light and dark themes; the dark values ride along as `--shiki-dark` custom properties that `src/styles.css` swaps under `prefers-color-scheme`. No highlighter ships to the client.
 
-Collections are globbed lazily so each post becomes its own chunk. Listing pages
-read frontmatter through a route loader, and because loaders run during
-prerender their results are serialized into the HTML — an index page renders
-without downloading any post chunks. To add a collection, export one more
-`collection("name")` from `src/content/index.ts` and add matching routes.
+Collections are globbed lazily so each post becomes its own chunk. Listing pages read frontmatter through a route loader, and because loaders run during prerender their results are serialized into the HTML—an index page renders without downloading any post chunks.
+
+The list of pages to prerender is derived from the content directory by `build/content-pages.ts`, so a new post needs no configuration. Adding a _collection_ means creating the folder, exporting one more `collection("name")` from `src/content/index.ts`, and adding two route files—both of which reuse `indexRoute`/`postRoute` from `src/content/routes.ts`.
 
 ## Deploying
 
-Deploying is the second job of `.github/workflows/ci.yml`. It runs only on
-`main` and only after the verify job passes, and it uploads the artifact that
-job built rather than rebuilding — so what ships is what was tested. It needs
-two repository secrets:
+Deploying is the second job of `.github/workflows/ci.yml`. It runs only on `main` and only after the verify job passes, and it uploads the artifact that job built rather than rebuilding—so what ships is what was tested. It needs two repository secrets:
 
-- `CLOUDFLARE_API_TOKEN` — a token with the **Workers Scripts: Edit** permission
+- `CLOUDFLARE_API_TOKEN`—a token with the **Workers Scripts: Edit** permission
 - `CLOUDFLARE_ACCOUNT_ID`
 
 Manually, once `wrangler login` has been run:
@@ -74,7 +59,20 @@ npm run build
 npx wrangler deploy
 ```
 
-`wrangler.jsonc` declares `dist/client` as a static asset directory with no
-Worker script. `not_found_handling` is set to `404-page`, which is why the build
-emits a flat `404.html` (configured under `pages` in `vite.config.ts`) — unknown
-paths get a real 404 status rather than a 200.
+`wrangler.jsonc` declares `dist/client` as a static asset directory with no Worker script. `html_handling` drops trailing slashes so URLs match the slashless form the router and sitemap use, and `not_found_handling` is set to `404-page` so unknown paths get a real 404 status rather than a 200.
+
+## The 404 page
+
+Cloudflare serves one file, `404.html`, for every unmatched URL. It is generated by `build/static-404.ts` as a standalone document with no router and no hydration.
+
+(A prerendered page bakes in the route matches it was rendered for, and serving it at a different URL leaves the client hydrating against state for a route it never resolved which fails and renders nothing.)
+
+The app's compiled CSS is inlined, so it picks up the site's styling without depending on hashed asset filenames or costing an extra request.
+
+`src/routes/$.tsx` is a separate thing: the catch-all for a dead link followed _inside_ the running app, which Cloudflare never sees.
+
+## Tests
+
+`npm test` renders real routes through the router rather than testing components in isolation to ensure that a post that renders fine in isolation is still correct when its MDX module is resolved through a mechanism that only works if a loader happened to run first.
+
+`vitest.config.ts` shares the MDX pipeline with the build via `build/mdx.ts`, minus syntax highlighting, so tests compile content the same way production does.

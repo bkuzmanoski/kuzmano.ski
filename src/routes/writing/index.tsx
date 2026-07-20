@@ -1,10 +1,10 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { writing } from "#/content";
+import { indexRoute } from "#/content/routes";
 
 export const Route = createFileRoute("/writing/")({
-  loader: () => writing.list(),
-  head: () => ({ meta: [{ title: "Writing — kuzmano.ski" }] }),
+  ...indexRoute(writing, "Writing"),
   component: WritingIndex,
 });
 
