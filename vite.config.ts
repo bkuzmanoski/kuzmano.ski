@@ -7,7 +7,6 @@ import { defineConfig } from "vite";
 
 import { contentPages } from "./build/content-pages";
 import { mdxPlugin } from "./build/mdx";
-import { static404 } from "./build/static-404";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
@@ -22,6 +21,5 @@ export default defineConfig({
     }),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),
-    static404(),
   ],
 });

@@ -6,8 +6,6 @@ import { NotFound } from "#/ui/not-found";
 
 import appCss from "../styles.css?url";
 
-// Excluded from tests as well as production: the devtools panel throws while
-// unmounting under jsdom, which fails any test that renders the root route.
 const Devtools =
   import.meta.env.DEV && import.meta.env.MODE !== "test"
     ? lazy(async () => {
@@ -29,11 +27,7 @@ const Devtools =
 
 export const Route = createRootRoute({
   head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "kuzmano.ski" },
-    ],
+    meta: [{ charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootDocument,

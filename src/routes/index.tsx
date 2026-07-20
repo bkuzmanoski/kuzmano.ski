@@ -1,6 +1,9 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({
+  head: () => ({ meta: [{ title: "kuzmano.ski" }] }),
+  component: Home,
+});
 
 function Home() {
   return (
