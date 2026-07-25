@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { projects } from "#/content";
 import { postRoute } from "#/content/routes";
-import { Post } from "#/ui/post";
+import { Window } from "#/ui/window";
+import { Post } from "#/views/post";
 
 export const Route = createFileRoute("/projects/$slug")({
   ...postRoute(projects),
@@ -10,5 +11,13 @@ export const Route = createFileRoute("/projects/$slug")({
 });
 
 function Project() {
-  return <Post collection={projects} frontmatter={Route.useLoaderData()} slug={Route.useParams().slug} />;
+  const { slug } = Route.useParams();
+  const frontmatter = Route.useLoaderData();
+  const navigate = useNavigate();
+
+  return (
+    <Window id={`projects/${slug}`} title={frontmatter.title} onClose={() => navigate({ to: "/projects" })}>
+      <Post collection={projects} frontmatter={frontmatter} slug={slug} />
+    </Window>
+  );
 }

@@ -1,18 +1,8 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { Home } from "#/views/home";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "kuzmano.ski" }] }),
   component: Home,
 });
-
-function Home() {
-  return (
-    <main>
-      <h1>kuzmano.ski</h1>
-      <nav>
-        <Link to="/writing">Writing</Link>
-        <Link to="/projects">Projects</Link>
-      </nav>
-    </main>
-  );
-}

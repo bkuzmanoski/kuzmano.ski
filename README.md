@@ -22,7 +22,7 @@ draft: false # optional; drafts render in dev, are omitted from builds
 ---
 ```
 
-Embedded HTML elements are mapped to app components in `src/ui/mdx-components.tsx`.
+Embedded HTML elements are mapped to app components in `src/content/mdx-components.tsx`.
 
 The list of pages to prerender is derived from the content directory by `build/content-pages.ts`, so a new post needs no configuration.
 

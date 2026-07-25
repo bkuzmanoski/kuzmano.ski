@@ -3,10 +3,10 @@ import { readdirSync } from "node:fs";
 const CONTENT_DIR = "src/content";
 
 /**
- * The complete list of pages to prerender.
+ * Derives a complete list of pages to prerender.
  *
- * Derived from the filesystem because the built-in discovery mechanisms
- * cannot produce a complete, non-duplicated list alone:
+ * The list is derived from the filesystem because the built-in discovery
+ * mechanisms cannot produce a complete, non-duplicated list alone:
  *
  * - `autoStaticPathsDiscovery` does not enumerate dynamic routes
  * - `crawlLinks` does not reach unlinked pages

@@ -1,0 +1,27 @@
+.menuBar {
+  position: relative;
+  z-index: 1000;
+
+  display: flex;
+  flex: none;
+  gap: 18px;
+  align-items: center;
+
+  height: 20px;
+  padding: 0 12px;
+  border-bottom: 1px solid #000;
+
+  background: #fff;
+}
+
+.apple,
+.menu {
+  user-select: none;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.apple {
+  font-size: 14px;
+}

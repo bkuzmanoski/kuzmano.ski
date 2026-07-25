@@ -1,0 +1,54 @@
+.overlay {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #000;
+
+  transition: opacity 700ms ease;
+
+  &.zooming {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 0s;
+  }
+}
+
+.stage {
+  transition: transform 700ms ease;
+
+  .zooming & {
+    transform: scale(6); /* TODO */
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 0s;
+
+    .zooming & {
+      transform: none;
+    }
+  }
+}
+
+.boot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.face {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.welcome {
+  margin: 0;
+  font-size: 12px;
+}

@@ -15,9 +15,10 @@ export default defineConfig({
     devtools(),
     mdxPlugin(),
     tanstackStart({
-      prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
-      sitemap: { host: "https://kuzmano.ski" },
+      router: { routeFileIgnorePattern: ".test.tsx" },
       pages: contentPages(),
+      sitemap: { host: "https://kuzmano.ski" },
+      prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
     }),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),

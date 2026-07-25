@@ -1,7 +1,8 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { writing } from "#/content";
 import { indexRoute } from "#/content/routes";
+import { Window } from "#/ui/window";
 
 export const Route = createFileRoute("/writing/")({
   ...indexRoute(writing, "Writing"),
@@ -10,10 +11,10 @@ export const Route = createFileRoute("/writing/")({
 
 function WritingIndex() {
   const entries = Route.useLoaderData();
+  const navigate = useNavigate();
 
   return (
-    <main>
-      <h1>Writing</h1>
+    <Window id="writing" title="Writing" onClose={() => navigate({ to: "/" })}>
       <ul>
         {entries.map((entry) => (
           <li key={entry.slug}>
@@ -25,6 +26,6 @@ function WritingIndex() {
           </li>
         ))}
       </ul>
-    </main>
+    </Window>
   );
 }

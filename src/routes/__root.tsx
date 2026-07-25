@@ -1,8 +1,10 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
-import { ErrorFallback } from "#/ui/error-fallback";
-import { NotFound } from "#/ui/not-found";
+import { bootCoverScript } from "#/ui/boot-overlay";
+import { Desktop } from "#/views/desktop";
+import { Error } from "#/views/error";
+import { NotFound } from "#/views/not-found";
 
 import appCss from "../styles.css?url";
 
@@ -31,18 +33,23 @@ export const Route = createRootRoute({
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootDocument,
-  errorComponent: ErrorFallback,
+  errorComponent: Error,
   notFoundComponent: NotFound,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // bootCoverScript sets data-boot on <html> before hydration, so the client
+    // <html> intentionally differs from the server's. suppressHydrationWarning
+    // scopes that expected mismatch to this element.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Runs before first paint to prevent a desktop flash before the boot; see boot-overlay. */}
+        <script dangerouslySetInnerHTML={{ __html: bootCoverScript }} />
       </head>
       <body>
-        {children}
+        <Desktop>{children}</Desktop>
         {Devtools && (
           <Suspense fallback={null}>
             <Devtools />

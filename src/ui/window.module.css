@@ -1,0 +1,72 @@
+/* Placeholder */
+
+.window {
+  position: absolute;
+
+  display: flex;
+  flex-direction: column;
+
+  min-width: 240px;
+  max-width: min(90vw, 640px);
+  max-height: 80vh;
+  border: 1px solid #000;
+
+  background: #fff;
+  box-shadow: 1px 1px 0 #000;
+}
+
+.titleBar {
+  touch-action: none;
+  user-select: none;
+
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+
+  height: 20px;
+  padding: 0 6px;
+  border-bottom: 1px solid #000;
+
+  .focused & {
+    background-image: repeating-linear-gradient(#000 0 1px, transparent 1px 2px);
+  }
+}
+
+.close {
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: 1px solid #000;
+
+  background: #fff;
+
+  &:active {
+    background: #000;
+  }
+}
+
+.closeSpacer {
+  width: 11px;
+  height: 11px;
+}
+
+.title {
+  overflow: hidden;
+
+  padding: 0 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  background: #fff;
+}
+
+.content {
+  overflow: auto;
+  flex: 1;
+  padding: 12px 16px;
+}

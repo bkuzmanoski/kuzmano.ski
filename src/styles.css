@@ -13,6 +13,21 @@ body {
 
 body {
   margin: 0;
+
+  /* TODO: Placeholder */
+  font-family: Geneva, Verdana, system-ui, sans-serif;
+  font-size: 13px;
+  color: #000;
+}
+
+html[data-boot]::before {
+  content: "";
+
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+
+  background: #000; /* TODO: Use regular background once defined */
 }
 
 /* stylelint-disable csstools/value-no-unknown-custom-properties -- set inline by Shiki */

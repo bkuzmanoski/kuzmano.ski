@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
-export function ErrorFallback({ error, reset }: ErrorComponentProps) {
+export function Error({ error, reset }: ErrorComponentProps) {
   return (
     <main>
       <h1>Something went wrong</h1>
