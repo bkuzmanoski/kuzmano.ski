@@ -39,9 +39,7 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    // bootCoverScript sets data-boot on <html> before hydration, so the client
-    // <html> intentionally differs from the server's. suppressHydrationWarning
-    // scopes that expected mismatch to this element.
+    // bootCoverScript sets data-boot on <html> before hydration, so the client <html> intentionally differs from the server's.
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
