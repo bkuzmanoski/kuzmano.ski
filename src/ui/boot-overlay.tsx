@@ -16,10 +16,8 @@ const shouldBoot = () => window.location.pathname === "/" && !sessionStorage.get
  * React can hydrate — and, when the boot is due, marks <html> so CSS paints an
  * opaque cover immediately. Without it the server-rendered desktop would flash
  * for a frame before the (client-only) overlay below mounts over it.
- *
- * The failsafe removes the cover if React never takes over (e.g. a script error).
  */
-export const bootCoverScript = `(function () {
+export const bootOverlayScript = `(function () {
   try {
     if (location.pathname === "/" && !sessionStorage.getItem("${HAS_BOOTED_KEY}")) {
       document.documentElement.setAttribute("${BOOT_ATTRIBUTE}", "");

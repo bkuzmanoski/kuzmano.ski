@@ -1,7 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
-import { bootCoverScript } from "#/ui/boot-overlay";
+import { bootOverlayScript } from "#/ui/boot-overlay";
 import { Desktop } from "#/views/desktop";
 import { Error } from "#/views/error";
 import { NotFound } from "#/views/not-found";
@@ -39,12 +39,12 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    // bootCoverScript sets data-boot on <html> before hydration, so the client <html> intentionally differs from the server's.
+    // bootOverlayScript sets data-boot on <html> before hydration, so the client <html> intentionally differs from the server's.
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* Runs before first paint to prevent a desktop flash before the boot; see boot-overlay. */}
-        <script dangerouslySetInnerHTML={{ __html: bootCoverScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootOverlayScript }} />
       </head>
       <body>
         <Desktop>{children}</Desktop>
