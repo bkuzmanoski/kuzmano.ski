@@ -3,8 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer 
 import type { ReactNode } from "react";
 
 /**
- * Ephemeral window state that is not encoded in the URL; it lives above
- * the router outlet, so a window's position survives navigation.
+ * Temporary window state that the URL does not hold. This state lives above
+ * the router outlet so that a window keeps its position after navigation.
  */
 
 interface Position {
@@ -12,11 +12,11 @@ interface Position {
   y: number;
 }
 
-const DEFAULT_WINDOW_POSITION: Position = { x: 72, y: 56 }; // TODO: Define default based on design specs.
+const DEFAULT_WINDOW_POSITION: Position = { x: 72, y: 56 }; // TODO: Set the default position from the design specification.
 
 interface WindowManagerState {
   positions: Record<string, Position>;
-  order: Array<string>; // Focus order, back to front; the last id is focused and drawn on top.
+  order: Array<string>; // Focus order, back to front. The app focuses the last id and draws it on top.
 }
 
 type WindowAction = { type: "focus"; id: string } | { type: "move"; id: string; x: number; y: number };
@@ -59,10 +59,12 @@ export interface WindowHandle {
 }
 
 /**
- * Subscribes a window to the manager. Registers as focused on mount, so
- * arriving at a route (SSR or client) brings its window to the front. Uses
- * a deterministic default position until first dragged, which keeps the SSR
- * and first client render identical to avoid hydration mismatches on placement.
+ * Adds a window to the manager. The window takes the focus when it mounts.
+ * A route brings its window to the front on the server and on the client.
+ *
+ * The window uses the same default position until the user drags it. This makes
+ * the server render and the first client render identical to prevent a
+ * hydration error.
  */
 export function useWindow(id: string): WindowHandle {
   const manager = useContext(ManagerContext);

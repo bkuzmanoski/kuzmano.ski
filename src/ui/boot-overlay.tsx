@@ -12,10 +12,12 @@ const BOOT_ATTRIBUTE = "data-boot";
 const shouldBoot = () => window.location.pathname === "/" && !sessionStorage.getItem(HAS_BOOTED_KEY);
 
 /**
- * Inline script for the document head. It runs before first paint — earlier than
- * React can hydrate — and, when the boot is due, marks <html> so CSS paints an
- * opaque cover immediately. Without it the server-rendered desktop would flash
- * for a frame before the (client-only) overlay below mounts over it.
+ * This inline script goes in the document head. It runs before the first paint,
+ * which is earlier than React can hydrate. If the boot is due, the script marks
+ * <html>. The CSS then paints an opaque cover immediately.
+ *
+ * Without this script, the browser shows the server-rendered desktop prior to
+ * hydration. The overlay below is client-only and mounts after hydration.
  */
 export const bootOverlayScript = `(function () {
   try {

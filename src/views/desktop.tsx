@@ -7,8 +7,11 @@ import styles from "./desktop.module.css";
 import type { ReactNode } from "react";
 
 /**
- * Mounted by the root route above the router outlet so it does not remount on navigation.
- * `children` is the outlet, which renders the route's window into the window layer.
+ * The root route mounts this component above the router outlet. The component
+ * does not mount again after navigation.
+ *
+ * `children` is the outlet. The outlet renders the window of the route into
+ * the window layer.
  */
 export function Desktop({ children }: { children: ReactNode }) {
   return (

@@ -6,11 +6,8 @@ import { writing } from "#/content";
 import { getRouter } from "#/router";
 
 /**
- * These tests drive the real route tree so the assertions cover the wiring as a
- * post that renders in isolation can still break when its MDX module is resolved
- * through a path that only works if a loader ran first.
- *
- * Expectations are read from the content collection.
+ * These tests use the real route tree. The assertions cover the route wiring.
+ * The tests read expected values from the content collection.
  */
 
 async function renderRoute(path: string) {

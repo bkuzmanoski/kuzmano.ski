@@ -39,11 +39,12 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    // bootOverlayScript sets data-boot on <html> before hydration, so the client <html> intentionally differs from the server's.
+    // bootOverlayScript sets data-boot on <html> before hydration,
+    // which makes the client <html> different from the server <html>.
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        {/* Runs before first paint to prevent a desktop flash before the boot; see boot-overlay. */}
+        {/* This script runs before the first paint to prevent a flash of the desktop. See boot-overlay. */}
         <script dangerouslySetInnerHTML={{ __html: bootOverlayScript }} />
       </head>
       <body>

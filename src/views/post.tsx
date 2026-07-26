@@ -11,7 +11,8 @@ interface PostProps {
 }
 
 export function Post({ collection, slug, frontmatter }: PostProps) {
-  const { default: Content } = use(collection.module(slug)); // Read with `use()` rather than the route loader because loader data must be serializable.
+  // Read the module with `use()` and not with the route loader. Loader data must be serializable.
+  const { default: Content } = use(collection.module(slug));
 
   return (
     <article>

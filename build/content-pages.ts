@@ -3,14 +3,14 @@ import { readdirSync } from "node:fs";
 const CONTENT_DIR = "src/content";
 
 /**
- * Derives a complete list of pages to prerender.
+ * Makes the complete list of pages to prerender.
  *
- * The list is derived from the filesystem because the built-in discovery
- * mechanisms cannot produce a complete, non-duplicated list alone:
+ * This function reads the file system. The built-in discovery options cannot
+ * make a complete list without duplicates:
  *
- * - `autoStaticPathsDiscovery` does not enumerate dynamic routes
- * - `crawlLinks` does not reach unlinked pages
- * - Enabling both emits index routes twice
+ * - `autoStaticPathsDiscovery` does not list dynamic routes
+ * - `crawlLinks` does not find pages that have no links to them
+ * - Both options together add some routes two times
  */
 export function contentPages(): Array<{ path: string }> {
   const collections = readdirSync(CONTENT_DIR, { withFileTypes: true })

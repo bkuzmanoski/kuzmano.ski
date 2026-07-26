@@ -1,53 +1,57 @@
 # kuzmano.ski
 
-## Getting started
+## Get started
 
-Requires the Node version in `.nvmrc`.
+This project needs the Node version in `.nvmrc`.
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+npm run dev # Starts the dev server on http://localhost:3000
 ```
 
 ## Content
 
-Content lives in `src/content/<collection>/*.mdx`. Frontmatter is validated at build time by `src/content/schema.ts`.
+Content files are in `src/content/<collection>/*.mdx`. At build time, `src/content/schema.ts` validates their frontmatter.
 
 ```mdx
 ---
 title: Post Title
-description: Shown in listings and as the meta description.
+description: The listings and the meta description show this text.
 date: 2026-07-19
-draft: false # optional; drafts render in dev, are omitted from builds
+draft: false # Optional. The dev server renders a draft. The build omits it.
 ---
 ```
 
-Embedded HTML elements are mapped to app components in `src/content/mdx-components.tsx`.
+`src/content/mdx-components.tsx` maps HTML elements in the MDX files to app components.
 
-The list of pages to prerender is derived from the content directory by `build/content-pages.ts`, so a new post needs no configuration.
+`build/content-pages.ts` makes a list of pages to prerender from the content directory. A new post needs no configuration.
 
-Adding a _collection_ means creating the folder, exporting one more `collection("name")` from `src/content/index.ts`, and adding two route files—both of which reuse `indexRoute`/`postRoute` from `src/content/routes.ts`.
+To add a collection:
 
-## Deploying
+1. Make the folder for the collection.
+2. Export one more `collection("name")` from `src/content/index.ts`.
+3. Add two route files. Both files use `indexRoute` and `postRoute` from `src/content/routes.ts`.
+
+## Deploy
 
 `.github/workflows/ci.yml` deploys `main` after the verify job passes.
 
-Manually, once `wrangler login` has been run:
+To deploy manually, first run `wrangler login`.
 
 ```bash
 npm run build
 npx wrangler deploy
 ```
 
-The build produces two things:
+The build makes two things:
 
-- Prerendered pages served as static assets
-- `dist/server/server.js` (TanStack Start SSR handler)
+- Prerendered pages, which Cloudflare sends as static assets
+- `dist/server/server.js`, the TanStack Start SSR handler
 
-Cloudflare serves a matching asset when one exists and only falls through to the Worker otherwise.
+If a matching asset exists, Cloudflare sends that asset. If no asset matches, Cloudflare calls the Worker.
 
 ## Tests
 
-`npm test` renders real routes through the router to ensure that a post that renders fine in isolation is still correct when its MDX module is resolved through a mechanism that only works if a loader happened to run first.
+`npm test` renders real routes through the router. A post can render correctly alone but still fail in the app. This happens because the router resolves an MDX module through a path. The path works only after a loader runs.
 
-`vitest.config.ts` shares the MDX pipeline with the build via `build/mdx.ts`, minus syntax highlighting.
+`vitest.config.ts` uses the same MDX pipeline as the build through `build/mdx.ts`, but without syntax highlighting for speed.
