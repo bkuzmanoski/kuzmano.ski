@@ -4,6 +4,7 @@ import { useState } from "react";
 import FolderSmallIcon from "#/assets/images/folder-small.svg?react";
 import type { Collection } from "#/content";
 import { formatDate } from "#/lib/date";
+import { playClick } from "#/lib/sound";
 import { useWindowActions, useWindowOrder } from "#/lib/window-manager";
 
 import styles from "./content-list.module.css";
@@ -44,6 +45,7 @@ export function ContentList({ collection, basePath }: { collection: Collection; 
               open(href);
             }}
             onFocus={() => setSelected(entry.slug)}
+            onPointerDown={playClick}
           >
             <span className={styles.cellPost}>
               <FolderSmallIcon className={styles.icon} />

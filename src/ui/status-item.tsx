@@ -7,6 +7,7 @@ import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react
 import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
+import { playClick } from "#/lib/sound";
 import { useWindowActions } from "#/lib/window-manager";
 
 import styles from "./status-item.module.css";
@@ -17,7 +18,7 @@ import type { ReactNode } from "react";
 function StatusButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
     <Tooltip label={label}>
-      <button aria-label={label} className={styles.control} type="button" onClick={onClick}>
+      <button aria-label={label} className={styles.control} type="button" onClick={onClick} onPointerDown={playClick}>
         {children}
       </button>
     </Tooltip>
@@ -56,7 +57,14 @@ export function SoundStatus() {
   return (
     <StatusButton
       label={`Sound: ${sound === "on" ? "On" : "Off"}`}
-      onClick={() => setSound(sound === "on" ? "off" : "on")}
+      onClick={() => {
+        setSound(sound === "on" ? "off" : "on");
+
+        // Switching on: he press itself was gated by the setting it just changed.
+        if (sound === "off") {
+          playClick();
+        }
+      }}
     >
       <Icon className={styles.icon} />
     </StatusButton>

@@ -7,6 +7,7 @@ import { RESUME_URL, SITE_SOURCE_URL } from "#/config/site";
 import { downloadFile } from "#/lib/download";
 import { useGlobalShortcuts } from "#/lib/keyboard-shortcut";
 import { cycle } from "#/lib/math";
+import { playClick } from "#/lib/sound";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
 import { restart } from "./boot-overlay";
@@ -100,6 +101,7 @@ export function MenuBar() {
       case "Enter":
       case " ":
         event.preventDefault();
+        playClick();
         setIsPointerHeld(false);
         setOpenMenu({ label, anchor: event.currentTarget });
 
@@ -128,6 +130,7 @@ export function MenuBar() {
           className={styles.logo}
           type="button"
           onClick={() => open(DESTINATIONS.about.route)}
+          onPointerDown={playClick}
         >
           <LogoIcon className={styles.logoIcon} />
         </button>
@@ -148,6 +151,7 @@ export function MenuBar() {
               onPointerDown={(event) => {
                 const anchor = event.currentTarget;
 
+                playClick();
                 setIsPointerHeld(true);
                 setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
               }}
