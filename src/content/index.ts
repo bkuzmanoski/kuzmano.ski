@@ -1,79 +1,115 @@
+import { COLLECTION_TITLES, PAGES_DIRECTORY } from "./configuration";
 import { parseFrontmatter } from "./schema";
 
-import type { ContentEntry, Frontmatter } from "./schema";
+import type { Frontmatter, Page } from "./schema";
 import type { MDXContent } from "mdx/types";
 
 interface MDXModule {
   default: MDXContent;
-  frontmatter: unknown;
 }
 
-export interface Collection {
-  list: () => Promise<Array<ContentEntry>>;
-  frontmatter: (slug: string) => Promise<Frontmatter | null>;
-  module: (slug: string) => Promise<MDXModule>;
+/** Slug-keyed lookup of MDX files. */
+export interface PageIndex {
+  has: (slug: string) => boolean;
+  frontmatter: (slug: string) => Frontmatter | null;
+  load: (slug: string) => Promise<MDXModule>;
 }
 
-const modules = import.meta.glob<MDXModule>("./**/*.mdx");
-const moduleCache = new Map<string, Promise<MDXModule>>();
+/** An index that enumerates its entries. */
+export interface Collection extends PageIndex {
+  title: string;
+  list: () => Array<Page>;
+}
 
-const slugOf = (path: string) => path.replace(/^\.\/[^/]+\//, "").replace(/\.mdx$/, "");
+/**
+ * Frontmatter without the compiled bodies (see the `?frontmatter` plugin in
+ * build/). A listing synchronously reads titles, categories and dates without
+ * pulling in page bodies.
+ */
+const frontmatterModules = import.meta.glob<{ default: unknown }>("./*/*.mdx", { query: "?frontmatter", eager: true });
 
-function collection(name: string): Collection {
-  const entries = Object.entries(modules).filter(([path]) => path.startsWith(`./${name}/`));
+const contentModules = import.meta.glob<MDXModule>("./*/*.mdx");
+const contentCache = new Map<string, Promise<MDXModule>>();
 
-  const pathOf = (slug: string) => entries.find(([path]) => slugOf(path) === slug)?.[0];
-  const load = (path: string) => {
-    const cached = moduleCache.get(path);
+const slugFromPath = (path: string) => path.replace(/^\.\/[^/]+\//, "").replace(/\.mdx$/, "");
+const frontmatterFromPath = (path: string) => parseFrontmatter(frontmatterModules[path]?.default, path);
 
-    if (cached) {
-      return cached;
+function loadContent(path: string): Promise<MDXModule> {
+  const cachedContent = contentCache.get(path);
+
+  if (cachedContent) {
+    return cachedContent;
+  }
+
+  const importer = contentModules[path];
+
+  if (!importer) {
+    throw new Error(`Content not found for path: ${path}`);
+  }
+
+  const promise = importer();
+
+  contentCache.set(path, promise);
+
+  return promise;
+}
+
+/**
+ * A directory of MDX files: `src/content/<name>/*.mdx`. One slug-to-path index
+ * serves every lookup. `paths` is used by `collection()` to enumerate entries and
+ * is dropped before it reaches callers.
+ */
+function pageIndex(name: string): PageIndex & { paths: Map<string, string> } {
+  const prefix = `./${name}/`;
+  const paths = new Map<string, string>();
+
+  for (const path of Object.keys(contentModules)) {
+    if (path.startsWith(prefix)) {
+      paths.set(slugFromPath(path), path);
     }
-
-    const loader = modules[path];
-
-    if (!loader) {
-      throw new Error(`[CONTENT] Entry not found: ${path}`);
-    }
-
-    const promise = loader();
-    moduleCache.set(path, promise);
-
-    return promise;
-  };
+  }
 
   return {
-    async list() {
-      const loaded = await Promise.all(
-        entries.map(async ([path]) => ({
-          ...parseFrontmatter((await load(path)).frontmatter, path),
-          slug: slugOf(path),
-        })),
-      );
-
-      return loaded
-        .filter((entry) => !entry.draft || import.meta.env.DEV)
-        .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+    paths,
+    has: (slug) => paths.has(slug),
+    frontmatter(slug) {
+      const path = paths.get(slug);
+      return path ? frontmatterFromPath(path) : null;
     },
-
-    async frontmatter(slug) {
-      const path = pathOf(slug);
-      return path ? parseFrontmatter((await load(path)).frontmatter, path) : null;
-    },
-
-    module(slug) {
-      const path = pathOf(slug);
+    load(slug) {
+      const path = paths.get(slug);
 
       if (!path) {
-        throw new Error(`[CONTENT] Entry not found: ${name}/${slug}`);
+        throw new Error(`Page not found: ${name}/${slug}`);
       }
 
-      return load(path);
+      return loadContent(path);
     },
   };
 }
 
-export const writing = collection("writing");
-export const projects = collection("projects");
+function collection(segment: string, title: string): Collection {
+  const { paths, ...index } = pageIndex(segment);
 
-export type { ContentEntry, Frontmatter };
+  let entries: Array<Page> | null = null;
+
+  return {
+    ...index,
+    title,
+    list() {
+      entries ??= [...paths]
+        .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))
+        .filter((entry) => !entry.draft || import.meta.env.DEV)
+        .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+
+      return entries;
+    },
+  };
+}
+
+export const collections: Record<string, Collection> = Object.fromEntries(
+  Object.entries(COLLECTION_TITLES).map(([segment, title]) => [segment, collection(segment, title)]),
+);
+export const pages: PageIndex = pageIndex(PAGES_DIRECTORY);
+
+export type { Page, Frontmatter };

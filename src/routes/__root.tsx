@@ -1,12 +1,15 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
+import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
+import { themeScript } from "#/lib/settings";
+import stylesheet from "#/styles.css?url";
 import { bootOverlayScript } from "#/ui/boot-overlay";
 import { Desktop } from "#/views/desktop";
 import { Error } from "#/views/error";
 import { NotFound } from "#/views/not-found";
 
-import appCss from "../styles.css?url";
+import type { ReactNode } from "react";
 
 const Devtools =
   import.meta.env.DEV && import.meta.env.MODE !== "test"
@@ -18,10 +21,7 @@ const Devtools =
 
         return {
           default: () => (
-            <TanStackDevtools
-              config={{ position: "bottom-right" }}
-              plugins={[{ name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> }]}
-            />
+            <TanStackDevtools plugins={[{ name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> }]} />
           ),
         };
       })
@@ -30,21 +30,25 @@ const Devtools =
 export const Route = createRootRoute({
   head: () => ({
     meta: [{ charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: stylesheet },
+      // Fetch font with with the stylesheet as chrome font uses `font-display: block`.
+      { rel: "preload", as: "font", type: "font/woff2", href: chromeFont, crossOrigin: "anonymous" },
+    ],
   }),
   shellComponent: RootDocument,
   errorComponent: Error,
   notFoundComponent: NotFound,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
-    // bootOverlayScript sets data-boot on <html> before hydration,
-    // which makes the client <html> different from the server <html>.
+    /* `themeScript` and `bootOverlayScript` set attributes on `<html>` before
+     * hydration, so the client <html> differs from the server's. */
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        {/* This script runs before the first paint to prevent a flash of the desktop. See boot-overlay. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: bootOverlayScript }} />
       </head>
       <body>

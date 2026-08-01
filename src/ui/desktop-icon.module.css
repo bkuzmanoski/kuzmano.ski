@@ -1,0 +1,49 @@
+.icon {
+  pointer-events: auto;
+  cursor: default;
+  user-select: none;
+
+  position: absolute;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+
+  width: 76px;
+
+  color: var(--color-foreground);
+  text-align: center;
+
+  & .glyph,
+  & .label {
+    pointer-events: none;
+  }
+
+  & .label {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+
+    padding: 0 3px;
+
+    font: var(--font-ui);
+    white-space: nowrap;
+
+    &.selected {
+      color: var(--color-background);
+      background: var(--color-foreground);
+    }
+
+    &.downloadIcon {
+      flex: none;
+      width: 10px;
+      height: 12px;
+    }
+  }
+
+  & .glyph {
+    width: auto;
+    height: 40px;
+  }
+}

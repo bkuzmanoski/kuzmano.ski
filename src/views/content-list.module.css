@@ -1,0 +1,84 @@
+.list {
+  --list-columns: 1fr 140px 132px;
+
+  font: var(--font-ui);
+}
+
+.header {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+
+  display: grid;
+  grid-template-columns: var(--list-columns);
+  align-items: center;
+
+  height: 28px;
+  padding: 0 0 0 12px;
+  border-bottom: 1px solid var(--color-foreground);
+
+  font-size: 16px;
+
+  background: var(--color-background);
+}
+
+.headerPost {
+  padding-left: 28px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: var(--list-columns);
+  align-items: center;
+
+  height: 34px;
+  padding: 0 0 0 12px;
+  border-bottom: 1px solid var(--color-muted);
+
+  color: var(--color-foreground);
+  text-decoration: none;
+
+  outline: none;
+}
+
+.open {
+  background: color-mix(in srgb, var(--color-foreground) 15%, transparent);
+}
+
+.cellPost {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.title {
+  overflow: hidden;
+
+  padding: 2px 6px;
+
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  .selected & {
+    color: var(--color-background);
+    background: var(--color-foreground);
+  }
+}
+
+.cellMetadata {
+  overflow: hidden;
+
+  padding-right: 8px;
+
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -4,23 +4,28 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
+import svgr from "vite-plugin-svgr";
 
-import { contentPages } from "./build/content-pages";
+import { content } from "./build/content";
+import { frontmatterPlugin } from "./build/frontmatter";
 import { mdxPlugin } from "./build/mdx";
+import { svgrOptions } from "./build/svgr";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
   css: { postcss: { plugins: [postcssPresetEnv()] } },
   plugins: [
     devtools(),
+    svgr({ svgrOptions }),
+    frontmatterPlugin(),
     mdxPlugin(),
     tanstackStart({
       router: { routeFileIgnorePattern: ".test.tsx" },
-      pages: contentPages(),
+      pages: command === "build" ? content() : [],
       sitemap: { host: "https://kuzmano.ski" },
       prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
     }),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),
   ],
-});
+}));

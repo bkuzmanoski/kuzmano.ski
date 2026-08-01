@@ -1,0 +1,70 @@
+.scrollbar {
+  user-select: none;
+
+  display: flex;
+  flex: none;
+  flex-direction: column;
+
+  width: 22px;
+  border-left: 1px solid var(--color-foreground);
+}
+
+.arrow {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  &:first-child {
+    border-bottom: 1px solid var(--color-foreground);
+  }
+
+  /* TODO: This depends on presence of resizeControl */
+  &:nth-last-child(2) {
+    border-top: 1px solid var(--color-foreground);
+  }
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.arrowIcon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentcolor;
+
+  &.down {
+    transform: rotate(180deg);
+  }
+
+  &.filled {
+    fill: currentcolor;
+    stroke: none;
+  }
+}
+
+.track {
+  position: relative;
+  flex: 1;
+
+  &.filled {
+    background-image: url("../assets/images/scrollbar-track-background-pattern.svg");
+    background-repeat: repeat;
+  }
+}
+
+.thumb {
+  position: absolute;
+  right: 0;
+  left: 0;
+
+  border-top: 1px solid var(--color-foreground);
+  border-bottom: 1px solid var(--color-foreground);
+
+  background: var(--color-background);
+}

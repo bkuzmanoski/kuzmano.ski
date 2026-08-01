@@ -1,39 +1,73 @@
-:root {
-  color-scheme: light dark;
+@font-face {
+  font-family: ChicagoFLF;
+  font-weight: 400;
+  font-style: normal;
+
+  font-display: block;
+  src: url("./assets/fonts/ChicagoFLF.woff2") format("woff2");
 }
 
-* {
+:root {
+  --color-foreground: light-dark(#0f0e0d, #fff);
+  --color-background: light-dark(#fff, #0f0e0d);
+  --color-muted: rgb(from var(--color-foreground) r g b / 50%);
+  --font-chrome: 16px "ChicagoFLF";
+  --font-ui: 14px "Helvetica", "Helvetica Neue", system-ui;
+  --letter-spacing-chrome: -0.01em;
+  --drop-shadow: 2px 2px 0 var(--color-muted);
+  --menu-bar-height: 32px;
+
+  color-scheme: light dark;
+
+  &[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  &[data-theme="dark"] {
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html,
 body {
-  min-height: 100%;
+  height: 100%;
+}
+
+html {
+  overflow: hidden;
+  overscroll-behavior: none;
+
+  &[data-boot]::before {
+    content: "";
+
+    position: fixed;
+    z-index: 9998;
+    inset: 0;
+
+    background: #000;
+  }
 }
 
 body {
   margin: 0;
-
-  /* TODO: Replace this placeholder. */
-  font-family: Geneva, Verdana, system-ui, sans-serif;
-  font-size: 13px;
-  color: #000;
+  color: var(--color-foreground);
 }
 
-html[data-boot]::before {
-  content: "";
+a,
+button,
+div[role="button"] {
+  padding: 0;
+  border: 0;
 
-  position: fixed;
-  z-index: 9998;
-  inset: 0;
+  font: inherit;
+  color: inherit;
 
-  background: #000; /* TODO: Use the standard background after it is defined. */
+  background: transparent;
+  outline: none;
 }
-
-/* stylelint-disable csstools/value-no-unknown-custom-properties -- Shiki sets these properties inline */
-.shiki,
-.shiki span {
-  color: light-dark(var(--shiki-light), var(--shiki-dark));
-  background-color: light-dark(var(--shiki-light-bg), var(--shiki-dark-bg));
-}
-/* stylelint-enable csstools/value-no-unknown-custom-properties */

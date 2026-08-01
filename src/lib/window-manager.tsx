@@ -1,96 +1,341 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from "react";
 
+import { INITIAL_WINDOW_ROUTE } from "#/config/site";
+import { CASCADE_OFFSET, DEFAULT_POSITION, DEFAULT_SIZE, MAX_CASCADE_STEPS, MIN_SIZE } from "#/config/windows";
+
+import { resolveWindow, windowKindFor } from "./window-registry";
+
+import type { Position, Rect } from "./geometry";
+import type { WindowKind } from "./window-registry";
+import type { AnyRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+export interface WindowState extends Rect {
+  title: string;
+  kind: WindowKind;
+  maximized: boolean;
+}
+
+export interface ManagerState {
+  windows: Record<string, WindowState>;
+  order: Array<string>;
+  focused: string | null; // `null` means the desktop has focus.
+}
+
+export type Action =
+  | { type: "open"; route: string; title: string; kind: WindowKind }
+  | { type: "close"; route: string }
+  | { type: "focus"; route: string }
+  | { type: "move"; route: string; x: number; y: number }
+  | { type: "resize"; route: string; width: number; height: number }
+  | { type: "zoom"; route: string }
+  | { type: "organize" }
+  | { type: "focusDesktop" };
+
+export const EMPTY_STATE: ManagerState = { windows: {}, order: [], focused: null };
+
+function focusWindow(state: ManagerState, route: string): ManagerState {
+  if (!state.windows[route]) {
+    return state;
+  }
+
+  if (state.focused === route && state.order.at(-1) === route) {
+    return state;
+  }
+
+  return { ...state, order: [...state.order.filter((open) => open !== route), route], focused: route };
+}
+
+function updateWindow(state: ManagerState, route: string, patch: Partial<WindowState>): ManagerState {
+  const target = state.windows[route];
+
+  if (!target) {
+    return state;
+  }
+
+  return { ...state, windows: { ...state.windows, [route]: { ...target, ...patch } } };
+}
+
+/** The position of cascade slot `step` for a kind. Slot 0 is the base position. */
+function cascadeSlot(kind: WindowKind, step: number): Position {
+  const base = DEFAULT_POSITION[kind];
+  const offset = (step % MAX_CASCADE_STEPS) * CASCADE_OFFSET;
+
+  return { x: base.x + offset, y: base.y + offset };
+}
+
 /**
- * Temporary window state that the URL does not hold. This state lives above
- * the router outlet so that a window keeps its position after navigation.
+ * The first cascade slot not occupied by an open window. The walk stops at CASCADE_STEPS
+ * and starts the cascade over, so a long session does not march a window off the desktop;
+ * the window layer fits the result to the viewport at render time.
  */
+function availableCascadeSlot(windows: Record<string, WindowState>, kind: WindowKind): Position {
+  const openWindows = Object.values(windows);
 
-interface Position {
-  x: number;
-  y: number;
+  for (let step = 0; step < MAX_CASCADE_STEPS; step++) {
+    const position = cascadeSlot(kind, step);
+
+    if (!openWindows.some((window) => window.x === position.x && window.y === position.y)) {
+      return position;
+    }
+  }
+
+  return cascadeSlot(kind, 0);
 }
 
-const DEFAULT_WINDOW_POSITION: Position = { x: 72, y: 56 }; // TODO: Set the default position from the design specification.
-
-interface WindowManagerState {
-  positions: Record<string, Position>;
-  order: Array<string>; // Focus order, back to front. The app focuses the last id and draws it on top.
-}
-
-type WindowAction = { type: "focus"; id: string } | { type: "move"; id: string; x: number; y: number };
-
-interface WindowManagerValue extends WindowManagerState {
-  dispatch: (action: WindowAction) => void;
-}
-
-const ManagerContext = createContext<WindowManagerValue | null>(null);
-
-function reducer(state: WindowManagerState, action: WindowAction): WindowManagerState {
+/** Exported for unit tests; the app dispatches through the provider. */
+export function reducer(state: ManagerState, action: Action): ManagerState {
   switch (action.type) {
-    case "focus": {
-      if (state.order.at(-1) === action.id) {
+    case "open": {
+      if (state.windows[action.route]) {
+        return focusWindow(state, action.route);
+      }
+
+      return {
+        windows: {
+          ...state.windows,
+          [action.route]: {
+            title: action.title,
+            kind: action.kind,
+            maximized: false,
+            ...availableCascadeSlot(state.windows, action.kind),
+            ...DEFAULT_SIZE[action.kind],
+          },
+        },
+        order: [...state.order, action.route],
+        focused: action.route,
+      };
+    }
+    case "close": {
+      if (!state.windows[action.route]) {
         return state;
       }
 
-      return { ...state, order: [...state.order.filter((id) => id !== action.id), action.id] };
+      const { [action.route]: _closed, ...windows } = state.windows;
+      const order = state.order.filter((open) => open !== action.route);
+      const focused = state.focused === action.route ? (order.at(-1) ?? null) : state.focused;
+
+      return { windows, order, focused };
+    }
+    case "focus": {
+      return focusWindow(state, action.route);
     }
     case "move": {
-      return { ...state, positions: { ...state.positions, [action.id]: { x: action.x, y: action.y } } };
+      return updateWindow(state, action.route, { x: action.x, y: action.y });
+    }
+    case "resize": {
+      /* The stored size is the desired size, never below the minimum.
+       * The window layer fits it to the viewport at render time. */
+      return updateWindow(state, action.route, {
+        width: Math.max(MIN_SIZE.width, action.width),
+        height: Math.max(MIN_SIZE.height, action.height),
+      });
+    }
+    case "zoom": {
+      const target = state.windows[action.route];
+
+      if (!target) {
+        return state;
+      }
+
+      return updateWindow(focusWindow(state, action.route), action.route, { maximized: !target.maximized });
+    }
+    case "organize": {
+      /* Collections go to the back and content windows to the front, so an open
+       * document sits above the folder it came from. Each group then cascades
+       * from its own base position, in the stack order it already had. */
+      const group = (kind: WindowKind) =>
+        state.order.flatMap((route) => {
+          const target = state.windows[route];
+          return target?.kind === kind ? [[route, target] as const] : [];
+        });
+
+      const entries = [...group("collection"), ...group("content")];
+      const windows: Record<string, WindowState> = {};
+      const steps: Record<WindowKind, number> = { collection: 0, content: 0 };
+
+      for (const [route, target] of entries) {
+        windows[route] = { ...target, ...cascadeSlot(target.kind, steps[target.kind]++), maximized: false };
+      }
+
+      const order = entries.map(([route]) => route);
+      const focused = state.focused === null ? null : (order.at(-1) ?? null);
+
+      return { windows, order, focused };
+    }
+    case "focusDesktop": {
+      return state.focused === null ? state : { ...state, focused: null };
     }
   }
+}
+
+export interface WindowActions {
+  open: (route: string) => void;
+  close: (route: string) => void;
+  focus: (route: string) => void;
+  move: (route: string, x: number, y: number) => void;
+  resize: (route: string, width: number, height: number) => void;
+  toggleZoom: (route: string) => void;
+  organize: () => void;
+  focusDesktop: () => void;
+}
+
+/*
+ * The state is split across four contexts so a change reaches only the parts
+ * that use it. A window drag rewrites `windows` many times per second; keeping
+ * the order and the focus apart means the menu bar, the status items, the
+ * desktop icons and the open lists do not re-render with it.
+ */
+const ActionsContext = createContext<WindowActions | null>(null);
+const WindowsContext = createContext<Record<string, WindowState>>({});
+const OrderContext = createContext<Array<string>>([]);
+const FocusContext = createContext<string | null>(null);
+
+function initialState(router: AnyRouter): ManagerState {
+  const action = openAction(router.state.location.pathname);
+  return action ? reducer(EMPTY_STATE, action) : EMPTY_STATE;
+}
+
+function openAction(route: string): Action | null {
+  const windowTarget = resolveWindow(route);
+
+  if (!windowTarget) {
+    return null;
+  }
+
+  return { type: "open", route, title: windowTarget.title, kind: windowKindFor(windowTarget) };
 }
 
 export function WindowManagerProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, { positions: {}, order: [] });
-  const value = useMemo(() => ({ ...state, dispatch }), [state]);
+  const router = useRouter();
+  const navigate = useNavigate();
+  const [state, dispatch] = useReducer(reducer, router, initialState);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  return <ManagerContext.Provider value={value}>{children}</ManagerContext.Provider>;
-}
+  const actions = useMemo<WindowActions>(() => {
+    const open: WindowActions["open"] = (route) => {
+      const action = openAction(route);
 
-export interface WindowHandle {
-  x: number;
-  y: number;
-  z: number;
-  focused: boolean;
-  focus: () => void;
-  move: (x: number, y: number) => void;
-}
+      if (action) {
+        dispatch(action);
+      }
+    };
 
-/**
- * Adds a window to the manager. The window takes the focus when it mounts.
- * A route brings its window to the front on the server and on the client.
- *
- * The window uses the same default position until the user drags it. This makes
- * the server render and the first client render identical to prevent a
- * hydration error.
- */
-export function useWindow(id: string): WindowHandle {
-  const manager = useContext(ManagerContext);
+    return {
+      open,
+      close: (route) => dispatch({ type: "close", route }),
+      focus: (route) => dispatch({ type: "focus", route }),
+      move: (route, x, y) => dispatch({ type: "move", route, x, y }),
+      resize: (route, width, height) => dispatch({ type: "resize", route, width, height }),
+      toggleZoom: (route) => dispatch({ type: "zoom", route }),
+      organize: () => dispatch({ type: "organize" }),
+      focusDesktop: () => dispatch({ type: "focusDesktop" }),
+    };
+  }, [dispatch]);
 
-  if (!manager) {
-    throw new Error("`useWindow` must be used within a `WindowManagerProvider`");
-  }
+  /* The two effects below keep the focused window and the URL in sync. Without a
+   * guard they fight: focusing a window changes the focus, which would make the
+   * URL→window effect re-open the *old* URL's window and revert the focus.
+   * expectedRouteRef records the navigation we initiate so the URL→window effect can
+   * ignore it and act only on genuinely external URL changes (deep link, back). */
+  const expectedRouteRef = useRef<string | null>(null);
 
-  const { positions, order, dispatch } = manager;
-
-  const focus = useCallback(() => dispatch({ type: "focus", id }), [dispatch, id]);
-  const move = useCallback((x: number, y: number) => dispatch({ type: "move", id, x, y }), [dispatch, id]);
+  /* The current URL for the focus→URL effect, which must read the path without
+   * reacting to it: a URL change must drive the focus, never the other way
+   * round. Reacting to both in one effect would make an external change (back)
+   * navigate straight back to the still-focused window.
+   */
+  const routeRef = useRef(pathname);
 
   useEffect(() => {
-    focus();
-  }, [focus]);
+    routeRef.current = pathname;
+  }, [pathname]);
 
-  const position = positions[id] ?? DEFAULT_WINDOW_POSITION;
-  const index = order.indexOf(id);
+  /* The active window drives the URL. When the desktop is active,
+   * the URL returns to "/", but only from a real window path. */
+  const focusedRoute = state.focused;
 
-  return {
-    x: position.x,
-    y: position.y,
-    z: index < 0 ? 0 : index + 1,
-    focused: order.at(-1) === id,
-    focus,
-    move,
-  };
+  useEffect(() => {
+    const route = routeRef.current;
+
+    if (focusedRoute) {
+      if (route !== focusedRoute) {
+        expectedRouteRef.current = focusedRoute;
+        void navigate({ to: focusedRoute });
+      }
+
+      return;
+    }
+
+    if (route !== "/" && resolveWindow(route) !== null) {
+      expectedRouteRef.current = "/";
+      void navigate({ to: "/" });
+    }
+  }, [focusedRoute, navigate]);
+
+  // An external URL change (deep link, browser back) opens/focuses its window.
+  useEffect(() => {
+    const expectedRoute = expectedRouteRef.current;
+
+    expectedRouteRef.current = null;
+
+    if (pathname === expectedRoute || pathname === "/") {
+      return;
+    }
+
+    actions.open(pathname);
+  }, [pathname, actions, router]);
+
+  /* A first visit to the bare desktop opens the default window, so the desktop
+   * is never empty on arrival. It runs once per mount: a later return to "/" (a
+   * click on the desktop) leaves the desktop as it is. */
+  const hasOpenedInitialWindow = useRef(false);
+
+  useEffect(() => {
+    if (hasOpenedInitialWindow.current) {
+      return;
+    }
+
+    hasOpenedInitialWindow.current = true;
+
+    if (routeRef.current === "/") {
+      actions.open(INITIAL_WINDOW_ROUTE);
+    }
+  }, [actions]);
+
+  return (
+    <ActionsContext.Provider value={actions}>
+      <OrderContext.Provider value={state.order}>
+        <FocusContext.Provider value={state.focused}>
+          <WindowsContext.Provider value={state.windows}>{children}</WindowsContext.Provider>
+        </FocusContext.Provider>
+      </OrderContext.Provider>
+    </ActionsContext.Provider>
+  );
+}
+
+export function useWindowActions(): WindowActions {
+  const actions = useContext(ActionsContext);
+
+  if (!actions) {
+    throw new Error("`useWindowActions` must be used within a `WindowManagerProvider`");
+  }
+
+  return actions;
+}
+
+/** Every open window, keyed by route. Changes on every move and resize. */
+export function useWindows(): Record<string, WindowState> {
+  return useContext(WindowsContext);
+}
+
+/** The open windows, back to front. Changes when a window opens, closes, or is raised. */
+export function useWindowOrder(): Array<string> {
+  return useContext(OrderContext);
+}
+
+/** The active window, or null when the desktop is active. */
+export function useFocusedWindow(): string | null {
+  return useContext(FocusContext);
 }

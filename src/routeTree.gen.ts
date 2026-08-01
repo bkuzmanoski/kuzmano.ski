@@ -10,80 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
-import { Route as ProjectsSlugRouteImport } from './routes/projects/$slug'
-import { Route as WritingIndexRouteImport } from './routes/writing/index'
-import { Route as WritingSlugRouteImport } from './routes/writing/$slug'
+import { Route as SegmentIndexRouteImport } from './routes/$segment/index'
+import { Route as SegmentSlugRouteImport } from './routes/$segment/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
+const SegmentIndexRoute = SegmentIndexRouteImport.update({
+  id: '/$segment/',
+  path: '/$segment/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
-  id: '/projects/$slug',
-  path: '/projects/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WritingIndexRoute = WritingIndexRouteImport.update({
-  id: '/writing/',
-  path: '/writing/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WritingSlugRoute = WritingSlugRouteImport.update({
-  id: '/writing/$slug',
-  path: '/writing/$slug',
+const SegmentSlugRoute = SegmentSlugRouteImport.update({
+  id: '/$segment/$slug',
+  path: '/$segment/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/projects/$slug': typeof ProjectsSlugRoute
-  '/writing/$slug': typeof WritingSlugRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/writing/': typeof WritingIndexRoute
+  '/$segment/$slug': typeof SegmentSlugRoute
+  '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/projects/$slug': typeof ProjectsSlugRoute
-  '/writing/$slug': typeof WritingSlugRoute
-  '/projects': typeof ProjectsIndexRoute
-  '/writing': typeof WritingIndexRoute
+  '/$segment/$slug': typeof SegmentSlugRoute
+  '/$segment': typeof SegmentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/projects/$slug': typeof ProjectsSlugRoute
-  '/writing/$slug': typeof WritingSlugRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/writing/': typeof WritingIndexRoute
+  '/$segment/$slug': typeof SegmentSlugRoute
+  '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    '/' | '/projects/$slug' | '/writing/$slug' | '/projects/' | '/writing/'
+  fullPaths: '/' | '/$segment/$slug' | '/$segment/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/projects/$slug' | '/writing/$slug' | '/projects' | '/writing'
-  id:
-    | '__root__'
-    | '/'
-    | '/projects/$slug'
-    | '/writing/$slug'
-    | '/projects/'
-    | '/writing/'
+  to: '/' | '/$segment/$slug' | '/$segment'
+  id: '__root__' | '/' | '/$segment/$slug' | '/$segment/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ProjectsSlugRoute: typeof ProjectsSlugRoute
-  WritingSlugRoute: typeof WritingSlugRoute
-  ProjectsIndexRoute: typeof ProjectsIndexRoute
-  WritingIndexRoute: typeof WritingIndexRoute
+  SegmentSlugRoute: typeof SegmentSlugRoute
+  SegmentIndexRoute: typeof SegmentIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,32 +68,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projects/': {
-      id: '/projects/'
-      path: '/projects'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexRouteImport
+    '/$segment/': {
+      id: '/$segment/'
+      path: '/$segment'
+      fullPath: '/$segment/'
+      preLoaderRoute: typeof SegmentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projects/$slug': {
-      id: '/projects/$slug'
-      path: '/projects/$slug'
-      fullPath: '/projects/$slug'
-      preLoaderRoute: typeof ProjectsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/writing/': {
-      id: '/writing/'
-      path: '/writing'
-      fullPath: '/writing/'
-      preLoaderRoute: typeof WritingIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/writing/$slug': {
-      id: '/writing/$slug'
-      path: '/writing/$slug'
-      fullPath: '/writing/$slug'
-      preLoaderRoute: typeof WritingSlugRouteImport
+    '/$segment/$slug': {
+      id: '/$segment/$slug'
+      path: '/$segment/$slug'
+      fullPath: '/$segment/$slug'
+      preLoaderRoute: typeof SegmentSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -128,10 +87,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ProjectsSlugRoute: ProjectsSlugRoute,
-  WritingSlugRoute: WritingSlugRoute,
-  ProjectsIndexRoute: ProjectsIndexRoute,
-  WritingIndexRoute: WritingIndexRoute,
+  SegmentSlugRoute: SegmentSlugRoute,
+  SegmentIndexRoute: SegmentIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

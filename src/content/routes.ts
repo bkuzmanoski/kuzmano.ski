@@ -1,31 +1,42 @@
 import { notFound } from "@tanstack/react-router";
 
-import type { Collection, ContentEntry, Frontmatter } from "./index";
+import { SITE_NAME } from "#/config/site";
 
-const SITE_NAME = "kuzmano.ski";
+import { collections, pages } from "./index";
 
-export function indexRoute(collection: Collection, title: string) {
-  return {
-    loader: (): Promise<Array<ContentEntry>> => collection.list(),
-    head: () => ({ meta: [{ title: `${title}—${SITE_NAME}` }] }),
-  };
+import type { Frontmatter } from "./index";
+
+const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
+const documentHead = ({ loaderData }: { loaderData?: { title: string; description?: string } }) => ({
+  meta: loaderData
+    ? [
+        { title: documentTitle(loaderData.title) },
+        ...(loaderData.description ? [{ name: "description", content: loaderData.description }] : []),
+      ]
+    : [],
+});
+
+function documentData(frontmatter: Frontmatter | null | undefined) {
+  if (!frontmatter) {
+    throw notFound();
+  }
+
+  return { title: frontmatter.title, description: frontmatter.description };
 }
 
-export function postRoute(collection: Collection) {
-  return {
-    loader: async ({ params }: { params: { slug: string } }): Promise<Frontmatter> => {
-      const frontmatter = await collection.frontmatter(params.slug);
+export const contentRoute = {
+  loader: ({ params }: { params: { segment: string; slug?: string } }): { title: string; description?: string } => {
+    if (params.slug !== undefined) {
+      return documentData(collections[params.segment]?.frontmatter(params.slug));
+    }
 
-      if (!frontmatter) {
-        throw notFound();
-      }
+    const collection = collections[params.segment];
 
-      return frontmatter;
-    },
-    head: ({ loaderData }: { loaderData?: Frontmatter }) => ({
-      meta: loaderData
-        ? [{ title: `${loaderData.title}—${SITE_NAME}` }, { name: "description", content: loaderData.description }]
-        : [],
-    }),
-  };
-}
+    if (collection) {
+      return { title: collection.title };
+    }
+
+    return documentData(pages.frontmatter(params.segment));
+  },
+  head: documentHead,
+};

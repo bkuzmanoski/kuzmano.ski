@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 40 40">
+  <path
+    fill="#000"
+    d="M20 36h-1v-1h1v1Zm-2-2h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-6-2h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm12-1h-1v-1h1v1Zm-22-1h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-26-2h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-26-2H9v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1ZM8 24H7v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1ZM6 22H5v-1h1v1Zm4 0H9v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1ZM4 20H3v-1h1v1Zm4 0H7v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1ZM6 18H5v-1h1v1Zm4 0H9v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1ZM8 16H7v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-22-2H9v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-18-2h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm4 0h-1v-1h1v1Zm-14-2h-1V9h1v1Zm4 0h-1V9h1v1Zm4 0h-1V9h1v1Zm4 0h-1V9h1v1ZM16 8h-1V7h1v1Zm4 0h-1V7h1v1Zm4 0h-1V7h1v1Zm-6-2h-1V5h1v1Zm4 0h-1V5h1v1Zm-2-2h-1V3h1v1Z"
+  />
+  <path
+    fill="#000"
+    fill-rule="evenodd"
+    d="M18.585.907a1 1 0 0 1 1.415 0l18.98 18.98a1.157 1.157 0 0 1 0 1.638l-.564.564A.827.827 0 0 0 39 23.5a1 1 0 0 1 1 1V33l-.005.103c-.048.47-.423.844-.893.892L39 34h-2l-.103-.005a1.001 1.001 0 0 1-.893-.892l-.01-.205a1 1 0 0 0-.892-.893L35.001 32h-.293l-.218-.01a2.209 2.209 0 0 1-1.18-.49l-.163-.146a1.208 1.208 0 0 0-.734-.348l-.12-.006h-1.96c-.53 0-1.04.211-1.414.586l-6.798 6.798-.153.137a2 2 0 0 1-2.524 0l-.151-.137L.907 19.999a1 1 0 0 1-.069-1.338l.069-.076L18.586.907ZM1.616 19.292 20 37.677a1 1 0 0 0 1 .248V37h1v.09L23.09 36H23v-1h1v.09L25.09 34H25v-1h1v.09L27.09 32H27v-1h1v.09l.211-.21a3.002 3.002 0 0 1 2.122-.88h1.96c.585 0 1.147.233 1.561.647.226.226.534.353.854.353H35a2 2 0 0 1 1.99 1.796L37 33v-1h1v1h1v-8.5c-1.361 0-2.153-1.376-1.703-2.5H37v-1h1v.09l.272-.272a.158.158 0 0 0 0-.223l-18.98-18.98L1.614 19.291Z"
+    clip-rule="evenodd"
+  />
+</svg>
