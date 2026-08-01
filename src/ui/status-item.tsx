@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { useEffect, useState } from "react";
 
 import OrganizeIcon from "#/assets/images/organize-windows.svg?react";
@@ -112,7 +113,7 @@ export function TimeStatus() {
 
   return (
     <Tooltip label="Sydney, Australia">
-      <time className={styles.time}>{time}</time>
+      <time className={clsx(styles.control, styles.time)}>{time}</time>
     </Tooltip>
   );
 }

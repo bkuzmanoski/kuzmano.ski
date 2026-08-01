@@ -1,14 +1,15 @@
 import clsx from "clsx";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
-import { playClick, playScroll } from "#/lib/sound";
+import { playClick, playScroll, skipScroll } from "#/lib/sound";
 import { usePointerDrag } from "#/lib/use-pointer-drag";
 
 import { Scrollbar, useScrollMetrics } from "./scrollbar";
+import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 
 import type { ReactNode } from "react";
@@ -22,6 +23,7 @@ export function Window({
   z,
   focused,
   maximized,
+  hidden,
   onClose,
   onZoom,
   onFocus,
@@ -37,6 +39,7 @@ export function Window({
   z: number;
   focused: boolean;
   maximized: boolean;
+  hidden: boolean;
   onClose: () => void;
   onZoom: () => void;
   onFocus: () => void;
@@ -44,8 +47,10 @@ export function Window({
   onResize: (width: number, height: number) => void;
   children: ReactNode;
 }) {
+  const viewportId = useId();
   const viewport = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewport);
+  const [isResizing, setIsResizing] = useState(false);
 
   const moveHandlers = usePointerDrag({
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
@@ -54,14 +59,23 @@ export function Window({
   });
 
   const resizeHandlers = usePointerDrag({
-    start: () => ({ width, height }),
+    start: () => {
+      playClick();
+      setIsResizing(true);
+
+      return { width, height };
+    },
     onStart: (delta, from) => onResize(from.width + delta.dx, from.height + delta.dy),
+    onEnd: () => setIsResizing(false),
   });
+
+  const isScrolledToEnd =
+    metrics.scrollHeight > metrics.clientHeight + 1 && metrics.top + metrics.clientHeight >= metrics.scrollHeight - 1;
 
   return (
     <section
       aria-label={title}
-      className={clsx(styles.window, focused && styles.focused, maximized && styles.maximized)}
+      className={clsx(styles.window, focused && styles.focused, maximized && styles.maximized, hidden && styles.hidden)}
       style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
       onPointerDownCapture={onFocus}
     >
@@ -79,26 +93,54 @@ export function Window({
         <div
           ref={viewport}
           className={styles.viewport}
+          data-scrolled-to-end={isScrolledToEnd || undefined}
+          id={viewportId}
           onScroll={(event) => {
             measure();
+
+            if (isResizing) {
+              skipScroll(event.currentTarget);
+              return;
+            }
+
             playScroll(event.currentTarget);
           }}
         >
           {children}
         </div>
         <Scrollbar
+          controls={viewportId}
           metrics={metrics}
           onScrollTop={(top) => {
             if (viewport.current) {
               viewport.current.scrollTop = top;
             }
           }}
-          onStep={(delta) => viewport.current?.scrollBy({ top: delta })}
+          onStep={(delta) => {
+            const element = viewport.current;
+
+            if (!element) {
+              return false;
+            }
+
+            const before = element.scrollTop;
+
+            element.scrollBy({ top: delta });
+
+            return element.scrollTop !== before;
+          }}
           resizeControl={
             maximized ? null : (
-              <button aria-label="Resize" className={styles.controlResize} type="button" {...resizeHandlers}>
-                <ResizeIcon />
-              </button>
+              <Tooltip label="Resize">
+                <button
+                  aria-label="Resize"
+                  className={clsx(styles.controlResize, isResizing && styles.pressed)}
+                  type="button"
+                  {...resizeHandlers}
+                >
+                  <ResizeIcon />
+                </button>
+              </Tooltip>
             )
           }
         />
@@ -121,20 +163,22 @@ function TitleBarButton({
   const [isPressed, setIsPressed] = useState(false);
 
   return (
-    <button
-      aria-label={label}
-      className={clsx(styles.control, className)}
-      type="button"
-      onClick={onClick}
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        setIsPressed(true);
-        playClick();
-      }}
-      onPointerLeave={() => setIsPressed(false)}
-      onPointerUp={() => setIsPressed(false)}
-    >
-      {isPressed ? <ActiveIcon /> : icon}
-    </button>
+    <Tooltip label={label} className={clsx(styles.control, className)}>
+      <button
+        aria-label={label}
+        className={styles.controlButton}
+        type="button"
+        onClick={onClick}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          setIsPressed(true);
+          playClick();
+        }}
+        onPointerLeave={() => setIsPressed(false)}
+        onPointerUp={() => setIsPressed(false)}
+      >
+        {isPressed ? <ActiveIcon /> : icon}
+      </button>
+    </Tooltip>
   );
 }

@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
+import { playClick } from "#/lib/sound";
 import { useElementSize } from "#/lib/use-element-size";
 import { usePointerDrag } from "#/lib/use-pointer-drag";
 
@@ -19,7 +20,7 @@ export interface ScrollMetrics {
   clientHeight: number;
 }
 
-function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => void }) {
+function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -34,7 +35,13 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
 
   function start() {
     setIsPressed(true);
-    onStep();
+
+    /* The scroll itself carries the sound. A press at the end of the
+     * travel moves nothing, so the press has to be heard on its own. */
+    if (!onStep()) {
+      playClick();
+    }
+
     repeatTimerRef.current = setInterval(onStep, REPEAT_MS);
   }
 
@@ -44,7 +51,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
   return (
     <button
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
-      className={clsx(styles.arrow, hidden && styles.hidden)}
+      className={clsx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
       tabIndex={hidden ? -1 : undefined}
       type="button"
       onPointerDown={start}
@@ -132,13 +139,15 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 }
 
 export function Scrollbar({
+  controls,
   metrics,
   onStep,
   onScrollTop,
   resizeControl,
 }: {
+  controls: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
-  onStep: (delta: number) => void;
+  onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
   resizeControl?: ReactNode;
 }) {
@@ -151,6 +160,7 @@ export function Scrollbar({
   const thumbTop = range > 0 ? (metrics.top / range) * (trackHeight - thumbHeight) : 0;
   const isAtTop = thumbTop <= 0.5;
   const isAtBottom = thumbTop + thumbHeight >= trackHeight - 0.5;
+  const scrolled = range > 0 ? Math.round((metrics.top / range) * 100) : 0;
 
   const thumbHandlers = usePointerDrag({
     preventDefault: true,
@@ -167,7 +177,18 @@ export function Scrollbar({
   return (
     <div className={styles.scrollbar}>
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
-      <div ref={trackRef} className={clsx(styles.track, overflow && styles.filled)}>
+      <div
+        ref={trackRef}
+        aria-controls={controls}
+        aria-label="Vertical scrollbar"
+        aria-orientation="vertical"
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={scrolled}
+        aria-valuetext={`${scrolled}% scrolled`}
+        className={clsx(styles.track, overflow && styles.filled)}
+        role="scrollbar"
+      >
         {overflow && (
           <div
             className={styles.thumb}

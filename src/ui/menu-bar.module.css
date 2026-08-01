@@ -7,7 +7,7 @@
   align-items: center;
 
   height: var(--menu-bar-height);
-  padding: 0 8px 0 12px;
+  padding: 0 12px;
   border-bottom: 1px solid var(--color-foreground);
 
   color: var(--color-foreground);
@@ -19,7 +19,12 @@
   display: inline-flex;
   align-items: center;
   height: 100%;
-  padding: 0 14px 0 0;
+  padding: 0 10px;
+
+  &:active {
+    color: var(--color-background);
+    background: var(--color-foreground);
+  }
 
   & .logoIcon {
     width: 24px;
@@ -59,6 +64,6 @@
 
 .statusItems {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   align-self: stretch;
 }

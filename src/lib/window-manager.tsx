@@ -181,12 +181,10 @@ export interface WindowActions {
   focusDesktop: () => void;
 }
 
-/*
- * The state is split across four contexts so a change reaches only the parts
+/* The state is split across four contexts so a change reaches only the parts
  * that use it. A window drag rewrites `windows` many times per second; keeping
  * the order and the focus apart means the menu bar, the status items, the
- * desktop icons and the open lists do not re-render with it.
- */
+ * desktop icons and the open lists do not re-render with it. */
 const ActionsContext = createContext<WindowActions | null>(null);
 const WindowsContext = createContext<Record<string, WindowState>>({});
 const OrderContext = createContext<Array<string>>([]);

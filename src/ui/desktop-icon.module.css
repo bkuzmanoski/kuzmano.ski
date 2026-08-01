@@ -20,6 +20,11 @@
     pointer-events: none;
   }
 
+  & .glyph {
+    width: auto;
+    height: 40px;
+  }
+
   & .label {
     display: inline-flex;
     gap: 3px;
@@ -30,20 +35,17 @@
     font: var(--font-ui);
     white-space: nowrap;
 
+    background: var(--color-background);
+
     &.selected {
       color: var(--color-background);
       background: var(--color-foreground);
     }
 
-    &.downloadIcon {
+    & .downloadIcon {
       flex: none;
       width: 10px;
       height: 12px;
     }
-  }
-
-  & .glyph {
-    width: auto;
-    height: 40px;
   }
 }

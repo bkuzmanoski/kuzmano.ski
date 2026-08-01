@@ -81,8 +81,7 @@ export function nextIconId(ids: ReadonlyArray<string>, fromId: string, direction
   return ids[cycle(ids.length, ids.indexOf(fromId), direction)]!;
 }
 
-/*
- * Positions are stored in this module instead of component state for two reasons.
+/* Positions are stored in this module instead of component state for two reasons.
  *
  * 1. Drags write here synchronously, so by the time a drag ends the final
  *    position is already persisted. Component state wouldn't be reliable
@@ -92,8 +91,7 @@ export function nextIconId(ids: ReadonlyArray<string>, fromId: string, direction
  *    That means both the server render and the hydration pass render no
  *    icons. A position is meaningless before the layer has been measured
  *    on the client. Once hydration finishes, React re-renders with the real
- *    positions, so a mount effect isn't needed just to read from storage.
- */
+ *    positions, so a mount effect isn't needed just to read from storage. */
 let positions: IconPositions = {};
 let hasLoaded = false;
 

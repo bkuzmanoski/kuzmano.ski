@@ -32,8 +32,7 @@ export const Route = createRootRoute({
     meta: [{ charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }],
     links: [
       { rel: "stylesheet", href: stylesheet },
-      // Fetch font with with the stylesheet as chrome font uses `font-display: block`.
-      { rel: "preload", as: "font", type: "font/woff2", href: chromeFont, crossOrigin: "anonymous" },
+      { rel: "preload", as: "font", type: "font/woff2", href: chromeFont, crossOrigin: "anonymous" }, // Fetch font with with the stylesheet as chrome font uses `font-display: block`.
     ],
   }),
   shellComponent: RootDocument,

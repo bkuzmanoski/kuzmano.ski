@@ -25,7 +25,8 @@ export type MenuItem =
 
 type MenuItemAccessory = "download" | "external-link";
 
-const ACTIVATION_FLASH_MS = 90;
+const ACTIVATION_FLASH_COUNT = 3;
+const ACTIVATION_FLASH_MS = 60;
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
 
@@ -66,17 +67,21 @@ export function Menu({
     setIsFlashing(true);
     playClick();
 
-    flashTimersRef.current.push(
-      setTimeout(() => {
-        setIsFlashing(false);
+    // The first step above turns the highlight off; the rest alternate from there.
+    const steps = ACTIVATION_FLASH_COUNT * 2 - 1;
 
-        flashTimersRef.current.push(
-          setTimeout(() => {
-            item.trigger();
-            onClose();
-          }, ACTIVATION_FLASH_MS),
-        );
-      }, ACTIVATION_FLASH_MS),
+    for (let step = 1; step <= steps; step++) {
+      flashTimersRef.current.push(setTimeout(() => setIsFlashing(step % 2 === 0), ACTIVATION_FLASH_MS * step));
+    }
+
+    flashTimersRef.current.push(
+      setTimeout(
+        () => {
+          item.trigger();
+          onClose();
+        },
+        ACTIVATION_FLASH_MS * (steps + 1),
+      ),
     );
   }
 

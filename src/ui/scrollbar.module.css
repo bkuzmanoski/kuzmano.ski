@@ -18,12 +18,11 @@
   width: 22px;
   height: 22px;
 
-  &:first-child {
+  &.arrowUp {
     border-bottom: 1px solid var(--color-foreground);
   }
 
-  /* TODO: This depends on presence of resizeControl */
-  &:nth-last-child(2) {
+  &.arrowDown {
     border-top: 1px solid var(--color-foreground);
   }
 }

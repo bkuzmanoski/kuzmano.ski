@@ -16,12 +16,17 @@
   &:not(.focused) {
     border-color: var(--color-muted);
   }
-}
 
-.maximized {
-  position: fixed;
-  inset: var(--menu-bar-height) 0 0;
-  box-shadow: none;
+  &.maximized {
+    position: fixed;
+    inset: var(--menu-bar-height) 0 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  &.hidden {
+    visibility: hidden;
+  }
 }
 
 .titleBar {
@@ -43,64 +48,80 @@
   .window:not(.focused) & {
     border-bottom-color: var(--color-muted);
   }
-}
 
-.bars {
-  position: absolute;
-  top: 6px;
-  right: 4px;
-  left: 4px;
+  /* Control buttons are placed by the tooltip wrapper around them */
+  & .control {
+    position: absolute;
+    top: 6px;
 
-  height: 16px;
+    &.controlClose {
+      left: 12px;
+    }
 
-  background-image: repeating-linear-gradient(to bottom, var(--color-foreground) 0 1px, transparent 1px 3px);
-}
+    &.controlZoom {
+      right: 12px;
+    }
+  }
 
-.title {
-  position: relative;
+  & .bars {
+    position: absolute;
+    top: 6px;
+    right: 4px;
+    left: 4px;
 
-  margin: 0 auto;
-  padding: 0 8px;
+    height: 16px;
 
-  letter-spacing: var(--letter-spacing-chrome);
-  white-space: nowrap;
+    background-image: repeating-linear-gradient(to bottom, var(--color-foreground) 0 1px, transparent 1px 3px);
+  }
 
-  background: var(--color-background);
+  & .title {
+    position: relative;
 
-  .window:not(.focused) & {
-    opacity: 0.5;
+    margin: 0 auto;
+    padding: 0 8px;
+
+    letter-spacing: var(--letter-spacing-chrome);
+    white-space: nowrap;
+
+    background: var(--color-background);
+
+    .window:not(.focused) & {
+      opacity: 0.5;
+    }
   }
 }
 
-.control {
-  position: absolute;
-  top: 6px;
-
+.controlButton {
   display: flex;
-
   width: 16px;
   height: 16px;
-
-  font-size: 16px;
-
   background: var(--color-background);
 
-  /*
-   * The control swaps its icon on press. The icon must not receive pointer events,
+  /* The control swaps its icon on press. The icon must not receive pointer events,
    * or the press removes the node that got the pointer-down. The browser then
    * cannot pair the pointer-down with the pointer-up and no click fires. With this
-   * rule the button is always the target, so the click fires.
-   */
+   * rule the button is always the target, so the click fires. */
   & svg {
     pointer-events: none;
   }
+}
 
-  &.controlClose {
-    left: 12px;
+.controlResize {
+  width: 22px;
+  height: 22px;
+  border-top: 1px solid var(--color-foreground);
+
+  /* `pressed` is used because the drag captures the pointer and takes it
+   * off the button, so `:active` ends as soon as the resize starts. */
+  &.pressed {
+    color: var(--color-background);
+    background: var(--color-foreground);
   }
 
-  &.controlZoom {
-    right: 12px;
+  & svg {
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -108,34 +129,19 @@
   display: flex;
   flex: 1;
   min-height: 0;
-}
 
-.viewport {
-  scrollbar-width: none;
+  & .viewport {
+    scrollbar-width: none;
 
-  overflow-y: auto;
-  flex: 1;
+    overflow-y: auto;
+    flex: 1;
 
-  min-width: 0;
+    min-width: 0;
 
-  background: var(--color-background);
+    background: var(--color-background);
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.controlResize {
-  display: flex;
-  flex: none;
-
-  width: 22px;
-  height: 22px;
-  border-top: 1px solid var(--color-foreground);
-
-  & svg {
-    pointer-events: none;
-    width: 20px;
-    height: 20px;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }

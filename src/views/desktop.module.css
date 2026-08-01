@@ -14,4 +14,5 @@
   position: relative;
   overflow: hidden;
   flex: 1;
+  margin-top: -1px; /* Account for the 1px border of the menu bar. */
 }

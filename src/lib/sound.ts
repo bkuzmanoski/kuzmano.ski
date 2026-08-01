@@ -3,10 +3,8 @@ import { useEffect } from "react";
 import { mulberry32 } from "./prng";
 import { getSettings } from "./settings";
 
-/*
- * Web Audio runs on its own thread and renders ahead of `currentTime`, so anything
- * scheduled at `currentTime` is partly in the past by the time it is rendered.
- */
+/* Web Audio runs on its own thread and renders ahead of `currentTime`, so anything
+ * scheduled at `currentTime` is partly in the past by the time it is rendered. */
 const LEAD_TIME = 0.02;
 const OUTPUT_GAIN = 0.2;
 
@@ -324,4 +322,14 @@ export function playScroll(element: Element) {
   gesture.distance = Math.min(gesture.distance - DETENT_PIXELS, DETENT_PIXELS);
 
   playDetent(gesture.speed);
+}
+
+/**
+ * Moves the gesture to where the content now sits without sounding a detent. A
+ * window resize reflows the content under a fixed viewport, so the scroll it
+ * produces is not a gesture; recording it here stops the next real scroll from
+ * reading the jump as travel.
+ */
+export function skipScroll(element: Element) {
+  gestures.set(element, { top: element.scrollTop, at: performance.now(), speed: 0, distance: 0 });
 }

@@ -20,9 +20,9 @@ export function ContentList({ collection, basePath }: { collection: Collection; 
   return (
     <div className={styles.list}>
       <div className={styles.header}>
-        <span className={styles.headerPost}>Post</span>
-        <span>Category</span>
-        <span>Date</span>
+        <span className={clsx(styles.cellEntry, styles.header)}>Post</span>
+        <span className={clsx(styles.cellCategory, styles.header)}>Category</span>
+        <span className={clsx(styles.cellDate, styles.header)}>Date</span>
       </div>
 
       {entries.map((entry) => {
@@ -47,12 +47,12 @@ export function ContentList({ collection, basePath }: { collection: Collection; 
             onFocus={() => setSelected(entry.slug)}
             onPointerDown={playClick}
           >
-            <span className={styles.cellPost}>
+            <span className={styles.cellEntry}>
               <FolderSmallIcon className={styles.icon} />
               <span className={styles.title}>{entry.title}</span>
             </span>
-            <span className={styles.cellMetadata}>{entry.category ?? ""}</span>
-            <span className={styles.cellMetadata}>{formatDate(entry.date, DATE_FORMAT)}</span>
+            <span className={styles.cellCategory}>{entry.category ?? ""}</span>
+            <span className={styles.cellDate}>{formatDate(entry.date, DATE_FORMAT)}</span>
           </a>
         );
       })}

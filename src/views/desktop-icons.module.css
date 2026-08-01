@@ -1,8 +1,6 @@
-/*
- * The icon layer fills the desktop but does not take pointer events itself, so a
- * click on the empty desktop still reaches the surface below. Each icon turns
- * pointer events back on.
- */
+/* The icon layer fills the desktop but does not take pointer events itself,
+ * so a click on the empty desktop still reaches the surface below. Each
+ * icon turns pointer events back on. */
 .layer {
   pointer-events: none;
   position: absolute;

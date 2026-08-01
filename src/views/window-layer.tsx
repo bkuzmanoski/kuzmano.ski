@@ -1,4 +1,4 @@
-import { Suspense, memo, useRef } from "react";
+import { Suspense, memo, useRef, useState } from "react";
 
 import { constrain } from "#/lib/geometry";
 import { useElementSize } from "#/lib/use-element-size";
@@ -40,6 +40,7 @@ const DesktopWindow = memo(function OpenWindow({
   z,
   focused,
   maximized,
+  hidden,
 }: {
   path: string;
   title: string;
@@ -50,6 +51,7 @@ const DesktopWindow = memo(function OpenWindow({
   z: number;
   focused: boolean;
   maximized: boolean;
+  hidden: boolean;
 }) {
   const { close, focus, move, resize, toggleZoom } = useWindowActions();
 
@@ -63,6 +65,7 @@ const DesktopWindow = memo(function OpenWindow({
       z={z}
       focused={focused}
       maximized={maximized}
+      hidden={hidden}
       onClose={() => close(path)}
       onZoom={() => toggleZoom(path)}
       onFocus={() => focus(path)}
@@ -75,8 +78,9 @@ const DesktopWindow = memo(function OpenWindow({
 });
 
 /**
- * The surface that hosts open windows, back to front. `children` is the router outlet;
- * it shows nothing but keeps the matched route mounted for SSR and head tags.
+ * The surface that hosts the open windows, stacked back to front by `zIndex`.
+ * `children` is the router outlet. It shows nothing but keeps the matched route
+ * mounted for SSR and head tags.
  */
 export function WindowLayer({ children }: { children: ReactNode }) {
   const windows = useWindows();
@@ -85,6 +89,10 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const { focusDesktop } = useWindowActions();
   const surfaceRef = useRef<HTMLDivElement>(null);
   const surfaceSize = useElementSize(surfaceRef);
+
+  /* The visibility of a window opened from an icon is suppressed
+   * until the zoom rect has finished growing towards it. */
+  const [zoomRectPath, setZoomRectPath] = useState<string | null>(null);
 
   return (
     <div
@@ -96,28 +104,31 @@ export function WindowLayer({ children }: { children: ReactNode }) {
         }
       }}
     >
-      <DesktopIcons />
-      {order.map((path, index) => {
-        const state = windows[path];
+      <DesktopIcons onZoomRectPathChange={setZoomRectPath} />
+      {/* By route, not by stacking order. Raising a window rewrites the order,
+       * and mapping that straight to the markup has React move the nodes to
+       * match. A moved node is taken out of the document and put back, which
+       * empties the scroll position of everything inside it — so a list would
+       * lose its place the moment its window changed places. Sorting by a key
+       * that never moves keeps the markup still; `zIndex` does the stacking. */}
+      {Object.entries(windows)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([path, state]) => {
+          const geometry = constrain(state, surfaceSize);
 
-        if (!state) {
-          return null;
-        }
-
-        const geometry = constrain(state, surfaceSize);
-
-        return (
-          <DesktopWindow
-            key={path}
-            path={path}
-            title={state.title}
-            {...geometry}
-            z={index + 1}
-            focused={path === focusedPath}
-            maximized={state.maximized}
-          />
-        );
-      })}
+          return (
+            <DesktopWindow
+              key={path}
+              path={path}
+              title={state.title}
+              {...geometry}
+              z={order.indexOf(path) + 1}
+              focused={path === focusedPath}
+              maximized={state.maximized}
+              hidden={path === zoomRectPath}
+            />
+          );
+        })}
       {children}
     </div>
   );

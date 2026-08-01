@@ -100,7 +100,7 @@ function ZoomRect({
   );
 }
 
-export function DesktopIcons() {
+export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (path: string | null) => void }) {
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
   const positions = useIconPositions();
@@ -167,6 +167,7 @@ export function DesktopIcons() {
 
     if (element && !isAlreadyOpen) {
       setZooming({ path: iconDefinition.route, from: relativeRect(element) });
+      onZoomRectPathChange(iconDefinition.route);
     }
 
     open(iconDefinition.route);
@@ -216,11 +217,9 @@ export function DesktopIcons() {
 
   return (
     <>
-      {/*
-       * The layer always renders so its ref exists for measurement. `positions`
+      {/* The layer always renders so its ref exists for measurement. `positions`
        * is null until the client has read them, which keeps the icons out of the
-       * server render: a position means nothing before the layer is measured.
-       */}
+       * server render: a position means nothing before the layer is measured. */}
       <div ref={layerRef} className={styles.layer}>
         {positions &&
           ICONS.map((iconDefinition) => {
@@ -264,10 +263,14 @@ export function DesktopIcons() {
 
       {zooming && (
         <ZoomRect
+          key={zooming.path}
           from={zooming.from}
           path={zooming.path}
           containerSize={containerSize}
-          onDone={() => setZooming(null)}
+          onDone={() => {
+            setZooming(null);
+            onZoomRectPathChange(null);
+          }}
         />
       )}
     </>

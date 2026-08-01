@@ -1,6 +1,7 @@
 .wrapper {
   position: relative;
   display: inline-flex;
+  align-self: stretch;
 }
 
 .tip {
@@ -9,7 +10,7 @@
 
   position: absolute;
   z-index: 2000;
-  top: calc(100% + 8px);
+  top: calc(100% + 5px);
   left: 50%;
   transform: translateX(-50%);
 

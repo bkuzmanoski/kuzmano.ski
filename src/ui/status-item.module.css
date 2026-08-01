@@ -1,12 +1,18 @@
 .control {
+  user-select: none;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  height: 100%;
-  padding: 0 8px;
+  padding: 0 12px;
 
-  &:active {
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+  letter-spacing: var(--letter-spacing-chrome);
+  white-space: nowrap;
+
+  &:active:not(.time) {
     color: var(--color-background);
     background: var(--color-foreground);
   }
@@ -15,15 +21,4 @@
 .icon {
   width: 22px;
   height: 22px;
-}
-
-.time {
-  user-select: none;
-
-  padding: 0 8px;
-
-  font: var(--font-chrome);
-  color: var(--color-foreground);
-  letter-spacing: var(--letter-spacing-chrome);
-  white-space: nowrap;
 }
