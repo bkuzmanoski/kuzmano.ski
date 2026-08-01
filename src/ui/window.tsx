@@ -23,9 +23,9 @@ export function Window({
   focused,
   maximized,
   onClose,
+  onZoom,
   onFocus,
   onMove,
-  onZoom,
   onResize,
   children,
 }: {
@@ -38,9 +38,9 @@ export function Window({
   focused: boolean;
   maximized: boolean;
   onClose: () => void;
+  onZoom: () => void;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
-  onZoom: () => void;
   onResize: (width: number, height: number) => void;
   children: ReactNode;
 }) {

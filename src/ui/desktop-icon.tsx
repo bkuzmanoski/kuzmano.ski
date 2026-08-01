@@ -16,28 +16,38 @@ import { usePointerDrag } from "#/lib/use-pointer-drag";
 
 import styles from "./desktop-icon.module.css";
 
-import type { ComponentType, KeyboardEvent } from "react";
+import type { KeyboardEvent, Ref } from "react";
 
 const DRAG_THRESHOLD = 4;
 
-function glyphFor(kind: IconKind, selected: boolean, open: boolean): ComponentType<{ className?: string }> {
+function Glyph({
+  kind,
+  selected,
+  open,
+  className,
+}: {
+  kind: IconKind;
+  selected: boolean;
+  open: boolean;
+  className?: string;
+}) {
   switch (kind) {
     case "folder":
       if (open) {
-        return selected ? FolderOpenSelectedIcon : FolderOpenIcon;
+        return selected ? <FolderOpenSelectedIcon className={className} /> : <FolderOpenIcon className={className} />;
       }
 
-      return selected ? FolderSelectedIcon : FolderIcon;
+      return selected ? <FolderSelectedIcon className={className} /> : <FolderIcon className={className} />;
     case "app":
-      return selected ? AppSelectedIcon : AppIcon;
+      return selected ? <AppSelectedIcon className={className} /> : <AppIcon className={className} />;
     default:
-      return selected ? DocumentSelectedIcon : DocumentIcon;
+      return selected ? <DocumentSelectedIcon className={className} /> : <DocumentIcon className={className} />;
   }
 }
 
 export function DesktopIcon({
   iconDefinition,
-  innerRef,
+  ref,
   x,
   y,
   tabIndex,
@@ -50,7 +60,7 @@ export function DesktopIcon({
   onKeyDown,
 }: {
   iconDefinition: Icon;
-  innerRef: (element: HTMLDivElement | null) => void;
+  ref: Ref<HTMLDivElement>;
   x: number;
   y: number;
   tabIndex: number;
@@ -62,7 +72,6 @@ export function DesktopIcon({
   onMoveEnd: () => void;
   onKeyDown: (event: KeyboardEvent) => void;
 }) {
-  const Glyph = glyphFor(iconDefinition.kind, selected, open);
   const hasMovedRef = useRef(false);
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD,
@@ -87,7 +96,7 @@ export function DesktopIcon({
 
   return (
     <div
-      ref={innerRef}
+      ref={ref}
       aria-label={iconDefinition.label}
       className={styles.icon}
       data-icon={iconDefinition.id}
@@ -103,7 +112,7 @@ export function DesktopIcon({
       onKeyDown={onKeyDown}
       {...dragHandlers}
     >
-      <Glyph className={styles.glyph} />
+      <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
       <span className={clsx(styles.label, selected && styles.selected)}>
         {iconDefinition.label}
         {iconDefinition.kind === "document" && <DownloadIcon className={styles.downloadIcon} />}

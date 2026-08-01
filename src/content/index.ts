@@ -54,12 +54,7 @@ function loadContent(path: string): Promise<MDXModule> {
   return promise;
 }
 
-/**
- * A directory of MDX files: `src/content/<name>/*.mdx`. One slug-to-path index
- * serves every lookup. `paths` is used by `collection()` to enumerate entries and
- * is dropped before it reaches callers.
- */
-function pageIndex(name: string): PageIndex & { paths: Map<string, string> } {
+function pageIndex(name: string): { index: PageIndex; paths: Map<string, string> } {
   const prefix = `./${name}/`;
   const paths = new Map<string, string>();
 
@@ -71,25 +66,27 @@ function pageIndex(name: string): PageIndex & { paths: Map<string, string> } {
 
   return {
     paths,
-    has: (slug) => paths.has(slug),
-    frontmatter(slug) {
-      const path = paths.get(slug);
-      return path ? frontmatterFromPath(path) : null;
-    },
-    load(slug) {
-      const path = paths.get(slug);
+    index: {
+      has: (slug) => paths.has(slug),
+      frontmatter(slug) {
+        const path = paths.get(slug);
+        return path ? frontmatterFromPath(path) : null;
+      },
+      load(slug) {
+        const path = paths.get(slug);
 
-      if (!path) {
-        throw new Error(`Page not found: ${name}/${slug}`);
-      }
+        if (!path) {
+          throw new Error(`Page not found: ${name}/${slug}`);
+        }
 
-      return loadContent(path);
+        return loadContent(path);
+      },
     },
   };
 }
 
 function collection(segment: string, title: string): Collection {
-  const { paths, ...index } = pageIndex(segment);
+  const { paths, index } = pageIndex(segment);
 
   let entries: Array<Page> | null = null;
 
@@ -110,6 +107,6 @@ function collection(segment: string, title: string): Collection {
 export const collections: Record<string, Collection> = Object.fromEntries(
   Object.entries(COLLECTION_TITLES).map(([segment, title]) => [segment, collection(segment, title)]),
 );
-export const pages: PageIndex = pageIndex(PAGES_DIRECTORY);
+export const pages: PageIndex = pageIndex(PAGES_DIRECTORY).index;
 
 export type { Page, Frontmatter };

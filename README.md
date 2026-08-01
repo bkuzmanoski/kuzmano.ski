@@ -26,15 +26,23 @@ draft: false # Optional. The dev server renders a draft. The build omits it.
 `src/content/mdx-components.tsx` maps HTML elements in the MDX files to app
 components.
 
-`build/content-pages.ts` makes a list of pages to prerender from the content
+`build/content.ts` makes a list of pages to prerender from the content
 directory. A new post needs no configuration.
 
-To add a collection:
+The routes are dynamic (`src/routes/$segment/`), so a collection needs no route
+files of its own. To add one:
 
-1. Make the folder for the collection.
-2. Export one more `collection("name")` from `src/content/index.ts`.
-3. Add two route files. Both files use `indexRoute` and `postRoute` from
-   `src/content/routes.ts`.
+1. Make the folder for the collection, `src/content/<name>/`.
+2. Add its display title to `COLLECTION_TITLES` in
+   `src/content/configuration.ts`. The build fails if a folder has no title, or
+   a title has no folder.
+3. To give it a desktop icon and a "Go" menu entry, add it to `DESTINATIONS` and
+   `DESTINATION_ORDER` in `src/config/navigation.ts`.
+
+`src/config/navigation.ts` is the single source for where the desktop can
+navigate. A collection takes its label and route from `COLLECTION_TITLES`. The
+desktop icons and the "Go" menu (including its keyboard shortcuts) are derived
+from it.
 
 ## Deploy
 

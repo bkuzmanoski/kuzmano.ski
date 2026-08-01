@@ -1,12 +1,11 @@
 import { notFound } from "@tanstack/react-router";
 
-import { SITE_NAME } from "#/config/site";
+import { documentTitle } from "#/config/site";
 
 import { collections, pages } from "./index";
 
 import type { Frontmatter } from "./index";
 
-const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
 const documentHead = ({ loaderData }: { loaderData?: { title: string; description?: string } }) => ({
   meta: loaderData
     ? [

@@ -80,7 +80,7 @@ export function usePointerDrag<T>({
     }
   }
 
-  function onPointerUp(event: ReactPointerEvent) {
+  function endDrag(event: ReactPointerEvent) {
     const activeDrag = dragRef.current;
 
     if (!activeDrag) {
@@ -88,12 +88,15 @@ export function usePointerDrag<T>({
     }
 
     dragRef.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
 
     cancelFrame();
     flush();
     onEnd?.(activeDrag.moved);
   }
 
-  return { onPointerDown, onPointerMove, onPointerUp };
+  return { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag };
 }

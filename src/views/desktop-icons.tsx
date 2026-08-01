@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-import { ICONS, ICON_IDS, ICON_LAYOUT, STORAGE_KEY } from "#/config/icons";
+import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/icons";
 import { downloadFile } from "#/lib/download";
 import { constrain } from "#/lib/geometry";
 import type { Rect, Size } from "#/lib/geometry";
-import { loadPositions, nextIconId, savePositions } from "#/lib/icon";
-import type { Icon, IconPosition } from "#/lib/icon";
+import type { Icon } from "#/lib/icon";
+import { commitIconPositions, moveIcon, nextIconId, useIconPositions } from "#/lib/icon";
 import { clamp } from "#/lib/math";
 import { playClick } from "#/lib/sound";
 import { useElementSize } from "#/lib/use-element-size";
@@ -21,7 +21,7 @@ const ZOOM_RECT_ANIMATION_MS = 200;
 const ZOOM_RECT_HOLD_MS = 260;
 
 /**
- * The zoom-rect that grows from an icon to the window it opened. It is a  sibling
+ * The zoom-rect that grows from an icon to the window it opened. It is a sibling
  * of the windows, not part of the icon layer, so it shares their stacking context.
  * Its z-index sits at the new window's level; being earlier in the DOM, it draws
  * below that window but above every other window.
@@ -42,29 +42,42 @@ function ZoomRect({
 }) {
   const windows = useWindows();
   const order = useWindowOrder();
-  const target = windows[path];
   const [box, setBox] = useState(from);
   const [animate, setAnimate] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(onDone, ZOOM_RECT_HOLD_MS);
+  /* The window this grows towards was opened in the same handler that mounted
+   * this component, so its geometry is in state by the first render. Latching it
+   * here means a later move or resize cannot redirect the animation midway. */
+  const [target] = useState(() => {
+    const state = windows[path];
+    return state ? constrain(state, containerSize) : null;
+  });
+
+  const start = useEffectEvent(() => {
     const frames: Array<number> = [];
 
     if (target) {
-      const constrainedTarget = constrain(target, containerSize);
-
       // Two frames: the outline must paint at the icon before it starts to grow.
       frames.push(
         requestAnimationFrame(() =>
           frames.push(
             requestAnimationFrame(() => {
-              setBox(constrainedTarget);
+              setBox(target);
               setAnimate(true);
             }),
           ),
         ),
       );
     }
+
+    return frames;
+  });
+
+  const finish = useEffectEvent(onDone);
+
+  useEffect(() => {
+    const timer = setTimeout(finish, ZOOM_RECT_HOLD_MS);
+    const frames = start();
 
     return () => {
       clearTimeout(timer);
@@ -90,8 +103,7 @@ function ZoomRect({
 export function DesktopIcons() {
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
-  const [isMounted, setIsMounted] = useState(false);
-  const [positions, setPositions] = useState<Record<string, IconPosition>>({});
+  const positions = useIconPositions();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [flashingIconId, setFlashingIconId] = useState<string | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
@@ -100,16 +112,6 @@ export function DesktopIcons() {
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
   const flashTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
-  const positionsRef = useRef(positions);
-
-  useEffect(() => {
-    positionsRef.current = positions;
-  }, [positions]);
-
-  useEffect(() => {
-    setPositions(loadPositions(ICON_IDS, ICON_LAYOUT, STORAGE_KEY));
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -157,16 +159,17 @@ export function DesktopIcons() {
 
     if (iconDefinition.kind === "document") {
       downloadFile(iconDefinition.downloadUrl);
-    } else {
-      const isAlreadyOpen = openPaths.includes(iconDefinition.route);
-      const element = iconsRef.current[iconDefinition.id];
-
-      if (element && !isAlreadyOpen) {
-        setZooming({ path: iconDefinition.route, from: relativeRect(element) });
-      }
-
-      open(iconDefinition.route);
+      return;
     }
+
+    const isAlreadyOpen = openPaths.includes(iconDefinition.route);
+    const element = iconsRef.current[iconDefinition.id];
+
+    if (element && !isAlreadyOpen) {
+      setZooming({ path: iconDefinition.route, from: relativeRect(element) });
+    }
+
+    open(iconDefinition.route);
   }
 
   function focusAdjacentIcon(fromId: string, direction: 1 | -1) {
@@ -207,7 +210,6 @@ export function DesktopIcons() {
     }
   }
 
-  const endZoom = useCallback(() => setZooming(null), []);
   const tabStop = selectedIconId ?? ICONS[0]?.id;
   const containerWidth = containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth);
   const containerHeight = containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight);
@@ -215,11 +217,12 @@ export function DesktopIcons() {
   return (
     <>
       {/*
-       * The layer always renders so its ref exists for measurement, but the icons
-       * are client-only as they depend on saved positions and the container size.
+       * The layer always renders so its ref exists for measurement. `positions`
+       * is null until the client has read them, which keeps the icons out of the
+       * server render: a position means nothing before the layer is measured.
        */}
       <div ref={layerRef} className={styles.layer}>
-        {isMounted &&
+        {positions &&
           ICONS.map((iconDefinition) => {
             const position = positions[iconDefinition.id];
 
@@ -227,13 +230,9 @@ export function DesktopIcons() {
               return null;
             }
 
-            const top = clamp(
-              Number.isFinite(position.top) ? position.top : 0,
-              0,
-              Math.max(0, containerHeight - ICON_LAYOUT.cellSize),
-            );
+            const top = clamp(position.top, 0, Math.max(0, containerHeight - ICON_LAYOUT.cellSize));
             const left = clamp(
-              containerWidth - (Number.isFinite(position.right) ? position.right : 0) - ICON_LAYOUT.cellSize,
+              containerWidth - position.right - ICON_LAYOUT.cellSize,
               0,
               Math.max(0, containerWidth - ICON_LAYOUT.cellSize),
             );
@@ -242,10 +241,10 @@ export function DesktopIcons() {
             return (
               <DesktopIcon
                 key={iconDefinition.id}
-                iconDefinition={iconDefinition}
-                innerRef={(element) => {
+                ref={(element) => {
                   iconsRef.current[iconDefinition.id] = element;
                 }}
+                iconDefinition={iconDefinition}
                 x={left}
                 y={top}
                 tabIndex={tabStop === iconDefinition.id ? 0 : -1}
@@ -254,19 +253,23 @@ export function DesktopIcons() {
                 onSelect={() => setSelectedIconId(iconDefinition.id)}
                 onOpen={() => openIcon(iconDefinition)}
                 onMoveStart={(x, y) =>
-                  setPositions((current) => ({
-                    ...current,
-                    [iconDefinition.id]: { right: containerWidth - x - ICON_LAYOUT.cellSize, top: y },
-                  }))
+                  moveIcon(iconDefinition.id, { right: containerWidth - x - ICON_LAYOUT.cellSize, top: y })
                 }
-                onMoveEnd={() => savePositions(positionsRef.current, STORAGE_KEY)}
+                onMoveEnd={commitIconPositions}
                 onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
               />
             );
           })}
       </div>
 
-      {zooming && <ZoomRect from={zooming.from} path={zooming.path} containerSize={containerSize} onDone={endZoom} />}
+      {zooming && (
+        <ZoomRect
+          from={zooming.from}
+          path={zooming.path}
+          containerSize={containerSize}
+          onDone={() => setZooming(null)}
+        />
+      )}
     </>
   );
 }

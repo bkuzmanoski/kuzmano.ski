@@ -1,3 +1,9 @@
+import { useSyncExternalStore } from "react";
+
+import { ICON_IDS, ICON_LAYOUT } from "#/config/icons";
+
+import { cycle } from "./math";
+
 export type IconKind = "app" | "folder" | "document";
 
 export type Icon = { id: string; label: string } & (
@@ -9,14 +15,18 @@ export interface IconPosition {
   right: number;
 }
 
+export type IconPositions = Record<string, IconPosition>;
+
 export interface IconLayout {
   cellSize: number;
   spacing: number;
   position: IconPosition;
 }
 
-function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout): Record<string, IconPosition> {
-  const positions: Record<string, IconPosition> = {};
+export const ICON_POSITIONS_STORAGE_KEY = "icon-positions";
+
+function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout): IconPositions {
+  const positions: IconPositions = {};
 
   ids.forEach((id, index) => {
     positions[id] = { right: layout.position.right, top: layout.position.top + index * layout.spacing };
@@ -34,11 +44,8 @@ export function isValidPosition(value: unknown): value is IconPosition {
   );
 }
 
-export function loadPositions(
-  ids: ReadonlyArray<string>,
-  layout: IconLayout,
-  storageKey: Readonly<string>,
-): Record<string, IconPosition> {
+/** Every icon gets a finite position: the saved one when it is valid, the default otherwise. */
+export function loadPositions(ids: ReadonlyArray<string>, layout: IconLayout, storageKey: string): IconPositions {
   const positions = defaultPositions(ids, layout);
 
   try {
@@ -62,7 +69,7 @@ export function loadPositions(
   return positions;
 }
 
-export function savePositions(positions: Record<string, IconPosition>, storageKey: Readonly<string>) {
+export function savePositions(positions: IconPositions, storageKey: string) {
   try {
     localStorage.setItem(storageKey, JSON.stringify(positions));
   } catch {
@@ -71,7 +78,57 @@ export function savePositions(positions: Record<string, IconPosition>, storageKe
 }
 
 export function nextIconId(ids: ReadonlyArray<string>, fromId: string, direction: 1 | -1): string {
-  const index = ids.indexOf(fromId);
+  return ids[cycle(ids.length, ids.indexOf(fromId), direction)]!;
+}
 
-  return ids[(index + direction + ids.length) % ids.length]!;
+/*
+ * Positions are stored in this module instead of component state for two reasons.
+ *
+ * 1. Drags write here synchronously, so by the time a drag ends the final
+ *    position is already persisted. Component state wouldn't be reliable
+ *    here, since it would still be waiting on its next commit.
+ *
+ * 2. `getServerSnapshot` returns null, which we treat as "not loaded yet".
+ *    That means both the server render and the hydration pass render no
+ *    icons. A position is meaningless before the layer has been measured
+ *    on the client. Once hydration finishes, React re-renders with the real
+ *    positions, so a mount effect isn't needed just to read from storage.
+ */
+let positions: IconPositions = {};
+let hasLoaded = false;
+
+const listeners = new Set<() => void>();
+
+function getSnapshot(): IconPositions | null {
+  if (!hasLoaded) {
+    positions = loadPositions(ICON_IDS, ICON_LAYOUT, ICON_POSITIONS_STORAGE_KEY);
+    hasLoaded = true;
+  }
+
+  return positions;
+}
+
+const getServerSnapshot = (): IconPositions | null => null;
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** The icon positions, or null before the client has read them. */
+export function useIconPositions(): IconPositions | null {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+/** Moves one icon. Call `commitIconPositions` when the drag ends to persist the layout. */
+export function moveIcon(id: string, position: IconPosition) {
+  positions = { ...positions, [id]: position };
+
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+export function commitIconPositions() {
+  savePositions(positions, ICON_POSITIONS_STORAGE_KEY);
 }

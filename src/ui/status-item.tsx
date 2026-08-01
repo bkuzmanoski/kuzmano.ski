@@ -63,15 +63,16 @@ export function SoundStatus() {
   );
 }
 
-function sydneyTime(): string {
-  const parts = new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Sydney",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
-  }).formatToParts(new Date());
+const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
+  timeZone: "Australia/Sydney",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZoneName: "short",
+});
 
+function sydneyTime(): string {
+  const parts = TIME_FORMAT.formatToParts(new Date());
   const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
 
   return `${value("hour")}:${value("minute")} ${value("dayPeriod")} (${value("timeZoneName")})`;

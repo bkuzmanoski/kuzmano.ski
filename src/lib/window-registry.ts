@@ -19,10 +19,7 @@ export function windowKindFor(target: WindowTarget): WindowKind {
 }
 
 export function resolveWindow(pathname: string): WindowTarget | null {
-  const segments = pathname
-    .replace(/^\/+|\/+$/g, "")
-    .split("/")
-    .filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length === 1) {
     const slug = segments[0]!;

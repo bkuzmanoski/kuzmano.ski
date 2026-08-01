@@ -1,17 +1,16 @@
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
 import OptionIcon from "#/assets/images/option-modifier.svg?react";
 import { useIsWindows } from "#/lib/keyboard-shortcut";
+import { cycle } from "#/lib/math";
 import { playClick } from "#/lib/sound";
 
 import styles from "./menu.module.css";
 
 import type { KeyboardEvent } from "react";
-
-export type MenuItemAccessory = "download" | "external-link";
 
 export type MenuItem =
   | {
@@ -23,6 +22,8 @@ export type MenuItem =
       trigger: () => void;
     }
   | { kind: "separator" };
+
+type MenuItemAccessory = "download" | "external-link";
 
 const ACTIVATION_FLASH_MS = 90;
 
@@ -44,21 +45,20 @@ export function Menu({
   const menuRef = useRef<HTMLDivElement>(null);
   const isStickyRef = useRef(!isPointerHeld);
   const flashTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
-  const latestPropsRef = useRef({ items, anchor, onClose });
-
-  useEffect(() => {
-    latestPropsRef.current = { items, anchor, onClose };
-  });
 
   useEffect(() => () => flashTimersRef.current.forEach(clearTimeout), []);
 
-  const isMenuFlashing = () => flashTimersRef.current.length > 0;
+  /* A selection is a one-way door: it flashes, triggers, and closes the menu.
+   * The latch stops a second press during the flash from starting another one. */
+  const isSelecting = () => flashTimersRef.current.length > 0;
 
-  // TODO: Flash 2/3 times
+  /* A plain function, not an Effect Event as the keyboard path calls it straight
+   * from `onKeyDown`. The pointer handlers below are Effect Events, so they
+   * always close over the latest render's copy of this. */
   function select(index: number) {
-    const item = latestPropsRef.current.items[index];
+    const item = items[index];
 
-    if (!item || item.kind !== "action" || item.disabled || isMenuFlashing()) {
+    if (!item || item.kind !== "action" || item.disabled || isSelecting()) {
       return;
     }
 
@@ -73,7 +73,7 @@ export function Menu({
         flashTimersRef.current.push(
           setTimeout(() => {
             item.trigger();
-            latestPropsRef.current.onClose();
+            onClose();
           }, ACTIVATION_FLASH_MS),
         );
       }, ACTIVATION_FLASH_MS),
@@ -91,7 +91,7 @@ export function Menu({
       let remaining = items.length;
 
       while (remaining-- > 0) {
-        next = (next + direction + items.length) % items.length;
+        next = cycle(items.length, next, direction);
 
         if (isEnabled(items[next])) {
           return next;
@@ -102,47 +102,42 @@ export function Menu({
     });
   }
 
-  useEffect(() => {
-    menuRef.current?.focus();
-
-    function onPointerMove(event: PointerEvent) {
-      if (!isMenuFlashing()) {
-        setFocusedItemId(indexAt(event.clientX, event.clientY));
-      }
+  const onPointerMove = useEffectEvent((event: PointerEvent) => {
+    if (!isSelecting()) {
+      setFocusedItemId(indexAt(event.clientX, event.clientY));
     }
+  });
 
-    function onPointerUp(event: PointerEvent) {
-      const index = indexAt(event.clientX, event.clientY);
+  const onPointerUp = useEffectEvent((event: PointerEvent) => {
+    const index = indexAt(event.clientX, event.clientY);
 
-      // Resolve the press that opened the menu (drag-to-select or click-to-stick).
-      if (!isStickyRef.current) {
-        isStickyRef.current = true;
+    if (!isStickyRef.current) {
+      isStickyRef.current = true;
 
-        if (index >= 0) {
-          select(index);
-        } else if (!latestPropsRef.current.anchor?.contains(event.target as Node)) {
-          latestPropsRef.current.onClose();
-        }
-
-        return;
-      }
-
-      // After the menu sticks open, a release on an item selects it.
       if (index >= 0) {
         select(index);
+      } else if (!anchor?.contains(event.target as Node)) {
+        onClose();
       }
+
+      return;
     }
 
-    function onPointerDown(event: PointerEvent) {
-      // A press outside the menu and its title closes the menu.
-      const isInside =
-        menuRef.current?.contains(event.target as Node) ||
-        latestPropsRef.current.anchor?.contains(event.target as Node);
-
-      if (isStickyRef.current && !isInside) {
-        latestPropsRef.current.onClose();
-      }
+    if (index >= 0) {
+      select(index);
     }
+  });
+
+  const onPointerDown = useEffectEvent((event: PointerEvent) => {
+    const isInside = menuRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
+
+    if (isStickyRef.current && !isInside) {
+      onClose();
+    }
+  });
+
+  useEffect(() => {
+    menuRef.current?.focus();
 
     document.addEventListener("pointermove", onPointerMove);
     document.addEventListener("pointerup", onPointerUp);
@@ -153,7 +148,7 @@ export function Menu({
       document.removeEventListener("pointerup", onPointerUp);
       document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, []); // Latest values come through the latestPropsRef ref; no dependencies needed
+  }, []);
 
   function onKeyDown(event: KeyboardEvent) {
     switch (event.key) {

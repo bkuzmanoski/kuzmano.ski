@@ -1,7 +1,7 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from "react";
+import { createContext, use, useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
 
-import { INITIAL_WINDOW_ROUTE } from "#/config/site";
+import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { CASCADE_OFFSET, DEFAULT_POSITION, DEFAULT_SIZE, MAX_CASCADE_STEPS, MIN_SIZE } from "#/config/windows";
 
 import { resolveWindow, windowKindFor } from "./window-registry";
@@ -234,33 +234,14 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
     };
   }, [dispatch]);
 
-  /* The two effects below keep the focused window and the URL in sync. Without a
-   * guard they fight: focusing a window changes the focus, which would make the
-   * URL→window effect re-open the *old* URL's window and revert the focus.
-   * expectedRouteRef records the navigation we initiate so the URL→window effect can
-   * ignore it and act only on genuinely external URL changes (deep link, back). */
+  /* The two effects below keep the focused window and the URL in sync. expectedRouteRef
+   * records internal navigation so the URL→window effect can ignore it and act only
+   * on external URL changes (deep links, back, etc.). */
   const expectedRouteRef = useRef<string | null>(null);
 
-  /* The current URL for the focus→URL effect, which must read the path without
-   * reacting to it: a URL change must drive the focus, never the other way
-   * round. Reacting to both in one effect would make an external change (back)
-   * navigate straight back to the still-focused window.
-   */
-  const routeRef = useRef(pathname);
-
-  useEffect(() => {
-    routeRef.current = pathname;
-  }, [pathname]);
-
-  /* The active window drives the URL. When the desktop is active,
-   * the URL returns to "/", but only from a real window path. */
-  const focusedRoute = state.focused;
-
-  useEffect(() => {
-    const route = routeRef.current;
-
+  const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
     if (focusedRoute) {
-      if (route !== focusedRoute) {
+      if (pathname !== focusedRoute) {
         expectedRouteRef.current = focusedRoute;
         void navigate({ to: focusedRoute });
       }
@@ -268,55 +249,60 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (route !== "/" && resolveWindow(route) !== null) {
+    if (pathname !== "/" && resolveWindow(pathname) !== null) {
       expectedRouteRef.current = "/";
       void navigate({ to: "/" });
     }
-  }, [focusedRoute, navigate]);
+  });
+
+  const focusedRoute = state.focused;
+
+  useEffect(() => {
+    syncUrlToFocus(focusedRoute);
+  }, [focusedRoute]);
 
   // An external URL change (deep link, browser back) opens/focuses its window.
-  useEffect(() => {
+  const openExternalRoute = useEffectEvent((route: string) => {
     const expectedRoute = expectedRouteRef.current;
 
     expectedRouteRef.current = null;
 
-    if (pathname === expectedRoute || pathname === "/") {
+    if (route === expectedRoute || route === "/") {
       return;
     }
 
-    actions.open(pathname);
-  }, [pathname, actions, router]);
-
-  /* A first visit to the bare desktop opens the default window, so the desktop
-   * is never empty on arrival. It runs once per mount: a later return to "/" (a
-   * click on the desktop) leaves the desktop as it is. */
-  const hasOpenedInitialWindow = useRef(false);
+    actions.open(route);
+  });
 
   useEffect(() => {
-    if (hasOpenedInitialWindow.current) {
-      return;
-    }
+    openExternalRoute(pathname);
+  }, [pathname]);
 
-    hasOpenedInitialWindow.current = true;
-
-    if (routeRef.current === "/") {
+  /* A first visit to the bare desktop opens the default window. A later return
+   * to "/" (e.g. via a click on the desktop) does not reopen it. */
+  const openInitialWindow = useEffectEvent(() => {
+    if (pathname === "/") {
       actions.open(INITIAL_WINDOW_ROUTE);
     }
-  }, [actions]);
+  });
+
+  useEffect(() => {
+    openInitialWindow();
+  }, []);
 
   return (
-    <ActionsContext.Provider value={actions}>
-      <OrderContext.Provider value={state.order}>
-        <FocusContext.Provider value={state.focused}>
-          <WindowsContext.Provider value={state.windows}>{children}</WindowsContext.Provider>
-        </FocusContext.Provider>
-      </OrderContext.Provider>
-    </ActionsContext.Provider>
+    <ActionsContext value={actions}>
+      <OrderContext value={state.order}>
+        <FocusContext value={state.focused}>
+          <WindowsContext value={state.windows}>{children}</WindowsContext>
+        </FocusContext>
+      </OrderContext>
+    </ActionsContext>
   );
 }
 
 export function useWindowActions(): WindowActions {
-  const actions = useContext(ActionsContext);
+  const actions = use(ActionsContext);
 
   if (!actions) {
     throw new Error("`useWindowActions` must be used within a `WindowManagerProvider`");
@@ -327,15 +313,15 @@ export function useWindowActions(): WindowActions {
 
 /** Every open window, keyed by route. Changes on every move and resize. */
 export function useWindows(): Record<string, WindowState> {
-  return useContext(WindowsContext);
+  return use(WindowsContext);
 }
 
 /** The open windows, back to front. Changes when a window opens, closes, or is raised. */
 export function useWindowOrder(): Array<string> {
-  return useContext(OrderContext);
+  return use(OrderContext);
 }
 
 /** The active window, or null when the desktop is active. */
 export function useFocusedWindow(): string | null {
-  return useContext(FocusContext);
+  return use(FocusContext);
 }

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 
 /**
  * A global keyboard shortcut. Modifier is Option/Alt. `code` is the
- * hysical key from KeyboardEvent.code. `key` is not used because
+ * physical key from KeyboardEvent.code. `key` is not used because
  * Option changes the character that `key` reports on macOS.
  */
 export interface KeyboardShortcut {
@@ -12,10 +12,15 @@ export interface KeyboardShortcut {
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
-  const ref = useRef(shortcuts);
+  /* The listener is bound once but always runs against the latest shortcuts,
+   * which change identity on every render of the menu bar. */
+  const runMatch = useEffectEvent((event: KeyboardEvent) => {
+    const match = shortcuts.find((shortcut) => shortcut.code === event.code && shortcut.enabled !== false);
 
-  useEffect(() => {
-    ref.current = shortcuts;
+    if (match) {
+      event.preventDefault();
+      match.run();
+    }
   });
 
   useEffect(() => {
@@ -24,12 +29,7 @@ export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
         return;
       }
 
-      const match = ref.current.find((shortcut) => shortcut.code === event.code && shortcut.enabled !== false);
-
-      if (match) {
-        event.preventDefault();
-        match.run();
-      }
+      runMatch(event);
     }
 
     window.addEventListener("keydown", onKeyDown);

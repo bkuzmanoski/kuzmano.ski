@@ -6,7 +6,7 @@ import { themeScript } from "#/lib/settings";
 import stylesheet from "#/styles.css?url";
 import { bootOverlayScript } from "#/ui/boot-overlay";
 import { Desktop } from "#/views/desktop";
-import { Error } from "#/views/error";
+import { ErrorView } from "#/views/error-view";
 import { NotFound } from "#/views/not-found";
 
 import type { ReactNode } from "react";
@@ -37,7 +37,7 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
-  errorComponent: Error,
+  errorComponent: ErrorView,
   notFoundComponent: NotFound,
 });
 

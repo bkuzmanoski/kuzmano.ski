@@ -2,9 +2,11 @@ import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
+import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
 import { RESUME_URL, SITE_SOURCE_URL } from "#/config/site";
 import { downloadFile } from "#/lib/download";
 import { useGlobalShortcuts } from "#/lib/keyboard-shortcut";
+import { cycle } from "#/lib/math";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
 import { restart } from "./boot-overlay";
@@ -19,20 +21,19 @@ import type { KeyboardEvent } from "react";
 export function MenuBar() {
   const { open, close } = useWindowActions();
   const focusedPath = useFocusedWindow();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
   const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titles = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const hasWindow = focusedPath !== null;
 
-  const actions = {
-    close: () => focusedPath && close(focusedPath),
-    techNotes: () => open("/tech-notes"),
-    designNotes: () => open("/design-notes"),
-    work: () => open("/work"),
-    about: () => open("/about"),
-    contact: () => open("/contact"),
-  };
+  const destinationShortcuts = DESTINATION_ORDER.map((id, index) => ({
+    code: `Digit${index + 1}`,
+    label: String(index + 1),
+    destination: DESTINATIONS[id],
+  }));
+
+  const closeWindow = () => focusedPath && close(focusedPath);
 
   const menus: Array<{ label: string; items: Array<MenuItem> }> = [
     {
@@ -43,23 +44,19 @@ export function MenuBar() {
           label: "Close",
           shortcut: { code: "KeyW", label: "W" },
           disabled: !hasWindow,
-          trigger: actions.close,
+          trigger: closeWindow,
         },
       ],
     },
     {
       label: "Go",
       items: [
-        { kind: "action", label: "Tech Notes", shortcut: { code: "Digit1", label: "1" }, trigger: actions.techNotes },
-        {
+        ...destinationShortcuts.map(({ code, label, destination }): MenuItem => ({
           kind: "action",
-          label: "Design Notes",
-          shortcut: { code: "Digit2", label: "2" },
-          trigger: actions.designNotes,
-        },
-        { kind: "action", label: "Work", shortcut: { code: "Digit3", label: "3" }, trigger: actions.work },
-        { kind: "action", label: "About", shortcut: { code: "Digit4", label: "4" }, trigger: actions.about },
-        { kind: "action", label: "Contact", shortcut: { code: "Digit5", label: "5" }, trigger: actions.contact },
+          label: destination.label,
+          shortcut: { code, label },
+          trigger: () => open(destination.route),
+        })),
         { kind: "separator" },
         { kind: "action", label: "Résumé (PDF)", accessory: "download", trigger: () => downloadFile(RESUME_URL) },
       ],
@@ -80,34 +77,31 @@ export function MenuBar() {
   ];
 
   useGlobalShortcuts([
-    { code: "KeyW", run: actions.close, enabled: hasWindow },
-    { code: "Digit1", run: actions.techNotes },
-    { code: "Digit2", run: actions.designNotes },
-    { code: "Digit3", run: actions.work },
-    { code: "Digit4", run: actions.about },
-    { code: "Digit5", run: actions.contact },
+    { code: "KeyW", run: closeWindow, enabled: hasWindow },
+    ...destinationShortcuts.map(({ code, destination }) => ({ code, run: () => open(destination.route) })),
   ]);
 
   function focusAdjacentMenu(from: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === from);
-    const next = menus[(index + direction + menus.length) % menus.length]!.label;
+    const next = menus[cycle(menus.length, index, direction)]!.label;
+    const anchor = titles.current[next];
 
-    titles.current[next]?.focus();
+    anchor?.focus();
 
-    if (openMenu) {
+    if (openMenu && anchor) {
       setIsPointerHeld(false);
-      setOpenMenu(next);
+      setOpenMenu({ label: next, anchor });
     }
   }
 
-  function onTitleKeyDown(event: KeyboardEvent, label: string) {
+  function onTitleKeyDown(event: KeyboardEvent<HTMLButtonElement>, label: string) {
     switch (event.key) {
       case "ArrowDown":
       case "Enter":
       case " ":
         event.preventDefault();
         setIsPointerHeld(false);
-        setOpenMenu(label);
+        setOpenMenu({ label, anchor: event.currentTarget });
 
         break;
       case "ArrowRight":
@@ -129,7 +123,12 @@ export function MenuBar() {
   return (
     <div className={styles.menuBar}>
       <Tooltip label="About">
-        <button aria-label="About" className={styles.logo} type="button" onClick={actions.about}>
+        <button
+          aria-label={DESTINATIONS.about.label}
+          className={styles.logo}
+          type="button"
+          onClick={() => open(DESTINATIONS.about.route)}
+        >
           <LogoIcon className={styles.logoIcon} />
         </button>
       </Tooltip>
@@ -141,27 +140,29 @@ export function MenuBar() {
               ref={(node) => {
                 titles.current[label] = node;
               }}
-              aria-expanded={openMenu === label}
+              aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
-              className={clsx(styles.title, openMenu === label && styles.titleOpen)}
+              className={clsx(styles.title, openMenu?.label === label && styles.titleOpen)}
               type="button"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
-              onPointerDown={() => {
+              onPointerDown={(event) => {
+                const anchor = event.currentTarget;
+
                 setIsPointerHeld(true);
-                setOpenMenu((current) => (current === label ? null : label));
+                setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
               }}
               onPointerEnter={(event) => {
-                if (openMenu !== null && openMenu !== label) {
+                if (openMenu !== null && openMenu.label !== label) {
                   setIsPointerHeld(event.buttons > 0);
-                  setOpenMenu(label);
+                  setOpenMenu({ label, anchor: event.currentTarget });
                 }
               }}
             >
               {label}
             </button>
-            {openMenu === label && (
+            {openMenu?.label === label && (
               <Menu
-                anchor={titles.current[label] ?? null}
+                anchor={openMenu.anchor}
                 items={items}
                 isPointerHeld={isPointerHeld}
                 onClose={() => setOpenMenu(null)}

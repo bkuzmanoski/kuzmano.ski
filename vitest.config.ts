@@ -1,4 +1,5 @@
-import viteReact from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
@@ -13,6 +14,7 @@ export default defineConfig({
     frontmatterPlugin(),
     mdxPlugin({ syntaxHighlight: false }),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
+    babel({ presets: [reactCompilerPreset()] }),
   ],
   test: {
     environment: "jsdom",
