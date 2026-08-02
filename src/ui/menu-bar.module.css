@@ -17,7 +17,7 @@
 
   &.ready {
     transform: translateY(0);
-    transition: transform var(--boot-step-ms) ease-in var(--boot-step-ms); /* Follow desktop reveal. */
+    transition: transform var(--boot-reveal-step-ms) ease-in var(--boot-reveal-step-ms); /* Follow desktop reveal. */
 
     @media (prefers-reduced-motion: reduce) {
       transition-duration: 0s;

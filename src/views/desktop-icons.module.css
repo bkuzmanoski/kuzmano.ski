@@ -12,7 +12,7 @@
 
   &.ready {
     opacity: 1;
-    transition: opacity 0ms linear calc(var(--boot-step-ms) * 2); /* Follow menu bar reveal. */
+    transition: opacity 0ms linear calc(var(--boot-reveal-step-ms) * 2); /* Follow menu bar reveal. */
   }
 }
 
