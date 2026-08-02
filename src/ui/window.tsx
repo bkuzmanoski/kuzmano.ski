@@ -5,7 +5,7 @@ import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
-import { useHasBooted } from "#/lib/hooks/use-has-booted";
+import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { playClick, playScroll, skipScroll } from "#/lib/sound";
 
@@ -83,7 +83,7 @@ export function Window({
   children: ReactNode;
 }) {
   const viewportId = useId();
-  const hasBooted = useHasBooted();
+  const isBootSequenceComplete = useIsBootSequenceComplete();
   const viewportRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewportRef);
   const [isResizing, setIsResizing] = useState(false);
@@ -116,7 +116,7 @@ export function Window({
         focused && styles.focused,
         maximized && styles.maximized,
         hidden && styles.hidden,
-        hasBooted && styles.ready,
+        isBootSequenceComplete && styles.ready,
       )}
       style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
       onPointerDownCapture={onFocus}

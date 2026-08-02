@@ -6,7 +6,7 @@ import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
 import { RESUME_URL, SITE_SOURCE_URL } from "#/config/site";
 import { downloadFile } from "#/lib/download";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
-import { useHasBooted } from "#/lib/hooks/use-has-booted";
+import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { cycle } from "#/lib/math";
 import { playClick } from "#/lib/sound";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
@@ -23,7 +23,7 @@ import type { KeyboardEvent } from "react";
 export function MenuBar() {
   const { open, close } = useWindowActions();
   const focusedPath = useFocusedWindow();
-  const hasBooted = useHasBooted();
+  const isBootSequenceComplete = useIsBootSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
   const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titles = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -125,7 +125,7 @@ export function MenuBar() {
   }
 
   return (
-    <div className={clsx(styles.menuBar, hasBooted && styles.ready)}>
+    <div className={clsx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <Tooltip label="About">
         <button
           aria-label={DESTINATIONS.about.label}

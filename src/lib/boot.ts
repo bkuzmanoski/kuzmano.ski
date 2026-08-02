@@ -14,7 +14,7 @@ export function shouldBoot(): boolean {
   return bootDecision;
 }
 
-export function markBooted() {
+export function setHasBooted() {
   try {
     sessionStorage.setItem(HAS_BOOTED_STORAGE_KEY, "1");
   } catch {
@@ -22,25 +22,25 @@ export function markBooted() {
   }
 }
 
-let hasBooted = false;
+let isBootSequenceComplete = false;
 
 const listeners = new Set<() => void>();
 
-export function markHasBooted() {
-  hasBooted = true;
+export function setIsBootSequenceComplete() {
+  isBootSequenceComplete = true;
 
   for (const listener of listeners) {
     listener();
   }
 }
 
-export function subscribeToHasBooted(listener: () => void) {
+export function subscribeToIsBootSequenceComplete(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-export const getHasBooted = () => hasBooted || !shouldBoot();
+export const getIsBootSequenceComplete = () => isBootSequenceComplete || !shouldBoot();
 
 /* The server renders the desktop ready. The `data-boot` cover hides it until
  * hydration decides otherwise, so the hand-off is never seen. */
-export const serverHasBooted = () => true;
+export const serverIsBootSequenceComplete = () => true;

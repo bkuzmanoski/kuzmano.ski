@@ -7,7 +7,7 @@ import { constrain } from "#/lib/geometry";
 import type { Rect, Size } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useElementSize } from "#/lib/hooks/use-element-size";
-import { useHasBooted } from "#/lib/hooks/use-has-booted";
+import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { nextIconId } from "#/lib/icon";
 import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
@@ -107,7 +107,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
   const positions = useIconPositions();
-  const hasBooted = useHasBooted();
+  const isBootSequenceComplete = useIsBootSequenceComplete();
   const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [zooming, setZooming] = useState<{ path: string; from: Rect } | null>(null);
@@ -206,7 +206,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
       {/* The layer always renders so its ref exists for measurement. `positions`
        * is null until the client has read them, which keeps the icons out of the
        * server render: a position means nothing before the layer is measured. */}
-      <div ref={layerRef} className={clsx(styles.layer, hasBooted && styles.ready)}>
+      <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
         {positions &&
           ICONS.map((iconDefinition) => {
             const position = positions[iconDefinition.id];
