@@ -22,7 +22,7 @@
   user-select: none;
 
   position: fixed;
-  z-index: 2000;
+  z-index: 3000;
   position-anchor: --tooltip;
   position-area: block-end span-all;
   position-try-fallbacks:

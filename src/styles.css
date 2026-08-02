@@ -10,6 +10,8 @@
 :root {
   --color-light: #f3f2f1;
   --color-dark: #0f0e0d;
+
+  /* TODO: Define dark mode. */
   --color-foreground: light-dark(var(--color-dark), var(--color-light));
   --color-background: light-dark(var(--color-light), var(--color-dark));
   --color-muted: rgb(from var(--color-foreground) r g b / 50%);
@@ -22,7 +24,7 @@
   --noise-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
   --menu-bar-height: 32px;
   --wallpaper: url("./assets/images/wallpaper.svg") repeat;
-  --boot-reveal-step-ms: 300ms; /* The time it takes for each step of the post-boot reveal sequence to complete. */
+  --desktop-reveal-step-ms: 300ms; /* The time it takes for each step of the post-boot reveal sequence to complete. */
 
   color-scheme: light dark;
 
@@ -57,7 +59,7 @@ html {
     z-index: 9998;
     inset: 0;
 
-    background: #000;
+    background: var(--color-dark);
   }
 }
 

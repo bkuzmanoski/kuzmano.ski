@@ -16,8 +16,8 @@
   background: var(--color-background);
 
   &.ready {
-    transform: translateY(0);
-    transition: transform var(--boot-reveal-step-ms) ease-in var(--boot-reveal-step-ms); /* Follow desktop reveal. */
+    transform: none;
+    transition: transform var(--desktop-reveal-step-ms) ease-in var(--desktop-reveal-step-ms);
 
     @media (prefers-reduced-motion: reduce) {
       transition-duration: 0s;

@@ -1,73 +1,234 @@
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+import LogoIcon from "#/assets/images/logo.svg?react";
+import DiskReadIndicator from "#/assets/images/macintosh-disk-read-indicator.svg?react";
+import macintoshImageUrl from "#/assets/images/macintosh.png";
+import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import type { Rect, Size } from "#/lib/geometry";
+import { useElementSize } from "#/lib/hooks/use-element-size";
 
 import styles from "./boot-overlay.module.css";
-import { MacFrame } from "./mac-frame";
 
-const BOOT_MS = 1800;
-const ZOOM_MS = 700;
-const HAS_BOOTED_KEY = "has-booted";
-const BOOT_ATTRIBUTE = "data-boot";
+import type { CSSProperties } from "react";
 
-const shouldBoot = () => window.location.pathname === "/" && !sessionStorage.getItem(HAS_BOOTED_KEY);
+const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
+const ASSET_TIMEOUT_MS = 3000; // Time to wait for the illustration and the font to load before giving up.
+
+/* Metrics derived from `macintosh.png` */
+const CASE = { width: 1214, height: 1067 };
+const VIEWABLE_AREA = { x: 330, y: 99, width: 554, height: 410 };
+const DISK_LIGHT = { x: 890, y: 670, size: 6 };
+
+/* Metrics scaled to the displayed size of the illustration. */
+const VIEWABLE_AREA_FRACTION = {
+  x: VIEWABLE_AREA.x / CASE.width,
+  y: VIEWABLE_AREA.y / CASE.height,
+  width: VIEWABLE_AREA.width / CASE.width,
+  height: VIEWABLE_AREA.height / CASE.height,
+};
+const DISK_LIGHT_FRACTION = {
+  x: DISK_LIGHT.x / CASE.width,
+  y: DISK_LIGHT.y / CASE.height,
+  size: DISK_LIGHT.size / CASE.width,
+};
+
+const DISPLAY_ON_MS = 450;
+const LOGO_MS = 1200;
+const WELCOME_DIALOG_MS = 1200;
+const REVEAL_DESKTOP_MS = 1000;
+
+type Phase = "pending" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
+
+/** Resolves when required assets are loaded, or if the wait has been too long. */
+function whenReady(image: HTMLImageElement | null): Promise<unknown> {
+  /* Both waits are feature-detected: `decode` and the font loading API are
+   * absent in the test environment and some browsers. A missing API is ignored. */
+  const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
+
+  // `document.fonts` is typed as always present, so it is read through a type that reveals the true state.
+  const fontSet = (document as Partial<Document>).fonts;
+  const assets = Promise.all([illustrationImage, fontSet?.ready ?? Promise.resolve()]);
+
+  return Promise.race([assets, new Promise((resolve) => setTimeout(resolve, ASSET_TIMEOUT_MS))]);
+}
+
+/** Exported for unit tests. */
+export function viewableAreaOf(box: { left: number; top: number; width: number; height: number }): Rect {
+  return {
+    x: box.left + box.width * VIEWABLE_AREA_FRACTION.x,
+    y: box.top + box.height * VIEWABLE_AREA_FRACTION.y,
+    width: box.width * VIEWABLE_AREA_FRACTION.width,
+    height: box.height * VIEWABLE_AREA_FRACTION.height,
+  };
+}
 
 /**
- * This inline script goes in the document head. It runs before the first paint,
- * which is earlier than React can hydrate. If the boot is due, the script marks
- * <html>. The CSS then paints an opaque cover immediately.
+ * Insets for a child of `box` that places its edges on the edges of the
+ * viewport, negative on every side. Each edge is given its own distance to
+ * travel, so animating to them reaches all four corners at once rather than
+ * the nearest one first.
  *
- * Without this script, the browser shows the server-rendered desktop prior to
- * hydration. The overlay below is client-only and mounts after hydration.
+ * These are applied to the element rather than through a custom property
+ * because the build expands an `inset` shorthand into its four longhands.
+ *
+ * Exported for unit tests.
  */
-export const bootOverlayScript = `(function () {
-  try {
-    if (location.pathname === "/" && !sessionStorage.getItem("${HAS_BOOTED_KEY}")) {
-      document.documentElement.setAttribute("${BOOT_ATTRIBUTE}", "");
-      setTimeout(function () {
-        document.documentElement.removeAttribute("${BOOT_ATTRIBUTE}");
-      }, 4000);
-    }
-  } catch (e) {}
-})();`;
+export function insetToViewport(box: Rect, view: Size) {
+  return {
+    top: -box.y,
+    right: box.x + box.width - view.width,
+    bottom: box.y + box.height - view.height,
+    left: -box.x,
+  };
+}
 
-type Phase = "pending" | "booting" | "zooming" | "done";
-
-export function BootOverlay() {
+function BootSequence() {
   const [phase, setPhase] = useState<Phase>("pending");
+  const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
+  const illustrationImageRef = useRef<HTMLImageElement>(null);
+  const illustrationImageSize = useElementSize(illustrationImageRef);
 
   useEffect(() => {
-    if (!shouldBoot()) {
-      setPhase("done");
+    const element = illustrationImageRef.current;
+
+    if (!element || illustrationImageSize.width === 0) {
       return;
     }
 
-    sessionStorage.setItem(HAS_BOOTED_KEY, "1");
-    document.documentElement.removeAttribute(BOOT_ATTRIBUTE);
-    setPhase("booting");
+    setGeometry({
+      display: viewableAreaOf(element.getBoundingClientRect()),
+      view: { width: window.innerWidth, height: window.innerHeight },
+    });
+  }, [illustrationImageSize]);
 
-    const toZoom = setTimeout(() => setPhase("zooming"), BOOT_MS);
-    const toDone = setTimeout(() => setPhase("done"), BOOT_MS + ZOOM_MS);
+  useEffect(() => {
+    setHasBooted();
+    document.documentElement.removeAttribute(BOOT_OVERLAY_ATTRIBUTE);
+
+    let isCancelled = false;
+
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+
+    void whenReady(illustrationImageRef.current).then(() => {
+      if (isCancelled) {
+        return;
+      }
+
+      setPhase("display-on");
+
+      const at = (delay: number, next: Phase) => timers.push(setTimeout(() => setPhase(next), delay));
+
+      at(DISPLAY_ON_MS, "logo");
+      at(DISPLAY_ON_MS + LOGO_MS, "welcome-dialog");
+      at(DISPLAY_ON_MS + LOGO_MS + WELCOME_DIALOG_MS, "desktop-reveal");
+
+      timers.push(
+        setTimeout(
+          () => {
+            setPhase("complete");
+            setIsBootSequenceComplete();
+          },
+          DISPLAY_ON_MS + LOGO_MS + WELCOME_DIALOG_MS + REVEAL_DESKTOP_MS,
+        ),
+      );
+    });
 
     return () => {
-      clearTimeout(toZoom);
-      clearTimeout(toDone);
+      isCancelled = true;
+      timers.forEach(clearTimeout);
     };
   }, []);
 
-  if (phase === "pending" || phase === "done") {
+  if (phase === "complete") {
     return null;
   }
 
+  const displayStyle: CSSProperties & Record<`--${string}`, string | number> = geometry
+    ? {
+        left: geometry.display.x,
+        top: geometry.display.y,
+        width: geometry.display.width,
+        height: geometry.display.height,
+        "--display-scale": geometry.display.width / VIEWABLE_AREA.width,
+      }
+    : {};
+
+  const isDisplayOn = phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
+  const isRevealingDesktop = phase === "desktop-reveal";
+
   return (
-    <div className={clsx(styles.overlay, phase === "zooming" && styles.zooming)} aria-hidden>
-      <div className={styles.stage}>
-        <MacFrame>
-          <div className={styles.boot}>
-            <div className={styles.face}>☺</div>
-            <p className={styles.welcome}>Welcome to Macintosh</p>
-          </div>
-        </MacFrame>
+    <div className={styles.overlay} aria-hidden>
+      <div className={styles.backdrop}>
+        <div className={styles.spotlight} />
       </div>
+      {geometry && (
+        <div className={clsx(styles.display, isRevealingDesktop && styles.revealing)} style={displayStyle}>
+          <div
+            className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
+            style={isRevealingDesktop ? insetToViewport(geometry.display, geometry.view) : undefined}
+          >
+            {phase === "logo" && <LogoIcon className={styles.logo} />}
+            {phase === "welcome-dialog" && <p className={styles.welcomeDialog}>Welcome to kuzmano.ski</p>}
+          </div>
+        </div>
+      )}
+      <div className={styles.stage}>
+        <div className={clsx(styles.illustration, isRevealingDesktop && styles.blurring)}>
+          <DiskReadIndicator
+            className={clsx(styles.diskReadIndicator, isDisplayOn && styles.reading)}
+            style={{
+              left: `${DISK_LIGHT_FRACTION.x * 100}%`,
+              top: `${DISK_LIGHT_FRACTION.y * 100}%`,
+              width: `${DISK_LIGHT_FRACTION.size * 100}%`,
+            }}
+          />
+          <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
+        </div>
+      </div>
+      <div className={clsx(styles.cover, phase !== "pending" && styles.leaving)} />
     </div>
   );
 }
+
+/** Clears saved settings and reloads the desktop. */
+export function restart() {
+  try {
+    localStorage.clear();
+    sessionStorage.removeItem(HAS_BOOTED_STORAGE_KEY);
+  } catch {
+    // Ignored.
+  }
+
+  window.location.replace("/"); // Reloads the page, even if the path is already "/".
+}
+
+const noSubscribe = () => () => {};
+const serverShouldBoot = () => false;
+
+/**
+ * The decision is client-only, so the server and the hydration pass both render
+ * nothing; React re-renders with the real answer once hydration is done. The
+ * `data-boot` cover painted by the inline script holds the black screen across
+ * that gap, so there is nothing to see in between.
+ */
+export function BootOverlay() {
+  return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <BootSequence /> : null;
+}
+
+/**
+ * Runs in the document head before first paint (prior to hydration) to
+ * hide the server-rendered desktop until the boot sequence has run.
+ */
+export const bootOverlayScript = `(function () {
+  try {
+    if (location.pathname === "/" && !sessionStorage.getItem("${HAS_BOOTED_STORAGE_KEY}")) {
+      document.documentElement.setAttribute("${BOOT_OVERLAY_ATTRIBUTE}", "");
+      setTimeout(function () {
+        document.documentElement.removeAttribute("${BOOT_OVERLAY_ATTRIBUTE}");
+      }, 4000);
+    }
+  } catch (e) {
+    // Ignored.
+  }
+})();`;

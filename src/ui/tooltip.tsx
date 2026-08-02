@@ -66,8 +66,13 @@ export function Tooltip({
   return (
     <span
       className={clsx(styles.wrapper, className)}
-      onFocusCapture={() => show(0)}
+      onFocusCapture={(event) => {
+        if (event.target.matches(":focus-visible")) {
+          show(0);
+        }
+      }}
       onBlurCapture={hide}
+      onPointerDownCapture={hide}
       onPointerEnter={() => show(DELAY_MS)}
       onPointerLeave={hide}
     >

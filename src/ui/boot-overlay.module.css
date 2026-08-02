@@ -1,54 +1,225 @@
 .overlay {
+  --display-scale: 1; /* Set from JS. */
+  --intro-fade-ms: 300ms; /* The time it takes for the cover to fade out after the assets are ready. */
+  --desktop-reveal-ms: 1000ms;
+
   position: fixed;
   z-index: 9999;
+  inset: 0;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(22 19 15) 40%,
+      rgb(22 19 15 / 99.2%) 47.07%,
+      rgb(22 19 15 / 96.8%) 52.83%,
+      rgb(22 19 15 / 93%) 57.47%,
+      rgb(22 19 15 / 87.9%) 61.2%,
+      rgb(22 19 15 / 81.9%) 64.22%,
+      rgb(22 19 15 / 74.9%) 66.74%,
+      rgb(22 19 15 / 67.2%) 68.95%,
+      rgb(22 19 15 / 58.9%) 71.05%,
+      rgb(22 19 15 / 50.3%) 73.26%,
+      rgb(22 19 15 / 41.5%) 75.78%,
+      rgb(22 19 15 / 32.6%) 78.8%,
+      rgb(22 19 15 / 23.8%) 82.53%,
+      rgb(22 19 15 / 15.4%) 87.17%,
+      rgb(22 19 15 / 7.37%) 92.93%,
+      rgb(22 19 15 / 0%) 100%
+    ),
+    #2e2b24;
+
+  &::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    opacity: 0.5;
+    background-image: var(--noise-texture);
+    mix-blend-mode: soft-light;
+  }
+
+  & .spotlight {
+    position: absolute;
+    right: -32px;
+    bottom: 48px;
+    left: -32px;
+
+    height: 96px;
+    border-radius: 50%;
+
+    background: #b0a897;
+    filter: blur(40px);
+  }
+}
+
+.stage {
+  position: absolute;
+  z-index: 2;
   inset: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  background: #000;
+.illustration {
+  will-change: filter;
+  position: relative;
+  display: flex;
 
-  transition: opacity 700ms ease;
+  &.blurring {
+    filter: blur(16px);
+    transition: filter var(--desktop-reveal-ms) linear;
+  }
 
-  &.zooming {
+  & .diskReadIndicator {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    height: auto;
+
+    :global(.led) {
+      opacity: 0;
+    }
+
+    &.reading :global(.led) {
+      animation: disk-read 1000ms infinite;
+    }
+  }
+
+  & img {
+    display: block;
+    max-width: 95vw;
+    max-height: 90dvh;
+  }
+}
+
+@keyframes disk-read {
+  0%,
+  15% {
+    opacity: 1;
+  }
+
+  20%,
+  35% {
     opacity: 0;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    transition-duration: 0s;
+  50%,
+  55% {
+    opacity: 1;
+  }
+
+  70%,
+  100% {
+    opacity: 0;
   }
 }
 
-.stage {
-  transition: transform 700ms ease;
+.display {
+  position: fixed;
+  z-index: 1;
+  background-color: #000; /* TODO: Replace with pre-rendered image. */
 
-  .zooming & {
-    transform: scale(6); /* TODO */
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition-duration: 0s;
-
-    .zooming & {
-      transform: none;
-    }
+  &.revealing {
+    z-index: 3;
   }
 }
 
-.boot {
+.viewableArea {
+  position: absolute;
+  inset: calc(32px * var(--display-scale)) calc(28px * var(--display-scale));
+
   display: flex;
-  flex-direction: column;
-  gap: 14px;
   align-items: center;
+  justify-content: center;
+
+  border-radius: calc(16px * var(--display-scale));
+
+  background: var(--wallpaper) fixed;
+
+  &.hidden {
+    opacity: 0;
+  }
+
+  &.growing {
+    border-radius: 0;
+
+    /* Insets set from JS. */
+    transition:
+      top var(--desktop-reveal-ms) linear,
+      right var(--desktop-reveal-ms) linear,
+      bottom var(--desktop-reveal-ms) linear,
+      left var(--desktop-reveal-ms) linear,
+      border-radius calc(var(--desktop-reveal-ms) / 2) ease-out calc(var(--desktop-reveal-ms) / 2);
+  }
 }
 
-.face {
-  font-size: 44px;
-  line-height: 1;
+.logo {
+  width: calc(62px * var(--display-scale));
+  height: auto;
+  color: var(--color-dark);
+
+  /* TODO: Fill the "B". */
 }
 
-.welcome {
+.welcomeDialog {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: calc(288px * var(--display-scale));
+  height: calc(104px * var(--display-scale));
   margin: 0;
-  font-size: 12px;
+  border: calc(1px * var(--display-scale)) solid var(--color-foreground);
+
+  font: var(--font-chrome);
+  font-size: calc(16px * var(--display-scale));
+  color: var(--color-foreground);
+  letter-spacing: var(--font-chrome-letter-spacing);
+
+  background: var(--color-background);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc(2px * var(--display-scale));
+    border: calc(2px * var(--display-scale)) solid var(--color-foreground);
+  }
+}
+
+.cover {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+
+  background: var(--color-dark);
+  mix-blend-mode: multiply; /* TODO: Figure out workaround for missing `plus-darker`. */
+
+  transition: opacity var(--intro-fade-ms) ease-out;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-dark);
+  }
+
+  &.leaving,
+  &.leaving::after {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    --desktop-reveal-ms: 0s;
+  }
 }
