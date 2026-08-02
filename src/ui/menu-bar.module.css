@@ -58,7 +58,7 @@
       padding: 0 12px;
 
       font: var(--font-chrome);
-      letter-spacing: var(--letter-spacing-chrome);
+      letter-spacing: var(--font-chrome-letter-spacing);
 
       &.titleOpen {
         color: var(--color-background);

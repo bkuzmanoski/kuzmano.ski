@@ -29,7 +29,7 @@
   font: var(--font-chrome);
   color: var(--color-foreground);
   text-align: left;
-  letter-spacing: var(--letter-spacing-chrome);
+  letter-spacing: var(--font-chrome-letter-spacing);
   white-space: nowrap;
 
   background: transparent;
