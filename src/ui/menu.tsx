@@ -7,6 +7,7 @@ import OptionIcon from "#/assets/images/option-modifier.svg?react";
 import { useIsWindows } from "#/lib/keyboard-shortcut";
 import { cycle } from "#/lib/math";
 import { playClick } from "#/lib/sound";
+import { useActivationFlash } from "#/lib/use-activation-flash";
 
 import styles from "./menu.module.css";
 
@@ -25,9 +26,6 @@ export type MenuItem =
 
 type MenuItemAccessory = "download" | "external-link";
 
-const ACTIVATION_FLASH_COUNT = 3;
-const ACTIVATION_FLASH_MS = 60;
-
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
 
 export function Menu({
@@ -41,17 +39,10 @@ export function Menu({
   isPointerHeld: boolean;
   onClose: () => void;
 }) {
+  const flash = useActivationFlash<number>();
   const [focusedItemId, setFocusedItemId] = useState(-1);
-  const [isFlashing, setIsFlashing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isStickyRef = useRef(!isPointerHeld);
-  const flashTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
-
-  useEffect(() => () => flashTimersRef.current.forEach(clearTimeout), []);
-
-  /* A selection is a one-way door: it flashes, triggers, and closes the menu.
-   * The latch stops a second press during the flash from starting another one. */
-  const isSelecting = () => flashTimersRef.current.length > 0;
 
   /* A plain function, not an Effect Event as the keyboard path calls it straight
    * from `onKeyDown`. The pointer handlers below are Effect Events, so they
@@ -59,30 +50,17 @@ export function Menu({
   function select(index: number) {
     const item = items[index];
 
-    if (!item || item.kind !== "action" || item.disabled || isSelecting()) {
+    if (!item || item.kind !== "action" || item.disabled || flash.isRunning()) {
       return;
     }
 
     setFocusedItemId(index);
-    setIsFlashing(true);
     playClick();
 
-    // The first step above turns the highlight off; the rest alternate from there.
-    const steps = ACTIVATION_FLASH_COUNT * 2 - 1;
-
-    for (let step = 1; step <= steps; step++) {
-      flashTimersRef.current.push(setTimeout(() => setIsFlashing(step % 2 === 0), ACTIVATION_FLASH_MS * step));
-    }
-
-    flashTimersRef.current.push(
-      setTimeout(
-        () => {
-          item.trigger();
-          onClose();
-        },
-        ACTIVATION_FLASH_MS * (steps + 1),
-      ),
-    );
+    flash.start(index, () => {
+      item.trigger();
+      onClose();
+    });
   }
 
   function indexAt(x: number, y: number): number {
@@ -108,7 +86,7 @@ export function Menu({
   }
 
   const onPointerMove = useEffectEvent((event: PointerEvent) => {
-    if (!isSelecting()) {
+    if (!flash.isRunning()) {
       setFocusedItemId(indexAt(event.clientX, event.clientY));
     }
   });
@@ -197,7 +175,7 @@ export function Menu({
             className={clsx(
               styles.item,
               item.disabled && styles.disabled,
-              focusedItemId === index && !isFlashing && styles.active,
+              flash.isHighlighted(index, focusedItemId === index) && styles.active,
             )}
             data-index={index}
             role="menuitem"

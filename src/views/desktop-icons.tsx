@@ -8,6 +8,7 @@ import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, nextIconId, useIconPositions } from "#/lib/icon";
 import { clamp } from "#/lib/math";
 import { playClick } from "#/lib/sound";
+import { useActivationFlash } from "#/lib/use-activation-flash";
 import { useElementSize } from "#/lib/use-element-size";
 import { useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
 import { DesktopIcon } from "#/ui/desktop-icon";
@@ -16,7 +17,6 @@ import styles from "./desktop-icons.module.css";
 
 import type { KeyboardEvent } from "react";
 
-const ACTIVATION_FLASH_STEPS_MS = [70, 140, 210]; // Step 1: flash on, Step 2: flash off, Step 3: flash on and end, in ms from the press
 const ZOOM_RECT_ANIMATION_MS = 200;
 const ZOOM_RECT_HOLD_MS = 260;
 
@@ -45,9 +45,9 @@ function ZoomRect({
   const [box, setBox] = useState(from);
   const [animate, setAnimate] = useState(false);
 
-  /* The window this grows towards was opened in the same handler that mounted
-   * this component, so its geometry is in state by the first render. Latching it
-   * here means a later move or resize cannot redirect the animation midway. */
+  /* The window the zoom rect grows towards was opened in the same handler that mounted
+   * this component, so its geometry is in state by the first render. Latching it here
+   * means a later move or resize cannot redirect the animation midway. */
   const [target] = useState(() => {
     const state = windows[path];
     return state ? constrain(state, containerSize) : null;
@@ -104,14 +104,12 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
   const positions = useIconPositions();
+  const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
-  const [flashingIconId, setFlashingIconId] = useState<string | null>(null);
-  const [isFlashing, setIsFlashing] = useState(false);
   const [zooming, setZooming] = useState<{ path: string; from: Rect } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
-  const flashTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -124,22 +122,6 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
 
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
-
-  useEffect(() => () => flashTimersRef.current.forEach(clearTimeout), []);
-
-  function flash(iconId: string) {
-    flashTimersRef.current.forEach(clearTimeout);
-    setFlashingIconId(iconId);
-    setIsFlashing(true);
-    flashTimersRef.current = [
-      setTimeout(() => setIsFlashing(false), ACTIVATION_FLASH_STEPS_MS[0]),
-      setTimeout(() => setIsFlashing(true), ACTIVATION_FLASH_STEPS_MS[1]),
-      setTimeout(() => {
-        setIsFlashing(false);
-        setFlashingIconId(null);
-      }, ACTIVATION_FLASH_STEPS_MS[2]),
-    ];
-  }
 
   /** The box of an element in the layer's own coordinates. */
   function relativeRect(element: Element): Rect {
@@ -155,7 +137,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   }
 
   function openIcon(iconDefinition: Icon) {
-    flash(iconDefinition.id);
+    flash.start(iconDefinition.id);
 
     if (iconDefinition.kind === "document") {
       downloadFile(iconDefinition.downloadUrl);
@@ -235,7 +217,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
               0,
               Math.max(0, containerWidth - ICON_LAYOUT.cellSize),
             );
-            const isSelected = flashingIconId === iconDefinition.id ? isFlashing : selectedIconId === iconDefinition.id;
+            const isSelected = flash.isHighlighted(iconDefinition.id, selectedIconId === iconDefinition.id);
 
             return (
               <DesktopIcon
