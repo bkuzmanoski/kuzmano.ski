@@ -57,7 +57,7 @@ export function setTheme(theme: Theme) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
-    /* Ignored. */
+    // Ignored.
   }
 
   applyTheme(theme);
@@ -70,7 +70,7 @@ export function setSound(sound: Sound) {
   try {
     localStorage.setItem(SOUND_STORAGE_KEY, sound);
   } catch {
-    /* Ignored. */
+    // Ignored.
   }
 
   emit();
@@ -94,7 +94,7 @@ export function getSettings(): Settings {
 }
 
 /**
- * Runs in the document head before first paint (earlier than hydration) so the
+ * Runs in the document head before first paint (prior to hydration) so the
  * chosen palette is applied without a flash of the default theme. Only the
  * explicit modes touch the attribute; "system" leaves it absent for the OS media
  * query to drive.
@@ -102,8 +102,11 @@ export function getSettings(): Settings {
 export const themeScript = `(function () {
   try {
     var theme = localStorage.getItem("${THEME_STORAGE_KEY}");
+
     if (theme === "light" || theme === "dark") {
       document.documentElement.setAttribute("${THEME_ATTRIBUTE}", theme);
     }
-  } catch (e) {}
+  } catch (e) {
+    // Ignored.
+  }
 })();`;

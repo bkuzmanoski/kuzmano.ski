@@ -57,7 +57,7 @@ export function loadPositions(ids: ReadonlyArray<string>, layout: IconLayout, st
       }
     }
   } catch {
-    /* Ignored. */
+    // Ignored.
   }
 
   return positions;
@@ -67,7 +67,7 @@ export function savePositions(positions: IconPositions, storageKey: string) {
   try {
     localStorage.setItem(storageKey, JSON.stringify(positions));
   } catch {
-    /* Ignored. */
+    // Ignored.
   }
 }
 

@@ -50,7 +50,7 @@ export function ContentList({ collection, basePath }: { collection: Collection; 
             onPointerDown={playClick}
           >
             <span className={styles.cellTitle}>
-              <span className={styles.icon} aria-hidden="true">
+              <span className={styles.icon} aria-hidden>
                 <FolderSmallIcon />
               </span>
               <span className={styles.title}>{entry.title}</span>

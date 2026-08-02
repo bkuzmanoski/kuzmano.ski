@@ -10,8 +10,14 @@
 
   color: var(--color-foreground);
 
+  opacity: 0;
   background: var(--color-background);
   box-shadow: var(--drop-shadow);
+
+  &.ready {
+    opacity: 1;
+    transition: opacity 0ms linear calc(var(--boot-step-ms) * 3); /* Follow menu bar and icons reveal. */
+  }
 
   &:not(.focused) {
     border-color: var(--color-muted);

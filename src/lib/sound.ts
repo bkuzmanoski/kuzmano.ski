@@ -47,7 +47,7 @@ function unlockAudio(): void {
   unlocking = context
     .resume()
     .catch(() => {
-      /* Ignored. */
+      // Ignored.
     })
     .finally(() => {
       unlocking = null;
@@ -102,7 +102,7 @@ function playSound(play: (context: AudioContext) => void) {
     .resume()
     .then(() => play(context))
     .catch(() => {
-      /* Ignored. */
+      // Ignored.
     });
 }
 

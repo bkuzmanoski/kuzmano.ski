@@ -5,6 +5,7 @@ import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
+import { useHasBooted } from "#/lib/hooks/use-has-booted";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { playClick, playScroll, skipScroll } from "#/lib/sound";
 
@@ -82,8 +83,9 @@ export function Window({
   children: ReactNode;
 }) {
   const viewportId = useId();
-  const viewport = useRef<HTMLDivElement>(null);
-  const { metrics, measure } = useScrollMetrics(viewport);
+  const hasBooted = useHasBooted();
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const { metrics, measure } = useScrollMetrics(viewportRef);
   const [isResizing, setIsResizing] = useState(false);
 
   const moveHandlers = usePointerDrag({
@@ -109,7 +111,13 @@ export function Window({
   return (
     <section
       aria-label={title}
-      className={clsx(styles.window, focused && styles.focused, maximized && styles.maximized, hidden && styles.hidden)}
+      className={clsx(
+        styles.window,
+        focused && styles.focused,
+        maximized && styles.maximized,
+        hidden && styles.hidden,
+        hasBooted && styles.ready,
+      )}
       style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
       onPointerDownCapture={onFocus}
     >
@@ -125,7 +133,7 @@ export function Window({
       </header>
       <div className={styles.content}>
         <div
-          ref={viewport}
+          ref={viewportRef}
           className={styles.viewport}
           data-scrolled-to-end={isScrolledToEnd || undefined}
           id={viewportId}
@@ -146,12 +154,12 @@ export function Window({
           controls={viewportId}
           metrics={metrics}
           onScrollTop={(top) => {
-            if (viewport.current) {
-              viewport.current.scrollTop = top;
+            if (viewportRef.current) {
+              viewportRef.current.scrollTop = top;
             }
           }}
           onStep={(delta) => {
-            const element = viewport.current;
+            const element = viewportRef.current;
 
             if (!element) {
               return false;

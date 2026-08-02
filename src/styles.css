@@ -20,6 +20,8 @@
   --letter-spacing-chrome: -0.01em;
   --drop-shadow: 2px 2px 0 var(--color-shadow);
   --menu-bar-height: 32px;
+  --wallpaper: url("./assets/images/wallpaper.svg") repeat;
+  --boot-step-ms: 300ms; /* The time it takes for each step of the boot sequence to complete */
 
   color-scheme: light dark;
 

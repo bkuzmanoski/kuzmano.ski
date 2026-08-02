@@ -1,6 +1,7 @@
 .menuBar {
   position: relative;
   z-index: 1000;
+  transform: translateY(-100%);
 
   display: flex;
   flex: none;
@@ -13,6 +14,15 @@
   color: var(--color-foreground);
 
   background: var(--color-background);
+
+  &.ready {
+    transform: translateY(0);
+    transition: transform var(--boot-step-ms) ease-in var(--boot-step-ms); /* Follow desktop reveal. */
+
+    @media (prefers-reduced-motion: reduce) {
+      transition-duration: 0s;
+    }
+  }
 }
 
 .logo {

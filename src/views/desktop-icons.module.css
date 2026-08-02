@@ -3,9 +3,17 @@
  * icon turns pointer events back on. */
 .layer {
   pointer-events: none;
+
   position: absolute;
   z-index: 0;
   inset: 0;
+
+  opacity: 0;
+
+  &.ready {
+    opacity: 1;
+    transition: opacity 0ms linear calc(var(--boot-step-ms) * 2); /* Follow menu bar reveal. */
+  }
 }
 
 .zoomRect {

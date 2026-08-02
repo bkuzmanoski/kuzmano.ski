@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 const noSubscribe = () => () => {};
-const readIsWindows = () => /Win/i.test(navigator.userAgent);
+const getIsWindows = () => /Win/i.test(navigator.userAgent);
 const serverIsWindows = () => false;
 
 /**
@@ -10,5 +10,5 @@ const serverIsWindows = () => false;
  * the store exists to keep the server render and hydration agreeing on macOS.
  */
 export function useIsWindows(): boolean {
-  return useSyncExternalStore(noSubscribe, readIsWindows, serverIsWindows);
+  return useSyncExternalStore(noSubscribe, getIsWindows, serverIsWindows);
 }
