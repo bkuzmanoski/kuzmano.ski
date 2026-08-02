@@ -131,7 +131,7 @@ export function Window({
           }}
           resizeControl={
             maximized ? null : (
-              <Tooltip label="Resize">
+              <Tooltip label="Resize" suppressed={isResizing}>
                 <button
                   aria-label="Resize"
                   className={clsx(styles.controlResize, isResizing && styles.pressed)}
