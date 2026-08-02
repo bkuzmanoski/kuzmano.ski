@@ -50,6 +50,7 @@ export function DesktopIcon({
   ref,
   x,
   y,
+  cellSize,
   tabIndex,
   selected,
   open,
@@ -63,6 +64,7 @@ export function DesktopIcon({
   ref: Ref<HTMLDivElement>;
   x: number;
   y: number;
+  cellSize: number;
   tabIndex: number;
   selected: boolean;
   open: boolean;
@@ -101,7 +103,7 @@ export function DesktopIcon({
       className={styles.icon}
       data-icon={iconDefinition.id}
       role="button"
-      style={{ left: x, top: y }}
+      style={{ left: x, top: y, width: cellSize }}
       tabIndex={tabIndex}
       onDoubleClick={() => {
         if (!hasMovedRef.current) {

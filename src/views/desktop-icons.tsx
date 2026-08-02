@@ -229,6 +229,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
                 iconDefinition={iconDefinition}
                 x={left}
                 y={top}
+                cellSize={ICON_LAYOUT.cellSize}
                 tabIndex={tabStop === iconDefinition.id ? 0 : -1}
                 open={iconDefinition.kind === "folder" && openPaths.includes(iconDefinition.route)}
                 selected={isSelected}
