@@ -1,7 +1,32 @@
 .list {
-  --list-columns: 1fr 140px 132px;
+  /* The title reserves the glyph's space as inline padding, so the header cell
+   * lines up with the rows without carrying an empty icon of its own. The
+   * title's own padding adds to the gap, clearing the glyph by --gap-icon * 2. */
+  --gap-icon: 8px;
+  --gap-column: 24px;
+  --icon-size: 16px;
+  --line-height: 20px;
+  --title-min-width: 204px;
+  --title-padding: 2px 4px;
+  --meta-width: 120px;
+  --row-padding-inline: 12px;
+  --row-padding-block: 6px;
+  --header-rule-gap: 3px;
+  --header-height: 28px; /* Not including the rule gap. */
+  --color-row-open: color-mix(in srgb, var(--color-foreground) 15%, transparent);
 
+  container-type: inline-size;
   font: var(--font-ui);
+  line-height: var(--line-height);
+}
+
+/* The meta tracks are `auto`, so a cell hidden by a container query collapses
+ * its track to nothing and the remaining cells shift along on their own. */
+.header,
+.row {
+  display: grid;
+  grid-template-columns: minmax(var(--title-min-width), 1fr) auto auto;
+  padding-inline: var(--row-padding-inline);
 }
 
 .header {
@@ -9,63 +34,63 @@
   z-index: 1;
   top: 0;
 
-  display: grid;
-  grid-template-columns: var(--list-columns);
   align-items: center;
 
-  height: 28px;
-  padding: 0 0 0 12px;
-  border-bottom: 1px solid var(--color-foreground);
+  block-size: calc(var(--header-height) + var(--header-rule-gap));
+  padding-block-end: var(--header-rule-gap);
+  border-block-end: 1px solid var(--color-foreground);
 
-  font-size: 16px;
-
-  background: var(--color-background);
-}
-
-.headerPost {
-  padding-left: 28px;
+  background:
+    linear-gradient(var(--color-foreground) 0 0) no-repeat left 0 bottom var(--header-rule-gap) / 100% 1px,
+    var(--color-background);
 }
 
 .row {
-  display: grid;
-  grid-template-columns: var(--list-columns);
-  align-items: center;
-
-  height: 34px;
-  padding: 0 0 0 12px;
-  border-bottom: 1px solid var(--color-muted);
-
-  color: var(--color-foreground);
+  align-items: start;
+  padding-block: var(--row-padding-block);
+  border-block-end: 1px solid var(--color-muted);
   text-decoration: none;
 
-  outline: none;
+  &.open {
+    background: var(--color-row-open);
+  }
+
+  [data-scrolled-to-end] &:last-child {
+    border-block-end-color: transparent;
+  }
 }
 
-.open {
-  background: color-mix(in srgb, var(--color-foreground) 15%, transparent);
+.cellTitle {
+  position: relative;
+  padding-inline-start: calc(var(--icon-size) + var(--gap-icon));
 }
 
-.cellPost {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
-}
-
+/* Taken out of flow into the reserved padding and given one line box of height,
+ * so the glyph centres on the first line however many lines the title runs to. */
 .icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+
+  display: flex;
+  align-items: center;
+
+  inline-size: var(--icon-size);
+  block-size: var(--line-height);
+
+  & svg {
+    inline-size: var(--icon-size);
+    block-size: var(--icon-size);
+  }
 }
 
 .title {
-  overflow: hidden;
+  padding: var(--title-padding);
+  box-decoration-break: clone;
 
-  padding: 2px 6px;
-
-  font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  .row & {
+    font: var(--font-ui-bold);
+  }
 
   .selected & {
     color: var(--color-background);
@@ -73,12 +98,25 @@
   }
 }
 
-.cellMetadata {
+.cellCategory,
+.cellDate {
   overflow: hidden;
 
-  padding-right: 8px;
+  inline-size: var(--meta-width);
+  margin-inline-start: var(--gap-column);
 
-  font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@container (width < 480px) {
+  .cellCategory {
+    display: none;
+  }
+}
+
+@container (width < 328px) {
+  .cellDate {
+    display: none;
+  }
 }
