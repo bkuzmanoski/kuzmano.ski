@@ -45,11 +45,7 @@
   font: var(--font-chrome);
   letter-spacing: var(--letter-spacing-chrome);
 
-  .window:not(.focused) & {
-    border-bottom-color: var(--color-muted);
-  }
-
-  /* Control buttons are placed by the tooltip wrapper around them */
+  /* Control buttons are placed by the tooltip wrapper around them. */
   & .control {
     position: absolute;
     top: 6px;

@@ -1,19 +1,41 @@
 .wrapper {
   position: relative;
+  anchor-name: --tooltip;
+  anchor-scope: --tooltip;
+
   display: inline-flex;
   align-self: stretch;
+}
+
+@position-try --tooltip-align-end {
+  position-area: block-end span-inline-start;
+  justify-self: end;
+}
+
+@position-try --tooltip-align-start {
+  position-area: block-end span-inline-end;
+  justify-self: start;
 }
 
 .tip {
   pointer-events: none;
   user-select: none;
 
-  position: absolute;
+  position: fixed;
   z-index: 2000;
-  top: calc(100% + 5px);
-  left: 50%;
-  transform: translateX(-50%);
+  position-anchor: --tooltip;
+  position-area: block-end span-all;
+  position-try-fallbacks:
+    --tooltip-align-end,
+    --tooltip-align-start,
+    flip-block,
+    --tooltip-align-end flip-block,
+    --tooltip-align-start flip-block;
 
+  justify-self: anchor-center;
+
+  width: max-content;
+  margin-block-start: 5px;
   padding: 4px 6px;
   border: 1px solid var(--color-foreground);
 
@@ -22,4 +44,13 @@
 
   background: var(--color-background);
   box-shadow: var(--drop-shadow);
+
+  @supports not (anchor-name: --tooltip) {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    margin-block-start: 0;
+  }
 }
