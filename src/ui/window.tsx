@@ -14,6 +14,40 @@ import styles from "./window.module.css";
 
 import type { ReactNode } from "react";
 
+function TitleBarButton({
+  icon,
+  label,
+  className,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  className?: string;
+  onClick: () => void;
+}) {
+  const [isPressed, setIsPressed] = useState(false);
+
+  return (
+    <Tooltip label={label} className={clsx(styles.control, className)}>
+      <button
+        aria-label={label}
+        className={styles.controlButton}
+        type="button"
+        onClick={onClick}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          setIsPressed(true);
+          playClick();
+        }}
+        onPointerLeave={() => setIsPressed(false)}
+        onPointerUp={() => setIsPressed(false)}
+      >
+        {isPressed ? <ActiveIcon /> : icon}
+      </button>
+    </Tooltip>
+  );
+}
+
 export function Window({
   title,
   x,
@@ -146,39 +180,5 @@ export function Window({
         />
       </div>
     </section>
-  );
-}
-
-function TitleBarButton({
-  icon,
-  label,
-  className,
-  onClick,
-}: {
-  icon: ReactNode;
-  label: string;
-  className?: string;
-  onClick: () => void;
-}) {
-  const [isPressed, setIsPressed] = useState(false);
-
-  return (
-    <Tooltip label={label} className={clsx(styles.control, className)}>
-      <button
-        aria-label={label}
-        className={styles.controlButton}
-        type="button"
-        onClick={onClick}
-        onPointerDown={(event) => {
-          event.stopPropagation();
-          setIsPressed(true);
-          playClick();
-        }}
-        onPointerLeave={() => setIsPressed(false)}
-        onPointerUp={() => setIsPressed(false)}
-      >
-        {isPressed ? <ActiveIcon /> : icon}
-      </button>
-    </Tooltip>
   );
 }

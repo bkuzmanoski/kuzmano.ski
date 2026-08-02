@@ -17,6 +17,10 @@
     border-color: var(--color-muted);
   }
 
+  &:not(.focused) > * {
+    opacity: 0.5;
+  }
+
   &.maximized {
     position: fixed;
     inset: var(--menu-bar-height) 0 0;
@@ -80,10 +84,6 @@
     white-space: nowrap;
 
     background: var(--color-background);
-
-    .window:not(.focused) & {
-      opacity: 0.5;
-    }
   }
 }
 
@@ -128,13 +128,9 @@
 
   & .viewport {
     scrollbar-width: none;
-
     overflow-y: auto;
     flex: 1;
-
     min-width: 0;
-
-    background: var(--color-background);
 
     &::-webkit-scrollbar {
       display: none;
