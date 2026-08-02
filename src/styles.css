@@ -8,14 +8,17 @@
 }
 
 :root {
-  --color-foreground: light-dark(#0f0e0d, #fff);
-  --color-background: light-dark(#fff, #0f0e0d);
+  --color-light: #f3f2f1;
+  --color-dark: #0f0e0d;
+  --color-foreground: light-dark(var(--color-dark), var(--color-light));
+  --color-background: light-dark(var(--color-light), var(--color-dark));
   --color-muted: rgb(from var(--color-foreground) r g b / 50%);
+  --color-shadow: rgb(from var(--color-dark) r g b / 50%);
   --font-chrome: 16px "ChicagoFLF";
   --font-ui: 14px "Helvetica", "Helvetica Neue", system-ui;
   --font-ui-bold: bold 14px "Helvetica", "Helvetica Neue", system-ui;
   --letter-spacing-chrome: -0.01em;
-  --drop-shadow: 2px 2px 0 var(--color-muted);
+  --drop-shadow: 2px 2px 0 var(--color-shadow);
   --menu-bar-height: 32px;
 
   color-scheme: light dark;

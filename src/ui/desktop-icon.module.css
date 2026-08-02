@@ -10,7 +10,7 @@
   gap: 4px;
   align-items: center;
 
-  color: var(--color-foreground);
+  color: var(--color-dark) !important;
   text-align: center;
 
   & .glyph,
@@ -34,11 +34,11 @@
     line-height: 20px;
     white-space: nowrap;
 
-    background: var(--color-background);
+    background: var(--color-light);
 
     &.selected {
-      color: var(--color-background);
-      background: var(--color-foreground);
+      color: var(--color-light);
+      background: var(--color-dark);
     }
 
     & .downloadIcon {
