@@ -196,7 +196,7 @@ function ShortcutHint({ label }: { label: string }) {
 
   return (
     <span className={styles.shortcut}>
-      {isWindows ? <span>Alt+</span> : <OptionIcon className={styles.modifier} />}
+      {isWindows ? <span>Alt&#8239;+</span> : <OptionIcon className={styles.modifier} />}
       <span>{label}</span>
     </span>
   );
