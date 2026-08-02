@@ -2,9 +2,9 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
+import { useElementSize } from "#/lib/hooks/use-element-size";
+import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { playClick } from "#/lib/sound";
-import { useElementSize } from "#/lib/use-element-size";
-import { usePointerDrag } from "#/lib/use-pointer-drag";
 
 import styles from "./scrollbar.module.css";
 

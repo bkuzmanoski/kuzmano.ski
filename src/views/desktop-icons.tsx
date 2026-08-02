@@ -4,12 +4,13 @@ import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/icons";
 import { downloadFile } from "#/lib/download";
 import { constrain } from "#/lib/geometry";
 import type { Rect, Size } from "#/lib/geometry";
+import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
+import { useElementSize } from "#/lib/hooks/use-element-size";
+import { nextIconId } from "#/lib/icon";
 import type { Icon } from "#/lib/icon";
-import { commitIconPositions, moveIcon, nextIconId, useIconPositions } from "#/lib/icon";
+import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
 import { clamp } from "#/lib/math";
 import { playClick } from "#/lib/sound";
-import { useActivationFlash } from "#/lib/use-activation-flash";
-import { useElementSize } from "#/lib/use-element-size";
 import { useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
 import { DesktopIcon } from "#/ui/desktop-icon";
 

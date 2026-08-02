@@ -1,3 +1,5 @@
+import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
+import { WINDOW_LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/sound";
 import { WindowManagerProvider } from "#/lib/window-manager";
 import { BootOverlay } from "#/ui/boot-overlay";
@@ -17,7 +19,7 @@ export function Desktop({ children }: { children: ReactNode }) {
   useAudioUnlock();
 
   return (
-    <WindowManagerProvider>
+    <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
       <div className={styles.desktop}>
         <MenuBar />
         <WindowLayer>{children}</WindowLayer>

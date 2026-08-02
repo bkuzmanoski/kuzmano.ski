@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 /**
  * A global keyboard shortcut. Modifier is Option/Alt. `code` is the
@@ -36,12 +36,4 @@ export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
 
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-}
-
-const noSubscribe = () => () => {};
-const readIsWindows = () => /Win/i.test(navigator.userAgent);
-const serverIsWindows = () => false;
-
-export function useIsWindows(): boolean {
-  return useSyncExternalStore(noSubscribe, readIsWindows, serverIsWindows);
 }

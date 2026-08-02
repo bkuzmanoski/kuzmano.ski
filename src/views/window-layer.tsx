@@ -1,7 +1,7 @@
 import { Suspense, memo, useRef, useState } from "react";
 
 import { constrain } from "#/lib/geometry";
-import { useElementSize } from "#/lib/use-element-size";
+import { useElementSize } from "#/lib/hooks/use-element-size";
 import { useFocusedWindow, useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
 import { Window } from "#/ui/window";
 

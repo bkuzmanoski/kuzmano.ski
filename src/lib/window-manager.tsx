@@ -1,20 +1,24 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { createContext, use, useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
 
-import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
-import { CASCADE_OFFSET, DEFAULT_POSITION, DEFAULT_SIZE, MAX_CASCADE_STEPS, MIN_SIZE } from "#/config/windows";
-
 import { resolveWindow, windowKindFor } from "./window-registry";
 
-import type { Position, Rect } from "./geometry";
+import type { Position, Rect, Size } from "./geometry";
 import type { WindowKind } from "./window-registry";
-import type { AnyRouter } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 export interface WindowState extends Rect {
   title: string;
   kind: WindowKind;
   maximized: boolean;
+}
+
+export interface WindowLayout {
+  defaultPosition: Record<WindowKind, Position>;
+  defaultSize: Record<WindowKind, Size>;
+  minSize: Size;
+  cascadeOffset: number;
+  maxCascadeSteps: number;
 }
 
 export interface ManagerState {
@@ -58,116 +62,124 @@ function updateWindow(state: ManagerState, route: string, patch: Partial<WindowS
 }
 
 /** The position of cascade slot `step` for a kind. Slot 0 is the base position. */
-function cascadeSlot(kind: WindowKind, step: number): Position {
-  const base = DEFAULT_POSITION[kind];
-  const offset = (step % MAX_CASCADE_STEPS) * CASCADE_OFFSET;
+function cascadeSlot(layout: WindowLayout, kind: WindowKind, step: number): Position {
+  const base = layout.defaultPosition[kind];
+  const offset = (step % layout.maxCascadeSteps) * layout.cascadeOffset;
 
   return { x: base.x + offset, y: base.y + offset };
 }
 
 /**
- * The first cascade slot not occupied by an open window. The walk stops at CASCADE_STEPS
+ * The first cascade slot not occupied by an open window. The walk stops at `maxCascadeSteps`
  * and starts the cascade over, so a long session does not march a window off the desktop;
  * the window layer fits the result to the viewport at render time.
  */
-function availableCascadeSlot(windows: Record<string, WindowState>, kind: WindowKind): Position {
+function availableCascadeSlot(layout: WindowLayout, windows: Record<string, WindowState>, kind: WindowKind): Position {
   const openWindows = Object.values(windows);
 
-  for (let step = 0; step < MAX_CASCADE_STEPS; step++) {
-    const position = cascadeSlot(kind, step);
+  for (let step = 0; step < layout.maxCascadeSteps; step++) {
+    const position = cascadeSlot(layout, kind, step);
 
     if (!openWindows.some((window) => window.x === position.x && window.y === position.y)) {
       return position;
     }
   }
 
-  return cascadeSlot(kind, 0);
+  return cascadeSlot(layout, kind, 0);
 }
 
+export type WindowReducer = (state: ManagerState, action: Action) => ManagerState;
+
 /** Exported for unit tests; the app dispatches through the provider. */
-export function reducer(state: ManagerState, action: Action): ManagerState {
-  switch (action.type) {
-    case "open": {
-      if (state.windows[action.route]) {
+export function createWindowReducer(layout: WindowLayout): WindowReducer {
+  return function reducer(state: ManagerState, action: Action): ManagerState {
+    switch (action.type) {
+      case "open": {
+        if (state.windows[action.route]) {
+          return focusWindow(state, action.route);
+        }
+
+        return {
+          windows: {
+            ...state.windows,
+            [action.route]: {
+              title: action.title,
+              kind: action.kind,
+              maximized: false,
+              ...availableCascadeSlot(layout, state.windows, action.kind),
+              ...layout.defaultSize[action.kind],
+            },
+          },
+          order: [...state.order, action.route],
+          focused: action.route,
+        };
+      }
+      case "close": {
+        if (!state.windows[action.route]) {
+          return state;
+        }
+
+        const { [action.route]: _closed, ...windows } = state.windows;
+        const order = state.order.filter((open) => open !== action.route);
+        const focused = state.focused === action.route ? (order.at(-1) ?? null) : state.focused;
+
+        return { windows, order, focused };
+      }
+      case "focus": {
         return focusWindow(state, action.route);
       }
-
-      return {
-        windows: {
-          ...state.windows,
-          [action.route]: {
-            title: action.title,
-            kind: action.kind,
-            maximized: false,
-            ...availableCascadeSlot(state.windows, action.kind),
-            ...DEFAULT_SIZE[action.kind],
-          },
-        },
-        order: [...state.order, action.route],
-        focused: action.route,
-      };
-    }
-    case "close": {
-      if (!state.windows[action.route]) {
-        return state;
+      case "move": {
+        return updateWindow(state, action.route, { x: action.x, y: action.y });
       }
-
-      const { [action.route]: _closed, ...windows } = state.windows;
-      const order = state.order.filter((open) => open !== action.route);
-      const focused = state.focused === action.route ? (order.at(-1) ?? null) : state.focused;
-
-      return { windows, order, focused };
-    }
-    case "focus": {
-      return focusWindow(state, action.route);
-    }
-    case "move": {
-      return updateWindow(state, action.route, { x: action.x, y: action.y });
-    }
-    case "resize": {
-      /* The stored size is the desired size, never below the minimum.
-       * The window layer fits it to the viewport at render time. */
-      return updateWindow(state, action.route, {
-        width: Math.max(MIN_SIZE.width, action.width),
-        height: Math.max(MIN_SIZE.height, action.height),
-      });
-    }
-    case "zoom": {
-      const target = state.windows[action.route];
-
-      if (!target) {
-        return state;
-      }
-
-      return updateWindow(focusWindow(state, action.route), action.route, { maximized: !target.maximized });
-    }
-    case "organize": {
-      /* Collections go to the back and content windows to the front, so an open
-       * document sits above the folder it came from. Each group then cascades
-       * from its own base position, in the stack order it already had. */
-      const group = (kind: WindowKind) =>
-        state.order.flatMap((route) => {
-          const target = state.windows[route];
-          return target?.kind === kind ? [[route, target] as const] : [];
+      case "resize": {
+        /* The stored size is the desired size, never below the minimum.
+         * The window layer fits it to the viewport at render time. */
+        return updateWindow(state, action.route, {
+          width: Math.max(layout.minSize.width, action.width),
+          height: Math.max(layout.minSize.height, action.height),
         });
-
-      const entries = [...group("collection"), ...group("content")];
-      const windows: Record<string, WindowState> = {};
-      const steps: Record<WindowKind, number> = { collection: 0, content: 0 };
-
-      for (const [route, target] of entries) {
-        windows[route] = { ...target, ...cascadeSlot(target.kind, steps[target.kind]++), maximized: false };
       }
+      case "zoom": {
+        const target = state.windows[action.route];
 
-      const order = entries.map(([route]) => route);
-      const focused = state.focused === null ? null : (order.at(-1) ?? null);
+        if (!target) {
+          return state;
+        }
 
-      return { windows, order, focused };
+        return updateWindow(focusWindow(state, action.route), action.route, { maximized: !target.maximized });
+      }
+      case "organize": {
+        /* Collections go to the back and content windows to the front, so an open
+         * document sits above the folder it came from. Each group then cascades
+         * from its own base position, in the stack order it already had. */
+        const group = (kind: WindowKind) =>
+          state.order.flatMap((route) => {
+            const target = state.windows[route];
+            return target?.kind === kind ? [[route, target] as const] : [];
+          });
+
+        const entries = [...group("collection"), ...group("content")];
+        const windows: Record<string, WindowState> = {};
+        const steps: Record<WindowKind, number> = { collection: 0, content: 0 };
+
+        for (const [route, target] of entries) {
+          windows[route] = {
+            ...target,
+            ...cascadeSlot(layout, target.kind, steps[target.kind]++),
+            maximized: false,
+          };
+        }
+
+        const order = entries.map(([route]) => route);
+        const focused = state.focused === null ? null : (order.at(-1) ?? null);
+
+        return { windows, order, focused };
+      }
+      case "focusDesktop": {
+        return state.focused === null ? state : { ...state, focused: null };
+      }
     }
-    case "focusDesktop": {
-      return state.focused === null ? state : { ...state, focused: null };
-    }
-  }
+  };
 }
 
 export interface WindowActions {
@@ -190,8 +202,8 @@ const WindowsContext = createContext<Record<string, WindowState>>({});
 const OrderContext = createContext<Array<string>>([]);
 const FocusContext = createContext<string | null>(null);
 
-function initialState(router: AnyRouter): ManagerState {
-  const action = openAction(router.state.location.pathname);
+function initialState(reducer: WindowReducer, pathname: string): ManagerState {
+  const action = openAction(pathname);
   return action ? reducer(EMPTY_STATE, action) : EMPTY_STATE;
 }
 
@@ -205,10 +217,21 @@ function openAction(route: string): Action | null {
   return { type: "open", route, title: windowTarget.title, kind: windowKindFor(windowTarget) };
 }
 
-export function WindowManagerProvider({ children }: { children: ReactNode }) {
+export function WindowManagerProvider({
+  layout,
+  initialRoute,
+  children,
+}: {
+  layout: WindowLayout;
+  initialRoute?: string;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const navigate = useNavigate();
-  const [state, dispatch] = useReducer(reducer, router, initialState);
+  const reducer = useMemo(() => createWindowReducer(layout), [layout]);
+  const [state, dispatch] = useReducer(reducer, router, (initialRouter) =>
+    initialState(reducer, initialRouter.state.location.pathname),
+  );
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const actions = useMemo<WindowActions>(() => {
@@ -279,8 +302,8 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
   /* A first visit to the bare desktop opens the default window. A later return
    * to "/" (e.g. via a click on the desktop) does not reopen it. */
   const openInitialWindow = useEffectEvent(() => {
-    if (pathname === "/") {
-      actions.open(INITIAL_WINDOW_ROUTE);
+    if (initialRoute && pathname === "/") {
+      actions.open(initialRoute);
     }
   });
 

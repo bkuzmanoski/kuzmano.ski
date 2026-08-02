@@ -5,7 +5,7 @@ import LogoIcon from "#/assets/images/logo.svg?react";
 import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
 import { RESUME_URL, SITE_SOURCE_URL } from "#/config/site";
 import { downloadFile } from "#/lib/download";
-import { useGlobalShortcuts } from "#/lib/keyboard-shortcut";
+import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
 import { playClick } from "#/lib/sound";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { Size } from "#/lib/geometry";
-
+import type { Size } from "../geometry";
 import type { RefObject } from "react";
 
 /**

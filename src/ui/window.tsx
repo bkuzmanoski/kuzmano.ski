@@ -5,8 +5,8 @@ import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
+import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { playClick, playScroll, skipScroll } from "#/lib/sound";
-import { usePointerDrag } from "#/lib/use-pointer-drag";
 
 import { Scrollbar, useScrollMetrics } from "./scrollbar";
 import { Tooltip } from "./tooltip";

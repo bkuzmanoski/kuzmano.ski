@@ -1,10 +1,18 @@
 import { describe, expect, test } from "vitest";
 
-import { DEFAULT_POSITION, MIN_SIZE } from "#/config/windows";
+import { EMPTY_STATE, createWindowReducer } from "./window-manager";
 
-import { EMPTY_STATE, reducer } from "./window-manager";
+import type { ManagerState, WindowLayout } from "./window-manager";
 
-import type { ManagerState } from "./window-manager";
+const LAYOUT: WindowLayout = {
+  defaultPosition: { collection: { x: 16, y: 16 }, content: { x: 512, y: 16 } },
+  defaultSize: { collection: { width: 480, height: 420 }, content: { width: 720, height: 640 } },
+  minSize: { width: 280, height: 160 },
+  cascadeOffset: 28,
+  maxCascadeSteps: 8,
+};
+
+const reducer = createWindowReducer(LAYOUT);
 
 function opened(...routes: Array<string>): ManagerState {
   return routes.reduce(
@@ -32,8 +40,8 @@ describe("open", () => {
   test("each kind cascades from its own base position", () => {
     const state = reducer(opened("/work"), { type: "open", route: "/about", title: "About", kind: "content" });
 
-    expect(state.windows["/work"]).toMatchObject(DEFAULT_POSITION.collection);
-    expect(state.windows["/about"]).toMatchObject(DEFAULT_POSITION.content);
+    expect(state.windows["/work"]).toMatchObject(LAYOUT.defaultPosition.collection);
+    expect(state.windows["/about"]).toMatchObject(LAYOUT.defaultPosition.content);
   });
 
   test("a closed window frees its slot for the next window", () => {
@@ -46,14 +54,14 @@ describe("open", () => {
     });
 
     // /work held the base slot, so /contact takes it rather than cascading past /about.
-    expect(mutatedState.windows["/contact"]).toMatchObject(DEFAULT_POSITION.collection);
+    expect(mutatedState.windows["/contact"]).toMatchObject(LAYOUT.defaultPosition.collection);
   });
 
   test("the base position is never mutated by a cascade", () => {
-    const defaultPosition = { ...DEFAULT_POSITION.collection };
+    const defaultPosition = { ...LAYOUT.defaultPosition.collection };
 
     opened("/work", "/about", "/contact");
-    expect(DEFAULT_POSITION.collection).toEqual(defaultPosition);
+    expect(LAYOUT.defaultPosition.collection).toEqual(defaultPosition);
   });
 
   test("an open route is re-focused, not duplicated", () => {
@@ -136,8 +144,8 @@ describe("resize", () => {
   test("clamps the size to the minimum size", () => {
     const state = reducer(opened("/work"), { type: "resize", route: "/work", width: 10, height: 10 });
 
-    expect(state.windows["/work"]!.width).toBe(MIN_SIZE.width);
-    expect(state.windows["/work"]!.height).toBe(MIN_SIZE.height);
+    expect(state.windows["/work"]!.width).toBe(LAYOUT.minSize.width);
+    expect(state.windows["/work"]!.height).toBe(LAYOUT.minSize.height);
   });
 });
 
@@ -185,8 +193,8 @@ describe("organize", () => {
 
     expect(initialState.order).toEqual(["/about", "/work"]);
     expect(mutatedState.order).toEqual(["/work", "/about"]);
-    expect(mutatedState.windows["/work"]).toMatchObject(DEFAULT_POSITION.collection);
-    expect(mutatedState.windows["/about"]).toMatchObject(DEFAULT_POSITION.content);
+    expect(mutatedState.windows["/work"]).toMatchObject(LAYOUT.defaultPosition.collection);
+    expect(mutatedState.windows["/about"]).toMatchObject(LAYOUT.defaultPosition.content);
   });
 
   test("the front window takes the focus", () => {
