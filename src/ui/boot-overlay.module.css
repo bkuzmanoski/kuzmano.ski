@@ -174,7 +174,9 @@
   height: auto;
   color: var(--color-dark);
 
-  /* TODO: Fill the "B". */
+  :global(.foreground) {
+    opacity: 1;
+  }
 }
 
 .welcomeDialog {
