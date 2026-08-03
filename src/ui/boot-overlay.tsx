@@ -93,9 +93,6 @@ export function viewableAreaOf(box: { left: number; top: number; width: number; 
  * Each edge is given its own distance to travel, so animating to them reaches all
  * four corners at the same time.
  *
- * These are applied to the element rather than through a custom property
- * because the build expands the `inset` shorthand into its four longhands.
- *
  * Exported for unit tests.
  */
 export function insetToViewport(box: Rect, view: Size) {
@@ -106,6 +103,9 @@ export function insetToViewport(box: Rect, view: Size) {
     left: -box.x,
   };
 }
+
+const cssInset = (edges: ReturnType<typeof insetToViewport>) =>
+  `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
@@ -176,20 +176,17 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
     height: geometry.height,
     "--display-scale": scale,
   };
-  const viewableAreaStyle: CSSProperties & Record<`--${string}`, string | number> = {
-    "--inset-x": `${SCREEN_INSET.x * scale}px`,
-    "--inset-y": `${SCREEN_INSET.y * scale}px`,
-    ...(isRevealingDesktop
-      ? { ...insetToViewport(geometry, view), clipPath: "none" }
-      : {
-          clipPath: screenClipPath(
-            geometry.width - 2 * SCREEN_INSET.x * scale,
-            geometry.height - 2 * SCREEN_INSET.y * scale,
-            SCREEN_RADIUS * scale,
-            SCREEN_PINCUSHION_BOW_PX * scale,
-          ),
-        }),
-  };
+  const viewableAreaStyle: CSSProperties & Record<`--${string}`, string | number> = isRevealingDesktop
+    ? { "--inset": cssInset(insetToViewport(geometry, view)), clipPath: "none" }
+    : {
+        "--inset": `${SCREEN_INSET.y * scale}px ${SCREEN_INSET.x * scale}px`,
+        clipPath: screenClipPath(
+          geometry.width - 2 * SCREEN_INSET.x * scale,
+          geometry.height - 2 * SCREEN_INSET.y * scale,
+          SCREEN_RADIUS * scale,
+          SCREEN_PINCUSHION_BOW_PX * scale,
+        ),
+      };
 
   return (
     <div

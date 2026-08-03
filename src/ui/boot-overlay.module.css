@@ -207,12 +207,10 @@
 }
 
 .viewableArea {
-  /* Insets set from JS. */
-  --inset-x: 0;
-  --inset-y: 0;
+  --inset: 0; /* Set from JS. */
 
   position: absolute;
-  inset: var(--inset-y) var(--inset-x);
+  inset: var(--inset);
 
   display: flex;
   align-items: center;
@@ -229,10 +227,7 @@
   &.growing {
     border-radius: 0;
     transition:
-      top var(--desktop-reveal-ms) ease-in,
-      right var(--desktop-reveal-ms) ease-in,
-      bottom var(--desktop-reveal-ms) ease-in,
-      left var(--desktop-reveal-ms) ease-in,
+      inset var(--desktop-reveal-ms) ease-in,
       border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 2);
   }
 }

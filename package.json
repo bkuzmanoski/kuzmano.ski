@@ -5,6 +5,9 @@
   "engines": {
     "node": ">=22"
   },
+  "browserslist": [
+    "baseline widely available"
+  ],
   "imports": {
     "#/*": "./src/*"
   },

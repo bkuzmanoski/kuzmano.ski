@@ -13,7 +13,15 @@ import { svgrOptions } from "./build/svgr";
 
 export default defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
-  css: { postcss: { plugins: [postcssPresetEnv()] } },
+  css: {
+    postcss: {
+      plugins: [
+        postcssPresetEnv({
+          features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
+        }),
+      ],
+    },
+  },
   plugins: [
     devtools(),
     svgr({ svgrOptions }),
