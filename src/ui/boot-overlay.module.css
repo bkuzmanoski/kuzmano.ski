@@ -1,6 +1,7 @@
 .overlay {
   /* Variables set from JS. */
   --loading-cover-fade-ms: 0ms;
+  --welcome-dialog-draw-ms: 0ms;
   --desktop-reveal-ms: 0ms;
 
   position: fixed;
@@ -275,11 +276,23 @@
 
   background: var(--color-background);
 
+  animation: draw-welcome-dialog var(--welcome-dialog-draw-ms) steps(10, jump-start) both;
+
   &::before {
     content: "";
     position: absolute;
     inset: calc(2px * var(--display-scale));
     border: calc(2px * var(--display-scale)) solid var(--color-foreground);
+  }
+}
+
+@keyframes draw-welcome-dialog {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -314,7 +327,7 @@
   }
 
   & .loadingMessage {
-    margin-bottom: 80px;
+    margin-bottom: 10dvh;
     font: var(--font-console);
     color: var(--color-light);
 

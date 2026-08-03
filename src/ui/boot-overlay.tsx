@@ -45,9 +45,10 @@ const SCREEN_RGB_SHIFT_PX = 0.5;
 const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
 const MAX_LOADING_MS = 5000; // Time to wait for the illustration and the font to load revealing the boot sequence.
 
-/* The two durations the stylesheet animates over. Both are motion
+/* The durations the stylesheet animates over. All are motion
  * rather than dwell, so reduced motion takes them to nothing. */
 const LOADING_COVER_FADE_MS = 1000;
+const WELCOME_DIALOG_DRAW_MS = 250;
 const DESKTOP_REVEAL_MS = 500;
 
 type Phase = "loading" | "macintosh-reveal" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
@@ -288,6 +289,7 @@ function BootSequence() {
   const isRevealingDesktop = phase === "desktop-reveal";
   const overlayStyle: CSSProperties & Record<`--${string}`, string | number> = {
     "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
+    "--welcome-dialog-draw-ms": `${prefersReducedMotion ? 0 : WELCOME_DIALOG_DRAW_MS}ms`,
     "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
   };
 
