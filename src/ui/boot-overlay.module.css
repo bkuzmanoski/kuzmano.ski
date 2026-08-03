@@ -84,7 +84,7 @@
       opacity var(--desktop-reveal-ms) ease-in;
   }
 
-  & .diskReadIndicator {
+  & .diskActivityIndicator {
     position: absolute;
     transform: translate(-50%, -50%);
     height: auto;
@@ -94,7 +94,7 @@
     }
 
     &.reading :global(.led) {
-      animation: disk-read 1000ms infinite;
+      animation: disk-activity 2s step-end infinite;
     }
   }
 
@@ -105,24 +105,68 @@
   }
 }
 
-@keyframes disk-read {
-  0%,
-  15% {
+@keyframes disk-activity {
+  0% {
     opacity: 1;
   }
 
-  20%,
-  35% {
+  7% {
     opacity: 0;
   }
 
-  50%,
+  12% {
+    opacity: 1;
+  }
+
+  16% {
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  31% {
+    opacity: 0;
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  38% {
+    opacity: 0;
+  }
+
+  47% {
+    opacity: 1;
+  }
+
+  51% {
+    opacity: 0;
+  }
+
   55% {
     opacity: 1;
   }
 
-  70%,
-  100% {
+  66% {
+    opacity: 0;
+  }
+
+  73% {
+    opacity: 1;
+  }
+
+  77% {
+    opacity: 0;
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
     opacity: 0;
   }
 }

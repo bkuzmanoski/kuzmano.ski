@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
-import DiskReadIndicator from "#/assets/images/macintosh-disk-read-indicator.svg?react";
+import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
 import Display from "#/assets/images/macintosh-display.svg?react";
 import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
@@ -177,8 +177,8 @@ function BootSequence() {
       )}
       <div className={styles.stage}>
         <div className={clsx(styles.illustration, isRevealingDesktop && styles.blurring)}>
-          <DiskReadIndicator
-            className={clsx(styles.diskReadIndicator, isDisplayOn && styles.reading)}
+          <DiskActivityIndicator
+            className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
             style={{
               left: `${DISK_LIGHT_FRACTION.x * 100}%`,
               top: `${DISK_LIGHT_FRACTION.y * 100}%`,
