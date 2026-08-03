@@ -5,7 +5,7 @@
     </mask>
     <g mask="url(#a)">
       <g class="led" filter="url(#b)">
-        <circle cx="3" cy="3" r="3" fill="#45FD04" />
+        <circle cx="3" cy="3" r="3" fill="#45fd04" />
       </g>
       <g class="specular-highlight" filter="url(#c)" opacity=".5" style="mix-blend-mode: plus-lighter">
         <path
