@@ -14,7 +14,7 @@ import styles from "./boot-overlay.module.css";
 import type { CSSProperties } from "react";
 
 const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
-const ASSET_TIMEOUT_MS = 3000; // Time to wait for the illustration and the font to load before giving up.
+const ASSET_TIMEOUT_MS = 5000; // Time to wait for the illustration and the font to load before giving up.
 
 /* Metrics derived from `macintosh.png` */
 const CASE = { width: 1214, height: 1067 };
