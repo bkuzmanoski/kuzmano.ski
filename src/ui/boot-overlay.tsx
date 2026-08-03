@@ -48,10 +48,10 @@ async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
   const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
   const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
   const promises = Promise.all([minDelay, fontSet, illustrationImage]);
   const timeout = new Promise((resolve) => (timer = setTimeout(resolve, ASSET_TIMEOUT_MS)));
-
-  let timer: ReturnType<typeof setTimeout> | undefined;
 
   try {
     return await Promise.race([promises, timeout]);
