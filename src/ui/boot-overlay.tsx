@@ -50,11 +50,12 @@ const MAX_LOADING_MS = 5000; // Time to wait for the illustration and the font t
 const LOADING_COVER_FADE_MS = 1000;
 const DESKTOP_REVEAL_MS = 500;
 
-type Phase = "loading" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
+type Phase = "loading" | "macintosh-reveal" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
 
-const phaseSequence = (desktopRevealMs: number) =>
+const phaseSequence = (loadingCoverFadeMs: number, desktopRevealMs: number) =>
   [
-    { phase: "display-on", durationMs: 500 },
+    { phase: "macintosh-reveal", durationMs: loadingCoverFadeMs },
+    { phase: "display-on", durationMs: 1000 },
     { phase: "logo", durationMs: 2000 },
     { phase: "welcome-dialog", durationMs: 2000 },
     { phase: "desktop-reveal", durationMs: desktopRevealMs },
@@ -164,7 +165,8 @@ function ScreenFilter({ scale }: { scale: number }) {
   );
 }
 
-const isDisplayOn = (phase: Phase) => phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
+const isDisplayOn = (phase: Phase) =>
+  phase === "display-on" || phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
 
 function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
   const scale = geometry.width / VIEWABLE_AREA.width;
@@ -250,11 +252,11 @@ function BootSequence() {
       /* Read here rather than from the hook so that changing the
        * preference partway through does not restart the sequence. */
       const reducedMotion = getPrefersReducedMotion();
-      const sequence = phaseSequence(reducedMotion ? 0 : DESKTOP_REVEAL_MS);
+      const sequence = phaseSequence(reducedMotion ? 0 : LOADING_COVER_FADE_MS, reducedMotion ? 0 : DESKTOP_REVEAL_MS);
 
       setPhase(sequence[0].phase);
 
-      let elapsedMs = reducedMotion ? 0 : LOADING_COVER_FADE_MS;
+      let elapsedMs = 0;
 
       sequence.forEach(({ durationMs }, index) => {
         const nextPhase: Phase = sequence[index + 1]?.phase ?? "complete";
