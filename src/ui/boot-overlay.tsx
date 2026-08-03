@@ -14,6 +14,7 @@ import styles from "./boot-overlay.module.css";
 import type { CSSProperties } from "react";
 
 const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
+const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence
 const ASSET_TIMEOUT_MS = 5000; // Time to wait for the illustration and the font to load before giving up.
 
 /* Metrics derived from `macintosh.png` */
@@ -42,16 +43,21 @@ const REVEAL_DESKTOP_MS = 500;
 type Phase = "pending" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
 
 /** Resolves when required assets are loaded, or if the wait has been too long. */
-function whenReady(image: HTMLImageElement | null): Promise<unknown> {
-  /* Both waits are feature-detected: `decode` and the font loading API are
-   * absent in the test environment and some browsers. A missing API is ignored. */
+async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
+  const minDelay = new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS));
+  const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
   const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
 
-  // `document.fonts` is typed as always present, so it is read through a type that reveals the true state.
-  const fontSet = (document as Partial<Document>).fonts;
-  const assets = Promise.all([illustrationImage, fontSet?.ready ?? Promise.resolve()]);
+  const promises = Promise.all([minDelay, fontSet, illustrationImage]);
+  const timeout = new Promise((resolve) => (timer = setTimeout(resolve, ASSET_TIMEOUT_MS)));
 
-  return Promise.race([assets, new Promise((resolve) => setTimeout(resolve, ASSET_TIMEOUT_MS))]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([promises, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** Exported for unit tests. */
@@ -188,7 +194,9 @@ function BootSequence() {
           <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
         </div>
       </div>
-      <div className={clsx(styles.cover, phase !== "pending" && styles.leaving)} />
+      <div className={clsx(styles.cover, phase !== "pending" && styles.leaving)}>
+        Loading&nbsp;<span className={styles.block}>&#9608;</span>
+      </div>
     </div>
   );
 }

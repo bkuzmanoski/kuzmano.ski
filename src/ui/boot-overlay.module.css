@@ -256,21 +256,47 @@
   z-index: 4;
   inset: 0;
 
-  background: var(--color-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font: var(--font-console);
+  color: var(--color-light);
+
   mix-blend-mode: multiply; /* TODO: Figure out workaround for missing `plus-darker`. */
 
-  transition: opacity var(--intro-fade-ms) ease-out;
+  transition: opacity calc(var(--intro-fade-ms) * 5) ease-out;
 
-  &::after {
+  &::before {
     content: "";
+
     position: absolute;
+    z-index: -1;
     inset: 0;
+
     background: var(--color-dark);
   }
 
-  &.leaving,
-  &.leaving::after {
+  &.leaving {
     opacity: 0;
+  }
+
+  & .block {
+    animation: blink 1s step-end infinite;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 

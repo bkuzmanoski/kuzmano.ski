@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
+import consoleFont from "#/assets/fonts/Monaco9.woff2?url";
 import { themeScript } from "#/lib/settings";
 import stylesheet from "#/styles.css?url";
 import { bootOverlayScript } from "#/ui/boot-overlay";
@@ -33,6 +34,7 @@ export const Route = createRootRoute({
     links: [
       { rel: "stylesheet", href: stylesheet },
       { rel: "preload", as: "font", type: "font/woff2", href: chromeFont, crossOrigin: "anonymous" }, // Fetch font with with the stylesheet as chrome font uses `font-display: block`.
+      { rel: "preload", as: "font", type: "font/woff2", href: consoleFont, crossOrigin: "anonymous" }, // Fetch font with with the stylesheet as console font uses `font-display: block`.
     ],
   }),
   shellComponent: RootDocument,
