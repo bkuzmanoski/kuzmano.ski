@@ -44,6 +44,7 @@
     mix-blend-mode: soft-light;
   }
 
+  /* TODO: Positioning on narrow displays. */
   & .spotlight {
     position: absolute;
     right: -32px;
@@ -78,9 +79,9 @@
     opacity: 0;
     filter: blur(16px);
     transition:
-      filter var(--desktop-reveal-ms) linear,
-      transform var(--desktop-reveal-ms) linear,
-      opacity var(--desktop-reveal-ms) linear;
+      filter var(--desktop-reveal-ms) ease-in,
+      transform var(--desktop-reveal-ms) ease-in,
+      opacity var(--desktop-reveal-ms) ease-in;
   }
 
   & .diskReadIndicator {
@@ -161,11 +162,11 @@
 
     /* Insets set from JS. */
     transition:
-      top var(--desktop-reveal-ms) linear,
-      right var(--desktop-reveal-ms) linear,
-      bottom var(--desktop-reveal-ms) linear,
-      left var(--desktop-reveal-ms) linear,
-      border-radius calc(var(--desktop-reveal-ms) / 2) ease-out calc(var(--desktop-reveal-ms) / 2);
+      top var(--desktop-reveal-ms) ease-in,
+      right var(--desktop-reveal-ms) ease-in,
+      bottom var(--desktop-reveal-ms) ease-in,
+      left var(--desktop-reveal-ms) ease-in,
+      border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 2);
   }
 }
 
