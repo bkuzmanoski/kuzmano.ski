@@ -1,5 +1,4 @@
 .icon {
-  --icon-foreground: var(--color-dark);
   --icon-background: var(--color-light);
 
   pointer-events: auto;
@@ -13,6 +12,7 @@
   gap: 4px;
   align-items: center;
 
+  color: var(--color-dark) !important;
   text-align: center;
 
   & .glyph,
