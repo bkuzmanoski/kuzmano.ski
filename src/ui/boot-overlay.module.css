@@ -1,7 +1,7 @@
 .overlay {
-  --display-scale: 1; /* Set from JS. */
-  --intro-fade-ms: 300ms; /* The time it takes for the cover to fade out after the assets are ready. */
-  --desktop-reveal-ms: 500ms;
+  /* Variables set from JS. */
+  --loading-cover-fade-ms: 0ms;
+  --desktop-reveal-ms: 0ms;
 
   position: fixed;
   z-index: 9999;
@@ -172,12 +172,15 @@
 }
 
 .displayMask {
+  --display-scale: 1; /* Set from JS. */
+
   position: fixed;
   z-index: 1;
 
   & .display {
     width: 100%;
     height: 100%;
+    color: #000; /* SVGR rewrites the illustration's `#000` to `currentColor`. */
   }
 
   &.revealing {
@@ -186,8 +189,12 @@
 }
 
 .viewableArea {
+  /* Insets set from JS. */
+  --inset-x: 0;
+  --inset-y: 0;
+
   position: absolute;
-  inset: calc(32px * var(--display-scale)) calc(28px * var(--display-scale));
+  inset: var(--inset-y) var(--inset-x);
 
   display: flex;
   align-items: center;
@@ -203,8 +210,6 @@
 
   &.growing {
     border-radius: 0;
-
-    /* Insets set from JS. */
     transition:
       top var(--desktop-reveal-ms) ease-in,
       right var(--desktop-reveal-ms) ease-in,
@@ -214,8 +219,19 @@
   }
 }
 
+.filterDefinitions {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.screen {
+  display: flex;
+  filter: url("#boot-screen");
+}
+
 .logo {
-  width: calc(62px * var(--display-scale));
+  width: calc(64px * var(--display-scale));
   height: auto;
   color: var(--color-dark);
 
@@ -260,12 +276,9 @@
   align-items: center;
   justify-content: center;
 
-  font: var(--font-console);
-  color: var(--color-light);
-
   mix-blend-mode: multiply; /* TODO: Figure out workaround for missing `plus-darker`. */
 
-  transition: opacity calc(var(--intro-fade-ms) * 5) ease-out;
+  transition: opacity var(--loading-cover-fade-ms) ease-out;
 
   &::before {
     content: "";
@@ -281,8 +294,14 @@
     opacity: 0;
   }
 
-  & .block {
-    animation: blink 1s step-end infinite;
+  & .loadingMessage {
+    margin-bottom: 16px;
+    font: var(--font-console);
+    color: var(--color-light);
+
+    .block {
+      animation: blink 1s step-end infinite;
+    }
   }
 }
 
@@ -297,11 +316,5 @@
 
   100% {
     opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .overlay {
-    --desktop-reveal-ms: 0s;
   }
 }

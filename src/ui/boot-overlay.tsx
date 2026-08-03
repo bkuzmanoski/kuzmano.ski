@@ -3,19 +3,19 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
 import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
-import Display from "#/assets/images/macintosh-display.svg?react";
+import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
 import macintoshImageUrl from "#/assets/images/macintosh.png";
+import { SITE_NAME } from "#/config/site";
 import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
+import { getPrefersReducedMotion, usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 
 import styles from "./boot-overlay.module.css";
 
 import type { CSSProperties } from "react";
 
 const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
-const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence
-const ASSET_TIMEOUT_MS = 5000; // Time to wait for the illustration and the font to load before giving up.
 
 /* Metrics derived from `macintosh.png` */
 const CASE = { width: 1214, height: 1067 };
@@ -35,12 +35,31 @@ const DISK_LIGHT_FRACTION = {
   size: DISK_LIGHT.size / CASE.width,
 };
 
-const DISPLAY_ON_MS = 500;
-const LOGO_MS = 2000;
-const WELCOME_DIALOG_MS = 2000;
-const REVEAL_DESKTOP_MS = 500;
+const SCREEN_INSET = { x: 28, y: 32 };
+const SCREEN_RADIUS = 16;
+const SCREEN_FILTER_ID = "boot-screen";
+const SCREEN_PINCUSHION_BOW_PX = 8;
+const SCREEN_RGB_SHIFT_PX = 0.5;
 
-type Phase = "pending" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
+/* Timings. */
+const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
+const MAX_LOADING_MS = 5000; // Time to wait for the illustration and the font to load revealing the boot sequence.
+
+/* The two durations the stylesheet animates over. Both are motion
+ * rather than dwell, so reduced motion takes them to nothing. */
+const LOADING_COVER_FADE_MS = 1000;
+const DESKTOP_REVEAL_MS = 500;
+
+type Phase = "loading" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
+
+const PHASE_SEQUENCE = [
+  { phase: "display-on", durationMs: 500 },
+  { phase: "logo", durationMs: 2000 },
+  { phase: "welcome-dialog", durationMs: 2000 },
+  { phase: "desktop-reveal", durationMs: DESKTOP_REVEAL_MS },
+] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
+
+const isDisplayOn = (phase: Phase) => phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
 
 /** Resolves when required assets are loaded, or if the wait has been too long. */
 async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
@@ -51,7 +70,7 @@ async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const promises = Promise.all([minDelay, fontSet, illustrationImage]);
-  const timeout = new Promise((resolve) => (timer = setTimeout(resolve, ASSET_TIMEOUT_MS)));
+  const timeout = new Promise((resolve) => (timer = setTimeout(resolve, MAX_LOADING_MS)));
 
   try {
     return await Promise.race([promises, timeout]);
@@ -71,13 +90,12 @@ export function viewableAreaOf(box: { left: number; top: number; width: number; 
 }
 
 /**
- * Insets for a child of `box` that places its edges on the edges of the
- * viewport, negative on every side. Each edge is given its own distance to
- * travel, so animating to them reaches all four corners at once rather than
- * the nearest one first.
+ * Insets for a child of `box` that places its edges on the edges of the viewport.
+ * Each edge is given its own distance to travel, so animating to them reaches all
+ * four corners at the same time.
  *
  * These are applied to the element rather than through a custom property
- * because the build expands an `inset` shorthand into its four longhands.
+ * because the build expands the `inset` shorthand into its four longhands.
  *
  * Exported for unit tests.
  */
@@ -90,8 +108,114 @@ export function insetToViewport(box: Rect, view: Size) {
   };
 }
 
+const round = (value: number) => Math.round(value * 100) / 100;
+
+function screenClipPath(width: number, height: number, radius: number, bow: number) {
+  const w = round(width);
+  const h = round(height);
+  const r = round(radius);
+  const c = round(bow);
+  const midX = round(width / 2);
+  const midY = round(height / 2);
+
+  return `path("${[
+    `M${c + r} ${c}`,
+    `Q${midX} 0 ${w - c - r} ${c}`,
+    `Q${w - c} ${c} ${w - c} ${c + r}`,
+    `Q${w} ${midY} ${w - c} ${h - c - r}`,
+    `Q${w - c} ${h - c} ${w - c - r} ${h - c}`,
+    `Q${midX} ${h} ${c + r} ${h - c}`,
+    `Q${c} ${h - c} ${c} ${h - c - r}`,
+    `Q0 ${midY} ${c} ${c + r}`,
+    `Q${c} ${c} ${c + r} ${c}`,
+    "Z",
+  ].join("")}")`;
+}
+
+function ScreenFilter({ scale }: { scale: number }) {
+  const shiftAmount = SCREEN_RGB_SHIFT_PX * scale;
+
+  return (
+    <svg className={styles.filterDefinitions} aria-hidden>
+      <filter id={SCREEN_FILTER_ID} x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+          result="red"
+        />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
+          result="green"
+        />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
+          result="blue"
+        />
+        <feOffset in="red" dx={-shiftAmount} result="redShifted" />
+        <feOffset in="blue" dx={shiftAmount} result="blueShifted" />
+        <feBlend in="redShifted" in2="green" mode="screen" result="redGreen" />
+        <feBlend in="redGreen" in2="blueShifted" mode="screen" />
+      </filter>
+    </svg>
+  );
+}
+
+function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
+  const scale = geometry.width / VIEWABLE_AREA.width;
+  const isRevealingDesktop = phase === "desktop-reveal";
+  const displayMaskStyle: CSSProperties & Record<`--${string}`, string | number> = {
+    left: geometry.x,
+    top: geometry.y,
+    width: geometry.width,
+    height: geometry.height,
+    "--display-scale": scale,
+  };
+  const viewableAreaStyle: CSSProperties & Record<`--${string}`, string | number> = {
+    "--inset-x": `${SCREEN_INSET.x * scale}px`,
+    "--inset-y": `${SCREEN_INSET.y * scale}px`,
+    ...(isRevealingDesktop
+      ? { ...insetToViewport(geometry, view), clipPath: "none" }
+      : {
+          clipPath: screenClipPath(
+            geometry.width - 2 * SCREEN_INSET.x * scale,
+            geometry.height - 2 * SCREEN_INSET.y * scale,
+            SCREEN_RADIUS * scale,
+            SCREEN_PINCUSHION_BOW_PX * scale,
+          ),
+        }),
+  };
+
+  return (
+    <div className={clsx(styles.displayMask, isRevealingDesktop && styles.revealing)} style={displayMaskStyle}>
+      <ScreenFilter scale={scale} />
+      <DisplayBackdrop className={styles.display} />
+      <div
+        className={clsx(
+          styles.viewableArea,
+          !isDisplayOn(phase) && styles.hidden,
+          isRevealingDesktop && styles.growing,
+        )}
+        style={viewableAreaStyle}
+      >
+        {(phase === "logo" || phase === "welcome-dialog") && (
+          <div className={styles.screen}>
+            {phase === "logo" && <LogoIcon className={styles.logo} />}
+            {phase === "welcome-dialog" && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function BootSequence() {
-  const [phase, setPhase] = useState<Phase>("pending");
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [phase, setPhase] = useState<Phase>("loading");
   const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
   const illustrationImageRef = useRef<HTMLImageElement>(null);
   const illustrationImageSize = useElementSize(illustrationImageRef);
@@ -122,23 +246,25 @@ function BootSequence() {
         return;
       }
 
-      setPhase("display-on");
+      setPhase(PHASE_SEQUENCE[0].phase);
 
-      const at = (delay: number, next: Phase) => timers.push(setTimeout(() => setPhase(next), delay));
+      let elapsedMs = getPrefersReducedMotion() ? 0 : LOADING_COVER_FADE_MS;
 
-      at(DISPLAY_ON_MS, "logo");
-      at(DISPLAY_ON_MS + LOGO_MS, "welcome-dialog");
-      at(DISPLAY_ON_MS + LOGO_MS + WELCOME_DIALOG_MS, "desktop-reveal");
+      PHASE_SEQUENCE.forEach(({ durationMs }, index) => {
+        const nextPhase: Phase = PHASE_SEQUENCE[index + 1]?.phase ?? "complete";
 
-      timers.push(
-        setTimeout(
-          () => {
-            setPhase("complete");
-            setIsBootSequenceComplete();
-          },
-          DISPLAY_ON_MS + LOGO_MS + WELCOME_DIALOG_MS + REVEAL_DESKTOP_MS,
-        ),
-      );
+        elapsedMs += durationMs;
+
+        timers.push(
+          setTimeout(() => {
+            setPhase(nextPhase);
+
+            if (nextPhase === "complete") {
+              setIsBootSequenceComplete();
+            }
+          }, elapsedMs),
+        );
+      });
     });
 
     return () => {
@@ -151,40 +277,22 @@ function BootSequence() {
     return null;
   }
 
-  const displayStyle: CSSProperties & Record<`--${string}`, string | number> = geometry
-    ? {
-        left: geometry.display.x,
-        top: geometry.display.y,
-        width: geometry.display.width,
-        height: geometry.display.height,
-        "--display-scale": geometry.display.width / VIEWABLE_AREA.width,
-      }
-    : {};
-
-  const isDisplayOn = phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
   const isRevealingDesktop = phase === "desktop-reveal";
+  const overlayStyle: CSSProperties & Record<`--${string}`, string | number> = {
+    "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
+    "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
+  };
 
   return (
-    <div className={styles.overlay} aria-hidden>
+    <div className={styles.overlay} style={overlayStyle} aria-hidden>
       <div className={styles.backdrop}>
         <div className={styles.spotlight} />
       </div>
-      {geometry && (
-        <div className={clsx(styles.displayMask, isRevealingDesktop && styles.revealing)} style={displayStyle}>
-          <Display className={styles.display} />
-          <div
-            className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
-            style={isRevealingDesktop ? insetToViewport(geometry.display, geometry.view) : undefined}
-          >
-            {phase === "logo" && <LogoIcon className={styles.logo} />}
-            {phase === "welcome-dialog" && <p className={styles.welcomeDialog}>Welcome to kuzmano.ski</p>}
-          </div>
-        </div>
-      )}
+      {geometry && <Display geometry={geometry.display} view={geometry.view} phase={phase} />}
       <div className={styles.stage}>
         <div className={clsx(styles.illustration, isRevealingDesktop && styles.blurring)}>
           <DiskActivityIndicator
-            className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
+            className={clsx(styles.diskActivityIndicator, isDisplayOn(phase) && styles.reading)}
             style={{
               left: `${DISK_LIGHT_FRACTION.x * 100}%`,
               top: `${DISK_LIGHT_FRACTION.y * 100}%`,
@@ -194,8 +302,10 @@ function BootSequence() {
           <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
         </div>
       </div>
-      <div className={clsx(styles.cover, phase !== "pending" && styles.leaving)}>
-        Loading&nbsp;<span className={styles.block}>&#9608;</span>
+      <div className={clsx(styles.cover, phase !== "loading" && styles.leaving)}>
+        <div className={styles.loadingMessage}>
+          Loading&nbsp;<span className={styles.block}>&#9608;</span>
+        </div>
       </div>
     </div>
   );
@@ -210,18 +320,12 @@ export function restart() {
     // Ignored.
   }
 
-  window.location.replace("/"); // Reloads the page, even if the path is already "/".
+  window.location.replace("/");
 }
 
 const noSubscribe = () => () => {};
 const serverShouldBoot = () => false;
 
-/**
- * The decision is client-only, so the server and the hydration pass both render
- * nothing; React re-renders with the real answer once hydration is done. The
- * `data-boot` cover painted by the inline script holds the black screen across
- * that gap, so there is nothing to see in between.
- */
 export function BootOverlay() {
   return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <BootSequence /> : null;
 }
@@ -236,7 +340,7 @@ export const bootOverlayScript = `(function () {
       document.documentElement.setAttribute("${BOOT_OVERLAY_ATTRIBUTE}", "");
       setTimeout(function () {
         document.documentElement.removeAttribute("${BOOT_OVERLAY_ATTRIBUTE}");
-      }, 4000);
+      }, ${MAX_LOADING_MS});
     }
   } catch (e) {
     // Ignored.
