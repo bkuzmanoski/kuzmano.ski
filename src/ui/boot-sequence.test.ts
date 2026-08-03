@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { insetToViewport, viewableAreaOf } from "./boot-overlay";
+import { insetToViewport, viewableAreaOf } from "./boot-sequence";
 
 describe("viewableAreaOf", () => {
   // Note: The display cutout is 554x410 at (330, 99) in the 1214x1067 illustration.

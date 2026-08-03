@@ -10,9 +10,9 @@ import FolderOpenSelectedIcon from "#/assets/images/folder-open-selected.svg?rea
 import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
+import { playClick } from "#/lib/audio/ui";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { Icon, IconKind } from "#/lib/icon";
-import { playClick } from "#/lib/sound";
 
 import styles from "./desktop-icon.module.css";
 

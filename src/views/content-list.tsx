@@ -3,8 +3,8 @@ import { useState } from "react";
 
 import FolderSmallIcon from "#/assets/images/folder-small.svg?react";
 import type { Collection } from "#/content";
+import { playClick } from "#/lib/audio/ui";
 import { formatDate } from "#/lib/date";
-import { playClick } from "#/lib/sound";
 import { useWindowActions, useWindowOrder } from "#/lib/window-manager";
 
 import styles from "./content-list.module.css";

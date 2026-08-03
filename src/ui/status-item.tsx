@@ -6,9 +6,9 @@ import SoundOffIcon from "#/assets/images/sound-effects-off.svg?react";
 import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
 import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
 import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
+import { playClick } from "#/lib/audio/ui";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
-import { playClick } from "#/lib/sound";
 import { useWindowActions } from "#/lib/window-manager";
 
 import styles from "./status-item.module.css";

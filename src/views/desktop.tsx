@@ -1,8 +1,8 @@
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { WINDOW_LAYOUT } from "#/config/windows";
-import { useAudioUnlock } from "#/lib/sound";
+import { useAudioUnlock } from "#/lib/audio/context";
 import { WindowManagerProvider } from "#/lib/window-manager";
-import { BootOverlay } from "#/ui/boot-overlay";
+import { BootSequence } from "#/ui/boot-sequence";
 import { MenuBar } from "#/ui/menu-bar";
 
 import styles from "./desktop.module.css";
@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
  * does not remount on navigation.
  */
 export function Desktop({ children }: { children: ReactNode }) {
-  // The first gesture anywhere on the page readies the audio context (see lib/sound).
+  // The first gesture anywhere on the page readies the audio context (see lib/audio/context).
   useAudioUnlock();
 
   return (
@@ -24,7 +24,7 @@ export function Desktop({ children }: { children: ReactNode }) {
         <MenuBar />
         <WindowLayer>{children}</WindowLayer>
       </div>
-      <BootOverlay />
+      <BootSequence />
     </WindowManagerProvider>
   );
 }

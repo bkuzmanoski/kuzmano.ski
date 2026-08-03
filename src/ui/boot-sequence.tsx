@@ -1,17 +1,19 @@
 import clsx from "clsx";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
 import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
 import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
 import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { SITE_NAME } from "#/config/site";
+import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
+import { unlockAudio } from "#/lib/audio/context";
 import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
-import { getPrefersReducedMotion, usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
+import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 
-import styles from "./boot-overlay.module.css";
+import styles from "./boot-sequence.module.css";
 
 import type { CSSProperties } from "react";
 
@@ -45,15 +47,24 @@ const SCREEN_RGB_SHIFT_PX = 0.5;
 const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
 const MAX_LOADING_MS = 5000; // Time to wait for the illustration and the font to load revealing the boot sequence.
 
-/* The durations the stylesheet animates over. All are motion
- * rather than dwell, so reduced motion takes them to nothing. */
+/* The durations the stylesheet animates over. Reduced motion preference overrides these to 0. */
 const LOADING_COVER_FADE_MS = 1000;
 const WELCOME_DIALOG_DRAW_MS = 250;
 const DESKTOP_REVEAL_MS = 500;
 
-type Phase = "loading" | "macintosh-reveal" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
+const NON_GESTURE_KEYS = new Set(["Alt", "CapsLock", "Control", "Escape", "Meta", "NumLock", "ScrollLock", "Shift"]); // Cannot unlock audio as they are not treated as a user gesture.
 
-const phaseSequence = (loadingCoverFadeMs: number, desktopRevealMs: number) =>
+type Phase =
+  | "loading"
+  | "waiting-for-input"
+  | "macintosh-reveal"
+  | "display-on"
+  | "logo"
+  | "welcome-dialog"
+  | "desktop-reveal"
+  | "complete";
+
+const sequence = (loadingCoverFadeMs: number, desktopRevealMs: number) =>
   [
     { phase: "macintosh-reveal", durationMs: loadingCoverFadeMs },
     { phase: "display-on", durationMs: 1000 },
@@ -62,15 +73,23 @@ const phaseSequence = (loadingCoverFadeMs: number, desktopRevealMs: number) =>
     { phase: "desktop-reveal", durationMs: desktopRevealMs },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
 
+/* The phases each layer is up for, so a component reads its state once per render. */
+const LOADING_COVER_PHASES = new Set<Phase>(["loading", "waiting-for-input"]);
+const DISPLAY_ON_PHASES = new Set<Phase>(["display-on", "logo", "welcome-dialog", "desktop-reveal"]);
+
+const isBeginKey = (event: KeyboardEvent) =>
+  !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
+const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
+
 /** Resolves when required assets are loaded, or if the wait has been too long. */
 async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
   const minDelay = new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS));
-  const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
   const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
+  const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
 
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const promises = Promise.all([minDelay, fontSet, illustrationImage]);
+  const promises = Promise.all([minDelay, illustrationImage, fontSet]);
   const timeout = new Promise((resolve) => (timer = setTimeout(resolve, MAX_LOADING_MS)));
 
   try {
@@ -166,11 +185,10 @@ function ScreenFilter({ scale }: { scale: number }) {
   );
 }
 
-const isDisplayOn = (phase: Phase) =>
-  phase === "display-on" || phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
-
 function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
   const scale = geometry.width / VIEWABLE_AREA.width;
+  const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
+  const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
   const isRevealingDesktop = phase === "desktop-reveal";
   const displayMaskStyle: CSSProperties & Record<`--${string}`, string | number> = {
     left: geometry.x,
@@ -193,17 +211,13 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
 
   return (
     <div
-      className={clsx(styles.displayMask, phase === "loading" && styles.hidden, isRevealingDesktop && styles.revealing)}
+      className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
       <ScreenFilter scale={scale} />
       <DisplayBackdrop className={styles.display} />
       <div
-        className={clsx(
-          styles.viewableArea,
-          !isDisplayOn(phase) && styles.hidden,
-          isRevealingDesktop && styles.growing,
-        )}
+        className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
         style={viewableAreaStyle}
       >
         {(phase === "logo" || phase === "welcome-dialog") && (
@@ -217,8 +231,8 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
   );
 }
 
-function BootSequence() {
-  const prefersReducedMotion = usePrefersReducedMotion();
+function Sequence() {
+  const [prefersReducedMotion] = useState(getPrefersReducedMotion); // Held for the whole run, so the durations the stylesheet animates over and the timers the phases run do not disagree if the preference changes.
   const [phase, setPhase] = useState<Phase>("loading");
   const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
   const illustrationImageRef = useRef<HTMLImageElement>(null);
@@ -237,47 +251,74 @@ function BootSequence() {
     });
   }, [illustrationImageSize]);
 
+  const startSequence = useEffectEvent(() => {
+    const phases = sequence(
+      prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS,
+      prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS,
+    );
+
+    setPhase(phases[0].phase);
+
+    /* Sound effects are scheduled against the audio clock rather than the phase timers, so the
+     * disk drive head is heard stepping in time with the light however those timers land. */
+    const displayOnDelaySeconds = phases[0].durationMs / 1000;
+    const diskActivitySeconds =
+      phases.reduce((total, { durationMs }) => total + durationMs, 0) / 1000 - displayOnDelaySeconds;
+
+    playBootChime({ delaySeconds: displayOnDelaySeconds });
+    playDiskActivity({ delaySeconds: displayOnDelaySeconds, seconds: diskActivitySeconds });
+
+    let elapsedMs = 0;
+
+    return phases.map(({ durationMs }, index) => {
+      const nextPhase: Phase = phases[index + 1]?.phase ?? "complete";
+
+      elapsedMs += durationMs;
+
+      return setTimeout(() => {
+        setPhase(nextPhase);
+
+        if (nextPhase === "complete") {
+          setIsBootSequenceComplete();
+        }
+      }, elapsedMs);
+    });
+  });
+
   useEffect(() => {
     setHasBooted();
     document.documentElement.removeAttribute(BOOT_OVERLAY_ATTRIBUTE);
 
-    let isCancelled = false;
-
     const timers: Array<ReturnType<typeof setTimeout>> = [];
+    const waitingForInput = new AbortController();
 
     void whenReady(illustrationImageRef.current).then(() => {
-      if (isCancelled) {
+      if (waitingForInput.signal.aborted) {
         return;
       }
 
-      /* Read here rather than from the hook so that changing the
-       * preference partway through does not restart the sequence. */
-      const reducedMotion = getPrefersReducedMotion();
-      const sequence = phaseSequence(reducedMotion ? 0 : LOADING_COVER_FADE_MS, reducedMotion ? 0 : DESKTOP_REVEAL_MS);
+      setPhase("waiting-for-input");
 
-      setPhase(sequence[0].phase);
+      const eventListenerOptions = { capture: true, signal: waitingForInput.signal };
 
-      let elapsedMs = 0;
-
-      sequence.forEach(({ durationMs }, index) => {
-        const nextPhase: Phase = sequence[index + 1]?.phase ?? "complete";
-
-        elapsedMs += durationMs;
-
-        timers.push(
-          setTimeout(() => {
-            setPhase(nextPhase);
-
-            if (nextPhase === "complete") {
-              setIsBootSequenceComplete();
-            }
-          }, elapsedMs),
-        );
-      });
+      document.addEventListener("keydown", onKeyDown, eventListenerOptions);
+      document.addEventListener("pointerdown", runSequence, eventListenerOptions);
     });
 
+    function onKeyDown(event: KeyboardEvent) {
+      if (isBeginKey(event)) {
+        runSequence();
+      }
+    }
+
+    function runSequence() {
+      unlockAudio();
+      waitingForInput.abort(); // Drops both listeners: only the first press counts.
+      timers.push(...startSequence());
+    }
+
     return () => {
-      isCancelled = true;
+      waitingForInput.abort();
       timers.forEach(clearTimeout);
     };
   }, []);
@@ -286,12 +327,15 @@ function BootSequence() {
     return null;
   }
 
+  const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
+  const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
   const isRevealingDesktop = phase === "desktop-reveal";
   const overlayStyle: CSSProperties & Record<`--${string}`, string | number> = {
     "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
     "--welcome-dialog-draw-ms": `${prefersReducedMotion ? 0 : WELCOME_DIALOG_DRAW_MS}ms`,
     "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
   };
+  const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
 
   return (
     <div className={styles.overlay} style={overlayStyle} aria-hidden>
@@ -303,12 +347,12 @@ function BootSequence() {
         <div
           className={clsx(
             styles.illustration,
-            phase === "loading" && styles.hidden,
+            isLoadingCoverUp && styles.hidden,
             isRevealingDesktop && styles.blurring,
           )}
         >
           <DiskActivityIndicator
-            className={clsx(styles.diskActivityIndicator, isDisplayOn(phase) && styles.reading)}
+            className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
             style={{
               left: `${DISK_LIGHT_FRACTION.x * 100}%`,
               top: `${DISK_LIGHT_FRACTION.y * 100}%`,
@@ -318,14 +362,28 @@ function BootSequence() {
           <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
         </div>
       </div>
-      <div className={clsx(styles.cover, phase !== "loading" && styles.leaving)} />
-      <div className={clsx(styles.loadingLayer, phase !== "loading" && styles.leaving)}>
+      <div className={clsx(styles.cover, !isLoadingCoverUp && styles.leaving)} />
+      <div className={clsx(styles.loadingLayer, !isLoadingCoverUp && styles.leaving)}>
         <div className={styles.loadingMessage}>
-          Loading&nbsp;<span className={styles.block}>&#9608;</span>
+          {/* TODO: Implement typewriter effect. */}
+          {phase === "loading" ? (
+            "Loading…"
+          ) : (
+            <>
+              {beginPrompt}&nbsp;<span className={styles.block}>&#9608;</span>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+const noSubscribe = () => () => {};
+const serverShouldBoot = () => false;
+
+export function BootSequence() {
+  return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <Sequence /> : null;
 }
 
 /** Clears saved settings and reloads the desktop. */
@@ -338,13 +396,6 @@ export function restart() {
   }
 
   window.location.replace("/");
-}
-
-const noSubscribe = () => () => {};
-const serverShouldBoot = () => false;
-
-export function BootOverlay() {
-  return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <BootSequence /> : null;
 }
 
 /**

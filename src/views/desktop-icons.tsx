@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/icons";
+import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
 import { constrain } from "#/lib/geometry";
 import type { Rect, Size } from "#/lib/geometry";
@@ -12,7 +13,6 @@ import { nextIconId } from "#/lib/icon";
 import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
 import { clamp } from "#/lib/math";
-import { playClick } from "#/lib/sound";
 import { useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
 import { DesktopIcon } from "#/ui/desktop-icon";
 

@@ -4,10 +4,10 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
 import OptionIcon from "#/assets/images/option-modifier.svg?react";
+import { playClick } from "#/lib/audio/ui";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsWindows } from "#/lib/hooks/use-is-windows";
 import { cycle } from "#/lib/math";
-import { playClick } from "#/lib/sound";
 
 import styles from "./menu.module.css";
 

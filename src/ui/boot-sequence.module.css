@@ -84,6 +84,8 @@
     transform: scale(0.9);
     opacity: 0;
     filter: blur(16px);
+
+    /* TODO: Tweak timing. */
     transition:
       filter var(--desktop-reveal-ms) ease-in,
       opacity var(--desktop-reveal-ms) ease-in,
@@ -227,6 +229,8 @@
 
   &.growing {
     border-radius: 0;
+
+    /* TODO: Tweak timing. */
     transition:
       inset var(--desktop-reveal-ms) ease-in,
       border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 2);
