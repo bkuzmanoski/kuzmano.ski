@@ -35,7 +35,7 @@ const DISK_LIGHT_FRACTION = {
   size: DISK_LIGHT.size / CASE.width,
 };
 
-const SCREEN_INSET = { x: 28, y: 32 };
+const SCREEN_INSET = { x: 24, y: 28 };
 const SCREEN_RADIUS = 16;
 const SCREEN_FILTER_ID = "boot-screen";
 const SCREEN_PINCUSHION_BOW_PX = 8;
@@ -52,14 +52,13 @@ const DESKTOP_REVEAL_MS = 500;
 
 type Phase = "loading" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
 
-const PHASE_SEQUENCE = [
-  { phase: "display-on", durationMs: 500 },
-  { phase: "logo", durationMs: 2000 },
-  { phase: "welcome-dialog", durationMs: 2000 },
-  { phase: "desktop-reveal", durationMs: DESKTOP_REVEAL_MS },
-] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
-
-const isDisplayOn = (phase: Phase) => phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
+const phaseSequence = (desktopRevealMs: number) =>
+  [
+    { phase: "display-on", durationMs: 500 },
+    { phase: "logo", durationMs: 2000 },
+    { phase: "welcome-dialog", durationMs: 2000 },
+    { phase: "desktop-reveal", durationMs: desktopRevealMs },
+  ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
 
 /** Resolves when required assets are loaded, or if the wait has been too long. */
 async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
@@ -165,6 +164,8 @@ function ScreenFilter({ scale }: { scale: number }) {
   );
 }
 
+const isDisplayOn = (phase: Phase) => phase === "logo" || phase === "welcome-dialog" || phase === "desktop-reveal";
+
 function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
   const scale = geometry.width / VIEWABLE_AREA.width;
   const isRevealingDesktop = phase === "desktop-reveal";
@@ -191,7 +192,10 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
   };
 
   return (
-    <div className={clsx(styles.displayMask, isRevealingDesktop && styles.revealing)} style={displayMaskStyle}>
+    <div
+      className={clsx(styles.displayMask, phase === "loading" && styles.hidden, isRevealingDesktop && styles.revealing)}
+      style={displayMaskStyle}
+    >
       <ScreenFilter scale={scale} />
       <DisplayBackdrop className={styles.display} />
       <div
@@ -246,12 +250,17 @@ function BootSequence() {
         return;
       }
 
-      setPhase(PHASE_SEQUENCE[0].phase);
+      /* Read here rather than from the hook so that changing the
+       * preference partway through does not restart the sequence. */
+      const reducedMotion = getPrefersReducedMotion();
+      const sequence = phaseSequence(reducedMotion ? 0 : DESKTOP_REVEAL_MS);
 
-      let elapsedMs = getPrefersReducedMotion() ? 0 : LOADING_COVER_FADE_MS;
+      setPhase(sequence[0].phase);
 
-      PHASE_SEQUENCE.forEach(({ durationMs }, index) => {
-        const nextPhase: Phase = PHASE_SEQUENCE[index + 1]?.phase ?? "complete";
+      let elapsedMs = reducedMotion ? 0 : LOADING_COVER_FADE_MS;
+
+      sequence.forEach(({ durationMs }, index) => {
+        const nextPhase: Phase = sequence[index + 1]?.phase ?? "complete";
 
         elapsedMs += durationMs;
 
@@ -290,7 +299,13 @@ function BootSequence() {
       </div>
       {geometry && <Display geometry={geometry.display} view={geometry.view} phase={phase} />}
       <div className={styles.stage}>
-        <div className={clsx(styles.illustration, isRevealingDesktop && styles.blurring)}>
+        <div
+          className={clsx(
+            styles.illustration,
+            phase === "loading" && styles.hidden,
+            isRevealingDesktop && styles.blurring,
+          )}
+        >
           <DiskActivityIndicator
             className={clsx(styles.diskActivityIndicator, isDisplayOn(phase) && styles.reading)}
             style={{
@@ -302,7 +317,8 @@ function BootSequence() {
           <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
         </div>
       </div>
-      <div className={clsx(styles.cover, phase !== "loading" && styles.leaving)}>
+      <div className={clsx(styles.cover, phase !== "loading" && styles.leaving)} />
+      <div className={clsx(styles.loadingLayer, phase !== "loading" && styles.leaving)}>
         <div className={styles.loadingMessage}>
           Loading&nbsp;<span className={styles.block}>&#9608;</span>
         </div>

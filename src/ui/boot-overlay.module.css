@@ -70,9 +70,14 @@
 }
 
 .illustration {
-  will-change: filter, transform, opacity;
+  will-change: filter, opacity, transform;
   position: relative;
   display: flex;
+  transition: opacity var(--loading-cover-fade-ms) ease-out;
+
+  &.hidden {
+    opacity: 0;
+  }
 
   &.blurring {
     transform: scale(0.9);
@@ -80,8 +85,8 @@
     filter: blur(16px);
     transition:
       filter var(--desktop-reveal-ms) ease-in,
-      transform var(--desktop-reveal-ms) ease-in,
-      opacity var(--desktop-reveal-ms) ease-in;
+      opacity var(--desktop-reveal-ms) ease-in,
+      transform var(--desktop-reveal-ms) ease-in;
   }
 
   & .diskActivityIndicator {
@@ -176,6 +181,12 @@
 
   position: fixed;
   z-index: 1;
+  transition: opacity var(--loading-cover-fade-ms) ease-out;
+
+  /* Fades in with the illustration it is laid over. */
+  &.hidden {
+    opacity: 0;
+  }
 
   & .display {
     width: 100%;
@@ -272,30 +283,33 @@
   z-index: 4;
   inset: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
+  background: var(--color-dark);
   mix-blend-mode: multiply; /* TODO: Figure out workaround for missing `plus-darker`. */
 
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  &::before {
-    content: "";
-
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-
-    background: var(--color-dark);
+  &.leaving {
+    opacity: 0;
   }
+}
+
+.loadingLayer {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: opacity var(--loading-cover-fade-ms) ease-out;
 
   &.leaving {
     opacity: 0;
   }
 
   & .loadingMessage {
-    margin-bottom: 16px;
+    margin-bottom: 80px;
     font: var(--font-console);
     color: var(--color-light);
 
