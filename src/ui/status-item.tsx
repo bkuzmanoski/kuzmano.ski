@@ -16,9 +16,19 @@ import { Tooltip } from "./tooltip";
 
 import type { ReactNode } from "react";
 
-function StatusButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+function StatusButton({
+  label,
+  persistTooltipOnPress,
+  onClick,
+  children,
+}: {
+  label: string;
+  persistTooltipOnPress?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
-    <Tooltip label={label}>
+    <Tooltip label={label} persistOnPress={persistTooltipOnPress}>
       <button aria-label={label} className={styles.control} type="button" onClick={onClick} onPointerDown={playClick}>
         {children}
       </button>
@@ -45,7 +55,7 @@ export function ThemeStatus() {
   const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
 
   return (
-    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(next)}>
+    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} persistTooltipOnPress onClick={() => setTheme(next)}>
       <Icon className={styles.icon} />
     </StatusButton>
   );
@@ -58,6 +68,7 @@ export function SoundStatus() {
   return (
     <StatusButton
       label={`Sound: ${sound === "on" ? "On" : "Off"}`}
+      persistTooltipOnPress
       onClick={() => {
         setSound(sound === "on" ? "off" : "on");
 

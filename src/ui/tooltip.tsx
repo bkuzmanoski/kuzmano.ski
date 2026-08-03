@@ -17,15 +17,21 @@ const DELAY_MS = 400;
  * sees the pointer leave and cannot dismiss the tooltip on its own. The control
  * reports that it is busy instead, which also keeps the tooltip from returning
  * on the focus the press just gave it.
+ *
+ * `persistOnPress` is for a control whose label reports the setting it toggles.
+ * The label is the feedback for the press, so the tooltip stays up and re-reads
+ * with the new value rather than leaving on the click that changed it.
  */
 export function Tooltip({
   label,
   suppressed = false,
+  persistOnPress = false,
   className,
   children,
 }: {
   label: string;
   suppressed?: boolean;
+  persistOnPress?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -72,7 +78,7 @@ export function Tooltip({
         }
       }}
       onBlurCapture={hide}
-      onPointerDownCapture={hide}
+      onPointerDownCapture={persistOnPress ? undefined : hide}
       onPointerEnter={() => show(DELAY_MS)}
       onPointerLeave={hide}
     >
