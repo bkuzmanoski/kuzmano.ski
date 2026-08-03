@@ -90,6 +90,10 @@
   }
 
   & .diskActivityIndicator {
+    /* Pin colors. */
+    --icon-foreground: #000;
+    --icon-background: #fff;
+
     position: absolute;
     transform: translate(-50%, -50%);
     height: auto;
@@ -189,9 +193,12 @@
   }
 
   & .display {
+    /* Pin colors. */
+    --icon-foreground: #000;
+    --icon-background: #fff;
+
     width: 100%;
     height: 100%;
-    color: #000; /* SVGR rewrites the illustration's `#000` to `currentColor`. */
   }
 
   &.revealing {
@@ -242,9 +249,12 @@
 }
 
 .logo {
+  /* Pin colors. */
+  --icon-foreground: var(--color-dark);
+  --icon-background: var(--color-light);
+
   width: calc(64px * var(--display-scale));
   height: auto;
-  color: var(--color-dark);
 
   :global(.foreground) {
     opacity: 1;
