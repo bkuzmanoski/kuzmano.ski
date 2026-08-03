@@ -12,10 +12,11 @@ import styles from "./content-list.module.css";
 const DATE_FORMAT = new Intl.DateTimeFormat("en-AU", { year: "numeric", month: "short", day: "numeric" });
 
 export function ContentList({ collection, basePath }: { collection: Collection; basePath: string }) {
-  const entries = collection.list();
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
   const [selected, setSelected] = useState<string | null>(null);
+
+  const entries = collection.list();
 
   return (
     <div className={styles.list}>

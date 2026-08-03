@@ -74,7 +74,6 @@ export function DesktopIcon({
   onMoveEnd: () => void;
   onKeyDown: (event: KeyboardEvent) => void;
 }) {
-  const hasMovedRef = useRef(false);
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD,
     canStart: (event) => event.button === 0,
@@ -95,6 +94,7 @@ export function DesktopIcon({
       }
     },
   });
+  const hasMovedRef = useRef(false);
 
   return (
     <div
