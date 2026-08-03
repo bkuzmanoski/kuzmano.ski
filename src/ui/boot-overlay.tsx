@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
 import DiskReadIndicator from "#/assets/images/macintosh-disk-read-indicator.svg?react";
+import Display from "#/assets/images/macintosh-display.svg?react";
 import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
@@ -33,10 +34,10 @@ const DISK_LIGHT_FRACTION = {
   size: DISK_LIGHT.size / CASE.width,
 };
 
-const DISPLAY_ON_MS = 450;
-const LOGO_MS = 1200;
-const WELCOME_DIALOG_MS = 1200;
-const REVEAL_DESKTOP_MS = 1000;
+const DISPLAY_ON_MS = 500;
+const LOGO_MS = 2000;
+const WELCOME_DIALOG_MS = 2000;
+const REVEAL_DESKTOP_MS = 500;
 
 type Phase = "pending" | "display-on" | "logo" | "welcome-dialog" | "desktop-reveal" | "complete";
 
@@ -163,7 +164,8 @@ function BootSequence() {
         <div className={styles.spotlight} />
       </div>
       {geometry && (
-        <div className={clsx(styles.display, isRevealingDesktop && styles.revealing)} style={displayStyle}>
+        <div className={clsx(styles.displayMask, isRevealingDesktop && styles.revealing)} style={displayStyle}>
+          <Display className={styles.display} />
           <div
             className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
             style={isRevealingDesktop ? insetToViewport(geometry.display, geometry.view) : undefined}

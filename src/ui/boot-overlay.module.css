@@ -1,7 +1,7 @@
 .overlay {
   --display-scale: 1; /* Set from JS. */
   --intro-fade-ms: 300ms; /* The time it takes for the cover to fade out after the assets are ready. */
-  --desktop-reveal-ms: 1000ms;
+  --desktop-reveal-ms: 500ms;
 
   position: fixed;
   z-index: 9999;
@@ -69,13 +69,18 @@
 }
 
 .illustration {
-  will-change: filter;
+  will-change: filter, transform, opacity;
   position: relative;
   display: flex;
 
   &.blurring {
+    transform: scale(0.9);
+    opacity: 0;
     filter: blur(16px);
-    transition: filter var(--desktop-reveal-ms) linear;
+    transition:
+      filter var(--desktop-reveal-ms) linear,
+      transform var(--desktop-reveal-ms) linear,
+      opacity var(--desktop-reveal-ms) linear;
   }
 
   & .diskReadIndicator {
@@ -121,10 +126,14 @@
   }
 }
 
-.display {
+.displayMask {
   position: fixed;
   z-index: 1;
-  background-color: #000; /* TODO: Replace with pre-rendered image. */
+
+  & .display {
+    width: 100%;
+    height: 100%;
+  }
 
   &.revealing {
     z-index: 3;
