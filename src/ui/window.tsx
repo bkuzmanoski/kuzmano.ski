@@ -15,6 +15,7 @@ import styles from "./window.module.css";
 
 import type { ReactNode } from "react";
 
+// TODO: Increase click target size.
 function TitleBarButton({
   icon,
   label,
