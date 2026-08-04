@@ -97,7 +97,7 @@ const SEEK: Voice = {
   fadeSeconds: 0.006,
 };
 
-const DRIVE_LOOP_SECONDS = 2;
+const DRIVE_LOOP_SECONDS = 4; /* Matches the `.diskActivityIndicator` animation in `ui/boot-sequence.module.css`. */
 
 /* The stretches over which the drive light is lit, as fractions of its loop. Kept
  * in step with the `disk-activity` keyframes in `ui/boot-sequence.module.css`, so

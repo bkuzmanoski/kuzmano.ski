@@ -338,10 +338,7 @@ function Sequence() {
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
 
   return (
-    <div className={styles.overlay} style={overlayStyle} aria-hidden>
-      <div className={styles.backdrop}>
-        <div className={styles.spotlight} />
-      </div>
+    <div className={styles.overlay} style={overlayStyle}>
       {geometry && <Display geometry={geometry.display} view={geometry.view} phase={phase} />}
       <div className={styles.stage}>
         <div
@@ -351,6 +348,7 @@ function Sequence() {
             isRevealingDesktop && styles.blurring,
           )}
         >
+          <div className={styles.spotlight} />
           <DiskActivityIndicator
             className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
             style={{
