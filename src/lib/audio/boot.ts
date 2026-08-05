@@ -85,7 +85,6 @@ export function playBootChime({ delaySeconds }: { delaySeconds: number }) {
   });
 }
 
-// TODO: Adjust variables for a more realistic sound.
 const SEEK: Voice = {
   seconds: 0.06,
   seed: 0x0d15c5,

@@ -167,8 +167,6 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   }
 
   function onIconKeyDown(event: KeyboardEvent, iconDefinition: Icon) {
-    // TODO: The arrow keys should move the selection in the direction of the arrow, not just the next icon in the list.
-
     switch (event.key) {
       case "ArrowDown":
       case "ArrowRight":
