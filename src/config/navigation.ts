@@ -25,13 +25,6 @@ export const DESTINATIONS = {
 
 export type DestinationId = keyof typeof DESTINATIONS;
 
-/** A mapping of URL segment -> title, for folder destinations only. */
-export const COLLECTION_TITLES: Record<string, string> = Object.fromEntries(
-  Object.values(DESTINATIONS)
-    .filter((destination) => destination.iconKind === "folder")
-    .map((destination) => [destination.route.slice(1), destination.title]),
-);
-
 export const DESTINATION_ORDER = [
   "about",
   "experience",
@@ -40,5 +33,12 @@ export const DESTINATION_ORDER = [
   "work",
   "contact",
 ] as const satisfies ReadonlyArray<DestinationId>;
+
+/** A mapping of URL segment -> title, for folder destinations only. */
+export const COLLECTION_TITLES: Record<string, string> = Object.fromEntries(
+  Object.values(DESTINATIONS)
+    .filter((destination) => destination.iconKind === "folder")
+    .map((destination) => [destination.route.slice(1), destination.title]),
+);
 
 export const INITIAL_WINDOW_ROUTE = DESTINATIONS.about.route;
