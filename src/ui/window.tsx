@@ -56,7 +56,6 @@ export function Window({
   width,
   height,
   z,
-  tabIndex,
   focused,
   maximized,
   hidden,
@@ -73,7 +72,6 @@ export function Window({
   width: number;
   height: number;
   z: number;
-  tabIndex: number;
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
@@ -136,7 +134,7 @@ export function Window({
         isBootSequenceComplete && styles.ready,
       )}
       style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
-      tabIndex={tabIndex}
+      tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
@@ -172,7 +170,6 @@ export function Window({
         <Scrollbar
           controls={viewportId}
           metrics={metrics}
-          tabIndex={tabIndex}
           onScrollTop={(top) => {
             if (viewportRef.current) {
               viewportRef.current.scrollTop = top;
@@ -197,7 +194,7 @@ export function Window({
                 <button
                   aria-label="Resize"
                   className={clsx(styles.controlResize, isResizing && styles.pressed)}
-                  tabIndex={-1} /* Drag handle is not keybaord accessible. */
+                  tabIndex={-1} /* Drag handle is not keyboard accessible. */
                   type="button"
                   {...resizeHandlers}
                 >

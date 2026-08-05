@@ -22,17 +22,7 @@ export interface ScrollMetrics {
 
 const isStepKey = (key: string) => key === "Enter" || key === " ";
 
-function Arrow({
-  direction,
-  hidden,
-  tabIndex,
-  onStep,
-}: {
-  direction: "up" | "down";
-  hidden: boolean;
-  tabIndex: number;
-  onStep: () => boolean;
-}) {
+function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -67,7 +57,7 @@ function Arrow({
     <button
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
       className={clsx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
-      tabIndex={hidden ? -1 : tabIndex}
+      tabIndex={hidden ? -1 : undefined}
       type="button"
       onBlur={stop}
       onKeyDown={(event) => {
@@ -174,14 +164,12 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 export function Scrollbar({
   controls,
   metrics,
-  tabIndex,
   onStep,
   onScrollTop,
   resizeControl,
 }: {
   controls: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
-  tabIndex: number; // Carries the window's tab stop down to the arrows.
   onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
   resizeControl?: ReactNode;
@@ -211,7 +199,7 @@ export function Scrollbar({
 
   return (
     <div className={styles.scrollbar}>
-      <Arrow direction="up" hidden={!overflow} tabIndex={tabIndex} onStep={() => onStep(-STEP)} />
+      <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}
         aria-controls={controls}
@@ -237,7 +225,7 @@ export function Scrollbar({
           />
         )}
       </div>
-      <Arrow direction="down" hidden={!overflow} tabIndex={tabIndex} onStep={() => onStep(STEP)} />
+      <Arrow direction="down" hidden={!overflow} onStep={() => onStep(STEP)} />
       {resizeControl}
     </div>
   );
