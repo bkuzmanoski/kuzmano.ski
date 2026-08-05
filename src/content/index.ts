@@ -1,3 +1,4 @@
+import { PAGES_DIRECTORY } from "#/config/content";
 import { COLLECTION_TITLES } from "#/config/navigation";
 
 import { parseFrontmatter } from "./schema";
@@ -104,8 +105,6 @@ function collection(segment: string, title: string): Collection {
     },
   };
 }
-
-export const PAGES_DIRECTORY = "_pages";
 
 export const collections: Record<string, Collection> = Object.fromEntries(
   Object.entries(COLLECTION_TITLES).map(([segment, title]) => [segment, collection(segment, title)]),

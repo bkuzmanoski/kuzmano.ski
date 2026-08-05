@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 
+import { PAGES_DIRECTORY } from "#/config/content";
 import { COLLECTION_TITLES } from "#/config/navigation";
-import { PAGES_DIRECTORY } from "#/content/index";
 
 const CONTENT_DIRECTORY = "src/content";
 
