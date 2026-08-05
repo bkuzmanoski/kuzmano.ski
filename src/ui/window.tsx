@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
@@ -56,6 +56,7 @@ export function Window({
   width,
   height,
   z,
+  tabIndex,
   focused,
   maximized,
   hidden,
@@ -72,6 +73,7 @@ export function Window({
   width: number;
   height: number;
   z: number;
+  tabIndex: number;
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
@@ -84,9 +86,23 @@ export function Window({
 }) {
   const viewportId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
+  const windowRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewportRef);
   const [isResizing, setIsResizing] = useState(false);
+
+  /* Focus the window element on window focus so that keyboard
+   * navigation continues into its own controls. */
+  useEffect(() => {
+    const element = windowRef.current;
+
+    /* Do not focus the window if it is:
+     * - hidden: a window opened from an icon waits out the zoom rect behind `visibility: hidden` and cannot be focused
+     * - already focused: a press that landed on a control has focused that control, and must not be overruled. */
+    if (focused && !hidden && element && !element.contains(document.activeElement)) {
+      element.focus({ preventScroll: true });
+    }
+  }, [focused, hidden]);
 
   const moveHandlers = usePointerDrag({
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
@@ -110,6 +126,7 @@ export function Window({
 
   return (
     <section
+      ref={windowRef}
       aria-label={title}
       className={clsx(
         styles.window,
@@ -119,6 +136,8 @@ export function Window({
         isBootSequenceComplete && styles.ready,
       )}
       style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
+      tabIndex={tabIndex}
+      onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
       <header className={styles.titleBar} {...moveHandlers}>
@@ -153,6 +172,7 @@ export function Window({
         <Scrollbar
           controls={viewportId}
           metrics={metrics}
+          tabIndex={tabIndex}
           onScrollTop={(top) => {
             if (viewportRef.current) {
               viewportRef.current.scrollTop = top;
@@ -177,6 +197,7 @@ export function Window({
                 <button
                   aria-label="Resize"
                   className={clsx(styles.controlResize, isResizing && styles.pressed)}
+                  tabIndex={-1} /* Drag handle is not keybaord accessible. */
                   type="button"
                   {...resizeHandlers}
                 >

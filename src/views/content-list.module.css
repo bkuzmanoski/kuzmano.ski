@@ -92,7 +92,7 @@
     font: var(--font-ui-bold);
   }
 
-  .selected & {
+  .row:focus & {
     color: var(--color-background);
     background: var(--color-foreground);
   }

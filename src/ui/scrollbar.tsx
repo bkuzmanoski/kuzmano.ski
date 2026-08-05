@@ -20,7 +20,19 @@ export interface ScrollMetrics {
   clientHeight: number;
 }
 
-function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
+const isStepKey = (key: string) => key === "Enter" || key === " ";
+
+function Arrow({
+  direction,
+  hidden,
+  tabIndex,
+  onStep,
+}: {
+  direction: "up" | "down";
+  hidden: boolean;
+  tabIndex: number;
+  onStep: () => boolean;
+}) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -33,14 +45,17 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
     }
   }
 
-  function start() {
-    setIsPressed(true);
-
+  function step() {
     /* The scroll itself carries the sound. A press at the end of the
      * travel moves nothing, so the press has to be heard on its own. */
     if (!onStep()) {
       playClick();
     }
+  }
+
+  function start() {
+    setIsPressed(true);
+    step();
 
     repeatTimerRef.current = setInterval(onStep, REPEAT_MS);
   }
@@ -52,8 +67,26 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
     <button
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
       className={clsx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
-      tabIndex={hidden ? -1 : undefined}
+      tabIndex={hidden ? -1 : tabIndex}
       type="button"
+      onBlur={stop}
+      onKeyDown={(event) => {
+        if (!isStepKey(event.key)) {
+          return;
+        }
+
+        /* Held down, the key repeat drives the repeat, so no timer is started here.
+         * The default is suppressed because both keys raise a click of their own,
+         * which would step the viewport a second time for every press. */
+        event.preventDefault();
+        setIsPressed(true);
+        step();
+      }}
+      onKeyUp={(event) => {
+        if (isStepKey(event.key)) {
+          stop();
+        }
+      }}
       onPointerDown={start}
       onPointerLeave={stop}
       onPointerUp={stop}
@@ -141,12 +174,14 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 export function Scrollbar({
   controls,
   metrics,
+  tabIndex,
   onStep,
   onScrollTop,
   resizeControl,
 }: {
   controls: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
+  tabIndex: number; // Carries the window's tab stop down to the arrows.
   onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
   resizeControl?: ReactNode;
@@ -176,7 +211,7 @@ export function Scrollbar({
 
   return (
     <div className={styles.scrollbar}>
-      <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
+      <Arrow direction="up" hidden={!overflow} tabIndex={tabIndex} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}
         aria-controls={controls}
@@ -202,7 +237,7 @@ export function Scrollbar({
           />
         )}
       </div>
-      <Arrow direction="down" hidden={!overflow} onStep={() => onStep(STEP)} />
+      <Arrow direction="down" hidden={!overflow} tabIndex={tabIndex} onStep={() => onStep(STEP)} />
       {resizeControl}
     </div>
   );

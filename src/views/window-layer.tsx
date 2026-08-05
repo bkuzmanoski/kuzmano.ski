@@ -38,6 +38,7 @@ const DesktopWindow = memo(function OpenWindow({
   width,
   height,
   z,
+  tabIndex,
   focused,
   maximized,
   hidden,
@@ -49,6 +50,7 @@ const DesktopWindow = memo(function OpenWindow({
   width: number;
   height: number;
   z: number;
+  tabIndex: number;
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
@@ -63,6 +65,7 @@ const DesktopWindow = memo(function OpenWindow({
       width={width}
       height={height}
       z={z}
+      tabIndex={tabIndex}
       focused={focused}
       maximized={maximized}
       hidden={hidden}
@@ -98,6 +101,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
     <div
       ref={surfaceRef}
       className={styles.windowLayer}
+      data-desktop=""
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) {
           focusDesktop();
@@ -105,12 +109,13 @@ export function WindowLayer({ children }: { children: ReactNode }) {
       }}
     >
       <DesktopIcons onZoomRectPathChange={setZoomRectPath} />
-      {/* By route, not by stacking order. Raising a window rewrites the order,
-       * and mapping that straight to the markup has React move the nodes to
-       * match. A moved node is taken out of the document and put back, which
-       * empties the scroll position of everything inside it — so a list would
-       * lose its place the moment its window changed places. Sorting by a key
-       * that never moves keeps the markup still; `zIndex` does the stacking. */}
+      {/* By route, not by stacking order to avoid reordering nodes in the DOM
+       * which affects the scroll position of elements inside the windows.
+       *
+       * Implications:
+       * - The order of the windows is managed by `zIndex`.
+       * - Background windows are removed from the tab order to keep keyboard
+       *   navigation predictable (window switching is handled separately). */}
       {Object.entries(windows)
         .sort(([a], [b]) => (a < b ? -1 : 1))
         .map(([path, state]) => {
@@ -123,6 +128,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
               title={state.title}
               {...geometry}
               z={order.indexOf(path) + 1}
+              tabIndex={path === order.at(-1) ? 0 : -1}
               focused={path === focusedPath}
               maximized={state.maximized}
               hidden={path === zoomRectPath}

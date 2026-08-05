@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import { useState } from "react";
 
 import FolderSmallIcon from "#/assets/images/folder-small.svg?react";
 import type { Collection } from "#/content";
@@ -14,7 +13,6 @@ const DATE_FORMAT = new Intl.DateTimeFormat("en-AU", { year: "numeric", month: "
 export function ContentList({ collection, basePath }: { collection: Collection; basePath: string }) {
   const openPaths = useWindowOrder();
   const { open } = useWindowActions();
-  const [selected, setSelected] = useState<string | null>(null);
 
   const entries = collection.list();
 
@@ -31,24 +29,29 @@ export function ContentList({ collection, basePath }: { collection: Collection; 
       {entries.map((entry) => {
         const href = `${basePath}/${entry.slug}`;
         const isOpen = openPaths.includes(href);
-        const isSelected = selected === entry.slug;
 
         return (
           <a
             key={entry.slug}
             aria-label={entry.title}
-            className={clsx(styles.row, isSelected && styles.selected, isOpen && styles.open)}
+            className={clsx(styles.row, isOpen && styles.open)}
             href={href}
-            onClick={(event) => {
-              event.preventDefault();
-              setSelected(entry.slug);
-            }}
+            onClick={(event) => event.preventDefault()}
             onDoubleClick={(event) => {
               event.preventDefault();
               open(href);
             }}
-            onFocus={() => setSelected(entry.slug)}
-            onPointerDown={playClick}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                playClick();
+                open(href);
+              }
+            }}
+            onPointerDown={(event) => {
+              playClick();
+              event.currentTarget.focus();
+            }}
           >
             <span className={styles.cellTitle}>
               <span className={styles.icon} aria-hidden>

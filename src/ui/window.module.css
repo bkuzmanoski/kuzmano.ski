@@ -12,6 +12,7 @@
 
   opacity: 0;
   background: var(--color-background);
+  outline: none;
   box-shadow: var(--drop-shadow);
 
   &.ready {
