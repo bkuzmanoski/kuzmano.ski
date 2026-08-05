@@ -2,10 +2,10 @@ import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
-import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
-import { RESUME_URL, SITE_SOURCE_URL } from "#/config/site";
+import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
+import type { DestinationId } from "#/config/navigation";
+import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
-import { downloadFile } from "#/lib/download";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { cycle } from "#/lib/math";
@@ -30,11 +30,10 @@ export function MenuBar() {
 
   const hasWindow = focusedPath !== null;
 
-  const destinationShortcuts = DESTINATION_ORDER.map((id, index) => ({
-    code: `Digit${index + 1}`,
-    label: String(index + 1),
-    destination: DESTINATIONS[id],
-  }));
+  const destinationShortcut = (id: DestinationId) => {
+    const number = DESTINATION_ORDER.indexOf(id) + 1;
+    return { code: `Digit${number}`, label: String(number) };
+  };
 
   const closeWindow = () => focusedPath && close(focusedPath);
 
@@ -47,21 +46,22 @@ export function MenuBar() {
           label: "Close",
           shortcut: { code: "KeyW", label: "W" },
           disabled: !hasWindow,
-          trigger: closeWindow,
+          action: closeWindow,
         },
       ],
     },
     {
       label: "Go",
       items: [
-        ...destinationShortcuts.map(({ code, label, destination }): MenuItem => ({
-          kind: "action",
-          label: destination.title,
-          shortcut: { code, label },
-          trigger: () => open(destination.route),
-        })),
-        { kind: "separator" },
-        { kind: "action", label: "Résumé (PDF)", accessory: "download", trigger: () => downloadFile(RESUME_URL) },
+        ...DESTINATION_GROUPS.flatMap((group, index): Array<MenuItem> => [
+          ...(index > 0 ? [{ kind: "separator" } as const] : []),
+          ...group.map((id): MenuItem => ({
+            kind: "action",
+            label: DESTINATIONS[id].title,
+            shortcut: destinationShortcut(id),
+            action: () => open(DESTINATIONS[id].route),
+          })),
+        ]),
       ],
     },
     {
@@ -71,17 +71,17 @@ export function MenuBar() {
           kind: "action",
           label: "View Source",
           accessory: "external-link",
-          trigger: () => window.open(SITE_SOURCE_URL, "_blank"),
+          action: () => window.open(SITE_SOURCE_URL, "_blank"),
         },
         { kind: "separator" },
-        { kind: "action", label: "Restart", trigger: restart },
+        { kind: "action", label: "Restart", action: restart },
       ],
     },
   ];
 
   useGlobalShortcuts([
     { code: "KeyW", run: closeWindow, enabled: hasWindow },
-    ...destinationShortcuts.map(({ code, destination }) => ({ code, run: () => open(destination.route) })),
+    ...DESTINATION_ORDER.map((id) => ({ code: destinationShortcut(id).code, run: () => open(DESTINATIONS[id].route) })),
   ]);
 
   function focusAdjacentMenu(from: string, direction: 1 | -1) {

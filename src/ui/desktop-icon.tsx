@@ -32,14 +32,14 @@ function Glyph({
   className?: string;
 }) {
   switch (kind) {
-    case "folder":
+    case "page":
+      return selected ? <AppSelectedIcon className={className} /> : <AppIcon className={className} />;
+    case "collection":
       if (open) {
         return selected ? <FolderOpenSelectedIcon className={className} /> : <FolderOpenIcon className={className} />;
       }
 
       return selected ? <FolderSelectedIcon className={className} /> : <FolderIcon className={className} />;
-    case "app":
-      return selected ? <AppSelectedIcon className={className} /> : <AppIcon className={className} />;
     default:
       return selected ? <DocumentSelectedIcon className={className} /> : <DocumentIcon className={className} />;
   }
@@ -117,7 +117,7 @@ export function DesktopIcon({
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
       <span className={clsx(styles.label, selected && styles.selected)}>
         {iconDefinition.label}
-        {iconDefinition.kind === "document" && <DownloadIcon className={styles.downloadIcon} />}
+        {iconDefinition.kind === "download" && <DownloadIcon className={styles.downloadIcon} />}
       </span>
     </div>
   );

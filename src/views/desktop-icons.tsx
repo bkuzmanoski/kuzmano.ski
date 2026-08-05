@@ -143,7 +143,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   function openIcon(iconDefinition: Icon) {
     flash.start(iconDefinition.id);
 
-    if (iconDefinition.kind === "document") {
+    if (iconDefinition.kind === "download") {
       downloadFile(iconDefinition.downloadUrl);
       return;
     }
@@ -235,7 +235,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
                 y={top}
                 cellSize={ICON_LAYOUT.cellSize}
                 tabIndex={tabStop === iconDefinition.id ? 0 : -1}
-                open={iconDefinition.kind === "folder" && openPaths.includes(iconDefinition.route)}
+                open={iconDefinition.kind === "collection" && openPaths.includes(iconDefinition.route)}
                 selected={isSelected}
                 onSelect={() => setSelectedIconId(iconDefinition.id)}
                 onOpen={() => openIcon(iconDefinition)}

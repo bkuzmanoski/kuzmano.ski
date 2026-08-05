@@ -20,7 +20,7 @@ export type MenuItem =
       shortcut?: { code: string; label: string };
       accessory?: MenuItemAccessory;
       disabled?: boolean;
-      trigger: () => void;
+      action: () => void;
     }
   | { kind: "separator" };
 
@@ -58,7 +58,7 @@ export function Menu({
     playClick();
 
     flash.start(index, () => {
-      item.trigger();
+      item.action();
       onClose();
     });
   }

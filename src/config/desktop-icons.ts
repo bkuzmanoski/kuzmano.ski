@@ -1,5 +1,4 @@
 import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
-import { RESUME_URL } from "#/config/site";
 import type { Icon, IconLayout } from "#/lib/icon";
 
 export const ICONS: Array<Icon> = [
@@ -9,7 +8,6 @@ export const ICONS: Array<Icon> = [
     label: DESTINATIONS[id].title,
     route: DESTINATIONS[id].route,
   })),
-  { id: "resume", kind: "document", label: "Résumé.pdf", downloadUrl: RESUME_URL },
 ];
 
 export const ICON_IDS = ICONS.map((iconDefinition) => iconDefinition.id);

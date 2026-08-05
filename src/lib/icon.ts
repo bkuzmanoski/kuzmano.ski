@@ -1,9 +1,9 @@
 import { cycle } from "./math";
 
-export type IconKind = "app" | "folder" | "document";
+export type IconKind = "page" | "collection" | "download";
 
 export type Icon = { id: string; label: string } & (
-  { kind: "app" | "folder"; route: string } | { kind: "document"; downloadUrl: string }
+  { kind: "page" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
 );
 
 export interface IconPosition {
