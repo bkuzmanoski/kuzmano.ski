@@ -57,7 +57,7 @@ describe("open", () => {
     expect(mutatedState.windows["/contact"]).toMatchObject(LAYOUT.defaultPosition.collection);
   });
 
-  test("the base position is never mutated by a cascade", () => {
+  test("the base position is not mutated by a cascade", () => {
     const defaultPosition = { ...LAYOUT.defaultPosition.collection };
 
     opened("/work", "/about", "/contact");
