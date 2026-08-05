@@ -1,0 +1,29 @@
+import { useFocusedWindow } from "#/lib/window-manager";
+
+import styles from "./skip-link.module.css";
+import { WINDOW_CONTENT_ID } from "./window";
+
+export function SkipLink() {
+  const focusedWindow = useFocusedWindow();
+
+  if (focusedWindow === null) {
+    return null;
+  }
+
+  return (
+    <a
+      className={styles.skipLink}
+      href={`#${WINDOW_CONTENT_ID}`}
+      onClick={(event) => {
+        const target = document.getElementById(WINDOW_CONTENT_ID);
+
+        if (target) {
+          event.preventDefault();
+          target.focus();
+        }
+      }}
+    >
+      Jump to content
+    </a>
+  );
+}

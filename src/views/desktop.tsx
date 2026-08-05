@@ -4,6 +4,7 @@ import { useAudioUnlock } from "#/lib/audio/context";
 import { WindowManagerProvider } from "#/lib/window-manager";
 import { BootSequence } from "#/ui/boot-sequence";
 import { MenuBar } from "#/ui/menu-bar";
+import { SkipLink } from "#/ui/skip-link";
 
 import styles from "./desktop.module.css";
 import { WindowLayer } from "./window-layer";
@@ -21,6 +22,7 @@ export function Desktop({ children }: { children: ReactNode }) {
   return (
     <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
       <div className={styles.desktop}>
+        <SkipLink />
         <MenuBar />
         <WindowLayer>{children}</WindowLayer>
       </div>

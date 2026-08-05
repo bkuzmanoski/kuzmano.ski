@@ -15,6 +15,9 @@ import styles from "./window.module.css";
 
 import type { ReactNode } from "react";
 
+/** The id carried by the focused window's viewport, so the skip link has a stable target. */
+export const WINDOW_CONTENT_ID = "window-content";
+
 function TitleBarButton({
   icon,
   label,
@@ -121,6 +124,7 @@ export function Window({
 
   const isScrolledToEnd =
     metrics.scrollHeight > metrics.clientHeight + 1 && metrics.top + metrics.clientHeight >= metrics.scrollHeight - 1;
+  const contentId = focused ? WINDOW_CONTENT_ID : viewportId;
 
   return (
     <section
@@ -153,7 +157,8 @@ export function Window({
           ref={viewportRef}
           className={styles.viewport}
           data-scrolled-to-end={isScrolledToEnd || undefined}
-          id={viewportId}
+          id={contentId}
+          tabIndex={-1}
           onScroll={(event) => {
             measure();
 
@@ -168,7 +173,7 @@ export function Window({
           {children}
         </div>
         <Scrollbar
-          controls={viewportId}
+          controls={contentId}
           metrics={metrics}
           onScrollTop={(top) => {
             if (viewportRef.current) {
