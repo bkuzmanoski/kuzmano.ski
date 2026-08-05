@@ -1,7 +1,9 @@
 {
   "config": {
     "MD013": false,
-    "MD033": false
+    "MD024": false,
+    "MD033": false,
+    "MD040": false
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
   "globs": ["**/*.{md,mdx}"],
