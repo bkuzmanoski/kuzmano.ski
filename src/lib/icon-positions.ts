@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { ICON_IDS, ICON_LAYOUT } from "#/config/icons";
+import { ICON_IDS, ICON_LAYOUT } from "#/config/desktop-icons";
 
 import { loadPositions, savePositions } from "./icon";
 

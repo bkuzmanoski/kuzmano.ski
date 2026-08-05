@@ -1,9 +1,9 @@
 import { readdirSync } from "node:fs";
 
-import { COLLECTION_TITLES, PAGES_DIRECTORY } from "#/content/configuration";
+import { COLLECTION_TITLES } from "#/config/navigation";
+import { PAGES_DIRECTORY } from "#/config/site";
 
 const CONTENT_DIRECTORY = "src/content";
-const CONFIGURATION_FILE = `${CONTENT_DIRECTORY}/configuration.ts`;
 
 const readContentDirectory = (directory: string) => {
   const entries = readdirSync(`${CONTENT_DIRECTORY}/${directory}`, { withFileTypes: true });
@@ -54,7 +54,7 @@ export function content(): Array<{ path: string }> {
     throw new Error(
       `Collection director(ies) missing titles: ${unregisteredCollections
         .map(({ name }) => `${CONTENT_DIRECTORY}/${name}/`)
-        .join(", ")}. Define them in ${CONFIGURATION_FILE}.`,
+        .join(", ")}`,
     );
   }
 
@@ -63,10 +63,7 @@ export function content(): Array<{ path: string }> {
   );
 
   if (missingCollections.length > 0) {
-    throw new Error(
-      `Collection title(s) defined with no corresponding content directory: ${missingCollections.join(", ")}. ` +
-        `Remove them from ${CONFIGURATION_FILE}.`,
-    );
+    throw new Error(`Collection(s) defined with no corresponding content directory: ${missingCollections.join(", ")}`);
   }
 
   const nestedDirectories = [

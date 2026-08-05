@@ -1,4 +1,6 @@
-import { COLLECTION_TITLES, PAGES_DIRECTORY } from "./configuration";
+import { COLLECTION_TITLES } from "#/config/navigation";
+import { PAGES_DIRECTORY } from "#/config/site";
+
 import { parseFrontmatter } from "./schema";
 
 import type { Frontmatter, Page } from "./schema";

@@ -56,7 +56,7 @@ export function MenuBar() {
       items: [
         ...destinationShortcuts.map(({ code, label, destination }): MenuItem => ({
           kind: "action",
-          label: destination.label,
+          label: destination.title,
           shortcut: { code, label },
           trigger: () => open(destination.route),
         })),
@@ -128,7 +128,7 @@ export function MenuBar() {
     <div className={clsx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <Tooltip label="About">
         <button
-          aria-label={DESTINATIONS.about.label}
+          aria-label={DESTINATIONS.about.title}
           className={styles.logo}
           type="button"
           onClick={() => open(DESTINATIONS.about.route)}

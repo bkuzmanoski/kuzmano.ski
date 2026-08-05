@@ -3,7 +3,12 @@ import { RESUME_URL } from "#/config/site";
 import type { Icon, IconLayout } from "#/lib/icon";
 
 export const ICONS: Array<Icon> = [
-  ...DESTINATION_ORDER.map((id) => ({ id, kind: DESTINATIONS[id].iconKind, ...DESTINATIONS[id] })),
+  ...DESTINATION_ORDER.map((id) => ({
+    id,
+    kind: DESTINATIONS[id].iconKind,
+    label: DESTINATIONS[id].title,
+    route: DESTINATIONS[id].route,
+  })),
   { id: "resume", kind: "document", label: "Résumé.pdf", downloadUrl: RESUME_URL },
 ];
 

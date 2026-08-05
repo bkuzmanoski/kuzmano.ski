@@ -30,19 +30,11 @@ components.
 directory. A new post needs no configuration.
 
 The routes are dynamic (`src/routes/$segment/`), so a collection needs no route
-files of its own. To add one:
+files of its own. To add a collection:
 
-1. Make the folder for the collection, `src/content/<name>/`.
-2. Add its display title to `COLLECTION_TITLES` in
-   `src/content/configuration.ts`. The build fails if a folder has no title, or
-   a title has no folder.
-3. To give it a desktop icon and a "Go" menu entry, add it to `DESTINATIONS` and
-   `DESTINATION_ORDER` in `src/config/navigation.ts`.
-
-`src/config/navigation.ts` is the single source for where the desktop can
-navigate. A collection takes its label and route from `COLLECTION_TITLES`. The
-desktop icons and the "Go" menu (including its keyboard shortcuts) are derived
-from it.
+1. Make a subfolder in `src/content`
+2. Add it to `DESTINATIONS` and `DESTINATION_ORDER` in
+   `src/config/navigation.ts`.
 
 ## Deploy
 

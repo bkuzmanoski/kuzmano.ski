@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/icons";
+import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/desktop-icons";
 import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
 import { constrain } from "#/lib/geometry";

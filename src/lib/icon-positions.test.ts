@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { ICON_IDS } from "#/config/icons";
+import { ICON_IDS } from "#/config/desktop-icons";
 
 import { ICON_POSITIONS_STORAGE_KEY, commitIconPositions, moveIcon, useIconPositions } from "./icon-positions";
 
