@@ -3,9 +3,9 @@ import { Suspense, lazy } from "react";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import consoleFont from "#/assets/fonts/Monaco9.woff2?url";
+import { bootOverlayScript } from "#/components/boot-sequence";
 import { themeScript } from "#/lib/settings";
 import stylesheet from "#/styles.css?url";
-import { bootOverlayScript } from "#/ui/boot-sequence";
 import { Desktop } from "#/views/desktop";
 import { ErrorView } from "#/views/error-view";
 import { NotFound } from "#/views/not-found";

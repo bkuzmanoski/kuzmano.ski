@@ -1,10 +1,10 @@
+import { BootSequence } from "#/components/boot-sequence";
+import { MenuBar } from "#/components/menu-bar";
+import { SkipLink } from "#/components/skip-link";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { WINDOW_LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/audio/context";
 import { WindowManagerProvider } from "#/lib/window-manager";
-import { BootSequence } from "#/ui/boot-sequence";
-import { MenuBar } from "#/ui/menu-bar";
-import { SkipLink } from "#/ui/skip-link";
 
 import styles from "./desktop.module.css";
 import { WindowLayer } from "./window-layer";

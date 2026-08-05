@@ -1,9 +1,9 @@
 import { Suspense, memo, useRef, useState } from "react";
 
+import { Window } from "#/components/window";
 import { constrain } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { useFocusedWindow, useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
-import { Window } from "#/ui/window";
 
 import { DesktopIcons } from "./desktop-icons";
 import styles from "./desktop.module.css";

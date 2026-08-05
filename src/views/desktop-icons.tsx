@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
+import { DesktopIcon } from "#/components/desktop-icon";
 import { ICONS, ICON_LAYOUT } from "#/config/desktop-icons";
 import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
@@ -13,7 +14,6 @@ import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
 import { clamp } from "#/lib/math";
 import { useFocusedWindow, useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
-import { DesktopIcon } from "#/ui/desktop-icon";
 
 import styles from "./desktop-icons.module.css";
 
