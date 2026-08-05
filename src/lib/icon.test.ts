@@ -1,26 +1,26 @@
 import { afterEach, describe, expect, test } from "vitest";
 
-import { isValidPosition, loadPositions, nextIconId, savePositions } from "./icon";
+import { isValidPosition, loadPositions, savePositions } from "./icon";
 
 import type { IconLayout, IconPositions } from "./icon";
 
-const IDS = ["about", "work", "contact"];
-const LAYOUT: IconLayout = { cellSize: 76, spacing: 84, position: { top: 24, right: 28 } };
 const STORAGE_KEY = "test-icon-positions";
-
-afterEach(() => localStorage.clear());
+const IDS = ["about", "experience", "work", "contact"];
+const LAYOUT: IconLayout = { cellSize: 76, spacing: 84, position: { top: 24, right: 28 } };
 
 function everyPositionIsValid(positions: IconPositions): boolean {
   return IDS.every((id) => isValidPosition(positions[id]));
 }
 
+afterEach(() => localStorage.clear());
+
 describe("loadPositions", () => {
-  test("stacks the icons down a column when nothing is saved", () => {
+  test("stacks icons vertically when nothing is saved", () => {
     const positions = loadPositions(IDS, LAYOUT, STORAGE_KEY);
 
     expect(Object.keys(positions)).toEqual(IDS);
     expect(positions.about).toEqual(LAYOUT.position);
-    expect(positions.work).toEqual({ top: LAYOUT.position.top + LAYOUT.spacing, right: LAYOUT.position.right });
+    expect(positions.experience).toEqual({ top: LAYOUT.position.top + LAYOUT.spacing, right: LAYOUT.position.right });
   });
 
   test("uses a saved position", () => {
@@ -28,7 +28,7 @@ describe("loadPositions", () => {
     expect(loadPositions(IDS, LAYOUT, STORAGE_KEY).about).toEqual({ top: 120, right: 120 });
   });
 
-  test("corrupt values fall back to the defaults", () => {
+  test("ignores a saved position with an invalid value", () => {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ about: null, work: "invalid", contact: { top: 0, right: "invalid" } }),
@@ -36,21 +36,13 @@ describe("loadPositions", () => {
     expect(everyPositionIsValid(loadPositions(IDS, LAYOUT, STORAGE_KEY))).toBe(true);
   });
 
-  test("unparsable storage falls back to the defaults", () => {
+  test("ignores a saved position that is unparseable", () => {
     localStorage.setItem(STORAGE_KEY, "not-json");
     expect(everyPositionIsValid(loadPositions(IDS, LAYOUT, STORAGE_KEY))).toBe(true);
   });
 
-  test("an unknown saved id is ignored", () => {
+  test("ignores a saved position for an unknown icon", () => {
     savePositions({ "not-an-icon": { top: 0, right: 0 } }, STORAGE_KEY);
     expect(Object.keys(loadPositions(IDS, LAYOUT, STORAGE_KEY))).toEqual(IDS);
-  });
-});
-
-describe("nextIconId", () => {
-  test("steps through the icons and wraps at both ends", () => {
-    expect(nextIconId(IDS, "about", 1)).toBe("work");
-    expect(nextIconId(IDS, "about", -1)).toBe("contact");
-    expect(nextIconId(IDS, "contact", 1)).toBe("about");
   });
 });

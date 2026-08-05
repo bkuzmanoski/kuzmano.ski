@@ -1,11 +1,10 @@
-import { cycle } from "./math";
-
 export type IconKind = "page" | "collection" | "download";
 
 export type Icon = { id: string; label: string } & (
   { kind: "page" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
 );
 
+/** Anchored to the right edge so it adapts to the width of the desktop. */
 export interface IconPosition {
   top: number;
   right: number;
@@ -69,8 +68,4 @@ export function savePositions(positions: IconPositions, storageKey: string) {
   } catch {
     // Ignored.
   }
-}
-
-export function nextIconId(ids: ReadonlyArray<string>, fromId: string, direction: 1 | -1): string {
-  return ids[cycle(ids.length, ids.indexOf(fromId), direction)]!;
 }

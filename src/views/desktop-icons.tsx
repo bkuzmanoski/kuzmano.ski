@@ -1,27 +1,75 @@
 import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-import { ICONS, ICON_IDS, ICON_LAYOUT } from "#/config/desktop-icons";
+import { ICONS, ICON_LAYOUT } from "#/config/desktop-icons";
 import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
 import { constrain } from "#/lib/geometry";
-import type { Rect, Size } from "#/lib/geometry";
+import type { Position, Rect, Size } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
-import { nextIconId } from "#/lib/icon";
 import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
 import { clamp } from "#/lib/math";
-import { useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
+import { useFocusedWindow, useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
 import { DesktopIcon } from "#/ui/desktop-icon";
 
 import styles from "./desktop-icons.module.css";
 
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
+const ARROW_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"] as const;
+
+type ArrowKey = (typeof ARROW_KEYS)[number];
+
+const OFF_AXIS_DISTANCE_WEIGHT = 2; //  How much further an icon off the arrow's axis has to be before it loses to one on it during keyboard navigation.
 const ZOOM_RECT_ANIMATION_MS = 200;
 const ZOOM_RECT_HOLD_MS = 260;
+
+export interface IconPlacement extends Position {
+  id: string;
+}
+
+const isArrowKey = (key: string): key is ArrowKey => ARROW_KEYS.includes(key as ArrowKey);
+
+/**
+ * The icon an arrow key selects, or null when nothing lies the given direction.
+ * Candidates are the icons in the half-plane the arrow points at. Distance off
+ * the arrow's axis is weighted over distance along it.
+ *
+ * Exported for unit tests.
+ */
+export function adjacentIconId(placements: ReadonlyArray<IconPlacement>, fromId: string, key: ArrowKey): string | null {
+  const from = placements.find((placement) => placement.id === fromId);
+
+  if (!from) {
+    return null;
+  }
+
+  const isVertical = key === "ArrowUp" || key === "ArrowDown";
+  const sign = key === "ArrowDown" || key === "ArrowRight" ? 1 : -1;
+
+  let bestId: string | null = null;
+  let bestScore = Infinity;
+
+  for (const placement of placements) {
+    if (placement.id === fromId) {
+      continue;
+    }
+
+    const alongAxisDistance = sign * (isVertical ? placement.y - from.y : placement.x - from.x);
+    const offAxisDistance = Math.abs(isVertical ? placement.x - from.x : placement.y - from.y);
+    const score = alongAxisDistance + offAxisDistance * OFF_AXIS_DISTANCE_WEIGHT;
+
+    if (alongAxisDistance > 0 && score < bestScore) {
+      bestId = placement.id;
+      bestScore = score;
+    }
+  }
+
+  return bestId;
+}
 
 /**
  * The zoom-rect that grows from an icon to the window it opened. It is a sibling
@@ -105,7 +153,8 @@ function ZoomRect({
 
 export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (path: string | null) => void }) {
   const openPaths = useWindowOrder();
-  const { open } = useWindowActions();
+  const focusedWindow = useFocusedWindow();
+  const { open, focusDesktop } = useWindowActions();
   const positions = useIconPositions();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const flash = useActivationFlash<string>();
@@ -115,9 +164,12 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
+  /* Only a press on the empty desktop clears the selection. A press on a window or on the
+   * menu bar leaves it standing. The desktop stops drawing a selection when it does not hold
+   * keyboard focus. */
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
-      if (!(event.target as HTMLElement).closest("[data-icon]")) {
+      if (event.target instanceof HTMLElement && event.target.dataset.desktop !== undefined) {
         setSelectedIconId(null);
       }
     }
@@ -140,6 +192,38 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
     };
   }
 
+  const tabStop = selectedIconId ?? ICONS[0]?.id;
+  const containerWidth = containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth);
+  const containerHeight = containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight);
+
+  /* Nothing is placed until `positions` has been read on the client which keeps the icons out of the server render. */
+  const placements: Array<IconPlacement & { iconDefinition: Icon }> = ICONS.flatMap((iconDefinition) => {
+    const position = positions?.[iconDefinition.id];
+
+    if (!position) {
+      return [];
+    }
+
+    return [
+      {
+        id: iconDefinition.id,
+        iconDefinition,
+        x: clamp(
+          containerWidth - position.right - ICON_LAYOUT.cellSize,
+          0,
+          Math.max(0, containerWidth - ICON_LAYOUT.cellSize),
+        ),
+        y: clamp(position.top, 0, Math.max(0, containerHeight - ICON_LAYOUT.cellSize)),
+      },
+    ];
+  });
+
+  function selectIcon(id: string) {
+    setSelectedIconId(id);
+    focusDesktop(); // Activate the desktop so the selection is drawn and the arrow keys move it.
+    iconsRef.current[id]?.focus();
+  }
+
   function openIcon(iconDefinition: Icon) {
     flash.start(iconDefinition.id);
 
@@ -159,27 +243,23 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
     open(iconDefinition.route);
   }
 
-  function focusAdjacentIcon(fromId: string, direction: 1 | -1) {
-    const nextId = nextIconId(ICON_IDS, fromId, direction);
+  function moveSelection(fromId: string | null, key: ArrowKey) {
+    const nextId = fromId === null ? placements[0]?.id : adjacentIconId(placements, fromId, key);
 
-    setSelectedIconId(nextId);
-    iconsRef.current[nextId]?.focus();
+    if (nextId) {
+      selectIcon(nextId);
+    }
   }
 
-  function onIconKeyDown(event: KeyboardEvent, iconDefinition: Icon) {
+  function onIconKeyDown(event: ReactKeyboardEvent, iconDefinition: Icon) {
+    if (isArrowKey(event.key)) {
+      event.preventDefault();
+      moveSelection(iconDefinition.id, event.key);
+
+      return;
+    }
+
     switch (event.key) {
-      case "ArrowDown":
-      case "ArrowRight":
-        event.preventDefault();
-        focusAdjacentIcon(iconDefinition.id, 1);
-
-        break;
-      case "ArrowUp":
-      case "ArrowLeft":
-        event.preventDefault();
-        focusAdjacentIcon(iconDefinition.id, -1);
-
-        break;
       case "Enter":
       case " ":
         event.preventDefault();
@@ -196,55 +276,55 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
     }
   }
 
-  const tabStop = selectedIconId ?? ICONS[0]?.id;
-  const containerWidth = containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth);
-  const containerHeight = containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight);
+  const onDesktopArrowKeyPress = useEffectEvent((key: ArrowKey) => moveSelection(selectedIconId, key));
+
+  useEffect(() => {
+    if (focusedWindow !== null || !isBootSequenceComplete) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.target !== document.body) {
+        return;
+      }
+
+      if (isArrowKey(event.key)) {
+        event.preventDefault();
+        onDesktopArrowKeyPress(event.key);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [focusedWindow, isBootSequenceComplete]);
 
   return (
     <>
-      {/* The layer always renders so its ref exists for measurement. `positions`
-       * is null until the client has read them, which keeps the icons out of the
-       * server render: a position means nothing before the layer is measured. */}
+      {/* The layer always renders so its ref exists for measurement. */}
       <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
-        {positions &&
-          ICONS.map((iconDefinition) => {
-            const position = positions[iconDefinition.id];
-
-            if (!position) {
-              return null;
+        {placements.map(({ id, iconDefinition, x, y }) => (
+          <DesktopIcon
+            key={id}
+            ref={(element) => {
+              iconsRef.current[id] = element;
+            }}
+            iconDefinition={iconDefinition}
+            x={x}
+            y={y}
+            cellSize={ICON_LAYOUT.cellSize}
+            tabIndex={tabStop === id ? 0 : -1}
+            open={iconDefinition.kind === "collection" && openPaths.includes(iconDefinition.route)}
+            selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
+            onSelect={() => selectIcon(id)}
+            onOpen={() => openIcon(iconDefinition)}
+            onMoveStart={(nextX, nextY) =>
+              moveIcon(id, { right: containerWidth - nextX - ICON_LAYOUT.cellSize, top: nextY })
             }
-
-            const top = clamp(position.top, 0, Math.max(0, containerHeight - ICON_LAYOUT.cellSize));
-            const left = clamp(
-              containerWidth - position.right - ICON_LAYOUT.cellSize,
-              0,
-              Math.max(0, containerWidth - ICON_LAYOUT.cellSize),
-            );
-            const isSelected = flash.isHighlighted(iconDefinition.id, selectedIconId === iconDefinition.id);
-
-            return (
-              <DesktopIcon
-                key={iconDefinition.id}
-                ref={(element) => {
-                  iconsRef.current[iconDefinition.id] = element;
-                }}
-                iconDefinition={iconDefinition}
-                x={left}
-                y={top}
-                cellSize={ICON_LAYOUT.cellSize}
-                tabIndex={tabStop === iconDefinition.id ? 0 : -1}
-                open={iconDefinition.kind === "collection" && openPaths.includes(iconDefinition.route)}
-                selected={isSelected}
-                onSelect={() => setSelectedIconId(iconDefinition.id)}
-                onOpen={() => openIcon(iconDefinition)}
-                onMoveStart={(x, y) =>
-                  moveIcon(iconDefinition.id, { right: containerWidth - x - ICON_LAYOUT.cellSize, top: y })
-                }
-                onMoveEnd={commitIconPositions}
-                onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
-              />
-            );
-          })}
+            onMoveEnd={commitIconPositions}
+            onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
+          />
+        ))}
       </div>
 
       {zooming && (
