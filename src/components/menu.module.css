@@ -1,15 +1,20 @@
+/* The menu sets the chrome type and colors once; its items inherit them. */
 .menu {
   position: absolute;
-  z-index: 2000;
+  z-index: var(--layer-menu);
   top: 100%;
   left: 0;
 
   min-width: 220px;
   padding: 4px 0;
-  border: 1px solid var(--color-foreground);
+  border: 1px solid var(--color-border);
+
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+  letter-spacing: var(--font-chrome-letter-spacing);
 
   background: var(--color-background);
-  box-shadow: var(--drop-shadow);
+  box-shadow: var(--shadow-drop);
 }
 
 .item {
@@ -23,24 +28,21 @@
 
   width: 100%;
   height: 31px;
-  padding: 0 17px;
+  padding: 0 calc(var(--gutter) + 4px); /* Items sit one step further in than the menu bar titles. */
   border: 0;
 
-  font: var(--font-chrome);
-  color: var(--color-foreground);
   text-align: left;
-  letter-spacing: var(--font-chrome-letter-spacing);
   white-space: nowrap;
 
   background: transparent;
 
   &.active {
-    color: var(--color-background);
-    background: var(--color-foreground);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight);
   }
 
   &.disabled {
-    color: var(--color-muted);
+    color: var(--color-foreground-muted);
   }
 }
 
@@ -69,6 +71,6 @@
   &::before {
     content: "";
     flex: 1;
-    border-top: 1px dotted var(--color-foreground);
+    border-top: 1px dotted var(--color-border);
   }
 }

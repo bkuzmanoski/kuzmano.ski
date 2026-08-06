@@ -5,19 +5,19 @@
   --gap-icon: 8px;
   --gap-column: 24px;
   --icon-size: 16px;
-  --line-height: 20px;
   --title-min-width: 204px;
   --title-padding: 2px 4px;
   --meta-width: 120px;
-  --row-padding-inline: 12px;
   --row-padding-block: 6px;
   --header-rule-gap: 3px;
   --header-height: 28px; /* Not including the rule gap. */
-  --color-row-open: color-mix(in srgb, var(--color-foreground) 15%, transparent);
+
+  /* A row whose window is open is marked with a wash of the text color rather
+   * than the full inversion a selected row gets. */
+  --color-row-open: color-mix(in oklab, var(--color-foreground) 12%, transparent);
 
   container-type: inline-size;
   font: var(--font-ui);
-  line-height: var(--line-height);
 }
 
 /* The meta tracks are `auto`, so a cell hidden by a container query collapses
@@ -26,7 +26,7 @@
 .row {
   display: grid;
   grid-template-columns: minmax(var(--title-min-width), 1fr) auto auto;
-  padding-inline: var(--row-padding-inline);
+  padding-inline: var(--gutter);
 }
 
 .header {
@@ -38,18 +38,22 @@
 
   block-size: calc(var(--header-height) + var(--header-rule-gap));
   padding-block-end: var(--header-rule-gap);
-  border-block-end: 1px solid var(--color-foreground);
+  border-block-end: 1px solid var(--color-border);
 
   background:
-    linear-gradient(var(--color-foreground) 0 0) no-repeat left 0 bottom var(--header-rule-gap) / 100% 1px,
+    linear-gradient(var(--color-border) 0 0) no-repeat left 0 bottom var(--header-rule-gap) / 100% 1px,
     var(--color-background);
 }
 
 .row {
   align-items: start;
+
   padding-block: var(--row-padding-block);
-  border-block-end: 1px solid var(--color-muted);
+  border-block-end: 1px solid var(--color-border-muted);
+
   text-decoration: none;
+
+  outline: none; /* The selected title is the focus indicator. */
 
   &.open {
     background: var(--color-row-open);
@@ -76,7 +80,7 @@
   align-items: center;
 
   inline-size: var(--icon-size);
-  block-size: var(--line-height);
+  block-size: var(--font-ui-line-height);
 
   & svg {
     inline-size: var(--icon-size);
@@ -93,8 +97,8 @@
   }
 
   .row:focus & {
-    color: var(--color-background);
-    background: var(--color-foreground);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight);
   }
 }
 

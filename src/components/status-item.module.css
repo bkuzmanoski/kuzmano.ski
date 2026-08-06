@@ -1,3 +1,4 @@
+/* Type is inherited from the menu bar. */
 .control {
   user-select: none;
 
@@ -5,16 +6,25 @@
   align-items: center;
   justify-content: center;
 
-  padding: 0 12px;
+  padding: 0 var(--gutter);
 
-  font: var(--font-chrome);
-  color: var(--color-foreground);
-  letter-spacing: var(--font-chrome-letter-spacing);
   white-space: nowrap;
 
+  /* Matches the menu titles in menu-bar.module.css. */
+  &:focus-visible {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--dotted-frame);
+    }
+  }
+
   &:active:not(.time) {
-    color: var(--color-background);
-    background: var(--color-foreground);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight);
   }
 }
 

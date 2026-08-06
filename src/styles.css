@@ -17,24 +17,77 @@
 }
 
 :root {
-  --color-light: #f3f2f1;
-  --color-dark: #0f0e0d;
+  /* Colors */
+  --color-background: light-dark(#f8f7f4, #16171a);
+  --color-foreground: light-dark(#1a1f2e, #f2f1ee);
+  --color-foreground-muted: color-mix(in oklab, var(--color-foreground) 55%, var(--color-background));
+  --color-accent: #7c9082;
+  --color-boot-scene-light: light-dark(var(--color-background), var(--color-foreground));
+  --color-boot-scene-dark: light-dark(var(--color-foreground), var(--color-background));
+  --color-boot-scene-cover: color-mix(in oklab, var(--color-boot-scene-dark) 75%, #000);
+  --color-boot-scene-backdrop: color-mix(in oklab, var(--color-boot-scene-dark) 78%, var(--color-accent));
+  --color-boot-scene-glow: color-mix(in oklab, var(--color-accent) 60%, var(--color-boot-scene-light));
+  --color-border: light-dark(
+    var(--color-foreground),
+    color-mix(in oklab, var(--color-foreground) 45%, var(--color-background))
+  );
+  --color-border-muted: light-dark(
+    color-mix(in oklab, var(--color-border) 35%, var(--color-background)),
+    color-mix(in oklab, var(--color-border) 60%, var(--color-background))
+  );
+  --color-highlight: var(--color-foreground);
+  --color-highlight-foreground: var(--color-background);
+  --color-wallpaper-a: light-dark(
+    color-mix(in oklab, var(--color-accent) 32%, var(--color-background)),
+    color-mix(in oklab, var(--color-accent) 18%, var(--color-background))
+  );
+  --color-wallpaper-b: light-dark(
+    color-mix(in oklab, var(--color-wallpaper-a) 72%, var(--color-foreground)),
+    color-mix(in oklab, var(--color-wallpaper-a) 84%, var(--color-foreground))
+  );
 
-  /* TODO: Define dark mode. */
-  --color-foreground: light-dark(var(--color-dark), var(--color-light));
-  --color-background: light-dark(var(--color-light), var(--color-dark));
-  --color-muted: rgb(from var(--color-foreground) r g b / 50%);
-  --color-shadow: rgb(from var(--color-dark) r g b / 50%);
-  --font-chrome: 16px "ChicagoFLF";
-  --font-chrome-letter-spacing: -0.01em;
-  --font-ui: 14px "Helvetica", "Helvetica Neue", system-ui;
-  --font-ui-bold: bold 14px "Helvetica", "Helvetica Neue", system-ui;
-  --font-console: 32px "Monaco9";
-  --drop-shadow: 2px 2px 0 var(--color-shadow);
-  --noise-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Patterns */
+  --grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  --wallpaper: conic-gradient(
+      var(--color-wallpaper-b) 0 25%,
+      var(--color-wallpaper-a) 0 50%,
+      var(--color-wallpaper-b) 0 75%,
+      var(--color-wallpaper-a) 0
+    )
+    0 0 / 4px 4px repeat;
+  --dotted-frame:
+    linear-gradient(90deg, currentcolor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
+    linear-gradient(90deg, currentcolor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
+    linear-gradient(180deg, currentcolor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
+    linear-gradient(180deg, currentcolor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
+
+  /* Typography */
+  --font-family-chrome: "ChicagoFLF", sans-serif;
+  --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
+  --font-family-console: "Monaco9", ui-monospace, monospace;
+  --font-chrome: 16px var(--font-family-chrome);
+  --font-chrome-letter-spacing: -0.01em; /* Set alongside --font-chrome; the shorthand cannot carry it. */
+  --font-ui-line-height: 20px; /* Named as well as set, for layout that has to line up with a line box. */
+  --font-ui: 14px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-console: 32px var(--font-family-console);
+  --shadow-drop: 2px 2px 0 light-dark(rgb(0 0 0 / 40%), rgb(0 0 0 / 60%));
+
+  /* Stacking */
+  --layer-menu-bar: 100;
+  --layer-skip-link: 110;
+  --layer-menu: 200;
+  --layer-tooltip: 300;
+  --layer-boot-cover: 390;
+  --layer-boot: 400;
+
+  /* Shared metrics */
   --menu-bar-height: 32px;
-  --wallpaper: url("./assets/images/wallpaper.svg") repeat;
-  --desktop-reveal-step-ms: 300ms; /* The time it takes for each step of the post-boot reveal sequence to complete. */
+  --gutter: 12px;
+  --scrollbar-size: 22px;
+
+  /* Transitions */
+  --duration-desktop-reveal-step: 300ms;
 
   color-scheme: light dark;
 
@@ -66,10 +119,10 @@ html {
     content: "";
 
     position: fixed;
-    z-index: 9998;
+    z-index: var(--layer-boot-cover);
     inset: 0;
 
-    background: var(--color-dark); /* Match `.cover` background in boot-sequence.module.css. */
+    background: var(--color-boot-scene-cover);
   }
 }
 
@@ -89,4 +142,9 @@ div[role="button"] {
 
   background: transparent;
   outline: none;
+}
+
+::selection {
+  color: var(--color-highlight-foreground);
+  background: var(--color-highlight);
 }

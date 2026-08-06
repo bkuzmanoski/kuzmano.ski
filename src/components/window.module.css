@@ -1,4 +1,7 @@
 .window {
+  --title-bar-height: 28px;
+  --control-size: 16px;
+
   position: absolute;
 
   display: flex;
@@ -6,22 +9,24 @@
 
   min-width: 200px;
   min-height: 120px;
-  border: 1px solid var(--color-foreground);
+  border: 1px solid var(--color-border);
 
   color: var(--color-foreground);
 
   opacity: 0;
   background: var(--color-background);
   outline: none;
-  box-shadow: var(--drop-shadow);
+  box-shadow: var(--shadow-drop);
 
   &.ready {
     opacity: 1;
-    transition: opacity 0ms linear calc(var(--desktop-reveal-step-ms) * 3); /* Follow menu bar and icons reveal. */
+    transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 3); /* Follow menu bar and icons reveal. */
   }
 
+  /* An unfocused window keeps its frame but gives up contrast: the rule softens
+   * and the whole window sits behind a veil of its own surface. */
   &:not(.focused) {
-    border-color: var(--color-muted);
+    border-color: var(--color-border-muted);
   }
 
   &:not(.focused)::after {
@@ -32,7 +37,7 @@
     z-index: 1;
     inset: 0;
 
-    background: rgb(from var(--color-background) r g b / 50%);
+    background: color-mix(in oklab, var(--color-background) 50%, transparent);
   }
 
   &.maximized {
@@ -47,6 +52,8 @@
   }
 }
 
+/* The bar sets the chrome type once for the title it holds. Its linework — the
+ * bars and the control glyphs — is drawn in the rule color, not the text color. */
 .titleBar {
   touch-action: none;
   user-select: none;
@@ -57,8 +64,8 @@
   flex: none;
   align-items: center;
 
-  height: 28px;
-  border-bottom: 1px solid var(--color-foreground);
+  height: var(--title-bar-height);
+  border-bottom: 1px solid var(--color-border);
 
   font: var(--font-chrome);
   letter-spacing: var(--font-chrome-letter-spacing);
@@ -66,46 +73,50 @@
   /* Control buttons are placed by the tooltip wrapper around them. */
   & .control {
     position: absolute;
-    top: 6px;
+    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
 
     &.controlClose {
-      left: 12px;
+      left: var(--gutter);
     }
 
     &.controlZoom {
-      right: 12px;
+      right: var(--gutter);
     }
   }
 
   & .bars {
     position: absolute;
-    top: 6px;
+    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
     right: 4px;
     left: 4px;
 
-    height: 16px;
+    height: var(--control-size);
 
-    background-image: repeating-linear-gradient(to bottom, var(--color-foreground) 0 1px, transparent 1px 3px);
+    background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
   }
 
+  /* Sits on the surface color to clear the bars running behind it. */
   & .title {
     position: relative;
 
     margin: 0 auto;
     padding: 0 8px;
 
-    letter-spacing: var(--font-chrome-letter-spacing);
     white-space: nowrap;
 
     background: var(--color-background);
   }
 }
 
+/* The glyphs are outlines filled with the surface color, so they clear the bars
+ * the same way the title does. The fill comes from the `--icon-background`
+ * fallback, so only the line color has to be named here. */
 .controlButton {
+  --icon-foreground: var(--color-border);
+
   display: flex;
-  width: 16px;
-  height: 16px;
-  background: var(--color-background);
+  width: var(--control-size);
+  height: var(--control-size);
 
   /* The control swaps its icon on press. The icon must not receive pointer events,
    * or the press removes the node that got the pointer-down. The browser then
@@ -117,15 +128,19 @@
 }
 
 .controlResize {
-  width: 22px;
-  height: 22px;
-  border-top: 1px solid var(--color-foreground);
+  --icon-foreground: var(--color-border);
+
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+  border-top: 1px solid var(--color-border);
 
   /* `pressed` is used because the drag captures the pointer and takes it
    * off the button, so `:active` ends as soon as the resize starts. */
   &.pressed {
-    color: var(--color-background);
-    background: var(--color-foreground);
+    --icon-foreground: var(--color-highlight-foreground);
+    --icon-background: var(--color-highlight);
+
+    background: var(--color-highlight);
   }
 
   & svg {

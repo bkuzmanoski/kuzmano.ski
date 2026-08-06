@@ -147,7 +147,7 @@ export function MenuBar() {
               }}
               aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
-              className={clsx(styles.title, openMenu?.label === label && styles.titleOpen)}
+              className={clsx(styles.title, openMenu?.label === label && styles.open)}
               type="button"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
               onPointerDown={(event) => {

@@ -12,12 +12,13 @@
 
   &.ready {
     opacity: 1;
-    transition: opacity 0ms linear calc(var(--desktop-reveal-step-ms) * 2); /* Follow menu bar reveal. */
+    transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 2); /* Follow menu bar reveal. */
   }
 }
 
 .zoomRect {
   pointer-events: none;
   position: absolute;
-  border: 2px dotted var(--color-foreground);
+  color: var(--color-border);
+  background: var(--dotted-frame);
 }

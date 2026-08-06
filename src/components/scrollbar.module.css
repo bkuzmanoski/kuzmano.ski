@@ -5,8 +5,8 @@
   flex: none;
   flex-direction: column;
 
-  width: 22px;
-  border-left: 1px solid var(--color-foreground);
+  width: var(--scrollbar-size);
+  border-left: 1px solid var(--color-border);
 }
 
 .arrow {
@@ -15,15 +15,15 @@
   align-items: center;
   justify-content: center;
 
-  width: 22px;
-  height: 22px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 
   &.arrowUp {
-    border-bottom: 1px solid var(--color-foreground);
+    border-bottom: 1px solid var(--color-border);
   }
 
   &.arrowDown {
-    border-top: 1px solid var(--color-foreground);
+    border-top: 1px solid var(--color-border);
   }
 }
 
@@ -47,13 +47,22 @@
   }
 }
 
+/* The dither is painted as a mask over the rule color rather than as an image, so
+ * it follows the theme. It goes on a pseudo-element because a mask on the track
+ * would take the thumb with it. */
 .track {
   position: relative;
   flex: 1;
 
-  &.filled {
-    background-image: url("../assets/images/scrollbar-track-background-pattern.svg");
-    background-repeat: repeat;
+  &.filled::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: var(--color-border);
+
+    mask: url("../assets/images/scrollbar-track-background-pattern.svg") 0 0 / 4px 4px repeat;
   }
 }
 
@@ -62,7 +71,7 @@
   right: 0;
   left: 0;
 
-  border-block: 1px solid var(--color-foreground);
+  border-block: 1px solid var(--color-border);
 
   background: var(--color-background);
 }

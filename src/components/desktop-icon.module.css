@@ -1,6 +1,7 @@
+/* The glyph and label take the theme, so an icon reads on the wallpaper in both.
+ * The selected glyph is a filled silhouette drawn in the inherited color, so only
+ * the label has to invert. */
 .icon {
-  --icon-background: var(--color-light);
-
   pointer-events: auto;
   cursor: default;
   user-select: none;
@@ -12,7 +13,6 @@
   gap: 4px;
   align-items: center;
 
-  color: var(--color-dark) !important;
   text-align: center;
 
   & .glyph,
@@ -33,14 +33,13 @@
     padding: 0 4px;
 
     font: var(--font-ui);
-    line-height: 20px;
     white-space: nowrap;
 
-    background: var(--color-light);
+    background: var(--color-background);
 
     &.selected {
-      color: var(--color-light);
-      background: var(--color-dark);
+      color: var(--color-highlight-foreground);
+      background: var(--color-highlight);
     }
 
     & .downloadIcon {

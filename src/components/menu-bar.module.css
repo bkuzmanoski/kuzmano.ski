@@ -1,6 +1,8 @@
+/* The bar sets the chrome type once. Everything it holds inherits it, so a
+ * control only names a font when it needs a different one. */
 .menuBar {
   position: relative;
-  z-index: 1000;
+  z-index: var(--layer-menu-bar);
   transform: translateY(-100%);
 
   display: flex;
@@ -8,16 +10,18 @@
   align-items: center;
 
   height: var(--menu-bar-height);
-  padding: 0 12px;
-  border-bottom: 1px solid var(--color-foreground);
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--color-border);
 
+  font: var(--font-chrome);
   color: var(--color-foreground);
+  letter-spacing: var(--font-chrome-letter-spacing);
 
   background: var(--color-background);
 
   &.ready {
     transform: none;
-    transition: transform var(--desktop-reveal-step-ms) ease-in var(--desktop-reveal-step-ms);
+    transition: transform var(--duration-desktop-reveal-step) ease-in var(--duration-desktop-reveal-step);
 
     @media (prefers-reduced-motion: reduce) {
       transition-duration: 0s;
@@ -29,11 +33,11 @@
   display: inline-flex;
   align-items: center;
   height: 100%;
-  padding: 0 12px;
+  padding: 0 var(--gutter);
 
   &:active {
-    color: var(--color-background);
-    background: var(--color-foreground);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight);
   }
 
   & .logoIcon {
@@ -53,18 +57,26 @@
 
     & .title {
       user-select: none;
-
       height: 100%;
-      padding: 0 12px;
+      padding: 0 var(--gutter);
 
-      font: var(--font-chrome);
-      letter-spacing: var(--font-chrome-letter-spacing);
-
-      &.titleOpen {
-        color: var(--color-background);
-        background: var(--color-foreground);
+      &.open {
+        color: var(--color-highlight-foreground);
+        background: var(--color-highlight);
       }
     }
+  }
+}
+
+.logo:focus-visible,
+.menu.title:focus-visible {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--dotted-frame);
   }
 }
 
