@@ -3,7 +3,7 @@ import { Suspense, lazy } from "react";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import consoleFont from "#/assets/fonts/Monaco9.woff2?url";
-import { bootOverlayScript } from "#/components/boot-sequence";
+import { bootSequenceOverlayScript } from "#/components/boot-sequence";
 import { themeScript } from "#/lib/settings";
 import stylesheet from "#/styles.css?url";
 import { Desktop } from "#/views/desktop";
@@ -44,13 +44,13 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    /* `themeScript` and `bootOverlayScript` set attributes on `<html>` before
-     * hydration, so the client <html> differs from the server's. */
+    /* `themeScript` and `bootSequenceOverlayScript` set attributes on `<html>`
+     * before hydration, so the client <html> differs from the server's. */
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script dangerouslySetInnerHTML={{ __html: bootOverlayScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootSequenceOverlayScript }} />
       </head>
       <body>
         <Desktop>{children}</Desktop>

@@ -34,8 +34,8 @@
   padding: 0 var(--gutter);
 
   &:active {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight);
+    color: var(--color-selection-foreground);
+    background: var(--color-selection-background);
   }
 
   & .logoIcon {
@@ -59,8 +59,8 @@
       padding: 0 var(--gutter);
 
       &.open {
-        color: var(--color-highlight-foreground);
-        background: var(--color-highlight);
+        color: var(--color-selection-foreground);
+        background: var(--color-selection-background);
       }
     }
   }

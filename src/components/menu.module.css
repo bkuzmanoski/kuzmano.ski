@@ -13,6 +13,7 @@
   letter-spacing: var(--font-chrome-letter-spacing);
 
   background: var(--color-background);
+  outline: none;
   box-shadow: var(--shadow-drop);
 }
 
@@ -36,8 +37,8 @@
   background: transparent;
 
   &.active {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight);
+    color: var(--color-selection-foreground);
+    background: var(--color-selection-background);
   }
 
   &.disabled {

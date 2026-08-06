@@ -87,8 +87,8 @@
   }
 
   .row:focus & {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight);
+    color: var(--color-selection-foreground);
+    background: var(--color-selection-background);
   }
 }
 

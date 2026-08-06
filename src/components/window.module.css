@@ -128,7 +128,7 @@
     --icon-foreground: var(--color-background);
     --icon-background: var(--color-border);
 
-    background: var(--color-highlight);
+    background: var(--color-border);
   }
 
   & svg {

@@ -1,18 +1,18 @@
-.overlay {
+.container {
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
   --welcome-dialog-draw-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
-  --light-position: 50% 78%;
-  --light-size: 110% 80%;
-  --light-falloff: 72%;
+  --light-position: 50% 80%;
+  --light-size: 100% 80%;
+  --light-falloff: 80%;
 
   position: fixed;
-  z-index: var(--layer-boot);
+  z-index: var(--layer-boot-sequence);
   inset: 0;
   background: radial-gradient(
     var(--light-size) at var(--light-position),
-    var(--color-boot-scene-backdrop),
-    var(--color-boot-scene-cover) var(--light-falloff)
+    var(--color-boot-sequence-background),
+    var(--color-boot-sequence-dark) var(--light-falloff)
   );
 
   &::after {
@@ -72,7 +72,11 @@
       height: calc(100dvh - 100% / 2);
 
       opacity: 0.8;
-      background: linear-gradient(transparent, var(--color-boot-scene-cover) 5%, var(--color-boot-scene-cover) 100%);
+      background: linear-gradient(
+        transparent,
+        var(--color-boot-sequence-dark) 5%,
+        var(--color-boot-sequence-dark) 100%
+      );
     }
 
     &::after {
@@ -87,7 +91,7 @@
       border-radius: 50%;
 
       opacity: 0.4;
-      background: var(--color-boot-scene-glow);
+      background: color-mix(in oklab, var(--color-accent) 60%, var(--color-boot-sequence-light));
       filter: blur(40px);
     }
   }
@@ -293,13 +297,12 @@
   }
 }
 
-.cover {
+.loadingCover {
   position: absolute;
   z-index: 4;
   inset: 0;
 
-  background: var(--color-boot-scene-cover);
-  mix-blend-mode: multiply;
+  background: var(--color-boot-sequence-dark);
 
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
@@ -308,7 +311,7 @@
   }
 }
 
-.loadingLayer {
+.loadingMessageWrapper {
   position: absolute;
   z-index: 5;
   inset: 0;
@@ -326,7 +329,7 @@
   & .loadingMessage {
     margin-bottom: 5dvh;
     font: var(--font-console);
-    color: var(--color-boot-scene-light);
+    color: var(--color-boot-sequence-light);
 
     .block {
       animation: blink 1s step-end infinite;

@@ -330,7 +330,7 @@ function Sequence() {
   const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
   const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
   const isRevealingDesktop = phase === "desktop-reveal";
-  const overlayStyle: CSSProperties & Record<`--${string}`, string | number> = {
+  const containerStyle: CSSProperties & Record<`--${string}`, string | number> = {
     "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
     "--welcome-dialog-draw-ms": `${prefersReducedMotion ? 0 : WELCOME_DIALOG_DRAW_MS}ms`,
     "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
@@ -338,7 +338,7 @@ function Sequence() {
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
 
   return (
-    <div className={styles.overlay} style={overlayStyle}>
+    <div className={styles.container} style={containerStyle}>
       {geometry && <Display geometry={geometry.display} view={geometry.view} phase={phase} />}
       <div className={styles.stage}>
         <div
@@ -360,8 +360,8 @@ function Sequence() {
           <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
         </div>
       </div>
-      <div className={clsx(styles.cover, !isLoadingCoverUp && styles.leaving)} />
-      <div className={clsx(styles.loadingLayer, !isLoadingCoverUp && styles.leaving)}>
+      <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
+      <div className={clsx(styles.loadingMessageWrapper, !isLoadingCoverUp && styles.leaving)}>
         <div className={styles.loadingMessage}>
           {/* TODO: Implement typewriter effect. */}
           {phase === "loading" ? (
@@ -400,7 +400,7 @@ export function restart() {
  * Runs in the document head before first paint (prior to hydration) to
  * hide the server-rendered desktop until the boot sequence has run.
  */
-export const bootOverlayScript = `(function () {
+export const bootSequenceOverlayScript = `(function () {
   try {
     if (location.pathname === "/" && !sessionStorage.getItem("${HAS_BOOTED_STORAGE_KEY}")) {
       document.documentElement.setAttribute("${BOOT_OVERLAY_ATTRIBUTE}", "");
