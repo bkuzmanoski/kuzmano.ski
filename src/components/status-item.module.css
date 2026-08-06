@@ -9,13 +9,14 @@
 
   white-space: nowrap;
 
+  /* Matches menu item titles in `menu-bar.module.css` */
   &:focus-visible {
     position: relative;
 
     &::after {
       content: "";
       position: absolute;
-      inset: 0;
+      inset: 2px;
       background: var(--dotted-frame);
     }
   }
