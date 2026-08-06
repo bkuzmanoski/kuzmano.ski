@@ -16,7 +16,7 @@ describe("resolveWindow", () => {
   });
 
   test("an unknown collection entry slug resolves to the 404 window", () => {
-    expect(resolveWindow("/tech-notes/does-not-exist")).toMatchObject({ kind: "notFound", title: "404" });
+    expect(resolveWindow("/tech-notes/does-not-exist")).toMatchObject({ kind: "notFound" });
   });
 
   test("an unknown collection resolves to the 404 window", () => {

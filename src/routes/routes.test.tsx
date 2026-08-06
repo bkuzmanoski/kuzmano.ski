@@ -57,7 +57,7 @@ test("the initial window opened by the desktop replaces the desktop in the sessi
 test("an unknown path under a collection opens a 404 window", async () => {
   await renderRoute("/tech-notes/does-not-exist");
 
-  const window = await screen.findByRole("region", { name: "404" });
+  const window = await screen.findByRole("region", { name: "Page not found (404)" });
 
   expect(within(window).getByRole("heading", { name: "Page not found (404)" })).toBeDefined();
 });
@@ -65,7 +65,7 @@ test("an unknown path under a collection opens a 404 window", async () => {
 test("an unknown top-level path opens a 404 window", async () => {
   await renderRoute("/no-such-page");
 
-  const window = await screen.findByRole("region", { name: "404" });
+  const window = await screen.findByRole("region", { name: "Page not found (404)" });
 
   expect(within(window).getByRole("heading", { name: "Page not found (404)" })).toBeDefined();
 });
