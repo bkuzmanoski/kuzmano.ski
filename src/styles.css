@@ -17,6 +17,21 @@
 }
 
 :root {
+  /* Stacking */
+  --layer-menu-bar: 100;
+  --layer-skip-link: 110;
+  --layer-menu: 200;
+  --layer-tooltip: 300;
+  --layer-boot-cover: 390;
+  --layer-boot: 400;
+
+  /* Shared metrics */
+  --menu-bar-height: 32px;
+  --gutter: 12px;
+  --scrollbar-size: 22px;
+  --tooltip-margin: 5px;
+  --shadow-length: 2px;
+
   /* Colors */
   --color-background: light-dark(#f8f7f4, #16171a);
   --color-foreground: light-dark(#1a1f2e, #f2f1ee);
@@ -61,6 +76,9 @@
     linear-gradient(180deg, currentcolor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
     linear-gradient(180deg, currentcolor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
 
+  /* Shadows */
+  --shadow-drop: var(--shadow-length) var(--shadow-length) 0 light-dark(rgb(0 0 0 / 40%), rgb(0 0 0 / 60%));
+
   /* Typography */
   --font-family-chrome: "ChicagoFLF", sans-serif;
   --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
@@ -71,20 +89,6 @@
   --font-ui: 14px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
   --font-console: 32px var(--font-family-console);
-  --shadow-drop: 2px 2px 0 light-dark(rgb(0 0 0 / 40%), rgb(0 0 0 / 60%));
-
-  /* Stacking */
-  --layer-menu-bar: 100;
-  --layer-skip-link: 110;
-  --layer-menu: 200;
-  --layer-tooltip: 300;
-  --layer-boot-cover: 390;
-  --layer-boot: 400;
-
-  /* Shared metrics */
-  --menu-bar-height: 32px;
-  --gutter: 12px;
-  --scrollbar-size: 22px;
 
   /* Transitions */
   --duration-desktop-reveal-step: 300ms;

@@ -23,8 +23,6 @@
     transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 3); /* Follow menu bar and icons reveal. */
   }
 
-  /* An unfocused window keeps its frame but gives up contrast: the rule softens
-   * and the whole window sits behind a veil of its own surface. */
   &:not(.focused) {
     border-color: var(--color-border-muted);
   }
@@ -52,8 +50,6 @@
   }
 }
 
-/* The bar sets the chrome type once for the title it holds. Its linework — the
- * bars and the control glyphs — is drawn in the rule color, not the text color. */
 .titleBar {
   touch-action: none;
   user-select: none;
@@ -95,7 +91,6 @@
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
   }
 
-  /* Sits on the surface color to clear the bars running behind it. */
   & .title {
     position: relative;
 
@@ -108,9 +103,6 @@
   }
 }
 
-/* The glyphs are outlines filled with the surface color, so they clear the bars
- * the same way the title does. The fill comes from the `--icon-background`
- * fallback, so only the line color has to be named here. */
 .controlButton {
   --icon-foreground: var(--color-border);
 
@@ -119,9 +111,8 @@
   height: var(--control-size);
 
   /* The control swaps its icon on press. The icon must not receive pointer events,
-   * or the press removes the node that got the pointer-down. The browser then
-   * cannot pair the pointer-down with the pointer-up and no click fires. With this
-   * rule the button is always the target, so the click fires. */
+   * or the press removes the node that got the pointer-down and the browser cannot
+   * pair the pointer-down event with the subsequent pointer-up event. */
   & svg {
     pointer-events: none;
   }

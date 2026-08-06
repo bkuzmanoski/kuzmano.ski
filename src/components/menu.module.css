@@ -1,4 +1,3 @@
-/* The menu sets the chrome type and colors once; its items inherit them. */
 .menu {
   position: absolute;
   z-index: var(--layer-menu);
@@ -28,7 +27,7 @@
 
   width: 100%;
   height: 31px;
-  padding: 0 calc(var(--gutter) + 4px); /* Items sit one step further in than the menu bar titles. */
+  padding: 0 calc(var(--gutter) + 4px);
   border: 0;
 
   text-align: left;

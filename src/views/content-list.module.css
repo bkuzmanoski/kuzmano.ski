@@ -1,27 +1,19 @@
 .list {
-  /* The title reserves the glyph's space as inline padding, so the header cell
-   * lines up with the rows without carrying an empty icon of its own. The
-   * title's own padding adds to the gap, clearing the glyph by --gap-icon * 2. */
-  --gap-icon: 8px;
+  --color-row-open: color-mix(in oklab, var(--color-foreground) 12%, transparent);
+  --header-rule-gap: 3px;
+  --header-height: 28px; /* Not including the rule gap. */
   --gap-column: 24px;
+  --gap-icon: 8px;
   --icon-size: 16px;
   --title-min-width: 204px;
   --title-padding: 2px 4px;
   --meta-width: 120px;
   --row-padding-block: 6px;
-  --header-rule-gap: 3px;
-  --header-height: 28px; /* Not including the rule gap. */
-
-  /* A row whose window is open is marked with a wash of the text color rather
-   * than the full inversion a selected row gets. */
-  --color-row-open: color-mix(in oklab, var(--color-foreground) 12%, transparent);
 
   container-type: inline-size;
   font: var(--font-ui);
 }
 
-/* The meta tracks are `auto`, so a cell hidden by a container query collapses
- * its track to nothing and the remaining cells shift along on their own. */
 .header,
 .row {
   display: grid;
@@ -69,8 +61,6 @@
   padding-inline-start: calc(var(--icon-size) + var(--gap-icon));
 }
 
-/* Taken out of flow into the reserved padding and given one line box of height,
- * so the glyph centres on the first line however many lines the title runs to. */
 .icon {
   position: absolute;
   inset-block-start: 0;

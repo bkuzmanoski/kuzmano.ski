@@ -47,9 +47,6 @@
   }
 }
 
-/* The dither is painted as a mask over the rule color rather than as an image, so
- * it follows the theme. It goes on a pseudo-element because a mask on the track
- * would take the thumb with it. */
 .track {
   position: relative;
   flex: 1;

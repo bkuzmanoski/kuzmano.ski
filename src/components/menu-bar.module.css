@@ -1,5 +1,3 @@
-/* The bar sets the chrome type once. Everything it holds inherits it, so a
- * control only names a font when it needs a different one. */
 .menuBar {
   position: relative;
   z-index: var(--layer-menu-bar);
@@ -69,7 +67,7 @@
 }
 
 .logo:focus-visible,
-.menu.title:focus-visible {
+.menu .title:focus-visible {
   position: relative;
 
   &::after {
