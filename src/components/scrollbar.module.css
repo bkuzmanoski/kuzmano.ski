@@ -32,17 +32,18 @@
 }
 
 .arrowIcon {
+  --icon-foreground: var(--color-border);
+
   width: 20px;
   height: 20px;
-  fill: none;
-  stroke: currentcolor;
 
   &.down {
     transform: rotate(180deg);
   }
 
   &.filled {
-    fill: currentcolor;
+    --icon-background: var(--color-border);
+
     stroke: none;
   }
 }

@@ -110,10 +110,8 @@
   width: var(--control-size);
   height: var(--control-size);
 
-  /* The control swaps its icon on press. The icon must not receive pointer events,
-   * or the press removes the node that got the pointer-down and the browser cannot
-   * pair the pointer-down event with the subsequent pointer-up event. */
   & svg {
+    /* The button swaps its icon on press. Ensure the stable node beneath handles pointer events. */
     pointer-events: none;
   }
 }
@@ -125,11 +123,10 @@
   height: var(--scrollbar-size);
   border-top: 1px solid var(--color-border);
 
-  /* `pressed` is used because the drag captures the pointer and takes it
-   * off the button, so `:active` ends as soon as the resize starts. */
+  /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */
   &.pressed {
-    --icon-foreground: var(--color-highlight-foreground);
-    --icon-background: var(--color-highlight);
+    --icon-foreground: var(--color-background);
+    --icon-background: var(--color-border);
 
     background: var(--color-highlight);
   }
@@ -148,8 +145,12 @@
 
   & .viewport {
     scrollbar-width: none;
+
     overflow-y: auto;
     flex: 1;
+
     min-width: 0;
+
+    outline: none;
   }
 }

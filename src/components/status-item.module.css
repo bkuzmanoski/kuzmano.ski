@@ -1,4 +1,3 @@
-/* Type is inherited from the menu bar. */
 .control {
   user-select: none;
 
@@ -10,7 +9,6 @@
 
   white-space: nowrap;
 
-  /* Matches the menu titles in menu-bar.module.css. */
   &:focus-visible {
     position: relative;
 

@@ -45,7 +45,7 @@
 
   text-decoration: none;
 
-  outline: none; /* The selected title is the focus indicator. */
+  outline: none;
 
   &.open {
     background: var(--color-row-open);

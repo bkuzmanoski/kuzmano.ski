@@ -1,5 +1,4 @@
 .overlay {
-  /* Set from JS. */
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
   --welcome-dialog-draw-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
@@ -191,7 +190,6 @@
   z-index: 1;
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  /* Fades in with the illustration it is laid over. */
   &.hidden {
     opacity: 0;
   }

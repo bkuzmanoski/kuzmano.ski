@@ -1,6 +1,3 @@
-/* The glyph and label take the theme, so an icon reads on the wallpaper in both.
- * The selected glyph is a filled silhouette drawn in the inherited color, so only
- * the label has to invert. */
 .icon {
   pointer-events: auto;
   cursor: default;
