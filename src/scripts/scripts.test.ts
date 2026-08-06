@@ -1,0 +1,93 @@
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+import { MAX_LOADING_MS } from "#/lib/boot";
+import bootOverlayScript from "#/scripts/boot-overlay.ts?inline-script";
+import themeScript from "#/scripts/theme.ts?inline-script";
+
+/* These tests run the bundled scripts as the browser receives them, so they cover
+ * the plugin, the tree-shaking and minification, and the logic. Attribute names are
+ * defined inline and not imported because the stylesheet uses these exact strings. */
+
+function run(script: string) {
+  new Function(script)();
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+  document.documentElement.removeAttribute("data-theme");
+  document.documentElement.removeAttribute("data-boot");
+});
+
+describe("theme", () => {
+  test.for(["light", "dark"])("pins the attribute for %s", (theme) => {
+    localStorage.setItem("theme", theme);
+
+    run(themeScript);
+
+    expect(document.documentElement.getAttribute("data-theme")).toBe(theme);
+  });
+
+  test.for([
+    ["nothing stored", null],
+    ["system", "system"],
+    ["an unrecognised value", "sepia"],
+  ] as const)("leaves the attribute absent for %s", ([, stored]) => {
+    if (stored !== null) {
+      localStorage.setItem("theme", stored);
+    }
+
+    run(themeScript);
+
+    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+  });
+
+  test("survives storage that throws", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("Storage access denied.");
+    });
+
+    expect(() => run(themeScript)).not.toThrow();
+    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+  });
+});
+
+describe("boot overlay", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test("covers the desktop on a first visit to the root", () => {
+    run(bootOverlayScript);
+
+    expect(document.documentElement.hasAttribute("data-boot")).toBe(true);
+  });
+
+  test("stays out of the way once booted", () => {
+    sessionStorage.setItem("has-booted", "1");
+
+    run(bootOverlayScript);
+
+    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
+  });
+
+  test("lifts the cover itself if hydration never arrives", () => {
+    vi.useFakeTimers();
+
+    run(bootOverlayScript);
+    expect(document.documentElement.hasAttribute("data-boot")).toBe(true);
+
+    vi.advanceTimersByTime(MAX_LOADING_MS);
+
+    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
+  });
+
+  test("survives storage that throws", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("Storage access denied.");
+    });
+
+    expect(() => run(bootOverlayScript)).not.toThrow();
+    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
+  });
+});

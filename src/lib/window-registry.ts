@@ -6,12 +6,14 @@ export type WindowKind = "content" | "collection";
 export type WindowTarget =
   | { kind: "collection"; title: string; slug: string; collection: Collection }
   | { kind: "collectionEntry"; title: string; slug: string; collection: Collection }
-  | { kind: "page"; title: string; slug: string };
+  | { kind: "page"; title: string; slug: string }
+  | { kind: "notFound"; title: string };
 
 const WINDOW_KIND_BY_TARGET: Record<WindowTarget["kind"], WindowKind> = {
   collection: "collection",
   page: "content",
   collectionEntry: "content",
+  notFound: "content",
 };
 
 export function windowKindFor(target: WindowTarget): WindowKind {
@@ -20,6 +22,10 @@ export function windowKindFor(target: WindowTarget): WindowKind {
 
 export function resolveWindow(pathname: string): WindowTarget | null {
   const segments = pathname.split("/").filter(Boolean);
+
+  if (segments.length === 0) {
+    return null;
+  }
 
   if (segments.length === 1) {
     const slug = segments[0]!;
@@ -32,8 +38,6 @@ export function resolveWindow(pathname: string): WindowTarget | null {
     if (pages.has(slug)) {
       return { kind: "page", title: pages.frontmatter(slug)?.title ?? slug, slug };
     }
-
-    return null;
   }
 
   if (segments.length === 2) {
@@ -46,5 +50,5 @@ export function resolveWindow(pathname: string): WindowTarget | null {
     }
   }
 
-  return null;
+  return { kind: "notFound", title: "Page not found (404)" };
 }

@@ -4,6 +4,7 @@ import { resolveWindow } from "#/lib/window-registry";
 
 import { ContentBody } from "./content-body";
 import { ContentList } from "./content-list";
+import { NotFoundBody } from "./not-found";
 
 function CollectionEntryBody({ collection, slug }: { collection: Collection; slug: string }) {
   const frontmatter = collection.frontmatter(slug);
@@ -29,5 +30,7 @@ export function WindowBody({ path }: { path: string }) {
       return <CollectionEntryBody collection={windowTarget.collection} slug={windowTarget.slug} />;
     case "page":
       return <PageBody slug={windowTarget.slug} />;
+    case "notFound":
+      return <NotFoundBody />;
   }
 }

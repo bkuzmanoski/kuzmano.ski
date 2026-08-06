@@ -260,20 +260,25 @@ export function WindowManagerProvider({
    * on external URL changes (deep links, back, etc.). */
   const expectedRouteRef = useRef<string | null>(null);
 
-  const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
-    if (focusedRoute) {
-      if (pathname !== focusedRoute) {
-        expectedRouteRef.current = focusedRoute;
-        void navigate({ to: focusedRoute });
-      }
+  /* True while the desktop opens a window that the visitor did not ask for, so the
+   * sync below replaces "/" instead of pushing over it. A push leaves an entry that
+   * reopens the same window on back navigation (browsers detect this and mark the
+   * entry skippable). Every other sync follows a real interaction so back navigation
+   * moves between windows normally. */
+  const isAutomaticFocusRef = useRef(false);
 
+  const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
+    const route = focusedRoute ?? "/";
+    const isAutomaticFocus = isAutomaticFocusRef.current;
+
+    isAutomaticFocusRef.current = false; // Cleared on every path, so a sync that does not navigate cannot leave it set for the next one.
+
+    if (pathname === route) {
       return;
     }
 
-    if (pathname !== "/" && resolveWindow(pathname) !== null) {
-      expectedRouteRef.current = "/";
-      void navigate({ to: "/" });
-    }
+    expectedRouteRef.current = route;
+    void navigate({ to: route, replace: isAutomaticFocus });
   });
 
   const focusedRoute = state.focused;
@@ -303,6 +308,7 @@ export function WindowManagerProvider({
    * to "/" (e.g. via a click on the desktop) does not reopen it. */
   const openInitialWindow = useEffectEvent(() => {
     if (initialRoute && pathname === "/") {
+      isAutomaticFocusRef.current = true;
       actions.open(initialRoute);
     }
   });
@@ -326,7 +332,7 @@ export function useWindowActions(): WindowActions {
   const actions = use(ActionsContext);
 
   if (!actions) {
-    throw new Error("`useWindowActions` must be used within a `WindowManagerProvider`");
+    throw new Error("`useWindowActions` must be used within a `WindowManagerProvider`.");
   }
 
   return actions;

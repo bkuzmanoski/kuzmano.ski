@@ -1,6 +1,5 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
-import { ErrorView } from "#/views/error-view";
 import { NotFound } from "#/views/not-found";
 
 import { routeTree } from "./routeTree.gen";
@@ -16,8 +15,8 @@ export function getRouter(history?: RouterHistory) {
     defaultPreload: "intent",
     defaultPreloadStaleTime: Infinity,
     defaultStaleTime: Infinity,
-    defaultErrorComponent: ErrorView,
     defaultNotFoundComponent: NotFound,
+    // No `defaultErrorComponent` so errors present an error page rather than showing on the desktop.
   });
 
   return router;

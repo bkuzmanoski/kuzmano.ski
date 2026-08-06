@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 
-export type Theme = "system" | "light" | "dark";
+import { THEME_STORAGE_KEY, applyTheme, isTheme } from "#/lib/theme";
+import type { Theme } from "#/lib/theme";
+
+export type { Theme };
+
 export type Sound = "on" | "off";
 
 export interface Settings {
@@ -8,14 +12,10 @@ export interface Settings {
   sound: Sound;
 }
 
-const THEME_STORAGE_KEY = "theme";
 const SOUND_STORAGE_KEY = "sound";
 
 const DEFAULTS: Settings = { theme: "system", sound: "on" };
 
-const THEME_ATTRIBUTE = "data-theme";
-
-const isTheme = (value: string): value is Theme => value === "system" || value === "light" || value === "dark";
 const isSound = (value: string): value is Sound => value === "off" || value === "on";
 
 function parseStored<T extends string>(key: string, isValid: (value: string) => value is T, fallback: T): T {
@@ -40,14 +40,6 @@ const listeners = new Set<() => void>();
 function emit() {
   for (const listener of listeners) {
     listener();
-  }
-}
-
-function applyTheme(theme: Theme) {
-  if (theme === "system") {
-    document.documentElement.removeAttribute(THEME_ATTRIBUTE);
-  } else {
-    document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
   }
 }
 
@@ -92,21 +84,3 @@ export function useSettings(): Settings {
 export function getSettings(): Settings {
   return state;
 }
-
-/**
- * Runs in the document head before first paint (prior to hydration) so the
- * chosen palette is applied without a flash of the default theme. Only the
- * explicit modes touch the attribute; "system" leaves it absent for the OS media
- * query to drive.
- */
-export const themeScript = `(function () {
-  try {
-    var theme = localStorage.getItem("${THEME_STORAGE_KEY}");
-
-    if (theme === "light" || theme === "dark") {
-      document.documentElement.setAttribute("${THEME_ATTRIBUTE}", theme);
-    }
-  } catch (e) {
-    // Ignored.
-  }
-})();`;

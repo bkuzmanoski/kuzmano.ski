@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as SegmentIndexRouteImport } from './routes/$segment/index'
 import { Route as SegmentSlugRouteImport } from './routes/$segment/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SegmentIndexRoute = SegmentIndexRouteImport.update({
@@ -31,30 +37,34 @@ const SegmentSlugRoute = SegmentSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/$segment': typeof SegmentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$segment/$slug' | '/$segment/'
+  fullPaths: '/' | '/$' | '/$segment/$slug' | '/$segment/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$segment/$slug' | '/$segment'
-  id: '__root__' | '/' | '/$segment/$slug' | '/$segment/'
+  to: '/' | '/$' | '/$segment/$slug' | '/$segment'
+  id: '__root__' | '/' | '/$' | '/$segment/$slug' | '/$segment/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SplatRoute: typeof SplatRoute
   SegmentSlugRoute: typeof SegmentSlugRoute
   SegmentIndexRoute: typeof SegmentIndexRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$segment/': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SplatRoute: SplatRoute,
   SegmentSlugRoute: SegmentSlugRoute,
   SegmentIndexRoute: SegmentIndexRoute,
 }

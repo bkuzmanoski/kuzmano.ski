@@ -31,9 +31,12 @@ describe("commitIconPositions", () => {
     act(() => moveIcon(FIRST_ICON_ID, { top: 320, right: 320 }));
     commitIconPositions();
 
-    const saved = JSON.parse(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY) ?? "{}") as Record<string, unknown>;
+    const savedPositions = JSON.parse(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY) ?? "{}") as Record<
+      string,
+      unknown
+    >;
 
-    expect(Object.keys(saved)).toEqual(ICON_IDS);
-    expect(saved[FIRST_ICON_ID]).toEqual({ top: 320, right: 320 });
+    expect(Object.keys(savedPositions)).toEqual(ICON_IDS);
+    expect(savedPositions[FIRST_ICON_ID]).toEqual({ top: 320, right: 320 });
   });
 });

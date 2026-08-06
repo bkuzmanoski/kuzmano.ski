@@ -7,7 +7,9 @@ import svgr from "vite-plugin-svgr";
 
 import { content } from "./build/content";
 import { frontmatterPlugin } from "./build/frontmatter";
+import { inlineScriptPlugin } from "./build/inline-script";
 import { mdxPlugin } from "./build/mdx";
+import { verifyPrerenderedPage } from "./build/prerender";
 import { svgrOptions } from "./build/svgr";
 
 export default defineConfig(({ command }) => ({
@@ -22,6 +24,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   plugins: [
+    inlineScriptPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     mdxPlugin(),
@@ -29,7 +32,12 @@ export default defineConfig(({ command }) => ({
       router: { routeFileIgnorePattern: ".test.tsx" },
       pages: command === "build" ? content() : [],
       sitemap: { host: "https://kuzmano.ski" },
-      prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
+      prerender: {
+        enabled: true,
+        crawlLinks: false,
+        autoStaticPathsDiscovery: false,
+        onSuccess: verifyPrerenderedPage,
+      },
     }),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),

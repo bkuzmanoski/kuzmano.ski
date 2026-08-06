@@ -187,11 +187,11 @@ export function Window({
               return false;
             }
 
-            const before = element.scrollTop;
+            const initialScrollTop = element.scrollTop;
 
             element.scrollBy({ top: delta });
 
-            return element.scrollTop !== before;
+            return element.scrollTop !== initialScrollTop;
           }}
           resizeControl={
             maximized ? null : (

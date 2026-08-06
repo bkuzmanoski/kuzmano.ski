@@ -7,8 +7,15 @@ import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?reac
 import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { SITE_NAME } from "#/config/site";
 import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
-import { unlockAudio } from "#/lib/audio/context";
-import { HAS_BOOTED_STORAGE_KEY, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
+import {
+  HAS_BOOTED_STORAGE_KEY,
+  MAX_LOADING_MS,
+  clearBootOverlay,
+  setHasBooted,
+  setIsBootSequenceComplete,
+  shouldBoot,
+} from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
@@ -16,8 +23,6 @@ import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion"
 import styles from "./boot-sequence.module.css";
 
 import type { CSSProperties } from "react";
-
-const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
 
 /* Metrics derived from `macintosh.png` */
 const CASE = { width: 1214, height: 1067 };
@@ -43,16 +48,12 @@ const SCREEN_FILTER_ID = "boot-screen";
 const SCREEN_PINCUSHION_BOW_PX = 8;
 const SCREEN_RGB_SHIFT_PX = 0.5;
 
-/* Timings. */
 const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
-const MAX_LOADING_MS = 5000; // Time to wait for the illustration and the font to load revealing the boot sequence.
 
 /* The durations the stylesheet animates over. Reduced motion preference overrides these to 0. */
 const LOADING_COVER_FADE_MS = 1000;
 const WELCOME_DIALOG_DRAW_MS = 250;
 const DESKTOP_REVEAL_MS = 500;
-
-const NON_GESTURE_KEYS = new Set(["Alt", "CapsLock", "Control", "Escape", "Meta", "NumLock", "ScrollLock", "Shift"]); // Cannot unlock audio as they are not treated as a user gesture.
 
 type Phase =
   | "loading"
@@ -287,7 +288,7 @@ function Sequence() {
 
   useEffect(() => {
     setHasBooted();
-    document.documentElement.removeAttribute(BOOT_OVERLAY_ATTRIBUTE);
+    clearBootOverlay();
 
     const timers: Array<ReturnType<typeof setTimeout>> = [];
     const waitingForInput = new AbortController();
@@ -395,20 +396,3 @@ export function restart() {
 
   window.location.replace("/");
 }
-
-/**
- * Runs in the document head before first paint (prior to hydration) to
- * hide the server-rendered desktop until the boot sequence has run.
- */
-export const bootSequenceOverlayScript = `(function () {
-  try {
-    if (location.pathname === "/" && !sessionStorage.getItem("${HAS_BOOTED_STORAGE_KEY}")) {
-      document.documentElement.setAttribute("${BOOT_OVERLAY_ATTRIBUTE}", "");
-      setTimeout(function () {
-        document.documentElement.removeAttribute("${BOOT_OVERLAY_ATTRIBUTE}");
-      }, ${MAX_LOADING_MS});
-    }
-  } catch (e) {
-    // Ignored.
-  }
-})();`;

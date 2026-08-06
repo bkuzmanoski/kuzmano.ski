@@ -18,7 +18,7 @@ import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "./s
 import { Tooltip } from "./tooltip";
 
 import type { MenuItem } from "./menu";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 
 export function MenuBar() {
   const { open, close } = useWindowActions();
@@ -84,17 +84,37 @@ export function MenuBar() {
     ...DESTINATION_ORDER.map((id) => ({ code: destinationShortcut(id).code, run: () => open(DESTINATIONS[id].route) })),
   ]);
 
-  function focusAdjacentMenu(from: string, direction: 1 | -1) {
+  /* The arrow keys move along the menu bar whether or not a menu is open. If a menu
+   * is open, the adjacent menu opens in its place and takes the focus as it mounts.
+   * If none is open, only the focus moves. */
+  function moveAlongMenuBar(from: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === from);
-    const next = menus[cycle(menus.length, index, direction)]!.label;
-    const anchor = titles.current[next];
+    const label = menus[cycle(menus.length, index, direction)]!.label;
+    const anchor = titles.current[label];
 
-    anchor?.focus();
-
-    if (openMenu && anchor) {
-      setIsPointerHeld(false);
-      setOpenMenu({ label: next, anchor });
+    if (!anchor) {
+      return;
     }
+
+    if (openMenu) {
+      setIsPointerHeld(false);
+      setOpenMenu({ label, anchor });
+    } else {
+      anchor.focus();
+    }
+  }
+
+  /* The handler focuses the title because the markup below prevents the focus the
+   * browser sets on mousedown. The default runs after the menu has mounted and has
+   * taken the focus which would move the focus back to the title preventing the
+   * arrow keys from working. */
+  function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
+    const anchor = event.currentTarget;
+
+    playClick();
+    anchor.focus();
+    setIsPointerHeld(true);
+    setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
   }
 
   function onTitleKeyDown(event: KeyboardEvent<HTMLButtonElement>, label: string) {
@@ -110,16 +130,13 @@ export function MenuBar() {
         break;
       case "ArrowRight":
         event.preventDefault();
-        focusAdjacentMenu(label, 1);
+        moveAlongMenuBar(label, 1);
 
         break;
       case "ArrowLeft":
         event.preventDefault();
-        focusAdjacentMenu(label, -1);
+        moveAlongMenuBar(label, -1);
 
-        break;
-      case "Escape":
-        setOpenMenu(null);
         break;
     }
   }
@@ -150,13 +167,8 @@ export function MenuBar() {
               className={clsx(styles.title, openMenu?.label === label && styles.open)}
               type="button"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
-              onPointerDown={(event) => {
-                const anchor = event.currentTarget;
-
-                playClick();
-                setIsPointerHeld(true);
-                setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
-              }}
+              onMouseDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => onTitlePointerDown(event, label)}
               onPointerEnter={(event) => {
                 if (openMenu !== null && openMenu.label !== label) {
                   setIsPointerHeld(event.buttons > 0);
@@ -171,6 +183,7 @@ export function MenuBar() {
                 anchor={openMenu.anchor}
                 items={items}
                 isPointerHeld={isPointerHeld}
+                onOpenAdjacent={(direction) => moveAlongMenuBar(label, direction)}
                 onClose={() => setOpenMenu(null)}
               />
             )}

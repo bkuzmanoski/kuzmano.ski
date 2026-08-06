@@ -1,5 +1,25 @@
 export const HAS_BOOTED_STORAGE_KEY = "has-booted";
 
+/**
+ * The time to wait for the assets to load before the boot sequence begins.
+ * Also, the longest time the boot sequence cover can hide the desktop.
+ */
+export const MAX_LOADING_MS = 5000;
+
+/* Set on `<html>` to hide the server-rendered desktop until the boot sequence
+ * has run. The stylesheet draws the cover from this attribute. */
+const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
+
+export const setBootOverlay = () => document.documentElement.setAttribute(BOOT_OVERLAY_ATTRIBUTE, "");
+
+/**
+ * Removes the cover set by the pre-hydration script.
+ *
+ * The boot sequence removes it as it begins. A view that draws in place of the desktop must
+ * also remove it, or it will hide that view until the failsafe timer in the script runs.
+ */
+export const clearBootOverlay = () => document.documentElement.removeAttribute(BOOT_OVERLAY_ATTRIBUTE);
+
 let bootDecision: boolean | null = null;
 
 export function shouldBoot(): boolean {
@@ -41,6 +61,6 @@ export function subscribeToIsBootSequenceComplete(listener: () => void) {
 
 export const getIsBootSequenceComplete = () => isBootSequenceComplete || !shouldBoot();
 
-/* The server renders the desktop ready. The `data-boot` cover hides it until
- * hydration decides otherwise, so the hand-off is never seen. */
+/* The `data-boot` cover hides the server-rendered desktop until
+ * hydration decides otherwise so the hand-off is not seen. */
 export const serverIsBootSequenceComplete = () => true;

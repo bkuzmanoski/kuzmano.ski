@@ -4,12 +4,14 @@ import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
 import { frontmatterPlugin } from "./build/frontmatter";
+import { inlineScriptPlugin } from "./build/inline-script";
 import { mdxPlugin } from "./build/mdx";
 import { svgrOptions } from "./build/svgr";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
+    inlineScriptPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     mdxPlugin({ syntaxHighlight: false }),

@@ -32,11 +32,13 @@ export function Menu({
   items,
   anchor,
   isPointerHeld,
+  onOpenAdjacent,
   onClose,
 }: {
   items: Array<MenuItem>;
   anchor: HTMLElement | null;
   isPointerHeld: boolean;
+  onOpenAdjacent: (direction: 1 | -1) => void;
   onClose: () => void;
 }) {
   const flash = useActivationFlash<number>();
@@ -87,7 +89,8 @@ export function Menu({
 
   const onPointerMove = useEffectEvent((event: PointerEvent) => {
     if (!flash.isRunning()) {
-      setFocusedItemId(indexAt(event.clientX, event.clientY));
+      const index = indexAt(event.clientX, event.clientY);
+      setFocusedItemId(isEnabled(items[index]) ? index : -1);
     }
   });
 
@@ -145,6 +148,16 @@ export function Menu({
         focusAdjacentMenuItem(-1);
 
         break;
+      case "ArrowRight":
+        event.preventDefault();
+        onOpenAdjacent(1);
+
+        break;
+      case "ArrowLeft":
+        event.preventDefault();
+        onOpenAdjacent(-1);
+
+        break;
       case "Enter":
       case " ":
         event.preventDefault();
@@ -157,6 +170,7 @@ export function Menu({
       case "Escape":
       case "Tab":
         event.preventDefault();
+        anchor?.focus(); // Return the focus to the title so the menu bar stays navigable by keyboard.
         onClose();
 
         break;
