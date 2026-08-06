@@ -66,8 +66,9 @@
   }
 }
 
+/* An open title already reads as selected, so the focus frame stays off it. */
 .logo:focus-visible,
-.menu .title:focus-visible {
+.menu .title:focus-visible:not(.open) {
   position: relative;
 
   &::after {
