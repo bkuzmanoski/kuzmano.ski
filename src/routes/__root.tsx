@@ -1,5 +1,4 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { Suspense, lazy } from "react";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import consoleFont from "#/assets/fonts/Monaco9.woff2?url";
@@ -11,22 +10,6 @@ import { ErrorView } from "#/views/error-view";
 import { NotFound } from "#/views/not-found";
 
 import type { ReactNode } from "react";
-
-const Devtools =
-  import.meta.env.DEV && import.meta.env.MODE !== "test"
-    ? lazy(async () => {
-        const [{ TanStackDevtools }, { TanStackRouterDevtoolsPanel }] = await Promise.all([
-          import("@tanstack/react-devtools"),
-          import("@tanstack/react-router-devtools"),
-        ]);
-
-        return {
-          default: () => (
-            <TanStackDevtools plugins={[{ name: "TanStack Router", render: <TanStackRouterDevtoolsPanel /> }]} />
-          ),
-        };
-      })
-    : null;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -54,11 +37,6 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         <Desktop>{children}</Desktop>
-        {Devtools && (
-          <Suspense fallback={null}>
-            <Devtools />
-          </Suspense>
-        )}
         <Scripts />
       </body>
     </html>

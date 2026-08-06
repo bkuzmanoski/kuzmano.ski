@@ -1,5 +1,4 @@
 import babel from "@rolldown/plugin-babel";
-import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import postcssPresetEnv from "postcss-preset-env";
@@ -23,7 +22,6 @@ export default defineConfig(({ command }) => ({
     },
   },
   plugins: [
-    devtools(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     mdxPlugin(),
