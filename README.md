@@ -33,7 +33,7 @@ The routes are dynamic (`src/routes/$segment/`), so a collection needs no route
 files of its own. To add a collection:
 
 1. Make a subfolder in `src/content`
-2. Add it to `DESTINATIONS` and `DESTINATION_ORDER` in
+2. Add it to `DESTINATIONS` and `DESTINATION_GROUPS` in
    `src/config/navigation.ts`.
 
 ## Deploy
