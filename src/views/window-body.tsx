@@ -1,10 +1,13 @@
+import { Suspense, memo } from "react";
+
 import { pages } from "#/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/lib/window-registry";
 
+import { CollectionEntryList } from "./collection-entry-list";
 import { ContentBody } from "./content-body";
-import { ContentList } from "./content-list";
 import { NotFoundBody } from "./not-found";
+import styles from "./window-body.module.css";
 
 function CollectionEntryBody({ collection, slug }: { collection: Collection; slug: string }) {
   const frontmatter = collection.frontmatter(slug);
@@ -16,21 +19,55 @@ function PageBody({ slug }: { slug: string }) {
   return frontmatter ? <ContentBody content={pages.load(slug)} frontmatter={frontmatter} showDate={false} /> : null;
 }
 
-export function WindowBody({ path }: { path: string }) {
-  const windowTarget = resolveWindow(path);
+function Pane({ route }: { route: string }) {
+  const target = resolveWindow(route);
 
-  if (!windowTarget) {
+  if (!target) {
     return null;
   }
 
-  switch (windowTarget.kind) {
+  switch (target.id) {
     case "collection":
-      return <ContentList basePath={path} collection={windowTarget.collection} />;
-    case "collectionEntry":
-      return <CollectionEntryBody collection={windowTarget.collection} slug={windowTarget.slug} />;
+      // A collection window opens on an entry (see `windowRouteFor`) so the list is empty here.
+      return target.entrySlug === null ? (
+        <p className={styles.placeholder}>This collection has no entries.</p>
+      ) : (
+        <CollectionEntryBody collection={target.collection} slug={target.entrySlug} />
+      );
     case "page":
-      return <PageBody slug={windowTarget.slug} />;
+      return <PageBody slug={target.slug} />;
     case "notFound":
       return <NotFoundBody />;
   }
 }
+
+/* Both `WindowSidebar` and `WindowBody` depend on the route alone, so they are memoized and held apart from the geometry. */
+
+/** The sidebar of a window. Only the collection window has one (see `hasSidebar`). */
+export const WindowSidebar = memo(function Sidebar({ route }: { route: string }) {
+  const target = resolveWindow(route);
+
+  if (target?.id !== "collection") {
+    return null;
+  }
+
+  /* Keyed by collection so a move to another one starts its list over, rather than
+   * carrying the scroll position and the tab stop of the list it replaced. */
+  return (
+    <CollectionEntryList
+      key={target.basePath}
+      activeSlug={target.entrySlug}
+      basePath={target.basePath}
+      collection={target.collection}
+    />
+  );
+});
+
+/** The main pane of a window. */
+export const WindowBody = memo(function Body({ route }: { route: string }) {
+  return (
+    <Suspense fallback={null}>
+      <Pane route={route} />
+    </Suspense>
+  );
+});

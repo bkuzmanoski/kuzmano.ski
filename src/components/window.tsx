@@ -52,6 +52,74 @@ function TitleBarButton({
   );
 }
 
+/** A scrolling viewport and the scrollbar that drives it. A window has one per pane. */
+function ScrollPane({
+  id,
+  className,
+  isResizing,
+  resizeControl,
+  children,
+}: {
+  id: string;
+  className?: string;
+  isResizing: boolean;
+  resizeControl?: ReactNode;
+  children: ReactNode;
+}) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const { metrics, measure } = useScrollMetrics(viewportRef);
+
+  const isScrolledToEnd =
+    metrics.scrollHeight > metrics.clientHeight + 1 && metrics.top + metrics.clientHeight >= metrics.scrollHeight - 1;
+
+  return (
+    <div className={clsx(styles.scrollPane, className)}>
+      <div
+        ref={viewportRef}
+        className={styles.viewport}
+        data-scrolled-to-end={isScrolledToEnd || undefined}
+        id={id}
+        tabIndex={-1}
+        onScroll={(event) => {
+          measure();
+
+          if (isResizing) {
+            skipScroll(event.currentTarget);
+            return;
+          }
+
+          playScroll(event.currentTarget);
+        }}
+      >
+        {children}
+      </div>
+      <Scrollbar
+        controls={id}
+        metrics={metrics}
+        onScrollTop={(top) => {
+          if (viewportRef.current) {
+            viewportRef.current.scrollTop = top;
+          }
+        }}
+        onStep={(delta) => {
+          const element = viewportRef.current;
+
+          if (!element) {
+            return false;
+          }
+
+          const initialScrollTop = element.scrollTop;
+
+          element.scrollBy({ top: delta });
+
+          return element.scrollTop !== initialScrollTop;
+        }}
+        resizeControl={resizeControl}
+      />
+    </div>
+  );
+}
+
 export function Window({
   title,
   x,
@@ -62,6 +130,8 @@ export function Window({
   focused,
   maximized,
   hidden,
+  unplaced,
+  sidebar,
   onClose,
   onZoom,
   onFocus,
@@ -78,6 +148,8 @@ export function Window({
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
+  unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
+  sidebar?: ReactNode;
   onClose: () => void;
   onZoom: () => void;
   onFocus: () => void;
@@ -86,10 +158,9 @@ export function Window({
   children: ReactNode;
 }) {
   const viewportId = useId();
+  const sidebarId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const windowRef = useRef<HTMLElement>(null);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const { metrics, measure } = useScrollMetrics(viewportRef);
   const [isResizing, setIsResizing] = useState(false);
 
   /* Focus the window element on window focus so that keyboard
@@ -122,8 +193,6 @@ export function Window({
     onEnd: () => setIsResizing(false),
   });
 
-  const isScrolledToEnd =
-    metrics.scrollHeight > metrics.clientHeight + 1 && metrics.top + metrics.clientHeight >= metrics.scrollHeight - 1;
   const contentId = focused ? WINDOW_CONTENT_ID : viewportId;
 
   return (
@@ -135,9 +204,12 @@ export function Window({
         focused && styles.focused,
         maximized && styles.maximized,
         hidden && styles.hidden,
+        unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
       )}
-      style={maximized ? { zIndex: z } : { left: x, top: y, width, height, zIndex: z }}
+      /* A maximized window is laid out entirely by CSS. An unplaced one keeps its
+       * size but leaves its position to CSS, which centres it on the desktop. */
+      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }}
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
@@ -153,46 +225,14 @@ export function Window({
         )}
       </header>
       <div className={styles.content}>
-        <div
-          ref={viewportRef}
-          className={styles.viewport}
-          data-scrolled-to-end={isScrolledToEnd || undefined}
+        {sidebar && (
+          <ScrollPane className={styles.sidebar} id={sidebarId} isResizing={isResizing}>
+            {sidebar}
+          </ScrollPane>
+        )}
+        <ScrollPane
           id={contentId}
-          tabIndex={-1}
-          onScroll={(event) => {
-            measure();
-
-            if (isResizing) {
-              skipScroll(event.currentTarget);
-              return;
-            }
-
-            playScroll(event.currentTarget);
-          }}
-        >
-          {children}
-        </div>
-        <Scrollbar
-          controls={contentId}
-          metrics={metrics}
-          onScrollTop={(top) => {
-            if (viewportRef.current) {
-              viewportRef.current.scrollTop = top;
-            }
-          }}
-          onStep={(delta) => {
-            const element = viewportRef.current;
-
-            if (!element) {
-              return false;
-            }
-
-            const initialScrollTop = element.scrollTop;
-
-            element.scrollBy({ top: delta });
-
-            return element.scrollTop !== initialScrollTop;
-          }}
+          isResizing={isResizing}
           resizeControl={
             maximized ? null : (
               <Tooltip label="Resize" suppressed={isResizing}>
@@ -208,7 +248,9 @@ export function Window({
               </Tooltip>
             )
           }
-        />
+        >
+          {children}
+        </ScrollPane>
       </div>
     </section>
   );

@@ -2,244 +2,229 @@ import { describe, expect, test } from "vitest";
 
 import { EMPTY_STATE, createWindowReducer } from "./window-manager";
 
-import type { ManagerState, WindowLayout } from "./window-manager";
+import type { Action, ManagerState, WindowLayout } from "./window-manager";
+import type { WindowId } from "./window-registry";
 
 const LAYOUT: WindowLayout = {
-  defaultPosition: { collection: { x: 16, y: 16 }, content: { x: 512, y: 16 } },
-  defaultSize: { collection: { width: 480, height: 420 }, content: { width: 720, height: 640 } },
-  minSize: { width: 280, height: 160 },
+  defaultSize: { width: 720, height: 560 },
+  minSize: { width: 480, height: 280 },
   cascadeOffset: 28,
-  maxCascadeSteps: 8,
+};
+
+const SURFACE = { width: 1280, height: 800 };
+const CENTRE_POSITION = {
+  x: (SURFACE.width - LAYOUT.defaultSize.width) / 2,
+  y: (SURFACE.height - LAYOUT.defaultSize.height) / 2,
 };
 
 const reducer = createWindowReducer(LAYOUT);
 
-function opened(...routes: Array<string>): ManagerState {
-  return routes.reduce(
-    (state, route) => reducer(state, { type: "open", route, title: route, kind: "collection" }),
-    EMPTY_STATE,
+const openAction = (id: WindowId, route: string): Action => ({ type: "open", id, route, title: route });
+
+function opened(...ids: Array<WindowId>): ManagerState {
+  return ids.reduce(
+    (state, id) => reducer(state, openAction(id, `/${id}`)),
+    reducer(EMPTY_STATE, { type: "measure", surface: SURFACE }),
   );
 }
 
 describe("open", () => {
-  test("adds the window, raises it to the front, and makes it active", () => {
-    const state = opened("/work");
+  test("opens the window, raises it to the front, and focuses it", () => {
+    const state = opened("page");
 
-    expect(state.order).toEqual(["/work"]);
-    expect(state.focused).toBe("/work");
-    expect(state.windows["/work"]?.title).toBe("/work");
+    expect(state.order).toEqual(["page"]);
+    expect(state.focused).toBe("page");
+    expect(state.content.page).toEqual({ route: "/page", title: "/page" });
   });
 
-  test("cascades each new window", () => {
-    const state = opened("/work", "/about");
+  test("the first window is centred on the desktop and subsequent windows cascade from there", () => {
+    const state = opened("page", "collection");
 
-    expect(state.windows["/about"]!.x).toBeGreaterThan(state.windows["/work"]!.x);
-    expect(state.windows["/about"]!.y).toBeGreaterThan(state.windows["/work"]!.y);
-  });
-
-  test("each kind cascades from its own base position", () => {
-    const state = reducer(opened("/work"), { type: "open", route: "/about", title: "About", kind: "content" });
-
-    expect(state.windows["/work"]).toMatchObject(LAYOUT.defaultPosition.collection);
-    expect(state.windows["/about"]).toMatchObject(LAYOUT.defaultPosition.content);
+    expect(state.geometry.page).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+    expect(state.geometry.collection).toMatchObject({
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+    });
   });
 
   test("a closed window frees its slot for the next window", () => {
-    const initialState = reducer(opened("/work", "/about"), { type: "close", route: "/work" });
-    const mutatedState = reducer(initialState, {
-      type: "open",
-      route: "/contact",
-      title: "Contact",
-      kind: "collection",
-    });
+    const initialState = reducer(opened("page", "collection"), { type: "close", id: "page" });
+    const mutatedState = reducer(initialState, openAction("notFound", "/typo"));
 
-    // /work held the base slot, so /contact takes it rather than cascading past /about.
-    expect(mutatedState.windows["/contact"]).toMatchObject(LAYOUT.defaultPosition.collection);
+    // The page window held the base slot, so the 404 takes it rather than cascading past the collection.
+    expect(mutatedState.geometry.notFound).toMatchObject(CENTRE_POSITION);
   });
 
-  test("the base position is not mutated by a cascade", () => {
-    const defaultPosition = { ...LAYOUT.defaultPosition.collection };
+  test("a route that resolves to an existing window replaces what it shows in place", () => {
+    const initialState = opened("collection", "page");
+    const mutatedState = reducer(initialState, openAction("collection", "/design-notes/entry"));
 
-    opened("/work", "/about", "/contact");
-    expect(LAYOUT.defaultPosition.collection).toEqual(defaultPosition);
+    expect(mutatedState.order).toEqual(["page", "collection"]);
+    expect(mutatedState.focused).toBe("collection");
+    expect(mutatedState.content.collection).toEqual({ route: "/design-notes/entry", title: "/design-notes/entry" });
+    expect(mutatedState.geometry.collection).toEqual(initialState.geometry.collection);
   });
 
-  test("an open route is re-focused, not duplicated", () => {
-    const state = reducer(opened("/work", "/about"), {
-      type: "open",
-      route: "/work",
-      title: "ignored",
-      kind: "collection",
-    });
+  test("re-opening the route a window already shows only raises it", () => {
+    const initialState = opened("collection", "page");
+    const mutatedState = reducer(initialState, openAction("collection", "/collection"));
 
-    expect(state.order).toEqual(["/about", "/work"]);
-    expect(state.focused).toBe("/work");
-    expect(state.windows["/work"]?.title).toBe("/work");
+    expect(mutatedState.order).toEqual(["page", "collection"]);
+    expect(mutatedState.content).toBe(initialState.content);
   });
 });
 
 describe("close", () => {
   test("hands the focus to the next window in the stack", () => {
-    const state = reducer(opened("/work", "/about"), { type: "close", route: "/about" });
+    const state = reducer(opened("collection", "page"), { type: "close", id: "page" });
 
-    expect(state.order).toEqual(["/work"]);
-    expect(state.focused).toBe("/work");
-    expect(state.windows["/about"]).toBeUndefined();
+    expect(state.order).toEqual(["collection"]);
+    expect(state.focused).toBe("collection");
+    expect(state.content.page).toBeUndefined();
+    expect(state.geometry.page).toBeUndefined();
   });
 
-  test("closing the last window makes the desktop active", () => {
-    expect(reducer(opened("/work"), { type: "close", route: "/work" }).focused).toBeNull();
+  test("focuses the desktop when applied to the last open window", () => {
+    expect(reducer(opened("page"), { type: "close", id: "page" }).focused).toBeNull();
   });
 
-  test("closing an inactive window retains the existing focus", () => {
-    const state = reducer(opened("/work", "/about"), { type: "close", route: "/work" });
-    expect(state.focused).toBe("/about");
+  test("retains the existing focus when applied to an inactive window", () => {
+    const state = reducer(opened("collection", "page"), { type: "close", id: "collection" });
+    expect(state.focused).toBe("page");
   });
 
-  test("an unknown route is a no-op", () => {
-    const state = opened("/work");
-    expect(reducer(state, { type: "close", route: "/unknown-route" })).toBe(state);
+  test("is a no-op on a closed window", () => {
+    const state = opened("page");
+    expect(reducer(state, { type: "close", id: "notFound" })).toBe(state);
   });
 });
 
 describe("focus", () => {
   test("raises the window to the front of the stack", () => {
-    const state = reducer(opened("/work", "/about"), { type: "focus", route: "/work" });
+    const state = reducer(opened("collection", "page"), { type: "focus", id: "collection" });
 
-    expect(state.order).toEqual(["/about", "/work"]);
-    expect(state.focused).toBe("/work");
+    expect(state.order).toEqual(["page", "collection"]);
+    expect(state.focused).toBe("collection");
   });
 
-  test("re-focusing the topmost window does not affect state", () => {
-    const state = opened("/work", "/about");
-    expect(reducer(state, { type: "focus", route: "/about" })).toBe(state);
+  test("does not affect state when applied to a focused window", () => {
+    const state = opened("collection", "page");
+    expect(reducer(state, { type: "focus", id: "page" })).toBe(state);
   });
 
-  test("an unknown route is a no-op", () => {
-    const state = opened("/work");
-    expect(reducer(state, { type: "focus", route: "/unknown-route" })).toBe(state);
+  test("is a no-op on a closed window", () => {
+    const state = opened("page");
+    expect(reducer(state, { type: "focus", id: "notFound" })).toBe(state);
   });
 });
 
 describe("move", () => {
   test("sets the position and leaves the size unchanged", () => {
-    const initialState = opened("/work");
-    const mutatedState = reducer(initialState, { type: "move", route: "/work", x: 50, y: 50 });
-
-    expect(mutatedState.windows["/work"]).toMatchObject({ x: 50, y: 50, width: initialState.windows["/work"]!.width });
+    const state = reducer(opened("page"), { type: "move", id: "page", x: 50, y: 50 });
+    expect(state.geometry.page).toMatchObject({ x: 50, y: 50, ...LAYOUT.defaultSize });
   });
 
-  test("an unknown route is a no-op", () => {
-    const state = opened("/work");
-    expect(reducer(state, { type: "move", route: "/nope", x: 1, y: 2 })).toBe(state);
+  test("a closed window is a no-op", () => {
+    const state = opened("page");
+    expect(reducer(state, { type: "move", id: "notFound", x: 1, y: 2 })).toBe(state);
   });
 });
 
 describe("resize", () => {
-  test("sets the desired size", () => {
-    const state = reducer(opened("/work"), { type: "resize", route: "/work", width: 640, height: 480 });
-    expect(state.windows["/work"]).toMatchObject({ width: 640, height: 480 });
+  test("sets the size", () => {
+    const state = reducer(opened("page"), { type: "resize", id: "page", width: 640, height: 480 });
+    expect(state.geometry.page).toMatchObject({ width: 640, height: 480 });
   });
 
   test("clamps the size to the minimum size", () => {
-    const state = reducer(opened("/work"), { type: "resize", route: "/work", width: 10, height: 10 });
+    const state = reducer(opened("page"), { type: "resize", id: "page", width: 10, height: 10 });
+    expect(state.geometry.page).toMatchObject(LAYOUT.minSize);
+  });
 
-    expect(state.windows["/work"]!.width).toBe(LAYOUT.minSize.width);
-    expect(state.windows["/work"]!.height).toBe(LAYOUT.minSize.height);
+  test("a window wider than the desktop takes the position it is rendered at", () => {
+    const narrowSurface = { width: 600, height: 800 };
+    const initialState = reducer(opened("page"), { type: "measure", surface: narrowSurface });
+    const mutatedState = reducer(initialState, { type: "resize", id: "page", width: 560, height: 400 });
+
+    expect(initialState.geometry.page).toMatchObject({ x: CENTRE_POSITION.x, width: LAYOUT.defaultSize.width });
+    expect(mutatedState.geometry.page).toMatchObject({ x: 0, width: 560 });
   });
 });
 
 describe("zoom", () => {
   test("toggles maximized and raises the window", () => {
-    const state = reducer(opened("/about", "/work"), { type: "zoom", route: "/about" });
+    const state = reducer(opened("page", "collection"), { type: "zoom", id: "page" });
 
-    expect(state.windows["/about"]!.maximized).toBe(true);
-    expect(state.order).toEqual(["/work", "/about"]);
-    expect(state.focused).toBe("/about");
+    expect(state.geometry.page!.maximized).toBe(true);
+    expect(state.order).toEqual(["collection", "page"]);
+    expect(state.focused).toBe("page");
 
-    expect(reducer(state, { type: "zoom", route: "/about" }).windows["/about"]!.maximized).toBe(false);
+    expect(reducer(state, { type: "zoom", id: "page" }).geometry.page!.maximized).toBe(false);
   });
 
-  test("an unknown route is a no-op", () => {
-    const state = opened("/work");
-    expect(reducer(state, { type: "zoom", route: "/nope" })).toBe(state);
+  test("is a no-op on a closed window", () => {
+    const state = opened("page");
+    expect(reducer(state, { type: "zoom", id: "notFound" })).toBe(state);
+  });
+});
+
+describe("measure", () => {
+  test("the first measurement matches the pre-rendered geometry", () => {
+    const preRendered = reducer(EMPTY_STATE, openAction("page", "/page"));
+    const measured = reducer(preRendered, { type: "measure", surface: SURFACE });
+
+    expect(preRendered.geometry.page).toMatchObject({ x: 0, y: 0 });
+    expect(measured.geometry.page).toMatchObject(CENTRE_POSITION);
+  });
+
+  test("a subsequent measurement leaves the windows where they are", () => {
+    const movedState = reducer(opened("page"), { type: "move", id: "page", x: 10, y: 10 });
+    const measured = reducer(movedState, { type: "measure", surface: { width: 640, height: 480 } });
+
+    expect(measured.geometry).toBe(movedState.geometry);
+    expect(measured.surface).toEqual({ width: 640, height: 480 });
+  });
+
+  test("is a no-op when the size is unchanged", () => {
+    const state = opened("page");
+    expect(reducer(state, { type: "measure", surface: SURFACE })).toBe(state);
   });
 });
 
 describe("organize", () => {
   test("un-maximizes and re-cascades every window in stack order", () => {
-    const zoomedState = reducer(opened("/work", "/about"), { type: "zoom", route: "/work" });
-    const movedState = reducer(zoomedState, { type: "move", route: "/work", x: 999, y: 999 });
+    const zoomedState = reducer(opened("collection", "page"), { type: "zoom", id: "collection" });
+    const movedState = reducer(zoomedState, { type: "move", id: "collection", x: 999, y: 999 });
     const organizedState = reducer(movedState, { type: "organize" });
 
-    // Zooming raised /work, so the cascade now runs /about, then /work.
-    expect(organizedState.order).toEqual(["/about", "/work"]);
-    expect(organizedState.windows["/work"]!.maximized).toBe(false);
-    expect(organizedState.windows["/work"]!.x).toBeGreaterThan(organizedState.windows["/about"]!.x);
-    expect(organizedState.windows["/work"]!.y).toBeGreaterThan(organizedState.windows["/about"]!.y);
-  });
-
-  test("raises the content windows above collection windows, each group from its own base position", () => {
-    const initialState = reducer(
-      reducer(EMPTY_STATE, { type: "open", route: "/about", title: "About", kind: "content" }),
-      {
-        type: "open",
-        route: "/work",
-        title: "Work",
-        kind: "collection",
-      },
-    );
-    const mutatedState = reducer(initialState, { type: "organize" });
-
-    expect(initialState.order).toEqual(["/about", "/work"]);
-    expect(mutatedState.order).toEqual(["/work", "/about"]);
-    expect(mutatedState.windows["/work"]).toMatchObject(LAYOUT.defaultPosition.collection);
-    expect(mutatedState.windows["/about"]).toMatchObject(LAYOUT.defaultPosition.content);
-  });
-
-  test("the front window takes the focus", () => {
-    const state = reducer(reducer(EMPTY_STATE, { type: "open", route: "/about", title: "About", kind: "content" }), {
-      type: "open",
-      route: "/work",
-      title: "Work",
-      kind: "collection",
+    // Zooming raised the collection window, so the cascade now runs the page window, then it.
+    expect(organizedState.order).toEqual(["page", "collection"]);
+    expect(organizedState.geometry.collection!.maximized).toBe(false);
+    expect(organizedState.geometry.page).toMatchObject(CENTRE_POSITION);
+    expect(organizedState.geometry.collection).toMatchObject({
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
     });
-
-    expect(state.focused).toBe("/work");
-    expect(reducer(state, { type: "organize" }).focused).toBe("/about");
   });
 
-  test("keeps the desktop focused if it was already focused", () => {
-    const state = reducer(reducer(opened("/work"), { type: "focusDesktop" }), { type: "organize" });
-
-    expect(state.focused).toBeNull();
-    expect(state.order).toEqual(["/work"]);
-  });
-
-  test("the first window returns to the base position", () => {
-    const initialState = opened("/work");
-    const movedState = reducer(initialState, { type: "move", route: "/work", x: 999, y: 999 });
-    const organizedState = reducer(movedState, { type: "organize" });
-
-    expect(organizedState.windows["/work"]).toMatchObject({
-      x: initialState.windows["/work"]!.x,
-      y: initialState.windows["/work"]!.y,
-    });
+  test("keeps the focus where it was", () => {
+    expect(reducer(opened("collection", "page"), { type: "organize" }).focused).toBe("page");
+    expect(reducer(reducer(opened("page"), { type: "focusDesktop" }), { type: "organize" }).focused).toBeNull();
   });
 });
 
 describe("focusDesktop", () => {
   test("keeps the windows open and makes the desktop active", () => {
-    const initialState = opened("/work", "/about");
+    const initialState = opened("collection", "page");
     const mutatedState = reducer(initialState, { type: "focusDesktop" });
 
     expect(mutatedState.focused).toBeNull();
-    expect(mutatedState.order).toEqual(["/work", "/about"]);
-    expect(mutatedState.windows).toBe(initialState.windows);
+    expect(mutatedState.order).toEqual(["collection", "page"]);
+    expect(mutatedState.geometry).toBe(initialState.geometry);
   });
 
   test("is a no-op when the desktop is already active", () => {
-    const state = reducer(opened("/work"), { type: "focusDesktop" });
+    const state = reducer(opened("page"), { type: "focusDesktop" });
     expect(reducer(state, { type: "focusDesktop" })).toBe(state);
   });
 });

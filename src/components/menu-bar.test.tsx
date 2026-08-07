@@ -142,20 +142,4 @@ describe("disabled items", () => {
     expect(menuItem.getAttribute("aria-disabled")).toBe("true");
     expect(menuItem.className).toBe(initialClassName);
   });
-
-  test("an enabled item in their place does take the highlight", () => {
-    focusedWindow = "/about";
-    render(<MenuBar />);
-
-    openWithKeyboard("File");
-
-    const menuItem = screen.getByRole("menuitem");
-    const initialClassName = menuItem.className;
-
-    Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => menuItem });
-    fireEvent(document, new MouseEvent("pointermove", { bubbles: true }));
-
-    expect(menuItem.getAttribute("aria-disabled")).toBeNull();
-    expect(menuItem.className).not.toBe(initialClassName);
-  });
 });

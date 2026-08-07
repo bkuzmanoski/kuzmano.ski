@@ -13,7 +13,15 @@ import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-comp
 import type { Icon } from "#/lib/icon";
 import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
 import { clamp } from "#/lib/math";
-import { useFocusedWindow, useWindowActions, useWindowOrder, useWindows } from "#/lib/window-manager";
+import {
+  useFocusedWindow,
+  useWindowActions,
+  useWindowContent,
+  useWindowGeometry,
+  useWindowOrder,
+} from "#/lib/window-manager";
+import { desktopRouteOf, resolveWindow } from "#/lib/window-registry";
+import type { WindowId } from "#/lib/window-registry";
 
 import styles from "./desktop-icons.module.css";
 
@@ -82,16 +90,16 @@ export function adjacentIconId(placements: ReadonlyArray<IconPlacement>, fromId:
  */
 function ZoomRect({
   from,
-  path,
+  windowId,
   containerSize,
   onDone,
 }: {
   from: Rect;
-  path: string;
+  windowId: WindowId;
   containerSize: Size;
   onDone: () => void;
 }) {
-  const windows = useWindows();
+  const geometry = useWindowGeometry();
   const order = useWindowOrder();
   const [box, setBox] = useState(from);
   const [animate, setAnimate] = useState(false);
@@ -100,7 +108,7 @@ function ZoomRect({
    * this component, so its geometry is in state by the first render. Latching it here
    * means a later move or resize cannot redirect the animation midway. */
   const [target] = useState(() => {
-    const state = windows[path];
+    const state = geometry[windowId];
     return state ? constrain(state, containerSize) : null;
   });
 
@@ -151,15 +159,15 @@ function ZoomRect({
   );
 }
 
-export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (path: string | null) => void }) {
-  const openPaths = useWindowOrder();
+export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChange: (id: WindowId | null) => void }) {
+  const content = useWindowContent();
   const focusedWindow = useFocusedWindow();
   const { open, focusDesktop } = useWindowActions();
   const positions = useIconPositions();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
-  const [zooming, setZooming] = useState<{ path: string; from: Rect } | null>(null);
+  const [zooming, setZooming] = useState<{ windowId: WindowId; from: Rect } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
@@ -193,6 +201,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
   }
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
+  const openRoutes = new Set(Object.values(content).map(({ route }) => desktopRouteOf(route)));
   const containerWidth = containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth);
   const containerHeight = containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight);
 
@@ -232,12 +241,14 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
       return;
     }
 
-    const isAlreadyOpen = openPaths.includes(iconDefinition.route);
+    /* The zoom rect grows towards a window that is not on the desktop yet.
+     * A window that is already open only changes what it shows. */
+    const windowId = resolveWindow(iconDefinition.route)?.id;
     const element = iconsRef.current[iconDefinition.id];
 
-    if (element && !isAlreadyOpen) {
-      setZooming({ path: iconDefinition.route, from: relativeRect(element) });
-      onZoomRectPathChange(iconDefinition.route);
+    if (element && windowId && !content[windowId]) {
+      setZooming({ windowId, from: relativeRect(element) });
+      onZoomRectWindowChange(windowId);
     }
 
     open(iconDefinition.route);
@@ -314,7 +325,7 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
             y={y}
             cellSize={ICON_LAYOUT.cellSize}
             tabIndex={tabStop === id ? 0 : -1}
-            open={iconDefinition.kind === "collection" && openPaths.includes(iconDefinition.route)}
+            open={iconDefinition.kind === "collection" && openRoutes.has(iconDefinition.route)}
             selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
             onSelect={() => selectIcon(id)}
             onOpen={() => openIcon(iconDefinition)}
@@ -329,13 +340,13 @@ export function DesktopIcons({ onZoomRectPathChange }: { onZoomRectPathChange: (
 
       {zooming && (
         <ZoomRect
-          key={zooming.path}
+          key={zooming.windowId}
           from={zooming.from}
-          path={zooming.path}
+          windowId={zooming.windowId}
           containerSize={containerSize}
           onDone={() => {
             setZooming(null);
-            onZoomRectPathChange(null);
+            onZoomRectWindowChange(null);
           }}
         />
       )}

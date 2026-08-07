@@ -1,6 +1,7 @@
 .window {
   --title-bar-height: 28px;
   --control-size: 16px;
+  --sidebar-width: 240px;
 
   position: absolute;
 
@@ -36,6 +37,18 @@
     inset: 0;
 
     background: color-mix(in oklab, var(--color-background) 50%, transparent);
+  }
+
+  /* A window the server drew has no position as the window layer has not yet been
+   * measured. These values mirror the default position for the initial window placed
+   * by the window manager. */
+  &.unplaced {
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+
+    max-width: 100%;
+    max-height: 100%;
   }
 
   &.maximized {
@@ -94,9 +107,13 @@
   & .title {
     position: relative;
 
+    overflow: hidden;
+
+    max-width: calc(100% - 2 * (var(--gutter) + var(--control-size) + 40px));
     margin: 0 auto;
     padding: 0 8px;
 
+    text-overflow: ellipsis;
     white-space: nowrap;
 
     background: var(--color-background);
@@ -119,8 +136,8 @@
 .controlResize {
   --icon-foreground: var(--color-border);
 
-  width: var(--scrollbar-size);
-  height: var(--scrollbar-size);
+  width: var(--scrollbar-width);
+  height: calc(var(--scrollbar-width) + 1px); /* +1px for the border. */
   border-top: 1px solid var(--color-border);
 
   /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */
@@ -133,8 +150,8 @@
 
   & svg {
     pointer-events: none;
-    width: 20px;
-    height: 20px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-width);
   }
 }
 
@@ -142,6 +159,27 @@
   display: flex;
   flex: 1;
   min-height: 0;
+
+  & .scrollPane {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+
+    /* The width a hidden scrollbar has freed up. Content in the pane holds it at its
+     * inline end, so what the pane draws keeps its width whether or not the scrollbar
+     * is there, and only the full-width edges of that content move. */
+    &:has(> [data-collapsed]) {
+      --reserved-scrollbar-width: calc(
+        var(--scrollbar-width) + 1px
+      ); /* +1px for the border defined in `scrollbar.module.css`. */
+    }
+
+    &.sidebar {
+      flex: none;
+      width: var(--sidebar-width);
+      border-right: 1px solid var(--color-border);
+    }
+  }
 
   & .viewport {
     scrollbar-width: none;

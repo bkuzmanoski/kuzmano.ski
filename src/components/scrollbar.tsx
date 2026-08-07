@@ -5,13 +5,13 @@ import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { playClick } from "#/lib/audio/ui";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { clamp } from "#/lib/math";
 
 import styles from "./scrollbar.module.css";
 
-import type { ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 
 const STEP = 40;
-const MIN_THUMB_HEIGHT = 20;
 const REPEAT_MS = 90;
 
 export interface ScrollMetrics {
@@ -175,30 +175,41 @@ export function Scrollbar({
   resizeControl?: ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const { height: trackHeight } = useElementSize(trackRef);
+  const thumbRef = useRef<HTMLDivElement>(null);
 
   const overflow = metrics.scrollHeight > metrics.clientHeight + 1;
   const range = metrics.scrollHeight - metrics.clientHeight;
-  const thumbHeight = Math.max(MIN_THUMB_HEIGHT, (metrics.clientHeight / metrics.scrollHeight) * trackHeight);
-  const thumbTop = range > 0 ? (metrics.top / range) * (trackHeight - thumbHeight) : 0;
-  const isAtTop = thumbTop <= 0.5;
-  const isAtBottom = thumbTop + thumbHeight >= trackHeight - 0.5;
-  const scrolled = range > 0 ? Math.round((metrics.top / range) * 100) : 0;
+  const position = range > 0 ? clamp(metrics.top / range, 0, 1) : 0;
+  const isAtTop = metrics.top <= 0.5;
+  const isAtBottom = metrics.top >= range - 0.5;
+  const scrolledPercent = Math.round(position * 100);
+  const thumbStyle = {
+    "--thumb-proportion": overflow ? metrics.clientHeight / metrics.scrollHeight : 1,
+    "--thumb-position": position,
+    borderTopWidth: isAtTop ? 0 : undefined,
+    borderBottomWidth: isAtBottom ? 0 : undefined,
+  } as CSSProperties;
 
   const thumbHandlers = usePointerDrag({
     preventDefault: true,
-    start: () => metrics.top,
-    onStart: (delta, startTop) => {
-      if (trackHeight <= thumbHeight) {
-        return;
+    start: () => ({
+      top: metrics.top,
+      travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
+    }),
+    onStart: (delta, from) => {
+      if (from.travel > 0) {
+        onScrollTop(from.top + (delta.dy / from.travel) * range);
       }
-
-      onScrollTop(startTop + (delta.dy / (trackHeight - thumbHeight)) * range);
     },
   });
 
+  const isMeasured = metrics.clientHeight > 0;
+  const isCollapsed = isMeasured && !overflow && !resizeControl;
+
   return (
-    <div className={styles.scrollbar}>
+    /* The state is an attribute rather than a class so that the pane around it can
+     * read it and hand the width back to its content (see `window.module.css`). */
+    <div className={styles.scrollbar} data-collapsed={isCollapsed || undefined}>
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}
@@ -207,23 +218,12 @@ export function Scrollbar({
         aria-orientation="vertical"
         aria-valuemax={100}
         aria-valuemin={0}
-        aria-valuenow={scrolled}
-        aria-valuetext={`${scrolled}% scrolled`}
+        aria-valuenow={scrolledPercent}
+        aria-valuetext={`${scrolledPercent}% scrolled`}
         className={clsx(styles.track, overflow && styles.filled)}
         role="scrollbar"
       >
-        {overflow && (
-          <div
-            className={styles.thumb}
-            style={{
-              top: thumbTop,
-              height: thumbHeight,
-              borderTopWidth: isAtTop ? 0 : undefined,
-              borderBottomWidth: isAtBottom ? 0 : undefined,
-            }}
-            {...thumbHandlers}
-          />
-        )}
+        {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>
       <Arrow direction="down" hidden={!overflow} onStep={() => onStep(STEP)} />
       {resizeControl}

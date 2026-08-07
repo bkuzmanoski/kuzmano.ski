@@ -1,91 +1,125 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { createContext, use, useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
 
-import { resolveWindow, windowKindFor } from "./window-registry";
+import { constrain } from "./geometry";
+import { WINDOW_IDS, resolveWindow, windowRouteFor } from "./window-registry";
 
 import type { Position, Rect, Size } from "./geometry";
-import type { WindowKind } from "./window-registry";
+import type { WindowId } from "./window-registry";
 import type { ReactNode } from "react";
 
-export interface WindowState extends Rect {
+/** A value held per window. A missing entry means that window is closed. */
+export type WindowRecord<T> = Partial<Record<WindowId, T>>;
+
+/** What a window shows. Rewritten only when the window opens or navigates. */
+export interface WindowContent {
+  route: string;
   title: string;
-  kind: WindowKind;
+}
+
+/** Where a window is placed. Rewritten on every frame of a drag. */
+export interface WindowGeometry extends Rect {
   maximized: boolean;
 }
 
 export interface WindowLayout {
-  defaultPosition: Record<WindowKind, Position>;
-  defaultSize: Record<WindowKind, Size>;
+  defaultSize: Size;
   minSize: Size;
   cascadeOffset: number;
-  maxCascadeSteps: number;
 }
 
 export interface ManagerState {
-  windows: Record<string, WindowState>;
-  order: Array<string>;
-  focused: string | null; // `null` means the desktop has focus.
+  content: WindowRecord<WindowContent>;
+  geometry: WindowRecord<WindowGeometry>;
+  order: Array<WindowId>;
+  focused: WindowId | null; // `null` means the desktop has focus.
+  surface: Size; // {0, 0} until the window layer has measured it.
 }
 
 export type Action =
-  | { type: "open"; route: string; title: string; kind: WindowKind }
-  | { type: "close"; route: string }
-  | { type: "focus"; route: string }
-  | { type: "move"; route: string; x: number; y: number }
-  | { type: "resize"; route: string; width: number; height: number }
-  | { type: "zoom"; route: string }
+  | { type: "open"; id: WindowId; route: string; title: string }
+  | { type: "close"; id: WindowId }
+  | { type: "focus"; id: WindowId }
+  | { type: "move"; id: WindowId; x: number; y: number }
+  | { type: "resize"; id: WindowId; width: number; height: number }
+  | { type: "zoom"; id: WindowId }
+  | { type: "measure"; surface: Size }
   | { type: "organize" }
   | { type: "focusDesktop" };
 
-export const EMPTY_STATE: ManagerState = { windows: {}, order: [], focused: null };
+export const EMPTY_STATE: ManagerState = {
+  content: {},
+  geometry: {},
+  order: [],
+  focused: null,
+  surface: { width: 0, height: 0 },
+};
 
-function focusWindow(state: ManagerState, route: string): ManagerState {
-  if (!state.windows[route]) {
+function focusWindow(state: ManagerState, id: WindowId): ManagerState {
+  if (!state.content[id]) {
     return state;
   }
 
-  if (state.focused === route && state.order.at(-1) === route) {
+  if (state.focused === id && state.order.at(-1) === id) {
     return state;
   }
 
-  return { ...state, order: [...state.order.filter((open) => open !== route), route], focused: route };
+  return { ...state, order: [...state.order.filter((open) => open !== id), id], focused: id };
 }
 
-function updateWindow(state: ManagerState, route: string, patch: Partial<WindowState>): ManagerState {
-  const target = state.windows[route];
+function updateGeometry(state: ManagerState, id: WindowId, patch: Partial<WindowGeometry>): ManagerState {
+  const target = state.geometry[id];
 
   if (!target) {
     return state;
   }
 
-  return { ...state, windows: { ...state.windows, [route]: { ...target, ...patch } } };
-}
-
-/** The position of cascade slot `step` for a kind. Slot 0 is the base position. */
-function cascadeSlot(layout: WindowLayout, kind: WindowKind, step: number): Position {
-  const base = layout.defaultPosition[kind];
-  const offset = (step % layout.maxCascadeSteps) * layout.cascadeOffset;
-
-  return { x: base.x + offset, y: base.y + offset };
+  return { ...state, geometry: { ...state.geometry, [id]: { ...target, ...patch } } };
 }
 
 /**
- * The first cascade slot not occupied by an open window. The walk stops at `maxCascadeSteps`
- * and starts the cascade over, so a long session does not march a window off the desktop;
- * the window layer fits the result to the viewport at render time.
+ * The position of cascade slot `step`, measured from a window centred on the desktop.
+ *
+ * The halves are left unrounded so that they match, to the pixel, where CSS centres a
+ * pre-rendered window (see `.unplaced` in `window.module.css`).
  */
-function availableCascadeSlot(layout: WindowLayout, windows: Record<string, WindowState>, kind: WindowKind): Position {
-  const openWindows = Object.values(windows);
+function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Position {
+  const offset = step * layout.cascadeOffset;
 
-  for (let step = 0; step < layout.maxCascadeSteps; step++) {
-    const position = cascadeSlot(layout, kind, step);
+  return {
+    x: Math.max(0, (surface.width - layout.defaultSize.width) / 2) + offset,
+    y: Math.max(0, (surface.height - layout.defaultSize.height) / 2) + offset,
+  };
+}
+
+/** The first unoccupied cascade slot. */
+function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Position {
+  const openWindows = Object.values(state.geometry);
+
+  for (let step = 0; step < WINDOW_IDS.length; step++) {
+    const position = cascadeSlot(layout, state.surface, step);
 
     if (!openWindows.some((window) => window.x === position.x && window.y === position.y)) {
       return position;
     }
   }
 
-  return cascadeSlot(layout, kind, 0);
+  return cascadeSlot(layout, state.surface, 0);
+}
+
+/** Every open window cascaded from the centre of the desktop, back to front, at its existing size. */
+function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
+  const geometry: WindowRecord<WindowGeometry> = {};
+
+  state.order.forEach((id, step) => {
+    const target = state.geometry[id];
+
+    if (target) {
+      geometry[id] = { ...target, ...cascadeSlot(layout, state.surface, step), maximized: false };
+    }
+  });
+
+  return geometry;
 }
 
 export type WindowReducer = (state: ManagerState, action: Action) => ManagerState;
@@ -95,85 +129,90 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
   return function reducer(state: ManagerState, action: Action): ManagerState {
     switch (action.type) {
       case "open": {
-        if (state.windows[action.route]) {
-          return focusWindow(state, action.route);
+        const { id, route, title } = action;
+        const current = state.content[id];
+        const content = current?.route === route ? state.content : { ...state.content, [id]: { route, title } };
+
+        if (current) {
+          const raised = focusWindow(state, id); // The window is already open, so it shows the new route in place and comes to the front.
+          return content === state.content ? raised : { ...raised, content };
         }
 
         return {
-          windows: {
-            ...state.windows,
-            [action.route]: {
-              title: action.title,
-              kind: action.kind,
-              maximized: false,
-              ...availableCascadeSlot(layout, state.windows, action.kind),
-              ...layout.defaultSize[action.kind],
-            },
+          ...state,
+          content,
+          geometry: {
+            ...state.geometry,
+            [id]: { ...freeCascadeSlot(layout, state), ...layout.defaultSize, maximized: false },
           },
-          order: [...state.order, action.route],
-          focused: action.route,
+          order: [...state.order, id],
+          focused: id,
         };
       }
       case "close": {
-        if (!state.windows[action.route]) {
+        if (!state.content[action.id]) {
           return state;
         }
 
-        const { [action.route]: _closed, ...windows } = state.windows;
-        const order = state.order.filter((open) => open !== action.route);
-        const focused = state.focused === action.route ? (order.at(-1) ?? null) : state.focused;
+        const { [action.id]: _closedContent, ...content } = state.content;
+        const { [action.id]: _closedGeometry, ...geometry } = state.geometry;
+        const order = state.order.filter((open) => open !== action.id);
+        const focused = state.focused === action.id ? (order.at(-1) ?? null) : state.focused;
 
-        return { windows, order, focused };
+        return { ...state, content, geometry, order, focused };
       }
       case "focus": {
-        return focusWindow(state, action.route);
+        return focusWindow(state, action.id);
       }
       case "move": {
-        return updateWindow(state, action.route, { x: action.x, y: action.y });
+        return updateGeometry(state, action.id, { x: action.x, y: action.y });
       }
       case "resize": {
-        /* The stored size is the desired size, never below the minimum.
-         * The window layer fits it to the viewport at render time. */
-        return updateWindow(state, action.route, {
-          width: Math.max(layout.minSize.width, action.width),
-          height: Math.max(layout.minSize.height, action.height),
-        });
-      }
-      case "zoom": {
-        const target = state.windows[action.route];
+        const target = state.geometry[action.id];
 
         if (!target) {
           return state;
         }
 
-        return updateWindow(focusWindow(state, action.route), action.route, { maximized: !target.maximized });
+        /* A window is drawn fitted to the desktop, so the drag starts from the drawn rect
+         * rather than the stored one. Taking the drawn position holds the far edges still
+         * while a window that was cut down to fit is resized. */
+        const drawn = constrain(target, state.surface);
+
+        return updateGeometry(state, action.id, {
+          x: drawn.x,
+          y: drawn.y,
+          width: Math.max(layout.minSize.width, action.width),
+          height: Math.max(layout.minSize.height, action.height),
+        });
       }
-      case "organize": {
-        /* Collections go to the back and content windows to the front, so an open
-         * document sits above the folder it came from. Each group then cascades
-         * from its own base position, in the stack order it already had. */
-        const group = (kind: WindowKind) =>
-          state.order.flatMap((route) => {
-            const target = state.windows[route];
-            return target?.kind === kind ? [[route, target] as const] : [];
-          });
+      case "zoom": {
+        const target = state.geometry[action.id];
 
-        const entries = [...group("collection"), ...group("content")];
-        const windows: Record<string, WindowState> = {};
-        const steps: Record<WindowKind, number> = { collection: 0, content: 0 };
-
-        for (const [route, target] of entries) {
-          windows[route] = {
-            ...target,
-            ...cascadeSlot(layout, target.kind, steps[target.kind]++),
-            maximized: false,
-          };
+        if (!target) {
+          return state;
         }
 
-        const order = entries.map(([route]) => route);
-        const focused = state.focused === null ? null : (order.at(-1) ?? null);
+        return updateGeometry(focusWindow(state, action.id), action.id, { maximized: !target.maximized });
+      }
+      case "measure": {
+        const { surface } = action;
 
-        return { windows, order, focused };
+        if (state.surface.width === surface.width && state.surface.height === surface.height) {
+          return state;
+        }
+
+        const measured = { ...state, surface };
+
+        /* A deep link opens its window before the desktop has been measured, so the first
+         * measurement places what is already open. Subsequent measurements do not affect
+         * windows; the window layer fits them to the desktop. */
+        const isFirstMeasurement = state.surface.width === 0 || state.surface.height === 0;
+
+        return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;
+      }
+      case "organize": {
+        return { ...state, geometry: cascadeWindows(layout, state) };
       }
       case "focusDesktop": {
         return state.focused === null ? state : { ...state, focused: null };
@@ -184,37 +223,41 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
 export interface WindowActions {
   open: (route: string) => void;
-  close: (route: string) => void;
-  focus: (route: string) => void;
-  move: (route: string, x: number, y: number) => void;
-  resize: (route: string, width: number, height: number) => void;
-  toggleZoom: (route: string) => void;
+  close: (id: WindowId) => void;
+  focus: (id: WindowId) => void;
+  move: (id: WindowId, x: number, y: number) => void;
+  resize: (id: WindowId, width: number, height: number) => void;
+  toggleZoom: (id: WindowId) => void;
+  measure: (surface: Size) => void;
   organize: () => void;
   focusDesktop: () => void;
 }
 
-/* The state is split across four contexts so a change reaches only the parts
- * that use it. A window drag rewrites `windows` many times per second; keeping
- * the order and the focus apart means the menu bar, the status items, the
- * desktop icons and the open lists do not re-render with it. */
+/* The state is split across six contexts so a change reaches only the parts that
+ * use it. A window drag rewrites `geometry` many times per second; keeping window
+ * content, the order, and the focus state separate means the menu bar, status items
+ * and desktop icons do not re-render with it. */
 const ActionsContext = createContext<WindowActions | null>(null);
-const WindowsContext = createContext<Record<string, WindowState>>({});
-const OrderContext = createContext<Array<string>>([]);
-const FocusContext = createContext<string | null>(null);
+const ContentContext = createContext<WindowRecord<WindowContent>>({});
+const GeometryContext = createContext<WindowRecord<WindowGeometry>>({});
+const OrderContext = createContext<Array<WindowId>>([]);
+const FocusContext = createContext<WindowId | null>(null);
+const SurfaceContext = createContext<Size>(EMPTY_STATE.surface);
+
+function openAction(requestedRoute: string): Action | null {
+  const route = windowRouteFor(requestedRoute);
+  const target = resolveWindow(route);
+
+  if (!target) {
+    return null;
+  }
+
+  return { type: "open", id: target.id, route, title: target.title };
+}
 
 function initialState(reducer: WindowReducer, pathname: string): ManagerState {
   const action = openAction(pathname);
   return action ? reducer(EMPTY_STATE, action) : EMPTY_STATE;
-}
-
-function openAction(route: string): Action | null {
-  const windowTarget = resolveWindow(route);
-
-  if (!windowTarget) {
-    return null;
-  }
-
-  return { type: "open", route, title: windowTarget.title, kind: windowKindFor(windowTarget) };
 }
 
 export function WindowManagerProvider({
@@ -245,11 +288,12 @@ export function WindowManagerProvider({
 
     return {
       open,
-      close: (route) => dispatch({ type: "close", route }),
-      focus: (route) => dispatch({ type: "focus", route }),
-      move: (route, x, y) => dispatch({ type: "move", route, x, y }),
-      resize: (route, width, height) => dispatch({ type: "resize", route, width, height }),
-      toggleZoom: (route) => dispatch({ type: "zoom", route }),
+      close: (id) => dispatch({ type: "close", id }),
+      focus: (id) => dispatch({ type: "focus", id }),
+      move: (id, x, y) => dispatch({ type: "move", id, x, y }),
+      resize: (id, width, height) => dispatch({ type: "resize", id, width, height }),
+      toggleZoom: (id) => dispatch({ type: "zoom", id }),
+      measure: (surface) => dispatch({ type: "measure", surface }),
       organize: () => dispatch({ type: "organize" }),
       focusDesktop: () => dispatch({ type: "focusDesktop" }),
     };
@@ -261,10 +305,8 @@ export function WindowManagerProvider({
   const expectedRouteRef = useRef<string | null>(null);
 
   /* True while the desktop opens a window that the visitor did not ask for, so the
-   * sync below replaces "/" instead of pushing over it. A push leaves an entry that
-   * reopens the same window on back navigation (browsers detect this and mark the
-   * entry skippable). Every other sync follows a real interaction so back navigation
-   * moves between windows normally. */
+   * sync below replaces "/" instead of pushing over it. Every other sync follows a
+   * real interaction so Back moves between windows normally. */
   const isAutomaticFocusRef = useRef(false);
 
   const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
@@ -277,11 +319,17 @@ export function WindowManagerProvider({
       return;
     }
 
+    /* A push would leave an entry that reopens or redirects as soon as Back reached it
+     * (browsers detect this and mark the entry skippable), so the URL is replaced
+     * whenever it is only being corrected: the desktop opened the window on its own, or
+     * the current URL is the one the open window came from (a collection index). */
+    const isCorrection = isAutomaticFocus || windowRouteFor(pathname) === route;
+
     expectedRouteRef.current = route;
-    void navigate({ to: route, replace: isAutomaticFocus });
+    void navigate({ to: route, replace: isCorrection });
   });
 
-  const focusedRoute = state.focused;
+  const focusedRoute = state.focused === null ? null : (state.content[state.focused]?.route ?? null);
 
   useEffect(() => {
     syncUrlToFocus(focusedRoute);
@@ -321,7 +369,11 @@ export function WindowManagerProvider({
     <ActionsContext value={actions}>
       <OrderContext value={state.order}>
         <FocusContext value={state.focused}>
-          <WindowsContext value={state.windows}>{children}</WindowsContext>
+          <SurfaceContext value={state.surface}>
+            <ContentContext value={state.content}>
+              <GeometryContext value={state.geometry}>{children}</GeometryContext>
+            </ContentContext>
+          </SurfaceContext>
         </FocusContext>
       </OrderContext>
     </ActionsContext>
@@ -338,17 +390,31 @@ export function useWindowActions(): WindowActions {
   return actions;
 }
 
-/** Every open window, keyed by route. Changes on every move and resize. */
-export function useWindows(): Record<string, WindowState> {
-  return use(WindowsContext);
+/** What each open window shows. Changes when a window opens, closes, or navigates. */
+export function useWindowContent(): WindowRecord<WindowContent> {
+  return use(ContentContext);
 }
 
-/** The open windows, back to front. Changes when a window opens, closes, or is raised. */
-export function useWindowOrder(): Array<string> {
+/** Where each open window is placed. Changes on move and resize. */
+export function useWindowGeometry(): WindowRecord<WindowGeometry> {
+  return use(GeometryContext);
+}
+
+/** Open windows, back to front. Changes when a window opens, closes, or is raised. */
+export function useWindowOrder(): Array<WindowId> {
   return use(OrderContext);
 }
 
 /** The active window, or null when the desktop is active. */
-export function useFocusedWindow(): string | null {
+export function useFocusedWindow(): WindowId | null {
   return use(FocusContext);
+}
+
+/**
+ * The size of the desktop the windows are placed on, {0, 0} until it has been measured.
+ * It comes from the manager rather than the DOM so that it and the geometry it produced
+ * always agree, however many renders the measurement takes to arrive.
+ */
+export function useSurface(): Size {
+  return use(SurfaceContext);
 }

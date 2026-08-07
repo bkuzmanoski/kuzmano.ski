@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { documentTitle } from "#/config/site";
 import { clearBootOverlay } from "#/lib/boot";
+import { NOT_FOUND_TITLE } from "#/lib/window-registry";
 
 /**
  * The route-level 404. The window manager opens the 404 window from the URL, the
@@ -10,14 +11,14 @@ import { clearBootOverlay } from "#/lib/boot";
  * title.
  */
 export function NotFound() {
-  return <title>{documentTitle("Page not found (404)")}</title>;
+  return <title>{documentTitle(NOT_FOUND_TITLE)}</title>;
 }
 
 /** The body of the 404 window. */
 export function NotFoundBody() {
   return (
     <article>
-      <h1>Page not found (404)</h1>
+      <h1>{NOT_FOUND_TITLE}</h1>
       <p>This page doesn&rsquo;t exist.</p>
     </article>
   );
@@ -34,8 +35,8 @@ export function NotFoundPage() {
 
   return (
     <main>
-      <title>{documentTitle("Page not found (404)")}</title>
-      <h1>Page not found (404)</h1>
+      <title>{documentTitle(NOT_FOUND_TITLE)}</title>
+      <h1>{NOT_FOUND_TITLE}</h1>
       <p>
         This page doesn&rsquo;t exist. Go to the <Link to="/">home page</Link>.
       </p>

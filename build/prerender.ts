@@ -30,8 +30,9 @@ function windowTitlesOf(html: string): Array<string> {
  * must be there, and makes the build fail if one is missing.
  *
  * Every page has the desktop chrome. Every page except the desktop also opens a window
- * for its route, with the same title as the document. Every page that is not a
- * collection listing draws a body in that window.
+ * with a body in it. The window carries the same title as the document, except on a
+ * collection index: that opens on the most recent entry, which titles the window (see
+ * `windowRouteFor` in `src/lib/window-registry.ts`).
  */
 export function verifyPrerenderedPage({ page, html }: { page: { path: string }; html: string }) {
   const problems: Array<string> = [];
@@ -44,16 +45,16 @@ export function verifyPrerenderedPage({ page, html }: { page: { path: string }; 
   if (segments.length > 0) {
     const title = documentTitleOf(html);
     const pageTitle = title?.endsWith(TITLE_SUFFIX) ? title.slice(0, -TITLE_SUFFIX.length) : null;
+    const windowTitles = windowTitlesOf(html);
+    const isCollectionIndex = segments.length === 1 && segments[0]! in COLLECTION_TITLES;
 
     if (!pageTitle) {
       problems.push(title === null ? "the document title is missing" : `the document title is "${title}"`);
-    } else if (!windowTitlesOf(html).includes(pageTitle)) {
-      problems.push(`no window is titled "${pageTitle}"`);
+    } else if (isCollectionIndex ? windowTitles.length === 0 : !windowTitles.includes(pageTitle)) {
+      problems.push(isCollectionIndex ? "no window is open" : `no window is titled "${pageTitle}"`);
     }
 
-    const isCollection = segments.length === 1 && segments[0]! in COLLECTION_TITLES;
-
-    if (!isCollection && !html.includes(CONTENT_BODY)) {
+    if (!html.includes(CONTENT_BODY)) {
       problems.push("the content body is missing");
     }
   }

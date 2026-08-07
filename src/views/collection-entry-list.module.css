@@ -1,0 +1,62 @@
+.list {
+  --color-card-active: color-mix(in oklab, var(--color-foreground) 12%, transparent);
+  --card-padding-block: 8px;
+  --gap-meta: 12px;
+  --title-padding: 2px 4px;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+  padding: 0;
+
+  font: var(--font-ui);
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 2px;
+
+  padding-block: var(--card-padding-block);
+
+  /* A card spans the list, so its rule and its highlight always reach the edge. Only what
+   * it holds stops short of a scrollbar, present or not, and so never rewraps. */
+  padding-inline: var(--gutter) calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+  border-block-end: 1px solid var(--color-border-muted);
+
+  text-decoration: none;
+
+  outline: none;
+
+  &.active {
+    background: var(--color-card-active);
+  }
+}
+
+[data-scrolled-to-end] .list > li:last-child .card {
+  border-block-end-color: transparent;
+}
+
+.title {
+  justify-self: start;
+  padding: var(--title-padding);
+  font: var(--font-ui-bold);
+  box-decoration-break: clone;
+
+  .card:focus & {
+    color: var(--color-selection-foreground);
+    background: var(--color-selection-background);
+  }
+}
+
+.description,
+.meta {
+  padding-inline: 4px; /* Line up with the inset the title's highlight adds. */
+  color: var(--color-foreground-muted);
+}
+
+.meta {
+  display: flex;
+  gap: var(--gap-meta);
+}

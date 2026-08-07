@@ -3,6 +3,8 @@ import { afterEach, vi } from "vitest";
 
 vi.stubGlobal("scrollTo", vi.fn());
 
+Element.prototype.scrollIntoView = vi.fn();
+
 afterEach(() => {
   cleanup();
 });

@@ -1,5 +1,5 @@
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
 import { collections } from "#/content";
@@ -26,6 +26,8 @@ function firstEntry() {
   return entry;
 }
 
+const openWindows = () => screen.queryAllByRole("region");
+
 test("a collection entry route renders its frontmatter title and compiled MDX body", async () => {
   const entry = firstEntry();
   const { container } = await renderRoute(`/tech-notes/${entry.slug}`);
@@ -42,6 +44,33 @@ test("a collection index lists its entries, linked by slug", async () => {
   const link = await screen.findByRole("link", { name: entry.title });
 
   expect(link.getAttribute("href")).toBe(`/tech-notes/${entry.slug}`);
+});
+
+test("a collection index opens on its most recent entry", async () => {
+  const entry = firstEntry();
+  const { history } = await renderRoute("/tech-notes");
+
+  expect(await screen.findByRole("region", { name: entry.title })).toBeDefined();
+  await waitFor(() => expect(history.location.pathname).toBe(`/tech-notes/${entry.slug}`));
+});
+
+test("a second collection reuses the collection window", async () => {
+  const { history } = await renderRoute("/tech-notes");
+
+  await screen.findByRole("region", { name: firstEntry().title });
+  history.push("/design-notes");
+
+  await waitFor(() => expect(openWindows()).toHaveLength(1));
+});
+
+test("a second unknown path reuses the 404 window", async () => {
+  const { history } = await renderRoute("/no-such-page");
+
+  await screen.findByRole("region", { name: "Page not found (404)" });
+  history.push("/another-typo");
+
+  await waitFor(() => expect(history.location.pathname).toBe("/another-typo"));
+  expect(openWindows()).toHaveLength(1);
 });
 
 /* A push would leave an entry that reopens the window as soon as Back reached it,

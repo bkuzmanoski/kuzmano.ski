@@ -20,11 +20,10 @@ export function useElementSize(ref: RefObject<HTMLElement | null>): Size {
     /* Keep the same object when the size did not change, so the
      * value can be an effect dependency without causing a loop. */
     const measure = () =>
-      setSize((current) =>
-        current.width === element.clientWidth && current.height === element.clientHeight
-          ? current
-          : { width: element.clientWidth, height: element.clientHeight },
-      );
+      setSize((current) => {
+        const { width, height } = element.getBoundingClientRect();
+        return current.width === width && current.height === height ? current : { width, height };
+      });
 
     measure();
 

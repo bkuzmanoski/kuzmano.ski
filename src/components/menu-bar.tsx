@@ -22,20 +22,20 @@ import type { KeyboardEvent, PointerEvent } from "react";
 
 export function MenuBar() {
   const { open, close } = useWindowActions();
-  const focusedPath = useFocusedWindow();
+  const focusedWindow = useFocusedWindow();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
   const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titles = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const hasWindow = focusedPath !== null;
+  const hasWindow = focusedWindow !== null;
 
   const destinationShortcut = (id: DestinationId) => {
     const number = DESTINATION_ORDER.indexOf(id) + 1;
     return { code: `Digit${number}`, label: String(number) };
   };
 
-  const closeWindow = () => focusedPath && close(focusedPath);
+  const closeWindow = () => focusedWindow && close(focusedWindow);
 
   const menus: Array<{ label: string; items: Array<MenuItem> }> = [
     {
