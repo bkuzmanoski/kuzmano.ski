@@ -38,6 +38,7 @@ export function playClick() {
 
 const DETENT_PIXELS = 24; // How far the content moves between detents.
 const DETENT_FULL_SPEED = 2200; // The speed, in pixels per second, at which a detent is at full strength.
+const DETENT_STEP_SPEED = 450; // The speed a step is credited with. A press is one notch however fast it repeats, so every press sounds alike.
 const DETENT_LEVEL = { quiet: 0.3, loud: 0.6 };
 const DETENT_RATE = { slow: 0.9, fast: 1.1 };
 const DETENT_INTERVAL = 0.01;
@@ -75,6 +76,7 @@ interface ScrollGesture {
 
 const gestures = new WeakMap<Element, ScrollGesture>(); // Per element, so two windows scrolling at once each keep their own place.
 
+/** Sounds the detents earned by a wheel or a trackpad, which report travel continuously. */
 export function playScroll(element: Element) {
   const now = performance.now();
   const top = element.scrollTop;
@@ -102,14 +104,18 @@ export function playScroll(element: Element) {
 
   gesture.distance += moved;
 
-  // Two events inside the same clock tick tell us nothing about speed.
-  if (elapsed <= 0 || gesture.distance < DETENT_PIXELS) {
+  /* Two events inside the same clock tick tell us nothing about speed, and one that
+   * moved nothing vertically—a sibling axis scrolling, say—is not travel at all. */
+  if (elapsed <= 0 || moved <= 0 || gesture.distance < DETENT_PIXELS) {
     return;
   }
 
   const speed = (moved / elapsed) * 1000;
 
-  gesture.speed = gesture.speed * DETENT_SPEED_SMOOTHING + speed * (1 - DETENT_SPEED_SMOOTHING);
+  /* The opening sample of a gesture has nothing to blend with: smoothing it against a
+   * standing start would halve the detent that every gesture begins on. */
+  gesture.speed =
+    gesture.speed > 0 ? gesture.speed * DETENT_SPEED_SMOOTHING + speed * (1 - DETENT_SPEED_SMOOTHING) : speed;
 
   /* Keep the leftover travel, so notches stay evenly spaced however the browser
    * happens to chunk the movement, but never bank more than one notch of debt
@@ -127,4 +133,15 @@ export function playScroll(element: Element) {
  */
 export function skipScroll(element: Element) {
   gestures.set(element, { top: element.scrollTop, at: performance.now(), speed: 0, distance: 0 });
+}
+
+/**
+ * Sounds the one detent a scrollbar step earns. A press is a discrete notch rather than
+ * travel to be measured—the accumulator and the speed estimate above are there for
+ * wheels and trackpads—so it is sounded outright, and the scroll it raises is skipped so
+ * that the notch is not sounded twice.
+ */
+export function playScrollStep(element: Element) {
+  skipScroll(element);
+  playDetent(DETENT_STEP_SPEED);
 }

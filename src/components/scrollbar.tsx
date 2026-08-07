@@ -12,6 +12,7 @@ import styles from "./scrollbar.module.css";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
 const STEP = 40;
+const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
 const REPEAT_MS = 90;
 
 export interface ScrollMetrics {
@@ -24,30 +25,39 @@ const isStepKey = (key: string) => key === "Enter" || key === " ";
 
 function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
   const [isPressed, setIsPressed] = useState(false);
-  const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const repeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function stop() {
     setIsPressed(false);
 
     if (repeatTimerRef.current) {
-      clearInterval(repeatTimerRef.current);
+      clearTimeout(repeatTimerRef.current);
       repeatTimerRef.current = null;
     }
   }
 
-  function step() {
-    /* The scroll itself carries the sound. A press at the end of the
-     * travel moves nothing, so the press has to be heard on its own. */
-    if (!onStep()) {
+  /* The scroll itself carries the sound so press at the
+   * end of the travel has to be heard on its own */
+  function step(isRepeat = false) {
+    if (!onStep() && !isRepeat) {
       playClick();
     }
+  }
+
+  /* A held arrow waits out `REPEAT_DELAY_MS` before it starts repeating, then repeats
+   * every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
+   * so a release cancels whichever is pending. */
+  function scheduleRepeat(delay: number) {
+    repeatTimerRef.current = setTimeout(() => {
+      step(true);
+      scheduleRepeat(REPEAT_MS);
+    }, delay);
   }
 
   function start() {
     setIsPressed(true);
     step();
-
-    repeatTimerRef.current = setInterval(onStep, REPEAT_MS);
+    scheduleRepeat(REPEAT_DELAY_MS);
   }
 
   // Cancel repeat if the scrollbar goes away mid-press.
@@ -70,7 +80,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
          * which would step the viewport a second time for every press. */
         event.preventDefault();
         setIsPressed(true);
-        step();
+        step(event.repeat);
       }}
       onKeyUp={(event) => {
         if (isStepKey(event.key)) {
