@@ -1,6 +1,7 @@
 .container {
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
   --welcome-dialog-draw-ms: 0ms; /* Set from JS. */
+  --glass-fade-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
   --light-position: 50% 80%;
   --light-size: 100% 80%;
@@ -198,13 +199,26 @@
     opacity: 0;
   }
 
-  & .display {
+  & .display,
+  & .glass {
     /* Pin colors. */
     --icon-foreground: #000;
     --icon-background: #fff;
 
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
+  }
+
+  & .glass {
+    pointer-events: none;
+    will-change: opacity;
+
+    &.leaving {
+      opacity: 0;
+      transition: opacity var(--glass-fade-ms) ease-out;
+    }
   }
 
   &.revealing {
@@ -282,8 +296,8 @@
   &::before {
     content: "";
     position: absolute;
-    inset: calc(2px * var(--display-scale));
-    border: calc(2px * var(--display-scale)) solid var(--color-border);
+    inset: calc(2.5px * var(--display-scale));
+    border: calc(1.5px * var(--display-scale)) solid var(--color-border);
   }
 }
 

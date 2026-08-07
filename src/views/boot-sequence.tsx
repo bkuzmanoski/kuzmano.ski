@@ -4,13 +4,13 @@ import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } fro
 import LogoIcon from "#/assets/images/logo.svg?react";
 import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
 import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
+import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg?react";
 import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { SITE_NAME } from "#/config/site";
 import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
 import { MAX_LOADING_MS, clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
-import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 
 import styles from "./boot-sequence.module.css";
@@ -37,16 +37,15 @@ const DISK_LIGHT_FRACTION = {
 
 const SCREEN_INSET = { x: 24, y: 28 };
 const SCREEN_RADIUS = 16;
-const SCREEN_FILTER_ID = "boot-screen";
 const SCREEN_PINCUSHION_BOW_PX = 8;
-const SCREEN_RGB_SHIFT_PX = 0.5;
 
 const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
 
 /* The durations the stylesheet animates over. Reduced motion preference overrides these to 0. */
 const LOADING_COVER_FADE_MS = 1000;
 const WELCOME_DIALOG_DRAW_MS = 250;
-const DESKTOP_REVEAL_MS = 500;
+const GLASS_FADE_MS = 150;
+const DESKTOP_REVEAL_MS = 350;
 
 type Phase =
   | "loading"
@@ -55,21 +54,25 @@ type Phase =
   | "display-on"
   | "logo"
   | "welcome-dialog"
+  | "glass-fade"
   | "desktop-reveal"
   | "complete";
 
-const sequence = (loadingCoverFadeMs: number, desktopRevealMs: number) =>
+const sequence = (loadingCoverFadeMs: number, glassFadeMs: number, desktopRevealMs: number) =>
   [
     { phase: "macintosh-reveal", durationMs: loadingCoverFadeMs },
     { phase: "display-on", durationMs: 1000 },
     { phase: "logo", durationMs: 2000 },
     { phase: "welcome-dialog", durationMs: 2000 },
+    { phase: "glass-fade", durationMs: glassFadeMs },
     { phase: "desktop-reveal", durationMs: desktopRevealMs },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
 
 /* The phases each layer is up for, so a component reads its state once per render. */
 const LOADING_COVER_PHASES = new Set<Phase>(["loading", "waiting-for-input"]);
-const DISPLAY_ON_PHASES = new Set<Phase>(["display-on", "logo", "welcome-dialog", "desktop-reveal"]);
+const DISPLAY_ON_PHASES = new Set<Phase>(["display-on", "logo", "welcome-dialog", "glass-fade", "desktop-reveal"]);
+const SCREEN_CONTENT_PHASES = new Set<Phase>(["logo", "welcome-dialog"]);
+const GLASS_HIDDEN_PHASES = new Set<Phase>(["glass-fade", "desktop-reveal"]);
 
 const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
@@ -146,44 +149,14 @@ function screenClipPath(width: number, height: number, radius: number, bow: numb
   ].join("")}")`;
 }
 
-function ScreenFilter({ scale }: { scale: number }) {
-  const shiftAmount = SCREEN_RGB_SHIFT_PX * scale;
-
-  return (
-    <svg className={styles.filterDefinitions} aria-hidden>
-      <filter id={SCREEN_FILTER_ID} x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
-        <feColorMatrix
-          in="SourceGraphic"
-          type="matrix"
-          values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
-          result="red"
-        />
-        <feColorMatrix
-          in="SourceGraphic"
-          type="matrix"
-          values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
-          result="green"
-        />
-        <feColorMatrix
-          in="SourceGraphic"
-          type="matrix"
-          values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
-          result="blue"
-        />
-        <feOffset in="red" dx={-shiftAmount} result="redShifted" />
-        <feOffset in="blue" dx={shiftAmount} result="blueShifted" />
-        <feBlend in="redShifted" in2="green" mode="screen" result="redGreen" />
-        <feBlend in="redGreen" in2="blueShifted" mode="screen" />
-      </filter>
-    </svg>
-  );
-}
-
 function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
   const scale = geometry.width / VIEWABLE_AREA.width;
   const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
   const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
+  const isScreenContentVisible = SCREEN_CONTENT_PHASES.has(phase);
+  const isGlassHidden = GLASS_HIDDEN_PHASES.has(phase);
   const isRevealingDesktop = phase === "desktop-reveal";
+  const screenInset = { x: SCREEN_INSET.x * scale, y: SCREEN_INSET.y * scale };
   const displayMaskStyle: CSSProperties & Record<`--${string}`, string | number> = {
     left: geometry.x,
     top: geometry.y,
@@ -194,10 +167,10 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
   const viewableAreaStyle: CSSProperties & Record<`--${string}`, string | number> = isRevealingDesktop
     ? { "--inset": cssInset(insetToViewport(geometry, view)), clipPath: "none" }
     : {
-        "--inset": `${SCREEN_INSET.y * scale}px ${SCREEN_INSET.x * scale}px`,
+        "--inset": `${screenInset.y}px ${screenInset.x}px`,
         clipPath: screenClipPath(
-          geometry.width - 2 * SCREEN_INSET.x * scale,
-          geometry.height - 2 * SCREEN_INSET.y * scale,
+          geometry.width - 2 * screenInset.x,
+          geometry.height - 2 * screenInset.y,
           SCREEN_RADIUS * scale,
           SCREEN_PINCUSHION_BOW_PX * scale,
         ),
@@ -208,46 +181,66 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
       className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
-      <ScreenFilter scale={scale} />
       <DisplayBackdrop className={styles.display} />
       <div
         className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
         style={viewableAreaStyle}
       >
-        {(phase === "logo" || phase === "welcome-dialog") && (
+        {isScreenContentVisible && (
           <div className={styles.screen}>
             {phase === "logo" && <LogoIcon className={styles.logo} />}
             {phase === "welcome-dialog" && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
           </div>
         )}
       </div>
+      <DisplayGlassLayer className={clsx(styles.glass, isGlassHidden && styles.leaving)} />
     </div>
   );
 }
 
 function Sequence() {
-  const [prefersReducedMotion] = useState(getPrefersReducedMotion); // Held for the whole run, so the durations the stylesheet animates over and the timers the phases run do not disagree if the preference changes.
+  /* Held for the whole run, so the durations the stylesheet animates over and
+   * the timers for each phase do not disagree if the preference changes. */
+  const [prefersReducedMotion] = useState(getPrefersReducedMotion);
+
   const [phase, setPhase] = useState<Phase>("loading");
   const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
   const illustrationImageRef = useRef<HTMLImageElement>(null);
-  const illustrationImageSize = useElementSize(illustrationImageRef);
 
   useEffect(() => {
     const element = illustrationImageRef.current;
 
-    if (!element || illustrationImageSize.width === 0) {
+    if (!element) {
       return;
     }
 
-    setGeometry({
-      display: viewableAreaOf(element.getBoundingClientRect()),
-      view: { width: window.innerWidth, height: window.innerHeight },
-    });
-  }, [illustrationImageSize]);
+    const resizing = new AbortController();
+
+    const measure = () => {
+      const box = element.getBoundingClientRect();
+
+      if (box.width === 0) {
+        return;
+      }
+
+      setGeometry({
+        display: viewableAreaOf(box),
+        view: { width: window.innerWidth, height: window.innerHeight },
+      });
+    };
+
+    measure();
+    window.addEventListener("resize", measure, { signal: resizing.signal });
+
+    return () => {
+      resizing.abort();
+    };
+  }, []);
 
   const startSequence = useEffectEvent(() => {
     const phases = sequence(
       prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS,
+      prefersReducedMotion ? 0 : GLASS_FADE_MS,
       prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS,
     );
 
@@ -327,6 +320,7 @@ function Sequence() {
   const containerStyle: CSSProperties & Record<`--${string}`, string | number> = {
     "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
     "--welcome-dialog-draw-ms": `${prefersReducedMotion ? 0 : WELCOME_DIALOG_DRAW_MS}ms`,
+    "--glass-fade-ms": `${prefersReducedMotion ? 0 : GLASS_FADE_MS}ms`,
     "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";

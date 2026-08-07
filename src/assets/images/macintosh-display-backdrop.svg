@@ -1,98 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="554" height="410" fill="none" viewBox="0 0 554 410">
-  <mask id="display-mask" width="554" height="410" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type: alpha">
-    <path
-      fill="#000"
-      d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
-      class="mask"
-    />
-  </mask>
-  <g mask="url(#display-mask)">
-    <path
-      fill="#000"
-      d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
-      class="background"
-    />
-    <path
-      fill="#363636"
-      d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
-      class="color-cast"
-      opacity=".4"
-    />
-    <path
-      fill="url(#display-glare-3-gradient)"
-      d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
-      class="glare-3"
-      opacity=".1"
-    />
-    <g class="glare-2" filter="url(#display-glare-2-blur)" opacity=".1">
-      <path fill="#fff" d="M16 16v410C49.081 216.879 217.762 55.61 428.157 31.95L570 16z" />
-    </g>
-    <g class="glare-1" filter="url(#display-glare-1-blur)" opacity=".1">
-      <path fill="#fff" d="M40 40v205C56.54 140.44 140.881 59.805 246.079 47.975L317 40z" />
-    </g>
-    <g class="shadow" filter="url(#display-inner-shadow)" style="mix-blend-mode: plus-darker">
-      <path
-        fill="#000"
-        fill-opacity=".01"
-        d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
-      />
-    </g>
-  </g>
-  <defs>
-    <filter
-      id="display-glare-2-blur"
-      width="714"
-      height="570"
-      x="-64"
-      y="-64"
-      color-interpolation-filters="sRGB"
-      filterUnits="userSpaceOnUse"
-    >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-      <feGaussianBlur result="effect1_foregroundBlur_335_2132" stdDeviation="40" />
-    </filter>
-    <filter
-      id="display-glare-1-blur"
-      width="469"
-      height="397"
-      x="-56"
-      y="-56"
-      color-interpolation-filters="sRGB"
-      filterUnits="userSpaceOnUse"
-    >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-      <feGaussianBlur result="effect1_foregroundBlur_335_2132" stdDeviation="48" />
-    </filter>
-    <filter
-      id="display-inner-shadow"
-      width="562"
-      height="418"
-      x="0"
-      y="0"
-      color-interpolation-filters="sRGB"
-      filterUnits="userSpaceOnUse"
-    >
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-      <feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
-      <feOffset dx="8" dy="8" />
-      <feGaussianBlur stdDeviation="16" />
-      <feComposite in2="hardAlpha" k2="-1" k3="1" operator="arithmetic" />
-      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0" />
-      <feBlend in2="shape" result="effect1_innerShadow_335_2132" />
-    </filter>
-    <radialGradient
-      id="display-glare-3-gradient"
-      cx="0"
-      cy="0"
-      r="1"
-      gradientTransform="matrix(0 280 -378.341 0 277 0)"
-      gradientUnits="userSpaceOnUse"
-    >
-      <stop stop-color="#fff" />
-      <stop offset="1" stop-color="#fff" stop-opacity="0" />
-    </radialGradient>
-  </defs>
+  <path
+    fill="#000"
+    d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
+    class="background"
+  />
+  <path
+    fill="#363636"
+    d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
+    class="color-cast"
+    opacity=".4"
+  />
 </svg>
