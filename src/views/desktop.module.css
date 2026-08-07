@@ -11,6 +11,7 @@
 
 .windowLayer {
   position: relative;
+  z-index: var(--layer-desktop);
   overflow: hidden;
   flex: 1;
 }

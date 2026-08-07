@@ -1,6 +1,4 @@
 .menuBar {
-  position: relative;
-  z-index: var(--layer-menu-bar);
   transform: translateY(-100%);
 
   display: flex;

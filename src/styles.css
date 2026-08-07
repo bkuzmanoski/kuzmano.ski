@@ -18,7 +18,7 @@
 
 :root {
   /* Layers */
-  --layer-menu-bar: 100;
+  --layer-desktop: 100;
   --layer-menu: 200;
   --layer-tooltip: 300;
   --layer-skip-link: 400;

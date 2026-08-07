@@ -48,7 +48,12 @@
   &.maximized {
     position: fixed;
     inset: var(--menu-bar-height) 0 0;
-    border: none;
+
+    /* The window meets the menu bar at the top and the viewport on the other three sides. */
+    border-right: none;
+    border-bottom: none;
+    border-left: none;
+
     box-shadow: none;
   }
 
