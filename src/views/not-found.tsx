@@ -10,7 +10,7 @@ import { clearBootOverlay } from "#/lib/boot";
  * title.
  */
 export function NotFound() {
-  return <title>{documentTitle("Page not found")}</title>;
+  return <title>{documentTitle("Page not found (404)")}</title>;
 }
 
 /** The body of the 404 window. */
