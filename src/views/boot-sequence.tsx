@@ -354,7 +354,6 @@ function Sequence() {
       <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
       <div className={clsx(styles.loadingMessageWrapper, !isLoadingCoverUp && styles.leaving)}>
         <div className={styles.loadingMessage}>
-          {/* TODO: Implement typewriter effect. */}
           {phase === "loading" ? (
             "Loading…"
           ) : (
