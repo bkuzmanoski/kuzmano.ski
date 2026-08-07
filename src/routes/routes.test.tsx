@@ -83,6 +83,29 @@ test("the initial window opened by the desktop replaces the desktop in the sessi
   expect(history.length).toBe(1);
 });
 
+/* The focused window renders its title bar controls, so their presence stands in for focus. */
+const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
+
+test("stepping back and forward over the desktop route follows the window focus both ways", async () => {
+  const entry = firstEntry();
+  const { history } = await renderRoute(`/tech-notes/${entry.slug}`);
+  const window = await screen.findByRole("region", { name: entry.title });
+
+  history.push("/"); // A click on the desktop unfocuses the window and pushes "/".
+
+  await waitFor(() => expect(isFocused(window)).toBe(false));
+
+  history.back();
+
+  await waitFor(() => expect(isFocused(window)).toBe(true));
+  expect(history.location.pathname).toBe(`/tech-notes/${entry.slug}`);
+
+  history.forward();
+
+  await waitFor(() => expect(isFocused(window)).toBe(false));
+  expect(history.location.pathname).toBe("/");
+});
+
 test("an unknown path under a collection opens a 404 window", async () => {
   await renderRoute("/tech-notes/does-not-exist");
 
