@@ -11,6 +11,7 @@ import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
 import { MAX_LOADING_MS, clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
+import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 
 import styles from "./boot-sequence.module.css";
@@ -206,35 +207,37 @@ function Sequence() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
   const illustrationImageRef = useRef<HTMLImageElement>(null);
+  const illustrationImageSize = useElementSize(illustrationImageRef);
 
-  useEffect(() => {
+  const updateGeometry = useEffectEvent(() => {
     const element = illustrationImageRef.current;
 
     if (!element) {
       return;
     }
 
+    const box = element.getBoundingClientRect();
+
+    if (box.width === 0) {
+      return;
+    }
+
+    setGeometry({
+      display: viewableAreaOf(box),
+      view: { width: window.innerWidth, height: window.innerHeight },
+    });
+  });
+
+  useEffect(() => {
+    updateGeometry();
+  }, [illustrationImageSize]);
+
+  useEffect(() => {
     const resizing = new AbortController();
 
-    const measure = () => {
-      const box = element.getBoundingClientRect();
+    window.addEventListener("resize", updateGeometry, { signal: resizing.signal });
 
-      if (box.width === 0) {
-        return;
-      }
-
-      setGeometry({
-        display: viewableAreaOf(box),
-        view: { width: window.innerWidth, height: window.innerHeight },
-      });
-    };
-
-    measure();
-    window.addEventListener("resize", measure, { signal: resizing.signal });
-
-    return () => {
-      resizing.abort();
-    };
+    return () => resizing.abort();
   }, []);
 
   const startSequence = useEffectEvent(() => {
