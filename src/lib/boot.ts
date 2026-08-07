@@ -64,3 +64,15 @@ export const getIsBootSequenceComplete = () => isBootSequenceComplete || !should
 /* The `data-boot` cover hides the server-rendered desktop until
  * hydration decides otherwise so the hand-off is not seen. */
 export const serverIsBootSequenceComplete = () => true;
+
+/** Clears saved settings and reloads the desktop so the boot runs again. */
+export function restart() {
+  try {
+    localStorage.clear();
+    sessionStorage.removeItem(HAS_BOOTED_STORAGE_KEY);
+  } catch {
+    // Ignored.
+  }
+
+  window.location.replace("/");
+}

@@ -6,12 +6,12 @@ import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/na
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
+import { restart } from "#/lib/boot";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { cycle } from "#/lib/math";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
-import { restart } from "./boot-sequence";
 import { Menu } from "./menu";
 import styles from "./menu-bar.module.css";
 import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "./status-item";

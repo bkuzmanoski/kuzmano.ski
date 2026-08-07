@@ -8,14 +8,7 @@ import macintoshImageUrl from "#/assets/images/macintosh.png";
 import { SITE_NAME } from "#/config/site";
 import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
-import {
-  HAS_BOOTED_STORAGE_KEY,
-  MAX_LOADING_MS,
-  clearBootOverlay,
-  setHasBooted,
-  setIsBootSequenceComplete,
-  shouldBoot,
-} from "#/lib/boot";
+import { MAX_LOADING_MS, clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import type { Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
@@ -383,16 +376,4 @@ const serverShouldBoot = () => false;
 
 export function BootSequence() {
   return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <Sequence /> : null;
-}
-
-/** Clears saved settings and reloads the desktop. */
-export function restart() {
-  try {
-    localStorage.clear();
-    sessionStorage.removeItem(HAS_BOOTED_STORAGE_KEY);
-  } catch {
-    // Ignored.
-  }
-
-  window.location.replace("/");
 }

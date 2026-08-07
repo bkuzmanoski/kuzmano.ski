@@ -1,5 +1,6 @@
 import { Suspense, memo } from "react";
 
+import { EmptyState } from "#/components/empty-state";
 import { pages } from "#/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/lib/window-registry";
@@ -7,7 +8,6 @@ import { resolveWindow } from "#/lib/window-registry";
 import { CollectionEntryList } from "./collection-entry-list";
 import { ContentBody } from "./content-body";
 import { NotFoundBody } from "./not-found";
-import styles from "./window-body.module.css";
 
 function CollectionEntryBody({ collection, slug }: { collection: Collection; slug: string }) {
   const frontmatter = collection.frontmatter(slug);
@@ -30,7 +30,7 @@ function Pane({ route }: { route: string }) {
     case "collection":
       // A collection window opens on an entry (see `windowRouteFor`) so the list is empty here.
       return target.entrySlug === null ? (
-        <p className={styles.placeholder}>This collection has no entries.</p>
+        <EmptyState message="This collection has no entries." />
       ) : (
         <CollectionEntryBody collection={target.collection} slug={target.entrySlug} />
       );
