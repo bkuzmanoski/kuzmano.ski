@@ -1,15 +1,9 @@
 .window {
-  --title-bar-height: 28px;
-  --control-size: 16px;
-  --sidebar-width: 240px;
-
   position: absolute;
 
   display: flex;
   flex-direction: column;
 
-  min-width: 200px;
-  min-height: 120px;
   border: 1px solid var(--color-border);
 
   color: var(--color-foreground);
@@ -73,7 +67,7 @@
   flex: none;
   align-items: center;
 
-  height: var(--title-bar-height);
+  height: var(--window-title-bar-height);
   border-bottom: 1px solid var(--color-border);
 
   font: var(--font-chrome);
@@ -82,7 +76,7 @@
   /* Control buttons are placed by the tooltip wrapper around them. */
   & .control {
     position: absolute;
-    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
+    top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
 
     &.controlClose {
       left: var(--gutter);
@@ -95,11 +89,11 @@
 
   & .bars {
     position: absolute;
-    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
+    top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
     right: 4px;
     left: 4px;
 
-    height: var(--control-size);
+    height: var(--window-control-size);
 
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
   }
@@ -109,7 +103,7 @@
 
     overflow: hidden;
 
-    max-width: calc(100% - 2 * (var(--gutter) + var(--control-size) + 40px));
+    max-width: calc(100% - 2 * (var(--gutter) + var(--window-control-size) + 40px));
     margin: 0 auto;
     padding: 0 8px;
 
@@ -124,8 +118,8 @@
   --icon-foreground: var(--color-border);
 
   display: flex;
-  width: var(--control-size);
-  height: var(--control-size);
+  width: var(--window-control-size);
+  height: var(--window-control-size);
 
   & svg {
     /* The button swaps its icon on press. Ensure the stable node beneath handles pointer events. */
@@ -176,7 +170,7 @@
 
     &.sidebar {
       flex: none;
-      width: var(--sidebar-width);
+      width: var(--window-sidebar-width);
       border-right: 1px solid var(--color-border);
     }
   }
