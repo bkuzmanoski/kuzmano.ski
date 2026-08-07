@@ -13,8 +13,7 @@ import type { ReactNode } from "react";
 
 /**
  * The body of a window. It depends on the path alone, so it is held apart from
- * the geometry: a drag rewrites the geometry many times per second and must not
- * re-render a long post or a list of entries with it.
+ * the geometry as a drag rewrites the geometry many times per second.
  */
 const WindowContent = memo(function Content({ path }: { path: string }) {
   return (

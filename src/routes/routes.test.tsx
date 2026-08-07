@@ -16,32 +16,32 @@ async function renderRoute(path: string) {
   return { history, ...render(<RouterProvider router={router} />) };
 }
 
-function firstPost() {
-  const post = collections["tech-notes"]?.list()[0];
+function firstEntry() {
+  const entry = collections["tech-notes"]?.list()[0];
 
-  if (!post) {
+  if (!entry) {
     throw new Error("This suite expects at least one tech-notes entry.");
   }
 
-  return post;
+  return entry;
 }
 
-test("a post route renders its frontmatter title and compiled MDX body", async () => {
-  const post = firstPost();
-  const { container } = await renderRoute(`/tech-notes/${post.slug}`);
+test("a collection entry route renders its frontmatter title and compiled MDX body", async () => {
+  const entry = firstEntry();
+  const { container } = await renderRoute(`/tech-notes/${entry.slug}`);
 
-  expect(await screen.findByRole("heading", { name: post.title })).toBeDefined();
+  expect(await screen.findByRole("heading", { name: entry.title })).toBeDefined();
   expect(container.querySelector("article p")).not.toBeNull();
 });
 
-test("a collection index lists its posts, linked by slug", async () => {
-  const post = firstPost();
+test("a collection index lists its entries, linked by slug", async () => {
+  const entry = firstEntry();
 
   await renderRoute("/tech-notes");
 
-  const link = await screen.findByRole("link", { name: post.title });
+  const link = await screen.findByRole("link", { name: entry.title });
 
-  expect(link.getAttribute("href")).toBe(`/tech-notes/${post.slug}`);
+  expect(link.getAttribute("href")).toBe(`/tech-notes/${entry.slug}`);
 });
 
 /* A push would leave an entry that reopens the window as soon as Back reached it,
