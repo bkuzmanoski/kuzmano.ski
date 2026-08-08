@@ -10,7 +10,9 @@ import { SITE_NAME } from "#/config/site";
 import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
 import { MAX_LOADING_MS, clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
-import type { Rect, Size } from "#/lib/geometry";
+import { PHOSPHOR_COLOR, screenParametersFor } from "#/lib/crt-effect";
+import type { Bloom } from "#/lib/crt-effect";
+import type { Inset, Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 
@@ -36,44 +38,86 @@ const DISK_LIGHT_FRACTION = {
   size: DISK_LIGHT.size / CASE.width,
 };
 
-const SCREEN_INSET = { x: 24, y: 28 };
-const SCREEN_RADIUS = 16;
-const SCREEN_PINCUSHION_BOW_PX = 8;
+const SCREEN_FILTER_ID = "boot-screen";
 
 const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
 
-/* The durations the stylesheet animates over. Reduced motion preference overrides these to 0. */
-const LOADING_COVER_FADE_MS = 1000;
-const WELCOME_DIALOG_DRAW_MS = 250;
-const GLASS_FADE_MS = 150;
-const DESKTOP_REVEAL_MS = 350;
+const PHASES = [
+  "loading",
+  "waiting-for-input",
+  "macintosh-reveal",
+  "display-on",
+  "logo",
+  "welcome-dialog",
+  "glass-fade",
+  "desktop-reveal",
+  "complete",
+] as const;
 
-type Phase =
-  | "loading"
-  | "waiting-for-input"
-  | "macintosh-reveal"
-  | "display-on"
-  | "logo"
-  | "welcome-dialog"
-  | "glass-fade"
-  | "desktop-reveal"
-  | "complete";
+type Phase = (typeof PHASES)[number];
 
-const sequence = (loadingCoverFadeMs: number, glassFadeMs: number, desktopRevealMs: number) =>
+function phaseFlags(phase: Phase) {
+  const step = PHASES.indexOf(phase);
+  const from = (first: Phase) => step >= PHASES.indexOf(first);
+  const before = (first: Phase) => step < PHASES.indexOf(first);
+
+  return {
+    isLoadingCoverUp: before("macintosh-reveal"),
+    isWarmingUp: phase === "display-on",
+    isDisplayOn: from("display-on"),
+    isScreenTreated: from("display-on") && before("desktop-reveal"),
+    isScreenContentVisible: from("logo") && before("glass-fade"),
+    isShowingLogo: phase === "logo",
+    isShowingWelcomeDialog: phase === "welcome-dialog",
+    isGlassHidden: from("glass-fade"),
+    isRevealingDesktop: phase === "desktop-reveal",
+  };
+}
+
+/* The motion the stylesheet animates over. */
+const MOTION_MS = {
+  loadingCoverFade: 1000,
+  crtWarmUp: 500,
+  welcomeDialogDraw: 250,
+  glassFade: 150,
+  desktopReveal: 350,
+};
+
+type Motion = typeof MOTION_MS;
+
+/* Substituted under a reduced motion preference. */
+const REDUCED_MOTION_MS: Motion = {
+  loadingCoverFade: 0,
+  crtWarmUp: 0,
+  welcomeDialogDraw: 0,
+  glassFade: 0,
+  desktopReveal: 0,
+};
+
+/* How long a phase stays put once whatever opens it has finished, so that a phase
+ * carrying both is the sum of the two rather than a number that has to be kept above
+ * the motion inside it by hand. */
+const HOLD_MS = { displayOn: 500, logo: 2000, welcomeDialog: 2000 };
+
+const sequence = (motion: Motion) =>
   [
-    { phase: "macintosh-reveal", durationMs: loadingCoverFadeMs },
-    { phase: "display-on", durationMs: 1000 },
-    { phase: "logo", durationMs: 2000 },
-    { phase: "welcome-dialog", durationMs: 2000 },
-    { phase: "glass-fade", durationMs: glassFadeMs },
-    { phase: "desktop-reveal", durationMs: desktopRevealMs },
+    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade },
+    { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_MS.displayOn },
+    { phase: "logo", durationMs: HOLD_MS.logo },
+    { phase: "welcome-dialog", durationMs: HOLD_MS.welcomeDialog },
+    { phase: "glass-fade", durationMs: motion.glassFade },
+    { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
 
-/* The phases each layer is up for, so a component reads its state once per render. */
-const LOADING_COVER_PHASES = new Set<Phase>(["loading", "waiting-for-input"]);
-const DISPLAY_ON_PHASES = new Set<Phase>(["display-on", "logo", "welcome-dialog", "glass-fade", "desktop-reveal"]);
-const SCREEN_CONTENT_PHASES = new Set<Phase>(["logo", "welcome-dialog"]);
-const GLASS_HIDDEN_PHASES = new Set<Phase>(["glass-fade", "desktop-reveal"]);
+type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
+
+interface Metrics {
+  display: Rect; // The cutout in the illustration, in viewport coordinates.
+  view: Size;
+  pixelRatio: number;
+}
+
+const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 
 const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
@@ -98,10 +142,10 @@ async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
 }
 
 /** Exported for unit tests. */
-export function viewableAreaOf(box: { left: number; top: number; width: number; height: number }): Rect {
+export function viewableAreaOf(box: Rect): Rect {
   return {
-    x: box.left + box.width * VIEWABLE_AREA_FRACTION.x,
-    y: box.top + box.height * VIEWABLE_AREA_FRACTION.y,
+    x: box.x + box.width * VIEWABLE_AREA_FRACTION.x,
+    y: box.y + box.height * VIEWABLE_AREA_FRACTION.y,
     width: box.width * VIEWABLE_AREA_FRACTION.width,
     height: box.height * VIEWABLE_AREA_FRACTION.height,
   };
@@ -114,7 +158,7 @@ export function viewableAreaOf(box: { left: number; top: number; width: number; 
  *
  * Exported for unit tests.
  */
-export function insetToViewport(box: Rect, view: Size) {
+export function insetToViewport(box: Rect, view: Size): Inset {
   return {
     top: -box.y,
     right: box.x + box.width - view.width,
@@ -123,76 +167,85 @@ export function insetToViewport(box: Rect, view: Size) {
   };
 }
 
-const cssInset = (edges: ReturnType<typeof insetToViewport>) =>
-  `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
-
-const round = (value: number) => Math.round(value * 100) / 100;
-
-function screenClipPath(width: number, height: number, radius: number, bow: number) {
-  const w = round(width);
-  const h = round(height);
-  const r = round(radius);
-  const c = round(bow);
-  const midX = round(width / 2);
-  const midY = round(height / 2);
-
-  return `path("${[
-    `M${c + r} ${c}`,
-    `Q${midX} 0 ${w - c - r} ${c}`,
-    `Q${w - c} ${c} ${w - c} ${c + r}`,
-    `Q${w} ${midY} ${w - c} ${h - c - r}`,
-    `Q${w - c} ${h - c} ${w - c - r} ${h - c}`,
-    `Q${midX} ${h} ${c + r} ${h - c}`,
-    `Q${c} ${h - c} ${c} ${h - c - r}`,
-    `Q0 ${midY} ${c} ${c + r}`,
-    `Q${c} ${c} ${c + r} ${c}`,
-    "Z",
-  ].join("")}")`;
+function ScreenFilter({ id, bloom }: { id: string; bloom: Bloom }) {
+  return (
+    <svg className={styles.filterDefinitions} aria-hidden>
+      <filter id={id} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
+        <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="luminance" />
+        <feComponentTransfer in="luminance" result="highlights">
+          <feFuncA type="table" tableValues={bloom.knee} />
+        </feComponentTransfer>
+        <feGaussianBlur in="highlights" stdDeviation={bloom.coreRadius} result="core" />
+        <feGaussianBlur in="highlights" stdDeviation={bloom.haloRadius} result="wide" />
+        <feComponentTransfer in="wide" result="halo">
+          <feFuncA type="linear" slope={bloom.haloIntensity} />
+        </feComponentTransfer>
+        <feBlend in="core" in2="halo" mode="screen" result="haze" />
+        <feComposite in="haze" in2="highlights" operator="out" result="spill" />
+        <feFlood floodColor={PHOSPHOR_COLOR} result="phosphor" />
+        <feComposite in="phosphor" in2="spill" operator="in" result="glow" />
+        <feBlend in="SourceGraphic" in2="glow" mode="screen" />
+      </filter>
+    </svg>
+  );
 }
 
-function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase: Phase }) {
-  const scale = geometry.width / VIEWABLE_AREA.width;
-  const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
-  const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
-  const isScreenContentVisible = SCREEN_CONTENT_PHASES.has(phase);
-  const isGlassHidden = GLASS_HIDDEN_PHASES.has(phase);
-  const isRevealingDesktop = phase === "desktop-reveal";
-  const screenInset = { x: SCREEN_INSET.x * scale, y: SCREEN_INSET.y * scale };
-  const displayMaskStyle: CSSProperties & Record<`--${string}`, string | number> = {
-    left: geometry.x,
-    top: geometry.y,
-    width: geometry.width,
-    height: geometry.height,
+function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
+  const { display, view, pixelRatio } = metrics;
+  const {
+    isLoadingCoverUp,
+    isWarmingUp,
+    isDisplayOn,
+    isScreenTreated,
+    isScreenContentVisible,
+    isShowingLogo,
+    isShowingWelcomeDialog,
+    isGlassHidden,
+    isRevealingDesktop,
+  } = phaseFlags(phase);
+
+  const scale = display.width / VIEWABLE_AREA.width;
+  const screenParameters = screenParametersFor(display, scale, pixelRatio);
+  const displayMaskStyle: StyleWithVars = {
+    left: display.x,
+    top: display.y,
+    width: display.width,
+    height: display.height,
     "--display-scale": scale,
+    "--phosphor-color": PHOSPHOR_COLOR,
+    "--screen-radius": `${screenParameters.radius}px`,
+    "--scanline-pitch": `${screenParameters.scanlines.pitch}px`,
+    "--scanline-alpha": screenParameters.scanlines.alpha,
+    "--scanline-offset": `${screenParameters.scanlines.offset}px`,
+    "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, view) : screenParameters.inset),
   };
-  const viewableAreaStyle: CSSProperties & Record<`--${string}`, string | number> = isRevealingDesktop
-    ? { "--inset": cssInset(insetToViewport(geometry, view)), clipPath: "none" }
-    : {
-        "--inset": `${screenInset.y}px ${screenInset.x}px`,
-        clipPath: screenClipPath(
-          geometry.width - 2 * screenInset.x,
-          geometry.height - 2 * screenInset.y,
-          SCREEN_RADIUS * scale,
-          SCREEN_PINCUSHION_BOW_PX * scale,
-        ),
-      };
+  const screenStyle: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
 
   return (
     <div
       className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
+      <ScreenFilter id={SCREEN_FILTER_ID} bloom={screenParameters.bloom} />
       <DisplayBackdrop className={styles.display} />
+      {isScreenTreated && <div className={clsx(styles.screenGlow, isGlassHidden && styles.leaving)} />}
       <div
-        className={clsx(styles.viewableArea, !isDisplayOn && styles.hidden, isRevealingDesktop && styles.growing)}
-        style={viewableAreaStyle}
+        className={clsx(
+          styles.viewableArea,
+          !isDisplayOn && styles.hidden,
+          isWarmingUp && styles.warmingUp,
+          isRevealingDesktop && styles.growing,
+        )}
+        style={{ clipPath: isRevealingDesktop ? "none" : screenParameters.clipPath }}
       >
         {isScreenContentVisible && (
-          <div className={styles.screen}>
-            {phase === "logo" && <LogoIcon className={styles.logo} />}
-            {phase === "welcome-dialog" && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
+          <div className={styles.screen} style={screenStyle}>
+            {isShowingLogo && <LogoIcon className={styles.logo} />}
+            {isShowingWelcomeDialog && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
           </div>
         )}
+        {isScreenTreated && <div className={clsx(styles.crtOverlay, isGlassHidden && styles.leaving)} />}
+        {isWarmingUp && <div className={styles.warmUpFlash} />}
       </div>
       <DisplayGlassLayer className={clsx(styles.glass, isGlassHidden && styles.leaving)} />
     </div>
@@ -200,16 +253,16 @@ function Display({ geometry, view, phase }: { geometry: Rect; view: Size; phase:
 }
 
 function Sequence() {
-  /* Held for the whole run, so the durations the stylesheet animates over and
-   * the timers for each phase do not disagree if the preference changes. */
-  const [prefersReducedMotion] = useState(getPrefersReducedMotion);
+  /* Held for the whole run, so the durations the stylesheet animates over and the
+   * timers for each phase do not disagree if the reduced motion preference changes. */
+  const [motion] = useState<Motion>(() => (getPrefersReducedMotion() ? REDUCED_MOTION_MS : MOTION_MS));
 
   const [phase, setPhase] = useState<Phase>("loading");
-  const [geometry, setGeometry] = useState<{ display: Rect; view: Size } | null>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
   const illustrationImageRef = useRef<HTMLImageElement>(null);
   const illustrationImageSize = useElementSize(illustrationImageRef);
 
-  const updateGeometry = useEffectEvent(() => {
+  const updateMetrics = useEffectEvent(() => {
     const element = illustrationImageRef.current;
 
     if (!element) {
@@ -222,30 +275,27 @@ function Sequence() {
       return;
     }
 
-    setGeometry({
+    setMetrics({
       display: viewableAreaOf(box),
       view: { width: window.innerWidth, height: window.innerHeight },
+      pixelRatio: window.devicePixelRatio || 1,
     });
   });
 
   useEffect(() => {
-    updateGeometry();
+    updateMetrics();
   }, [illustrationImageSize]);
 
   useEffect(() => {
     const resizing = new AbortController();
 
-    window.addEventListener("resize", updateGeometry, { signal: resizing.signal });
+    window.addEventListener("resize", updateMetrics, { signal: resizing.signal });
 
     return () => resizing.abort();
   }, []);
 
   const startSequence = useEffectEvent(() => {
-    const phases = sequence(
-      prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS,
-      prefersReducedMotion ? 0 : GLASS_FADE_MS,
-      prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS,
-    );
+    const phases = sequence(motion);
 
     setPhase(phases[0].phase);
 
@@ -303,7 +353,7 @@ function Sequence() {
 
     function runSequence() {
       unlockAudio();
-      waitingForInput.abort(); // Drops both listeners: only the first press counts.
+      waitingForInput.abort();
       timers.push(...startSequence());
     }
 
@@ -317,38 +367,39 @@ function Sequence() {
     return null;
   }
 
-  const isLoadingCoverUp = LOADING_COVER_PHASES.has(phase);
-  const isDisplayOn = DISPLAY_ON_PHASES.has(phase);
-  const isRevealingDesktop = phase === "desktop-reveal";
-  const containerStyle: CSSProperties & Record<`--${string}`, string | number> = {
-    "--loading-cover-fade-ms": `${prefersReducedMotion ? 0 : LOADING_COVER_FADE_MS}ms`,
-    "--welcome-dialog-draw-ms": `${prefersReducedMotion ? 0 : WELCOME_DIALOG_DRAW_MS}ms`,
-    "--glass-fade-ms": `${prefersReducedMotion ? 0 : GLASS_FADE_MS}ms`,
-    "--desktop-reveal-ms": `${prefersReducedMotion ? 0 : DESKTOP_REVEAL_MS}ms`,
+  const { isLoadingCoverUp, isDisplayOn, isRevealingDesktop } = phaseFlags(phase);
+  const containerStyle: StyleWithVars = {
+    "--loading-cover-fade-ms": `${motion.loadingCoverFade}ms`,
+    "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
+    "--welcome-dialog-draw-ms": `${motion.welcomeDialogDraw}ms`,
+    "--glass-fade-ms": `${motion.glassFade}ms`,
+    "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
 
   return (
     <div className={styles.container} style={containerStyle}>
-      {geometry && <Display geometry={geometry.display} view={geometry.view} phase={phase} />}
+      {metrics && <Display metrics={metrics} phase={phase} />}
       <div className={styles.stage}>
         <div
           className={clsx(
             styles.illustration,
             isLoadingCoverUp && styles.hidden,
-            isRevealingDesktop && styles.blurring,
+            isRevealingDesktop && styles.receding,
           )}
         >
           <div className={styles.spotlight} />
-          <DiskActivityIndicator
-            className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
-            style={{
-              left: `${DISK_LIGHT_FRACTION.x * 100}%`,
-              top: `${DISK_LIGHT_FRACTION.y * 100}%`,
-              width: `${DISK_LIGHT_FRACTION.size * 100}%`,
-            }}
-          />
-          <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
+          <div className={styles.illustrationBody}>
+            <DiskActivityIndicator
+              className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
+              style={{
+                left: `${DISK_LIGHT_FRACTION.x * 100}%`,
+                top: `${DISK_LIGHT_FRACTION.y * 100}%`,
+                width: `${DISK_LIGHT_FRACTION.size * 100}%`,
+              }}
+            />
+            <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
+          </div>
         </div>
       </div>
       <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />

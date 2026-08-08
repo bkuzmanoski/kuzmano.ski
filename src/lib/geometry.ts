@@ -12,6 +12,31 @@ export interface Size {
 
 export interface Rect extends Position, Size {}
 
+export interface Inset {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export function scaleInset(inset: Inset, scale: number): Inset {
+  return {
+    top: inset.top * scale,
+    right: inset.right * scale,
+    bottom: inset.bottom * scale,
+    left: inset.left * scale,
+  };
+}
+
+export function insetRect(rect: Rect, inset: Inset): Rect {
+  return {
+    x: rect.x + inset.left,
+    y: rect.y + inset.top,
+    width: rect.width - inset.left - inset.right,
+    height: rect.height - inset.top - inset.bottom,
+  };
+}
+
 export function constrain(rect: Rect, container: Size): Rect {
   if (container.width === 0 || container.height === 0) {
     return rect;

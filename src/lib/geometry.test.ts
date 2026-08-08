@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { constrain } from "./geometry";
+import { constrain, insetRect, scaleInset } from "./geometry";
 
-import type { Rect, Size } from "./geometry";
+import type { Inset, Rect, Size } from "./geometry";
 
 const containerSize: Size = { width: 1000, height: 800 };
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
+const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
 describe("constrain", () => {
   test("returns a rect unchanged when it already fits", () => {
@@ -37,5 +38,47 @@ describe("constrain", () => {
 
   test("returns the rect unchanged when the container is unmeasured", () => {
     expect(constrain(rect, { width: 0, height: 0 })).toEqual(rect);
+  });
+});
+
+describe("scaleInset", () => {
+  test("scales every edge", () => {
+    expect(scaleInset(inset, 0.5)).toEqual({ top: 14, right: 12, bottom: 14, left: 12 });
+  });
+
+  test("a scale of one leaves the inset alone", () => {
+    expect(scaleInset(inset, 1)).toEqual(inset);
+  });
+
+  test("carries the sign of an edge that reaches past its container", () => {
+    expect(scaleInset({ top: -100, right: -200, bottom: 0, left: 50 }, 2)).toEqual({
+      top: -200,
+      right: -400,
+      bottom: 0,
+      left: 100,
+    });
+  });
+});
+
+describe("insetRect", () => {
+  test("takes each edge off the corresponding side", () => {
+    expect(insetRect(rect, inset)).toEqual({ x: 124, y: 78, width: 352, height: 244 });
+  });
+
+  test("leaves the box centred when the inset is symmetric", () => {
+    const inner = insetRect(rect, inset);
+
+    expect(inner.x + inner.width / 2).toBeCloseTo(rect.x + rect.width / 2);
+    expect(inner.y + inner.height / 2).toBeCloseTo(rect.y + rect.height / 2);
+  });
+
+  test("a zero inset returns the rect itself", () => {
+    expect(insetRect(rect, { top: 0, right: 0, bottom: 0, left: 0 })).toEqual(rect);
+  });
+
+  test("grows the rect for a negative inset, which is what reaching out to the viewport is", () => {
+    expect(
+      insetRect({ x: 100, y: 50, width: 400, height: 300 }, { top: -50, right: -100, bottom: -450, left: -100 }),
+    ).toEqual({ x: 0, y: 0, width: 600, height: 800 });
   });
 });

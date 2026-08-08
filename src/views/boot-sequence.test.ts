@@ -6,7 +6,7 @@ describe("viewableAreaOf", () => {
   // Note: The display cutout is 554x410 at (330, 99) in the 1214x1067 illustration.
 
   test("maps the illustration at its own size to the cutout", () => {
-    const area = viewableAreaOf({ left: 0, top: 0, width: 1214, height: 1067 });
+    const area = viewableAreaOf({ x: 0, y: 0, width: 1214, height: 1067 });
 
     expect(area.x).toBeCloseTo(330);
     expect(area.y).toBeCloseTo(99);
@@ -15,7 +15,7 @@ describe("viewableAreaOf", () => {
   });
 
   test("scales with the illustration", () => {
-    const area = viewableAreaOf({ left: 0, top: 0, width: 607, height: 533.5 });
+    const area = viewableAreaOf({ x: 0, y: 0, width: 607, height: 533.5 });
 
     expect(area.x).toBeCloseTo(165);
     expect(area.y).toBeCloseTo(49.5);
@@ -24,14 +24,14 @@ describe("viewableAreaOf", () => {
   });
 
   test("follows the illustration's position in the viewport", () => {
-    const area = viewableAreaOf({ left: 100, top: 40, width: 1214, height: 1067 });
+    const area = viewableAreaOf({ x: 100, y: 40, width: 1214, height: 1067 });
 
     expect(area.x).toBeCloseTo(430);
     expect(area.y).toBeCloseTo(139);
   });
 
   test("stays inside the illustration", () => {
-    const box = { left: 0, top: 0, width: 900, height: 791 };
+    const box = { x: 0, y: 0, width: 900, height: 791 };
     const area = viewableAreaOf(box);
 
     expect(area.x).toBeGreaterThan(0);

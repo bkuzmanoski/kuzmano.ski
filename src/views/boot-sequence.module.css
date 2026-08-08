@@ -1,5 +1,6 @@
 .container {
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
+  --crt-warm-up-ms: 0ms; /* Set from JS. */
   --welcome-dialog-draw-ms: 0ms; /* Set from JS. */
   --glass-fade-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
@@ -38,7 +39,7 @@
 }
 
 .illustration {
-  will-change: filter, opacity, transform;
+  will-change: opacity, transform;
   position: relative;
   display: flex;
   transition: opacity var(--loading-cover-fade-ms) ease-out;
@@ -47,14 +48,23 @@
     opacity: 0;
   }
 
-  &.blurring {
+  & .illustrationBody {
+    will-change: filter;
+    position: relative;
+    display: flex;
+  }
+
+  &.receding {
     transform: scale(0.9);
     opacity: 0;
-    filter: blur(16px);
     transition:
-      filter var(--desktop-reveal-ms) ease-in,
       opacity var(--desktop-reveal-ms) ease-in,
       transform var(--desktop-reveal-ms) ease-in;
+
+    & .illustrationBody {
+      filter: blur(16px);
+      transition: filter var(--desktop-reveal-ms) ease-in;
+    }
   }
 
   & .spotlight {
@@ -190,6 +200,12 @@
 
 .displayMask {
   --display-scale: 1; /* Set from JS. */
+  --phosphor-color: #fff; /* Set from JS. */
+  --screen-radius: 0px; /* Set from JS */
+  --inset: 0; /* Set from JS. */
+  --scanline-pitch: 2px; /* Set from JS. */
+  --scanline-alpha: 0; /* Set from JS. */
+  --scanline-offset: 0px; /* Set from JS. */
 
   position: fixed;
   z-index: 1;
@@ -226,9 +242,29 @@
   }
 }
 
-.viewableArea {
-  --inset: 0; /* Set from JS. */
+.screenGlow {
+  --treatment-opacity: 0.2;
 
+  pointer-events: none;
+
+  position: absolute;
+  inset: var(--inset);
+
+  border-radius: var(--screen-radius);
+
+  opacity: var(--treatment-opacity);
+  background: color-mix(in oklab, var(--phosphor-color) 30%, var(--color-wallpaper-a));
+  filter: blur(calc(20px * var(--display-scale)));
+
+  animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards;
+
+  &.leaving {
+    opacity: 0;
+    transition: opacity var(--glass-fade-ms) ease-out;
+  }
+}
+
+.viewableArea {
   position: absolute;
   inset: var(--inset);
 
@@ -236,12 +272,19 @@
   align-items: center;
   justify-content: center;
 
-  border-radius: calc(16px * var(--display-scale));
+  border-radius: var(--screen-radius);
 
-  background: var(--wallpaper) fixed;
+  background: var(--wallpaper);
 
   &.hidden {
     opacity: 0;
+  }
+
+  &.warmingUp {
+    mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    animation: crt-warm-up var(--crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
   }
 
   &.growing {
@@ -252,6 +295,79 @@
   }
 }
 
+@keyframes crt-warm-up {
+  0%,
+  15% {
+    mask-size: 100% 1%;
+  }
+
+  100% {
+    mask-size: 100% 150%;
+  }
+}
+
+.warmUpFlash {
+  pointer-events: none;
+
+  position: absolute;
+  inset: 0;
+
+  background: var(--phosphor-color);
+
+  animation: crt-warm-up-flash var(--crt-warm-up-ms) ease-out both;
+}
+
+@keyframes crt-warm-up-flash {
+  0%,
+  15% {
+    opacity: 0.9;
+  }
+
+  60% {
+    opacity: 0.12;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.crtOverlay {
+  --treatment-opacity: 1;
+
+  pointer-events: none;
+
+  position: absolute;
+  inset: 0;
+
+  background: repeating-linear-gradient(
+    rgb(0 0 0 / var(--scanline-alpha)) 0 calc(var(--scanline-pitch) / 2),
+    transparent calc(var(--scanline-pitch) / 2) var(--scanline-pitch)
+  );
+
+  /* Offset by however far the screen begins off the device pixel grid to prevent
+   * the lines from straddling pixels and averaging out into a flat tint. */
+  background-position: 0 var(--scanline-offset);
+
+  animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out below. */
+
+  &.leaving {
+    opacity: 0;
+    transition: opacity var(--glass-fade-ms) ease-out;
+  }
+}
+
+@keyframes fade-in-screen-treatment {
+  0%,
+  70% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: var(--treatment-opacity);
+  }
+}
+
 .filterDefinitions {
   position: absolute;
   width: 0;
@@ -259,8 +375,10 @@
 }
 
 .screen {
+  --filter-url: none; /* Set from JS. */
+
   display: flex;
-  filter: url("#boot-screen");
+  filter: var(--filter-url);
 }
 
 .logo {
@@ -285,7 +403,7 @@
   border: calc(1px * var(--display-scale)) solid var(--color-border);
 
   font: var(--font-chrome);
-  font-size: calc(16px * var(--display-scale));
+  font-size: calc(var(--font-chrome-size) * var(--display-scale));
   color: var(--color-foreground);
   letter-spacing: var(--font-chrome-letter-spacing);
 
@@ -296,8 +414,8 @@
   &::before {
     content: "";
     position: absolute;
-    inset: calc(2.5px * var(--display-scale));
-    border: calc(1.5px * var(--display-scale)) solid var(--color-border);
+    inset: calc(2px * var(--display-scale));
+    border: calc(2px * var(--display-scale)) solid var(--color-border);
   }
 }
 
