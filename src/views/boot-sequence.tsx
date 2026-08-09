@@ -372,7 +372,8 @@ function Sequence() {
           <Spinner className={styles.spinner} />
         ) : (
           <div className={styles.prompt}>
-            {beginPrompt}&nbsp;<span className={styles.block}>&#9608;</span>
+            {beginPrompt}
+            <span className={styles.block} aria-hidden />
           </div>
         )}
       </div>

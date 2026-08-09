@@ -384,6 +384,18 @@
     color: var(--color-boot-sequence-light);
 
     & .block {
+      display: inline-block;
+
+      /* Matches the metrics of U+2588 in Monaco9 (advance 750, ink -250 to 1125 of 2000 upem).
+       * Drawing the block as a box instead of a glyph avoids rendering artefacts in Safari. */
+      width: 0.375em;
+      height: 0.6875em;
+      margin-left: 0.375em; /* One character of the monospaced advance. */
+
+      vertical-align: -0.125em;
+
+      background-color: currentcolor;
+
       animation: blink 1s step-end infinite;
     }
   }
