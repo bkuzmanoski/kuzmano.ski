@@ -8,8 +8,9 @@ import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick, playScroll, playScrollStep, skipScroll } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
-import { Scrollbar, useScrollMetrics } from "./scrollbar";
+import { Scrollbar } from "./scrollbar";
 import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 

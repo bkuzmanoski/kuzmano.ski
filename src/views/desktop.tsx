@@ -1,9 +1,11 @@
+import { Outlet } from "@tanstack/react-router";
+
 import { MenuBar } from "#/components/menu-bar";
 import { SkipLink } from "#/components/skip-link";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { WINDOW_LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/audio/context";
-import { WindowManagerProvider } from "#/lib/window-manager";
+import { WindowManagerProvider } from "#/lib/window-manager-provider";
 
 import { BootSequence } from "./boot-sequence";
 import styles from "./desktop.module.css";
@@ -28,5 +30,14 @@ export function Desktop({ children }: { children: ReactNode }) {
       </div>
       <BootSequence />
     </WindowManagerProvider>
+  );
+}
+
+/** The root route's component: the desktop wrapped around the outlet every route renders into. */
+export function DesktopRoot() {
+  return (
+    <Desktop>
+      <Outlet />
+    </Desktop>
   );
 }

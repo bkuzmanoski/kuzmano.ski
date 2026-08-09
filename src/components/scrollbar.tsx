@@ -1,25 +1,19 @@
 import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { playClick } from "#/lib/audio/ui";
-import { useElementSize } from "#/lib/hooks/use-element-size";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { clamp } from "#/lib/math";
 
 import styles from "./scrollbar.module.css";
 
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 const STEP = 40;
 const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
 const REPEAT_MS = 90;
-
-export interface ScrollMetrics {
-  top: number;
-  scrollHeight: number;
-  clientHeight: number;
-}
 
 const isStepKey = (key: string) => key === "Enter" || key === " ";
 
@@ -96,79 +90,6 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
       />
     </button>
   );
-}
-
-export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
-  const [metrics, setMetrics] = useState<ScrollMetrics>({ top: 0, scrollHeight: 0, clientHeight: 0 });
-  const size = useElementSize(ref);
-
-  const measure = useCallback(() => {
-    const element = ref.current;
-
-    if (!element) {
-      return;
-    }
-
-    setMetrics((current) =>
-      current.top === element.scrollTop &&
-      current.scrollHeight === element.scrollHeight &&
-      current.clientHeight === element.clientHeight
-        ? current
-        : { top: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight },
-    );
-  }, [ref]);
-
-  useEffect(() => {
-    measure();
-  }, [size, measure]);
-
-  useEffect(() => {
-    const element = ref.current;
-
-    if (!element || typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    let frame: number | null = null;
-
-    const schedule = () => {
-      frame ??= requestAnimationFrame(() => {
-        frame = null;
-        measure();
-      });
-    };
-
-    const resizeObserver = new ResizeObserver(schedule);
-
-    const observeChildren = () => {
-      for (const child of element.children) {
-        resizeObserver.observe(child);
-      }
-    };
-
-    observeChildren();
-
-    let mutationObserver: MutationObserver | undefined;
-
-    if (typeof MutationObserver !== "undefined") {
-      mutationObserver = new MutationObserver(() => {
-        observeChildren();
-        schedule();
-      });
-      mutationObserver.observe(element, { childList: true });
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-      mutationObserver?.disconnect();
-
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-    };
-  }, [ref, measure]);
-
-  return { metrics, measure };
 }
 
 export function Scrollbar({

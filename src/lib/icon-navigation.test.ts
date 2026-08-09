@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { adjacentIconId } from "./desktop-icons";
+import { adjacentIconId } from "./icon-navigation";
 
-import type { IconPlacement } from "./desktop-icons";
+import type { IconPlacement } from "./icon-navigation";
 
 const ICON_PLACEMENTS: Array<IconPlacement> = [
   { id: "about", x: 0, y: 0 },

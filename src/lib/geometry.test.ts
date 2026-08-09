@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { constrain, insetRect, scaleInset } from "./geometry";
+import { constrain, insetRect, insetToViewport, scaleInset } from "./geometry";
 
 import type { Inset, Rect, Size } from "./geometry";
 
@@ -80,5 +80,33 @@ describe("insetRect", () => {
     expect(
       insetRect({ x: 100, y: 50, width: 400, height: 300 }, { top: -50, right: -100, bottom: -450, left: -100 }),
     ).toEqual({ x: 0, y: 0, width: 600, height: 800 });
+  });
+});
+
+describe("insetToViewport", () => {
+  const viewport = { width: 1000, height: 800 };
+
+  test("returns distance from the box to the viewport for each edge", () => {
+    expect(insetToViewport({ x: 300, y: 100, width: 500, height: 400 }, viewport)).toEqual({
+      top: -100,
+      right: -200,
+      bottom: -300,
+      left: -300,
+    });
+  });
+
+  test("returns zero for every edge of a box that fills the viewport", () => {
+    const insetBox = insetToViewport({ x: 0, y: 0, width: 1000, height: 800 }, viewport);
+    expect(Object.values(insetBox).every((edge) => edge === 0)).toBe(true); // Compared as numbers: a zero edge can come out signed, which CSS does not mind.
+  });
+
+  test("returns edges that place the box on the viewport edges", () => {
+    const box = { x: 330, y: 99, width: 554, height: 410 };
+    const edges = insetToViewport(box, viewport);
+
+    expect(box.y + edges.top).toBe(0);
+    expect(box.x + edges.left).toBe(0);
+    expect(box.x + box.width - edges.right).toBe(viewport.width);
+    expect(box.y + box.height - edges.bottom).toBe(viewport.height);
   });
 });

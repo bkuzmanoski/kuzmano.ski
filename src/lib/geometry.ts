@@ -19,6 +19,22 @@ export interface Inset {
   left: number;
 }
 
+export function constrain(rect: Rect, container: Size): Rect {
+  if (container.width === 0 || container.height === 0) {
+    return rect;
+  }
+
+  const width = Math.min(rect.width, container.width);
+  const height = Math.min(rect.height, container.height);
+
+  return {
+    x: clamp(rect.x, 0, container.width - width),
+    y: clamp(rect.y, 0, container.height - height),
+    width,
+    height,
+  };
+}
+
 export function scaleInset(inset: Inset, scale: number): Inset {
   return {
     top: inset.top * scale,
@@ -37,18 +53,16 @@ export function insetRect(rect: Rect, inset: Inset): Rect {
   };
 }
 
-export function constrain(rect: Rect, container: Size): Rect {
-  if (container.width === 0 || container.height === 0) {
-    return rect;
-  }
-
-  const width = Math.min(rect.width, container.width);
-  const height = Math.min(rect.height, container.height);
-
+/**
+ * Insets for a child of `box` that places its edges on the edges of the viewport.
+ * Each edge is given its own distance to travel, so animating to them reaches all
+ * four corners at the same time.
+ */
+export function insetToViewport(box: Rect, viewport: Size): Inset {
   return {
-    x: clamp(rect.x, 0, container.width - width),
-    y: clamp(rect.y, 0, container.height - height),
-    width,
-    height,
+    top: -box.y,
+    right: box.x + box.width - viewport.width,
+    bottom: box.y + box.height - viewport.height,
+    left: -box.x,
   };
 }
