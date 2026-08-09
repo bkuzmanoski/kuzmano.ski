@@ -40,8 +40,6 @@ const DISK_LIGHT_FRACTION = {
 
 const SCREEN_FILTER_ID = "boot-screen";
 
-const MIN_LOADING_MS = 1000; // Minimum time to show the loading cover before revealing the boot sequence.
-
 const PHASES = [
   "loading",
   "waiting-for-input",
@@ -125,13 +123,12 @@ const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: 
 
 /** Resolves when required assets are loaded, or if the wait has been too long. */
 async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
-  const minDelay = new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS));
   const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
   const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
 
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const promises = Promise.all([minDelay, illustrationImage, fontSet]);
+  const promises = Promise.all([illustrationImage, fontSet]);
   const timeout = new Promise((resolve) => (timer = setTimeout(resolve, MAX_LOADING_MS)));
 
   try {
