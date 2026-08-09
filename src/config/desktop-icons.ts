@@ -13,7 +13,7 @@ export const ICONS: Array<Icon> = [
 export const ICON_IDS = ICONS.map((iconDefinition) => iconDefinition.id);
 
 export const ICON_LAYOUT: IconLayout = {
-  cellSize: 76,
-  position: { top: 24, right: 28 },
-  spacing: 84,
+  cellSize: 72,
+  position: { top: 24, right: 32 },
+  spacing: 96,
 };

@@ -13,7 +13,6 @@ export const ICON_POSITIONS_STORAGE_KEY = "icon-positions";
  * 1. Drags write here synchronously, so by the time a drag ends the final
  *    position is already persisted. Component state wouldn't be reliable
  *    here, since it would still be waiting on its next commit.
- *
  * 2. `getServerSnapshot` returns null, which we treat as "not loaded yet".
  *    That means both the server render and the hydration pass render no
  *    icons. A position is meaningless before the layer has been measured
