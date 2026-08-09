@@ -24,7 +24,7 @@
       <path fill="#fff" d="M40 40v205C56.54 140.44 140.881 59.805 246.079 47.975L317 40z" />
     </g>
   </g>
-  <g class="shadow" filter="url(#inner-shadow)" style="mix-blend-mode: plus-darker">
+  <g class="shadow" filter="url(#inner-shadow)">
     <path
       fill="#000"
       fill-opacity=".01"
@@ -73,7 +73,7 @@
       <feOffset dx="8" dy="8" />
       <feGaussianBlur stdDeviation="16" />
       <feComposite in2="hardAlpha" k2="-1" k3="1" operator="arithmetic" />
-      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0" />
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" />
       <feBlend in2="shape" result="effect1_innerShadow_335_2132" />
     </filter>
     <radialGradient
