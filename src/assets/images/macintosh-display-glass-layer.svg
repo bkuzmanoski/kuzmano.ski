@@ -13,6 +13,10 @@
     opacity=".1"
   />
   <g mask="url(#glare-mask)">
+    <!-- Safari clips masked content to the geometry bounding box of the masked group, which does not
+         account for how far the blurs spread past it. Without this padding rect the glares are cut off
+         along the top and left edges, where the group's box starts at (16, 16). -->
+    <rect width="554" height="410" fill="#fff" fill-opacity="0" />
     <g class="glare-2" filter="url(#glare-2-blur)" opacity=".1">
       <path fill="#fff" d="M16 16v410C49.081 216.879 217.762 55.61 428.157 31.95L570 16z" />
     </g>
