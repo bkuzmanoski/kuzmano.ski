@@ -4,7 +4,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
 import OptionIcon from "#/assets/images/option-modifier.svg?react";
-import { playClick } from "#/lib/audio/ui";
+import { playClick, playHover } from "#/lib/audio/ui";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsWindows } from "#/lib/hooks/use-is-windows";
 import { cycle } from "#/lib/math";
@@ -45,6 +45,7 @@ export function Menu({
   const [focusedItemId, setFocusedItemId] = useState(-1);
   const menuRef = useRef<HTMLDivElement>(null);
   const isStickyRef = useRef(!isPointerHeld);
+  const focusedItemRef = useRef(-1);
 
   /* A plain function, not an Effect Event as the keyboard path calls it straight
    * from `onKeyDown`. The pointer handlers below are Effect Events, so they
@@ -56,6 +57,7 @@ export function Menu({
       return;
     }
 
+    focusedItemRef.current = index;
     setFocusedItemId(index);
     playClick();
 
@@ -70,28 +72,41 @@ export function Menu({
     return element ? Number(element.dataset.index) : -1;
   }
 
+  function focusItem(index: number) {
+    if (index === focusedItemRef.current) {
+      return;
+    }
+
+    focusedItemRef.current = index;
+    setFocusedItemId(index);
+
+    if (index >= 0) {
+      playHover();
+    }
+  }
+
   function focusAdjacentMenuItem(direction: 1 | -1) {
-    setFocusedItemId((current) => {
-      let next = current;
-      let remaining = items.length;
+    let next = focusedItemRef.current;
+    let remaining = items.length;
 
-      while (remaining-- > 0) {
-        next = cycle(items.length, next, direction);
+    while (remaining-- > 0) {
+      next = cycle(items.length, next, direction);
 
-        if (isEnabled(items[next])) {
-          return next;
-        }
+      if (isEnabled(items[next])) {
+        focusItem(next);
+        return;
       }
-
-      return current;
-    });
+    }
   }
 
   const onPointerMove = useEffectEvent((event: PointerEvent) => {
-    if (!flash.isRunning()) {
-      const index = indexAt(event.clientX, event.clientY);
-      setFocusedItemId(isEnabled(items[index]) ? index : -1);
+    if (flash.isRunning()) {
+      return;
     }
+
+    const index = indexAt(event.clientX, event.clientY);
+
+    focusItem(isEnabled(items[index]) ? index : -1);
   });
 
   const onPointerUp = useEffectEvent((event: PointerEvent) => {
