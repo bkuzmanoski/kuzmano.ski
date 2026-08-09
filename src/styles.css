@@ -51,7 +51,7 @@
   --color-background: light-dark(#f8f7f4, #16171a);
   --color-foreground: light-dark(#1a1f2e, #f2f1ee);
   --color-foreground-muted: color-mix(in oklab, var(--color-foreground) 55%, var(--color-background));
-  --color-accent: #7c9082;
+  --color-accent: #8787b3;
   --color-boot-sequence-light: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-dark: light-dark(var(--color-foreground), var(--color-background));
   --color-boot-sequence-background: color-mix(in oklab, var(--color-boot-sequence-dark) 80%, var(--color-accent));
