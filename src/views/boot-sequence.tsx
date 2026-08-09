@@ -8,7 +8,6 @@ import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg
 import macintoshAvifUrl from "#/assets/images/macintosh.avif";
 import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { Spinner } from "#/components/spinner";
-import { SITE_NAME } from "#/config/site";
 import { playBootChime } from "#/lib/audio/boot-chime";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
 import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
@@ -30,7 +29,6 @@ const PHASES = [
   "macintosh-reveal",
   "display-on",
   "logo",
-  "welcome-dialog",
   "glass-fade",
   "desktop-reveal",
   "complete",
@@ -42,7 +40,7 @@ type Phase = (typeof PHASES)[number];
 const MOTION_MS = {
   loadingCoverFade: 600,
   crtWarmUp: 500,
-  welcomeDialogDraw: 250,
+  logoDraw: 250,
   glassFade: 150,
   desktopReveal: 350, // Matches `--duration-desktop-reveal-step` in `styles.css`.
 };
@@ -60,7 +58,6 @@ const HOLD_MS = {
   illustrationReveal: 400,
   displayOn: 500,
   logo: 1400,
-  welcomeDialog: 1400,
 };
 
 const MINIMUM_LOADING_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
@@ -84,10 +81,8 @@ function phaseFlags(phase: Phase) {
     isWarmingUp: phase === "display-on",
     isDisplayOn: from("display-on"),
     isScreenTreated: from("display-on") && before("desktop-reveal"),
-    isScreenContentVisible: from("logo") && before("glass-fade"),
-    isShowingLogo: phase === "logo",
-    isShowingWelcomeDialog: phase === "welcome-dialog",
-    isPreparingToLeave: from("welcome-dialog"), // Used to apply `will-change` hints to the layers that will be animated out.
+    isScreenContentVisible: from("logo") && before("desktop-reveal"),
+    isPreparingToLeave: from("logo"), // Used to apply `will-change` hints to the layers that will be animated out.
     isGlassHidden: from("glass-fade"),
     isRevealingDesktop: phase === "desktop-reveal",
   };
@@ -97,8 +92,7 @@ const sequence = (motion: Motion) =>
   [
     { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_MS.illustrationReveal },
     { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_MS.displayOn },
-    { phase: "logo", durationMs: HOLD_MS.logo },
-    { phase: "welcome-dialog", durationMs: motion.welcomeDialogDraw + HOLD_MS.welcomeDialog },
+    { phase: "logo", durationMs: motion.logoDraw + HOLD_MS.logo },
     { phase: "glass-fade", durationMs: motion.glassFade },
     { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
@@ -164,8 +158,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     isDisplayOn,
     isScreenTreated,
     isScreenContentVisible,
-    isShowingLogo,
-    isShowingWelcomeDialog,
     isPreparingToLeave,
     isGlassHidden,
     isRevealingDesktop,
@@ -205,9 +197,8 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
         style={{ clipPath: screenClipPath }}
       >
         {isScreenContentVisible && (
-          <div className={styles.screen} style={SCREEN_STYLE}>
-            {isShowingLogo && <LogoIcon className={styles.logo} />}
-            {isShowingWelcomeDialog && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
+          <div className={clsx(styles.screen, isGlassHidden && styles.leaving)} style={SCREEN_STYLE}>
+            <LogoIcon className={styles.logo} />
           </div>
         )}
         {isScreenTreated && <div className={clsx(styles.crtOverlay, isGlassHidden && styles.leaving)} />}
@@ -340,7 +331,7 @@ function Sequence() {
   const containerStyle: StyleWithVars = {
     "--loading-cover-fade-ms": `${motion.loadingCoverFade}ms`,
     "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
-    "--welcome-dialog-draw-ms": `${motion.welcomeDialogDraw}ms`,
+    "--logo-draw-ms": `${motion.logoDraw}ms`,
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
   };
