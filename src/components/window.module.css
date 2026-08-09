@@ -127,8 +127,9 @@
   height: var(--window-control-size);
 
   & svg {
-    /* The button swaps its icon on press. Ensure the stable node beneath handles pointer events. */
-    pointer-events: none;
+    pointer-events: none; /* The button swaps its icon on press. Ensure the stable node beneath handles pointer events. */
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -149,8 +150,8 @@
 
   & svg {
     pointer-events: none;
-    width: var(--scrollbar-width);
-    height: var(--scrollbar-width);
+    width: 100%;
+    height: 100%;
   }
 }
 

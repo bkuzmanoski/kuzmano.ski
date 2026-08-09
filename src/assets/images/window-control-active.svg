@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
-  <path fill="#fff" stroke="#000" d="M.5.5h15v15H.5z" />
+  <path fill="white" stroke="black" d="M.5.5h15v15H.5z" />
   <path
-    fill="#000"
+    fill="black"
     d="M8.5 15h-1v-4h1v4Zm-2.793-4-2.303 2.304-.707-.708L5 10.293l.707.707Zm7.596 1.597-.707.707L10.292 11l.708-.707 2.303 2.304ZM15 7.5v1h-4v-1h4Zm-10 1H1v-1h4v1ZM5.707 5 5 5.708 2.696 3.404l.707-.708L5.707 5Zm7.597-1.597L11 5.707 10.293 5l2.304-2.304.707.707ZM8.5 5h-1V1h1v4Z"
   />
 </svg>

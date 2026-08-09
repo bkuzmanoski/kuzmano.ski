@@ -114,10 +114,6 @@
   }
 
   & .diskActivityIndicator {
-    /* Pin colors. */
-    --icon-foreground: #000;
-    --icon-background: #fff;
-
     position: absolute;
     transform: translate(-50%, -50%);
     height: auto;
@@ -131,6 +127,7 @@
     }
   }
 
+  & picture,
   & img {
     display: block;
     max-width: 140vw;
@@ -219,10 +216,6 @@
 
   & .display,
   & .glassOverlay {
-    /* Pin colors. */
-    --icon-foreground: #000;
-    --icon-background: #fff;
-
     position: absolute;
     inset: 0;
     width: 100%;

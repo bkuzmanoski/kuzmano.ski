@@ -113,12 +113,14 @@ export function unlockAudio(): void {
 
 export function useAudioUnlock() {
   useEffect(() => {
-    document.addEventListener("pointerdown", unlockAudio, { capture: true, passive: true });
+    document.addEventListener("pointerdown", unlockAudio, { capture: true, passive: true }); // Mouse clicks
+    document.addEventListener("pointerup", unlockAudio, { capture: true, passive: true }); // Touch taps
     document.addEventListener("keydown", unlockAudioOnKeyDown, { capture: true, passive: true });
     document.addEventListener("visibilitychange", resumeAudioOnReturn);
 
     return () => {
       document.removeEventListener("pointerdown", unlockAudio, true);
+      document.removeEventListener("pointerup", unlockAudio, true);
       document.removeEventListener("keydown", unlockAudioOnKeyDown, true);
       document.removeEventListener("visibilitychange", resumeAudioOnReturn);
     };

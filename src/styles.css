@@ -131,7 +131,7 @@ html {
     z-index: var(--layer-boot-sequence-overlay);
     inset: 0;
 
-    background: var(--color-boot-sequence-background); /* Match `.loadingCover` in `boot-sequence.module.css`. */
+    background: var(--color-boot-sequence-dark); /* Match `.loadingCover` in `boot-sequence.module.css`. */
   }
 }
 

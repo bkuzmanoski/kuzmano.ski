@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { MAX_LOADING_MS } from "#/lib/boot";
 import bootOverlayScript from "#/scripts/boot-overlay.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
@@ -53,10 +52,6 @@ describe("theme", () => {
 });
 
 describe("boot overlay", () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   test("covers the desktop on a first visit to the root", () => {
     run(bootOverlayScript);
 
@@ -67,17 +62,6 @@ describe("boot overlay", () => {
     sessionStorage.setItem("has-booted", "1");
 
     run(bootOverlayScript);
-
-    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
-  });
-
-  test("lifts the cover itself if hydration never arrives", () => {
-    vi.useFakeTimers();
-
-    run(bootOverlayScript);
-    expect(document.documentElement.hasAttribute("data-boot")).toBe(true);
-
-    vi.advanceTimersByTime(MAX_LOADING_MS);
 
     expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
   });

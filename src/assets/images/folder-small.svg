@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
   <path
-    fill="#000"
+    fill="black"
     fill-rule="evenodd"
     d="M14.5 3.5V16h-13V0H11l3.5 3.5ZM2.5 15h11V4h-3V1h-8v14Z"
     clip-rule="evenodd"

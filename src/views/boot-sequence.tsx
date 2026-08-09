@@ -5,11 +5,12 @@ import LogoIcon from "#/assets/images/logo.svg?react";
 import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
 import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
 import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg?react";
-import macintoshImageUrl from "#/assets/images/macintosh.png";
+import macintoshAvifUrl from "#/assets/images/macintosh.avif";
+import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { SITE_NAME } from "#/config/site";
 import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
-import { MAX_LOADING_MS, clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import { PHOSPHOR_COLOR, screenParametersFor } from "#/lib/crt-effect";
 import type { Bloom } from "#/lib/crt-effect";
 import type { Inset, Rect, Size } from "#/lib/geometry";
@@ -22,7 +23,7 @@ import type { CSSProperties } from "react";
 
 type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
 
-/* Metrics derived from `macintosh.png` */
+/* Metrics derived from the illustration, in its own coordinates. */
 const CASE = { width: 1214, height: 1067 };
 const VIEWABLE_AREA = { x: 330, y: 99, width: 554, height: 410 };
 const DISK_LIGHT = { x: 890, y: 670, size: 6 };
@@ -169,7 +170,7 @@ export function insetToViewport(box: Rect, view: Size): Inset {
 
 function ScreenFilter({ bloom }: { bloom: Bloom }) {
   return (
-    <svg className={styles.filterDefinition} aria-hidden>
+    <svg className={styles.filterDefinitions} aria-hidden>
       <filter id={SCREEN_FILTER_ID} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
         <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="luminance" />
         <feComponentTransfer in="luminance" result="highlights">
@@ -349,7 +350,7 @@ function Sequence() {
       const eventListenerOptions = { capture: true, signal: waitingForInput.signal };
 
       document.addEventListener("keydown", onKeyDown, eventListenerOptions);
-      document.addEventListener("pointerdown", runSequence, eventListenerOptions);
+      document.addEventListener("pointerup", runSequence, eventListenerOptions);
     });
 
     function onKeyDown(event: KeyboardEvent) {
@@ -406,7 +407,10 @@ function Sequence() {
                 width: `${DISK_LIGHT_FRACTION.size * 100}%`,
               }}
             />
-            <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshImageUrl} />
+            <picture>
+              <source srcSet={macintoshAvifUrl} type="image/avif" />
+              <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshWebpUrl} />
+            </picture>
           </div>
         </div>
       </div>
