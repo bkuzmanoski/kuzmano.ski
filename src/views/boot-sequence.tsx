@@ -20,6 +20,8 @@ import styles from "./boot-sequence.module.css";
 
 import type { CSSProperties } from "react";
 
+type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
+
 /* Metrics derived from `macintosh.png` */
 const CASE = { width: 1214, height: 1067 };
 const VIEWABLE_AREA = { x: 330, y: 99, width: 554, height: 410 };
@@ -39,7 +41,9 @@ const DISK_LIGHT_FRACTION = {
 };
 
 const SCREEN_FILTER_ID = "boot-screen";
+const SCREEN_STYLE: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
 
+/* Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order. */
 const PHASES = [
   "loading",
   "waiting-for-input",
@@ -67,6 +71,7 @@ function phaseFlags(phase: Phase) {
     isScreenContentVisible: from("logo") && before("glass-fade"),
     isShowingLogo: phase === "logo",
     isShowingWelcomeDialog: phase === "welcome-dialog",
+    isPreparingToLeave: from("welcome-dialog"), // Used to apply `will-change` hints to the layers that will be animated out.
     isGlassHidden: from("glass-fade"),
     isRevealingDesktop: phase === "desktop-reveal",
   };
@@ -74,40 +79,38 @@ function phaseFlags(phase: Phase) {
 
 /* The motion the stylesheet animates over. */
 const MOTION_MS = {
-  loadingCoverFade: 1000,
+  loadingCoverFade: 600,
   crtWarmUp: 500,
   welcomeDialogDraw: 250,
   glassFade: 150,
-  desktopReveal: 350,
+  desktopReveal: 350, // Matches `--duration-desktop-reveal-step` in `styles.css`.
 };
 
 type Motion = typeof MOTION_MS;
 
 /* Substituted under a reduced motion preference. */
 const REDUCED_MOTION_MS: Motion = {
-  loadingCoverFade: 0,
+  ...MOTION_MS,
   crtWarmUp: 0,
-  welcomeDialogDraw: 0,
-  glassFade: 0,
   desktopReveal: 0,
 };
 
-/* How long a phase stays put once whatever opens it has finished, so that a phase
- * carrying both is the sum of the two rather than a number that has to be kept above
- * the motion inside it by hand. */
-const HOLD_MS = { displayOn: 500, logo: 2000, welcomeDialog: 2000 };
+const HOLD_MS = {
+  illustrationReveal: 400,
+  displayOn: 500,
+  logo: 1400,
+  welcomeDialog: 1400,
+};
 
 const sequence = (motion: Motion) =>
   [
-    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade },
+    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_MS.illustrationReveal },
     { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_MS.displayOn },
     { phase: "logo", durationMs: HOLD_MS.logo },
-    { phase: "welcome-dialog", durationMs: HOLD_MS.welcomeDialog },
+    { phase: "welcome-dialog", durationMs: motion.welcomeDialogDraw + HOLD_MS.welcomeDialog },
     { phase: "glass-fade", durationMs: motion.glassFade },
     { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
-
-type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
 
 interface Metrics {
   display: Rect; // The cutout in the illustration, in viewport coordinates.
@@ -164,10 +167,10 @@ export function insetToViewport(box: Rect, view: Size): Inset {
   };
 }
 
-function ScreenFilter({ id, bloom }: { id: string; bloom: Bloom }) {
+function ScreenFilter({ bloom }: { bloom: Bloom }) {
   return (
-    <svg className={styles.filterDefinitions} aria-hidden>
-      <filter id={id} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
+    <svg className={styles.filterDefinition} aria-hidden>
+      <filter id={SCREEN_FILTER_ID} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
         <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="luminance" />
         <feComponentTransfer in="luminance" result="highlights">
           <feFuncA type="table" tableValues={bloom.knee} />
@@ -197,6 +200,7 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     isScreenContentVisible,
     isShowingLogo,
     isShowingWelcomeDialog,
+    isPreparingToLeave,
     isGlassHidden,
     isRevealingDesktop,
   } = phaseFlags(phase);
@@ -216,14 +220,14 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     "--scanline-offset": `${screenParameters.scanlines.offset}px`,
     "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, view) : screenParameters.inset),
   };
-  const screenStyle: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
+  const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
 
   return (
     <div
       className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
-      <ScreenFilter id={SCREEN_FILTER_ID} bloom={screenParameters.bloom} />
+      <ScreenFilter bloom={screenParameters.bloom} />
       <DisplayBackdrop className={styles.display} />
       {isScreenTreated && <div className={clsx(styles.screenGlow, isGlassHidden && styles.leaving)} />}
       <div
@@ -233,10 +237,10 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
           isWarmingUp && styles.warmingUp,
           isRevealingDesktop && styles.growing,
         )}
-        style={{ clipPath: isRevealingDesktop ? "none" : screenParameters.clipPath }}
+        style={{ clipPath: screenClipPath }}
       >
         {isScreenContentVisible && (
-          <div className={styles.screen} style={screenStyle}>
+          <div className={styles.screen} style={SCREEN_STYLE}>
             {isShowingLogo && <LogoIcon className={styles.logo} />}
             {isShowingWelcomeDialog && <p className={styles.welcomeDialog}>Welcome to {SITE_NAME}</p>}
           </div>
@@ -244,7 +248,13 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
         {isScreenTreated && <div className={clsx(styles.crtOverlay, isGlassHidden && styles.leaving)} />}
         {isWarmingUp && <div className={styles.warmUpFlash} />}
       </div>
-      <DisplayGlassLayer className={clsx(styles.glass, isGlassHidden && styles.leaving)} />
+      <DisplayGlassLayer
+        className={clsx(
+          styles.glassOverlay,
+          isPreparingToLeave && styles.preparingToLeave,
+          isGlassHidden && styles.leaving,
+        )}
+      />
     </div>
   );
 }
@@ -364,7 +374,7 @@ function Sequence() {
     return null;
   }
 
-  const { isLoadingCoverUp, isDisplayOn, isRevealingDesktop } = phaseFlags(phase);
+  const { isLoadingCoverUp, isDisplayOn, isPreparingToLeave, isRevealingDesktop } = phaseFlags(phase);
   const containerStyle: StyleWithVars = {
     "--loading-cover-fade-ms": `${motion.loadingCoverFade}ms`,
     "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
@@ -382,7 +392,8 @@ function Sequence() {
           className={clsx(
             styles.illustration,
             isLoadingCoverUp && styles.hidden,
-            isRevealingDesktop && styles.receding,
+            isPreparingToLeave && styles.preparingToLeave,
+            isRevealingDesktop && styles.leaving,
           )}
         >
           <div className={styles.spotlight} />

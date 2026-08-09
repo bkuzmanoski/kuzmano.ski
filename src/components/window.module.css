@@ -15,7 +15,7 @@
 
   &.ready {
     opacity: 1;
-    transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 3); /* Follow menu bar and icons reveal. */
+    transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 2); /* Follow menu bar and icons reveal. */
   }
 
   &:not(.focused) {

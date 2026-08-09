@@ -17,7 +17,7 @@
 
   &.ready {
     transform: none;
-    transition: transform var(--duration-desktop-reveal-step) ease-in var(--duration-desktop-reveal-step);
+    transition: transform var(--duration-desktop-reveal-step) ease-out;
 
     @media (prefers-reduced-motion: reduce) {
       transition-duration: 0s;

@@ -38,23 +38,29 @@
   justify-content: center;
 }
 
+.hidden {
+  opacity: 0;
+}
+
 .illustration {
-  will-change: opacity, transform;
   position: relative;
   display: flex;
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  &.hidden {
-    opacity: 0;
-  }
-
   & .illustrationBody {
-    will-change: filter;
     position: relative;
     display: flex;
   }
 
-  &.receding {
+  &.preparingToLeave {
+    will-change: opacity, transform;
+
+    & .illustrationBody {
+      will-change: filter;
+    }
+  }
+
+  &.leaving {
     transform: scale(0.9);
     opacity: 0;
     transition:
@@ -62,7 +68,7 @@
       transform var(--desktop-reveal-ms) ease-in;
 
     & .illustrationBody {
-      filter: blur(16px);
+      filter: blur(8px);
       transition: filter var(--desktop-reveal-ms) ease-in;
     }
   }
@@ -211,12 +217,8 @@
   z-index: 1;
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  &.hidden {
-    opacity: 0;
-  }
-
   & .display,
-  & .glass {
+  & .glassOverlay {
     /* Pin colors. */
     --icon-foreground: #000;
     --icon-background: #fff;
@@ -227,19 +229,23 @@
     height: 100%;
   }
 
-  & .glass {
+  & .glassOverlay {
     pointer-events: none;
-    will-change: opacity;
 
-    &.leaving {
-      opacity: 0;
-      transition: opacity var(--glass-fade-ms) ease-out;
+    &.preparingToLeave {
+      will-change: opacity;
     }
   }
 
   &.revealing {
     z-index: 3;
   }
+}
+
+.filterDefinitions {
+  position: absolute;
+  width: 0;
+  height: 0;
 }
 
 .screenGlow {
@@ -257,11 +263,6 @@
   filter: blur(calc(20px * var(--display-scale)));
 
   animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards;
-
-  &.leaving {
-    opacity: 0;
-    transition: opacity var(--glass-fade-ms) ease-out;
-  }
 }
 
 .viewableArea {
@@ -276,10 +277,6 @@
 
   background: var(--wallpaper);
 
-  &.hidden {
-    opacity: 0;
-  }
-
   &.warmingUp {
     mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
     mask-repeat: no-repeat;
@@ -291,7 +288,38 @@
     border-radius: 0;
     transition:
       inset var(--desktop-reveal-ms) ease-in,
-      border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 2);
+      border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
+  }
+
+  .crtOverlay {
+    --treatment-opacity: 1;
+
+    pointer-events: none;
+
+    position: absolute;
+    inset: 0;
+
+    background: repeating-linear-gradient(
+      rgb(0 0 0 / var(--scanline-alpha)) 0 calc(var(--scanline-pitch) / 2),
+      transparent calc(var(--scanline-pitch) / 2) var(--scanline-pitch)
+    );
+
+    /* Offset by how far the screen begins off the device pixel grid to prevent
+     * the lines from straddling pixels and averaging out to a flat tint. */
+    background-position: 0 var(--scanline-offset);
+
+    animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out in `.leaving` below. */
+  }
+
+  .warmUpFlash {
+    pointer-events: none;
+
+    position: absolute;
+    inset: 0;
+
+    background: var(--phosphor-color);
+
+    animation: crt-warm-up-flash var(--crt-warm-up-ms) ease-out both;
   }
 }
 
@@ -304,17 +332,6 @@
   100% {
     mask-size: 100% 150%;
   }
-}
-
-.warmUpFlash {
-  pointer-events: none;
-
-  position: absolute;
-  inset: 0;
-
-  background: var(--phosphor-color);
-
-  animation: crt-warm-up-flash var(--crt-warm-up-ms) ease-out both;
 }
 
 @keyframes crt-warm-up-flash {
@@ -332,31 +349,6 @@
   }
 }
 
-.crtOverlay {
-  --treatment-opacity: 1;
-
-  pointer-events: none;
-
-  position: absolute;
-  inset: 0;
-
-  background: repeating-linear-gradient(
-    rgb(0 0 0 / var(--scanline-alpha)) 0 calc(var(--scanline-pitch) / 2),
-    transparent calc(var(--scanline-pitch) / 2) var(--scanline-pitch)
-  );
-
-  /* Offset by however far the screen begins off the device pixel grid to prevent
-   * the lines from straddling pixels and averaging out into a flat tint. */
-  background-position: 0 var(--scanline-offset);
-
-  animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out below. */
-
-  &.leaving {
-    opacity: 0;
-    transition: opacity var(--glass-fade-ms) ease-out;
-  }
-}
-
 @keyframes fade-in-screen-treatment {
   0%,
   70% {
@@ -368,54 +360,48 @@
   }
 }
 
-.filterDefinitions {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
 .screen {
   --filter-url: none; /* Set from JS. */
 
   display: flex;
   filter: var(--filter-url);
-}
 
-.logo {
-  width: calc(64px * var(--display-scale));
-  height: auto;
+  .logo {
+    width: calc(64px * var(--display-scale));
+    height: auto;
 
-  :global(.foreground) {
-    opacity: 1;
+    :global(.foreground) {
+      opacity: 1;
+    }
   }
-}
 
-.welcomeDialog {
-  position: relative;
+  .welcomeDialog {
+    position: relative;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-  width: calc(288px * var(--display-scale));
-  height: calc(104px * var(--display-scale));
-  margin: 0;
-  border: calc(1px * var(--display-scale)) solid var(--color-border);
+    width: calc(288px * var(--display-scale));
+    height: calc(104px * var(--display-scale));
+    margin: 0;
+    border: calc(1px * var(--display-scale)) solid var(--color-border);
 
-  font: var(--font-chrome);
-  font-size: calc(var(--font-chrome-size) * var(--display-scale));
-  color: var(--color-foreground);
-  letter-spacing: var(--font-chrome-letter-spacing);
+    font: var(--font-chrome);
+    font-size: calc(var(--font-chrome-size) * var(--display-scale));
+    color: var(--color-foreground);
+    letter-spacing: var(--font-chrome-letter-spacing);
 
-  background: var(--color-background);
+    background: var(--color-background);
 
-  animation: draw-welcome-dialog var(--welcome-dialog-draw-ms) steps(10, jump-start) both;
+    animation: draw-welcome-dialog var(--welcome-dialog-draw-ms) steps(10, jump-start) both;
 
-  &::before {
-    content: "";
-    position: absolute;
-    inset: calc(2px * var(--display-scale));
-    border: calc(2px * var(--display-scale)) solid var(--color-border);
+    &::before {
+      content: "";
+      position: absolute;
+      inset: calc(2px * var(--display-scale));
+      border: calc(2px * var(--display-scale)) solid var(--color-border);
+    }
   }
 }
 
@@ -426,6 +412,15 @@
 
   to {
     clip-path: inset(0 0 0 0);
+  }
+}
+
+.screenGlow,
+.crtOverlay,
+.glassOverlay {
+  &.leaving {
+    opacity: 0;
+    transition: opacity var(--glass-fade-ms) ease-out;
   }
 }
 
