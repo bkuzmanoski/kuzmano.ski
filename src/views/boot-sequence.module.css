@@ -267,7 +267,7 @@
       border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
   }
 
-  .crtOverlay {
+  & .crtOverlay {
     pointer-events: none;
 
     position: absolute;
@@ -314,7 +314,7 @@
   display: flex;
   filter: var(--filter-url);
 
-  .logo {
+  & .logo {
     width: calc(108px * var(--display-scale));
     height: auto;
     animation: draw-logo var(--logo-draw-ms) steps(10, jump-start) both;
@@ -358,7 +358,7 @@
   }
 }
 
-.loadingMessageWrapper {
+.loadingContent {
   position: absolute;
   z-index: 5;
   inset: 0;
@@ -378,12 +378,12 @@
     color: var(--color-boot-sequence-light);
   }
 
-  & .loadingMessage {
+  & .prompt {
     margin-bottom: 5dvh;
     font: var(--font-console);
     color: var(--color-boot-sequence-light);
 
-    .block {
+    & .block {
       animation: blink 1s step-end infinite;
     }
   }

@@ -367,11 +367,11 @@ function Sequence() {
         </div>
       </div>
       <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
-      <div className={clsx(styles.loadingMessageWrapper, !isLoadingCoverUp && styles.leaving)}>
+      <div className={clsx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
         {phase === "loading" ? (
           <Spinner className={styles.spinner} />
         ) : (
-          <div className={styles.loadingMessage}>
+          <div className={styles.prompt}>
             {beginPrompt}&nbsp;<span className={styles.block}>&#9608;</span>
           </div>
         )}
