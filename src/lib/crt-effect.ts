@@ -2,15 +2,15 @@ import { insetRect, scaleInset } from "./geometry";
 
 import type { Inset, Rect } from "./geometry";
 
-export const PHOSPHOR_COLOR = "#d9e1f2";
+export const PHOSPHOR_COLOR = "#ffffff";
 
 const BEZEL: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 const CORNER_RADIUS = 16;
 const EDGE_BOW = 8;
-const BLOOM_CORE_RADIUS = 1.25;
-const BLOOM_HALO_RADIUS = 6;
-const BLOOM_HALO_INTENSITY = 0.3;
-const BLOOM_KNEE = "0 0 0.35 1";
+const BLOOM_HIGHLIGHTS = "0 0 0.3 1";
+const BLOOM_CORE_RADIUS = 1;
+const BLOOM_HALO_RADIUS = 4;
+const BLOOM_HALO_INTENSITY = 0.2;
 const SCANLINE_PITCH = 2;
 const SCANLINE_ALPHA = 0.2;
 
@@ -48,16 +48,16 @@ function scanlines(top: number, ratio: number): Scanlines {
 /**
  * Bloom parameters.
  *
+ * - `highlights` is the transfer table for the alpha of the bloom, over the luminance of the source.
  * - `coreRadius` is the blur that keeps to the edges of lit shapes.
  * - `haloRadius` is the blur that carries light off a lit area onto the screen around it.
  * - `haloIntensity` is the slope of the transfer function for the halo.
- * - `knee` is the transfer table for the alpha of the bloom, over the luminance of the source.
  */
 export interface Bloom {
+  highlights: string;
   coreRadius: number;
   haloRadius: number;
   haloIntensity: number;
-  knee: string;
 }
 
 /**
@@ -92,10 +92,10 @@ export function screenParametersFor(display: Rect, scale: number, devicePixelRat
     radius: CORNER_RADIUS * scale,
     clipPath: clipPath(box.width, box.height, CORNER_RADIUS * scale, EDGE_BOW * scale),
     bloom: {
+      highlights: BLOOM_HIGHLIGHTS,
       coreRadius: BLOOM_CORE_RADIUS * scale,
       haloRadius: BLOOM_HALO_RADIUS * scale,
       haloIntensity: BLOOM_HALO_INTENSITY,
-      knee: BLOOM_KNEE,
     },
     scanlines: scanlines(box.y, devicePixelRatio > 0 ? devicePixelRatio : 1),
   };

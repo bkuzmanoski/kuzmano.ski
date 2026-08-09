@@ -7,42 +7,21 @@ import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?reac
 import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg?react";
 import macintoshAvifUrl from "#/assets/images/macintosh.avif";
 import macintoshWebpUrl from "#/assets/images/macintosh.webp";
+import { Spinner } from "#/components/spinner";
 import { SITE_NAME } from "#/config/site";
-import { playBootChime, playDiskActivity } from "#/lib/audio/boot";
+import { playBootChime } from "#/lib/audio/boot-chime";
 import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
 import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
 import { PHOSPHOR_COLOR, screenParametersFor } from "#/lib/crt-effect";
 import type { Bloom } from "#/lib/crt-effect";
+import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
+import { DISK_ACTIVITY_INDICATOR_PLACEMENT, VIEWABLE_AREA, viewableAreaOf } from "#/lib/macintosh-illustration";
+import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./boot-sequence.module.css";
-
-import type { CSSProperties } from "react";
-
-type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
-
-/* Metrics derived from the illustration, in its own coordinates. */
-const CASE = { width: 1214, height: 1067 };
-const VIEWABLE_AREA = { x: 330, y: 99, width: 554, height: 410 };
-const DISK_LIGHT = { x: 890, y: 670, size: 6 };
-
-/* Metrics scaled to the displayed size of the illustration. */
-const VIEWABLE_AREA_FRACTION = {
-  x: VIEWABLE_AREA.x / CASE.width,
-  y: VIEWABLE_AREA.y / CASE.height,
-  width: VIEWABLE_AREA.width / CASE.width,
-  height: VIEWABLE_AREA.height / CASE.height,
-};
-const DISK_LIGHT_FRACTION = {
-  x: DISK_LIGHT.x / CASE.width,
-  y: DISK_LIGHT.y / CASE.height,
-  size: DISK_LIGHT.size / CASE.width,
-};
-
-const SCREEN_FILTER_ID = "boot-screen";
-const SCREEN_STYLE: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
 
 /* Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order. */
 const PHASES = [
@@ -58,25 +37,6 @@ const PHASES = [
 ] as const;
 
 type Phase = (typeof PHASES)[number];
-
-function phaseFlags(phase: Phase) {
-  const step = PHASES.indexOf(phase);
-  const from = (first: Phase) => step >= PHASES.indexOf(first);
-  const before = (first: Phase) => step < PHASES.indexOf(first);
-
-  return {
-    isLoadingCoverUp: before("macintosh-reveal"),
-    isWarmingUp: phase === "display-on",
-    isDisplayOn: from("display-on"),
-    isScreenTreated: from("display-on") && before("desktop-reveal"),
-    isScreenContentVisible: from("logo") && before("glass-fade"),
-    isShowingLogo: phase === "logo",
-    isShowingWelcomeDialog: phase === "welcome-dialog",
-    isPreparingToLeave: from("welcome-dialog"), // Used to apply `will-change` hints to the layers that will be animated out.
-    isGlassHidden: from("glass-fade"),
-    isRevealingDesktop: phase === "desktop-reveal",
-  };
-}
 
 /* The motion the stylesheet animates over. */
 const MOTION_MS = {
@@ -103,6 +63,36 @@ const HOLD_MS = {
   welcomeDialog: 1400,
 };
 
+const MINIMUM_LOADING_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
+
+const SCREEN_FILTER_ID = "boot-screen";
+const SCREEN_STYLE: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
+
+interface Metrics {
+  display: Rect; // The cutout in the illustration, in viewport coordinates.
+  view: Size;
+  pixelRatio: number;
+}
+
+function phaseFlags(phase: Phase) {
+  const step = PHASES.indexOf(phase);
+  const from = (first: Phase) => step >= PHASES.indexOf(first);
+  const before = (first: Phase) => step < PHASES.indexOf(first);
+
+  return {
+    isLoadingCoverUp: before("macintosh-reveal"),
+    isWarmingUp: phase === "display-on",
+    isDisplayOn: from("display-on"),
+    isScreenTreated: from("display-on") && before("desktop-reveal"),
+    isScreenContentVisible: from("logo") && before("glass-fade"),
+    isShowingLogo: phase === "logo",
+    isShowingWelcomeDialog: phase === "welcome-dialog",
+    isPreparingToLeave: from("welcome-dialog"), // Used to apply `will-change` hints to the layers that will be animated out.
+    isGlassHidden: from("glass-fade"),
+    isRevealingDesktop: phase === "desktop-reveal",
+  };
+}
+
 const sequence = (motion: Motion) =>
   [
     { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_MS.illustrationReveal },
@@ -113,74 +103,49 @@ const sequence = (motion: Motion) =>
     { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
 
-interface Metrics {
-  display: Rect; // The cutout in the illustration, in viewport coordinates.
-  view: Size;
-  pixelRatio: number;
-}
-
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 
 const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
 const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
 
-/** Resolves when required assets are loaded, or if the wait has been too long. */
-async function whenReady(image: HTMLImageElement | null): Promise<unknown> {
-  const illustrationImage = image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
-  const fontSet = (document as Partial<Document>).fonts?.ready ?? Promise.resolve();
+async function whenFontsReady(): Promise<void> {
+  const fontSet = (document as Partial<Document>).fonts;
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  if (!fontSet) {
+    return;
+  }
 
-  const promises = Promise.all([illustrationImage, fontSet]);
-  const timeout = new Promise((resolve) => (timer = setTimeout(resolve, MAX_LOADING_MS)));
+  const consoleFont = getComputedStyle(document.documentElement).getPropertyValue("--font-console").trim();
 
   try {
-    return await Promise.race([promises, timeout]);
-  } finally {
-    clearTimeout(timer);
+    if (consoleFont) {
+      await fontSet.load(consoleFont);
+    }
+
+    await fontSet.ready;
+  } catch {
+    // Ignored.
   }
 }
 
-/** Exported for unit tests. */
-export function viewableAreaOf(box: Rect): Rect {
-  return {
-    x: box.x + box.width * VIEWABLE_AREA_FRACTION.x,
-    y: box.y + box.height * VIEWABLE_AREA_FRACTION.y,
-    width: box.width * VIEWABLE_AREA_FRACTION.width,
-    height: box.height * VIEWABLE_AREA_FRACTION.height,
-  };
-}
-
-/**
- * Insets for a child of `box` that places its edges on the edges of the viewport.
- * Each edge is given its own distance to travel, so animating to them reaches all
- * four corners at the same time.
- *
- * Exported for unit tests.
- */
-export function insetToViewport(box: Rect, view: Size): Inset {
-  return {
-    top: -box.y,
-    right: box.x + box.width - view.width,
-    bottom: box.y + box.height - view.height,
-    left: -box.x,
-  };
+function whenIllustrationReady(image: HTMLImageElement | null): Promise<unknown> {
+  return image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
 }
 
 function ScreenFilter({ bloom }: { bloom: Bloom }) {
   return (
-    <svg className={styles.filterDefinitions} aria-hidden>
+    <svg className={styles.filterDefinition} aria-hidden>
       <filter id={SCREEN_FILTER_ID} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
         <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="luminance" />
         <feComponentTransfer in="luminance" result="highlights">
-          <feFuncA type="table" tableValues={bloom.knee} />
+          <feFuncA type="table" tableValues={bloom.highlights} />
         </feComponentTransfer>
         <feGaussianBlur in="highlights" stdDeviation={bloom.coreRadius} result="core" />
-        <feGaussianBlur in="highlights" stdDeviation={bloom.haloRadius} result="wide" />
-        <feComponentTransfer in="wide" result="halo">
+        <feComponentTransfer in="highlights" result="haloIntensity">
           <feFuncA type="linear" slope={bloom.haloIntensity} />
         </feComponentTransfer>
+        <feGaussianBlur in="haloIntensity" stdDeviation={bloom.haloRadius} result="halo" />
         <feBlend in="core" in2="halo" mode="screen" result="haze" />
         <feComposite in="haze" in2="highlights" operator="out" result="spill" />
         <feFlood floodColor={PHOSPHOR_COLOR} result="phosphor" />
@@ -230,7 +195,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     >
       <ScreenFilter bloom={screenParameters.bloom} />
       <DisplayBackdrop className={styles.display} />
-      {isScreenTreated && <div className={clsx(styles.screenGlow, isGlassHidden && styles.leaving)} />}
       <div
         className={clsx(
           styles.viewableArea,
@@ -247,7 +211,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
           </div>
         )}
         {isScreenTreated && <div className={clsx(styles.crtOverlay, isGlassHidden && styles.leaving)} />}
-        {isWarmingUp && <div className={styles.warmUpFlash} />}
       </div>
       <DisplayGlassLayer
         className={clsx(
@@ -306,15 +269,7 @@ function Sequence() {
     const phases = sequence(motion);
 
     setPhase(phases[0].phase);
-
-    /* Sound effects are scheduled against the audio clock rather than the phase timers, so the
-     * disk drive head is heard stepping in time with the light however those timers land. */
-    const displayOnDelaySeconds = phases[0].durationMs / 1000;
-    const diskActivitySeconds =
-      phases.reduce((total, { durationMs }) => total + durationMs, 0) / 1000 - displayOnDelaySeconds;
-
-    playBootChime({ delaySeconds: displayOnDelaySeconds });
-    playDiskActivity({ delaySeconds: displayOnDelaySeconds, seconds: diskActivitySeconds });
+    playBootChime({ delaySeconds: phases[0].durationMs / 1000 });
 
     let elapsedMs = 0;
 
@@ -340,7 +295,13 @@ function Sequence() {
     const timers: Array<ReturnType<typeof setTimeout>> = [];
     const waitingForInput = new AbortController();
 
-    void whenReady(illustrationImageRef.current).then(() => {
+    const loading = [
+      whenFontsReady(),
+      whenIllustrationReady(illustrationImageRef.current),
+      new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_MS))),
+    ];
+
+    void Promise.all(loading).then(() => {
       if (waitingForInput.signal.aborted) {
         return;
       }
@@ -402,9 +363,9 @@ function Sequence() {
             <DiskActivityIndicator
               className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
               style={{
-                left: `${DISK_LIGHT_FRACTION.x * 100}%`,
-                top: `${DISK_LIGHT_FRACTION.y * 100}%`,
-                width: `${DISK_LIGHT_FRACTION.size * 100}%`,
+                left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
+                top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
+                width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.size * 100}%`,
               }}
             />
             <picture>
@@ -416,15 +377,13 @@ function Sequence() {
       </div>
       <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
       <div className={clsx(styles.loadingMessageWrapper, !isLoadingCoverUp && styles.leaving)}>
-        <div className={styles.loadingMessage}>
-          {phase === "loading" ? (
-            "Loading…"
-          ) : (
-            <>
-              {beginPrompt}&nbsp;<span className={styles.block}>&#9608;</span>
-            </>
-          )}
-        </div>
+        {phase === "loading" ? (
+          <Spinner className={styles.spinner} />
+        ) : (
+          <div className={styles.loadingMessage}>
+            {beginPrompt}&nbsp;<span className={styles.block}>&#9608;</span>
+          </div>
+        )}
       </div>
     </div>
   );

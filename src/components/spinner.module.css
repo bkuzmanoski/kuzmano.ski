@@ -1,0 +1,26 @@
+.spinner {
+  --block-size: 6px;
+  --blocks: 12;
+  --step-ms: 75ms;
+
+  display: grid;
+  grid: repeat(5, var(--block-size)) / repeat(5, var(--block-size));
+
+  & span {
+    --block-index: 0; /* Set from JS. */
+
+    background: currentcolor;
+    animation: sweep-spinner calc(var(--blocks) * var(--step-ms)) steps(4, jump-none) infinite;
+    animation-delay: calc((var(--block-index) + 1 - var(--blocks)) * var(--step-ms));
+  }
+}
+
+@keyframes sweep-spinner {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.2;
+  }
+}

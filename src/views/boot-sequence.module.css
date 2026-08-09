@@ -235,27 +235,10 @@
   }
 }
 
-.filterDefinitions {
+.filterDefinition {
   position: absolute;
   width: 0;
   height: 0;
-}
-
-.screenGlow {
-  --treatment-opacity: 0.2;
-
-  pointer-events: none;
-
-  position: absolute;
-  inset: var(--inset);
-
-  border-radius: var(--screen-radius);
-
-  opacity: var(--treatment-opacity);
-  background: color-mix(in oklab, var(--phosphor-color) 30%, var(--color-wallpaper-a));
-  filter: blur(calc(20px * var(--display-scale)));
-
-  animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards;
 }
 
 .viewableArea {
@@ -285,8 +268,6 @@
   }
 
   .crtOverlay {
-    --treatment-opacity: 1;
-
     pointer-events: none;
 
     position: absolute;
@@ -301,55 +282,29 @@
      * the lines from straddling pixels and averaging out to a flat tint. */
     background-position: 0 var(--scanline-offset);
 
-    animation: fade-in-screen-treatment var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out in `.leaving` below. */
-  }
-
-  .warmUpFlash {
-    pointer-events: none;
-
-    position: absolute;
-    inset: 0;
-
-    background: var(--phosphor-color);
-
-    animation: crt-warm-up-flash var(--crt-warm-up-ms) ease-out both;
+    animation: fade-in-crt-overlay var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out in `.leaving` below. */
   }
 }
 
 @keyframes crt-warm-up {
   0%,
   15% {
-    mask-size: 100% 1%;
+    mask-size: 100% 0%;
   }
 
   100% {
-    mask-size: 100% 150%;
+    mask-size: 100% 150%; /* Grow past the screen so that both of the gradient's ramps clear it (100% / (1 - 2 * 15%) = 143%). */
   }
 }
 
-@keyframes crt-warm-up-flash {
-  0%,
-  15% {
-    opacity: 0.9;
-  }
-
-  60% {
-    opacity: 0.12;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes fade-in-screen-treatment {
+@keyframes fade-in-crt-overlay {
   0%,
   70% {
     opacity: 0;
   }
 
   100% {
-    opacity: var(--treatment-opacity);
+    opacity: 1;
   }
 }
 
@@ -408,7 +363,6 @@
   }
 }
 
-.screenGlow,
 .crtOverlay,
 .glassOverlay {
   &.leaving {
@@ -444,6 +398,11 @@
 
   &.leaving {
     opacity: 0;
+  }
+
+  & .spinner {
+    margin-bottom: 5dvh;
+    color: var(--color-boot-sequence-light);
   }
 
   & .loadingMessage {
