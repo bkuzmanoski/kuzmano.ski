@@ -61,8 +61,6 @@ export function renderBuffer(
   const attack = Math.max(1, sampleRate * attackSeconds);
   const fade = Math.max(1, sampleRate * fadeSeconds);
 
-  const renderedSamples: Array<number> = [];
-
   let peak = 0;
 
   for (let i = 0; i < length; i++) {
@@ -70,14 +68,16 @@ export function renderBuffer(
     const tail = Math.min(1, (length - 1 - i) / fade);
     const value = sample(i, i / sampleRate) * strike * tail;
 
-    renderedSamples.push(value);
+    samples[i] = value;
     peak = Math.max(peak, Math.abs(value));
   }
 
   const normalizedAmplitude = peak > 0 ? 1 / peak : 0;
   const finalize = quantize ?? ((value: number) => value);
 
-  samples.set(renderedSamples.map((value) => finalize(value * normalizedAmplitude)));
+  for (let i = 0; i < length; i++) {
+    samples[i] = finalize(samples[i]! * normalizedAmplitude);
+  }
 
   return buffer;
 }
