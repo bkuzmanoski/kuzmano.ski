@@ -1,5 +1,5 @@
 .skipLink {
-  composes: chromePanel from "./shared.module.css";
+  composes: chromePanelElevated from "./shared.module.css";
 
   position: fixed;
   z-index: var(--layer-skip-link);

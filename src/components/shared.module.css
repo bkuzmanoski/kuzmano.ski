@@ -7,6 +7,12 @@
   box-shadow: var(--shadow-drop);
 }
 
+/* Transient overlays that float above other panels: tooltips, the skip link. */
+.chromePanelElevated {
+  composes: chromePanel;
+  background: var(--color-background-elevated);
+}
+
 /* Chrome type. Kept together because the `font` shorthand cannot carry the letter-spacing. */
 .chromeText {
   font: var(--font-chrome);

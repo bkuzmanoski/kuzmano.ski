@@ -1,5 +1,4 @@
 .list {
-  --color-card-active: color-mix(in oklab, var(--color-foreground) 12%, transparent);
   --card-padding-block: 8px;
   --gap-meta: 12px;
   --title-padding: 2px 4px;
@@ -30,7 +29,7 @@
   outline: none;
 
   &.active {
-    background: var(--color-card-active);
+    background: var(--color-active-background);
   }
 }
 

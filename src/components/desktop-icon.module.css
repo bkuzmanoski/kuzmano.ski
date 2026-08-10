@@ -18,8 +18,8 @@
   }
 
   & .glyph {
-    --icon-background: light-dark(var(--color-background), var(--color-foreground));
-    --icon-foreground: light-dark(var(--color-foreground), var(--color-background));
+    --color-icon-background: light-dark(var(--color-background), var(--color-foreground));
+    --color-icon-foreground: light-dark(var(--color-foreground), var(--color-background));
 
     width: auto;
     height: 40px;

@@ -47,32 +47,49 @@
   --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
   --font-console: 32px var(--font-family-console);
 
-  /* Colors */
-  --color-background: light-dark(#f8f7f4, #16171a);
-  --color-foreground: light-dark(#1a1f2e, #f2f1ee);
+  /* Colors
+   * Every surface is tinted from the accent hue. Tokens are literals, one-level
+   * color-mixes of the primitives (background/foreground/accent), or explicit
+   * `oklch(from var(--color-accent) L C h)` derivations. */
+  --color-accent: #8787b3; /* Mirrored by `THEME_COLORS` in `lib/theme.ts`. */
+  --color-foreground: light-dark(
+    oklch(from var(--color-accent) 24% 0.03 h),
+    oklch(from var(--color-accent) 96% 0.005 h)
+  );
   --color-foreground-muted: color-mix(in oklab, var(--color-foreground) 55%, var(--color-background));
-  --color-accent: #8787b3;
-  --color-boot-sequence-light: light-dark(var(--color-background), var(--color-foreground));
-  --color-boot-sequence-dark: light-dark(var(--color-foreground), var(--color-background));
-  --color-boot-sequence-background: color-mix(in oklab, var(--color-boot-sequence-dark) 80%, var(--color-accent));
-  --color-border: light-dark(
-    var(--color-foreground),
-    color-mix(in oklab, var(--color-foreground) 45%, var(--color-background))
+  --color-background: light-dark(
+    oklch(from var(--color-accent) 97% 0.005 h),
+    oklch(from var(--color-accent) 21% 0.012 h)
   );
+  --color-background-elevated: light-dark(
+    color-mix(in oklab, var(--color-background) 96%, var(--color-foreground)),
+    color-mix(in oklab, var(--color-background) 92%, var(--color-foreground))
+  );
+  --color-border: light-dark(var(--color-foreground), oklch(from var(--color-accent) 45% 0.03 h));
   --color-border-muted: light-dark(
-    color-mix(in oklab, var(--color-border) 35%, var(--color-background)),
-    color-mix(in oklab, var(--color-border) 60%, var(--color-background))
+    oklch(from var(--color-accent) 72% 0.02 h),
+    oklch(from var(--color-accent) 35% 0.03 h)
   );
-  --color-selection-background: var(--color-foreground);
+  --color-scrim: color-mix(in oklab, var(--color-background) 50%, transparent);
   --color-selection-foreground: var(--color-background);
+  --color-selection-background: color-mix(in oklab, var(--color-foreground) 75%, var(--color-accent));
+  --color-active-background: light-dark(
+    oklch(from var(--color-accent) 88% 0.01 h),
+    oklch(from var(--color-accent) 24% 0.02 h)
+  );
   --color-wallpaper-a: light-dark(
     color-mix(in oklab, var(--color-accent) 32%, var(--color-background)),
     color-mix(in oklab, var(--color-accent) 18%, var(--color-background))
   );
   --color-wallpaper-b: light-dark(
-    color-mix(in oklab, var(--color-wallpaper-a) 72%, var(--color-foreground)),
-    color-mix(in oklab, var(--color-wallpaper-a) 84%, var(--color-foreground))
+    oklch(from var(--color-accent) 69% 0.021 h),
+    oklch(from var(--color-accent) 39% 0.013 h)
   );
+  --color-icon-foreground: currentcolor;
+  --color-icon-background: var(--color-background);
+  --color-boot-sequence-light: light-dark(var(--color-background), var(--color-foreground));
+  --color-boot-sequence-dark: light-dark(var(--color-foreground), var(--color-background));
+  --color-boot-sequence-background: color-mix(in oklab, var(--color-boot-sequence-dark) 80%, var(--color-accent));
 
   /* Shadows */
   --shadow-menu-bar: 0 var(--shadow-length) 0

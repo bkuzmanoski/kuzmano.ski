@@ -28,7 +28,7 @@
     z-index: 1;
     inset: 0;
 
-    background: color-mix(in oklab, var(--color-background) 50%, transparent);
+    background: var(--color-scrim);
   }
 
   /* A window the server drew has no position as the window layer has not yet been
@@ -119,7 +119,7 @@
 
 /* Shared by the window controls, whose icon fills the control. */
 .filledControl {
-  --icon-foreground: var(--color-border);
+  --color-icon-foreground: var(--color-border);
 
   & svg {
     pointer-events: none; /* A control swaps its icon on press. Ensure the stable node beneath handles pointer events. */
@@ -143,8 +143,8 @@
 
   /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */
   &.pressed {
-    --icon-foreground: var(--color-background);
-    --icon-background: var(--color-border);
+    --color-icon-foreground: var(--color-background);
+    --color-icon-background: var(--color-border);
 
     background: var(--color-border);
   }
