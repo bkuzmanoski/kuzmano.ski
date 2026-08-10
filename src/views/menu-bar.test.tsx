@@ -61,6 +61,31 @@ describe("opening a menu", () => {
   });
 });
 
+describe("holding the pointer across the menu bar", () => {
+  test("moving onto another title opens its menu in place", () => {
+    render(<MenuBar />);
+
+    openWithPointer("File");
+    fireEvent.pointerOver(title("Go"), { buttons: 1 });
+
+    expect(isExpanded("File")).toBe(false);
+    expect(isExpanded("Go")).toBe(true);
+  });
+
+  test("a press gives up the implicit capture that would keep a touch pointer on one title", () => {
+    render(<MenuBar />);
+
+    const anchor = title("File");
+
+    vi.spyOn(anchor, "hasPointerCapture").mockReturnValue(true);
+    const releasePointerCapture = vi.spyOn(anchor, "releasePointerCapture");
+
+    fireEvent.pointerDown(anchor, { pointerId: 7, pointerType: "touch" });
+
+    expect(releasePointerCapture).toHaveBeenCalledWith(7);
+  });
+});
+
 describe("navigating an open menu", () => {
   test("the up and down keys cycle the menu items", () => {
     render(<MenuBar />);
