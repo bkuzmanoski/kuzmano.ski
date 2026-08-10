@@ -1,3 +1,5 @@
+import { clamp } from "#/lib/math";
+
 import { LEAD_TIME, playSound } from "./context";
 import { playVoice } from "./voice";
 
@@ -94,9 +96,14 @@ interface ScrollGesture {
 
 const gestures = new WeakMap<Element, ScrollGesture>(); // Per element, so two windows scrolling at once each keep their own place.
 
+/* Clamped scroll top position to prevent sound effects during overscroll. */
+function getScrollTop(element: Element) {
+  return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
+}
+
 export function playScroll(element: Element) {
   const now = performance.now();
-  const top = element.scrollTop;
+  const top = getScrollTop(element);
   const gesture = gestures.get(element);
 
   if (!gesture) {
@@ -156,5 +163,5 @@ export function playScrollStep(element: Element) {
  * reading the jump as travel.
  */
 export function skipScroll(element: Element) {
-  gestures.set(element, { top: element.scrollTop, at: performance.now(), speed: 0, distance: 0 });
+  gestures.set(element, { top: getScrollTop(element), at: performance.now(), speed: 0, distance: 0 });
 }
