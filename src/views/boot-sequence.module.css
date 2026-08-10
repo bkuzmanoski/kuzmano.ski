@@ -203,7 +203,8 @@
 
 .displayMask {
   --display-scale: 1; /* Set from JS. */
-  --screen-radius: 0px; /* Set from JS. */
+  --phosphor-color: #fff; /* Set from JS. */
+  --screen-radius: 0px; /* Set from JS */
   --inset: 0; /* Set from JS. */
   --scanline-pitch: 2px; /* Set from JS. */
   --scanline-alpha: 0; /* Set from JS. */
@@ -265,24 +266,6 @@
       inset var(--desktop-reveal-ms) ease-in,
       border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
   }
-
-  & .crtOverlay {
-    pointer-events: none;
-
-    position: absolute;
-    inset: 0;
-
-    background: repeating-linear-gradient(
-      rgb(0 0 0 / var(--scanline-alpha)) 0 calc(var(--scanline-pitch) / 2),
-      transparent calc(var(--scanline-pitch) / 2) var(--scanline-pitch)
-    );
-
-    /* Offset by how far the screen begins off the device pixel grid to prevent
-     * the lines from straddling pixels and averaging out to a flat tint. */
-    background-position: 0 var(--scanline-offset);
-
-    animation: fade-in-crt-overlay var(--crt-warm-up-ms) ease-out backwards; /* Note: a forwards fill would outrank the fade out in `.leaving` below. */
-  }
 }
 
 @keyframes crt-warm-up {
@@ -296,22 +279,8 @@
   }
 }
 
-@keyframes fade-in-crt-overlay {
-  0%,
-  70% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
 .screen {
-  --filter-url: none; /* Set from JS. */
-
   display: flex;
-  filter: var(--filter-url);
 
   & .logo {
     width: calc(108px * var(--display-scale));
@@ -335,7 +304,6 @@
 }
 
 .screen,
-.crtOverlay,
 .glassOverlay {
   &.leaving {
     opacity: 0;

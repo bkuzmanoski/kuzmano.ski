@@ -23,8 +23,7 @@ import {
   whenIllustrationReady,
 } from "#/lib/boot-sequence";
 import type { Motion, Phase } from "#/lib/boot-sequence";
-import { PHOSPHOR_COLOR, screenParametersFor } from "#/lib/crt-effect";
-import type { Bloom } from "#/lib/crt-effect";
+import { screenParametersFor } from "#/lib/crt-effect";
 import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
@@ -35,47 +34,19 @@ import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./boot-sequence.module.css";
 
-const SCREEN_FILTER_ID = "boot-screen";
-const SCREEN_STYLE: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
-
 interface Metrics {
   display: Rect; // The cutout in the illustration, in viewport coordinates.
   view: Size;
-  pixelRatio: number;
 }
 
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 
-function ScreenFilter({ bloom }: { bloom: Bloom }) {
-  return (
-    <svg className={styles.filterDefinition} aria-hidden>
-      <filter id={SCREEN_FILTER_ID} x="-40%" y="-40%" width="180%" height="180%" colorInterpolationFilters="sRGB">
-        <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="luminance" />
-        <feComponentTransfer in="luminance" result="highlights">
-          <feFuncA type="table" tableValues={bloom.highlights} />
-        </feComponentTransfer>
-        <feGaussianBlur in="highlights" stdDeviation={bloom.coreRadius} result="core" />
-        <feComponentTransfer in="highlights" result="haloIntensity">
-          <feFuncA type="linear" slope={bloom.haloIntensity} />
-        </feComponentTransfer>
-        <feGaussianBlur in="haloIntensity" stdDeviation={bloom.haloRadius} result="halo" />
-        <feBlend in="core" in2="halo" mode="screen" result="haze" />
-        <feComposite in="haze" in2="highlights" operator="out" result="spill" />
-        <feFlood floodColor={PHOSPHOR_COLOR} result="phosphor" />
-        <feComposite in="phosphor" in2="spill" operator="in" result="glow" />
-        <feBlend in="SourceGraphic" in2="glow" mode="screen" />
-      </filter>
-    </svg>
-  );
-}
-
 function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
-  const { display, view, pixelRatio } = metrics;
+  const { display, view } = metrics;
   const {
     isLoadingCoverUp,
     isWarmingUp,
     isDisplayOn,
-    isScreenTreated,
     isScreenContentVisible,
     isPreparingToLeave,
     isGlassHidden,
@@ -83,7 +54,7 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
   } = phaseFlags(phase);
 
   const scale = display.width / VIEWABLE_AREA.width;
-  const screenParameters = screenParametersFor(display, scale, pixelRatio);
+  const screenParameters = screenParametersFor(display, scale);
   const displayMaskStyle: StyleWithVars = {
     left: display.x,
     top: display.y,
@@ -91,9 +62,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     height: display.height,
     "--display-scale": scale,
     "--screen-radius": `${screenParameters.radius}px`,
-    "--scanline-pitch": `${screenParameters.scanlines.pitch}px`,
-    "--scanline-alpha": screenParameters.scanlines.alpha,
-    "--scanline-offset": `${screenParameters.scanlines.offset}px`,
     "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, view) : screenParameters.inset),
   };
   const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
@@ -103,7 +71,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
       className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
-      <ScreenFilter bloom={screenParameters.bloom} />
       <DisplayBackdrop className={styles.display} />
       <div
         className={clsx(
@@ -115,11 +82,10 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
         style={{ clipPath: screenClipPath }}
       >
         {isScreenContentVisible && (
-          <div className={clsx(styles.screen, isGlassHidden && styles.leaving)} style={SCREEN_STYLE}>
+          <div className={clsx(styles.screen, isGlassHidden && styles.leaving)}>
             <LogoIcon className={styles.logo} />
           </div>
         )}
-        {isScreenTreated && <div className={clsx(styles.crtOverlay, isGlassHidden && styles.leaving)} />}
       </div>
       <DisplayGlassLayer
         className={clsx(
@@ -158,7 +124,6 @@ function Sequence() {
     setMetrics({
       display: viewableAreaOf(box),
       view: { width: window.innerWidth, height: window.innerHeight },
-      pixelRatio: window.devicePixelRatio || 1,
     });
   });
 

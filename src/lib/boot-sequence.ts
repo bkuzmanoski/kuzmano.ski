@@ -49,7 +49,6 @@ export function phaseFlags(phase: Phase) {
     isLoadingCoverUp: before("macintosh-reveal"),
     isWarmingUp: phase === "display-on",
     isDisplayOn: from("display-on"),
-    isScreenTreated: from("display-on") && before("desktop-reveal"),
     isScreenContentVisible: from("logo") && before("desktop-reveal"),
     isPreparingToLeave: from("logo"), // Used to apply `will-change` hints to the layers that will be animated out.
     isGlassHidden: from("glass-fade"),
