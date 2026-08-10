@@ -5,9 +5,11 @@ import { collections } from "#/content";
 
 import { CollectionEntryList } from "./collection-entry-list";
 
-const open = vi.fn();
+const open = vi.hoisted(() => vi.fn());
 
-vi.mock("#/lib/window-manager", () => ({ useWindowActions: () => ({ open }) }));
+vi.mock("#/lib/window-manager", async () =>
+  (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
+);
 vi.mock("#/lib/audio/ui", () => ({ playClick: () => {} }));
 
 const collection = collections["design-notes"]!;

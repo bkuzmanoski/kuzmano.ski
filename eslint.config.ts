@@ -1,5 +1,6 @@
 import { tanstackConfig } from "@tanstack/eslint-config";
 import { defineConfig } from "eslint/config";
+import { createNodeResolver } from "eslint-plugin-import-x";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
@@ -17,7 +18,22 @@ export default defineConfig(
   },
   {
     name: "kuzmano.ski/imports",
+    settings: {
+      "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".mjs", ".js", ".json"] })],
+    },
     rules: {
+      "import/no-restricted-paths": [
+        "error",
+        {
+          zones: [
+            {
+              target: "./src/lib",
+              from: ["./src/components", "./src/config", "./src/content", "./src/routes", "./src/views"],
+            },
+            { target: "./src/components", from: ["./src/routes", "./src/views"] },
+          ],
+        },
+      ],
       "import/order": [
         "error",
         {

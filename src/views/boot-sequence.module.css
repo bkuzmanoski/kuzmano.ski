@@ -203,8 +203,7 @@
 
 .displayMask {
   --display-scale: 1; /* Set from JS. */
-  --phosphor-color: #fff; /* Set from JS. */
-  --screen-radius: 0px; /* Set from JS */
+  --screen-radius: 0px; /* Set from JS. */
   --inset: 0; /* Set from JS. */
   --scanline-pitch: 2px; /* Set from JS. */
   --scanline-alpha: 0; /* Set from JS. */

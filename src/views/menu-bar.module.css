@@ -1,4 +1,6 @@
 .menuBar {
+  composes: chromeText from "../components/shared.module.css";
+
   transform: translateY(-100%);
 
   display: flex;
@@ -7,10 +9,6 @@
 
   height: var(--menu-bar-height);
   padding: 0 var(--gutter);
-
-  font: var(--font-chrome);
-  color: var(--color-foreground);
-  letter-spacing: var(--font-chrome-letter-spacing);
 
   background: var(--color-background);
   box-shadow: var(--shadow-menu-bar);
@@ -26,8 +24,11 @@
 }
 
 .logo {
+  composes: focusFrame from "../components/shared.module.css";
+
   display: inline-flex;
   align-items: center;
+
   height: 100%;
   padding: 0 var(--gutter);
 
@@ -50,30 +51,23 @@
   & .menu {
     position: relative;
     display: flex;
-
-    & .title {
-      user-select: none;
-      height: 100%;
-      padding: 0 var(--gutter);
-
-      &.open {
-        color: var(--color-selection-foreground);
-        background: var(--color-selection-background);
-      }
-    }
   }
 }
 
-/* An open title already reads as selected, so the focus frame stays off it. */
-.logo:focus-visible,
-.menu .title:focus-visible:not(.open) {
-  position: relative;
+.title {
+  composes: focusFrame from "../components/shared.module.css";
+  user-select: none;
+  height: 100%;
+  padding: 0 var(--gutter);
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    background: var(--dotted-frame);
+  &.open {
+    color: var(--color-selection-foreground);
+    background: var(--color-selection-background);
+  }
+
+  /* An open title already reads as selected, so the focus frame stays off it. */
+  &.open:focus-visible::after {
+    content: none;
   }
 }
 

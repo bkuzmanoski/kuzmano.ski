@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { isActivationKey } from "../keys";
 import { clamp } from "../math";
 
 import type { KeyboardEvent } from "react";
@@ -11,8 +12,6 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   Home: () => 0,
   End: (_index, lastIndex) => lastIndex,
 };
-
-const isActivationKey = (key: string) => key === "Enter" || key === " ";
 
 /**
  * Keyboard navigation for a vertical list. The list is a single tab stop, which lands on

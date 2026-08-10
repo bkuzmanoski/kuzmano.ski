@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { isValidPosition, loadPositions, savePositions } from "./icon";
 
@@ -11,8 +11,6 @@ const LAYOUT: IconLayout = { cellSize: 76, spacing: 84, position: { top: 24, rig
 function everyPositionIsValid(positions: IconPositions): boolean {
   return IDS.every((id) => isValidPosition(positions[id]));
 }
-
-afterEach(() => localStorage.clear());
 
 describe("loadPositions", () => {
   test("stacks icons vertically when nothing is saved", () => {

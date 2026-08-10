@@ -1,6 +1,7 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
 
+import { resolveWindow, windowRouteFor } from "#/content/window-registry";
 import {
   ActionsContext,
   ContentContext,
@@ -10,10 +11,9 @@ import {
   OrderContext,
   SurfaceContext,
   createWindowReducer,
-} from "./window-manager";
-import { resolveWindow, windowRouteFor } from "./window-registry";
+} from "#/lib/window-manager";
+import type { Action, ManagerState, WindowActions, WindowLayout, WindowReducer } from "#/lib/window-manager";
 
-import type { Action, ManagerState, WindowActions, WindowLayout, WindowReducer } from "./window-manager";
 import type { ReactNode } from "react";
 
 function openAction(requestedRoute: string): Action | null {

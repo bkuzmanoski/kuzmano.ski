@@ -1,4 +1,5 @@
-import { LEAD_TIME, getGainNode, playSound } from "./context";
+import { LEAD_TIME, playSound } from "./context";
+import { playBuffer, renderBuffer } from "./voice";
 
 const SAMPLE_RATE = 22254.54; // The sample rate the Macintosh 128K sound driver used, in Hz.
 const QUANTIZATION_STEPS = 127; // Eight bits, signed, across the full swing of the cone.
@@ -17,67 +18,35 @@ const CHIME = {
 let chimeBuffer: AudioBuffer | null = null;
 
 function chimeSample(context: AudioContext): AudioBuffer {
-  if (chimeBuffer) {
-    return chimeBuffer;
-  }
+  chimeBuffer ??= renderBuffer(context, {
+    sampleRate: SAMPLE_RATE,
+    seconds: CHIME.seconds,
+    attackSeconds: CHIME.attackSeconds,
+    fadeSeconds: CHIME.fadeSeconds,
+    sample: (_, seconds) => {
+      let value = 0;
 
-  const length = Math.max(1, Math.round(SAMPLE_RATE * CHIME.seconds));
-  const buffer = context.createBuffer(1, length, SAMPLE_RATE);
-  const samples = buffer.getChannelData(0);
-  const attack = Math.max(1, SAMPLE_RATE * CHIME.attackSeconds);
-  const fade = Math.max(1, SAMPLE_RATE * CHIME.fadeSeconds);
+      for (let partial = 0; partial < CHIME.partials; partial++) {
+        const harmonic = 2 * partial + 1;
+        const decaySeconds = CHIME.decaySeconds * Math.pow(CHIME.partialDecay, partial);
+        const amplitude = Math.exp(-seconds / decaySeconds) / harmonic;
 
-  const renderedSamples: Array<number> = [];
+        value += amplitude * Math.sin(2 * Math.PI * CHIME.fundamentalHz * harmonic * seconds);
+      }
 
-  let peak = 0;
+      return value;
+    },
+    quantize: (value) => Math.round(value * QUANTIZATION_STEPS) / QUANTIZATION_STEPS,
+  });
 
-  for (let i = 0; i < length; i++) {
-    const seconds = i / SAMPLE_RATE;
-
-    let value = 0;
-
-    for (let partial = 0; partial < CHIME.partials; partial++) {
-      const harmonic = 2 * partial + 1;
-      const decaySeconds = CHIME.decaySeconds * Math.pow(CHIME.partialDecay, partial);
-      const amplitude = Math.exp(-seconds / decaySeconds) / harmonic;
-
-      value += amplitude * Math.sin(2 * Math.PI * CHIME.fundamentalHz * harmonic * seconds);
-    }
-
-    const strike = Math.min(1, (i + 1) / attack);
-    const tail = Math.min(1, (length - 1 - i) / fade);
-    const sample = value * strike * tail;
-
-    renderedSamples.push(sample);
-    peak = Math.max(peak, Math.abs(sample));
-  }
-
-  const normalizedAmplitude = peak > 0 ? 1 / peak : 0;
-
-  samples.set(
-    renderedSamples.map((sample) => Math.round(sample * normalizedAmplitude * QUANTIZATION_STEPS) / QUANTIZATION_STEPS),
-  );
-  chimeBuffer = buffer;
-
-  return buffer;
+  return chimeBuffer;
 }
 
 export function playBootChime({ delaySeconds }: { delaySeconds: number }) {
   playSound((context) => {
-    const source = context.createBufferSource();
-    const gain = context.createGain();
-
-    source.buffer = chimeSample(context);
-    gain.gain.value = CHIME.level;
-
-    source.connect(gain);
-    gain.connect(getGainNode(context));
-
-    source.onended = () => {
-      source.disconnect();
-      gain.disconnect();
-    };
-
-    source.start(context.currentTime + LEAD_TIME + delaySeconds);
+    playBuffer(context, chimeSample(context), {
+      at: context.currentTime + LEAD_TIME + delaySeconds,
+      level: CHIME.level,
+    });
   });
 }

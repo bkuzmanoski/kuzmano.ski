@@ -7,6 +7,7 @@ import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
 import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
 import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
 import { playClick } from "#/lib/audio/ui";
+import { cycle } from "#/lib/math";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
 import { useWindowActions } from "#/lib/window-manager";
@@ -51,7 +52,7 @@ const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", d
 
 export function ThemeStatus() {
   const { theme } = useSettings();
-  const next = THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length]!;
+  const next = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
   const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
 
   return (
@@ -72,7 +73,7 @@ export function SoundStatus() {
       onClick={() => {
         setSound(sound === "on" ? "off" : "on");
 
-        // Switching on: he press itself was gated by the setting it just changed.
+        // Switching on: the press itself was gated by the setting it just changed.
         if (sound === "off") {
           playClick();
         }

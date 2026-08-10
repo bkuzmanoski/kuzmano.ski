@@ -1,10 +1,18 @@
 import { createContext, use } from "react";
 
 import { constrain } from "./geometry";
-import { WINDOW_IDS } from "./window-registry";
 
 import type { Position, Rect, Size } from "./geometry";
-import type { WindowId } from "./window-registry";
+
+/**
+ * The windows the desktop can open. Every route resolves to exactly one of them,
+ * and each one exists at most once: a route that resolves to an open window
+ * replaces what that window shows instead of opening a second one.
+ */
+export type WindowId = "collection" | "page" | "notFound";
+
+/** Every window id, in the order the window layer writes them to the DOM. */
+export const WINDOW_IDS = ["collection", "page", "notFound"] as const satisfies ReadonlyArray<WindowId>;
 
 /** A value held per window. A missing entry means that window is closed. */
 export type WindowRecord<T> = Partial<Record<WindowId, T>>;

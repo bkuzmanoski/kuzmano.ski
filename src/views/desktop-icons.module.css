@@ -12,10 +12,3 @@
     transition: opacity 0ms linear var(--duration-desktop-reveal-step); /* Follow menu bar reveal. */
   }
 }
-
-.zoomRect {
-  pointer-events: none;
-  position: absolute;
-  color: var(--color-border);
-  background: var(--dotted-frame);
-}

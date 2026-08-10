@@ -1,3 +1,5 @@
+import { readStoredJson, writeStored } from "./storage";
+
 export type IconKind = "page" | "collection" | "download";
 
 export type Icon = { id: string; label: string } & (
@@ -40,32 +42,21 @@ export function isValidPosition(value: unknown): value is IconPosition {
 /** Every icon gets a finite position: the saved one when it is valid, the default otherwise. */
 export function loadPositions(ids: ReadonlyArray<string>, layout: IconLayout, storageKey: string): IconPositions {
   const positions = defaultPositions(ids, layout);
+  const savedPositions = readStoredJson(storageKey) as Record<string, unknown> | null;
 
-  try {
-    const rawValue = localStorage.getItem(storageKey);
+  if (savedPositions) {
+    for (const id of ids) {
+      const value = savedPositions[id];
 
-    if (rawValue) {
-      const saved = JSON.parse(rawValue) as Record<string, unknown>;
-
-      for (const id of ids) {
-        const value = saved[id];
-
-        if (isValidPosition(value)) {
-          positions[id] = { right: value.right, top: value.top };
-        }
+      if (isValidPosition(value)) {
+        positions[id] = { right: value.right, top: value.top };
       }
     }
-  } catch {
-    // Ignored.
   }
 
   return positions;
 }
 
 export function savePositions(positions: IconPositions, storageKey: string) {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(positions));
-  } catch {
-    // Ignored.
-  }
+  writeStored(storageKey, JSON.stringify(positions));
 }

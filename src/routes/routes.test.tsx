@@ -1,20 +1,10 @@
-import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
 import { collections } from "#/content";
-import { getRouter } from "#/router";
+import { renderRoute } from "#/test-utils/render-route";
 
 /* These tests use the real route tree to cover route wiring. */
-
-async function renderRoute(path: string) {
-  const history = createMemoryHistory({ initialEntries: [path] });
-  const router = getRouter(history);
-
-  await router.load();
-
-  return { history, ...render(<RouterProvider router={router} />) };
-}
 
 function firstEntry() {
   const entry = collections["tech-notes"]?.list()[0];

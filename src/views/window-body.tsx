@@ -3,7 +3,7 @@ import { Suspense, memo } from "react";
 import { EmptyState } from "#/components/empty-state";
 import { pages } from "#/content";
 import type { Collection } from "#/content";
-import { resolveWindow } from "#/lib/window-registry";
+import { resolveWindow } from "#/content/window-registry";
 
 import { CollectionEntryList } from "./collection-entry-list";
 import { ContentBody } from "./content-body";
@@ -41,7 +41,8 @@ function Pane({ route }: { route: string }) {
   }
 }
 
-/* Both `WindowSidebar` and `WindowBody` depend on the route alone, so they are memoized and held apart from the geometry. */
+/* Both `WindowSidebar` and `WindowBody` depend on the route alone, so they
+ * are memoized and held apart from the geometry. */
 
 /** The sidebar of a window. Only the collection window has one (see `hasSidebar`). */
 export const WindowSidebar = memo(function Sidebar({ route }: { route: string }) {

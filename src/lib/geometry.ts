@@ -19,6 +19,10 @@ export interface Inset {
   left: number;
 }
 
+/**
+ * Fits `rect` inside `container`, shrinking it if it cannot fit. A zero-sized
+ * container means "not measured yet", so the rect passes through untouched.
+ */
 export function constrain(rect: Rect, container: Size): Rect {
   if (container.width === 0 || container.height === 0) {
     return rect;
@@ -33,6 +37,11 @@ export function constrain(rect: Rect, container: Size): Rect {
     width,
     height,
   };
+}
+
+/** Clamps a cell's leading edge so a cell of `cellSize` stays inside a container of `containerSize`. */
+export function clampToContainer(position: number, containerSize: number, cellSize: number): number {
+  return clamp(position, 0, Math.max(0, containerSize - cellSize));
 }
 
 export function scaleInset(inset: Inset, scale: number): Inset {

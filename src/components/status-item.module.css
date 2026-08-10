@@ -1,4 +1,6 @@
 .control {
+  composes: focusFrame from "./shared.module.css";
+
   user-select: none;
 
   display: inline-flex;
@@ -8,18 +10,6 @@
   padding: 0 var(--gutter);
 
   white-space: nowrap;
-
-  /* Matches menu item titles in `menu-bar.module.css` */
-  &:focus-visible {
-    position: relative;
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 2px;
-      background: var(--dotted-frame);
-    }
-  }
 
   &:active:not(.time) {
     color: var(--color-selection-foreground);

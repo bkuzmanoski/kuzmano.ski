@@ -113,17 +113,15 @@ export function unlockAudio(): void {
 
 export function useAudioUnlock() {
   useEffect(() => {
-    document.addEventListener("pointerdown", unlockAudio, { capture: true, passive: true }); // Mouse clicks
-    document.addEventListener("pointerup", unlockAudio, { capture: true, passive: true }); // Touch taps
-    document.addEventListener("keydown", unlockAudioOnKeyDown, { capture: true, passive: true });
-    document.addEventListener("visibilitychange", resumeAudioOnReturn);
+    const listening = new AbortController();
+    const options = { capture: true, passive: true, signal: listening.signal };
 
-    return () => {
-      document.removeEventListener("pointerdown", unlockAudio, true);
-      document.removeEventListener("pointerup", unlockAudio, true);
-      document.removeEventListener("keydown", unlockAudioOnKeyDown, true);
-      document.removeEventListener("visibilitychange", resumeAudioOnReturn);
-    };
+    document.addEventListener("pointerdown", unlockAudio, options); // Mouse clicks
+    document.addEventListener("pointerup", unlockAudio, options); // Touch taps
+    document.addEventListener("keydown", unlockAudioOnKeyDown, options);
+    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: listening.signal });
+
+    return () => listening.abort();
   }, []);
 }
 

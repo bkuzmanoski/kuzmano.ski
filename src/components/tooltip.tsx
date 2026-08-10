@@ -1,5 +1,7 @@
 import clsx from "clsx";
-import { cloneElement, isValidElement, useId, useRef, useState } from "react";
+import { cloneElement, isValidElement, useId, useState } from "react";
+
+import { useTimer } from "#/lib/hooks/use-timer";
 
 import styles from "./tooltip.module.css";
 
@@ -38,7 +40,7 @@ export function Tooltip({
   const id = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [wasSuppressed, setWasSuppressed] = useState(suppressed);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timer = useTimer();
 
   if (suppressed !== wasSuppressed) {
     setWasSuppressed(suppressed);
@@ -48,25 +50,18 @@ export function Tooltip({
   const isVisible = isOpen && !suppressed;
 
   function show(delay: number) {
-    cancelPendingTimer();
+    timer.cancel();
 
     if (suppressed) {
       return;
     }
 
-    timerRef.current = setTimeout(() => setIsOpen(true), delay);
+    timer.start(() => setIsOpen(true), delay);
   }
 
   function hide() {
-    cancelPendingTimer();
+    timer.cancel();
     setIsOpen(false);
-  }
-
-  function cancelPendingTimer() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
   }
 
   return (

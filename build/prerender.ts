@@ -32,7 +32,7 @@ function windowTitlesOf(html: string): Array<string> {
  * Every page has the desktop chrome. Every page except the desktop also opens a window
  * with a body in it. The window carries the same title as the document, except on a
  * collection index: that opens on the most recent entry, which titles the window (see
- * `windowRouteFor` in `src/lib/window-registry.ts`).
+ * `windowRouteFor` in `src/content/window-registry.ts`).
  */
 export function verifyPrerenderedPage({ page, html }: { page: { path: string }; html: string }) {
   const problems: Array<string> = [];

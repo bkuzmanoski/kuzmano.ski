@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 import { documentTitle } from "#/config/site";
-import { clearBootOverlay } from "#/lib/boot";
-import { NOT_FOUND_TITLE } from "#/lib/window-registry";
+import { NOT_FOUND_TITLE } from "#/content/window-registry";
+import { useClearBootOverlay } from "#/lib/hooks/use-clear-boot-overlay";
 
 /**
  * The route-level 404. The window manager opens the 404 window from the URL, the
@@ -29,9 +28,7 @@ export function NotFoundBody() {
  * a window in. It stands on its own, the same as the error page.
  */
 export function NotFoundPage() {
-  useEffect(() => {
-    clearBootOverlay();
-  }, []);
+  useClearBootOverlay();
 
   return (
     <main>

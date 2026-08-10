@@ -2,6 +2,10 @@ import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
+import { Menu } from "#/components/menu";
+import type { MenuItem } from "#/components/menu";
+import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "#/components/status-item";
+import { Tooltip } from "#/components/tooltip";
 import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
@@ -12,12 +16,8 @@ import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-comp
 import { cycle } from "#/lib/math";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
-import { Menu } from "./menu";
 import styles from "./menu-bar.module.css";
-import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "./status-item";
-import { Tooltip } from "./tooltip";
 
-import type { MenuItem } from "./menu";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 export function MenuBar() {
@@ -84,6 +84,11 @@ export function MenuBar() {
     ...DESTINATION_ORDER.map((id) => ({ code: destinationShortcut(id).code, run: () => open(DESTINATIONS[id].route) })),
   ]);
 
+  function openMenuAt(label: string, anchor: HTMLButtonElement, { pointerHeld = false } = {}) {
+    setIsPointerHeld(pointerHeld);
+    setOpenMenu({ label, anchor });
+  }
+
   /* The arrow keys move along the menu bar whether or not a menu is open. If a menu
    * is open, the adjacent menu opens in its place and takes the focus as it mounts.
    * If none is open, only the focus moves. */
@@ -97,8 +102,7 @@ export function MenuBar() {
     }
 
     if (openMenu) {
-      setIsPointerHeld(false);
-      setOpenMenu({ label, anchor });
+      openMenuAt(label, anchor);
     } else {
       anchor.focus();
     }
@@ -124,8 +128,7 @@ export function MenuBar() {
       case " ":
         event.preventDefault();
         playClick();
-        setIsPointerHeld(false);
-        setOpenMenu({ label, anchor: event.currentTarget });
+        openMenuAt(label, event.currentTarget);
 
         break;
       case "ArrowRight":
@@ -171,8 +174,7 @@ export function MenuBar() {
               onPointerDown={(event) => onTitlePointerDown(event, label)}
               onPointerEnter={(event) => {
                 if (openMenu !== null && openMenu.label !== label) {
-                  setIsPointerHeld(event.buttons > 0);
-                  setOpenMenu({ label, anchor: event.currentTarget });
+                  openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
               }}
             >

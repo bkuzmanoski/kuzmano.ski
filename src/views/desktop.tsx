@@ -1,15 +1,15 @@
 import { Outlet } from "@tanstack/react-router";
 
-import { MenuBar } from "#/components/menu-bar";
 import { SkipLink } from "#/components/skip-link";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { WINDOW_LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/audio/context";
-import { WindowManagerProvider } from "#/lib/window-manager-provider";
 
 import { BootSequence } from "./boot-sequence";
 import styles from "./desktop.module.css";
+import { MenuBar } from "./menu-bar";
 import { WindowLayer } from "./window-layer";
+import { WindowManagerProvider } from "./window-manager-provider";
 
 import type { ReactNode } from "react";
 

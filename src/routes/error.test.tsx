@@ -1,9 +1,8 @@
-import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import type * as Content from "#/content";
-import { getRouter } from "#/router";
+import { renderRoute } from "#/test-utils/render-route";
 
 /* Content that cannot be read fails when the route loads, and again when the desktop
  * resolves the window for it. The desktop cannot recover from this. These tests use
@@ -24,11 +23,7 @@ vi.mock("#/content", async (importOriginal) => {
 });
 
 test("an error replaces the desktop with a standalone page", async () => {
-  const router = getRouter(createMemoryHistory({ initialEntries: ["/about"] }));
-
-  await router.load().catch(() => undefined);
-
-  render(<RouterProvider router={router} />);
+  await renderRoute("/about");
 
   expect(await screen.findByRole("heading", { name: "Error" })).toBeDefined();
   expect(screen.queryByRole("navigation", { name: "Main menu" })).toBeNull();

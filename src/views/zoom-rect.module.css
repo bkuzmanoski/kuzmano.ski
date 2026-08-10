@@ -1,0 +1,6 @@
+.zoomRect {
+  pointer-events: none;
+  position: absolute;
+  color: var(--color-border);
+  background: var(--dotted-frame);
+}

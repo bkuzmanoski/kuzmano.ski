@@ -1,7 +1,10 @@
 import { useSyncExternalStore } from "react";
 
-import { THEME_STORAGE_KEY, applyTheme, isTheme } from "#/lib/theme";
-import type { Theme } from "#/lib/theme";
+import { readStored, writeStored } from "./storage";
+import { createEmitter } from "./store";
+import { THEME_STORAGE_KEY, applyTheme, isTheme } from "./theme";
+
+import type { Theme } from "./theme";
 
 export type { Theme };
 
@@ -19,58 +22,34 @@ const DEFAULTS: Settings = { theme: "system", sound: "on" };
 const isSound = (value: string): value is Sound => value === "off" || value === "on";
 
 function parseStored<T extends string>(key: string, isValid: (value: string) => value is T, fallback: T): T {
-  const rawValue = localStorage.getItem(key);
+  const rawValue = readStored(key);
   return rawValue !== null && isValid(rawValue) ? rawValue : fallback;
 }
 
 function read(): Settings {
-  try {
-    return {
-      theme: parseStored(THEME_STORAGE_KEY, isTheme, DEFAULTS.theme),
-      sound: parseStored(SOUND_STORAGE_KEY, isSound, DEFAULTS.sound),
-    };
-  } catch {
-    return DEFAULTS;
-  }
+  return {
+    theme: parseStored(THEME_STORAGE_KEY, isTheme, DEFAULTS.theme),
+    sound: parseStored(SOUND_STORAGE_KEY, isSound, DEFAULTS.sound),
+  };
 }
 
 let state: Settings = typeof window === "undefined" ? DEFAULTS : read();
-const listeners = new Set<() => void>();
 
-function emit() {
-  for (const listener of listeners) {
-    listener();
-  }
+const { emit, subscribe } = createEmitter();
+
+function save<TKey extends keyof Settings>(key: TKey, storageKey: string, value: Settings[TKey]) {
+  state = { ...state, [key]: value };
+  writeStored(storageKey, value);
+  emit();
 }
 
 export function setTheme(theme: Theme) {
-  state = { ...state, theme };
-
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // Ignored.
-  }
-
+  save("theme", THEME_STORAGE_KEY, theme);
   applyTheme(theme);
-  emit();
 }
 
 export function setSound(sound: Sound) {
-  state = { ...state, sound };
-
-  try {
-    localStorage.setItem(SOUND_STORAGE_KEY, sound);
-  } catch {
-    // Ignored.
-  }
-
-  emit();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  save("sound", SOUND_STORAGE_KEY, sound);
 }
 
 const getSnapshot = () => state;

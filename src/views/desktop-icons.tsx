@@ -2,117 +2,28 @@ import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
-import { ICONS, ICON_LAYOUT } from "#/config/desktop-icons";
+import { ICONS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
+import { desktopRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
-import { constrain } from "#/lib/geometry";
-import type { Rect, Size } from "#/lib/geometry";
+import { clampToContainer } from "#/lib/geometry";
+import type { Rect } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import type { Icon } from "#/lib/icon";
-import { adjacentIconId, isArrowKey } from "#/lib/icon-navigation";
-import type { ArrowKey, IconPlacement } from "#/lib/icon-navigation";
-import { commitIconPositions, moveIcon, useIconPositions } from "#/lib/icon-positions";
-import { clamp } from "#/lib/math";
-import {
-  useFocusedWindow,
-  useWindowActions,
-  useWindowContent,
-  useWindowGeometry,
-  useWindowOrder,
-} from "#/lib/window-manager";
-import { desktopRouteOf, resolveWindow } from "#/lib/window-registry";
-import type { WindowId } from "#/lib/window-registry";
+import { adjacentIconId } from "#/lib/icon-navigation";
+import type { IconPlacement } from "#/lib/icon-navigation";
+import { isArrowKey } from "#/lib/keys";
+import type { ArrowKey } from "#/lib/keys";
+import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager";
+import type { WindowId } from "#/lib/window-manager";
 
 import styles from "./desktop-icons.module.css";
 
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
-const ZOOM_RECT_ANIMATION_MS = 200;
-const ZOOM_RECT_HOLD_MS = 260;
-
-/**
- * The zoom-rect that grows from an icon to the window it opened. It is a sibling
- * of the windows, not part of the icon layer, so it shares their stacking context.
- * Its z-index sits at the new window's level; being earlier in the DOM, it draws
- * below that window but above every other window.
- *
- * The target box comes from the window state, fitted to the same container the
- * window layer uses, so the outline lands exactly on the window.
- */
-function ZoomRect({
-  from,
-  windowId,
-  containerSize,
-  onDone,
-}: {
-  from: Rect;
-  windowId: WindowId;
-  containerSize: Size;
-  onDone: () => void;
-}) {
-  const geometry = useWindowGeometry();
-  const order = useWindowOrder();
-  const [box, setBox] = useState(from);
-  const [animate, setAnimate] = useState(false);
-
-  /* The window the zoom rect grows towards was opened in the same handler that mounted
-   * this component, so its geometry is in state by the first render. Latching it here
-   * means a later move or resize cannot redirect the animation midway. */
-  const [target] = useState(() => {
-    const state = geometry[windowId];
-    return state ? constrain(state, containerSize) : null;
-  });
-
-  const start = useEffectEvent(() => {
-    const frames: Array<number> = [];
-
-    if (target) {
-      // Two frames: the outline must paint at the icon before it starts to grow.
-      frames.push(
-        requestAnimationFrame(() =>
-          frames.push(
-            requestAnimationFrame(() => {
-              setBox(target);
-              setAnimate(true);
-            }),
-          ),
-        ),
-      );
-    }
-
-    return frames;
-  });
-
-  const finish = useEffectEvent(onDone);
-
-  useEffect(() => {
-    const timer = setTimeout(finish, ZOOM_RECT_HOLD_MS);
-    const frames = start();
-
-    return () => {
-      clearTimeout(timer);
-      frames.forEach(cancelAnimationFrame);
-    };
-  }, []);
-
-  return (
-    <div
-      className={styles.zoomRect}
-      style={{
-        left: box.x,
-        top: box.y,
-        width: box.width,
-        height: box.height,
-        zIndex: order.length,
-        transition: animate ? `all ${ZOOM_RECT_ANIMATION_MS}ms ease-out` : "none",
-      }}
-    />
-  );
-}
-
-export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChange: (id: WindowId | null) => void }) {
+export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: WindowId; from: Rect }) => void }) {
   const content = useWindowContent();
   const focusedWindow = useFocusedWindow();
   const { open, focusDesktop } = useWindowActions();
@@ -120,7 +31,6 @@ export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChang
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
-  const [zooming, setZooming] = useState<{ windowId: WindowId; from: Rect } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
@@ -170,12 +80,12 @@ export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChang
       {
         id: iconDefinition.id,
         iconDefinition,
-        x: clamp(
+        x: clampToContainer(
           containerWidth - position.right - ICON_LAYOUT.cellSize,
-          0,
-          Math.max(0, containerWidth - ICON_LAYOUT.cellSize),
+          containerWidth,
+          ICON_LAYOUT.cellSize,
         ),
-        y: clamp(position.top, 0, Math.max(0, containerHeight - ICON_LAYOUT.cellSize)),
+        y: clampToContainer(position.top, containerHeight, ICON_LAYOUT.cellSize),
       },
     ];
   });
@@ -200,8 +110,7 @@ export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChang
     const element = iconsRef.current[iconDefinition.id];
 
     if (element && windowId && !content[windowId]) {
-      setZooming({ windowId, from: relativeRect(element) });
-      onZoomRectWindowChange(windowId);
+      onZoomRect({ windowId, from: relativeRect(element) });
     }
 
     open(iconDefinition.route);
@@ -263,46 +172,31 @@ export function DesktopIcons({ onZoomRectWindowChange }: { onZoomRectWindowChang
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [focusedWindow, isBootSequenceComplete]);
 
+  /* The layer always renders so its ref exists for measurement. */
   return (
-    <>
-      {/* The layer always renders so its ref exists for measurement. */}
-      <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
-        {placements.map(({ id, iconDefinition, x, y }) => (
-          <DesktopIcon
-            key={id}
-            ref={(element) => {
-              iconsRef.current[id] = element;
-            }}
-            iconDefinition={iconDefinition}
-            x={x}
-            y={y}
-            cellSize={ICON_LAYOUT.cellSize}
-            tabIndex={tabStop === id ? 0 : -1}
-            open={iconDefinition.kind === "collection" && openRoutes.has(iconDefinition.route)}
-            selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
-            onSelect={() => selectIcon(id)}
-            onOpen={() => openIcon(iconDefinition)}
-            onMoveStart={(nextX, nextY) =>
-              moveIcon(id, { right: containerWidth - nextX - ICON_LAYOUT.cellSize, top: nextY })
-            }
-            onMoveEnd={commitIconPositions}
-            onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
-          />
-        ))}
-      </div>
-
-      {zooming && (
-        <ZoomRect
-          key={zooming.windowId}
-          from={zooming.from}
-          windowId={zooming.windowId}
-          containerSize={containerSize}
-          onDone={() => {
-            setZooming(null);
-            onZoomRectWindowChange(null);
+    <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
+      {placements.map(({ id, iconDefinition, x, y }) => (
+        <DesktopIcon
+          key={id}
+          ref={(element) => {
+            iconsRef.current[id] = element;
           }}
+          iconDefinition={iconDefinition}
+          x={x}
+          y={y}
+          cellSize={ICON_LAYOUT.cellSize}
+          tabIndex={tabStop === id ? 0 : -1}
+          open={iconDefinition.kind === "collection" && openRoutes.has(iconDefinition.route)}
+          selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
+          onSelect={() => selectIcon(id)}
+          onOpen={() => openIcon(iconDefinition)}
+          onMoveStart={(nextX, nextY) =>
+            moveIcon(id, { right: containerWidth - nextX - ICON_LAYOUT.cellSize, top: nextY })
+          }
+          onMoveEnd={commitIconPositions}
+          onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
         />
-      )}
-    </>
+      ))}
+    </div>
   );
 }

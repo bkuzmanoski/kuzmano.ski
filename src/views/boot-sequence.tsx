@@ -9,8 +9,20 @@ import macintoshAvifUrl from "#/assets/images/macintosh.avif";
 import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
-import { NON_GESTURE_KEYS, unlockAudio } from "#/lib/audio/context";
+import { unlockAudio } from "#/lib/audio/context";
 import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import {
+  MINIMUM_LOADING_MS,
+  MOTION_MS,
+  REDUCED_MOTION_MS,
+  isBeginKey,
+  isTouchOnly,
+  phaseFlags,
+  sequence,
+  whenFontsReady,
+  whenIllustrationReady,
+} from "#/lib/boot-sequence";
+import type { Motion, Phase } from "#/lib/boot-sequence";
 import { PHOSPHOR_COLOR, screenParametersFor } from "#/lib/crt-effect";
 import type { Bloom } from "#/lib/crt-effect";
 import { insetToViewport } from "#/lib/geometry";
@@ -18,49 +30,10 @@ import type { Inset, Rect, Size } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 import { DISK_ACTIVITY_INDICATOR_PLACEMENT, VIEWABLE_AREA, viewableAreaOf } from "#/lib/macintosh-illustration";
+import { noSubscribe } from "#/lib/store";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./boot-sequence.module.css";
-
-/* Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order. */
-const PHASES = [
-  "loading",
-  "waiting-for-input",
-  "macintosh-reveal",
-  "display-on",
-  "logo",
-  "glass-fade",
-  "desktop-reveal",
-  "complete",
-] as const;
-
-type Phase = (typeof PHASES)[number];
-
-/* The motion the stylesheet animates over. */
-const MOTION_MS = {
-  loadingCoverFade: 600,
-  crtWarmUp: 500,
-  logoDraw: 250,
-  glassFade: 150,
-  desktopReveal: 350, // Matches `--duration-desktop-reveal-step` in `styles.css`.
-};
-
-type Motion = typeof MOTION_MS;
-
-/* Substituted under a reduced motion preference. */
-const REDUCED_MOTION_MS: Motion = {
-  ...MOTION_MS,
-  crtWarmUp: 0,
-  desktopReveal: 0,
-};
-
-const HOLD_MS = {
-  illustrationReveal: 400,
-  displayOn: 500,
-  logo: 1400,
-};
-
-const MINIMUM_LOADING_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
 
 const SCREEN_FILTER_ID = "boot-screen";
 const SCREEN_STYLE: StyleWithVars = { "--filter-url": `url(#${SCREEN_FILTER_ID})` };
@@ -71,61 +44,7 @@ interface Metrics {
   pixelRatio: number;
 }
 
-function phaseFlags(phase: Phase) {
-  const step = PHASES.indexOf(phase);
-  const from = (first: Phase) => step >= PHASES.indexOf(first);
-  const before = (first: Phase) => step < PHASES.indexOf(first);
-
-  return {
-    isLoadingCoverUp: before("macintosh-reveal"),
-    isWarmingUp: phase === "display-on",
-    isDisplayOn: from("display-on"),
-    isScreenTreated: from("display-on") && before("desktop-reveal"),
-    isScreenContentVisible: from("logo") && before("desktop-reveal"),
-    isPreparingToLeave: from("logo"), // Used to apply `will-change` hints to the layers that will be animated out.
-    isGlassHidden: from("glass-fade"),
-    isRevealingDesktop: phase === "desktop-reveal",
-  };
-}
-
-const sequence = (motion: Motion) =>
-  [
-    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_MS.illustrationReveal },
-    { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_MS.displayOn },
-    { phase: "logo", durationMs: motion.logoDraw + HOLD_MS.logo },
-    { phase: "glass-fade", durationMs: motion.glassFade },
-    { phase: "desktop-reveal", durationMs: motion.desktopReveal },
-  ] as const satisfies ReadonlyArray<{ phase: Phase; durationMs: number }>;
-
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
-
-const isBeginKey = (event: KeyboardEvent) =>
-  !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
-const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
-
-async function whenFontsReady(): Promise<void> {
-  const fontSet = (document as Partial<Document>).fonts;
-
-  if (!fontSet) {
-    return;
-  }
-
-  const consoleFont = getComputedStyle(document.documentElement).getPropertyValue("--font-console").trim();
-
-  try {
-    if (consoleFont) {
-      await fontSet.load(consoleFont);
-    }
-
-    await fontSet.ready;
-  } catch {
-    // Ignored.
-  }
-}
-
-function whenIllustrationReady(image: HTMLImageElement | null): Promise<unknown> {
-  return image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
-}
 
 function ScreenFilter({ bloom }: { bloom: Bloom }) {
   return (
@@ -171,7 +90,6 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     width: display.width,
     height: display.height,
     "--display-scale": scale,
-    "--phosphor-color": PHOSPHOR_COLOR,
     "--screen-radius": `${screenParameters.radius}px`,
     "--scanline-pitch": `${screenParameters.scanlines.pitch}px`,
     "--scanline-alpha": screenParameters.scanlines.alpha,
@@ -381,7 +299,6 @@ function Sequence() {
   );
 }
 
-const noSubscribe = () => () => {};
 const serverShouldBoot = () => false;
 
 export function BootSequence() {

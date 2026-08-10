@@ -16,9 +16,17 @@ import type { Icon, IconKind } from "#/lib/icon";
 
 import styles from "./desktop-icon.module.css";
 
-import type { KeyboardEvent, Ref } from "react";
+import type { ComponentType, KeyboardEvent, Ref } from "react";
 
 const DRAG_THRESHOLD = 4;
+
+type GlyphIcon = ComponentType<{ className?: string }>;
+
+const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
+  page: { closed: [AppIcon, AppSelectedIcon] },
+  collection: { closed: [FolderIcon, FolderSelectedIcon], open: [FolderOpenIcon, FolderOpenSelectedIcon] },
+  download: { closed: [DocumentIcon, DocumentSelectedIcon] },
+};
 
 function Glyph({
   kind,
@@ -31,18 +39,11 @@ function Glyph({
   open: boolean;
   className?: string;
 }) {
-  switch (kind) {
-    case "page":
-      return selected ? <AppSelectedIcon className={className} /> : <AppIcon className={className} />;
-    case "collection":
-      if (open) {
-        return selected ? <FolderOpenSelectedIcon className={className} /> : <FolderOpenIcon className={className} />;
-      }
+  const variants = GLYPHS[kind];
+  const [idle, active] = (open && variants.open) || variants.closed;
+  const GlyphComponent = selected ? active : idle;
 
-      return selected ? <FolderSelectedIcon className={className} /> : <FolderIcon className={className} />;
-    default:
-      return selected ? <DocumentSelectedIcon className={className} /> : <DocumentIcon className={className} />;
-  }
+  return <GlyphComponent className={className} />;
 }
 
 export function DesktopIcon({

@@ -12,8 +12,6 @@ function run(script: string) {
 }
 
 beforeEach(() => {
-  localStorage.clear();
-  sessionStorage.clear();
   document.documentElement.removeAttribute("data-theme");
   document.documentElement.removeAttribute("data-boot");
 });
@@ -40,15 +38,6 @@ describe("theme", () => {
 
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
   });
-
-  test("survives storage that throws", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("Storage access denied.");
-    });
-
-    expect(() => run(themeScript)).not.toThrow();
-    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
-  });
 });
 
 describe("boot overlay", () => {
@@ -65,13 +54,18 @@ describe("boot overlay", () => {
 
     expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
   });
+});
 
-  test("survives storage that throws", () => {
+describe("resilience", () => {
+  test.for([
+    ["theme", themeScript, "data-theme"],
+    ["boot overlay", bootOverlayScript, "data-boot"],
+  ] as const)("the %s script survives storage that throws", ([, script, attribute]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("Storage access denied.");
     });
 
-    expect(() => run(bootOverlayScript)).not.toThrow();
-    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
+    expect(() => run(script)).not.toThrow();
+    expect(document.documentElement.hasAttribute(attribute)).toBe(false);
   });
 });

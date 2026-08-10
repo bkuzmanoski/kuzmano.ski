@@ -39,6 +39,9 @@ function clipPath(width: number, height: number, radius: number, bow: number): s
 }
 
 function scanlines(top: number, ratio: number): Scanlines {
+  /* The pitch is rounded to an even number of device pixels so every line
+   * paints the same. The double modulo keeps the fraction positive for a
+   * negative `top`, and `|| 0` normalizes the -0 the negation makes of it. */
   const devicePitch = Math.max(2, 2 * Math.round((SCANLINE_PITCH * ratio) / 2));
   const offGrid = (((top * ratio) % 1) + 1) % 1;
 

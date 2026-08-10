@@ -24,7 +24,7 @@ const RING: ReadonlyArray<StyleWithVars> = [
 /**
  * A ring of blocks with a bright head sweeping around it.
  *
- * Each blocks takes its color from `currentcolor`; `--block-size` sets
+ * Each block takes its color from `currentcolor`; `--block-size` sets
  * how large they are. Caller can set each via `className`.
  */
 export function Spinner({ className, label = "Loading" }: { className?: string; label?: string }) {

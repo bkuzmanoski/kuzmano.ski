@@ -140,15 +140,14 @@ export function Menu({
   useEffect(() => {
     menuRef.current?.focus();
 
-    document.addEventListener("pointermove", onPointerMove);
-    document.addEventListener("pointerup", onPointerUp);
-    document.addEventListener("pointerdown", onPointerDown);
+    const listening = new AbortController();
+    const options = { signal: listening.signal };
 
-    return () => {
-      document.removeEventListener("pointermove", onPointerMove);
-      document.removeEventListener("pointerup", onPointerUp);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
+    document.addEventListener("pointermove", onPointerMove, options);
+    document.addEventListener("pointerup", onPointerUp, options);
+    document.addEventListener("pointerdown", onPointerDown, options);
+
+    return () => listening.abort();
   }, []);
 
   function onKeyDown(event: KeyboardEvent) {

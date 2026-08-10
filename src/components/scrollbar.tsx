@@ -1,33 +1,31 @@
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { playClick } from "#/lib/audio/ui";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
+import { useTimer } from "#/lib/hooks/use-timer";
+import { isActivationKey } from "#/lib/keys";
 import { clamp } from "#/lib/math";
+import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./scrollbar.module.css";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 const STEP = 40;
 const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
 const REPEAT_MS = 90;
 
-const isStepKey = (key: string) => key === "Enter" || key === " ";
-
 function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
   const [isPressed, setIsPressed] = useState(false);
-  const repeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const repeatTimer = useTimer();
 
+  // Also run on unmount, so the repeat is cancelled if the scrollbar goes away mid-press.
   function stop() {
     setIsPressed(false);
-
-    if (repeatTimerRef.current) {
-      clearTimeout(repeatTimerRef.current);
-      repeatTimerRef.current = null;
-    }
+    repeatTimer.cancel();
   }
 
   /* The scroll itself carries the sound so press at the
@@ -42,7 +40,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
    * every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
    * so a release cancels whichever is pending. */
   function scheduleRepeat(delay: number) {
-    repeatTimerRef.current = setTimeout(() => {
+    repeatTimer.start(() => {
       step(true);
       scheduleRepeat(REPEAT_MS);
     }, delay);
@@ -54,9 +52,6 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
     scheduleRepeat(REPEAT_DELAY_MS);
   }
 
-  // Cancel repeat if the scrollbar goes away mid-press.
-  useEffect(() => () => stop(), []);
-
   return (
     <button
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
@@ -65,7 +60,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
       type="button"
       onBlur={stop}
       onKeyDown={(event) => {
-        if (!isStepKey(event.key)) {
+        if (!isActivationKey(event.key)) {
           return;
         }
 
@@ -77,7 +72,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
         step(event.repeat);
       }}
       onKeyUp={(event) => {
-        if (isStepKey(event.key)) {
+        if (isActivationKey(event.key)) {
           stop();
         }
       }}
@@ -114,12 +109,12 @@ export function Scrollbar({
   const isAtTop = metrics.top <= 0.5;
   const isAtBottom = metrics.top >= range - 0.5;
   const scrolledPercent = Math.round(position * 100);
-  const thumbStyle = {
+  const thumbStyle: StyleWithVars = {
     "--thumb-proportion": overflow ? metrics.clientHeight / metrics.scrollHeight : 1,
     "--thumb-position": position,
     borderTopWidth: isAtTop ? 0 : undefined,
     borderBottomWidth: isAtBottom ? 0 : undefined,
-  } as CSSProperties;
+  };
 
   const thumbHandlers = usePointerDrag({
     preventDefault: true,

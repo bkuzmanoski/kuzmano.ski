@@ -1,19 +1,6 @@
 import { collections, pages } from "#/content";
 import type { Collection } from "#/content";
 
-/**
- * The windows the desktop can open. Every route resolves to exactly one of them,
- * and each one exists at most once: a route that resolves to an open window
- * replaces what that window shows instead of opening a second one.
- */
-export type WindowId = "collection" | "page" | "notFound";
-
-/** Every window id, in the order the window layer writes them to the DOM. */
-export const WINDOW_IDS = ["collection", "page", "notFound"] as const satisfies ReadonlyArray<WindowId>;
-
-/** Whether a window shows a list of its own beside its body. */
-export const hasSidebar = (id: WindowId) => id === "collection";
-
 export const NOT_FOUND_TITLE = "Page not found (404)";
 
 export type WindowTarget =

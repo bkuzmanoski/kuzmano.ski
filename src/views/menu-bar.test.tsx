@@ -1,14 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+import type { WindowId } from "#/lib/window-manager";
+
 import { MenuBar } from "./menu-bar";
 
-let focusedWindow: string | null = null;
+let focusedWindow: WindowId | null = null;
 
-vi.mock("#/lib/window-manager", () => ({
-  useWindowActions: () => ({ open: () => {}, close: () => {} }),
-  useFocusedWindow: () => focusedWindow,
-}));
+vi.mock("#/lib/window-manager", async () =>
+  (await import("#/test-utils/window-manager-mock")).windowManagerMock({
+    actions: { open: () => {}, close: () => {} },
+    focusedWindow: () => focusedWindow,
+  }),
+);
 
 beforeEach(() => {
   focusedWindow = null;

@@ -1,3 +1,5 @@
+import { createEmitter } from "./store";
+
 export const HAS_BOOTED_STORAGE_KEY = "has-booted";
 
 /* Set on `<html>` to hide the server-rendered desktop until the boot sequence
@@ -38,20 +40,14 @@ export function setHasBooted() {
 
 let isBootSequenceComplete = false;
 
-const listeners = new Set<() => void>();
+const { emit, subscribe } = createEmitter();
 
 export function setIsBootSequenceComplete() {
   isBootSequenceComplete = true;
-
-  for (const listener of listeners) {
-    listener();
-  }
+  emit();
 }
 
-export function subscribeToIsBootSequenceComplete(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeToIsBootSequenceComplete = subscribe;
 
 export const getIsBootSequenceComplete = () => isBootSequenceComplete || !shouldBoot();
 

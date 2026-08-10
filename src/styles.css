@@ -36,7 +36,7 @@
   --shadow-length: 2px;
 
   /* Typography */
-  --font-family-chrome: "ChicagoFLF", sans-serif;
+  --font-family-chrome: ChicagoFLF, sans-serif;
   --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
   --font-family-console: "Monaco9", ui-monospace, monospace;
   --font-chrome-size: 16px; /* Named as well as set, for layout that has to be scaled. */
@@ -96,7 +96,7 @@
     linear-gradient(180deg, currentcolor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
 
   /* Transitions */
-  --duration-desktop-reveal-step: 350ms; /* One step of the hand-off from the boot sequence to the desktop. Matches `MOTION_MS.desktopReveal` in `views/boot-sequence.tsx`. */
+  --duration-desktop-reveal-step: 350ms; /* One step of the hand-off from the boot sequence to the desktop. Matches `MOTION_MS.desktopReveal` in `lib/boot-sequence.ts`. */
 
   color-scheme: light dark;
 

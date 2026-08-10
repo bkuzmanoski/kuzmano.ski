@@ -2,8 +2,10 @@ import { memo, useEffect, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
 import { constrain } from "#/lib/geometry";
+import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import {
+  WINDOW_IDS,
   useFocusedWindow,
   useSurface,
   useWindowActions,
@@ -11,14 +13,17 @@ import {
   useWindowGeometry,
   useWindowOrder,
 } from "#/lib/window-manager";
-import { WINDOW_IDS, hasSidebar } from "#/lib/window-registry";
-import type { WindowId } from "#/lib/window-registry";
+import type { WindowId } from "#/lib/window-manager";
 
 import { DesktopIcons } from "./desktop-icons";
 import styles from "./desktop.module.css";
 import { WindowBody, WindowSidebar } from "./window-body";
+import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
+
+/** Whether a window shows a list of its own beside its body. */
+const hasSidebar = (id: WindowId) => id === "collection";
 
 /**
  * One open window. Everything it needs arrives as a primitive, and the only context
@@ -99,9 +104,10 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const surface = useSurface();
   const isUnplaced = surface.width === 0 || surface.height === 0;
 
-  /* The visibility of a window opened from an icon is suppressed
-   * until the zoom rect has finished growing towards it. */
-  const [zoomRectWindow, setZoomRectWindow] = useState<WindowId | null>(null);
+  /* The zoom-rect growing from an icon towards the window it opened. While it runs,
+   * the visibility of that window is suppressed until the outline has landed on it. */
+  const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
+  const zoomTarget = zoomRect ? geometry[zoomRect.windowId] : undefined;
 
   useEffect(() => {
     measure(measuredSurface);
@@ -118,7 +124,16 @@ export function WindowLayer({ children }: { children: ReactNode }) {
         }
       }}
     >
-      <DesktopIcons onZoomRectWindowChange={setZoomRectWindow} />
+      <DesktopIcons onZoomRect={setZoomRect} />
+      {zoomRect && (
+        <ZoomRect
+          key={zoomRect.windowId}
+          from={zoomRect.from}
+          target={zoomTarget ? constrain(zoomTarget, surface) : null}
+          z={order.length}
+          onDone={() => setZoomRect(null)}
+        />
+      )}
       {/* By window id instead of stacking order to avoid reordering nodes in the DOM
        * which affects the scroll position of elements inside the windows.
        *
@@ -143,7 +158,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
             z={order.indexOf(id) + 1}
             focused={id === focusedWindow}
             maximized={windowGeometry.maximized}
-            hidden={id === zoomRectWindow}
+            hidden={id === zoomRect?.windowId}
             unplaced={isUnplaced}
           />
         );

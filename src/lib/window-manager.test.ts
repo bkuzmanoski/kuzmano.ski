@@ -2,8 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { EMPTY_STATE, createWindowReducer } from "./window-manager";
 
-import type { Action, ManagerState, WindowLayout } from "./window-manager";
-import type { WindowId } from "./window-registry";
+import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
 
 const LAYOUT: WindowLayout = {
   defaultSize: { width: 720, height: 560 },

@@ -1,16 +1,11 @@
 import type { Position } from "./geometry";
+import type { ArrowKey } from "./keys";
 
-const ARROW_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"] as const;
-
-export type ArrowKey = (typeof ARROW_KEYS)[number];
-
-const OFF_AXIS_DISTANCE_WEIGHT = 2; //  How much further an icon off the arrow's axis has to be before it loses to one on it during keyboard navigation.
+const OFF_AXIS_DISTANCE_WEIGHT = 2; // How much further an icon off the arrow's axis has to be before it loses to one on it during keyboard navigation.
 
 export interface IconPlacement extends Position {
   id: string;
 }
-
-export const isArrowKey = (key: string): key is ArrowKey => ARROW_KEYS.includes(key as ArrowKey);
 
 /**
  * The icon an arrow key selects, or null when nothing lies the given direction.

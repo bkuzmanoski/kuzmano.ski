@@ -1,15 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 import { documentTitle } from "#/config/site";
-import { clearBootOverlay } from "#/lib/boot";
+import { useClearBootOverlay } from "#/lib/hooks/use-clear-boot-overlay";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
 export function ErrorView({ error, reset }: ErrorComponentProps) {
-  useEffect(() => {
-    clearBootOverlay();
-  }, []);
+  useClearBootOverlay();
 
   return (
     <main>
