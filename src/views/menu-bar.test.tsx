@@ -72,6 +72,20 @@ describe("holding the pointer across the menu bar", () => {
     expect(isExpanded("Go")).toBe(true);
   });
 
+  test("a cancelled gesture ends the hold, leaving the menu open for the next press", () => {
+    render(<MenuBar />);
+
+    openWithPointer("Go");
+    fireEvent(document, new Event("pointercancel", { bubbles: true }));
+
+    // The hold is over, so this release belongs to no gesture and must not close the menu.
+    fireEvent(document, new MouseEvent("pointerup", { bubbles: true }));
+    expect(openMenu()).not.toBeNull();
+
+    fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }));
+    expect(openMenu()).toBeNull();
+  });
+
   test("a press gives up the implicit capture that would keep a touch pointer on one title", () => {
     render(<MenuBar />);
 

@@ -129,6 +129,17 @@ export function Menu({
     }
   });
 
+  /* A cancelled gesture never delivers its `pointerup`, so the hold ends here instead:
+   * the menu turns sticky and waits for a press, rather than reading a later unrelated
+   * release as the end of a hold that is long over. */
+  const onPointerCancel = useEffectEvent(() => {
+    isStickyRef.current = true;
+
+    if (!flash.isRunning()) {
+      focusItem(-1); // The pointer is gone, so nothing is under it to keep highlighted.
+    }
+  });
+
   const onPointerDown = useEffectEvent((event: PointerEvent) => {
     const isInside = menuRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
 
@@ -145,6 +156,7 @@ export function Menu({
 
     document.addEventListener("pointermove", onPointerMove, options);
     document.addEventListener("pointerup", onPointerUp, options);
+    document.addEventListener("pointercancel", onPointerCancel, options);
     document.addEventListener("pointerdown", onPointerDown, options);
 
     return () => listening.abort();
