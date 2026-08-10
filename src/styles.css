@@ -82,7 +82,7 @@
     oklch(from var(--color-accent) 69% 0.021 h),
     oklch(from var(--color-accent) 39% 0.013 h)
   );
-  --color-icon-foreground: currentcolor;
+  --color-icon-foreground: currentColor;
   --color-icon-background: var(--color-background);
   --color-boot-sequence-light: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-dark: light-dark(var(--color-foreground), var(--color-background));
@@ -104,10 +104,10 @@
     )
     0 0 / 4px 4px repeat;
   --dotted-frame:
-    linear-gradient(90deg, currentcolor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
-    linear-gradient(90deg, currentcolor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
-    linear-gradient(180deg, currentcolor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
-    linear-gradient(180deg, currentcolor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
+    linear-gradient(90deg, currentColor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
+    linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
+    linear-gradient(180deg, currentColor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
+    linear-gradient(180deg, currentColor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
 
   /* Transitions */
   --duration-desktop-reveal-step: 350ms; /* One step of the hand-off from the boot sequence to the desktop. Matches `MOTION_MS.desktopReveal` in `lib/boot-sequence.ts`. */

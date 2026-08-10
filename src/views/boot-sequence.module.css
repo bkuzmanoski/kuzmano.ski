@@ -361,7 +361,7 @@
 
       vertical-align: -0.125em;
 
-      background-color: currentcolor;
+      background-color: currentColor;
 
       animation: blink 1s step-end infinite;
     }

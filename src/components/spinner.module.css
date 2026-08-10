@@ -9,7 +9,7 @@
   & span {
     --block-index: 0; /* Set from JS. */
 
-    background: currentcolor;
+    background: currentColor;
     animation: sweep-spinner calc(var(--blocks) * var(--step-ms)) steps(4, jump-none) infinite;
     animation-delay: calc((var(--block-index) + 1 - var(--blocks)) * var(--step-ms));
   }
