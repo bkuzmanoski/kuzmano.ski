@@ -6,11 +6,13 @@ import { collections } from "#/content";
 import { CollectionEntryList } from "./collection-entry-list";
 
 const open = vi.hoisted(() => vi.fn());
+const playHover = vi.hoisted(() => vi.fn());
+const skipEnclosingScroll = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/ui", () => ({ playClick: () => {} }));
+vi.mock("#/lib/audio/ui", () => ({ playClick: () => {}, playHover, skipEnclosingScroll }));
 
 const collection = collections["design-notes"]!;
 const entries = collection.list();
@@ -18,6 +20,8 @@ const routeOf = (index: number) => `/design-notes/${entries[index]!.slug}`;
 
 beforeEach(() => {
   open.mockClear();
+  playHover.mockClear();
+  skipEnclosingScroll.mockClear();
 });
 
 function renderList(activeSlug: string | null) {
@@ -60,6 +64,32 @@ test("home and end reach the ends of the list, and the arrow keys stop there", (
 
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
   expect(document.activeElement).toBe(links[0]);
+});
+
+test("a key that moves the focus sounds a detent", () => {
+  const links = renderList(entries[0]!.slug);
+
+  fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
+  expect(playHover).toHaveBeenCalledTimes(1);
+
+  fireEvent.keyDown(links[1]!, { key: "End" });
+  expect(playHover).toHaveBeenCalledTimes(2);
+});
+
+test("a key that runs into the end of the list sounds nothing", () => {
+  const links = renderList(entries[0]!.slug);
+
+  fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
+  fireEvent.keyDown(links[0]!, { key: "Home" });
+
+  expect(playHover).not.toHaveBeenCalled();
+});
+
+test("the scroll the focus causes is not sounded as travel", () => {
+  const links = renderList(entries[0]!.slug);
+
+  fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
+  expect(skipEnclosingScroll).toHaveBeenCalledWith(links[1]);
 });
 
 test("the focus makes the entry it lands on the tab stop", () => {

@@ -165,3 +165,21 @@ export function playScrollStep(element: Element) {
 export function skipScroll(element: Element) {
   gestures.set(element, { top: getScrollTop(element), at: performance.now(), speed: 0, distance: 0 });
 }
+
+/**
+ * Skips the scroll that bringing `element` into view has just made, for whichever
+ * viewport above it moved. Both `focus` and `scrollIntoView` move their viewport
+ * before they return, and only the scroll event that follows is asynchronous, so
+ * reading the position here—between the two—records where the content has already
+ * landed and leaves the jump silent.
+ *
+ * A viewport that has yet to scroll holds no gesture, and `playScroll` opens one
+ * without sounding a detent, so there is nothing there to silence.
+ */
+export function skipEnclosingScroll(element: Element) {
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    if (gestures.has(parent)) {
+      skipScroll(parent);
+    }
+  }
+}
