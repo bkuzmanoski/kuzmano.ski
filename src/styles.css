@@ -48,39 +48,45 @@
   --font-console: 32px var(--font-family-console);
 
   /* Colors */
+  --tint-faint: 0.012;
+  --tint-soft: 0.026;
+  --tint-strong: 0.042;
   --color-accent: #8787b3;
-  --color-foreground: light-dark(
-    oklch(from var(--color-accent) 24% 0.03 h),
-    oklch(from var(--color-accent) 96% 0.005 h)
-  );
-  --color-foreground-muted: color-mix(in oklab, var(--color-foreground) 55%, var(--color-background));
   --color-background: light-dark(
-    oklch(from var(--color-accent) 97% 0.005 h),
-    oklch(from var(--color-accent) 21% 0.012 h)
+    oklch(from var(--color-accent) 97% var(--tint-faint) h),
+    oklch(from var(--color-accent) 21% var(--tint-faint) h)
   );
   --color-background-elevated: light-dark(
-    color-mix(in oklab, var(--color-background) 96%, var(--color-foreground)),
-    color-mix(in oklab, var(--color-background) 92%, var(--color-foreground))
+    oklch(from var(--color-accent) 94% var(--tint-faint) h),
+    oklch(from var(--color-accent) 27% var(--tint-faint) h)
   );
-  --color-border: light-dark(var(--color-foreground), oklch(from var(--color-accent) 45% 0.03 h));
+  --color-foreground: light-dark(
+    oklch(from var(--color-accent) 24% var(--tint-soft) h),
+    oklch(from var(--color-accent) 96% var(--tint-faint) h)
+  );
+  --color-foreground-muted: light-dark(
+    oklch(from var(--color-accent) 48% var(--tint-strong) h),
+    oklch(from var(--color-accent) 65% var(--tint-strong) h)
+  );
+  --color-border: light-dark(var(--color-foreground), oklch(from var(--color-accent) 45% var(--tint-strong) h));
   --color-border-muted: light-dark(
-    oklch(from var(--color-accent) 72% 0.02 h),
-    oklch(from var(--color-accent) 35% 0.03 h)
+    oklch(from var(--color-accent) 72% var(--tint-strong) h),
+    oklch(from var(--color-accent) 35% var(--tint-soft) h)
   );
   --color-scrim: color-mix(in oklab, var(--color-background) 50%, transparent);
   --color-selection-foreground: var(--color-background);
   --color-selection-background: color-mix(in oklab, var(--color-foreground) 75%, var(--color-accent));
   --color-active-background: light-dark(
-    oklch(from var(--color-accent) 88% 0.01 h),
-    oklch(from var(--color-accent) 24% 0.02 h)
+    oklch(from var(--color-accent) 88% var(--tint-soft) h),
+    oklch(from var(--color-accent) 24% var(--tint-soft) h)
   );
   --color-wallpaper-a: light-dark(
-    color-mix(in oklab, var(--color-accent) 32%, var(--color-background)),
-    color-mix(in oklab, var(--color-accent) 18%, var(--color-background))
+    oklch(from var(--color-accent) 86% var(--tint-soft) h),
+    oklch(from var(--color-accent) 29% var(--tint-soft) h)
   );
   --color-wallpaper-b: light-dark(
-    oklch(from var(--color-accent) 69% 0.021 h),
-    oklch(from var(--color-accent) 39% 0.013 h)
+    oklch(from var(--color-accent) 69% var(--tint-soft) h),
+    oklch(from var(--color-accent) 39% var(--tint-soft) h)
   );
   --color-icon-foreground: currentColor;
   --color-icon-background: var(--color-background);
