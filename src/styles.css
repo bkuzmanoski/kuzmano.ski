@@ -47,11 +47,8 @@
   --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
   --font-console: 32px var(--font-family-console);
 
-  /* Colors
-   * Every surface is tinted from the accent hue. Tokens are literals, one-level
-   * color-mixes of the primitives (background/foreground/accent), or explicit
-   * `oklch(from var(--color-accent) L C h)` derivations. */
-  --color-accent: #8787b3; /* Mirrored by `THEME_COLORS` in `lib/theme.ts`. */
+  /* Colors */
+  --color-accent: #8787b3;
   --color-foreground: light-dark(
     oklch(from var(--color-accent) 24% 0.03 h),
     oklch(from var(--color-accent) 96% 0.005 h)
