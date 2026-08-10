@@ -5,7 +5,7 @@ import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
-import { playClick, playScroll, playScrollStep, skipScroll } from "#/lib/audio/ui";
+import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
@@ -85,7 +85,7 @@ function ScrollPane({
           measure();
 
           if (isResizing) {
-            skipScroll(event.currentTarget);
+            skipScrollAt(event.currentTarget);
             return;
           }
 

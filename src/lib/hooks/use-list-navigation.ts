@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { playHover, skipEnclosingScroll } from "../audio/ui";
+import { playHover, skipScrollAbove } from "../audio/ui";
 import { isActivationKey } from "../keys";
 import { clamp } from "../math";
 
@@ -47,7 +47,7 @@ export function useListNavigation({
     /* `nearest` holds still while the item is already in view, so activating one
      * does not move the list under the pointer. */
     item.scrollIntoView({ block: "nearest" });
-    skipEnclosingScroll(item);
+    skipScrollAbove(item);
   }, [activeIndex]);
 
   const tabStop = focusedIndex ?? Math.max(activeIndex, 0);
@@ -91,7 +91,7 @@ export function useListNavigation({
         /* The focus brings the item into view, which scrolls the window under it.
          * That scroll belongs to this keypress and is already being sounded by the
          * detent below, so it is not sounded a second time as travel. */
-        skipEnclosingScroll(item);
+        skipScrollAbove(item);
         playHover();
       },
     };

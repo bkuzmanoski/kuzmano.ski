@@ -7,12 +7,12 @@ import { CollectionEntryList } from "./collection-entry-list";
 
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
-const skipEnclosingScroll = vi.hoisted(() => vi.fn());
+const skipScrollAbove = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/ui", () => ({ playClick: () => {}, playHover, skipEnclosingScroll }));
+vi.mock("#/lib/audio/ui", () => ({ playClick: () => {}, playHover, skipScrollAbove }));
 
 const collection = collections["design-notes"]!;
 const entries = collection.list();
@@ -21,7 +21,7 @@ const routeOf = (index: number) => `/design-notes/${entries[index]!.slug}`;
 beforeEach(() => {
   open.mockClear();
   playHover.mockClear();
-  skipEnclosingScroll.mockClear();
+  skipScrollAbove.mockClear();
 });
 
 function renderList(activeSlug: string | null) {
@@ -89,7 +89,7 @@ test("the scroll the focus causes is not sounded as travel", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
-  expect(skipEnclosingScroll).toHaveBeenCalledWith(links[1]);
+  expect(skipScrollAbove).toHaveBeenCalledWith(links[1]);
 });
 
 test("the focus makes the entry it lands on the tab stop", () => {

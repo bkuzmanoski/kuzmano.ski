@@ -152,17 +152,17 @@ export function playScroll(element: Element) {
 }
 
 export function playScrollStep(element: Element) {
-  skipScroll(element);
+  skipScrollAt(element);
   playScrollDetent(SCROLL_DETENT_STEP_SPEED);
 }
 
 /**
- * Moves the gesture to where the content now sits without sounding a detent. A
- * window resize reflows the content under a fixed viewport, so the scroll it
- * produces is not a gesture; recording it here stops the next real scroll from
- * reading the jump as travel.
+ * Moves the gesture of the viewport that is `element` to where its content now
+ * sits, without sounding a detent. A window resize reflows the content under a
+ * fixed viewport, so the scroll it produces is not a gesture; recording it here
+ * stops the next real scroll from reading the jump as travel.
  */
-export function skipScroll(element: Element) {
+export function skipScrollAt(element: Element) {
   gestures.set(element, { top: getScrollTop(element), at: performance.now(), speed: 0, distance: 0 });
 }
 
@@ -173,13 +173,14 @@ export function skipScroll(element: Element) {
  * reading the position here—between the two—records where the content has already
  * landed and leaves the jump silent.
  *
- * A viewport that has yet to scroll holds no gesture, and `playScroll` opens one
- * without sounding a detent, so there is nothing there to silence.
+ * Only a viewport already holding a gesture is moved, since which ancestor scrolled
+ * is not knowable from here. One that has yet to scroll holds none, and `playScroll`
+ * opens it without sounding a detent, so there is nothing there to silence.
  */
-export function skipEnclosingScroll(element: Element) {
+export function skipScrollAbove(element: Element) {
   for (let parent = element.parentElement; parent; parent = parent.parentElement) {
     if (gestures.has(parent)) {
-      skipScroll(parent);
+      skipScrollAt(parent);
     }
   }
 }
