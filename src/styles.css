@@ -75,7 +75,7 @@
   );
   --color-scrim: color-mix(in oklab, var(--color-background) 50%, transparent);
   --color-selection-foreground: var(--color-background);
-  --color-selection-background: color-mix(in oklab, var(--color-foreground) 75%, var(--color-accent));
+  --color-selection-background: var(--color-foreground);
   --color-active-background: light-dark(
     oklch(from var(--color-accent) 88% var(--tint-soft) h),
     oklch(from var(--color-accent) 24% var(--tint-soft) h)
