@@ -1,11 +1,15 @@
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+export function clamp(value: number, floor: number, ceiling: number): number {
+  return Math.max(Math.min(value, ceiling), floor);
 }
 
-/**
- * Steps an index by `direction` around a list of `length`, wrapping at both
- * ends. An index of -1 (not found) steps to the first or the last entry.
- */
 export function cycle(length: number, from: number, direction: 1 | -1): number {
-  return length === 0 ? 0 : (from + direction + length) % length;
+  if (length === 0) {
+    return 0;
+  }
+
+  if (from < 0) {
+    return direction === 1 ? 0 : length - 1;
+  }
+
+  return (from + direction + length) % length;
 }

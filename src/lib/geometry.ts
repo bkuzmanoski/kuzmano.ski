@@ -41,7 +41,7 @@ export function constrain(rect: Rect, container: Size): Rect {
 
 /** Clamps a cell's leading edge so a cell of `cellSize` stays inside a container of `containerSize`. */
 export function clampToContainer(position: number, containerSize: number, cellSize: number): number {
-  return clamp(position, 0, Math.max(0, containerSize - cellSize));
+  return clamp(position, 0, containerSize - cellSize);
 }
 
 export function scaleInset(inset: Inset, scale: number): Inset {

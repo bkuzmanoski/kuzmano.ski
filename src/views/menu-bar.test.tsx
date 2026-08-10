@@ -62,7 +62,7 @@ describe("opening a menu", () => {
 });
 
 describe("navigating an open menu", () => {
-  test("up and down keys cycle the menu items", () => {
+  test("the up and down keys cycle the menu items", () => {
     render(<MenuBar />);
 
     openWithPointer("Go");
@@ -77,7 +77,16 @@ describe("navigating an open menu", () => {
     expect(highlightedItem()).toBe("About");
   });
 
-  test("left and right keys walk the menu bar, wrapping around", () => {
+  test("the up key enters a freshly opened menu at its last item", () => {
+    render(<MenuBar />);
+
+    openWithPointer("Go");
+
+    fireEvent.keyDown(openMenu()!, { key: "ArrowUp" });
+    expect(highlightedItem()).toBe("Contact");
+  });
+
+  test("the left and right keys walk the menu bar, wrapping around", () => {
     render(<MenuBar />);
 
     openWithKeyboard("File");
@@ -108,7 +117,7 @@ describe("navigating an open menu", () => {
     expect(highlightedItem()).toBe("About");
   });
 
-  test("escape closes the menu and returns the focus to its title", () => {
+  test("the escape key closes the menu and returns the focus to its title", () => {
     render(<MenuBar />);
 
     openWithKeyboard("Go");
@@ -120,7 +129,7 @@ describe("navigating an open menu", () => {
 });
 
 describe("navigating the closed menu bar", () => {
-  test("left and right keys move the focus between menu titles without opening their menus", () => {
+  test("the left and right keys move the focus between menu titles without opening their menus", () => {
     render(<MenuBar />);
 
     title("File").focus();
