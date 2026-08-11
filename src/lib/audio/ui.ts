@@ -101,31 +101,33 @@ function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
+/** A gesture opens owing a full notch, so its first movement sounds a detent. */
+function openGesture(top: number, at: number): ScrollGesture {
+  return { top, at, speed: 0, distance: SCROLL_DETENT_PIXELS };
+}
+
 export function playScroll(element: Element) {
   const now = performance.now();
   const top = getScrollTop(element);
   const gesture = gestures.get(element);
 
   if (!gesture) {
-    gestures.set(element, { top, at: now, speed: 0, distance: 0 });
+    gestures.set(element, openGesture(top, now));
     return;
   }
 
   const elapsed = now - gesture.at;
   const moved = Math.abs(top - gesture.top);
 
-  gesture.top = top;
-  gesture.at = now;
-
   /* A jump after a long pause is not a scroll gesture: it is a window opening
    * at a saved position, or content resizing under a fixed scroll offset. */
   if (elapsed > SCROLL_DETENT_IDLE_MS) {
-    gesture.speed = 0;
-    gesture.distance = 0;
-
+    gestures.set(element, openGesture(top, now));
     return;
   }
 
+  gesture.top = top;
+  gesture.at = now;
   gesture.distance += moved;
 
   /* Two events inside the same clock tick tell us nothing about speed, and one that
@@ -163,7 +165,7 @@ export function playScrollStep(element: Element) {
  * stops the next real scroll from reading the jump as travel.
  */
 export function skipScrollAt(element: Element) {
-  gestures.set(element, { top: getScrollTop(element), at: performance.now(), speed: 0, distance: 0 });
+  gestures.set(element, openGesture(getScrollTop(element), performance.now()));
 }
 
 /**
