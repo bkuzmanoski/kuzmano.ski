@@ -47,7 +47,7 @@
     inset: 0;
 
     border-right-width: min(1px, var(--safe-area-right));
-    border-bottom-width: min(1px, max(0px, calc(var(--safe-area-bottom) - (100lvh - 100dvh)))); /* TODO */
+    border-bottom-width: min(1px, var(--safe-area-bottom));
     border-left-width: min(1px, var(--safe-area-left));
 
     box-shadow: none;
