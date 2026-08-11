@@ -74,7 +74,7 @@ export function MenuBar() {
           action: () => window.open(SITE_SOURCE_URL, "_blank"),
         },
         { kind: "separator" },
-        { kind: "action", label: "Reset", action: reset },
+        { kind: "action", label: "Restart", action: reset },
       ],
     },
   ];
