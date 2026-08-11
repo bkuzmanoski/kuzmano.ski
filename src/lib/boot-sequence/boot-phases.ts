@@ -98,18 +98,18 @@ export const isBeginKey = (event: KeyboardEvent) =>
 
 export const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
 
-export async function whenFontsReady(): Promise<void> {
+export async function whenFontReady(): Promise<void> {
   const fontSet = (document as Partial<Document>).fonts;
 
   if (!fontSet) {
     return;
   }
 
-  const consoleFont = getComputedStyle(document.documentElement).getPropertyValue("--font-console").trim();
+  const promptFont = getComputedStyle(document.documentElement).getPropertyValue("--font-chrome").trim();
 
   try {
-    if (consoleFont) {
-      await fontSet.load(consoleFont);
+    if (promptFont) {
+      await fontSet.load(promptFont);
     }
 
     await fontSet.ready;

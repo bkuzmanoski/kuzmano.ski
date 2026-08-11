@@ -363,19 +363,17 @@
 
   & .prompt {
     margin-bottom: 5dvh;
-    font: var(--font-console);
+    font: var(--font-chrome);
     color: var(--color-boot-sequence-light);
+    letter-spacing: var(--font-chrome-letter-spacing);
 
     & .block {
       display: inline-block;
 
-      /* Matches the metrics of U+2588 in Monaco9 (advance 750, ink -250 to 1125 of 2000 upem).
-       * Drawing the block as a box instead of a glyph avoids rendering artefacts in Safari. */
-      width: 0.375em;
-      height: 0.6875em;
-      margin-left: 0.375em; /* One character of the monospaced advance. */
-
-      vertical-align: -0.125em;
+      width: 0.55em;
+      height: 0.83em;
+      margin-bottom: -0.03em;
+      margin-left: 0.385em;
 
       background-color: currentColor;
 

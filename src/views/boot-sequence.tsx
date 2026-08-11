@@ -21,7 +21,7 @@ import {
   phaseFlags,
   sequence,
   startOfPhaseMs,
-  whenFontsReady,
+  whenFontReady,
   whenIllustrationReady,
 } from "#/lib/boot-sequence/boot-phases";
 import type { Motion, Phase } from "#/lib/boot-sequence/boot-phases";
@@ -151,7 +151,7 @@ function Sequence() {
     const waitingForInput = new AbortController();
 
     const loading = [
-      whenFontsReady(),
+      whenFontReady(),
       whenIllustrationReady(illustrationImageRef.current),
       new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_MS))),
     ];

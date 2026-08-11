@@ -7,15 +7,6 @@
   src: url("./assets/fonts/ChicagoFLF.woff2") format("woff2");
 }
 
-@font-face {
-  font-family: "Monaco9";
-  font-weight: 400;
-  font-style: normal;
-
-  font-display: block;
-  src: url("./assets/fonts/Monaco9.woff2") format("woff2");
-}
-
 :root {
   /* Layers */
   --layer-desktop: 100;
@@ -38,14 +29,12 @@
   /* Typography */
   --font-family-chrome: ChicagoFLF, sans-serif;
   --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
-  --font-family-console: "Monaco9", ui-monospace, monospace;
   --font-chrome-size: 16px; /* Named as well as set, for layout that has to be scaled. */
   --font-chrome: var(--font-chrome-size) var(--font-family-chrome);
   --font-chrome-letter-spacing: -0.01em; /* Set alongside --font-chrome; the shorthand cannot carry it. */
   --font-ui-line-height: 20px; /* Named as well as set, for layout that has to line up with a line box. */
   --font-ui: 14px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
-  --font-console: 32px var(--font-family-console);
 
   /* Colors */
   --tint-faint: 0.012;
