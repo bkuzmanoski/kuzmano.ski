@@ -132,20 +132,13 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       return;
     }
 
-    switch (event.key) {
-      case "Enter":
-      case " ":
-        event.preventDefault();
-        playClick();
-        openIcon(iconDefinition);
+    const isEnterOrSpace = event.key === "Enter" || event.key === " ";
+    const isAltO = event.altKey && event.code === "KeyO";
 
-        break;
-      default:
-        if (event.altKey && event.code === "KeyO") {
-          event.preventDefault();
-          playClick();
-          openIcon(iconDefinition);
-        }
+    if (isEnterOrSpace || isAltO) {
+      event.preventDefault();
+      playClick();
+      openIcon(iconDefinition);
     }
   }
 
