@@ -1,38 +1,15 @@
 import clsx from "clsx";
 
-import type { StyleWithVars } from "#/lib/style";
+import WatchIcon from "#/assets/images/spinner.svg?react";
 
 import styles from "./spinner.module.css";
 
-/* The blocks of the ring, clockwise from the left of its top edge, defined
- * as lines on the five by five grid laid out by the stylesheet. */
-const RING: ReadonlyArray<StyleWithVars> = [
-  { row: 1, column: 2 },
-  { row: 1, column: 3 },
-  { row: 1, column: 4 },
-  { row: 2, column: 5 },
-  { row: 3, column: 5 },
-  { row: 4, column: 5 },
-  { row: 5, column: 4 },
-  { row: 5, column: 3 },
-  { row: 5, column: 2 },
-  { row: 4, column: 1 },
-  { row: 3, column: 1 },
-  { row: 2, column: 1 },
-].map(({ row, column }, index) => ({ gridArea: `${row} / ${column}`, "--block-index": index }));
-
 /**
- * A ring of blocks with a bright head sweeping around it.
+ * A System 6-era watch, its minute hand ticking clockwise to mark time passing.
  *
- * Each block takes its color from `currentColor`; `--block-size` sets
- * how large they are. Caller can set each via `className`.
+ * The watch takes its color from `currentColor`; `--step-ms` sets how long each
+ * position of the hand is held for. Caller can set each via `className`.
  */
 export function Spinner({ className, label = "Loading" }: { className?: string; label?: string }) {
-  return (
-    <div className={clsx(styles.spinner, className)} role="status" aria-label={label}>
-      {RING.map((blockStyle) => (
-        <span key={blockStyle.gridArea} style={blockStyle} />
-      ))}
-    </div>
-  );
+  return <WatchIcon className={clsx(styles.spinner, className)} role="status" aria-label={label} />;
 }

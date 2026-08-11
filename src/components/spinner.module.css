@@ -1,26 +1,49 @@
 .spinner {
-  --block-size: 6px;
-  --blocks: 12;
-  --step-ms: 75ms;
+  --hands: 8;
+  --step-ms: 100ms;
 
-  display: grid;
-  grid: repeat(5, var(--block-size)) / repeat(5, var(--block-size));
+  & :global(.hand) path {
+    --hand-index: 0;
 
-  & span {
-    --block-index: 0; /* Set from JS. */
+    animation: tick-watch-hand calc(var(--hands) * var(--step-ms)) step-end infinite;
+    animation-delay: calc((var(--hand-index) - var(--hands)) * var(--step-ms));
 
-    background: currentColor;
-    animation: sweep-spinner calc(var(--blocks) * var(--step-ms)) steps(4, jump-none) infinite;
-    animation-delay: calc((var(--block-index) + 1 - var(--blocks)) * var(--step-ms));
+    &:nth-child(2) {
+      --hand-index: 1;
+    }
+
+    &:nth-child(3) {
+      --hand-index: 2;
+    }
+
+    &:nth-child(4) {
+      --hand-index: 3;
+    }
+
+    &:nth-child(5) {
+      --hand-index: 4;
+    }
+
+    &:nth-child(6) {
+      --hand-index: 5;
+    }
+
+    &:nth-child(7) {
+      --hand-index: 6;
+    }
+
+    &:nth-child(8) {
+      --hand-index: 7;
+    }
   }
 }
 
-@keyframes sweep-spinner {
-  from {
+@keyframes tick-watch-hand {
+  0% {
     opacity: 1;
   }
 
-  to {
-    opacity: 0.2;
+  12.5% {
+    opacity: 0;
   }
 }
