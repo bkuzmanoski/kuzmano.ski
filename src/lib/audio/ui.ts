@@ -30,12 +30,12 @@ const DETENT: Voice = {
 const HOVER_LEVEL = 0.22;
 const HOVER_INTERVAL = 0.03;
 
-const SCROLL_DETENT_PIXELS = 24; // How far the content moves between detents.
+const SCROLL_DETENT_PIXELS = 12; // How far the content moves between detents.
 const SCROLL_DETENT_FULL_SPEED = 2200; // The speed, in pixels per second, at which a detent is at full strength.
 const SCROLL_DETENT_STEP_SPEED = 450; // The speed a step is credited with. A press is one notch however fast it repeats, so every press sounds alike.
 const SCROLL_DETENT_LEVEL = { quiet: 0.3, loud: 0.45 };
 const SCROLL_DETENT_RATE = { slow: 0.92, fast: 1.08 };
-const SCROLL_DETENT_INTERVAL = 0.018;
+const SCROLL_DETENT_INTERVAL_MS = 0.018;
 const SCROLL_DETENT_IDLE_MS = 250;
 const SCROLL_DETENT_SPEED_SMOOTHING = 0.5;
 
@@ -71,7 +71,7 @@ function playScrollDetent(speed: number) {
   playSound((context) => {
     const at = context.currentTime + LEAD_TIME;
 
-    if (at < lastDetentAt + SCROLL_DETENT_INTERVAL) {
+    if (at < lastDetentAt + SCROLL_DETENT_INTERVAL_MS) {
       return;
     }
 
