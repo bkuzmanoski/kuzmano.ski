@@ -19,6 +19,12 @@ export interface Inset {
   left: number;
 }
 
+export interface Transform {
+  scale: number;
+  x: number;
+  y: number;
+}
+
 /**
  * Fits `rect` inside `container`, shrinking it if it cannot fit. A zero-sized
  * container means "not measured yet", so the rect passes through untouched.
@@ -73,5 +79,20 @@ export function insetToViewport(box: Rect, viewport: Size): Inset {
     right: box.x + box.width - viewport.width,
     bottom: box.y + box.height - viewport.height,
     left: -box.x,
+  };
+}
+
+/**
+ * The scale and translation that places `from` where `to` is, for an element whose transform
+ * origin is the origin of the coordinates both rects are given in. The rects are taken to
+ * share an aspect ratio, so their widths set the scale on both axes.
+ */
+export function transformBetween(from: Rect, to: Rect): Transform {
+  const scale = from.width === 0 ? 1 : to.width / from.width;
+
+  return {
+    scale,
+    x: to.x - from.x * scale,
+    y: to.y - from.y * scale,
   };
 }

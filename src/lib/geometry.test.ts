@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { constrain, insetRect, insetToViewport, scaleInset } from "./geometry";
+import { constrain, insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry";
 
-import type { Inset, Rect, Size } from "./geometry";
+import type { Inset, Rect, Size, Transform } from "./geometry";
 
 const containerSize: Size = { width: 1000, height: 800 };
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
@@ -66,10 +66,10 @@ describe("insetRect", () => {
   });
 
   test("leaves the box centred when the inset is symmetric", () => {
-    const inner = insetRect(rect, inset);
+    const innerRect = insetRect(rect, inset);
 
-    expect(inner.x + inner.width / 2).toBeCloseTo(rect.x + rect.width / 2);
-    expect(inner.y + inner.height / 2).toBeCloseTo(rect.y + rect.height / 2);
+    expect(innerRect.x + innerRect.width / 2).toBeCloseTo(rect.x + rect.width / 2);
+    expect(innerRect.y + innerRect.height / 2).toBeCloseTo(rect.y + rect.height / 2);
   });
 
   test("a zero inset returns the rect itself", () => {
@@ -108,5 +108,43 @@ describe("insetToViewport", () => {
     expect(box.x + edges.left).toBe(0);
     expect(box.x + box.width - edges.right).toBe(viewport.width);
     expect(box.y + box.height - edges.bottom).toBe(viewport.height);
+  });
+});
+
+describe("transformBetween", () => {
+  const apply = ({ scale, x, y }: Transform, box: Rect): Rect => ({
+    x: box.x * scale + x,
+    y: box.y * scale + y,
+    width: box.width * scale,
+    height: box.height * scale,
+  });
+
+  const originalRect: Rect = { x: 200, y: 150, width: 400, height: 300 };
+  const targetRect: Rect = { x: 50, y: 25, width: 800, height: 600 };
+
+  test("transforms the original rect to the target rect", () => {
+    expect(apply(transformBetween(originalRect, targetRect), originalRect)).toEqual(targetRect);
+  });
+
+  test("transforms a child rect of the original rect to the corresponding position and size in the target rect", () => {
+    const childRect: Rect = { x: 300, y: 250, width: 100, height: 100 }; // Offset by 100, 100 inside `originalRect`.
+    const transformedRect = apply(transformBetween(originalRect, targetRect), childRect);
+
+    expect(transformedRect.x - targetRect.x).toBeCloseTo(200); // The offset doubles with the rect.
+    expect(transformedRect.y - targetRect.y).toBeCloseTo(200);
+    expect(transformedRect.width).toBeCloseTo(200);
+    expect(transformedRect.height).toBeCloseTo(200);
+  });
+
+  test("is the identity between a rect and itself", () => {
+    expect(transformBetween(originalRect, originalRect)).toEqual({ scale: 1, x: 0, y: 0 });
+  });
+
+  test("holds a scale of one for an unmeasured rect", () => {
+    expect(transformBetween({ x: 0, y: 0, width: 0, height: 0 }, targetRect)).toEqual({
+      scale: 1,
+      x: targetRect.x,
+      y: targetRect.y,
+    });
   });
 });

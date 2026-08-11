@@ -1,8 +1,7 @@
-import { insetRect, scaleInset } from "./geometry";
+import { insetRect, scaleInset } from "../geometry";
 
-import type { Inset, Rect } from "./geometry";
+import type { Inset, Rect } from "../geometry";
 
-const BEZEL: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 const CORNER_RADIUS = 16;
 const EDGE_BOW = 8;
 
@@ -37,8 +36,8 @@ export interface ScreenParameters {
   clipPath: string;
 }
 
-export function screenParametersFor(display: Rect, scale: number): ScreenParameters {
-  const inset = scaleInset(BEZEL, scale);
+export function screenParametersFor(display: Rect, bezel: Inset, scale: number): ScreenParameters {
+  const inset = scaleInset(bezel, scale);
   const box = insetRect(display, inset);
 
   return {

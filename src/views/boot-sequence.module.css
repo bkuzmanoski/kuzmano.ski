@@ -1,5 +1,6 @@
 .container {
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
+  --stage-zoom-ms: 0ms; /* Set from JS. */
   --crt-warm-up-ms: 0ms; /* Set from JS. */
   --logo-draw-ms: 0ms; /* Set from JS. */
   --glass-fade-ms: 0ms; /* Set from JS. */
@@ -28,14 +29,31 @@
   }
 }
 
+/* What the zoom scales: it holds the layers that are placed against each other — the
+ * illustration and the display over its cutout — so one transform takes both and they stay
+ * registered while it runs. Its box is the viewport, so a transform origin at its top-left
+ * corner matches the viewport coordinates the boxes inside it are placed in. */
 .stage {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
+  --zoom-out: none; /* Set from JS. */
+  --spotlight-spill: 0%; /* Set from JS. */
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  transform-origin: 0 0;
+
+  transition: transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Only the zoom in is animated: a framing that changes while the stage is still zoomed out
+   * (a resize) takes effect at once. */
+  &.zoomedOut {
+    transform: var(--zoom-out);
+    transition: none;
+  }
+
+  &.preparingToZoom {
+    will-change: transform;
+  }
 }
 
 .hidden {
@@ -43,13 +61,13 @@
 }
 
 .illustration {
-  position: relative;
-  display: flex;
+  position: absolute; /* Placed and sized from JS. */
+  z-index: 2; /* Over the display, which shows through the transparent cutout in it. */
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
   & .illustrationBody {
-    position: relative;
-    display: flex;
+    position: absolute;
+    inset: 0;
   }
 
   &.preparingToLeave {
@@ -77,16 +95,18 @@
     position: absolute;
     inset: 0;
 
+    /* Sized against the illustration rather than the viewport: the zoom scales whatever is on
+     * the stage, so a floor drawn in viewport units would stop short of the sides while the
+     * stage is zoomed out. Four illustrations wide covers the viewport at every framing. */
     &::before {
       content: "";
 
       position: absolute;
       top: 100%;
-      right: calc(50% - 50vw);
-      left: calc(50% - 50vw);
+      right: -150%;
+      left: -150%;
 
-      width: 100vw;
-      height: calc(100dvh - 100% / 2);
+      height: 100%;
 
       opacity: 0.8;
       background: linear-gradient(
@@ -101,10 +121,10 @@
 
       position: absolute;
       right: -50%;
-      bottom: -8%;
+      bottom: calc(-1 * var(--spotlight-spill));
       left: -50%;
 
-      height: 16%;
+      height: calc(2 * var(--spotlight-spill));
       border-radius: 50%;
 
       opacity: 0.4;
@@ -130,8 +150,8 @@
   & picture,
   & img {
     display: block;
-    max-width: 140vw;
-    max-height: 90dvh;
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -203,18 +223,14 @@
 
 .displayMask {
   --display-scale: 1; /* Set from JS. */
-  --phosphor-color: #fff; /* Set from JS. */
   --screen-radius: 0px; /* Set from JS */
   --inset: 0; /* Set from JS. */
-  --scanline-pitch: 2px; /* Set from JS. */
-  --scanline-alpha: 0; /* Set from JS. */
-  --scanline-offset: 0px; /* Set from JS. */
 
-  position: fixed;
+  position: absolute;
   z-index: 1;
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  & .display,
+  & .displayBackdrop,
   & .glassOverlay {
     position: absolute;
     inset: 0;
@@ -241,7 +257,7 @@
   height: 0;
 }
 
-.viewableArea {
+.display {
   position: absolute;
   inset: var(--inset);
 

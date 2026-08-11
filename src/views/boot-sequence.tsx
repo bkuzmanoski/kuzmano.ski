@@ -15,34 +15,39 @@ import {
   MINIMUM_LOADING_MS,
   MOTION_MS,
   REDUCED_MOTION_MS,
+  hasStageZoom,
   isBeginKey,
   isTouchOnly,
   phaseFlags,
   sequence,
+  startOfPhaseMs,
   whenFontsReady,
   whenIllustrationReady,
-} from "#/lib/boot-sequence";
-import type { Motion, Phase } from "#/lib/boot-sequence";
-import { screenParametersFor } from "#/lib/crt-effect";
+} from "#/lib/boot-sequence/boot-phases";
+import type { Motion, Phase } from "#/lib/boot-sequence/boot-phases";
+import {
+  DISK_ACTIVITY_INDICATOR_PLACEMENT,
+  DISPLAY_BEZEL_INSET,
+  SPOTLIGHT_SPILL,
+  stageMetricsFor,
+} from "#/lib/boot-sequence/boot-stage";
+import type { StageMetrics } from "#/lib/boot-sequence/boot-stage";
+import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import { insetToViewport } from "#/lib/geometry";
-import type { Inset, Rect, Size } from "#/lib/geometry";
-import { useElementSize } from "#/lib/hooks/use-element-size";
+import type { Inset, Size, Transform } from "#/lib/geometry";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
-import { DISK_ACTIVITY_INDICATOR_PLACEMENT, VIEWABLE_AREA, viewableAreaOf } from "#/lib/macintosh-illustration";
 import { noSubscribe } from "#/lib/store";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./boot-sequence.module.css";
 
-interface Metrics {
-  display: Rect; // The cutout in the illustration, in viewport coordinates.
-  view: Size;
-}
-
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
+const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
 
-function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
-  const { display, view } = metrics;
+const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
+
+function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
+  const { display, scale, viewport } = metrics;
   const {
     isLoadingCoverUp,
     isWarmingUp,
@@ -53,8 +58,7 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     isRevealingDesktop,
   } = phaseFlags(phase);
 
-  const scale = display.width / VIEWABLE_AREA.width;
-  const screenParameters = screenParametersFor(display, scale);
+  const screenParameters = screenParametersFor(display, DISPLAY_BEZEL_INSET, scale);
   const displayMaskStyle: StyleWithVars = {
     left: display.x,
     top: display.y,
@@ -62,7 +66,7 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
     height: display.height,
     "--display-scale": scale,
     "--screen-radius": `${screenParameters.radius}px`,
-    "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, view) : screenParameters.inset),
+    "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset),
   };
   const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
 
@@ -71,10 +75,10 @@ function Display({ metrics, phase }: { metrics: Metrics; phase: Phase }) {
       className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
-      <DisplayBackdrop className={styles.display} />
+      <DisplayBackdrop className={styles.displayBackdrop} />
       <div
         className={clsx(
-          styles.viewableArea,
+          styles.display,
           !isDisplayOn && styles.hidden,
           isWarmingUp && styles.warmingUp,
           isRevealingDesktop && styles.growing,
@@ -104,35 +108,12 @@ function Sequence() {
   const [motion] = useState<Motion>(() => (getPrefersReducedMotion() ? REDUCED_MOTION_MS : MOTION_MS));
 
   const [phase, setPhase] = useState<Phase>("loading");
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
   const illustrationImageRef = useRef<HTMLImageElement>(null);
-  const illustrationImageSize = useElementSize(illustrationImageRef);
-
-  const updateMetrics = useEffectEvent(() => {
-    const element = illustrationImageRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    const box = element.getBoundingClientRect();
-
-    if (box.width === 0) {
-      return;
-    }
-
-    setMetrics({
-      display: viewableAreaOf(box),
-      view: { width: window.innerWidth, height: window.innerHeight },
-    });
-  });
-
-  useEffect(() => {
-    updateMetrics();
-  }, [illustrationImageSize]);
 
   useEffect(() => {
     const resizing = new AbortController();
+    const updateMetrics = () => setMetrics(stageMetricsFor(viewportSize()));
 
     window.addEventListener("resize", updateMetrics, { signal: resizing.signal });
 
@@ -143,7 +124,7 @@ function Sequence() {
     const phases = sequence(motion);
 
     setPhase(phases[0].phase);
-    playBootChime({ delaySeconds: phases[0].durationMs / 1000 });
+    playBootChime({ delaySeconds: startOfPhaseMs(phases, "display-on") / 1000 });
 
     let elapsedMs = 0;
 
@@ -210,20 +191,40 @@ function Sequence() {
     return null;
   }
 
-  const { isLoadingCoverUp, isDisplayOn, isPreparingToLeave, isRevealingDesktop } = phaseFlags(phase);
+  const { isLoadingCoverUp, isZoomedOut, isPreparingToZoom, isDisplayOn, isPreparingToLeave, isRevealingDesktop } =
+    phaseFlags(phase);
+  const hasZoom = hasStageZoom(motion);
   const containerStyle: StyleWithVars = {
     "--loading-cover-fade-ms": `${motion.loadingCoverFade}ms`,
+    "--stage-zoom-ms": `${motion.stageZoom}ms`,
     "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
     "--logo-draw-ms": `${motion.logoDraw}ms`,
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
+  const stageStyle: StyleWithVars = {
+    "--zoom-out": cssTransform(metrics.zoomOut),
+    "--spotlight-spill": `${SPOTLIGHT_SPILL * 100}%`,
+  };
+  const illustrationStyle = {
+    left: metrics.illustration.x,
+    top: metrics.illustration.y,
+    width: metrics.illustration.width,
+    height: metrics.illustration.height,
+  };
 
   return (
     <div className={styles.container} style={containerStyle}>
-      {metrics && <Display metrics={metrics} phase={phase} />}
-      <div className={styles.stage}>
+      <div
+        className={clsx(
+          styles.stage,
+          hasZoom && isZoomedOut && styles.zoomedOut,
+          hasZoom && isPreparingToZoom && styles.preparingToZoom,
+        )}
+        style={stageStyle}
+      >
+        <Display metrics={metrics} phase={phase} />
         <div
           className={clsx(
             styles.illustration,
@@ -231,6 +232,7 @@ function Sequence() {
             isPreparingToLeave && styles.preparingToLeave,
             isRevealingDesktop && styles.leaving,
           )}
+          style={illustrationStyle}
         >
           <div className={styles.spotlight} />
           <div className={styles.illustrationBody}>
@@ -239,7 +241,8 @@ function Sequence() {
               style={{
                 left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
                 top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
-                width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.size * 100}%`,
+                width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.width * 100}%`,
+                height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
               }}
             />
             <picture>
