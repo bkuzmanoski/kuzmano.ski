@@ -42,4 +42,5 @@ export default defineConfig(({ command }) => ({
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),
   ],
+  server: { host: true },
 }));
