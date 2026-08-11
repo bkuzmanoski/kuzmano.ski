@@ -10,7 +10,7 @@ import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/na
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
-import { restart } from "#/lib/boot";
+import { reset } from "#/lib/boot";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { cycle } from "#/lib/math";
@@ -74,7 +74,7 @@ export function MenuBar() {
           action: () => window.open(SITE_SOURCE_URL, "_blank"),
         },
         { kind: "separator" },
-        { kind: "action", label: "Restart", action: restart },
+        { kind: "action", label: "Reset", action: reset },
       ],
     },
   ];

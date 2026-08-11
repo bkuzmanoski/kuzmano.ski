@@ -56,7 +56,7 @@ export const getIsBootSequenceComplete = () => isBootSequenceComplete || !should
 export const serverIsBootSequenceComplete = () => true;
 
 /** Clears saved settings and reloads the desktop so the boot runs again. */
-export function restart() {
+export function reset() {
   try {
     localStorage.clear();
     sessionStorage.removeItem(HAS_BOOTED_STORAGE_KEY);
