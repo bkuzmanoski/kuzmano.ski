@@ -70,15 +70,15 @@ function ScrollPane({
   const viewportRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewportRef);
 
-  const isScrolledToEnd =
-    metrics.scrollHeight > metrics.clientHeight + 1 && metrics.top + metrics.clientHeight >= metrics.scrollHeight - 1;
+  const overscrolledEnd =
+    metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
 
   return (
     <div className={clsx(styles.scrollPane, className)}>
       <div
         ref={viewportRef}
         className={styles.viewport}
-        data-scrolled-to-end={isScrolledToEnd || undefined}
+        data-overscrolled={overscrolledEnd}
         id={id}
         tabIndex={-1}
         onScroll={(event) => {
