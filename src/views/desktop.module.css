@@ -4,15 +4,3 @@
   flex-direction: column;
   height: 100dvh;
 }
-
-.windowLayer {
-  position: relative;
-  z-index: var(--layer-desktop);
-
-  overflow: hidden;
-  flex: 1;
-
-  margin-right: var(--safe-area-right);
-  margin-bottom: var(--safe-area-bottom-remaining);
-  margin-left: var(--safe-area-left);
-}

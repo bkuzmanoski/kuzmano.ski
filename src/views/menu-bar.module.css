@@ -11,9 +11,9 @@
   flex: none;
   align-items: center;
 
-  height: var(--menu-bar-inset);
+  height: calc(var(--safe-area-top) + var(--menu-bar-height));
   padding: var(--safe-area-top) calc(var(--gutter) + var(--safe-area-right)) 0
-    calc(var(--gutter) + var(--safe-area-left));
+    calc(var(--safe-area-left) + var(--gutter));
 
   background: var(--color-background);
   box-shadow: var(--shadow-menu-bar);

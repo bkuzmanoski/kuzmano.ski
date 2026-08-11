@@ -16,8 +16,8 @@ import {
 import type { WindowId } from "#/lib/window-manager";
 
 import { DesktopIcons } from "./desktop-icons";
-import styles from "./desktop.module.css";
 import { WindowBody, WindowSidebar } from "./window-body";
+import styles from "./window-layer.module.css";
 import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
