@@ -17,7 +17,13 @@
   --layer-boot-sequence: 600;
 
   /* Metrics */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-bottom-remaining: max(0px, calc(var(--safe-area-bottom) - (100lvh - 100dvh)));
   --menu-bar-height: 32px;
+  --menu-bar-inset: calc(var(--menu-bar-height) + var(--safe-area-top));
   --window-title-bar-height: 28px;
   --window-control-size: 16px;
   --window-sidebar-width: 240px;
@@ -132,6 +138,7 @@ body {
 html {
   overflow: hidden;
   overscroll-behavior: none;
+  background: var(--wallpaper);
 
   &[data-boot]::before {
     content: "";

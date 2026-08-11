@@ -5,17 +5,15 @@
   --logo-draw-ms: 0ms; /* Set from JS. */
   --glass-fade-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
-  --light-position: 50% 80%;
-  --light-size: 100% 80%;
-  --light-falloff: 80%;
+  --viewport-height: 0px; /* Set from JS. */
 
   position: fixed;
   z-index: var(--layer-boot-sequence);
   inset: 0;
   background: radial-gradient(
-    var(--light-size) at var(--light-position),
+    100% calc(0.8 * var(--viewport-height)) at 50% calc(0.8 * var(--viewport-height)),
     var(--color-boot-sequence-background),
-    var(--color-boot-sequence-dark) var(--light-falloff)
+    var(--color-boot-sequence-dark) 80%
   );
 
   &::after {
@@ -276,10 +274,17 @@
     animation: crt-warm-up var(--crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
   }
 
+  /* The inset it grows to is measured against the interactive area, so its bottom edge is carried
+   * the rest of the way to the overlay's own box: the wallpaper it hands over to is painted behind
+   * floating browser UI as well, and a bottom edge that stopped short would show as a band of the
+   * backdrop until the overlay leaves. Animated alongside the inset, or the edge would jump as the
+   * growth begins. */
   &.growing {
+    margin-bottom: calc(var(--viewport-height) - 100lvh);
     border-radius: 0;
     transition:
       inset var(--desktop-reveal-ms) ease-in,
+      margin-bottom var(--desktop-reveal-ms) ease-in,
       border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
   }
 }
@@ -341,14 +346,20 @@
   }
 }
 
+/* Centred in the interactive area rather than the overlay's box, so the prompt does not sit under
+ * floating browser UI. The cover below it stays full-bleed. */
 .loadingContent {
   position: absolute;
   z-index: 5;
-  inset: 0;
+  top: 0;
+  right: 0;
+  left: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
+
+  height: var(--viewport-height);
 
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 

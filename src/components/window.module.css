@@ -44,13 +44,11 @@
   }
 
   &.maximized {
-    position: fixed;
-    inset: var(--menu-bar-height) 0 0;
+    inset: 0;
 
-    /* The window meets the menu bar at the top and the viewport on the other three sides. */
-    border-right: none;
-    border-bottom: none;
-    border-left: none;
+    border-right-width: min(1px, var(--safe-area-right));
+    border-bottom-width: min(1px, var(--safe-area-bottom-remaining));
+    border-left-width: min(1px, var(--safe-area-left));
 
     box-shadow: none;
   }

@@ -201,6 +201,7 @@ function Sequence() {
     "--logo-draw-ms": `${motion.logoDraw}ms`,
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
+    "--viewport-height": `${metrics.viewport.height}px`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
   const stageStyle: StyleWithVars = {

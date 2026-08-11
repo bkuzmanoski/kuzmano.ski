@@ -2,16 +2,17 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-
-  width: 100%;
   height: 100dvh;
-
-  background: var(--wallpaper);
 }
 
 .windowLayer {
   position: relative;
   z-index: var(--layer-desktop);
+
   overflow: hidden;
   flex: 1;
+
+  margin-right: var(--safe-area-right);
+  margin-bottom: var(--safe-area-bottom-remaining);
+  margin-left: var(--safe-area-left);
 }

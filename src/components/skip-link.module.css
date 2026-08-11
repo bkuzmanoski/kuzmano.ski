@@ -13,7 +13,11 @@
   color: var(--color-foreground);
   text-decoration: none;
 
+  /* Below the menu bar, which the top inset has made taller, and clear of the left inset. */
   &:focus {
-    transform: translate(var(--tooltip-margin), calc(var(--menu-bar-height) + var(--tooltip-margin)));
+    transform: translate(
+      calc(var(--safe-area-left) + var(--tooltip-margin)),
+      calc(var(--menu-bar-inset) + var(--tooltip-margin))
+    );
   }
 }
