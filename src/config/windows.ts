@@ -10,7 +10,7 @@ export const WINDOW_LAYOUT: WindowLayout = {
 
 export const SIDEBAR_LAYOUT: SidebarLayout = {
   defaultWidth: 240,
-  minWidth: 160,
+  minWidth: 208,
   maxWidth: 480,
 };
 
