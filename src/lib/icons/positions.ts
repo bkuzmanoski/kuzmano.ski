@@ -1,4 +1,5 @@
-import { createClientStore } from "./client-store";
+import { createClientStore } from "../client-store";
+
 import { loadPositions, savePositions } from "./icon";
 
 import type { IconLayout, IconPosition, IconPositions } from "./icon";

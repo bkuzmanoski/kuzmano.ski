@@ -2,18 +2,17 @@ import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
-import { ICONS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
+import { ICONS, ICON_IDS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
 import { desktopRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/ui";
 import { downloadFile } from "#/lib/download";
-import { clampToContainer } from "#/lib/geometry";
 import type { Rect } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
-import type { Icon } from "#/lib/icon";
-import { adjacentIconId } from "#/lib/icon-navigation";
-import type { IconPlacement } from "#/lib/icon-navigation";
+import type { Icon, IconPlacement } from "#/lib/icons/icon";
+import { positionFromDrop, resolveIconPlacements } from "#/lib/icons/layout";
+import { adjacentIconId } from "#/lib/icons/navigation";
 import { isArrowKey } from "#/lib/keys";
 import type { ArrowKey } from "#/lib/keys";
 import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager";
@@ -22,6 +21,8 @@ import type { WindowId } from "#/lib/window-manager";
 import styles from "./desktop-icons.module.css";
 
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+
+const ICONS_BY_ID = new Map(ICONS.map((iconDefinition) => [iconDefinition.id, iconDefinition]));
 
 export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: WindowId; from: Rect }) => void }) {
   const content = useWindowContent();
@@ -65,30 +66,18 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
   const openRoutes = new Set(Object.values(content).map(({ route }) => desktopRouteOf(route)));
-  const containerWidth = containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth);
-  const containerHeight = containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight);
+  const container = {
+    width: containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth),
+    height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
+  };
 
   /* Nothing is placed until `positions` has been read on the client which keeps the icons out of the server render. */
-  const placements: Array<IconPlacement & { iconDefinition: Icon }> = ICONS.flatMap((iconDefinition) => {
-    const position = positions?.[iconDefinition.id];
-
-    if (!position) {
-      return [];
-    }
-
-    return [
-      {
-        id: iconDefinition.id,
-        iconDefinition,
-        x: clampToContainer(
-          containerWidth - position.right - ICON_LAYOUT.cellSize,
-          containerWidth,
-          ICON_LAYOUT.cellSize,
-        ),
-        y: clampToContainer(position.top, containerHeight, ICON_LAYOUT.cellSize),
-      },
-    ];
-  });
+  const placements: Array<IconPlacement & { iconDefinition: Icon }> = positions
+    ? resolveIconPlacements(ICON_IDS, positions, container, ICON_LAYOUT).flatMap((placement) => {
+        const iconDefinition = ICONS_BY_ID.get(placement.id);
+        return iconDefinition ? [{ ...placement, iconDefinition }] : [];
+      })
+    : [];
 
   function selectIcon(id: string) {
     setSelectedIconId(id);
@@ -183,9 +172,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
           onSelect={() => selectIcon(id)}
           onOpen={() => openIcon(iconDefinition)}
-          onMoveStart={(nextX, nextY) =>
-            moveIcon(id, { right: containerWidth - nextX - ICON_LAYOUT.cellSize, top: nextY })
-          }
+          onMoveStart={(nextX, nextY) => moveIcon(id, positionFromDrop({ x: nextX, y: nextY }, container, ICON_LAYOUT))}
           onMoveEnd={commitIconPositions}
           onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
         />

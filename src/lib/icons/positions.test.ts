@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
-import { createIconPositionsStore } from "./icon-positions";
+import { createIconPositionsStore } from "./positions";
 
 import type { IconLayout } from "./icon";
 

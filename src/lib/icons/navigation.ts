@@ -1,11 +1,7 @@
-import type { Position } from "./geometry";
-import type { ArrowKey } from "./keys";
+import type { IconPlacement } from "./icon";
+import type { ArrowKey } from "../keys";
 
-const OFF_AXIS_DISTANCE_WEIGHT = 2; // How much further an icon off the arrow's axis has to be before it loses to one on it during keyboard navigation.
-
-export interface IconPlacement extends Position {
-  id: string;
-}
+const OFF_AXIS_DISTANCE_WEIGHT = 2; // How much further an icon off the arrow's axis has to be before it loses to one on that axis during keyboard navigation.
 
 /**
  * The icon an arrow key selects, or null when nothing lies the given direction.

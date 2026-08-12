@@ -1,6 +1,6 @@
 import { DESTINATIONS, DESTINATION_ORDER } from "#/config/navigation";
-import type { Icon, IconLayout } from "#/lib/icon";
-import { createIconPositionsStore } from "#/lib/icon-positions";
+import type { Icon, IconLayout } from "#/lib/icons/icon";
+import { createIconPositionsStore } from "#/lib/icons/positions";
 
 export const ICONS: Array<Icon> = [
   ...DESTINATION_ORDER.map((id) => ({

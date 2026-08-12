@@ -11,6 +11,7 @@ import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
 import { unlockAudio } from "#/lib/audio/context";
 import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import {
   MINIMUM_LOADING_MS,
   MOTION_MS,
@@ -23,16 +24,15 @@ import {
   startOfPhaseMs,
   whenFontReady,
   whenIllustrationReady,
-} from "#/lib/boot-sequence/boot-phases";
-import type { Motion, Phase } from "#/lib/boot-sequence/boot-phases";
+} from "#/lib/boot-sequence/phases";
+import type { Motion, Phase } from "#/lib/boot-sequence/phases";
 import {
   DISK_ACTIVITY_INDICATOR_PLACEMENT,
   DISPLAY_BEZEL_INSET,
   SPOTLIGHT_SPILL,
   stageMetricsFor,
-} from "#/lib/boot-sequence/boot-stage";
-import type { StageMetrics } from "#/lib/boot-sequence/boot-stage";
-import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
+} from "#/lib/boot-sequence/stage";
+import type { StageMetrics } from "#/lib/boot-sequence/stage";
 import { noSubscribe } from "#/lib/emitter";
 import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Size, Transform } from "#/lib/geometry";

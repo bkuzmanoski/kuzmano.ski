@@ -1,4 +1,4 @@
-import type { IconKind } from "#/lib/icon";
+import type { IconKind } from "#/lib/icons/icon";
 
 export interface Destination {
   title: string;

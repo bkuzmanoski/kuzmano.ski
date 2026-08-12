@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { SPOTLIGHT_SPILL, stageMetricsFor } from "./boot-stage";
+import { SPOTLIGHT_SPILL, stageMetricsFor } from "./stage";
 
 import type { Rect, Size, Transform } from "../geometry";
 

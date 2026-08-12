@@ -1,14 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  HOLD_MS,
-  MOTION_MS,
-  REDUCED_MOTION_MS,
-  hasStageZoom,
-  phaseFlags,
-  sequence,
-  startOfPhaseMs,
-} from "./boot-phases";
+import { HOLD_MS, MOTION_MS, REDUCED_MOTION_MS, hasStageZoom, phaseFlags, sequence, startOfPhaseMs } from "./phases";
 
 describe("phaseFlags", () => {
   test("the loading cover stays up until the illustration is revealed", () => {

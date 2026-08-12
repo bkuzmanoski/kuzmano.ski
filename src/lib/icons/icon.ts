@@ -1,4 +1,6 @@
-import { readStoredJson, writeStored } from "./storage";
+import { readStoredJson, writeStored } from "../storage";
+
+import type { Position } from "../geometry";
 
 export type IconKind = "page" | "collection" | "download";
 
@@ -18,6 +20,10 @@ export interface IconLayout {
   cellSize: number;
   spacing: number;
   position: IconPosition;
+}
+
+export interface IconPlacement extends Position {
+  id: string;
 }
 
 function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout): IconPositions {

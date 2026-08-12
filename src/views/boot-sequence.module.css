@@ -26,10 +26,6 @@
   }
 }
 
-/* What the zoom scales: it holds the layers that are placed against each other — the
- * illustration and the display over its cutout — so one transform takes both and they stay
- * registered while it runs. Its box is the viewport, so a transform origin at its top-left
- * corner matches the viewport coordinates the boxes inside it are placed in. */
 .stage {
   --zoom-out: none; /* Set from JS. */
   --spotlight-spill: 0%; /* Set from JS. */
