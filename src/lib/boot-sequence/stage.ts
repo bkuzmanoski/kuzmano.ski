@@ -6,7 +6,7 @@ import type { Inset, Rect, Size, Transform } from "../geometry";
 const ILLUSTRATION_RECT: Rect = { x: 0, y: 0, width: 1214, height: 1067 };
 const DISPLAY_RECT: Rect = { x: 330, y: 99, width: 554, height: 410 };
 const DISK_ACTIVITY_INDICATOR_RECT: Rect = { x: 890, y: 670, width: 6, height: 6 };
-const FOCUS_AREA_RECT: Rect = { x: 271, y: 0, width: 672, height: 784 }; // The front face of the case excluding the bottom outer bezel.
+const FOCUS_AREA_RECT: Rect = { x: 271, y: 0, width: 672, height: 784 };
 
 export const DISPLAY_BEZEL_INSET: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
