@@ -1,4 +1,8 @@
 .window {
+  --window-safe-area-inline-start: 0px;
+  --window-safe-area-inline-end: 0px;
+  --window-safe-area-block-end: 0px;
+
   composes: chromePanel from "./shared.module.css";
 
   position: absolute;
@@ -43,13 +47,14 @@
     max-height: 100%;
   }
 
+  /* Extend into the safe-area insets when maximized. */
   &.maximized {
-    inset: 0;
+    --window-safe-area-inline-start: var(--safe-area-left);
+    --window-safe-area-inline-end: var(--safe-area-right);
+    --window-safe-area-block-end: var(--safe-area-bottom);
 
-    border-right-width: min(1px, var(--safe-area-right));
-    border-bottom-width: min(1px, var(--safe-area-bottom));
-    border-left-width: min(1px, var(--safe-area-left));
-
+    inset: 0 calc(-1 * var(--safe-area-right)) calc(-1 * var(--safe-area-bottom)) calc(-1 * var(--safe-area-left));
+    border-width: 1px 0 0;
     box-shadow: none;
   }
 
@@ -69,6 +74,7 @@
   align-items: center;
 
   height: var(--window-title-bar-height);
+  padding-inline: var(--window-safe-area-inline-start) var(--window-safe-area-inline-end);
   border-bottom: 1px solid var(--color-border);
 
   font: var(--font-chrome);
@@ -80,19 +86,19 @@
     top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
 
     &.controlClose {
-      left: var(--gutter);
+      left: calc(var(--gutter) + var(--window-safe-area-inline-start));
     }
 
     &.controlZoom {
-      right: var(--gutter);
+      right: calc(var(--gutter) + var(--window-safe-area-inline-end));
     }
   }
 
   & .bars {
     position: absolute;
     top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
-    right: 4px;
-    left: 4px;
+    right: calc(4px + var(--window-safe-area-inline-end));
+    left: calc(4px + var(--window-safe-area-inline-start));
 
     height: var(--window-control-size);
 
@@ -165,6 +171,10 @@
       --reserved-scrollbar-width: calc(
         var(--scrollbar-width) + 1px
       ); /* +1px for the border defined in `scrollbar.module.css`. */
+
+      @media not all and (any-hover: hover) and (any-pointer: fine) {
+        --reserved-scrollbar-width: 0px; /* Scrollbars are hidden on touch devices (see `scrollbar.module.css`). */
+      }
     }
 
     &.sidebar {
@@ -173,15 +183,24 @@
     }
   }
 
-  & .viewport {
+  & .contentContainer {
     scrollbar-width: none;
 
     overflow-y: auto;
     flex: 1;
 
     min-width: 0;
+    padding-block-end: var(--window-safe-area-block-end);
 
     outline: none;
+  }
+
+  & .scrollPane:first-child > .contentContainer {
+    padding-inline-start: var(--window-safe-area-inline-start);
+  }
+
+  & .scrollPane:last-child > .contentContainer {
+    padding-inline-end: var(--window-safe-area-inline-start);
   }
 }
 

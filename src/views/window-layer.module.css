@@ -2,8 +2,8 @@
   position: relative;
   z-index: var(--layer-desktop);
 
-  overflow: hidden;
   flex: 1;
 
+  min-height: 0;
   margin: 0 var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
 }

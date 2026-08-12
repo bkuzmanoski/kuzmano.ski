@@ -16,7 +16,7 @@ import styles from "./window.module.css";
 
 import type { CSSProperties, ReactNode, Ref } from "react";
 
-/** The id carried by the focused window's viewport, so the skip link has a stable target. */
+/** The id carried by the focused window's content container, so the skip link has a stable target. */
 export const WINDOW_CONTENT_ID = "window-content";
 
 function TitleBarButton({
@@ -53,7 +53,7 @@ function TitleBarButton({
   );
 }
 
-/** A scrolling viewport and the scrollbar that drives it. A window has one per pane. */
+/** A scrolling container. A window has one per pane. */
 function ScrollPane({
   id,
   ref,
@@ -71,8 +71,8 @@ function ScrollPane({
   resizeControl?: ReactNode;
   children: ReactNode;
 }) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const { metrics, measure } = useScrollMetrics(viewportRef);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+  const { metrics, measure } = useScrollMetrics(contentContainerRef);
 
   const overscrolledEnd =
     metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
@@ -80,8 +80,8 @@ function ScrollPane({
   return (
     <div ref={ref} className={clsx(styles.scrollPane, className)} style={style}>
       <div
-        ref={viewportRef}
-        className={styles.viewport}
+        ref={contentContainerRef}
+        className={styles.contentContainer}
         data-overscrolled={overscrolledEnd}
         id={id}
         tabIndex={-1}
@@ -102,12 +102,12 @@ function ScrollPane({
         controls={id}
         metrics={metrics}
         onScrollTop={(top) => {
-          if (viewportRef.current) {
-            viewportRef.current.scrollTop = top;
+          if (contentContainerRef.current) {
+            contentContainerRef.current.scrollTop = top;
           }
         }}
         onStep={(delta) => {
-          const element = viewportRef.current;
+          const element = contentContainerRef.current;
 
           if (!element) {
             return false;
@@ -176,7 +176,7 @@ export function Window({
   onResetSidebarWidth: () => void;
   children: ReactNode;
 }) {
-  const viewportId = useId();
+  const fallbackContentId = useId();
   const sidebarId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const windowRef = useRef<HTMLElement>(null);
@@ -185,7 +185,7 @@ export function Window({
   const [resizeTarget, setResizeTarget] = useState<"window" | "sidebar" | null>(null);
 
   const isResizing = resizeTarget !== null;
-  const contentId = focused ? WINDOW_CONTENT_ID : viewportId;
+  const contentId = focused ? WINDOW_CONTENT_ID : fallbackContentId;
 
   /* Focus the window element on window focus so that keyboard
    * navigation continues into its own controls. */
