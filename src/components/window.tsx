@@ -9,6 +9,7 @@ import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
+import type { StyleWithVars } from "#/lib/style";
 
 import { Scrollbar } from "./scrollbar";
 import { Tooltip } from "./tooltip";
@@ -144,6 +145,7 @@ export function Window({
   unplaced,
   sidebar,
   sidebarWidth,
+  sidebarMinWidth,
   onClose,
   onZoom,
   onFocus,
@@ -166,6 +168,7 @@ export function Window({
   unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
   sidebar?: ReactNode;
   sidebarWidth: number;
+  sidebarMinWidth: number;
   onClose: () => void;
   onZoom: () => void;
   onFocus: () => void;
@@ -186,6 +189,10 @@ export function Window({
 
   const isResizing = resizeTarget !== null;
   const contentId = focused ? WINDOW_CONTENT_ID : fallbackContentId;
+  const sidebarStyle: StyleWithVars = {
+    "--window-sidebar-width": `${sidebarWidth}px`,
+    "--window-sidebar-min-width": `${sidebarMinWidth}px`,
+  };
 
   /* Focus the window element on window focus so that keyboard
    * navigation continues into its own controls. */
@@ -273,7 +280,7 @@ export function Window({
               ref={sidebarRef}
               id={sidebarId}
               className={styles.sidebar}
-              style={{ width: sidebarWidth }}
+              style={sidebarStyle}
               isResizing={isResizing}
             >
               {sidebar}

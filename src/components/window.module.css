@@ -185,8 +185,18 @@
     }
 
     &.sidebar {
+      --window-sidebar-width: 0px; /* Set from JS. */
+      --window-sidebar-min-width: 0px; /* Set from JS. */
+
       flex: none;
-      max-width: calc(100% - var(--window-body-min-width));
+
+      /* Each pane spends part of its box on the safe-area inset it touches, so both bounds
+       * are stated as the width left to use. The body's floor is applied last: a window too
+       * narrow to honour both takes what it needs from the sidebar. */
+      width: min(
+        max(calc(var(--window-sidebar-min-width) + var(--window-safe-area-inline-start)), var(--window-sidebar-width)),
+        calc(100% - var(--window-body-min-width) - var(--window-safe-area-inline-end) - 1px) /* -1px for the divider. */
+      );
     }
   }
 

@@ -1,7 +1,13 @@
 import { memo, useEffect, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
-import { commitSidebarWidth, resetSidebarWidth, setSidebarWidth, useSidebarWidth } from "#/config/windows";
+import {
+  SIDEBAR_LAYOUT,
+  commitSidebarWidth,
+  resetSidebarWidth,
+  setSidebarWidth,
+  useSidebarWidth,
+} from "#/config/windows";
 import { constrain } from "#/lib/geometry";
 import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
@@ -77,6 +83,7 @@ const DesktopWindow = memo(function OpenWindow({
       unplaced={unplaced}
       sidebar={hasSidebar(id) && <WindowSidebar route={route} />}
       sidebarWidth={sidebarWidth}
+      sidebarMinWidth={SIDEBAR_LAYOUT.minWidth}
       onClose={() => close(id)}
       onZoom={() => toggleZoom(id)}
       onFocus={() => focus(id)}
