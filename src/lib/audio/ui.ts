@@ -50,6 +50,20 @@ export function playClick() {
   });
 }
 
+/** Sounds a click when the press event is disambiguated from a scroll. */
+export const scrollSafeClickSoundHandlers = {
+  onPointerDown: ({ pointerType }: { pointerType: string }) => {
+    if (pointerType !== "touch") {
+      playClick();
+    }
+  },
+  onPointerUp: ({ pointerType }: { pointerType: string }) => {
+    if (pointerType === "touch") {
+      playClick();
+    }
+  },
+};
+
 let lastHoverAt = 0;
 
 export function playHover() {

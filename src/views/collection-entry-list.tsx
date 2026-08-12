@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
 import type { Collection } from "#/content";
-import { playClick } from "#/lib/audio/ui";
+import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/ui";
 import { formatDate } from "#/lib/date";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { useWindowActions } from "#/lib/window-manager";
@@ -47,6 +47,7 @@ export function CollectionEntryList({
           <li key={entry.slug}>
             <a
               {...itemProps(index)}
+              {...scrollSafeClickSoundHandlers}
               aria-current={isActive || undefined}
               aria-label={entry.title}
               className={clsx(styles.card, isActive && styles.active)}
@@ -55,7 +56,6 @@ export function CollectionEntryList({
                 event.preventDefault();
                 openEntry(entry.slug);
               }}
-              onPointerDown={playClick}
             >
               <span className={styles.title}>{entry.title}</span>
               <span className={styles.meta}>

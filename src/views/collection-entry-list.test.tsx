@@ -8,11 +8,17 @@ import { CollectionEntryList } from "./collection-entry-list";
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 const skipScrollAbove = vi.hoisted(() => vi.fn());
+const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/ui", () => ({ playClick: () => {}, playHover, skipScrollAbove }));
+vi.mock("#/lib/audio/ui", () => ({
+  playClick: () => {},
+  playHover,
+  skipScrollAbove,
+  scrollSafeClickSoundHandlers,
+}));
 
 const collection = collections["design-notes"]!;
 const entries = collection.list();
@@ -22,6 +28,8 @@ beforeEach(() => {
   open.mockClear();
   playHover.mockClear();
   skipScrollAbove.mockClear();
+  scrollSafeClickSoundHandlers.onPointerDown.mockClear();
+  scrollSafeClickSoundHandlers.onPointerUp.mockClear();
 });
 
 function renderList(activeSlug: string | null) {
@@ -107,6 +115,16 @@ test("enter and space open the entry that holds the focus", () => {
 
   fireEvent.keyDown(links[2]!, { key: " " });
   expect(open).toHaveBeenLastCalledWith(routeOf(2));
+});
+
+test("an entry sounds its press through both halves of a pointer press", () => {
+  const links = renderList(entries[0]!.slug);
+
+  fireEvent.pointerDown(links[1]!);
+  fireEvent.pointerUp(links[1]!);
+
+  expect(scrollSafeClickSoundHandlers.onPointerDown).toHaveBeenCalled();
+  expect(scrollSafeClickSoundHandlers.onPointerUp).toHaveBeenCalled();
 });
 
 test("a press opens the entry without leaving the page", () => {
