@@ -16,7 +16,7 @@ import {
   MOTION_MS,
   REDUCED_MOTION_MS,
   hasStageZoom,
-  isBeginKey,
+  isStartKey,
   isTouchOnly,
   phaseFlags,
   sequence,
@@ -170,7 +170,7 @@ function Sequence() {
     });
 
     function onKeyDown(event: KeyboardEvent) {
-      if (isBeginKey(event)) {
+      if (isStartKey(event)) {
         runSequence();
       }
     }
@@ -202,7 +202,7 @@ function Sequence() {
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
   };
-  const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
+  const startPrompt = isTouchOnly() ? "Tap to enter" : "Press any key to enter";
   const stageStyle: StyleWithVars = {
     "--zoom-out": cssTransform(metrics.zoomOut),
     "--spotlight-spill": `${SPOTLIGHT_SPILL * 100}%`,
@@ -258,7 +258,7 @@ function Sequence() {
           <Spinner className={styles.spinner} />
         ) : (
           <div className={styles.prompt}>
-            {beginPrompt}
+            {startPrompt}
             <span className={styles.block} aria-hidden />
           </div>
         )}

@@ -8,12 +8,7 @@ const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
 
 export const setBootOverlay = () => document.documentElement.setAttribute(BOOT_OVERLAY_ATTRIBUTE, "");
 
-/**
- * Removes the cover set by the pre-hydration script.
- *
- * The boot sequence removes it as it begins. A view that draws in place
- * of the desktop must also remove it.
- */
+/** Removes the cover set by the pre-hydration script. */
 export const clearBootOverlay = () => document.documentElement.removeAttribute(BOOT_OVERLAY_ATTRIBUTE);
 
 let bootDecision: boolean | null = null;

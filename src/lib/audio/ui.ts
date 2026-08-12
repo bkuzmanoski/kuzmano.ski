@@ -101,7 +101,7 @@ function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
-/** A gesture opens owing a full notch, so its first movement sounds a detent. */
+/* A gesture opens owing a full notch, so its first movement sounds a detent. */
 function openGesture(top: number, at: number): ScrollGesture {
   return { top, at, speed: 0, distance: SCROLL_DETENT_PIXELS };
 }
@@ -130,16 +130,12 @@ export function playScroll(element: Element) {
   gesture.at = now;
   gesture.distance += moved;
 
-  /* Two events inside the same clock tick tell us nothing about speed, and one that
-   * moved nothing vertically—a sibling axis scrolling, say—is not travel at all. */
   if (elapsed <= 0 || moved <= 0 || gesture.distance < SCROLL_DETENT_PIXELS) {
     return;
   }
 
   const speed = (moved / elapsed) * 1000;
 
-  /* The opening sample of a gesture has nothing to blend with: smoothing it against a
-   * standing start would halve the detent that every gesture begins on. */
   gesture.speed =
     gesture.speed > 0
       ? gesture.speed * SCROLL_DETENT_SPEED_SMOOTHING + speed * (1 - SCROLL_DETENT_SPEED_SMOOTHING)
