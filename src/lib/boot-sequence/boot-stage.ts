@@ -80,10 +80,10 @@ export function stageMetricsFor(viewport: Size): StageMetrics {
   const illustration = zoomedInBoxFor(viewport);
 
   return {
+    viewport,
     illustration,
     display: displayAreaOf(illustration),
     scale: illustration.width / ILLUSTRATION_RECT.width,
     zoomOut: transformBetween(illustration, zoomedOutBoxFor(viewport)),
-    viewport,
   };
 }
