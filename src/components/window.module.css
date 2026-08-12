@@ -164,6 +164,11 @@
    * held unselectable for as long as a handle has the pointer. */
   &[data-resizing] {
     user-select: none;
+
+    /* Reset the transition for the sidebar while resizing (see below). */
+    & .scrollPane.sidebar {
+      transition: none;
+    }
   }
 
   & .scrollPane {
@@ -197,6 +202,15 @@
         max(calc(var(--window-sidebar-min-width) + var(--window-safe-area-inline-start)), var(--window-sidebar-width)),
         calc(100% - var(--window-body-min-width) - var(--window-safe-area-inline-end) - 1px) /* -1px for the divider. */
       );
+
+      /* A page is drawn at the default width, since the stored one cannot be read until the
+       * client has hydrated (see `sidebar-width.ts`). The width transition animates the
+       * restoration of the stored sidebar width. */
+      transition: width 250ms ease-out;
+
+      @media (prefers-reduced-motion: reduce) {
+        transition-duration: 0s;
+      }
     }
   }
 
