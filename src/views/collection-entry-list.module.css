@@ -1,8 +1,4 @@
 .list {
-  --card-padding-block: 8px;
-  --gap-meta: 12px;
-  --title-padding: 2px 4px;
-
   display: flex;
   flex-direction: column;
 
@@ -17,13 +13,9 @@
 
 .card {
   display: grid;
-  gap: 2px;
 
-  padding-block: var(--card-padding-block);
-
-  /* A card spans the list, so its rule and its highlight always reach the edge. Only what
-   * it holds stops short of a scrollbar, present or not, and so never rewraps. */
-  padding-inline: var(--gutter) calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+  padding-block: var(--gutter);
+  padding-inline: var(--gutter) calc(var(--gutter) + var(--reserved-scrollbar-width, 0px)); /* Prevent layout shift when a scrollbar appears. Defined in `window.module.css`. */
 
   text-decoration: none;
 
@@ -50,7 +42,7 @@
 
 .title {
   justify-self: start;
-  padding: var(--title-padding);
+  padding: 2px 4px;
   font: var(--font-ui-bold);
   box-decoration-break: clone;
 
@@ -60,13 +52,8 @@
   }
 }
 
-.description,
-.meta {
-  padding-inline: 4px; /* Line up with the inset the title's highlight adds. */
-  color: var(--color-foreground-muted);
-}
-
 .meta {
   display: flex;
-  gap: var(--gap-meta);
+  padding-inline: 4px; /* Line up with the inset the title's highlight adds. */
+  color: var(--color-foreground-muted);
 }

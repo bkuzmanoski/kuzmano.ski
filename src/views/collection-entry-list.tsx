@@ -58,9 +58,7 @@ export function CollectionEntryList({
               onPointerDown={playClick}
             >
               <span className={styles.title}>{entry.title}</span>
-              <span className={styles.description}>{entry.description}</span>
               <span className={styles.meta}>
-                {entry.category && <span>{entry.category}</span>}
                 <time dateTime={entry.date}>{formatDate(entry.date, DATE_FORMAT)}</time>
               </span>
             </a>
