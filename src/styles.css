@@ -136,6 +136,7 @@ body {
 html {
   overscroll-behavior: none;
   background: var(--wallpaper);
+  background-color: var(--color-foreground);
 
   &[data-boot]::before {
     content: "";
