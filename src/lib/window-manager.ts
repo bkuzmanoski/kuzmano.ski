@@ -2,7 +2,7 @@ import { createContext, use } from "react";
 
 import { constrain } from "./geometry";
 
-import type { Position, Rect, Size } from "./geometry";
+import type { Rect, Size } from "./geometry";
 
 /**
  * The windows the desktop can open. Every route resolves to exactly one of them,
@@ -32,6 +32,7 @@ export interface WindowLayout {
   defaultSize: Size;
   minSize: Size;
   cascadeOffset: number;
+  padding: number;
 }
 
 export interface ManagerState {
@@ -84,22 +85,33 @@ function updateGeometry(state: ManagerState, id: WindowId, patch: Partial<Window
 }
 
 /**
- * The position of cascade slot `step`, measured from a window centred on the desktop.
+ * The position of cascade slot `step`.
  *
  * The halves are left unrounded so that they match, to the pixel, where CSS centres a
  * pre-rendered window (see `.unplaced` in `window.module.css`).
  */
-function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Position {
+function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Rect {
   const offset = step * layout.cascadeOffset;
 
+  /* An unmeasured desktop has no padded area to fit into. CSS places what the server
+   * drew, and the first measurement re-places it (see the `measure` case). */
+  if (surface.width === 0 || surface.height === 0) {
+    return { x: offset, y: offset, ...layout.defaultSize };
+  }
+
+  const x = Math.max(layout.padding, (surface.width - layout.defaultSize.width) / 2) + offset;
+  const y = Math.max(layout.padding, (surface.height - layout.defaultSize.height) / 2) + offset;
+
   return {
-    x: Math.max(0, (surface.width - layout.defaultSize.width) / 2) + offset,
-    y: Math.max(0, (surface.height - layout.defaultSize.height) / 2) + offset,
+    x,
+    y,
+    width: Math.min(layout.defaultSize.width, surface.width - layout.padding - x),
+    height: Math.min(layout.defaultSize.height, surface.height - layout.padding - y),
   };
 }
 
 /** The first unoccupied cascade slot. */
-function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Position {
+function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Rect {
   const openWindows = Object.values(state.geometry);
 
   for (let step = 0; step < WINDOW_IDS.length; step++) {
@@ -113,7 +125,8 @@ function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Position {
   return cascadeSlot(layout, state.surface, 0);
 }
 
-/** Every open window cascaded from the centre of the desktop, back to front, at its existing size. */
+/* Every open window cascaded from the centre of the desktop, back to front,
+ * at its existing size unless that size overflows the slot it lands in. */
 function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 
@@ -121,7 +134,14 @@ function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord
     const target = state.geometry[id];
 
     if (target) {
-      geometry[id] = { ...target, ...cascadeSlot(layout, state.surface, step), maximized: false };
+      const slot = cascadeSlot(layout, state.surface, step);
+
+      geometry[id] = {
+        ...slot,
+        width: Math.min(target.width, slot.width),
+        height: Math.min(target.height, slot.height),
+        maximized: false,
+      };
     }
   });
 
@@ -149,7 +169,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           content,
           geometry: {
             ...state.geometry,
-            [id]: { ...freeCascadeSlot(layout, state), ...layout.defaultSize, maximized: false },
+            [id]: { ...freeCascadeSlot(layout, state), maximized: false },
           },
           order: [...state.order, id],
           focused: id,
@@ -171,7 +191,15 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         return focusWindow(state, action.id);
       }
       case "move": {
-        return updateGeometry(state, action.id, { x: action.x, y: action.y });
+        const target = state.geometry[action.id];
+
+        if (!target) {
+          return state;
+        }
+
+        const constrainedRect = constrain({ ...target, x: action.x, y: action.y }, state.surface);
+
+        return updateGeometry(state, action.id, { x: constrainedRect.x, y: constrainedRect.y });
       }
       case "resize": {
         const target = state.geometry[action.id];
@@ -180,17 +208,14 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           return state;
         }
 
-        /* A window is drawn fitted to the desktop, so the drag starts from the drawn rect
-         * rather than the stored one. Taking the drawn position holds the far edges still
-         * while a window that was cut down to fit is resized. */
-        const drawn = constrain(target, state.surface);
-
-        return updateGeometry(state, action.id, {
-          x: drawn.x,
-          y: drawn.y,
+        const constrainedRect = constrain(target, state.surface);
+        const resized = {
+          ...constrainedRect,
           width: Math.max(layout.minSize.width, action.width),
           height: Math.max(layout.minSize.height, action.height),
-        });
+        };
+
+        return updateGeometry(state, action.id, constrain(resized, state.surface));
       }
       case "zoom": {
         const target = state.geometry[action.id];

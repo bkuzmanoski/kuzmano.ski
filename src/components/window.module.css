@@ -36,15 +36,15 @@
   }
 
   /* A window the server drew has no position as the window layer has not yet been
-   * measured. These values mirror the default position for the initial window placed
-   * by the window manager. */
+   * measured. These values mirror the default position and size for the initial window
+   * placed by the window manager (see `window-manager.ts`). */
   &.unplaced {
     top: 50%;
     left: 50%;
     translate: -50% -50%;
 
-    max-width: 100%;
-    max-height: 100%;
+    max-width: calc(100% - 2 * var(--window-layer-padding));
+    max-height: calc(100% - 2 * var(--window-layer-padding));
   }
 
   /* Extend into the safe-area insets when maximized. */

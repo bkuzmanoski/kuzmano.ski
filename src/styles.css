@@ -22,6 +22,7 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --menu-bar-height: 32px;
+  --window-layer-padding: 8px; /* Kept clear around a window as it is placed. Mirrors `WINDOW_LAYOUT.padding` in `config/windows.ts`. */
   --window-title-bar-height: 28px;
   --window-control-size: 16px;
   --window-body-min-width: 208px; /* What a window holds back from a sidebar being widened. Bounds `SIDEBAR_LAYOUT` in `config/windows.ts`. */

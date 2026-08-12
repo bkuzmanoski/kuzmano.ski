@@ -2,12 +2,14 @@ import { describe, expect, test } from "vitest";
 
 import { EMPTY_STATE, createWindowReducer } from "./window-manager";
 
+import type { Size } from "./geometry";
 import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
 
 const LAYOUT: WindowLayout = {
-  defaultSize: { width: 720, height: 560 },
-  minSize: { width: 480, height: 280 },
+  defaultSize: { width: 1024, height: 1024 },
+  minSize: { width: 480, height: 320 },
   cascadeOffset: 28,
+  padding: 8,
 };
 
 const SURFACE = { width: 1280, height: 800 };
@@ -20,11 +22,15 @@ const reducer = createWindowReducer(LAYOUT);
 
 const openAction = (id: WindowId, route: string): Action => ({ type: "open", id, route, title: route });
 
-function opened(...ids: Array<WindowId>): ManagerState {
+function openedOn(surface: Size, ...ids: Array<WindowId>): ManagerState {
   return ids.reduce(
     (state, id) => reducer(state, openAction(id, `/${id}`)),
-    reducer(EMPTY_STATE, { type: "measure", surface: SURFACE }),
+    reducer(EMPTY_STATE, { type: "measure", surface }),
   );
+}
+
+function opened(...ids: Array<WindowId>): ManagerState {
+  return openedOn(SURFACE, ...ids);
 }
 
 describe("open", () => {
@@ -43,7 +49,28 @@ describe("open", () => {
     expect(state.geometry.collection).toMatchObject({
       x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
       y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+      ...LAYOUT.defaultSize, // A desktop with room to spare places both windows at the default size.
     });
+  });
+
+  test("resizes a window down to fit the available space", () => {
+    const state = openedOn({ width: 600, height: 400 }, "page");
+
+    expect(state.geometry.page).toMatchObject({
+      x: LAYOUT.padding,
+      y: LAYOUT.padding,
+      width: 600 - 2 * LAYOUT.padding,
+      height: 400 - 2 * LAYOUT.padding,
+    });
+  });
+
+  test("resizes a cascaded window to fit the available space", () => {
+    const surface = { width: 800, height: 640 };
+    const state = openedOn(surface, "page", "collection");
+
+    // Centred, the default size clears the padding by 8px on every edge; a step of 28px does not.
+    expect(state.geometry.page).toMatchObject({ x: 40, y: 40, ...LAYOUT.defaultSize });
+    expect(state.geometry.collection).toMatchObject({ x: 68, y: 68, width: 700, height: 540 });
   });
 
   test("a closed window frees its slot for the next window", () => {
@@ -123,6 +150,16 @@ describe("move", () => {
     expect(state.geometry.page).toMatchObject({ x: 50, y: 50, ...LAYOUT.defaultSize });
   });
 
+  test("stops at the edge of the desktop rather than banking movement past it", () => {
+    const state = reducer(opened("page"), { type: "move", id: "page", x: 5000, y: 5000 });
+
+    expect(state.geometry.page).toMatchObject({
+      x: SURFACE.width - LAYOUT.defaultSize.width,
+      y: SURFACE.height - LAYOUT.defaultSize.height,
+      ...LAYOUT.defaultSize,
+    });
+  });
+
   test("a closed window is a no-op", () => {
     const state = opened("page");
     expect(reducer(state, { type: "move", id: "notFound", x: 1, y: 2 })).toBe(state);
@@ -138,6 +175,11 @@ describe("resize", () => {
   test("clamps the size to the minimum size", () => {
     const state = reducer(opened("page"), { type: "resize", id: "page", width: 10, height: 10 });
     expect(state.geometry.page).toMatchObject(LAYOUT.minSize);
+  });
+
+  test("stops at the edge of the desktop rather than banking size past it", () => {
+    const state = reducer(opened("page"), { type: "resize", id: "page", width: 5000, height: 5000 });
+    expect(state.geometry.page).toMatchObject({ x: 0, y: 0, ...SURFACE });
   });
 
   test("a window wider than the desktop takes the position it is rendered at", () => {
@@ -172,8 +214,21 @@ describe("measure", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("page", "/page"));
     const measured = reducer(preRendered, { type: "measure", surface: SURFACE });
 
-    expect(preRendered.geometry.page).toMatchObject({ x: 0, y: 0 });
-    expect(measured.geometry.page).toMatchObject(CENTRE_POSITION);
+    expect(preRendered.geometry.page).toMatchObject({ x: 0, y: 0, ...LAYOUT.defaultSize });
+    expect(measured.geometry.page).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+  });
+
+  test("the first measurement fits a pre-rendered window into the padded area", () => {
+    const preRendered = reducer(EMPTY_STATE, openAction("page", "/page"));
+    const measured = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
+
+    // What CSS drew before the desktop was measured (see `.unplaced` in `window.module.css`).
+    expect(measured.geometry.page).toMatchObject({
+      x: LAYOUT.padding,
+      y: LAYOUT.padding,
+      width: 600 - 2 * LAYOUT.padding,
+      height: 400 - 2 * LAYOUT.padding,
+    });
   });
 
   test("a subsequent measurement leaves the windows where they are", () => {
@@ -203,6 +258,25 @@ describe("organize", () => {
     expect(organizedState.geometry.collection).toMatchObject({
       x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
       y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+    });
+  });
+
+  test("resizes a window down to its cascade slot if it does not fit", () => {
+    const enlargedState = reducer(opened("page", "collection"), {
+      type: "resize",
+      id: "page",
+      width: 1200,
+      height: 700,
+    });
+    const resizedState = reducer(enlargedState, { type: "resize", id: "collection", width: 500, height: 300 });
+    const organizedState = reducer(resizedState, { type: "organize" });
+
+    expect(organizedState.geometry.page).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+    expect(organizedState.geometry.collection).toMatchObject({
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+      width: 500,
+      height: 300,
     });
   });
 
