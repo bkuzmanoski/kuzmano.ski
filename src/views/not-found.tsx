@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import { documentTitle } from "#/config/site";
 import { NOT_FOUND_TITLE } from "#/content/window-registry";
-import { useClearBootOverlay } from "#/lib/hooks/use-clear-boot-overlay";
+import { useClearBootOverlay } from "#/lib/boot-sequence/use-clear-boot-overlay";
 
 /**
  * The route-level 404. The window manager opens the 404 window from the URL, the

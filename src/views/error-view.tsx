@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { documentTitle } from "#/config/site";
-import { useClearBootOverlay } from "#/lib/hooks/use-clear-boot-overlay";
+import { useClearBootOverlay } from "#/lib/boot-sequence/use-clear-boot-overlay";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 

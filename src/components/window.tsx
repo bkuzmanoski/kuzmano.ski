@@ -6,7 +6,7 @@ import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
-import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
+import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import type { StyleWithVars } from "#/lib/style";

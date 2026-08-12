@@ -10,9 +10,9 @@ import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/na
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
-import { reset } from "#/lib/boot";
+import { reset } from "#/lib/boot-sequence/boot";
+import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
-import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
 import { cycle } from "#/lib/math";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
