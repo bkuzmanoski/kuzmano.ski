@@ -35,13 +35,20 @@
   }
 
   /* Top border border on overscroll. */
-  [data-overscrolled="start"] .list > li:first-child & {
+  &[data-overscrolled="start"] .list > li:first-child & {
     box-shadow: inset 0 1px 0 var(--color-border-muted);
   }
 
-  /* Bottom border border on overscroll. */
-  [data-overscrolled="end"] .list > li:last-child & {
-    box-shadow: inset 0 -1px 0 var(--color-border-muted);
+  /* Bottom border border on overscroll only where the list's own is out of view. */
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+  @container style(--window-safe-area-block-end: 0px) {
+    [data-overscrolled="end"] .list {
+      box-shadow: none;
+    }
+
+    [data-overscrolled="end"] .list > li:last-child .card {
+      box-shadow: inset 0 -1px 0 var(--color-border-muted);
+    }
   }
 }
 
