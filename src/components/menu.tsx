@@ -3,15 +3,18 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
-import OptionIcon from "#/assets/images/option-modifier.svg?react";
 import { playClick, playHover } from "#/lib/audio/ui";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
-import { useIsWindows } from "#/lib/hooks/use-is-windows";
+import { useIsMacOS } from "#/lib/hooks/use-is-macos";
 import { cycle } from "#/lib/math";
 
 import styles from "./menu.module.css";
 
 import type { KeyboardEvent } from "react";
+
+const CHAR_OPTION_KEY = "\u2325";
+const CHAR_NBSP = "\u00A0";
+const NARROW_NBSP = "\u202F";
 
 export type MenuItem =
   | {
@@ -41,6 +44,7 @@ export function Menu({
   onOpenAdjacent: (direction: 1 | -1) => void;
   onClose: () => void;
 }) {
+  const isMacOS = useIsMacOS();
   const flash = useActivationFlash<number>();
   const [focusedItemId, setFocusedItemId] = useState(-1);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -221,7 +225,7 @@ export function Menu({
             role="menuitem"
           >
             <span>{item.label}</span>
-            {item.shortcut && <ShortcutHint label={item.shortcut.label} />}
+            {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
             {item.accessory === "download" && <DownloadIcon className={styles.accessory} />}
             {item.accessory === "external-link" && <ExternalLinkIcon className={styles.accessory} />}
           </div>
@@ -231,13 +235,18 @@ export function Menu({
   );
 }
 
-function ShortcutHint({ label }: { label: string }) {
-  const isWindows = useIsWindows();
-
+function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
   return (
     <span className={styles.shortcut}>
-      {isWindows ? <span>Alt&#8239;+</span> : <OptionIcon className={styles.modifier} />}
-      <span>{label}</span>
+      {isMacOS ? (
+        <>
+          <span className={styles.modifierIcon}>{CHAR_OPTION_KEY}</span>
+          {CHAR_NBSP}
+        </>
+      ) : (
+        `Alt${NARROW_NBSP}+${NARROW_NBSP}`
+      )}
+      {label}
     </span>
   );
 }

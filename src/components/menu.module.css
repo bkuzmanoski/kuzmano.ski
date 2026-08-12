@@ -43,12 +43,15 @@
 
 .shortcut {
   display: inline-flex;
-  gap: 2px;
   align-items: center;
 
-  & .modifier {
-    width: 16px;
-    height: 16px;
+  & .modifierIcon {
+    transform: translateY(-1.5px);
+    display: inline-block;
+  }
+
+  @media not all and (any-hover: hover) and (any-pointer: fine) {
+    display: none;
   }
 }
 
