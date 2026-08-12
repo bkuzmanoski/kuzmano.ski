@@ -12,7 +12,7 @@ const LAYOUT: WindowLayout = {
   padding: 8,
 };
 
-const SURFACE = { width: 1280, height: 800 };
+const SURFACE = { width: 1600, height: 1200 }; // Room for the default size plus a cascade step on every edge.
 const CENTRE_POSITION = {
   x: (SURFACE.width - LAYOUT.defaultSize.width) / 2,
   y: (SURFACE.height - LAYOUT.defaultSize.height) / 2,
@@ -65,12 +65,12 @@ describe("open", () => {
   });
 
   test("resizes a cascaded window to fit the available space", () => {
-    const surface = { width: 800, height: 640 };
+    const surface = { width: 1080, height: 1080 };
     const state = openedOn(surface, "page", "collection");
 
-    // Centred, the default size clears the padding by 8px on every edge; a step of 28px does not.
-    expect(state.geometry.page).toMatchObject({ x: 40, y: 40, ...LAYOUT.defaultSize });
-    expect(state.geometry.collection).toMatchObject({ x: 68, y: 68, width: 700, height: 540 });
+    // Centred, the default size clears the padding by 20px on every edge; a step of 28px does not.
+    expect(state.geometry.page).toMatchObject({ x: 28, y: 28, ...LAYOUT.defaultSize });
+    expect(state.geometry.collection).toMatchObject({ x: 56, y: 56, width: 1016, height: 1016 });
   });
 
   test("a closed window frees its slot for the next window", () => {
@@ -268,15 +268,20 @@ describe("organize", () => {
       width: 1200,
       height: 700,
     });
-    const resizedState = reducer(enlargedState, { type: "resize", id: "collection", width: 500, height: 300 });
+    const resizedState = reducer(enlargedState, { type: "resize", id: "collection", width: 500, height: 400 });
     const organizedState = reducer(resizedState, { type: "organize" });
 
-    expect(organizedState.geometry.page).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+    // The page window loses the width its slot cannot hold and keeps the height that fits.
+    expect(organizedState.geometry.page).toMatchObject({
+      ...CENTRE_POSITION,
+      width: LAYOUT.defaultSize.width,
+      height: 700,
+    });
     expect(organizedState.geometry.collection).toMatchObject({
       x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
       y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
       width: 500,
-      height: 300,
+      height: 400,
     });
   });
 
