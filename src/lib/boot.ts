@@ -1,4 +1,4 @@
-import { createEmitter } from "./store";
+import { createEmitter } from "./emitter";
 
 export const HAS_BOOTED_STORAGE_KEY = "has-booted";
 

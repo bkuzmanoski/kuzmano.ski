@@ -11,14 +11,12 @@ import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
 import { playClick } from "#/lib/audio/ui";
-import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { Icon, IconKind } from "#/lib/icon";
 
 import styles from "./desktop-icon.module.css";
 
 import type { ComponentType, KeyboardEvent, Ref } from "react";
-
-const DRAG_THRESHOLD = 4;
 
 type GlyphIcon = ComponentType<{ className?: string }>;
 

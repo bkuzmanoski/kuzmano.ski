@@ -33,10 +33,10 @@ import {
 } from "#/lib/boot-sequence/boot-stage";
 import type { StageMetrics } from "#/lib/boot-sequence/boot-stage";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
+import { noSubscribe } from "#/lib/emitter";
 import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Size, Transform } from "#/lib/geometry";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
-import { noSubscribe } from "#/lib/store";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./boot-sequence.module.css";

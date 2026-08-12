@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
+import { commitSidebarWidth, resetSidebarWidth, setSidebarWidth, useSidebarWidth } from "#/config/windows";
 import { constrain } from "#/lib/geometry";
 import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
@@ -26,10 +27,11 @@ import type { ReactNode } from "react";
 const hasSidebar = (id: WindowId) => id === "collection";
 
 /**
- * One open window. Everything it needs arrives as a primitive, and the only context
- * it reads is the actions, whose value never changes. This prevents dragging one
- * from re-rendering all other windows. The layer below re-renders on every pointer
- * frame, but the windows that did not move compare equal here.
+ * One open window. Everything placed per window arrives as a primitive, so moving or
+ * resizing one does not re-render the others: the layer below re-renders on every
+ * pointer frame, but the windows that did not move compare equal here. What it reads
+ * for itself is shared by every window: the actions, whose value never changes, and
+ * the width of the sidebar.
  */
 const DesktopWindow = memo(function OpenWindow({
   id,
@@ -59,6 +61,7 @@ const DesktopWindow = memo(function OpenWindow({
   unplaced: boolean;
 }) {
   const { close, focus, move, resize, toggleZoom } = useWindowActions();
+  const sidebarWidth = useSidebarWidth();
 
   return (
     <Window
@@ -73,11 +76,15 @@ const DesktopWindow = memo(function OpenWindow({
       hidden={hidden}
       unplaced={unplaced}
       sidebar={hasSidebar(id) && <WindowSidebar route={route} />}
+      sidebarWidth={sidebarWidth}
       onClose={() => close(id)}
       onZoom={() => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={(nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
+      onResizeSidebar={setSidebarWidth}
+      onResizeSidebarEnd={commitSidebarWidth}
+      onResetSidebarWidth={resetSidebarWidth}
     >
       <WindowBody route={route} />
     </Window>

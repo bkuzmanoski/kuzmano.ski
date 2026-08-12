@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
-const noSubscribe = () => () => {};
+import { noSubscribe } from "./../emitter";
+
 const getIsMacOS = () => /Mac/i.test(navigator.userAgent);
 const serverIsMacOS = () => true; // Note: Assume macOS for this audience.
 

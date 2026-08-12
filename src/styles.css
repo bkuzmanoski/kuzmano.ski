@@ -24,7 +24,7 @@
   --menu-bar-height: 32px;
   --window-title-bar-height: 28px;
   --window-control-size: 16px;
-  --window-sidebar-width: 240px;
+  --window-body-min-width: 200px; /* What a window holds back from a sidebar being widened. Bounds `SIDEBAR_LAYOUT` in `config/windows.ts`. */
   --scrollbar-width: 20px;
   --tooltip-margin: 5px;
   --gutter: 12px;

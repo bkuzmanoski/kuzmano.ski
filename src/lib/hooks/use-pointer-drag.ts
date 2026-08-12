@@ -7,6 +7,9 @@ export interface DragDelta {
   dy: number;
 }
 
+/** The travel past which a press counts as a drag, for handles that also answer a click. */
+export const DRAG_THRESHOLD = 4;
+
 export function usePointerDrag<T>({
   threshold = 0,
   preventDefault = false,

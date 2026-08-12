@@ -169,8 +169,7 @@
 
     &.sidebar {
       flex: none;
-      width: var(--window-sidebar-width);
-      border-right: 1px solid var(--color-border);
+      max-width: calc(100% - var(--window-body-min-width));
     }
   }
 
@@ -183,5 +182,25 @@
     min-width: 0;
 
     outline: none;
+  }
+}
+
+.divider {
+  touch-action: none;
+  cursor: col-resize;
+
+  position: relative;
+
+  flex: none;
+
+  width: 1px;
+
+  background: var(--color-border);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: -4px;
   }
 }

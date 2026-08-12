@@ -1,7 +1,5 @@
-import { useSyncExternalStore } from "react";
-
+import { createClientStore } from "./client-store";
 import { readStored, writeStored } from "./storage";
-import { createEmitter } from "./store";
 import { THEME_STORAGE_KEY, applyTheme, isTheme } from "./theme";
 
 import type { Theme } from "./theme";
@@ -33,14 +31,11 @@ function read(): Settings {
   };
 }
 
-let state: Settings = typeof window === "undefined" ? DEFAULTS : read();
-
-const { emit, subscribe } = createEmitter();
+const { useValue, getValue, setValue } = createClientStore(DEFAULTS, read);
 
 function save<TKey extends keyof Settings>(key: TKey, storageKey: string, value: Settings[TKey]) {
-  state = { ...state, [key]: value };
+  setValue({ ...getValue(), [key]: value });
   writeStored(storageKey, value);
-  emit();
 }
 
 export function setTheme(theme: Theme) {
@@ -52,14 +47,7 @@ export function setSound(sound: Sound) {
   save("sound", SOUND_STORAGE_KEY, sound);
 }
 
-const getSnapshot = () => state;
-const getServerSnapshot = () => DEFAULTS;
-
-export function useSettings(): Settings {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-}
+export const useSettings = useValue;
 
 /** The current settings, outside React. Use `useSettings` in a component. */
-export function getSettings(): Settings {
-  return state;
-}
+export const getSettings = getValue;

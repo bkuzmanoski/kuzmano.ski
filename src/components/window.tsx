@@ -7,14 +7,14 @@ import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/hooks/use-is-boot-sequence-complete";
-import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
 import { Scrollbar } from "./scrollbar";
 import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode, Ref } from "react";
 
 /** The id carried by the focused window's viewport, so the skip link has a stable target. */
 export const WINDOW_CONTENT_ID = "window-content";
@@ -56,13 +56,17 @@ function TitleBarButton({
 /** A scrolling viewport and the scrollbar that drives it. A window has one per pane. */
 function ScrollPane({
   id,
+  ref,
   className,
+  style,
   isResizing,
   resizeControl,
   children,
 }: {
   id: string;
+  ref?: Ref<HTMLDivElement>;
   className?: string;
+  style?: CSSProperties;
   isResizing: boolean;
   resizeControl?: ReactNode;
   children: ReactNode;
@@ -74,7 +78,7 @@ function ScrollPane({
     metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
 
   return (
-    <div className={clsx(styles.scrollPane, className)}>
+    <div ref={ref} className={clsx(styles.scrollPane, className)} style={style}>
       <div
         ref={viewportRef}
         className={styles.viewport}
@@ -139,11 +143,15 @@ export function Window({
   hidden,
   unplaced,
   sidebar,
+  sidebarWidth,
   onClose,
   onZoom,
   onFocus,
   onMove,
   onResize,
+  onResizeSidebar,
+  onResizeSidebarEnd,
+  onResetSidebarWidth,
   children,
 }: {
   title: string;
@@ -157,18 +165,27 @@ export function Window({
   hidden: boolean;
   unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
   sidebar?: ReactNode;
+  sidebarWidth: number;
   onClose: () => void;
   onZoom: () => void;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (width: number, height: number) => void;
+  onResizeSidebar: (width: number) => void;
+  onResizeSidebarEnd: () => void;
+  onResetSidebarWidth: () => void;
   children: ReactNode;
 }) {
   const viewportId = useId();
   const sidebarId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const windowRef = useRef<HTMLElement>(null);
-  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const hasResizedSidebarRef = useRef(false);
+  const [resizeTarget, setResizeTarget] = useState<"window" | "sidebar" | null>(null);
+
+  const isResizing = resizeTarget !== null;
+  const contentId = focused ? WINDOW_CONTENT_ID : viewportId;
 
   /* Focus the window element on window focus so that keyboard
    * navigation continues into its own controls. */
@@ -192,15 +209,32 @@ export function Window({
   const resizeHandlers = usePointerDrag({
     start: () => {
       playClick();
-      setIsResizing(true);
+      setResizeTarget("window");
 
       return { width, height };
     },
     onStart: (delta, from) => onResize(from.width + delta.dx, from.height + delta.dy),
-    onEnd: () => setIsResizing(false),
+    onEnd: () => setResizeTarget(null),
   });
 
-  const contentId = focused ? WINDOW_CONTENT_ID : viewportId;
+  const sidebarResizeHandlers = usePointerDrag({
+    threshold: DRAG_THRESHOLD,
+    start: () => {
+      playClick();
+      setResizeTarget("sidebar");
+      hasResizedSidebarRef.current = false;
+
+      /* The sidebar is constrained by the window's width (see `window.module.css`),
+       * so the drag starts from the width on screen rather than the one it was given. */
+      return sidebarRef.current?.clientWidth ?? sidebarWidth;
+    },
+    onStart: (delta, from) => onResizeSidebar(from + delta.dx),
+    onEnd: (moved) => {
+      hasResizedSidebarRef.current = moved;
+      setResizeTarget(null);
+      onResizeSidebarEnd();
+    },
+  });
 
   return (
     <section
@@ -233,19 +267,39 @@ export function Window({
       </header>
       <div className={styles.content}>
         {sidebar && (
-          <ScrollPane className={styles.sidebar} id={sidebarId} isResizing={isResizing}>
-            {sidebar}
-          </ScrollPane>
+          <>
+            <ScrollPane
+              ref={sidebarRef}
+              id={sidebarId}
+              className={styles.sidebar}
+              style={{ width: sidebarWidth }}
+              isResizing={isResizing}
+            >
+              {sidebar}
+            </ScrollPane>
+            <button
+              aria-label="Resize sidebar"
+              className={styles.divider}
+              tabIndex={-1} /* Drag handle is not keyboard accessible. */
+              type="button"
+              onDoubleClick={() => {
+                if (!hasResizedSidebarRef.current) {
+                  onResetSidebarWidth();
+                }
+              }}
+              {...sidebarResizeHandlers}
+            />
+          </>
         )}
         <ScrollPane
           id={contentId}
           isResizing={isResizing}
           resizeControl={
             maximized ? null : (
-              <Tooltip label="Resize" suppressed={isResizing}>
+              <Tooltip label="Resize" suppressed={resizeTarget === "window"}>
                 <button
                   aria-label="Resize"
-                  className={clsx(styles.controlResize, isResizing && styles.pressed)}
+                  className={clsx(styles.controlResize, resizeTarget === "window" && styles.pressed)}
                   tabIndex={-1} /* Drag handle is not keyboard accessible. */
                   type="button"
                   {...resizeHandlers}
