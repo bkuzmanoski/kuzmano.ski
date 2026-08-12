@@ -275,6 +275,7 @@ export function Window({
         className={styles.titleBar}
         onDoubleClick={(event) => {
           if (!(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current)) {
+            playClick();
             onZoom();
           }
         }}

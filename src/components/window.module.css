@@ -134,9 +134,28 @@
 
 .controlButton {
   composes: filledControl;
+
+  position: relative;
+
   display: flex;
+
   width: var(--window-control-size);
   height: var(--window-control-size);
+
+  /* Extend the hit target to the height of the title bar. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: calc((var(--window-control-size) - var(--window-title-bar-height)) / 2);
+    inset-inline: -6px;
+  }
+
+  /* Increase hit target for touch devices. */
+  @media not all and (any-hover: hover) and (any-pointer: fine) {
+    &::before {
+      inset-inline: -14px;
+    }
+  }
 }
 
 .controlResize {
