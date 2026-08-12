@@ -159,6 +159,13 @@
   flex: 1;
   min-height: 0;
 
+  /* A press that lands beside text can start a native selection, which a touch device
+   * then follows with a loupe and a growing highlight as the drag goes on. The panes are
+   * held unselectable for as long as a handle has the pointer. */
+  &[data-resizing] {
+    user-select: none;
+  }
+
   & .scrollPane {
     display: flex;
     flex: 1;
@@ -207,6 +214,7 @@
 .divider {
   touch-action: none;
   cursor: col-resize;
+  user-select: none;
 
   position: relative;
 

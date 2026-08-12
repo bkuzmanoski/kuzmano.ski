@@ -219,6 +219,7 @@ export function Window({
 
   const sidebarResizeHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD,
+    preventDefault: true, // The divider sits between two panes of text; the press must not reach the selection that flanks it.
     start: () => {
       playClick();
       setResizeTarget("sidebar");
@@ -265,7 +266,7 @@ export function Window({
           </>
         )}
       </header>
-      <div className={styles.content}>
+      <div className={styles.content} data-resizing={isResizing || undefined}>
         {sidebar && (
           <>
             <ScrollPane
