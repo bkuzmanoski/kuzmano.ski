@@ -207,7 +207,7 @@
   }
 
   & .scrollPane:last-child > .contentContainer {
-    padding-inline-end: var(--window-safe-area-inline-start);
+    padding-inline-end: var(--window-safe-area-inline-end);
   }
 }
 
