@@ -184,6 +184,7 @@ export function Window({
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const windowRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const hasMovedWindowRef = useRef(false);
   const hasResizedSidebarRef = useRef(false);
   const [resizeTarget, setResizeTarget] = useState<"window" | "sidebar" | null>(null);
 
@@ -208,9 +209,16 @@ export function Window({
   }, [focused, hidden]);
 
   const moveHandlers = usePointerDrag({
+    threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
-    start: () => ({ x, y }),
+    start: () => {
+      hasMovedWindowRef.current = false;
+      return { x, y };
+    },
     onStart: (delta, from) => onMove(from.x + delta.dx, from.y + delta.dy),
+    onEnd: (moved) => {
+      hasMovedWindowRef.current = moved;
+    },
   });
 
   const resizeHandlers = usePointerDrag({
@@ -263,7 +271,15 @@ export function Window({
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
-      <header className={styles.titleBar} {...moveHandlers}>
+      <header
+        className={styles.titleBar}
+        onDoubleClick={(event) => {
+          if (!(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current)) {
+            onZoom();
+          }
+        }}
+        {...moveHandlers}
+      >
         {focused && <div className={styles.bars} aria-hidden />}
         <span className={styles.title}>{title}</span>
         {focused && (
