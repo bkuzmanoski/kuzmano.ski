@@ -165,6 +165,8 @@ div[role="button"] {
 
   background: transparent;
   outline: none;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
