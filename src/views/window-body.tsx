@@ -1,6 +1,7 @@
 import { Suspense, memo } from "react";
 
 import { EmptyState } from "#/components/empty-state";
+import { LoadingState } from "#/components/loading-state";
 import { pages } from "#/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
@@ -67,7 +68,7 @@ export const WindowSidebar = memo(function Sidebar({ route }: { route: string })
 /** The main pane of a window. */
 export const WindowBody = memo(function Body({ route }: { route: string }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoadingState />}>
       <Pane route={route} />
     </Suspense>
   );

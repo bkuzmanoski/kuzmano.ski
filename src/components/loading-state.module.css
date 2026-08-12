@@ -1,0 +1,23 @@
+.loadingState {
+  --delay-ms: 300ms;
+  --fade-in-ms: 150ms;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  padding: var(--gutter);
+
+  color: var(--color-foreground-muted);
+
+  opacity: 0;
+
+  animation: reveal-loading-state var(--fade-in-ms) ease-out var(--delay-ms) forwards;
+}
+
+@keyframes reveal-loading-state {
+  to {
+    opacity: 1;
+  }
+}
