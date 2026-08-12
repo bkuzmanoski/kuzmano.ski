@@ -5,7 +5,7 @@ import type { WindowLayout } from "#/lib/window-manager";
 export const WINDOW_LAYOUT: WindowLayout = {
   defaultSize: { width: 1024, height: 1024 },
   minSize: { width: 480, height: 320 },
-  cascadeOffset: 28, // Height of the title bar.
+  cascadeOffset: 28, // Height of the title bar defined in `styles.css`.
 };
 
 export const SIDEBAR_LAYOUT: SidebarLayout = {
