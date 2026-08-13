@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 
 import type { MDXComponents } from "mdx/types";
+import type { ComponentProps } from "react";
 
 export const mdxComponents: MDXComponents = {
-  a: ({ href, children, ...props }) => {
-    if (href && href.startsWith("/")) {
+  a: ({ href, children, ...props }: ComponentProps<"a">) => {
+    if (href?.startsWith("/")) {
       return (
         <Link to={href} {...props}>
           {children}

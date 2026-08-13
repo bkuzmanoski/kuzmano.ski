@@ -57,7 +57,7 @@ export function Menu({
   function select(index: number) {
     const item = items[index];
 
-    if (!item || item.kind !== "action" || item.disabled || flash.isRunning()) {
+    if (item?.kind !== "action" || item.disabled || flash.isRunning()) {
       return;
     }
 

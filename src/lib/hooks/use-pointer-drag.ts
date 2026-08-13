@@ -75,12 +75,10 @@ export function usePointerDrag<T>({
 
     pendingDeltaRef.current = { delta, value: active.value };
 
-    if (frameRef.current === null) {
-      frameRef.current = requestAnimationFrame(() => {
-        frameRef.current = null;
-        flush();
-      });
-    }
+    frameRef.current ??= requestAnimationFrame(() => {
+      frameRef.current = null;
+      flush();
+    });
   }
 
   function endDrag(event: ReactPointerEvent) {

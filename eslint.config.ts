@@ -3,23 +3,25 @@ import { defineConfig } from "eslint/config";
 import { createNodeResolver } from "eslint-plugin-import-x";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
 
 export default defineConfig(
   ...tanstackConfig,
   { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts"] },
+  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
   reactHooks.configs.flat["recommended-latest"],
   reactRefresh.configs.vite,
   {
-    name: "kuzmano.ski/routes",
     files: ["src/routes/**/*.tsx"],
     rules: {
       "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
     },
   },
   {
-    name: "kuzmano.ski/imports",
+    files: ["**/*.{ts,tsx}"],
     settings: {
-      "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".mjs", ".js", ".json"] })],
+      "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".json"] })],
     },
     rules: {
       "import/no-restricted-paths": [
@@ -43,6 +45,21 @@ export default defineConfig(
           "newlines-between": "always",
           alphabetize: { order: "asc", caseInsensitive: true },
         },
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "all",
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/prefer-nullish-coalescing": ["error", { ignorePrimitives: { boolean: true } }],
+      "@typescript-eslint/only-throw-error": [
+        "error",
+        { allow: [{ from: "package", package: "@tanstack/router-core", name: ["NotFoundError", "AnyRedirect"] }] },
       ],
     },
   },

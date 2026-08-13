@@ -21,4 +21,4 @@ export function createEmitter() {
 }
 
 /** For `useSyncExternalStore` values that never change after mount. */
-export const noSubscribe = () => () => {};
+export const noSubscribe = () => () => undefined;

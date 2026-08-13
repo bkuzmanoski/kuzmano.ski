@@ -14,7 +14,7 @@ vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/ui", () => ({
-  playClick: () => {},
+  playClick: vi.fn(),
   playHover,
   skipScrollAbove,
   scrollSafeClickSoundHandlers,

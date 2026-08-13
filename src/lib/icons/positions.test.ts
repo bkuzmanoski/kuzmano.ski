@@ -23,7 +23,7 @@ describe("useIconPositions", () => {
 
     act(() => moveIcon("first", { top: 200, right: 200 }));
 
-    expect(result.current!["first"]).toEqual({ top: 200, right: 200 });
+    expect(result.current!.first).toEqual({ top: 200, right: 200 });
   });
 });
 
@@ -38,6 +38,6 @@ describe("commitIconPositions", () => {
     const savedPositions = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Record<string, unknown>;
 
     expect(Object.keys(savedPositions)).toEqual(IDS);
-    expect(savedPositions["first"]).toEqual({ top: 320, right: 320 });
+    expect(savedPositions.first).toEqual({ top: 320, right: 320 });
   });
 });

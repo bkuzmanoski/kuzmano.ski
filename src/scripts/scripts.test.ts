@@ -8,6 +8,7 @@ import themeScript from "#/scripts/theme.ts?inline-script";
  * defined inline and not imported because the stylesheet uses these exact strings. */
 
 function run(script: string) {
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- Tests the bundle as it would be evaluated in the browser.
   new Function(script)();
 }
 

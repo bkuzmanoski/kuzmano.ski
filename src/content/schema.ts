@@ -32,11 +32,11 @@ export function parseFrontmatter(source: unknown, id: string): Frontmatter {
   }
 
   if (category !== undefined && typeof category !== "string") {
-    throw new Error(`Page "${id}" has a non-string category value: ${String(category)}`);
+    throw new Error(`Page "${id}" has a non-string category value: ${JSON.stringify(category)}`);
   }
 
   if (draft !== undefined && typeof draft !== "boolean") {
-    throw new Error(`Page "${id}" has a non-boolean draft value: ${String(draft)}`);
+    throw new Error(`Page "${id}" has a non-boolean draft value: ${JSON.stringify(draft)}`);
   }
 
   return { title, description, date, category, draft };
