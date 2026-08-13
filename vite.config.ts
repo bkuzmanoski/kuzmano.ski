@@ -5,12 +5,13 @@ import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
-import { content } from "./build/content";
-import { frontmatterPlugin } from "./build/frontmatter";
-import { inlineScriptPlugin } from "./build/inline-script";
-import { mdxPlugin } from "./build/mdx";
-import { verifyPrerenderedPage } from "./build/prerender";
-import { svgrOptions } from "./build/svgr";
+import { content } from "./build/content.ts";
+import { frontmatterPlugin } from "./build/frontmatter.ts";
+import { inlineScriptPlugin } from "./build/inline-script.ts";
+import { mdxPlugin } from "./build/mdx.ts";
+import { verifyPrerenderedPage } from "./build/prerender.ts";
+import { svgrOptions } from "./build/svgr.ts";
+import { themeColorPlugin } from "./build/theme-color.ts";
 
 export default defineConfig(({ command }) => ({
   resolve: { tsconfigPaths: true },
@@ -24,6 +25,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   plugins: [
+    themeColorPlugin(),
     inlineScriptPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),

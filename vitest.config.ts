@@ -3,10 +3,10 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
-import { frontmatterPlugin } from "./build/frontmatter";
-import { inlineScriptPlugin } from "./build/inline-script";
-import { mdxPlugin } from "./build/mdx";
-import { svgrOptions } from "./build/svgr";
+import { frontmatterPlugin } from "./build/frontmatter.ts";
+import { inlineScriptPlugin } from "./build/inline-script.ts";
+import { mdxPlugin } from "./build/mdx.ts";
+import { svgrOptions } from "./build/svgr.ts";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },

@@ -12,7 +12,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        {/* The `theme-color` pair is declared here because `HeadContent` de-duplicates meta by `name`. Values match colors defined in `styles.css`. */}
+        {/* The `theme-color` pair is declared here because `HeadContent` de-duplicates meta by `name`. */}
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f4fd" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#17181e" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

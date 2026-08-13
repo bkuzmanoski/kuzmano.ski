@@ -46,7 +46,8 @@ export function verifyPrerenderedPage({ page, html }: { page: { path: string }; 
     const title = documentTitleOf(html);
     const pageTitle = title?.endsWith(TITLE_SUFFIX) ? title.slice(0, -TITLE_SUFFIX.length) : null;
     const windowTitles = windowTitlesOf(html);
-    const isCollectionIndex = segments.length === 1 && segments[0]! in COLLECTION_TITLES;
+    const collection = segments.length === 1 ? segments[0] : undefined;
+    const isCollectionIndex = collection !== undefined && collection in COLLECTION_TITLES;
 
     if (!pageTitle) {
       problems.push(title === null ? "the document title is missing" : `the document title is "${title}"`);

@@ -23,7 +23,7 @@ vi.mock("#/content", async (importOriginal) => {
 });
 
 test("an error replaces the desktop with a standalone page", async () => {
-  await renderRoute("/about");
+  renderRoute("/about");
 
   expect(await screen.findByRole("heading", { name: "Error" })).toBeDefined();
   expect(screen.queryByRole("navigation", { name: "Main menu" })).toBeNull();
