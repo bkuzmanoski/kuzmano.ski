@@ -30,6 +30,9 @@ export default defineConfig(
   },
   {
     files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parserOptions: { project: false, projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
     settings: {
       "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".json"] })],
     },
