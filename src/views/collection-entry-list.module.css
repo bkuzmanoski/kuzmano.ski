@@ -14,6 +14,9 @@
 }
 
 .card {
+  cursor: default;
+  user-select: none;
+
   display: grid;
 
   padding-block: var(--gutter);
