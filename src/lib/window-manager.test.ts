@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { EMPTY_STATE, createWindowReducer } from "./window-manager";
+import { EMPTY_STATE, WINDOW_IDS, createWindowPlacer, createWindowReducer } from "./window-manager";
 
 import type { Size } from "./geometry";
 import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
@@ -68,9 +68,19 @@ describe("open", () => {
     const surface = { width: 1080, height: 1080 };
     const state = openedOn(surface, "page", "collection");
 
-    // Centred, the default size clears the padding by 20px on every edge; a step of 28px does not.
     expect(state.geometry.page).toMatchObject({ x: 28, y: 28, ...LAYOUT.defaultSize });
     expect(state.geometry.collection).toMatchObject({ x: 56, y: 56, width: 1016, height: 1016 });
+  });
+
+  test("opens every window at a position and size that fits within the desktop", () => {
+    const state = opened(...WINDOW_IDS);
+    const placeWindow = createWindowPlacer(LAYOUT);
+
+    for (const id of WINDOW_IDS) {
+      const { maximized: _maximized, ...geometry } = state.geometry[id]!;
+      const placedRect = placeWindow(geometry, SURFACE);
+      expect(placedRect).toEqual(geometry); // Cascade slots are placed already so an opened window does not move.
+    }
   });
 
   test("a closed window frees its slot for the next window", () => {
@@ -154,8 +164,8 @@ describe("move", () => {
     const state = reducer(opened("page"), { type: "move", id: "page", x: 5000, y: 5000 });
 
     expect(state.geometry.page).toMatchObject({
-      x: SURFACE.width - LAYOUT.defaultSize.width,
-      y: SURFACE.height - LAYOUT.defaultSize.height,
+      x: SURFACE.width - LAYOUT.padding - LAYOUT.defaultSize.width,
+      y: SURFACE.height - LAYOUT.padding - LAYOUT.defaultSize.height,
       ...LAYOUT.defaultSize,
     });
   });
@@ -179,7 +189,12 @@ describe("resize", () => {
 
   test("stops at the edge of the desktop rather than banking size past it", () => {
     const state = reducer(opened("page"), { type: "resize", id: "page", width: 5000, height: 5000 });
-    expect(state.geometry.page).toMatchObject({ x: 0, y: 0, ...SURFACE });
+    expect(state.geometry.page).toMatchObject({
+      x: LAYOUT.padding,
+      y: LAYOUT.padding,
+      width: SURFACE.width - 2 * LAYOUT.padding,
+      height: SURFACE.height - 2 * LAYOUT.padding,
+    });
   });
 
   test("a window wider than the desktop takes the position it is rendered at", () => {
@@ -188,7 +203,7 @@ describe("resize", () => {
     const mutatedState = reducer(initialState, { type: "resize", id: "page", width: 560, height: 400 });
 
     expect(initialState.geometry.page).toMatchObject({ x: CENTRE_POSITION.x, width: LAYOUT.defaultSize.width });
-    expect(mutatedState.geometry.page).toMatchObject({ x: 0, width: 560 });
+    expect(mutatedState.geometry.page).toMatchObject({ x: LAYOUT.padding, width: 560 });
   });
 });
 
@@ -199,7 +214,6 @@ describe("zoom", () => {
     expect(state.geometry.page!.maximized).toBe(true);
     expect(state.order).toEqual(["collection", "page"]);
     expect(state.focused).toBe("page");
-
     expect(reducer(state, { type: "zoom", id: "page" }).geometry.page!.maximized).toBe(false);
   });
 
@@ -304,5 +318,53 @@ describe("focusDesktop", () => {
   test("is a no-op when the desktop is already active", () => {
     const state = reducer(opened("page"), { type: "focusDesktop" });
     expect(reducer(state, { type: "focusDesktop" })).toBe(state);
+  });
+});
+
+describe("createWindowPlacer", () => {
+  const placeWindow = createWindowPlacer(LAYOUT);
+  const windowRect = { x: 100, y: 50, width: 400, height: 300 };
+
+  test("returns the window geometry unchanged when the desktop is unmeasured", () => {
+    const placedRect = placeWindow(windowRect, EMPTY_STATE.surface);
+    expect(placedRect).toEqual(windowRect);
+  });
+
+  test("returns the window geometry unchanged when it fits in the available space", () => {
+    const placedRect = placeWindow(windowRect, SURFACE);
+    expect(placedRect).toEqual(windowRect);
+  });
+
+  test("adjusts the position of a window that extends past the desktop bounds without changing its size", () => {
+    const placedFromTopLeft = placeWindow({ ...windowRect, x: -50, y: -50 }, SURFACE);
+    const placedFromBottomRight = placeWindow({ ...windowRect, x: 5000, y: 5000 }, SURFACE);
+
+    expect(placedFromTopLeft).toEqual({
+      x: LAYOUT.padding,
+      y: LAYOUT.padding,
+      width: windowRect.width,
+      height: windowRect.height,
+    });
+    expect(placedFromBottomRight).toEqual({
+      x: SURFACE.width - LAYOUT.padding - windowRect.width,
+      y: SURFACE.height - LAYOUT.padding - windowRect.height,
+      width: windowRect.width,
+      height: windowRect.height,
+    });
+  });
+
+  test("resizes a window that cannot fit within the desktop bounds", () => {
+    const placedRect = placeWindow({ x: 900, y: 0, width: 400, height: 900 }, { width: 1000, height: 300 });
+    expect(placedRect).toEqual({
+      x: 1000 - LAYOUT.padding - 400,
+      y: LAYOUT.padding,
+      width: 400,
+      height: 300 - 2 * LAYOUT.padding,
+    });
+  });
+
+  test("resizes a window to zero dimensions on a desktop with no room to place it", () => {
+    const placedRect = placeWindow(windowRect, { width: LAYOUT.padding, height: LAYOUT.padding });
+    expect(placedRect).toEqual({ x: LAYOUT.padding, y: LAYOUT.padding, width: 0, height: 0 });
   });
 });

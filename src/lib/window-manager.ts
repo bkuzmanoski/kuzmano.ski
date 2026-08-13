@@ -1,6 +1,6 @@
 import { createContext, use } from "react";
 
-import { constrain } from "./geometry";
+import { clamp } from "./math";
 
 import type { Rect, Size } from "./geometry";
 
@@ -62,6 +62,11 @@ export const EMPTY_STATE: ManagerState = {
   surface: { width: 0, height: 0 },
 };
 
+/** Whether window layer has reported the size of the desktop yet. */
+export function isUnmeasured(surface: Size): boolean {
+  return surface.width === 0 || surface.height === 0;
+}
+
 function focusWindow(state: ManagerState, id: WindowId): ManagerState {
   if (!state.content[id]) {
     return state;
@@ -74,18 +79,23 @@ function focusWindow(state: ManagerState, id: WindowId): ManagerState {
   return { ...state, order: [...state.order.filter((open) => open !== id), id], focused: id };
 }
 
-function updateGeometry(state: ManagerState, id: WindowId, patch: Partial<WindowGeometry>): ManagerState {
+function updateGeometry(
+  state: ManagerState,
+  id: WindowId,
+  patch: (target: WindowGeometry) => Partial<WindowGeometry>,
+): ManagerState {
   const target = state.geometry[id];
 
   if (!target) {
     return state;
   }
 
-  return { ...state, geometry: { ...state.geometry, [id]: { ...target, ...patch } } };
+  return { ...state, geometry: { ...state.geometry, [id]: { ...target, ...patch(target) } } };
 }
 
 /**
- * The position of cascade slot `step`.
+ * The default size stepped down and to the right of centre, constrained to the available
+ * space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
  *
  * The halves are left unrounded so that they match, to the pixel, where CSS centres a
  * pre-rendered window (see `.unplaced` in `window.module.css`).
@@ -95,7 +105,7 @@ function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Rect {
 
   /* An unmeasured desktop has no padded area to fit into. CSS places what the server
    * drew, and the first measurement re-places it (see the `measure` case). */
-  if (surface.width === 0 || surface.height === 0) {
+  if (isUnmeasured(surface)) {
     return { x: offset, y: offset, ...layout.defaultSize };
   }
 
@@ -148,10 +158,33 @@ function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord
   return geometry;
 }
 
+/** How a window is positioned and sized on a desktop of a given size. Bound to a layout by `createWindowPlacer`. */
+export type WindowPlacer = (geometry: Rect, surface: Size) => Rect;
+
+export function createWindowPlacer(layout: WindowLayout): WindowPlacer {
+  return function placeWindow(geometry, surface) {
+    if (isUnmeasured(surface)) {
+      return geometry;
+    }
+
+    const width = Math.min(geometry.width, Math.max(0, surface.width - 2 * layout.padding));
+    const height = Math.min(geometry.height, Math.max(0, surface.height - 2 * layout.padding));
+
+    return {
+      x: clamp(geometry.x, layout.padding, surface.width - layout.padding - width),
+      y: clamp(geometry.y, layout.padding, surface.height - layout.padding - height),
+      width,
+      height,
+    };
+  };
+}
+
 export type WindowReducer = (state: ManagerState, action: Action) => ManagerState;
 
 /** The app dispatches through the provider; the reducer is built here so it can be unit tested. */
 export function createWindowReducer(layout: WindowLayout): WindowReducer {
+  const placeWindow = createWindowPlacer(layout);
+
   return function reducer(state: ManagerState, action: Action): ManagerState {
     switch (action.type) {
       case "open": {
@@ -191,40 +224,27 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         return focusWindow(state, action.id);
       }
       case "move": {
-        const target = state.geometry[action.id];
-
-        if (!target) {
-          return state;
-        }
-
-        const constrainedRect = constrain({ ...target, x: action.x, y: action.y }, state.surface);
-
-        return updateGeometry(state, action.id, { x: constrainedRect.x, y: constrainedRect.y });
+        return updateGeometry(state, action.id, (target) => {
+          const { x, y } = placeWindow({ ...target, x: action.x, y: action.y }, state.surface);
+          return { x, y };
+        });
       }
       case "resize": {
-        const target = state.geometry[action.id];
+        return updateGeometry(state, action.id, (target) => {
+          const placedRect = placeWindow(target, state.surface);
+          const resizedRect = {
+            ...placedRect,
+            width: Math.max(layout.minSize.width, action.width),
+            height: Math.max(layout.minSize.height, action.height),
+          };
 
-        if (!target) {
-          return state;
-        }
-
-        const constrainedRect = constrain(target, state.surface);
-        const resized = {
-          ...constrainedRect,
-          width: Math.max(layout.minSize.width, action.width),
-          height: Math.max(layout.minSize.height, action.height),
-        };
-
-        return updateGeometry(state, action.id, constrain(resized, state.surface));
+          return placeWindow(resizedRect, state.surface);
+        });
       }
       case "zoom": {
-        const target = state.geometry[action.id];
-
-        if (!target) {
-          return state;
-        }
-
-        return updateGeometry(focusWindow(state, action.id), action.id, { maximized: !target.maximized });
+        return updateGeometry(focusWindow(state, action.id), action.id, (target) => ({
+          maximized: !target.maximized,
+        }));
       }
       case "measure": {
         const { surface } = action;
@@ -238,7 +258,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         /* A deep link opens its window before the desktop has been measured, so the first
          * measurement places what is already open. Subsequent measurements do not affect
          * windows; the window layer fits them to the desktop. */
-        const isFirstMeasurement = state.surface.width === 0 || state.surface.height === 0;
+        const isFirstMeasurement = isUnmeasured(state.surface);
 
         return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;
       }

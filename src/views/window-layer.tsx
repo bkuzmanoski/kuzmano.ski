@@ -3,16 +3,18 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Window } from "#/components/window";
 import {
   SIDEBAR_LAYOUT,
+  WINDOW_LAYOUT,
   commitSidebarWidth,
   resetSidebarWidth,
   setSidebarWidth,
   useSidebarWidth,
 } from "#/config/windows";
-import { constrain } from "#/lib/geometry";
 import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import {
   WINDOW_IDS,
+  createWindowPlacer,
+  isUnmeasured,
   useFocusedWindow,
   useSurface,
   useWindowActions,
@@ -29,8 +31,8 @@ import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
 
-/** Whether a window shows a list of its own beside its body. */
 const hasSidebar = (id: WindowId) => id === "collection";
+const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
 
 /**
  * One open window. Everything placed per window arrives as a primitive, so moving or
@@ -104,6 +106,7 @@ const DesktopWindow = memo(function OpenWindow({
  * mounted for SSR and head tags.
  */
 export function WindowLayer({ children }: { children: ReactNode }) {
+  const surface = useSurface();
   const content = useWindowContent();
   const geometry = useWindowGeometry();
   const order = useWindowOrder();
@@ -112,11 +115,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const surfaceRef = useRef<HTMLDivElement>(null);
   const measuredSurface = useElementSize(surfaceRef);
 
-  /* The windows are placed using the size in the manager state, not the one just measured
-   * so that a window and the desktop its position was computed from can never disagree.
-   * CSS centres them to match where the manager will place them when they are measured. */
-  const surface = useSurface();
-  const isUnplaced = surface.width === 0 || surface.height === 0;
+  const isUnplaced = isUnmeasured(surface);
 
   /* The zoom-rect growing from an icon towards the window it opened. While it runs,
    * the visibility of that window is suppressed until the outline has landed on it. */
@@ -143,7 +142,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
         <ZoomRect
           key={zoomRect.windowId}
           from={zoomRect.from}
-          target={zoomTarget ? constrain(zoomTarget, surface) : null}
+          target={zoomTarget ? placeWindow(zoomTarget, surface) : null}
           z={order.length}
           onDone={() => setZoomRect(null)}
         />
@@ -168,7 +167,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
             id={id}
             route={windowContent.route}
             title={windowContent.title}
-            {...constrain(windowGeometry, surface)}
+            {...placeWindow(windowGeometry, surface)}
             z={order.indexOf(id) + 1}
             focused={id === focusedWindow}
             maximized={windowGeometry.maximized}
