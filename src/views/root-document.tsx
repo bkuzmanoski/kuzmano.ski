@@ -1,11 +1,15 @@
 import { HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 
+import { watchFaviconColorScheme } from "#/lib/favicon";
 import bootOverlayScript from "#/scripts/boot-overlay.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
 import type { ReactNode } from "react";
 
 export function RootDocument({ children }: { children: ReactNode }) {
+  useEffect(watchFaviconColorScheme, []);
+
   return (
     /* suppressHydrationWarning: `themeScript` and `bootOverlayScript` set attributes on `<html>`
      * before hydration, so the client `<html>` differs from the one the server sent. */
