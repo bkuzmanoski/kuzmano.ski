@@ -10,7 +10,7 @@ import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
 import { unlockAudio } from "#/lib/audio/context";
-import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot";
+import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot-sequence/boot";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import {
   MINIMUM_LOADING_MS,
