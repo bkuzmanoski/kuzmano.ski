@@ -75,7 +75,7 @@
     "rehype-slug": "^6.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
-    "sharp": "0.34.5",
+    "sharp": "^0.35.3",
     "simple-git-hooks": "^2.13.1",
     "stylelint": "^17.13.0",
     "stylelint-config-clean-order": "^10.0.0",
@@ -95,7 +95,7 @@
     "workerd@1.20260811.1": true,
     "unrs-resolver@1.12.2": true,
     "fsevents": false,
-    "simple-git-hooks": false,
-    "sharp@0.34.5": true
+    "sharp@0.35.3": true,
+    "simple-git-hooks@2.13.1": true
   }
 }
