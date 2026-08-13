@@ -18,7 +18,7 @@
 }
 
 .tip {
-  composes: chromePanelElevated from "./shared.module.css";
+  composes: chromePanel chromePanelElevated from global;
 
   pointer-events: none;
   user-select: none;

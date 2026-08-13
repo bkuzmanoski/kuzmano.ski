@@ -1,5 +1,5 @@
 .control {
-  composes: focusFrame from "./shared.module.css";
+  composes: focusFrame from global;
 
   user-select: none;
 

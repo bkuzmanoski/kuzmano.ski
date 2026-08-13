@@ -1,5 +1,5 @@
 .menu {
-  composes: chromePanel chromeText from "./shared.module.css";
+  composes: chromePanel chromeText from global;
 
   position: absolute;
   z-index: var(--layer-menu);

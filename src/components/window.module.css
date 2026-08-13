@@ -3,7 +3,7 @@
   --window-safe-area-inline-end: 0px;
   --window-safe-area-block-end: 0px;
 
-  composes: chromePanel from "./shared.module.css";
+  composes: chromePanel from global;
 
   position: absolute;
 
@@ -121,7 +121,6 @@
   }
 }
 
-/* Shared by the window controls, whose icon fills the control. */
 .filledControl {
   --color-icon-foreground: var(--color-border);
 

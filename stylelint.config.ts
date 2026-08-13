@@ -9,7 +9,7 @@ export default {
   rules: {
     "selector-class-pattern": "^[a-z][a-zA-Z0-9]*$|^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
     "selector-pseudo-class-no-unknown": [true, { ignorePseudoClasses: ["global"] }],
-    "property-no-unknown": [true, { ignoreProperties: ["composes"] }], // `composes` is CSS modules syntax (see `shared.module.css`), not a real property.
+    "property-no-unknown": [true, { ignoreProperties: ["composes"] }], // `composes` is CSS modules syntax (see shared classes in `src/styles.css`).
     "value-keyword-case": [
       "lower",
       { ignoreProperties: ["composes", "/font-family/"], ignoreKeywords: ["currentColor"] },

@@ -174,3 +174,30 @@ div[role="button"] {
   color: var(--color-selection-foreground);
   background: var(--color-selection-background);
 }
+
+.chromePanel {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  box-shadow: var(--shadow-drop);
+}
+
+.chromePanelElevated {
+  background: var(--color-background-elevated);
+}
+
+.chromeText {
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+  letter-spacing: var(--font-chrome-letter-spacing);
+}
+
+.focusFrame:focus-visible {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--dotted-frame);
+  }
+}
