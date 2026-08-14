@@ -37,11 +37,11 @@ describe("resolveWindow", () => {
     });
   });
 
-  test("an unknown collection entry slug resolves to the 404 window", () => {
+  test("an unknown collection entry slug resolves to the not-found window", () => {
     expect(resolveWindow("/tech-notes/does-not-exist")).toMatchObject({ id: "notFound" });
   });
 
-  test("an unknown collection resolves to the 404 window", () => {
+  test("an unknown collection resolves to the not-found window", () => {
     expect(resolveWindow("/unknown-collection")).toMatchObject({ id: "notFound" });
     expect(resolveWindow("/unknown-collection/unknown-entry")).toMatchObject({ id: "notFound" });
   });
@@ -57,7 +57,7 @@ describe("resolveWindow", () => {
     expect(resolveWindow(`/tech-notes/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
   });
 
-  test("a route deeper than a collection entry resolves to the 404 window", () => {
+  test("a route deeper than a collection entry resolves to the not-found window", () => {
     expect(resolveWindow(`/tech-notes/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
   });
 });

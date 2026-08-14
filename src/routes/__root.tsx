@@ -3,7 +3,7 @@ import { createRootRoute } from "@tanstack/react-router";
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import stylesheet from "#/styles.css?url";
 import { DesktopRoot } from "#/views/desktop";
-import { ErrorView } from "#/views/error-view";
+import { ErrorPage } from "#/views/error-page";
 import { NotFoundPage } from "#/views/not-found";
 import { RootDocument } from "#/views/root-document";
 
@@ -24,6 +24,6 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   component: DesktopRoot,
-  errorComponent: ErrorView,
-  notFoundComponent: NotFoundPage, // A not found route that reaches the root gets the standalone 404 page.
+  errorComponent: ErrorPage,
+  notFoundComponent: NotFoundPage,
 });

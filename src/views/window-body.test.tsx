@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import { collections } from "#/content";
+import { NOT_FOUND_TITLE } from "#/content/window-registry";
 import { newestEntry } from "#/test-utils/content";
 
 import { WindowBody } from "./window-body";
@@ -51,5 +52,5 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
 
 test("a route that matches no content renders the not-found body", () => {
   render(<WindowBody route="/no-such-page" />);
-  expect(screen.getByRole("heading", { name: "Page not found (404)" })).toBeDefined();
+  expect(screen.getByRole("heading", { name: NOT_FOUND_TITLE })).toBeDefined();
 });

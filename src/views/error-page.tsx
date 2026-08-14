@@ -5,7 +5,7 @@ import { useClearBootOverlay } from "#/lib/boot-sequence/use-clear-boot-overlay"
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
-export function ErrorView({ error, reset }: ErrorComponentProps) {
+export function ErrorPage({ error, reset }: ErrorComponentProps) {
   useClearBootOverlay();
 
   return (
@@ -17,7 +17,7 @@ export function ErrorView({ error, reset }: ErrorComponentProps) {
         <button type="button" onClick={reset}>
           Try again
         </button>{" "}
-        or <Link to="/">go back home</Link>.
+        or go to the <Link to="/">home page</Link>.
       </p>
     </main>
   );

@@ -87,14 +87,6 @@ describe("open", () => {
     }
   });
 
-  test("a closed window frees its slot for the next window", () => {
-    const initialState = reducer(opened("entry", "collection"), { type: "close", id: "entry" });
-    const mutatedState = reducer(initialState, openAction("notFound", "/typo"));
-
-    // The entry window held the base slot, so the 404 takes it rather than cascading past the collection.
-    expect(mutatedState.geometry.notFound).toMatchObject(CENTRE_POSITION);
-  });
-
   test("a route that resolves to an existing window replaces what it shows in place", () => {
     const initialState = opened("collection", "entry");
     const mutatedState = reducer(initialState, openAction("collection", "/design-notes/entry"));

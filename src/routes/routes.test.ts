@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
+import { NOT_FOUND_TITLE } from "#/content/window-registry";
 import { newestEntry } from "#/test-utils/content";
 import { renderRoute } from "#/test-utils/render-route";
 
@@ -73,10 +74,10 @@ test("a second collection reuses the collection window", async () => {
   expect(openWindows()).toHaveLength(1);
 });
 
-test("a second unknown path reuses the 404 window", async () => {
+test("a second unknown path reuses the not-found window", async () => {
   const { history } = renderRoute("/no-such-page");
 
-  await screen.findByRole("region", { name: "Page not found (404)" });
+  await screen.findByRole("region", { name: NOT_FOUND_TITLE });
   history.push("/another-typo");
 
   await waitFor(() => expect(history.location.pathname).toBe("/another-typo"));
@@ -113,18 +114,18 @@ test("stepping back and forward over the desktop route follows the window focus 
   expect(history.location.pathname).toBe("/");
 });
 
-test("an unknown path under a collection opens a 404 window", async () => {
+test("an unknown path under a collection opens a not-found window", async () => {
   renderRoute("/tech-notes/does-not-exist");
 
-  const window = await screen.findByRole("region", { name: "Page not found (404)" });
+  const window = await screen.findByRole("region", { name: NOT_FOUND_TITLE });
 
-  expect(within(window).getByRole("heading", { name: "Page not found (404)" })).toBeDefined();
+  expect(within(window).getByRole("heading", { name: NOT_FOUND_TITLE })).toBeDefined();
 });
 
-test("an unknown top-level path opens a 404 window", async () => {
+test("an unknown top-level path opens a not-found window", async () => {
   renderRoute("/no-such-page");
 
-  const window = await screen.findByRole("region", { name: "Page not found (404)" });
+  const window = await screen.findByRole("region", { name: NOT_FOUND_TITLE });
 
-  expect(within(window).getByRole("heading", { name: "Page not found (404)" })).toBeDefined();
+  expect(within(window).getByRole("heading", { name: NOT_FOUND_TITLE })).toBeDefined();
 });
