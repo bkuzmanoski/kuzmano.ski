@@ -26,7 +26,7 @@ function documentData(frontmatter: Frontmatter | null | undefined) {
 export const contentRoute = {
   loader: ({ params }: { params: { segment: string; slug?: string } }): { title: string; description?: string } => {
     if (params.slug !== undefined) {
-      return documentData(collections[params.segment]?.frontmatter(params.slug));
+      return documentData(collections[params.segment]?.frontmatterOf(params.slug));
     }
 
     const collection = collections[params.segment];
@@ -35,7 +35,7 @@ export const contentRoute = {
       return { title: collection.title };
     }
 
-    return documentData(pages.frontmatter(params.segment));
+    return documentData(pages.frontmatterOf(params.segment));
   },
   head: documentHead,
 };

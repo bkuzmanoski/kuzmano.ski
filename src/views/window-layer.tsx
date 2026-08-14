@@ -1,18 +1,11 @@
 import { memo, useEffect, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
-import {
-  SIDEBAR_LAYOUT,
-  WINDOW_LAYOUT,
-  commitSidebarWidth,
-  resetSidebarWidth,
-  setSidebarWidth,
-  useSidebarWidth,
-} from "#/config/windows";
+import { WINDOW_LAYOUT } from "#/config/windows";
 import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import {
-  WINDOW_IDS,
+  WINDOW_DOM_ORDER,
   createWindowPlacer,
   isUnmeasured,
   useFocusedWindow,
@@ -25,22 +18,16 @@ import {
 import type { WindowId } from "#/lib/window-manager";
 
 import { DesktopIcons } from "./desktop-icons";
-import { WindowBody, WindowSidebar } from "./window-body";
+import { WindowBody } from "./window-body";
 import styles from "./window-layer.module.css";
 import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
 
-const hasSidebar = (id: WindowId) => id === "collection";
 const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
 
-/**
- * One open window. Everything placed per window arrives as a primitive, so moving or
- * resizing one does not re-render the others: the layer below re-renders on every
- * pointer frame, but the windows that did not move compare equal here. What it reads
- * for itself is shared by every window: the actions, whose value never changes, and
- * the width of the sidebar.
- */
+/* The layer below re-renders on every pointer frame, but the windows that did
+ * not move compare equal here (the values `useWindowActions` do not change). */
 const DesktopWindow = memo(function OpenWindow({
   id,
   route,
@@ -69,10 +56,10 @@ const DesktopWindow = memo(function OpenWindow({
   unplaced: boolean;
 }) {
   const { close, focus, move, resize, toggleZoom } = useWindowActions();
-  const sidebarWidth = useSidebarWidth();
 
   return (
     <Window
+      contentKey={route}
       title={title}
       x={x}
       y={y}
@@ -83,17 +70,11 @@ const DesktopWindow = memo(function OpenWindow({
       maximized={maximized}
       hidden={hidden}
       unplaced={unplaced}
-      sidebar={hasSidebar(id) && <WindowSidebar route={route} />}
-      sidebarWidth={sidebarWidth}
-      sidebarMinWidth={SIDEBAR_LAYOUT.minWidth}
       onClose={() => close(id)}
       onZoom={() => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={(nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
-      onResizeSidebar={setSidebarWidth}
-      onResizeSidebarEnd={commitSidebarWidth}
-      onResetSidebarWidth={resetSidebarWidth}
     >
       <WindowBody route={route} />
     </Window>
@@ -153,7 +134,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
        * Implications:
        * - The order of the windows is managed by `zIndex`
        * - The tab order follows the markup (focus raises the window it lands in) */}
-      {WINDOW_IDS.map((id) => {
+      {WINDOW_DOM_ORDER.map((id) => {
         const windowContent = content[id];
         const windowGeometry = geometry[id];
 

@@ -3,24 +3,24 @@ import { COLLECTION_TITLES } from "#/config/navigation";
 
 import { parseFrontmatter } from "./schema";
 
-import type { Frontmatter, Page } from "./schema";
+import type { Entry, Frontmatter } from "./schema";
 import type { MDXContent } from "mdx/types";
 
 interface MDXModule {
   default: MDXContent;
 }
 
-/** Slug-keyed lookup of MDX files. */
-export interface PageIndex {
+/** Slug-keyed lookup of the content in a directory. */
+export interface ContentIndex {
   has: (slug: string) => boolean;
-  frontmatter: (slug: string) => Frontmatter | null;
-  load: (slug: string) => Promise<MDXModule>;
+  frontmatterOf: (slug: string) => Frontmatter | null;
+  load: (slug: string) => Promise<MDXModule>; // The compiled body, in a chunk of its own.
 }
 
-/** An index that enumerates its entries. */
-export interface Collection extends PageIndex {
+/** A content index that enumerates what it holds, most recent first. */
+export interface Collection extends ContentIndex {
   title: string;
-  list: () => Array<Page>;
+  list: () => Array<Entry>;
 }
 
 /**
@@ -56,8 +56,8 @@ function loadContent(path: string): Promise<MDXModule> {
   return promise;
 }
 
-function pageIndex(name: string): { index: PageIndex; paths: Map<string, string> } {
-  const prefix = `./${name}/`;
+function contentIndex(directory: string): { index: ContentIndex; paths: Map<string, string> } {
+  const prefix = `./${directory}/`;
   const paths = new Map<string, string>();
 
   for (const path of Object.keys(contentModules)) {
@@ -70,7 +70,7 @@ function pageIndex(name: string): { index: PageIndex; paths: Map<string, string>
     paths,
     index: {
       has: (slug) => paths.has(slug),
-      frontmatter(slug) {
+      frontmatterOf(slug) {
         const path = paths.get(slug);
         return path ? frontmatterFromPath(path) : null;
       },
@@ -78,7 +78,7 @@ function pageIndex(name: string): { index: PageIndex; paths: Map<string, string>
         const path = paths.get(slug);
 
         if (!path) {
-          throw new Error(`Page not found: ${name}/${slug}`);
+          throw new Error(`Content not found: ${directory}/${slug}`);
         }
 
         return loadContent(path);
@@ -87,10 +87,10 @@ function pageIndex(name: string): { index: PageIndex; paths: Map<string, string>
   };
 }
 
-function collection(segment: string, title: string): Collection {
-  const { paths, index } = pageIndex(segment);
+function collection(directory: string, title: string): Collection {
+  const { paths, index } = contentIndex(directory);
 
-  let entries: Array<Page> | null = null;
+  let entries: Array<Entry> | null = null;
 
   return {
     ...index,
@@ -109,6 +109,6 @@ function collection(segment: string, title: string): Collection {
 export const collections: Record<string, Collection> = Object.fromEntries(
   Object.entries(COLLECTION_TITLES).map(([segment, title]) => [segment, collection(segment, title)]),
 );
-export const pages: PageIndex = pageIndex(PAGES_DIRECTORY).index;
+export const pages: ContentIndex = contentIndex(PAGES_DIRECTORY).index;
 
-export type { Page, Frontmatter };
+export type { Entry, Frontmatter };

@@ -15,7 +15,7 @@ vi.mock("#/content", async (importOriginal) => {
     ...actual,
     pages: {
       ...actual.pages,
-      frontmatter: () => {
+      frontmatterOf: () => {
         throw new Error("Unreadable frontmatter.");
       },
     },

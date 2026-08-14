@@ -172,104 +172,35 @@
   }
 }
 
-.content {
+.scrollPane {
   display: flex;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 
-  /* A press that lands beside text can start a native selection, which a touch device
-   * then follows with a loupe and a growing highlight as the drag goes on. The panes are
-   * held unselectable for as long as a handle has the pointer. */
-  &[data-resizing] {
-    user-select: none;
+  /* The width a hidden scrollbar has freed up. Content in the pane holds it at its
+   * inline end, so the pane's content keeps its width whether or not the scrollbar
+   * is there, and only the full-width edges of that content move. */
+  &:has(> [data-collapsed]) {
+    --reserved-scrollbar-width: calc(
+      var(--scrollbar-width) + 1px
+    ); /* +1px for the border defined in `scrollbar.module.css`. */
 
-    /* Reset the transition for the sidebar while resizing (see below). */
-    & .scrollPane.sidebar {
-      transition: none;
+    @media not all and (any-hover: hover) and (any-pointer: fine) {
+      --reserved-scrollbar-width: 0px; /* Scrollbars are hidden on touch devices (see `scrollbar.module.css`). */
     }
-  }
-
-  & .scrollPane {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-
-    /* The width a hidden scrollbar has freed up. Content in the pane holds it at its
-     * inline end, so what the pane draws keeps its width whether or not the scrollbar
-     * is there, and only the full-width edges of that content move. */
-    &:has(> [data-collapsed]) {
-      --reserved-scrollbar-width: calc(
-        var(--scrollbar-width) + 1px
-      ); /* +1px for the border defined in `scrollbar.module.css`. */
-
-      @media not all and (any-hover: hover) and (any-pointer: fine) {
-        --reserved-scrollbar-width: 0px; /* Scrollbars are hidden on touch devices (see `scrollbar.module.css`). */
-      }
-    }
-
-    &.sidebar {
-      --window-sidebar-width: 0px; /* Set from JS. */
-      --window-sidebar-min-width: 0px; /* Set from JS. */
-
-      flex: none;
-
-      /* Each pane spends part of its box on the safe-area inset it touches, so both bounds
-       * are stated as the width left to use. The body's floor is applied last: a window too
-       * narrow to honour both takes what it needs from the sidebar. */
-      width: min(
-        max(calc(var(--window-sidebar-min-width) + var(--window-safe-area-inline-start)), var(--window-sidebar-width)),
-        calc(100% - var(--window-body-min-width) - var(--window-safe-area-inline-end) - 1px) /* -1px for the divider. */
-      );
-
-      /* A page is drawn at the default width, since the stored one cannot be read until the
-       * client has hydrated (see `sidebar-width.ts`). The width transition animates the
-       * restoration of the stored sidebar width. */
-      transition: width 250ms ease-out;
-
-      @media (prefers-reduced-motion: reduce) {
-        transition-duration: 0s;
-      }
-    }
-  }
-
-  & .contentContainer {
-    scrollbar-width: none;
-
-    overflow-y: auto;
-    flex: 1;
-
-    min-width: 0;
-    padding-block-end: var(--window-safe-area-block-end);
-
-    outline: none;
-  }
-
-  & .scrollPane:first-child > .contentContainer {
-    padding-inline-start: var(--window-safe-area-inline-start);
-  }
-
-  & .scrollPane:last-child > .contentContainer {
-    padding-inline-end: var(--window-safe-area-inline-end);
   }
 }
 
-.divider {
-  touch-action: none;
-  cursor: col-resize;
-  user-select: none;
+.contentContainer {
+  scrollbar-width: none;
 
-  position: relative;
+  overflow-y: auto;
+  flex: 1;
 
-  flex: none;
+  min-width: 0;
+  padding-block-end: var(--window-safe-area-block-end);
+  padding-inline: var(--window-safe-area-inline-start) var(--window-safe-area-inline-end);
 
-  width: 1px;
-
-  background: var(--color-border);
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset-block: 0;
-    inset-inline: -4px;
-  }
+  outline: none;
 }

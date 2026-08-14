@@ -23,9 +23,6 @@ const readContentDirectory = (directory: string) => {
  * make a complete, duplicate-free list on their own (`autoStaticPathsDiscovery`
  * misses dynamic routes, `crawlLinks` misses unlinked pages, and enabling both
  * emits index routes twice).
- *
- * Every content directory is a collection (`/<name>` + `/<name>/<slug>`) except
- * `PAGES_DIRECTORY`, whose files are top-level routes (`/<slug>`).
  */
 export function content(): Array<{ path: string }> {
   const directoryNames = readdirSync(CONTENT_DIRECTORY, { withFileTypes: true })

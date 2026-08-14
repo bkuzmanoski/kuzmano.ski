@@ -89,7 +89,7 @@
     inset: 0;
 
     /* Sized against the illustration rather than the viewport: the zoom scales whatever is on
-     * the stage, so a floor drawn in viewport units would stop short of the sides while the
+     * the stage, so a floor sized in viewport units would stop short of the sides while the
      * stage is zoomed out. Four illustrations wide covers the viewport at every framing. */
     &::before {
       content: "";

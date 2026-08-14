@@ -1,32 +1,39 @@
 import { describe, expect, test } from "vitest";
 
-import { collections } from "#/content";
+import { collections, pages } from "#/content";
+import { newestEntry } from "#/test-utils/content";
 
-import { desktopRouteOf, resolveWindow, windowRouteFor } from "./window-registry";
+import { destinationRouteOf, resolveWindow } from "./window-registry";
 
-const entries = collections["tech-notes"]!.list();
-const knownSlug = entries[0]?.slug;
+const collection = collections["tech-notes"]!;
+const entry = newestEntry("tech-notes");
 
 describe("resolveWindow", () => {
-  test("resolves a top-level page", () => {
-    expect(resolveWindow("/about")).toMatchObject({ id: "page", slug: "about", title: "About" });
+  test("resolves a top-level entry", () => {
+    expect(resolveWindow("/about")).toMatchObject({
+      id: "entry",
+      title: "About",
+      slug: "about",
+      collectionRoute: null,
+      contentIndex: pages,
+    });
+  });
+
+  test("resolves a collection entry", () => {
+    expect(resolveWindow(`/tech-notes/${entry.slug}`)).toMatchObject({
+      id: "entry",
+      title: entry.title,
+      slug: entry.slug,
+      collectionRoute: "/tech-notes",
+      contentIndex: collection,
+    });
   });
 
   test("resolves a collection index", () => {
     expect(resolveWindow("/tech-notes")).toMatchObject({
       id: "collection",
-      basePath: "/tech-notes",
-      entrySlug: null,
       title: "Tech Notes",
-    });
-  });
-
-  test("a collection entry resolves to the collection window, on that entry", () => {
-    expect(resolveWindow(`/tech-notes/${knownSlug}`)).toMatchObject({
-      id: "collection",
-      basePath: "/tech-notes",
-      entrySlug: knownSlug,
-      title: entries[0]!.title,
+      route: "/tech-notes",
     });
   });
 
@@ -45,36 +52,29 @@ describe("resolveWindow", () => {
   });
 
   test("ignores leading and trailing slashes", () => {
-    expect(resolveWindow("/tech-notes/")).toMatchObject({ id: "collection", entrySlug: null });
-    expect(resolveWindow("//about//")).toMatchObject({ id: "page" });
-    expect(resolveWindow(`/tech-notes/${knownSlug}/`)).toMatchObject({ id: "collection", entrySlug: knownSlug });
+    expect(resolveWindow("/tech-notes/")).toMatchObject({ id: "collection" });
+    expect(resolveWindow("//about//")).toMatchObject({ id: "entry" });
+    expect(resolveWindow(`/tech-notes/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
   });
 
   test("a route deeper than a collection entry resolves to the 404 window", () => {
-    expect(resolveWindow(`/tech-notes/${knownSlug}/invalid-route`)).toMatchObject({ id: "notFound" });
+    expect(resolveWindow(`/tech-notes/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
   });
 });
 
-describe("windowRouteFor", () => {
-  test("a collection index opens on its most recent entry", () => {
-    expect(windowRouteFor("/tech-notes")).toBe(`/tech-notes/${knownSlug}`);
+describe("destinationRouteOf", () => {
+  test("returns its own route for a top-level entry or collection", () => {
+    expect(destinationRouteOf("/about")).toBe("/about");
+    expect(destinationRouteOf("/tech-notes")).toBe("/tech-notes");
   });
 
-  test("every other route opens itself", () => {
-    expect(windowRouteFor("/about")).toBe("/about");
-    expect(windowRouteFor(`/tech-notes/${knownSlug}`)).toBe(`/tech-notes/${knownSlug}`);
-    expect(windowRouteFor("/no-such-page")).toBe("/no-such-page");
-  });
-});
-
-describe("desktopRouteOf", () => {
-  test("a collection entry traces back to its collection", () => {
-    expect(desktopRouteOf(`/tech-notes/${knownSlug}`)).toBe("/tech-notes");
-    expect(desktopRouteOf("/tech-notes")).toBe("/tech-notes");
+  test("returns the containing collection route for a collection entry", () => {
+    expect(destinationRouteOf(`/tech-notes/${entry.slug}`)).toBe("/tech-notes");
   });
 
-  test("every other route traces back to itself", () => {
-    expect(desktopRouteOf("/about")).toBe("/about");
-    expect(desktopRouteOf("/no-such-page")).toBe("/no-such-page");
+  test("returns null for routes that do not open a window", () => {
+    expect(destinationRouteOf("/no-such-page")).toBeNull();
+    expect(destinationRouteOf("/tech-notes/does-not-exist")).toBeNull();
+    expect(destinationRouteOf("/")).toBeNull();
   });
 });

@@ -31,7 +31,7 @@ export default defineConfig(({ command }) => ({
     frontmatterPlugin(),
     mdxPlugin(),
     tanstackStart({
-      router: { routeFileIgnorePattern: ".test.tsx" },
+      router: { routeFileIgnorePattern: "\\.test\\." }, // Suites beside the routes they cover, in either extension.
       pages: command === "build" ? content() : [],
       sitemap: { host: "https://kuzmano.ski" },
       prerender: {

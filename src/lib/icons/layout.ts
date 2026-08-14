@@ -3,7 +3,7 @@ import { clampToContainer } from "../geometry";
 import type { Position, Size } from "../geometry";
 import type { IconLayout, IconPlacement, IconPosition, IconPositions } from "./icon";
 
-/** Whether two cells of `cellSize` drawn at these origins share any area. */
+/** Whether two cells of `cellSize` positioned at these origins share any area. */
 function overlaps(a: Position, b: Position, cellSize: number): boolean {
   return Math.abs(a.x - b.x) < cellSize && Math.abs(a.y - b.y) < cellSize;
 }
@@ -37,7 +37,7 @@ function freeSlot(placed: ReadonlyArray<Position>, container: Size, layout: Icon
 }
 
 /**
- * Where each icon is drawn for a container of this size, in `ids` order. Stored positions are
+ * Where each icon is placed for a container of this size, in `ids` order. Stored positions are
  * never touched, so growing the container puts every icon back where it was left.
  *
  * A position is anchored to the container's right edge, which means a resize slides every icon

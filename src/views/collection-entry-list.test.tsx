@@ -3,12 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { collections } from "#/content";
 
-import { CollectionEntryList } from "./collection-entry-list";
-
-const open = vi.hoisted(() => vi.fn());
-const playHover = vi.hoisted(() => vi.fn());
-const skipScrollAbove = vi.hoisted(() => vi.fn());
-const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
+import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
@@ -19,6 +14,11 @@ vi.mock("#/lib/audio/ui", () => ({
   skipScrollAbove,
   scrollSafeClickSoundHandlers,
 }));
+
+const open = vi.hoisted(() => vi.fn());
+const playHover = vi.hoisted(() => vi.fn());
+const skipScrollAbove = vi.hoisted(() => vi.fn());
+const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
 const collection = collections["design-notes"]!;
 const entries = collection.list();
@@ -33,9 +33,18 @@ beforeEach(() => {
 });
 
 function renderList(activeSlug: string | null) {
-  render(<CollectionEntryList activeSlug={activeSlug} basePath="/design-notes" collection={collection} />);
+  render(<CollectionEntryList activeSlug={activeSlug} route="/design-notes" collection={collection} />);
   return screen.getAllByRole("link");
 }
+
+test("a collection with no entries show an empty state", () => {
+  render(
+    <CollectionEntryList activeSlug={null} route="/design-notes" collection={{ ...collection, list: () => [] }} />,
+  );
+
+  expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
+  expect(screen.queryByRole("list")).toBeNull();
+});
 
 test("the list is a single tab stop, on the active entry", () => {
   const links = renderList(entries[2]!.slug);

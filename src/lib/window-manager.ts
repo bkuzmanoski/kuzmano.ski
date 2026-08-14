@@ -9,10 +9,12 @@ import type { Rect, Size } from "./geometry";
  * and each one exists at most once: a route that resolves to an open window
  * replaces what that window shows instead of opening a second one.
  */
-export type WindowId = "collection" | "page" | "notFound";
+export type WindowId = "entry" | "collection" | "notFound";
 
-/** Every window id, in the order the window layer writes them to the DOM. */
-export const WINDOW_IDS = ["collection", "page", "notFound"] as const satisfies ReadonlyArray<WindowId>;
+/** Every window id, in the order the window layer writes them to the DOM. Stacking is `order`. */
+export const WINDOW_DOM_ORDER = ["collection", "entry", "notFound"] as const satisfies ReadonlyArray<WindowId>;
+
+const WINDOW_COUNT = WINDOW_DOM_ORDER.length; // The most windows that can be open at once.
 
 /** A value held per window. A missing entry means that window is closed. */
 export type WindowRecord<T> = Partial<Record<WindowId, T>>;
@@ -38,7 +40,7 @@ export interface WindowLayout {
 export interface ManagerState {
   content: WindowRecord<WindowContent>;
   geometry: WindowRecord<WindowGeometry>;
-  order: Array<WindowId>;
+  order: Array<WindowId>; // Back to front, so the last is on top.
   focused: WindowId | null; // `null` means the desktop has focus.
   surface: Size; // {0, 0} until the window layer has measured it.
 }
@@ -124,7 +126,7 @@ function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Rect {
 function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Rect {
   const openWindows = Object.values(state.geometry);
 
-  for (let step = 0; step < WINDOW_IDS.length; step++) {
+  for (let step = 0; step < WINDOW_COUNT; step++) {
     const position = cascadeSlot(layout, state.surface, step);
 
     if (!openWindows.some((window) => window.x === position.x && window.y === position.y)) {
@@ -272,8 +274,12 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
   };
 }
 
+export interface OpenOptions {
+  replaceUrl?: boolean;
+}
+
 export interface WindowActions {
-  open: (route: string) => void;
+  open: (route: string, options?: OpenOptions) => void;
   close: (id: WindowId) => void;
   focus: (id: WindowId) => void;
   move: (id: WindowId, x: number, y: number) => void;

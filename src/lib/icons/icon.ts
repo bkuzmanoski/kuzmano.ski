@@ -2,10 +2,10 @@ import { readStoredJson, writeStored } from "../storage";
 
 import type { Position } from "../geometry";
 
-export type IconKind = "page" | "collection" | "download";
+export type IconKind = "entry" | "collection" | "download";
 
 export type Icon = { id: string; label: string } & (
-  { kind: "page" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
+  { kind: "entry" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
 );
 
 /** Anchored to the right edge so it adapts to the width of the desktop. */

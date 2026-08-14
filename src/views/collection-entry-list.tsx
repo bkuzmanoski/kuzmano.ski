@@ -1,5 +1,6 @@
 import clsx from "clsx";
 
+import { EmptyState } from "#/components/empty-state";
 import type { Collection } from "#/content";
 import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/ui";
 import { formatDate } from "#/lib/date";
@@ -10,20 +11,21 @@ import styles from "./collection-entry-list.module.css";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-AU", { year: "numeric", month: "short", day: "numeric" });
 
-/** The entries of a collection, as the list half of the collection window. */
+export const EMPTY_COLLECTION_MESSAGE = "Nothing to see here.";
+
 export function CollectionEntryList({
   collection,
-  basePath,
+  route,
   activeSlug,
 }: {
   collection: Collection;
-  basePath: string;
+  route: string;
   activeSlug: string | null;
 }) {
   const { open } = useWindowActions();
 
   const entries = collection.list();
-  const openEntry = (slug: string) => open(`${basePath}/${slug}`);
+  const openEntry = (slug: string) => open(`${route}/${slug}`);
 
   const itemProps = useListNavigation({
     count: entries.length,
@@ -38,6 +40,10 @@ export function CollectionEntryList({
     },
   });
 
+  if (entries.length === 0) {
+    return <EmptyState message={EMPTY_COLLECTION_MESSAGE} />;
+  }
+
   return (
     <ul className={styles.list}>
       {entries.map((entry, index) => {
@@ -51,7 +57,7 @@ export function CollectionEntryList({
               aria-current={isActive || undefined}
               aria-label={entry.title}
               className={clsx(styles.card, isActive && styles.active)}
-              href={`${basePath}/${entry.slug}`}
+              href={`${route}/${entry.slug}`}
               onClick={(event) => {
                 event.preventDefault();
                 openEntry(entry.slug);

@@ -1,9 +1,10 @@
-import { COLLECTION_TITLES } from "#/config/navigation";
 import { documentTitle } from "#/config/site";
 
 const TITLE_SUFFIX = documentTitle(""); // The suffix on every page title. It comes from `documentTitle` so the two agree.
-const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar draws in `src/components/menu-bar.tsx`
-const CONTENT_BODY = "<article"; // The element a content body opens with in `src/views/content-body.tsx`
+const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `src/components/menu-bar.tsx`
+const WINDOW_BODY = /id="window-content"[^>]*>(?:<!--.*?-->)*<(?!\/)/; // Content inside `FOCUSED_WINDOW_CONTENT_ID`, past the comments React writes around a Suspense boundary.
+const LOADING_STATE = 'role="status"'; // The spinner in `src/components/loading-state.tsx`; should not be present in a prerendered page.
+
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#x27": "'", "#39": "'" };
 
 /* A title is compared across a text node and an attribute. The two use different escapes. */
@@ -15,7 +16,7 @@ function documentTitleOf(html: string): string | null {
   return match?.[1] ? decode(match[1]) : null;
 }
 
-/* Every window is a `<section>` with its title as the label. Nothing else on the page is one. */
+/* Every window is a `<section>` with its title as the label. */
 function windowTitlesOf(html: string): Array<string> {
   return [...html.matchAll(/<section[^>]*aria-label="([^"]*)"/g)].map(([, title]) => decode(title!));
 }
@@ -23,16 +24,9 @@ function windowTitlesOf(html: string): Array<string> {
 /**
  * Checks prerendered HTML for the presence of required elements.
  *
- * A component that throws during the server render does not fail the render. React
- * logs the error, streams the markup it has reached, and leaves the rest to the
- * client. The prerenderer receives a 200 and writes the partial page, so the fault
- * appears only in the browser. This check reads the written markup for the parts that
- * must be there, and makes the build fail if one is missing.
- *
- * Every page has the desktop chrome. Every page except the desktop also opens a window
- * with a body in it. The window carries the same title as the document, except on a
- * collection index: that opens on the most recent entry, which titles the window (see
- * `windowRouteFor` in `src/content/window-registry.ts`).
+ * A component that throws during the server render does not fail the render (the
+ * prerenderer receives a 200 and writes the partial page). This check reads the
+ * written markup and fails the build fail if any required elements are missing.
  */
 export function verifyPrerenderedPage({ page, html }: { page: { path: string }; html: string }) {
   const problems: Array<string> = [];
@@ -46,17 +40,19 @@ export function verifyPrerenderedPage({ page, html }: { page: { path: string }; 
     const title = documentTitleOf(html);
     const pageTitle = title?.endsWith(TITLE_SUFFIX) ? title.slice(0, -TITLE_SUFFIX.length) : null;
     const windowTitles = windowTitlesOf(html);
-    const collection = segments.length === 1 ? segments[0] : undefined;
-    const isCollectionIndex = collection !== undefined && collection in COLLECTION_TITLES;
 
     if (!pageTitle) {
       problems.push(title === null ? "the document title is missing" : `the document title is "${title}"`);
-    } else if (isCollectionIndex ? windowTitles.length === 0 : !windowTitles.includes(pageTitle)) {
-      problems.push(isCollectionIndex ? "no window is open" : `no window is titled "${pageTitle}"`);
+    } else if (!windowTitles.includes(pageTitle)) {
+      problems.push(`no window is titled "${pageTitle}"`);
     }
 
-    if (!html.includes(CONTENT_BODY)) {
-      problems.push("the content body is missing");
+    if (!WINDOW_BODY.test(html)) {
+      problems.push("the window body is empty");
+    }
+
+    if (html.includes(LOADING_STATE)) {
+      problems.push("the window body is still loading");
     }
   }
 

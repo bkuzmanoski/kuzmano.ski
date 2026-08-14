@@ -9,16 +9,15 @@ import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
-import type { StyleWithVars } from "#/lib/style";
 
 import { Scrollbar } from "./scrollbar";
 import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 
-import type { CSSProperties, ReactNode, Ref } from "react";
+import type { ReactNode } from "react";
 
-/** The id carried by the focused window's content container, so the skip link has a stable target. */
-export const WINDOW_CONTENT_ID = "window-content";
+/** A known id carried by the focused window's content container to give the skip link a stable target. */
+export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 
 function TitleBarButton({
   icon,
@@ -54,20 +53,13 @@ function TitleBarButton({
   );
 }
 
-/** A scrolling container. A window has one per pane. */
 function ScrollPane({
   id,
-  ref,
-  className,
-  style,
   isResizing,
   resizeControl,
   children,
 }: {
   id: string;
-  ref?: Ref<HTMLDivElement>;
-  className?: string;
-  style?: CSSProperties;
   isResizing: boolean;
   resizeControl?: ReactNode;
   children: ReactNode;
@@ -79,7 +71,7 @@ function ScrollPane({
     metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
 
   return (
-    <div ref={ref} className={clsx(styles.scrollPane, className)} style={style}>
+    <div className={styles.scrollPane}>
       <div
         ref={contentContainerRef}
         className={styles.contentContainer}
@@ -133,6 +125,7 @@ function ScrollPane({
 }
 
 export function Window({
+  contentKey,
   title,
   x,
   y,
@@ -143,19 +136,14 @@ export function Window({
   maximized,
   hidden,
   unplaced,
-  sidebar,
-  sidebarWidth,
-  sidebarMinWidth,
   onClose,
   onZoom,
   onFocus,
   onMove,
   onResize,
-  onResizeSidebar,
-  onResizeSidebarEnd,
-  onResetSidebarWidth,
   children,
 }: {
+  contentKey: string; // Used to invalidate scroll position when the content changes.
   title: string;
   x: number;
   y: number;
@@ -166,37 +154,21 @@ export function Window({
   maximized: boolean;
   hidden: boolean;
   unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
-  sidebar?: ReactNode;
-  sidebarWidth: number;
-  sidebarMinWidth: number;
   onClose: () => void;
   onZoom: () => void;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (width: number, height: number) => void;
-  onResizeSidebar: (width: number) => void;
-  onResizeSidebarEnd: () => void;
-  onResetSidebarWidth: () => void;
   children: ReactNode;
 }) {
   const fallbackContentId = useId();
-  const sidebarId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const windowRef = useRef<HTMLElement>(null);
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const hasMovedWindowRef = useRef(false);
-  const hasResizedSidebarRef = useRef(false);
-  const [resizeTarget, setResizeTarget] = useState<"window" | "sidebar" | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
 
-  const isResizing = resizeTarget !== null;
-  const contentId = focused ? WINDOW_CONTENT_ID : fallbackContentId;
-  const sidebarStyle: StyleWithVars = {
-    "--window-sidebar-width": `${sidebarWidth}px`,
-    "--window-sidebar-min-width": `${sidebarMinWidth}px`,
-  };
+  const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
 
-  /* Focus the window element on window focus so that keyboard
-   * navigation continues into its own controls. */
   useEffect(() => {
     const element = windowRef.current;
 
@@ -206,7 +178,7 @@ export function Window({
     if (focused && !hidden && element && !element.contains(document.activeElement)) {
       element.focus({ preventScroll: true });
     }
-  }, [focused, hidden]);
+  }, [focused, hidden, contentKey]);
 
   const moveHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
@@ -224,33 +196,27 @@ export function Window({
   const resizeHandlers = usePointerDrag({
     start: () => {
       playClick();
-      setResizeTarget("window");
+      setIsResizing(true);
 
       return { width, height };
     },
     onStart: (delta, from) => onResize(from.width + delta.dx, from.height + delta.dy),
-    onEnd: () => setResizeTarget(null),
+    onEnd: () => setIsResizing(false),
   });
 
-  const sidebarResizeHandlers = usePointerDrag({
-    threshold: DRAG_THRESHOLD,
-    preventDefault: true, // The divider sits between two panes of text; the press must not reach the selection that flanks it.
-    start: () => {
-      playClick();
-      setResizeTarget("sidebar");
-      hasResizedSidebarRef.current = false;
-
-      /* The sidebar is constrained by the window's width (see `window.module.css`),
-       * so the drag starts from the width on screen rather than the one it was given. */
-      return sidebarRef.current?.clientWidth ?? sidebarWidth;
-    },
-    onStart: (delta, from) => onResizeSidebar(from + delta.dx),
-    onEnd: (moved) => {
-      hasResizedSidebarRef.current = moved;
-      setResizeTarget(null);
-      onResizeSidebarEnd();
-    },
-  });
+  const resizeControl = maximized ? null : (
+    <Tooltip label="Resize" suppressed={isResizing}>
+      <button
+        aria-label="Resize"
+        className={clsx(styles.controlResize, isResizing && styles.pressed)}
+        tabIndex={-1} /* Drag handle is not keyboard accessible. */
+        type="button"
+        {...resizeHandlers}
+      >
+        <ResizeIcon />
+      </button>
+    </Tooltip>
+  );
 
   return (
     <section
@@ -264,8 +230,7 @@ export function Window({
         unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
       )}
-      /* A maximized window is laid out entirely by CSS. An unplaced one keeps its
-       * size but leaves its position to CSS, which centres it on the desktop. */
+      /* A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS. */
       style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }}
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
       onFocus={onFocus}
@@ -290,54 +255,9 @@ export function Window({
           </>
         )}
       </header>
-      <div className={styles.content} data-resizing={isResizing || undefined}>
-        {sidebar && (
-          <>
-            <ScrollPane
-              ref={sidebarRef}
-              id={sidebarId}
-              className={styles.sidebar}
-              style={sidebarStyle}
-              isResizing={isResizing}
-            >
-              {sidebar}
-            </ScrollPane>
-            <button
-              aria-label="Resize sidebar"
-              className={styles.divider}
-              tabIndex={-1} /* Drag handle is not keyboard accessible. */
-              type="button"
-              onDoubleClick={() => {
-                if (!hasResizedSidebarRef.current) {
-                  onResetSidebarWidth();
-                }
-              }}
-              {...sidebarResizeHandlers}
-            />
-          </>
-        )}
-        <ScrollPane
-          id={contentId}
-          isResizing={isResizing}
-          resizeControl={
-            maximized ? null : (
-              <Tooltip label="Resize" suppressed={resizeTarget === "window"}>
-                <button
-                  aria-label="Resize"
-                  className={clsx(styles.controlResize, resizeTarget === "window" && styles.pressed)}
-                  tabIndex={-1} /* Drag handle is not keyboard accessible. */
-                  type="button"
-                  {...resizeHandlers}
-                >
-                  <ResizeIcon />
-                </button>
-              </Tooltip>
-            )
-          }
-        >
-          {children}
-        </ScrollPane>
-      </div>
+      <ScrollPane key={contentKey} id={contentId} isResizing={isResizing} resizeControl={resizeControl}>
+        {children}
+      </ScrollPane>
     </section>
   );
 }

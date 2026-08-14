@@ -66,7 +66,7 @@ export interface StageMetrics {
   viewport: Size;
   illustration: Rect; // The illustration's box, in viewport coordinates.
   display: Rect; // The display cutout in the illustration, in viewport coordinates.
-  scale: number; // The illustration's drawn size over its own coordinates, which the screen inside the display scales with.
+  scale: number; // The illustration's rendered size over its own coordinates, which the screen inside the display scales with.
   zoomOut: Transform; // Takes the stage back out to the framing the illustration is revealed at.
 }
 

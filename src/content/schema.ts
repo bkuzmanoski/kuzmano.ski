@@ -8,35 +8,35 @@ export interface Frontmatter {
   draft?: boolean;
 }
 
-export interface Page extends Frontmatter {
+export interface Entry extends Frontmatter {
   slug: string;
 }
 
-export function parseFrontmatter(source: unknown, id: string): Frontmatter {
-  if (typeof source !== "object" || source === null) {
-    throw new Error(`Page "${id}" is missing a frontmatter block.`);
+export function parseFrontmatter(input: unknown, path: string): Frontmatter {
+  if (typeof input !== "object" || input === null) {
+    throw new Error(`"${path}" is missing a frontmatter block.`);
   }
 
-  const { title, description, date, category, draft } = source as Record<string, unknown>;
+  const { title, description, date, category, draft } = input as Record<string, unknown>;
 
   if (typeof title !== "string" || title.length === 0) {
-    throw new Error(`Page "${id}" is missing a title.`);
+    throw new Error(`"${path}" is missing a title.`);
   }
 
   if (typeof description !== "string" || description.length === 0) {
-    throw new Error(`Page "${id}" is missing a description.`);
+    throw new Error(`"${path}" is missing a description.`);
   }
 
   if (!isIsoDate(date)) {
-    throw new Error(`Page "${id}" has a non-ISO date value: ${String(date)}`);
+    throw new Error(`"${path}" has a non-ISO date value: ${String(date)}`);
   }
 
   if (category !== undefined && typeof category !== "string") {
-    throw new Error(`Page "${id}" has a non-string category value: ${JSON.stringify(category)}`);
+    throw new Error(`"${path}" has a non-string category value: ${JSON.stringify(category)}`);
   }
 
   if (draft !== undefined && typeof draft !== "boolean") {
-    throw new Error(`Page "${id}" has a non-boolean draft value: ${JSON.stringify(draft)}`);
+    throw new Error(`"${path}" has a non-boolean draft value: ${JSON.stringify(draft)}`);
   }
 
   return { title, description, date, category, draft };

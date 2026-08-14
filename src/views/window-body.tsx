@@ -1,26 +1,27 @@
-import { Suspense, memo } from "react";
+import { Suspense } from "react";
 
-import { EmptyState } from "#/components/empty-state";
 import { LoadingState } from "#/components/loading-state";
-import { pages } from "#/content";
-import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
+import type { CollectionTarget } from "#/content/window-registry";
+import { useWindowContent } from "#/lib/window-manager";
 
 import { CollectionEntryList } from "./collection-entry-list";
 import { ContentBody } from "./content-body";
 import { NotFoundBody } from "./not-found";
 
-function CollectionEntryBody({ collection, slug }: { collection: Collection; slug: string }) {
-  const frontmatter = collection.frontmatter(slug);
-  return frontmatter ? <ContentBody content={collection.load(slug)} frontmatter={frontmatter} /> : null;
+function useOpenEntrySlug(collectionRoute: string): string | null {
+  const entryWindow = useWindowContent().entry;
+  const target = entryWindow ? resolveWindow(entryWindow.route) : null;
+
+  return target?.id === "entry" && target.collectionRoute === collectionRoute ? target.slug : null;
 }
 
-function PageBody({ slug }: { slug: string }) {
-  const frontmatter = pages.frontmatter(slug);
-  return frontmatter ? <ContentBody content={pages.load(slug)} frontmatter={frontmatter} showDate={false} /> : null;
+function CollectionListBody({ target }: { target: CollectionTarget }) {
+  const activeSlug = useOpenEntrySlug(target.route);
+  return <CollectionEntryList activeSlug={activeSlug} collection={target.collection} route={target.route} />;
 }
 
-function Pane({ route }: { route: string }) {
+export function WindowBody({ route }: { route: string }) {
   const target = resolveWindow(route);
 
   if (!target) {
@@ -28,48 +29,15 @@ function Pane({ route }: { route: string }) {
   }
 
   switch (target.id) {
-    case "collection":
-      // A collection window opens on an entry (see `windowRouteFor`) so the list is empty here.
-      return target.entrySlug === null ? (
-        <EmptyState message="This collection has no entries." />
-      ) : (
-        <CollectionEntryBody collection={target.collection} slug={target.entrySlug} />
+    case "entry":
+      return (
+        <Suspense fallback={<LoadingState />}>
+          <ContentBody content={target.contentIndex.load(target.slug)} />
+        </Suspense>
       );
-    case "page":
-      return <PageBody slug={target.slug} />;
+    case "collection":
+      return <CollectionListBody target={target} />;
     case "notFound":
       return <NotFoundBody />;
   }
 }
-
-/* Both `WindowSidebar` and `WindowBody` depend on the route alone, so they
- * are memoized and held apart from the geometry. */
-
-/** The sidebar of a window. Only the collection window has one (see `hasSidebar`). */
-export const WindowSidebar = memo(function Sidebar({ route }: { route: string }) {
-  const target = resolveWindow(route);
-
-  if (target?.id !== "collection") {
-    return null;
-  }
-
-  /* Keyed by collection so a move to another one starts its list over, rather than
-   * carrying the scroll position and the tab stop of the list it replaced. */
-  return (
-    <CollectionEntryList
-      key={target.basePath}
-      activeSlug={target.entrySlug}
-      basePath={target.basePath}
-      collection={target.collection}
-    />
-  );
-});
-
-/** The main pane of a window. */
-export const WindowBody = memo(function Body({ route }: { route: string }) {
-  return (
-    <Suspense fallback={<LoadingState />}>
-      <Pane route={route} />
-    </Suspense>
-  );
-});

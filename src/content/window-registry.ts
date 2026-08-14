@@ -1,12 +1,27 @@
 import { collections, pages } from "#/content";
-import type { Collection } from "#/content";
+import type { Collection, ContentIndex } from "#/content";
 
 export const NOT_FOUND_TITLE = "Page not found (404)";
 
-export type WindowTarget =
-  | { id: "collection"; title: string; collection: Collection; basePath: string; entrySlug: string | null }
-  | { id: "page"; title: string; slug: string }
-  | { id: "notFound"; title: string };
+/** A window that shows one entry, read from a content index. */
+export interface EntryTarget {
+  id: "entry";
+  title: string;
+  slug: string;
+  collectionRoute: string | null; // The collection the entry came from, or `null` for a top-level entry.
+  contentIndex: ContentIndex; // Where the entry is read from: top-level pages or the collection it belongs to.
+}
+
+/** A window that lists collection entries. */
+export interface CollectionTarget {
+  id: "collection";
+  title: string;
+  collection: Collection;
+  route: string;
+}
+
+/** The type of window a route opens. */
+export type WindowTarget = EntryTarget | CollectionTarget | { id: "notFound"; title: string };
 
 export function resolveWindow(pathname: string): WindowTarget | null {
   const segments = pathname.split("/").filter(Boolean);
@@ -20,24 +35,30 @@ export function resolveWindow(pathname: string): WindowTarget | null {
 
   if (segments.length === 1) {
     if (collection) {
-      return { id: "collection", title: collection.title, collection, basePath: `/${segment}`, entrySlug: null };
+      return { id: "collection", title: collection.title, collection, route: `/${segment}` };
     }
 
     if (pages.has(segment)) {
-      return { id: "page", title: pages.frontmatter(segment)?.title ?? segment, slug: segment };
+      return {
+        id: "entry",
+        title: pages.frontmatterOf(segment)?.title ?? segment,
+        slug: segment,
+        collectionRoute: null,
+        contentIndex: pages,
+      };
     }
   }
 
   if (segments.length === 2) {
-    const entrySlug = segments[1]!;
+    const slug = segments[1]!;
 
-    if (collection?.has(entrySlug)) {
+    if (collection?.has(slug)) {
       return {
-        id: "collection",
-        title: collection.frontmatter(entrySlug)?.title ?? entrySlug,
-        collection,
-        basePath: `/${segment}`,
-        entrySlug,
+        id: "entry",
+        title: collection.frontmatterOf(slug)?.title ?? slug,
+        slug,
+        collectionRoute: `/${segment}`,
+        contentIndex: collection,
       };
     }
   }
@@ -46,27 +67,23 @@ export function resolveWindow(pathname: string): WindowTarget | null {
 }
 
 /**
- * The route a window opens for `route`. A collection opens on its most recent entry,
- * so the collection window always has a body beside its list. An empty collection
- * (every entry a draft) has nothing to open, and keeps its own route.
+ * Returns the desktop destination route associated with an open window.
+ *
+ * A collection entry is associated with its containing collection; a top-level entry or a
+ * collection is associated with its own route. Returns `null` for routes that do not open a
+ * window.
  */
-export function windowRouteFor(route: string): string {
-  const target = resolveWindow(route);
+export function destinationRouteOf(windowRoute: string): string | null {
+  const target = resolveWindow(windowRoute);
 
-  if (target?.id !== "collection" || target.entrySlug !== null) {
-    return route;
+  switch (target?.id) {
+    case "entry":
+      return target.collectionRoute ?? windowRoute;
+
+    case "collection":
+      return target.route;
+
+    default:
+      return null;
   }
-
-  const latest = target.collection.list()[0];
-
-  return latest ? `${target.basePath}/${latest.slug}` : route;
-}
-
-/**
- * The route an open window traces back to on the desktop. A collection entry
- * traces back to its collection, so the folder it came from draws as open.
- */
-export function desktopRouteOf(route: string): string {
-  const target = resolveWindow(route);
-  return target?.id === "collection" ? target.basePath : route;
 }

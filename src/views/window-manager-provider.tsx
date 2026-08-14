@@ -1,7 +1,7 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
 
-import { resolveWindow, windowRouteFor } from "#/content/window-registry";
+import { resolveWindow } from "#/content/window-registry";
 import {
   ActionsContext,
   ContentContext,
@@ -16,8 +16,7 @@ import type { Action, ManagerState, WindowActions, WindowLayout, WindowReducer }
 
 import type { ReactNode } from "react";
 
-function openAction(requestedRoute: string): Action | null {
-  const route = windowRouteFor(requestedRoute);
+function openAction(route: string): Action | null {
   const target = resolveWindow(route);
 
   if (!target) {
@@ -42,18 +41,20 @@ export function WindowManagerProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const reducer = useMemo(() => createWindowReducer(layout), [layout]);
   const [state, dispatch] = useReducer(reducer, router, (initialRouter) =>
     initialState(reducer, initialRouter.state.location.pathname),
   );
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const shouldReplaceUrlRef = useRef(false);
 
   const actions = useMemo<WindowActions>(() => {
-    const open: WindowActions["open"] = (route) => {
+    const open: WindowActions["open"] = (route, { replaceUrl = false } = {}) => {
       const action = openAction(route);
 
       if (action) {
+        shouldReplaceUrlRef.current = replaceUrl;
         dispatch(action);
       }
     };
@@ -76,29 +77,19 @@ export function WindowManagerProvider({
    * on external URL changes (deep links, back, forward, etc.). */
   const expectedRouteRef = useRef<string | null>(null);
 
-  /* True while the desktop opens a window that the visitor did not ask for, so the
-   * sync below replaces "/" instead of pushing over it. Every other sync follows a
-   * real interaction so Back moves between windows normally. */
-  const isAutomaticFocusRef = useRef(false);
-
   const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
     const route = focusedRoute ?? "/";
-    const isAutomaticFocus = isAutomaticFocusRef.current;
+    const shouldReplaceUrl = shouldReplaceUrlRef.current;
 
-    isAutomaticFocusRef.current = false; // Cleared on every path, so a sync that does not navigate cannot leave it set for the next one.
+    shouldReplaceUrlRef.current = false; // Cleared on every path, so a sync that does not navigate cannot leave it set for the next one.
 
     if (pathname === route) {
       return;
     }
 
-    /* A push would leave an entry that reopens or redirects as soon as Back reached it
-     * (browsers detect this and mark the entry skippable), so the URL is replaced
-     * whenever it is only being corrected: the desktop opened the window on its own, or
-     * the current URL is the one the open window came from (a collection index). */
-    const isCorrection = isAutomaticFocus || windowRouteFor(pathname) === route;
-
     expectedRouteRef.current = route;
-    void navigate({ to: route, replace: isCorrection });
+
+    void navigate({ to: route, replace: shouldReplaceUrl });
   });
 
   const focusedRoute = state.focused === null ? null : (state.content[state.focused]?.route ?? null);
@@ -136,8 +127,7 @@ export function WindowManagerProvider({
    * to "/" (e.g. via a click on the desktop) does not reopen it. */
   const openInitialWindow = useEffectEvent(() => {
     if (initialRoute && pathname === "/") {
-      isAutomaticFocusRef.current = true;
-      actions.open(initialRoute);
+      actions.open(initialRoute, { replaceUrl: true });
     }
   });
 

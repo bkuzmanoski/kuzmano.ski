@@ -3,7 +3,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
 import { ICONS, ICON_IDS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
-import { desktopRouteOf, resolveWindow } from "#/content/window-registry";
+import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { downloadFile } from "#/lib/download";
@@ -37,7 +37,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
   /* Only a press on the empty desktop clears the selection. A press on a window or on the
-   * menu bar leaves it standing. The desktop stops drawing a selection when it does not hold
+   * menu bar leaves it standing. The desktop stops showing a selection when it does not hold
    * keyboard focus. */
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -65,7 +65,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   }
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
-  const openRoutes = new Set(Object.values(content).map(({ route }) => desktopRouteOf(route)));
+  const openDestinationRoutes = new Set(Object.values(content).map(({ route }) => destinationRouteOf(route)));
   const container = {
     width: containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth),
     height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
@@ -81,7 +81,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   function selectIcon(id: string) {
     setSelectedIconId(id);
-    focusDesktop(); // Activate the desktop so the selection is drawn and the arrow keys move it.
+    focusDesktop(); // Activate the desktop so the selection is shown and the arrow keys move it.
     iconsRef.current[id]?.focus();
   }
 
@@ -168,7 +168,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           y={y}
           cellSize={ICON_LAYOUT.cellSize}
           tabIndex={tabStop === id ? 0 : -1}
-          open={iconDefinition.kind === "collection" && openRoutes.has(iconDefinition.route)}
+          open={iconDefinition.kind === "collection" && openDestinationRoutes.has(iconDefinition.route)}
           selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
           onSelect={() => selectIcon(id)}
           onOpen={() => openIcon(iconDefinition)}

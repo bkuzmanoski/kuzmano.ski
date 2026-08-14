@@ -22,7 +22,7 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
  * The active item is also scrolled into view as it changes, so a list that opens scrolled
  * to the top still shows what is selected.
  *
- * Spread the returned props onto each item, in the order the list draws them. An
+ * Spread the returned props onto each item, in the order the list renders them. An
  * `activeIndex` of -1 means nothing is active, and the tab stop falls on the first item.
  */
 export function useListNavigation({

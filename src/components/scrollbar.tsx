@@ -129,8 +129,7 @@ export function Scrollbar({
     },
   });
 
-  const isMeasured = metrics.clientHeight > 0;
-  const isCollapsed = isMeasured && !overflow && !resizeControl;
+  const isCollapsed = !overflow && !resizeControl;
 
   return (
     /* The state is an attribute rather than a class so that the pane around it can

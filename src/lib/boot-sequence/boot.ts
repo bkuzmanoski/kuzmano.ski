@@ -3,7 +3,7 @@ import { createEmitter } from "../emitter";
 export const HAS_BOOTED_STORAGE_KEY = "has-booted";
 
 /* Set on `<html>` to hide the server-rendered desktop until the boot sequence
- * has run. The stylesheet draws the cover from this attribute. */
+ * has run. The stylesheet shows the cover while this attribute is set. */
 const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
 
 export const setBootOverlay = () => document.documentElement.setAttribute(BOOT_OVERLAY_ATTRIBUTE, "");

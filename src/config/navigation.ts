@@ -2,31 +2,30 @@ import type { IconKind } from "#/lib/icons/icon";
 
 export interface Destination {
   title: string;
-  iconKind: Extract<IconKind, "page" | "collection">;
+  iconKind: Extract<IconKind, "entry" | "collection">;
   route: string;
 }
 
+const entry = (slug: string, title: string): Destination => ({ title, iconKind: "entry", route: `/${slug}` });
 const collection = (segment: string, title: string): Destination => ({
   title: title,
   iconKind: "collection",
   route: `/${segment}`,
 });
 
-const page = (slug: string, title: string): Destination => ({ title, iconKind: "page", route: `/${slug}` });
-
 export const DESTINATIONS = {
-  about: page("about", "About"),
-  experience: page("experience", "Experience"),
+  about: entry("about", "About"),
+  experience: entry("experience", "Experience"),
   work: collection("work", "Work"),
   "tech-notes": collection("tech-notes", "Tech Notes"),
   "design-notes": collection("design-notes", "Design Notes"),
-  contact: page("contact", "Contact"),
+  contact: entry("contact", "Contact"),
 } as const satisfies Record<string, Destination>;
 
 export type DestinationId = keyof typeof DESTINATIONS;
 
 /**
- * Destinations in display order, split into groups. Menus draw a separator
+ * Destinations in display order, split into groups. Menus render a separator
  * between groups; consumers that render a flat list use `DESTINATION_ORDER`.
  */
 export const DESTINATION_GROUPS = [

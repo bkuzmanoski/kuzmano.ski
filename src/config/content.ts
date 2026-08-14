@@ -1,5 +1,5 @@
 /**
- * Directory under `src/content/` whose files are top-level routes (`/<slug>`)
- * rather than a collection. Every other directory is a collection.
+ * Directory under `src/content/` whose files are top-level entries (`/<slug>`)
+ * that do not belong to a collection (`/<collection>/<slug>`).
  */
 export const PAGES_DIRECTORY = "_pages";

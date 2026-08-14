@@ -52,7 +52,7 @@ describe("stageMetricsFor", () => {
     }
   });
 
-  test("reports the scale the illustration is drawn at", () => {
+  test("reports the scale the illustration is rendered at", () => {
     for (const viewport of VIEWPORTS) {
       const { illustration, scale } = stageMetricsFor(viewport);
 

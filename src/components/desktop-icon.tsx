@@ -21,7 +21,7 @@ import type { ComponentType, KeyboardEvent, Ref } from "react";
 type GlyphIcon = ComponentType<{ className?: string }>;
 
 const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
-  page: { closed: [AppIcon, AppSelectedIcon] },
+  entry: { closed: [AppIcon, AppSelectedIcon] },
   collection: { closed: [FolderIcon, FolderSelectedIcon], open: [FolderOpenIcon, FolderOpenSelectedIcon] },
   download: { closed: [DocumentIcon, DocumentSelectedIcon] },
 };

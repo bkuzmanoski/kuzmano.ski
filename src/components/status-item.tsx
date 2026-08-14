@@ -19,18 +19,26 @@ import type { ReactNode } from "react";
 
 function StatusButton({
   label,
+  className,
   persistTooltipOnPress,
   onClick,
   children,
 }: {
   label: string;
+  className?: string;
   persistTooltipOnPress?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
   return (
     <Tooltip label={label} persistOnPress={persistTooltipOnPress}>
-      <button aria-label={label} className={styles.control} type="button" onClick={onClick} onPointerDown={playClick}>
+      <button
+        aria-label={label}
+        className={clsx(styles.control, className)}
+        type="button"
+        onClick={onClick}
+        onPointerDown={playClick}
+      >
         {children}
       </button>
     </Tooltip>
@@ -41,7 +49,7 @@ export function OrganizeWindowsStatus() {
   const { organize } = useWindowActions();
 
   return (
-    <StatusButton label="Organize Windows" onClick={organize}>
+    <StatusButton className={styles.pointerOnly} label="Organize Windows" onClick={organize}>
       <OrganizeIcon className={styles.icon} />
     </StatusButton>
   );
@@ -120,12 +128,12 @@ export function TimeStatus() {
   }, []);
 
   if (!time) {
-    return <span className={styles.time} aria-hidden />;
+    return <></>;
   }
 
   return (
     <Tooltip label="Sydney, Australia">
-      <time className={clsx(styles.control, styles.time)}>{time}</time>
+      <time className={clsx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
     </Tooltip>
   );
 }

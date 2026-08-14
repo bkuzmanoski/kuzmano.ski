@@ -1,56 +1,76 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import { collections } from "#/content";
+import { newestEntry } from "#/test-utils/content";
 import { renderRoute } from "#/test-utils/render-route";
 
 /* These tests use the real route tree to cover route wiring. */
 
-function firstEntry() {
-  const entry = collections["tech-notes"]?.list()[0];
-
-  if (!entry) {
-    throw new Error("This suite expects at least one tech-notes entry.");
-  }
-
-  return entry;
-}
+const firstEntry = () => newestEntry("tech-notes");
 
 const openWindows = () => screen.queryAllByRole("region");
 
-test("a collection entry route renders its frontmatter title and compiled MDX body", async () => {
+/* The focused window renders its title bar controls, so their presence stands in for focus. */
+const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
+
+test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
   const entry = firstEntry();
   const { container } = renderRoute(`/tech-notes/${entry.slug}`);
 
-  expect(await screen.findByRole("heading", { name: entry.title })).toBeDefined();
-  expect(container.querySelector("article p")).not.toBeNull();
+  expect(await screen.findByRole("region", { name: entry.title })).toBeDefined();
+  await waitFor(() => expect(container.querySelector("article p")).not.toBeNull());
 });
 
-test("a collection index lists its entries, linked by slug", async () => {
-  const entry = firstEntry();
-
-  renderRoute("/tech-notes");
-
-  const link = await screen.findByRole("link", { name: entry.title });
-
-  expect(link.getAttribute("href")).toBe(`/tech-notes/${entry.slug}`);
-});
-
-test("a collection index opens on its most recent entry", async () => {
+test("a collection route opens a window with the collection title and its entry list", async () => {
   const entry = firstEntry();
   const { history } = renderRoute("/tech-notes");
+  const window = await screen.findByRole("region", { name: "Tech Notes" });
 
-  expect(await screen.findByRole("region", { name: entry.title })).toBeDefined();
+  expect(history.location.pathname).toBe("/tech-notes");
+  expect(openWindows()).toHaveLength(1);
+  expect(within(window).getByRole("link", { name: entry.title }).getAttribute("href")).toBe(
+    `/tech-notes/${entry.slug}`,
+  );
+});
+
+test("a collection entry link opens a new window", async () => {
+  const entry = firstEntry();
+  const { history } = renderRoute("/tech-notes");
+  const window = await screen.findByRole("region", { name: "Tech Notes" });
+
+  fireEvent.click(within(window).getByRole("link", { name: entry.title }));
+
   await waitFor(() => expect(history.location.pathname).toBe(`/tech-notes/${entry.slug}`));
+  expect(history.length).toBe(2);
+  expect(openWindows()).toHaveLength(2);
+  expect(within(window).getByRole("link", { name: entry.title }).getAttribute("aria-current")).toBe("true");
+});
+
+test("closing a collection entry window focuses and updates the state the collection window behind it", async () => {
+  const entry = firstEntry();
+  const { history } = renderRoute("/tech-notes");
+  const collectionWindow = await screen.findByRole("region", { name: "Tech Notes" });
+
+  fireEvent.click(within(collectionWindow).getByRole("link", { name: entry.title }));
+
+  const entryWindow = await screen.findByRole("region", { name: entry.title });
+
+  fireEvent.click(within(entryWindow).getByRole("button", { name: "Close" }));
+
+  await waitFor(() => expect(history.location.pathname).toBe("/tech-notes"));
+  await waitFor(() => expect(isFocused(collectionWindow)).toBe(true));
+  expect(collectionWindow.querySelector("[aria-current]")).toBeNull();
+  expect(openWindows()).toHaveLength(1);
 });
 
 test("a second collection reuses the collection window", async () => {
   const { history } = renderRoute("/tech-notes");
 
-  await screen.findByRole("region", { name: firstEntry().title });
+  await screen.findByRole("region", { name: "Tech Notes" });
   history.push("/design-notes");
 
-  await waitFor(() => expect(openWindows()).toHaveLength(1));
+  await screen.findByRole("region", { name: "Design Notes" });
+  expect(openWindows()).toHaveLength(1);
 });
 
 test("a second unknown path reuses the 404 window", async () => {
@@ -72,9 +92,6 @@ test("the initial window opened by the desktop replaces the desktop in the sessi
   expect(history.location.pathname).toBe("/about");
   expect(history.length).toBe(1);
 });
-
-/* The focused window renders its title bar controls, so their presence stands in for focus. */
-const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
 
 test("stepping back and forward over the desktop route follows the window focus both ways", async () => {
   const entry = firstEntry();
