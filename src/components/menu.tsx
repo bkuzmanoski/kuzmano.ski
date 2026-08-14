@@ -174,11 +174,13 @@ export function Menu({
         focusAdjacentMenuItem(1);
 
         break;
+
       case "ArrowUp":
         event.preventDefault();
         focusAdjacentMenuItem(-1);
 
         break;
+
       case "ArrowRight":
         event.preventDefault();
         onOpenAdjacent(1);
@@ -189,6 +191,7 @@ export function Menu({
         onOpenAdjacent(-1);
 
         break;
+
       case "Enter":
       case " ":
         event.preventDefault();
@@ -198,6 +201,7 @@ export function Menu({
         }
 
         break;
+
       case "Escape":
       case "Tab":
         event.preventDefault();

@@ -35,8 +35,10 @@ export function WindowBody({ route }: { route: string }) {
           <ContentBody content={target.contentIndex.load(target.slug)} />
         </Suspense>
       );
+
     case "collection":
       return <CollectionListBody target={target} />;
+
     case "notFound":
       return <NotFoundBody />;
   }

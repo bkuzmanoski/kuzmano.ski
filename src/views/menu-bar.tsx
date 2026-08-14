@@ -140,11 +140,13 @@ export function MenuBar() {
         openMenuAt(label, event.currentTarget);
 
         break;
+
       case "ArrowRight":
         event.preventDefault();
         moveAlongMenuBar(label, 1);
 
         break;
+
       case "ArrowLeft":
         event.preventDefault();
         moveAlongMenuBar(label, -1);

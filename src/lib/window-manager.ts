@@ -210,6 +210,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           focused: id,
         };
       }
+
       case "close": {
         if (!state.content[action.id]) {
           return state;
@@ -222,15 +223,18 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
         return { ...state, content, geometry, order, focused };
       }
+
       case "focus": {
         return focusWindow(state, action.id);
       }
+
       case "move": {
         return updateGeometry(state, action.id, (target) => {
           const { x, y } = placeWindow({ ...target, x: action.x, y: action.y }, state.surface);
           return { x, y };
         });
       }
+
       case "resize": {
         return updateGeometry(state, action.id, (target) => {
           const placedRect = placeWindow(target, state.surface);
@@ -243,11 +247,13 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           return placeWindow(resizedRect, state.surface);
         });
       }
+
       case "zoom": {
         return updateGeometry(focusWindow(state, action.id), action.id, (target) => ({
           maximized: !target.maximized,
         }));
       }
+
       case "measure": {
         const { surface } = action;
 
@@ -264,9 +270,11 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
         return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;
       }
+
       case "organize": {
         return { ...state, geometry: cascadeWindows(layout, state) };
       }
+
       case "focusDesktop": {
         return state.focused === null ? state : { ...state, focused: null };
       }
