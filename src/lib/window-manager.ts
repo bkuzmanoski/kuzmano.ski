@@ -31,7 +31,8 @@ export interface WindowGeometry extends Rect {
 }
 
 export interface WindowLayout {
-  defaultSize: Size;
+  openAt: Record<WindowId, "cascade" | "centre">;
+  defaultSize: Record<WindowId, Size>;
   minSize: Size;
   cascadeOffset: number;
   padding: number;
@@ -96,49 +97,60 @@ function updateGeometry(
 }
 
 /**
- * The default size stepped down and to the right of centre, constrained to the available
- * space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
+ * A window's default size stepped down and to the right of centre, constrained to the
+ * available space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
  *
  * The halves are left unrounded so that they match, to the pixel, where CSS centres a
  * pre-rendered window (see `.unplaced` in `window.module.css`).
  */
-function cascadeSlot(layout: WindowLayout, surface: Size, step: number): Rect {
+function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
+  const defaultSize = layout.defaultSize[id];
   const offset = step * layout.cascadeOffset;
 
   /* An unmeasured desktop has no padded area to fit into. CSS places what the server
-   * drew, and the first measurement re-places it (see the `measure` case). */
+   * rendered, and the first measurement re-places it (see the `measure` case). */
   if (isUnmeasured(surface)) {
-    return { x: offset, y: offset, ...layout.defaultSize };
+    return { x: offset, y: offset, ...defaultSize };
   }
 
-  const x = Math.max(layout.padding, (surface.width - layout.defaultSize.width) / 2) + offset;
-  const y = Math.max(layout.padding, (surface.height - layout.defaultSize.height) / 2) + offset;
+  const x = Math.max(layout.padding, (surface.width - defaultSize.width) / 2) + offset;
+  const y = Math.max(layout.padding, (surface.height - defaultSize.height) / 2) + offset;
 
   return {
     x,
     y,
-    width: Math.min(layout.defaultSize.width, surface.width - layout.padding - x),
-    height: Math.min(layout.defaultSize.height, surface.height - layout.padding - y),
+    width: Math.min(defaultSize.width, surface.width - layout.padding - x),
+    height: Math.min(defaultSize.height, surface.height - layout.padding - y),
   };
 }
 
-/** The first unoccupied cascade slot. */
-function freeCascadeSlot(layout: WindowLayout, state: ManagerState): Rect {
+/**
+ * Where a window opens. A cascading window takes the first slot no open window stands on, so
+ * it is never hidden behind one the same size; a centred window always opens in the middle.
+ */
+function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect {
+  const slotAt = (step: number) => cascadeSlot(layout, state.surface, id, step);
+
+  if (layout.openAt[id] === "centre") {
+    return slotAt(0);
+  }
+
   const openWindows = Object.values(state.geometry);
 
   for (let step = 0; step < WINDOW_COUNT; step++) {
-    const position = cascadeSlot(layout, state.surface, step);
+    const slot = slotAt(step);
 
-    if (!openWindows.some((window) => window.x === position.x && window.y === position.y)) {
-      return position;
+    if (!openWindows.some((window) => window.x === slot.x && window.y === slot.y)) {
+      return slot;
     }
   }
 
-  return cascadeSlot(layout, state.surface, 0);
+  return slotAt(0);
 }
 
-/* Every open window cascaded from the centre of the desktop, back to front,
- * at its existing size unless that size overflows the slot it lands in. */
+/* Every open window cascaded from the centre of the desktop, back to front, at its existing
+ * size unless that size overflows the slot it lands in. Organizing is a deliberate tidy-up
+ * of the whole desktop, so it cascades windows that would open in the centre as well. */
 function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 
@@ -146,8 +158,7 @@ function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord
     const target = state.geometry[id];
 
     if (target) {
-      const slot = cascadeSlot(layout, state.surface, step);
-
+      const slot = cascadeSlot(layout, state.surface, id, step);
       geometry[id] = {
         ...slot,
         width: Math.min(target.width, slot.width),
@@ -204,7 +215,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           content,
           geometry: {
             ...state.geometry,
-            [id]: { ...freeCascadeSlot(layout, state), maximized: false },
+            [id]: { ...openSlot(layout, state, id), maximized: false },
           },
           order: [...state.order, id],
           focused: id,

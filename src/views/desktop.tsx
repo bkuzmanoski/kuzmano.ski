@@ -2,7 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 
 import { SkipLink } from "#/components/skip-link";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
-import { WINDOW_LAYOUT } from "#/config/windows";
+import { LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/audio/context";
 
 import { BootSequence } from "./boot-sequence";
@@ -22,7 +22,7 @@ export function Desktop({ children }: { children: ReactNode }) {
   useAudioUnlock();
 
   return (
-    <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
+    <WindowManagerProvider layout={LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
       <div className={styles.desktop}>
         <SkipLink />
         <MenuBar />

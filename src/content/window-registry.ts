@@ -1,27 +1,26 @@
 import { collections, pages } from "#/content";
 import type { Collection, ContentIndex } from "#/content";
+import type { WindowId } from "#/lib/window-manager";
 
 export const NOT_FOUND_TITLE = "Page not found (404)";
 
+/* The type of window a route opens. */
+type WindowTarget = {
+  [K in WindowId]: { id: K; title: string } & {
+    entry: { slug: string; collectionRoute: string | null; contentIndex: ContentIndex };
+    collection: { collection: Collection; route: string };
+    notFound: Record<never, never>;
+  }[K];
+}[WindowId];
+
 /** A window that shows one entry, read from a content index. */
-export interface EntryTarget {
-  id: "entry";
-  title: string;
-  slug: string;
-  collectionRoute: string | null; // The collection the entry came from, or `null` for a top-level entry.
-  contentIndex: ContentIndex; // Where the entry is read from: top-level pages or the collection it belongs to.
-}
+export type EntryTarget = Extract<WindowTarget, { id: "entry" }>;
 
 /** A window that lists collection entries. */
-export interface CollectionTarget {
-  id: "collection";
-  title: string;
-  collection: Collection;
-  route: string;
-}
+export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
 
-/** The type of window a route opens. */
-export type WindowTarget = EntryTarget | CollectionTarget | { id: "notFound"; title: string };
+/** A window that reports a route with no matching content. */
+export type NotFoundTarget = Extract<WindowTarget, { id: "notFound" }>;
 
 export function resolveWindow(pathname: string): WindowTarget | null {
   const segments = pathname.split("/").filter(Boolean);

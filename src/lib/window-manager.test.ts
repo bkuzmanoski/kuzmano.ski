@@ -5,8 +5,12 @@ import { EMPTY_STATE, WINDOW_DOM_ORDER, createWindowPlacer, createWindowReducer 
 import type { Size } from "./geometry";
 import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
 
+/* Every window is given the same size and opens the same way, so the suite below reads as
+ * one cascade. The layouts that vary by window are covered in `per-window layout`. */
+const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const LAYOUT: WindowLayout = {
-  defaultSize: { width: 1024, height: 1024 },
+  defaultSize: { entry: DEFAULT_SIZE, collection: DEFAULT_SIZE, notFound: DEFAULT_SIZE },
+  openAt: { entry: "cascade", collection: "cascade", notFound: "cascade" },
   minSize: { width: 480, height: 320 },
   cascadeOffset: 28,
   padding: 8,
@@ -14,8 +18,8 @@ const LAYOUT: WindowLayout = {
 
 const SURFACE = { width: 1600, height: 1200 }; // Room for the default size plus a cascade step on every edge.
 const CENTRE_POSITION = {
-  x: (SURFACE.width - LAYOUT.defaultSize.width) / 2,
-  y: (SURFACE.height - LAYOUT.defaultSize.height) / 2,
+  x: (SURFACE.width - DEFAULT_SIZE.width) / 2,
+  y: (SURFACE.height - DEFAULT_SIZE.height) / 2,
 };
 
 const reducer = createWindowReducer(LAYOUT);
@@ -45,11 +49,11 @@ describe("open", () => {
   test("the first window is centred on the desktop and subsequent windows cascade from there", () => {
     const state = opened("entry", "collection");
 
-    expect(state.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+    expect(state.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
       x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
       y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
-      ...LAYOUT.defaultSize, // A desktop with room to spare places both windows at the default size.
+      ...DEFAULT_SIZE, // A desktop with room to spare places both windows at the default size.
     });
   });
 
@@ -68,7 +72,7 @@ describe("open", () => {
     const surface = { width: 1080, height: 1080 };
     const state = openedOn(surface, "entry", "collection");
 
-    expect(state.geometry.entry).toMatchObject({ x: 28, y: 28, ...LAYOUT.defaultSize });
+    expect(state.geometry.entry).toMatchObject({ x: 28, y: 28, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({ x: 56, y: 56, width: 1016, height: 1016 });
   });
 
@@ -157,16 +161,16 @@ describe("focus", () => {
 describe("move", () => {
   test("sets the position and leaves the size unchanged", () => {
     const state = reducer(opened("entry"), { type: "move", id: "entry", x: 50, y: 50 });
-    expect(state.geometry.entry).toMatchObject({ x: 50, y: 50, ...LAYOUT.defaultSize });
+    expect(state.geometry.entry).toMatchObject({ x: 50, y: 50, ...DEFAULT_SIZE });
   });
 
   test("stops at the edge of the desktop rather than banking movement past it", () => {
     const state = reducer(opened("entry"), { type: "move", id: "entry", x: 5000, y: 5000 });
 
     expect(state.geometry.entry).toMatchObject({
-      x: SURFACE.width - LAYOUT.padding - LAYOUT.defaultSize.width,
-      y: SURFACE.height - LAYOUT.padding - LAYOUT.defaultSize.height,
-      ...LAYOUT.defaultSize,
+      x: SURFACE.width - LAYOUT.padding - DEFAULT_SIZE.width,
+      y: SURFACE.height - LAYOUT.padding - DEFAULT_SIZE.height,
+      ...DEFAULT_SIZE,
     });
   });
 
@@ -202,7 +206,7 @@ describe("resize", () => {
     const initialState = reducer(opened("entry"), { type: "measure", surface: narrowSurface });
     const mutatedState = reducer(initialState, { type: "resize", id: "entry", width: 560, height: 400 });
 
-    expect(initialState.geometry.entry).toMatchObject({ x: CENTRE_POSITION.x, width: LAYOUT.defaultSize.width });
+    expect(initialState.geometry.entry).toMatchObject({ x: CENTRE_POSITION.x, width: DEFAULT_SIZE.width });
     expect(mutatedState.geometry.entry).toMatchObject({ x: LAYOUT.padding, width: 560 });
   });
 });
@@ -228,15 +232,15 @@ describe("measure", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
     const measured = reducer(preRendered, { type: "measure", surface: SURFACE });
 
-    expect(preRendered.geometry.entry).toMatchObject({ x: 0, y: 0, ...LAYOUT.defaultSize });
-    expect(measured.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...LAYOUT.defaultSize });
+    expect(preRendered.geometry.entry).toMatchObject({ x: 0, y: 0, ...DEFAULT_SIZE });
+    expect(measured.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...DEFAULT_SIZE });
   });
 
   test("the first measurement fits a pre-rendered window into the padded area", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
     const measured = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
 
-    // What CSS drew before the desktop was measured (see `.unplaced` in `window.module.css`).
+    // What CSS rendered before the desktop was measured (see `.unplaced` in `window.module.css`).
     expect(measured.geometry.entry).toMatchObject({
       x: LAYOUT.padding,
       y: LAYOUT.padding,
@@ -288,7 +292,7 @@ describe("organize", () => {
     // The entry window loses the width its slot cannot hold and keeps the height that fits.
     expect(organizedState.geometry.entry).toMatchObject({
       ...CENTRE_POSITION,
-      width: LAYOUT.defaultSize.width,
+      width: DEFAULT_SIZE.width,
       height: 700,
     });
     expect(organizedState.geometry.collection).toMatchObject({
@@ -318,6 +322,47 @@ describe("focusDesktop", () => {
   test("is a no-op when the desktop is already active", () => {
     const state = reducer(opened("entry"), { type: "focusDesktop" });
     expect(reducer(state, { type: "focusDesktop" })).toBe(state);
+  });
+});
+
+describe("per-window layout", () => {
+  const SMALL_SIZE: Size = { width: 480, height: 420 };
+
+  const centreOf = (size: Size) => ({
+    x: (SURFACE.width - size.width) / 2,
+    y: (SURFACE.height - size.height) / 2,
+  });
+
+  const varyingReducer = createWindowReducer({
+    ...LAYOUT,
+    openAt: { ...LAYOUT.openAt, notFound: "centre" },
+    defaultSize: { ...LAYOUT.defaultSize, notFound: SMALL_SIZE },
+  });
+
+  const openedOnDesktop = (...ids: Array<WindowId>) =>
+    ids.reduce(
+      (state, id) => varyingReducer(state, openAction(id, `/${id}`)),
+      varyingReducer(EMPTY_STATE, { type: "measure", surface: SURFACE }),
+    );
+
+  test("a window opens at the specified default size", () => {
+    expect(openedOnDesktop("entry").geometry.entry).toMatchObject(DEFAULT_SIZE);
+    expect(openedOnDesktop("notFound").geometry.notFound).toMatchObject(SMALL_SIZE);
+  });
+
+  test("a window that opens in the centre is not affected by the cascade", () => {
+    const state = openedOnDesktop("entry", "collection", "notFound");
+
+    expect(state.geometry.collection).toMatchObject({ x: CENTRE_POSITION.x + LAYOUT.cascadeOffset }); // The cascade is unaffected.
+    expect(state.geometry.notFound).toMatchObject(centreOf(SMALL_SIZE));
+  });
+
+  test("organizing cascades every open window, including those that open in the centre", () => {
+    const state = varyingReducer(openedOnDesktop("entry", "notFound"), { type: "organize" });
+    expect(state.geometry.notFound).toMatchObject({
+      x: centreOf(SMALL_SIZE).x + LAYOUT.cascadeOffset,
+      y: centreOf(SMALL_SIZE).y + LAYOUT.cascadeOffset,
+    });
   });
 });
 

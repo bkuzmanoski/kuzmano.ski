@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
-import { WINDOW_LAYOUT } from "#/config/windows";
+import { LAYOUT } from "#/config/windows";
 import type { Rect } from "#/lib/geometry";
 import { useElementSize } from "#/lib/hooks/use-element-size";
 import {
@@ -24,7 +24,7 @@ import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
 
-const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
+const placeWindow = createWindowPlacer(LAYOUT);
 
 /* The layer below re-renders on every pointer frame, but the windows that did
  * not move compare equal here (the values `useWindowActions` do not change). */

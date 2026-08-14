@@ -35,7 +35,7 @@
     background: var(--color-scrim);
   }
 
-  /* A window the server drew has no position as the window layer has not yet been
+  /* A window the server rendered has no position as the window layer has not yet been
    * measured. These values mirror the default position and size for the initial window
    * placed by the window manager (see `window-manager.ts`). */
   &.unplaced {
