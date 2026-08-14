@@ -19,12 +19,21 @@ export function ErrorPage({ error }: ErrorComponentProps) {
       stack: error instanceof Error ? error.stack : undefined,
       route: location.pathname,
     };
-    void fetch("/api/client-errors", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(report),
-      keepalive: true,
-    });
+    const jsonReport = JSON.stringify(report);
+    const blob = new Blob([jsonReport], { type: "application/json" });
+    const queued = navigator.sendBeacon("/api/client-errors", blob);
+
+    if (!queued) {
+      // Beacon was rejected (e.g. queue full); best-effort fallback.
+      fetch("/api/client-errors", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: jsonReport,
+        keepalive: true,
+      }).catch(() => {
+        // Ignored.
+      });
+    }
   }, [error]);
 
   return (

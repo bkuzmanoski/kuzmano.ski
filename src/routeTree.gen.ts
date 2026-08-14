@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as SegmentIndexRouteImport } from './routes/$segment/index'
 import { Route as SegmentSlugRouteImport } from './routes/$segment/$slug'
+import { Route as ApiClientErrorsRouteImport } from './routes/api/client-errors'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,17 +35,24 @@ const SegmentSlugRoute = SegmentSlugRouteImport.update({
   path: '/$segment/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiClientErrorsRoute = ApiClientErrorsRouteImport.update({
+  id: '/api/client-errors',
+  path: '/api/client-errors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
+  '/api/client-errors': typeof ApiClientErrorsRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
+  '/api/client-errors': typeof ApiClientErrorsRoute
   '/$segment': typeof SegmentIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,29 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/$segment/$slug': typeof SegmentSlugRoute
+  '/api/client-errors': typeof ApiClientErrorsRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$' | '/$segment/$slug' | '/$segment/'
+  fullPaths:
+    '/' | '/$' | '/$segment/$slug' | '/api/client-errors' | '/$segment/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/$segment/$slug' | '/$segment'
-  id: '__root__' | '/' | '/$' | '/$segment/$slug' | '/$segment/'
+  to: '/' | '/$' | '/$segment/$slug' | '/api/client-errors' | '/$segment'
+  id:
+    | '__root__'
+    | '/'
+    | '/$'
+    | '/$segment/$slug'
+    | '/api/client-errors'
+    | '/$segment/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   SegmentSlugRoute: typeof SegmentSlugRoute
+  ApiClientErrorsRoute: typeof ApiClientErrorsRoute
   SegmentIndexRoute: typeof SegmentIndexRoute
 }
 
@@ -99,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SegmentSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/client-errors': {
+      id: '/api/client-errors'
+      path: '/api/client-errors'
+      fullPath: '/api/client-errors'
+      preLoaderRoute: typeof ApiClientErrorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   SegmentSlugRoute: SegmentSlugRoute,
+  ApiClientErrorsRoute: ApiClientErrorsRoute,
   SegmentIndexRoute: SegmentIndexRoute,
 }
 export const routeTree = rootRouteImport
