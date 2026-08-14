@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
@@ -47,6 +47,7 @@ export function Menu({
   const isMacOS = useIsMacOS();
   const flash = useActivationFlash<number>();
   const [focusedItemId, setFocusedItemId] = useState(-1);
+  const itemIdPrefix = useId();
   const menuRef = useRef<HTMLDivElement>(null);
   const isStickyRef = useRef(!isPointerHeld);
   const focusedItemRef = useRef(-1);
@@ -208,7 +209,14 @@ export function Menu({
   }
 
   return (
-    <div ref={menuRef} className={styles.menu} role="menu" tabIndex={-1} onKeyDown={onKeyDown}>
+    <div
+      ref={menuRef}
+      aria-activedescendant={focusedItemId >= 0 ? `${itemIdPrefix}-${focusedItemId}` : undefined}
+      className={styles.menu}
+      role="menu"
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+    >
       {items.map((item, index) =>
         item.kind === "separator" ? (
           <div key={index} className={styles.separator} role="separator" />
@@ -222,6 +230,7 @@ export function Menu({
               flash.isHighlighted(index, focusedItemId === index) && styles.active,
             )}
             data-index={index}
+            id={`${itemIdPrefix}-${index}`}
             role="menuitem"
           >
             <span>{item.label}</span>

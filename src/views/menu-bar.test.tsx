@@ -165,6 +165,25 @@ describe("navigating an open menu", () => {
     expect(openMenu()).toBeNull();
     expect(document.activeElement).toBe(title("Go"));
   });
+
+  test("reports the highlighted item to assistive technology", () => {
+    render(<MenuBar />);
+
+    openWithKeyboard("Go");
+
+    const menu = openMenu()!;
+    expect(menu.getAttribute("aria-activedescendant")).toBeNull();
+
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+
+    const activeItemId = menu.getAttribute("aria-activedescendant");
+    expect(activeItemId).not.toBeNull();
+    expect(document.getElementById(activeItemId!)?.getAttribute("role")).toBe("menuitem");
+    expect(document.getElementById(activeItemId!)?.textContent).toContain("About");
+
+    fireEvent.keyDown(menu, { key: "ArrowUp" });
+    expect(document.getElementById(menu.getAttribute("aria-activedescendant")!)?.textContent).toContain("Contact");
+  });
 });
 
 describe("navigating the closed menu bar", () => {
