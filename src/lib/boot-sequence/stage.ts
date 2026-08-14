@@ -2,7 +2,7 @@ import { transformBetween } from "../geometry";
 
 import type { Inset, Rect, Size, Transform } from "../geometry";
 
-/* Metrics derived from the illustration, in its own coordinates. */
+// Metrics derived from the illustration, in its own coordinates.
 const ILLUSTRATION_RECT: Rect = { x: 0, y: 0, width: 1214, height: 1067 };
 const DISPLAY_RECT: Rect = { x: 330, y: 99, width: 554, height: 410 };
 const DISK_ACTIVITY_INDICATOR_RECT: Rect = { x: 890, y: 670, width: 6, height: 6 };
@@ -10,7 +10,7 @@ const FOCUS_AREA_RECT: Rect = { x: 271, y: 0, width: 672, height: 784 };
 
 export const DISPLAY_BEZEL_INSET: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
-/* Metrics as fractions of the illustration's box. */
+// Metrics as fractions of the illustration's box.
 const DISPLAY_PLACEMENT: Rect = {
   x: DISPLAY_RECT.x / ILLUSTRATION_RECT.width,
   y: DISPLAY_RECT.y / ILLUSTRATION_RECT.height,
@@ -27,7 +27,7 @@ export const DISK_ACTIVITY_INDICATOR_PLACEMENT: Rect = {
 /** How far the light pooled under the illustration reaches below it, as a fraction of the illustration's height. */
 export const SPOTLIGHT_SPILL = 0.08;
 
-/* How much of each viewport axis a framed area is allowed to fill. */
+// How much of each viewport axis a framed area is allowed to fill.
 const ZOOMED_OUT_EXTENT: Size = { width: 1.4, height: 0.9 };
 const ZOOMED_IN_EXTENT: Size = { width: 0.98, height: 0.94 };
 
@@ -40,8 +40,8 @@ function displayAreaOf(box: Rect): Rect {
   };
 }
 
-/* The illustration's box, in viewport coordinates, when its `area`
- * is fitted to the viewport up to `scaleExtent` of each axis. */
+// The illustration's box, in viewport coordinates, when its `area`
+// is fitted to the viewport up to `scaleExtent` of each axis.
 function framedOn(area: Rect, scaleExtent: Size, viewport: Size): Rect {
   const scale = Math.min(
     (scaleExtent.width * viewport.width) / area.width,

@@ -148,9 +148,9 @@ function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect
   return slotAt(0);
 }
 
-/* Every open window cascaded from the centre of the desktop, back to front, at its existing
- * size unless that size overflows the slot it lands in. Organizing is a deliberate tidy-up
- * of the whole desktop, so it cascades windows that would open in the centre as well. */
+// Every open window cascaded from the centre of the desktop, back to front, at its existing
+// size unless that size overflows the slot it lands in. Organizing is a deliberate tidy-up
+// of the whole desktop, so it cascades windows that would open in the centre as well.
 function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 
@@ -309,13 +309,13 @@ export interface WindowActions {
   focusDesktop: () => void;
 }
 
-/* The state is split across six contexts so a change reaches only the parts that
- * use it. A window drag rewrites `geometry` many times per second; keeping window
- * content, the order, and the focus state separate means the menu bar, status items
- * and desktop icons do not re-render with it.
- *
- * They are exported for `window-manager-provider`, which is the only thing that
- * writes to them. Everything else reads through the hooks below. */
+// The state is split across six contexts so a change reaches only the parts that
+// use it. A window drag rewrites `geometry` many times per second; keeping window
+// content, the order, and the focus state separate means the menu bar, status items
+// and desktop icons do not re-render with it.
+//
+// They are exported for `window-manager-provider`, which is the only thing that
+// writes to them. Everything else reads through the hooks below.
 export const ActionsContext = createContext<WindowActions | null>(null);
 export const ContentContext = createContext<WindowRecord<WindowContent>>({});
 export const GeometryContext = createContext<WindowRecord<WindowGeometry>>({});

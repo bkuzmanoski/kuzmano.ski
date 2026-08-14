@@ -5,8 +5,9 @@ import { EMPTY_STATE, WINDOW_DOM_ORDER, createWindowPlacer, createWindowReducer 
 import type { Size } from "./geometry";
 import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
 
-/* Every window is given the same size and opens the same way, so the suite below reads as
- * one cascade. The layouts that vary by window are covered in `per-window layout`. */
+// Every window is given the same size and opens the same way, so the suite below reads as
+// one cascade. The layouts that vary by window are covered in `per-window layout`.
+
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const LAYOUT: WindowLayout = {
   defaultSize: { entry: DEFAULT_SIZE, collection: DEFAULT_SIZE, notFound: DEFAULT_SIZE },

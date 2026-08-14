@@ -26,12 +26,12 @@ let audioContext: AudioContext | null = null;
 let output: GainNode | null = null;
 let whenRunning: Promise<void> | null = null;
 
-/* True if the document has had a user gesture. */
+// True if the document has had a user gesture.
 const hasUserActivation = () => (navigator as Partial<Navigator>).userActivation?.hasBeenActive ?? true;
 
-/* The one way state is ever inspected. WebKit also reports a non-standard
- * "interrupted" state (phone call, Siri, lock screen); comparing against
- * "running" treats it like "suspended" without a cast. */
+// The one way state is ever inspected. WebKit also reports a non-standard
+// "interrupted" state (phone call, Siri, lock screen); comparing against
+// "running" treats it like "suspended" without a cast.
 const isRunning = (context: AudioContext) => context.state === "running";
 
 /**
@@ -61,11 +61,11 @@ function unlockAudioOnKeyDown(event: KeyboardEvent): void {
   }
 }
 
-/* Every call issues a fresh `resume()`. Concurrent calls are safe—they all settle
- * when the context transitions—while a resume issued from a moment iOS does not
- * honor (e.g. the touchstart phase of a tap) can stay pending forever. Deduping on
- * such a promise would swallow the resume from the next, valid gesture and leave
- * audio dead for the session. */
+// Every call issues a fresh `resume()`. Concurrent calls are safe—they all settle
+// when the context transitions—while a resume issued from a moment iOS does not
+// honor (e.g. the touchstart phase of a tap) can stay pending forever. Deduping on
+// such a promise would swallow the resume from the next, valid gesture and leave
+// audio dead for the session.
 function ensureResumed(context: AudioContext): void {
   if (!isRunning(context)) {
     void context.resume().catch(() => {
@@ -74,9 +74,9 @@ function ensureResumed(context: AudioContext): void {
   }
 }
 
-/* Resolves when the context is actually running, keyed to the state transition
- * itself rather than to any one `resume()` promise, so it settles no matter which
- * gesture's resume finally lands. */
+// Resolves when the context is actually running, keyed to the state transition
+// itself rather than to any one `resume()` promise, so it settles no matter which
+// gesture's resume finally lands.
 function whenAudioRunning(context: AudioContext): Promise<void> {
   if (isRunning(context)) {
     return Promise.resolve();
@@ -97,8 +97,8 @@ function whenAudioRunning(context: AudioContext): Promise<void> {
   return whenRunning;
 }
 
-/* Resumes a context created by an earlier gesture that the
- * browser suspended while the tab was in the background. */
+// Resumes a context created by an earlier gesture that the
+// browser suspended while the tab was in the background.
 function resumeAudioOnReturn(): void {
   if (!audioContext || document.visibilityState !== "visible" || getSettings().sound !== "on") {
     return;

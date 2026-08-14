@@ -15,7 +15,7 @@ const DISPLAY_PLACEMENT: Rect = { x: 330 / 1214, y: 99 / 1067, width: 554 / 1214
 const APPLE_LOGO_BOTTOM = 735 / 1067;
 const DISK_DRIVE_BOTTOM = 692 / 1067;
 
-/* Applies a transform the way the compositor does, for an origin at the viewport's top-left corner. */
+// Applies a transform the way the compositor does, for an origin at the viewport's top-left corner.
 const transformed = ({ scale, x, y }: Transform, box: Rect): Rect => ({
   x: box.x * scale + x,
   y: box.y * scale + y,

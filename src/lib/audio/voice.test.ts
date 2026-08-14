@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { renderBuffer } from "./voice";
 
-/* jsdom has no AudioContext; `renderBuffer` only needs `createBuffer`. */
+// jsdom has no AudioContext; `renderBuffer` only needs `createBuffer`.
 function fakeContext(): AudioContext {
   return {
     createBuffer(_channels: number, length: number, sampleRate: number) {

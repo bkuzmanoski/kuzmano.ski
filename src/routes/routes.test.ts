@@ -5,13 +5,13 @@ import { NOT_FOUND_TITLE } from "#/content/window-registry";
 import { newestEntry } from "#/test-utils/content";
 import { renderRoute } from "#/test-utils/render-route";
 
-/* These tests use the real route tree to cover route wiring. */
+// These tests use the real route tree to cover route wiring.
 
 const firstEntry = () => newestEntry("tech-notes");
 
 const openWindows = () => screen.queryAllByRole("region");
 
-/* The focused window renders its title bar controls, so their presence stands in for focus. */
+// The focused window renders its title bar controls, so their presence stands in for focus.
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
 
 test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
@@ -84,8 +84,8 @@ test("a second unknown path reuses the not-found window", async () => {
   expect(openWindows()).toHaveLength(1);
 });
 
-/* A push would leave an entry that reopens the window as soon as Back reached it,
- * which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`). */
+// A push would leave an entry that reopens the window as soon as Back reached it,
+// which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`).
 test("the initial window opened by the desktop replaces the desktop in the session history", async () => {
   const { history } = renderRoute("/");
 

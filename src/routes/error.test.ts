@@ -4,9 +4,9 @@ import { expect, test, vi } from "vitest";
 import type * as Content from "#/content";
 import { renderRoute } from "#/test-utils/render-route";
 
-/* Content that cannot be read fails when the route loads, and again when the desktop
- * resolves the window for it. The desktop cannot recover from this. These tests use
- * the real route tree to cover that path. */
+// Content that cannot be read fails when the route loads, and again when the desktop
+// resolves the window for it. The desktop cannot recover from this. These tests use
+// the real route tree to cover that path.
 
 vi.mock("#/content", async (importOriginal) => {
   const actual = await importOriginal<typeof Content>();

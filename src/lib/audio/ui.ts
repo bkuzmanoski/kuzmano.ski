@@ -110,12 +110,12 @@ interface ScrollGesture {
 
 const gestures = new WeakMap<Element, ScrollGesture>(); // Per element, so two windows scrolling at once each keep their own place.
 
-/* Clamped scroll top position to prevent sound effects during overscroll. */
+// Clamped scroll top position to prevent sound effects during overscroll.
 function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
-/* A gesture opens owing a full notch, so its first movement sounds a detent. */
+// A gesture opens owing a full notch, so its first movement sounds a detent.
 function openGesture(top: number, at: number): ScrollGesture {
   return { top, at, speed: 0, distance: SCROLL_DETENT_PIXELS };
 }

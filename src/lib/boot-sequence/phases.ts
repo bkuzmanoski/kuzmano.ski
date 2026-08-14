@@ -1,6 +1,6 @@
 import { NON_GESTURE_KEYS } from "../audio/context";
 
-/* Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order. */
+// Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order.
 const PHASES = [
   "loading",
   "waiting-for-input",
@@ -15,7 +15,7 @@ const PHASES = [
 
 export type Phase = (typeof PHASES)[number];
 
-/* The motion the stylesheet animates over. */
+// The motion the stylesheet animates over.
 export const MOTION_MS = {
   loadingCoverFade: 600,
   stageZoom: 800,
@@ -27,7 +27,7 @@ export const MOTION_MS = {
 
 export type Motion = typeof MOTION_MS;
 
-/* Substituted under a reduced motion preference. */
+// Substituted under a reduced motion preference.
 export const REDUCED_MOTION_MS: Motion = {
   ...MOTION_MS,
   stageZoom: 0,

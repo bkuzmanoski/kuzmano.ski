@@ -7,8 +7,8 @@ import tseslint from "typescript-eslint";
 
 const BUILD_IGNORE_PATTERN = "**/build/**";
 
-/* TanStack's shared config ignores every `build` directory; in this
- * project build/` contains first-party Vite plugins and script. */
+// TanStack's shared config ignores every `build` directory; in this
+// project build/` contains first-party Vite plugins and script.
 const baseConfig = tanstackConfig.map((config) =>
   config.name === "tanstack/ignores"
     ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== BUILD_IGNORE_PATTERN) }

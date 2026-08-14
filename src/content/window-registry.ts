@@ -4,7 +4,7 @@ import type { WindowId } from "#/lib/window-manager";
 
 export const NOT_FOUND_TITLE = "Page not found (404)";
 
-/* The type of window a route opens. */
+// The type of window a route opens.
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
     entry: { slug: string; collectionRoute: string | null; contentIndex: ContentIndex };

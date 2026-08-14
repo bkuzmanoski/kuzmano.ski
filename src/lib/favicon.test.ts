@@ -4,8 +4,8 @@ import { watchFaviconColorScheme } from "./favicon";
 
 const HREF = "/favicon.svg";
 
-/* Stands in for `matchMedia`, which jsdom does not implement, and exposes the
- * scheme change the browser would otherwise report. */
+// Stands in for `matchMedia`, which jsdom does not implement, and
+// exposes the scheme change the browser would otherwise report.
 function stubMatchMedia() {
   const listeners = new Set<(event: MediaQueryListEvent) => void>();
   const media = {

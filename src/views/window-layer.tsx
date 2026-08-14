@@ -26,8 +26,8 @@ import type { ReactNode } from "react";
 
 const placeWindow = createWindowPlacer(LAYOUT);
 
-/* The layer below re-renders on every pointer frame, but the windows that did
- * not move compare equal here (the values `useWindowActions` do not change). */
+// The layer below re-renders on every pointer frame, but the windows that did
+// not move compare equal here (the values `useWindowActions` do not change).
 const DesktopWindow = memo(function OpenWindow({
   id,
   route,

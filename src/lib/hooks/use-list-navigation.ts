@@ -6,7 +6,7 @@ import { clamp } from "../math";
 
 import type { KeyboardEvent } from "react";
 
-/* Where each key moves the focus, from the item that received it. */
+// Where each key moves the focus, from the item that received it.
 const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number) | undefined> = {
   ArrowUp: (index) => index - 1,
   ArrowDown: (index) => index + 1,

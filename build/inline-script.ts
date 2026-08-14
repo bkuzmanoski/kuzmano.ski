@@ -5,9 +5,9 @@ import type { Plugin, ResolvedConfig } from "vite";
 const QUERY = "inline-script";
 const PREFIX = "\0inline-script:";
 
-/* These scripts block the first paint, so they must stay small. The limit is set against
- * the current scripts, which are 250-350 bytes each. It leaves room for another script
- * but catches a non-lead module import that pulls in a large module. */
+// These scripts block the first paint, so they must stay small. The limit is set against
+// the current scripts, which are 250-350 bytes each. It leaves room for another script
+// but catches a non-lead module import that pulls in a large module.
 const MAX_BYTES = 1024;
 
 /**

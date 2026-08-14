@@ -69,7 +69,7 @@ function parseHex(value: string): Rgb {
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 
-/* Splits on separators that sit outside any parentheses, dropping empties. */
+// Splits on separators that sit outside any parentheses, dropping empties.
 function splitTopLevel(input: string, isSeparator: (character: string) => boolean): Array<string> {
   const parts: Array<string> = [];
 
@@ -106,7 +106,7 @@ function splitTopLevel(input: string, isSeparator: (character: string) => boolea
 const splitArguments = (input: string) => splitTopLevel(input, (character) => character === ",");
 const splitWords = (input: string) => splitTopLevel(input, (character) => /\s/.test(character));
 
-/* Index of the bracket closing the one at `openIndex`, or undefined if it never closes. */
+// Index of the bracket closing the one at `openIndex`, or undefined if it never closes.
 function findMatching(input: string, openIndex: number, open: string, close: string): number | undefined {
   let depth = 0;
 
@@ -166,7 +166,7 @@ function parseCustomProperties(block: string): Map<string, string> {
   return properties;
 }
 
-/* Reads `name(args)`, rejecting values like `var(--a) var(--b)`. */
+// Reads `name(args)`, rejecting values like `var(--a) var(--b)`.
 function parseFunction(value: string): { name: string; args: string } | undefined {
   const openParenthesisIndex = value.indexOf("(");
   const functionName = openParenthesisIndex === -1 ? "" : value.slice(0, openParenthesisIndex);

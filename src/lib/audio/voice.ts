@@ -17,7 +17,7 @@ export interface Voice {
 
 const voiceBuffers = new Map<Voice, AudioBuffer>();
 
-/* A seedable PRNG for deterministic voice rendering. */
+// Seedable PRNG for deterministic voice rendering.
 function mulberry32(seed: number): () => number {
   let state = seed;
 

@@ -2,8 +2,8 @@ import { createEmitter } from "../emitter";
 
 export const HAS_BOOTED_STORAGE_KEY = "has-booted";
 
-/* Set on `<html>` to hide the server-rendered desktop until the boot sequence
- * has run. The stylesheet shows the cover while this attribute is set. */
+// Set on `<html>` to hide the server-rendered desktop until the boot sequence
+// has run. The stylesheet shows the cover while this attribute is set.
 const BOOT_OVERLAY_ATTRIBUTE = "data-boot";
 
 export const setBootOverlay = () => document.documentElement.setAttribute(BOOT_OVERLAY_ATTRIBUTE, "");
@@ -46,8 +46,8 @@ export const subscribeToIsBootSequenceComplete = subscribe;
 
 export const getIsBootSequenceComplete = () => isBootSequenceComplete || !shouldBoot();
 
-/* The `data-boot` cover hides the server-rendered desktop until
- * hydration decides otherwise so the hand-off is not seen. */
+// The `data-boot` cover hides the server-rendered desktop until
+// hydration decides otherwise so the hand-off is not seen.
 export const serverIsBootSequenceComplete = () => true;
 
 /** Clears saved settings and reloads the desktop so the boot runs again. */

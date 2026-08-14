@@ -7,7 +7,7 @@ const LOADING_STATE = 'role="status"'; // The spinner in `src/components/loading
 
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#x27": "'", "#39": "'" };
 
-/* A title is compared across a text node and an attribute. The two use different escapes. */
+// A title is compared across a text node and an attribute. The two use different escapes.
 const decode = (value: string) =>
   value.replace(/&(amp|lt|gt|quot|#x27|#39);/g, (match, name: string) => ENTITIES[name] ?? match);
 
@@ -16,7 +16,7 @@ function documentTitleOf(html: string): string | null {
   return match?.[1] ? decode(match[1]) : null;
 }
 
-/* Every window is a `<section>` with its title as the label. */
+// Every window is a `<section>` with its title as the label.
 function windowTitlesOf(html: string): Array<string> {
   return [...html.matchAll(/<section[^>]*aria-label="([^"]*)"/g)].map(([, title]) => decode(title!));
 }
