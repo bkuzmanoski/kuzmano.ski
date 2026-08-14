@@ -38,6 +38,7 @@
   --font-chrome-letter-spacing: -0.01em; /* Set alongside --font-chrome; the shorthand cannot carry it. */
   --font-ui-line-height: 20px; /* Named as well as set, for layout that has to line up with a line box. */
   --font-ui: 16px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
 
   /* Colors */
   --tint-faint: 0.012;
@@ -186,6 +187,11 @@ div[role="button"] {
 
 .textUI {
   font: var(--font-ui);
+  color: var(--color-foreground);
+}
+
+.textUIBold {
+  font: var(--font-ui-bold);
   color: var(--color-foreground);
 }
 

@@ -54,6 +54,5 @@
 }
 
 .title {
-  composes: textUI from global;
-  font-weight: bold;
+  composes: textUIBold from global;
 }

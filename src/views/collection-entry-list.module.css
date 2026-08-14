@@ -56,9 +56,9 @@
 }
 
 .title {
+  composes: textUIBold from global;
   justify-self: start;
   padding: 2px 4px;
-  font: var(--font-ui-bold);
   box-decoration-break: clone;
 
   .card:focus & {
