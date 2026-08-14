@@ -174,20 +174,20 @@ div[role="button"] {
   background: var(--color-selection-background);
 }
 
-.chromePanel {
+.textChrome {
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+  letter-spacing: var(--font-chrome-letter-spacing);
+}
+
+.panel {
   border: 1px solid var(--color-border);
   background: var(--color-background);
   box-shadow: var(--shadow-drop);
 }
 
-.chromePanelElevated {
+.panelElevated {
   background: var(--color-background-elevated);
-}
-
-.chromeText {
-  font: var(--font-chrome);
-  color: var(--color-foreground);
-  letter-spacing: var(--font-chrome-letter-spacing);
 }
 
 .focusFrame:focus-visible {

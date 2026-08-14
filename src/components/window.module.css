@@ -3,7 +3,7 @@
   --window-safe-area-inline-end: 0px;
   --window-safe-area-block-end: 0px;
 
-  composes: chromePanel from global;
+  composes: panel from global;
 
   position: absolute;
 
