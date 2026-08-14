@@ -1,24 +1,30 @@
-import { Link } from "@tanstack/react-router";
-
+import { Button } from "#/components/button";
+import { ButtonGroup } from "#/components/button-group";
 import { documentTitle } from "#/config/site";
 import { useClearBootOverlay } from "#/lib/boot-sequence/use-clear-boot-overlay";
 
+import styles from "./error-page.module.css";
+
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
-export function ErrorPage({ error, reset }: ErrorComponentProps) {
+export function ErrorPage({ error: _error }: ErrorComponentProps) {
   useClearBootOverlay();
 
   return (
-    <main>
+    <>
       <title>{documentTitle("Error")}</title>
-      <h1>Error</h1>
-      {import.meta.env.DEV && <pre>{error.stack ?? error.message}</pre>}
-      <p>
-        <button type="button" onClick={reset}>
-          Try again
-        </button>{" "}
-        or go to the <Link to="/">home page</Link>.
-      </p>
-    </main>
+      <main className={styles.errorPage}>
+        <div className={styles.dialog}>
+          <div className={styles.message}>
+            <h1 className={styles.title}>Error</h1>
+            <p>There was a problem loading this page.</p>
+          </div>
+          <ButtonGroup>
+            <Button children="Go Home" onClick={() => (location.href = "/")} />
+            <Button children="Try Again" autoFocus onClick={() => location.reload()} />
+          </ButtonGroup>
+        </div>
+      </main>
+    </>
   );
 }

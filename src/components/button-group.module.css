@@ -1,0 +1,17 @@
+.buttonGroup {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.left {
+  justify-content: flex-start;
+}
+
+.center {
+  justify-content: center;
+}
+
+.right {
+  justify-content: flex-end;
+}

@@ -37,8 +37,7 @@
   --font-chrome: var(--font-chrome-size) var(--font-family-chrome);
   --font-chrome-letter-spacing: -0.01em; /* Set alongside --font-chrome; the shorthand cannot carry it. */
   --font-ui-line-height: 20px; /* Named as well as set, for layout that has to line up with a line box. */
-  --font-ui: 14px/var(--font-ui-line-height) var(--font-family-ui);
-  --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui: 16px/var(--font-ui-line-height) var(--font-family-ui);
 
   /* Colors */
   --tint-faint: 0.012;
@@ -154,6 +153,11 @@ body {
   color: var(--color-foreground);
 }
 
+h1,
+p {
+  margin: 0;
+}
+
 a,
 button,
 div[role="button"] {
@@ -178,6 +182,11 @@ div[role="button"] {
   font: var(--font-chrome);
   color: var(--color-foreground);
   letter-spacing: var(--font-chrome-letter-spacing);
+}
+
+.textUI {
+  font: var(--font-ui);
+  color: var(--color-foreground);
 }
 
 .panel {
