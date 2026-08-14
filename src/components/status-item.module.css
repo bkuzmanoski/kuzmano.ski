@@ -27,9 +27,3 @@
     display: none;
   }
 }
-
-@media not all and (any-hover: hover) and (any-pointer: fine) {
-  .pointerOnly {
-    display: none;
-  }
-}

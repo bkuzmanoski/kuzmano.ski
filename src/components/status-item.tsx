@@ -49,7 +49,7 @@ export function OrganizeWindowsStatus() {
   const { organize } = useWindowActions();
 
   return (
-    <StatusButton className={styles.pointerOnly} label="Organize Windows" onClick={organize}>
+    <StatusButton label="Organize Windows" onClick={organize}>
       <OrganizeIcon className={styles.icon} />
     </StatusButton>
   );

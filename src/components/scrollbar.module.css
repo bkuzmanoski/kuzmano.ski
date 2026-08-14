@@ -14,10 +14,6 @@
     border-left: none;
     visibility: hidden;
   }
-
-  @media not all and (any-hover: hover) and (any-pointer: fine) {
-    display: none; /* Note: this also hides the resize control if present. */
-  }
 }
 
 .arrow {

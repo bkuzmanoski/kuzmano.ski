@@ -185,10 +185,6 @@
     --reserved-scrollbar-width: calc(
       var(--scrollbar-width) + 1px
     ); /* +1px for the border defined in `scrollbar.module.css`. */
-
-    @media not all and (any-hover: hover) and (any-pointer: fine) {
-      --reserved-scrollbar-width: 0px; /* Scrollbars are hidden on touch devices (see `scrollbar.module.css`). */
-    }
   }
 }
 
