@@ -13,26 +13,36 @@ export function ErrorPage({ error }: ErrorComponentProps) {
   useClearBootOverlay();
 
   useEffect(() => {
+    if (import.meta.env.DEV || import.meta.env.MODE === "test") {
+      return;
+    }
+
+    const message = error instanceof Error ? error.message : String(error);
+    const route = location.pathname;
     const report = {
       kind: "router-error-boundary",
-      message: error instanceof Error ? error.message : String(error),
+      message,
       stack: error instanceof Error ? error.stack : undefined,
-      route: location.pathname,
+      route,
     };
-    const jsonReport = JSON.stringify(report);
-    const blob = new Blob([jsonReport], { type: "application/json" });
-    const queued = navigator.sendBeacon("/api/client-errors", blob);
 
-    if (!queued) {
-      // Beacon was rejected (e.g. queue full); best-effort fallback.
-      fetch("/api/client-errors", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: jsonReport,
-        keepalive: true,
-      }).catch(() => {
-        // Ignored.
-      });
+    try {
+      const jsonBody = JSON.stringify(report);
+      const blob = new Blob([jsonBody], { type: "application/json" });
+      const queued = typeof navigator.sendBeacon === "function" && navigator.sendBeacon("/api/client-errors", blob);
+
+      if (!queued) {
+        fetch("/api/client-errors", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: jsonBody,
+          keepalive: true,
+        }).catch(() => {
+          // Ignored.
+        });
+      }
+    } catch {
+      // Suppressed.
     }
   }, [error]);
 
