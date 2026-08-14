@@ -13,7 +13,7 @@ vi.mock("#/lib/audio/ui", () => ({
 }));
 vi.mock("#/lib/boot-sequence/use-is-boot-sequence-complete", () => ({ useIsBootSequenceComplete: () => true }));
 
-const PANE_HEIGHT = 100;
+const BASE_PANE_HEIGHT = 100;
 
 const scrollTops = new WeakMap<Element, number>();
 const replacedProperties: Array<[string, PropertyDescriptor | undefined]> = [];
@@ -24,7 +24,7 @@ function replaceElementProperty(property: string, descriptor: PropertyDescriptor
 }
 
 beforeAll(() => {
-  replaceElementProperty("clientHeight", { get: () => PANE_HEIGHT });
+  replaceElementProperty("clientHeight", { get: () => BASE_PANE_HEIGHT });
   replaceElementProperty("scrollHeight", {
     get(this: HTMLElement) {
       return [...this.children].reduce((total, child) => total + Number((child as HTMLElement).dataset.height ?? 0), 0);
@@ -71,8 +71,8 @@ const windowShowing = (contentKey: string, children: ReactNode) => (
   </Window>
 );
 
-const tallPane = <div data-height={PANE_HEIGHT * 8} />;
-const shortPane = <div data-height={PANE_HEIGHT / 5} />;
+const tallPane = <div data-height={BASE_PANE_HEIGHT * 8} />;
+const shortPane = <div data-height={BASE_PANE_HEIGHT / 4} />;
 
 const pane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const hasScrollableContent = () => screen.getByRole("button", { name: "Scroll up" }).tabIndex === 0; // An arrow is out of the tab order while the pane has nothing to scroll to.
@@ -116,4 +116,30 @@ test("the window restores focus to itself when its content is replaced", () => {
   rerender(windowShowing("/other", tallPane));
 
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
+});
+
+test("the zoom control can be hidden", () => {
+  render(
+    <Window
+      contentKey="/not-found"
+      title="Window"
+      x={0}
+      y={0}
+      width={800}
+      height={600}
+      z={1}
+      focused
+      maximized={false}
+      hidden={false}
+      unplaced={false}
+      onClose={vi.fn()}
+      onZoom={null}
+      onFocus={vi.fn()}
+      onMove={vi.fn()}
+      onResize={vi.fn()}
+    >
+      {shortPane}
+    </Window>,
+  );
+  expect(screen.queryByRole("button", { name: "Zoom" })).toBeNull();
 });

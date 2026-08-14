@@ -155,7 +155,7 @@ export function Window({
   hidden: boolean;
   unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
   onClose: () => void;
-  onZoom: () => void;
+  onZoom: (() => void) | null;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (width: number, height: number) => void;
@@ -230,20 +230,23 @@ export function Window({
         unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
       )}
-      /* A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS. */
-      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }}
+      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }} // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
       <header
         className={styles.titleBar}
-        onDoubleClick={(event) => {
-          if (!(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current)) {
-            playClick();
-            onZoom();
-          }
-        }}
+        onDoubleClick={
+          onZoom
+            ? (event) => {
+                if (!(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current)) {
+                  playClick();
+                  onZoom();
+                }
+              }
+            : undefined
+        }
         {...moveHandlers}
       >
         {focused && <div className={styles.bars} aria-hidden />}
@@ -251,7 +254,9 @@ export function Window({
         {focused && (
           <>
             <TitleBarButton className={styles.controlClose} icon={<CloseIcon />} label="Close" onClick={onClose} />
-            <TitleBarButton className={styles.controlZoom} icon={<ZoomIcon />} label="Zoom" onClick={onZoom} />
+            {onZoom && (
+              <TitleBarButton className={styles.controlZoom} icon={<ZoomIcon />} label="Zoom" onClick={onZoom} />
+            )}
           </>
         )}
       </header>

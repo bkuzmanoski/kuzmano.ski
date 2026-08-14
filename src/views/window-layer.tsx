@@ -71,7 +71,7 @@ const DesktopWindow = memo(function OpenWindow({
       hidden={hidden}
       unplaced={unplaced}
       onClose={() => close(id)}
-      onZoom={() => toggleZoom(id)}
+      onZoom={id === "notFound" ? null : () => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={(nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
