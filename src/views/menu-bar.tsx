@@ -89,6 +89,14 @@ export function MenuBar() {
     setOpenMenu({ label, anchor });
   }
 
+  /* An open menu dismisses itself on a press outside it, and on touch that press is
+   * also what opens the next menu: there is no hover to swap the menus beforehand, so
+   * the press reaches the open menu after the title under it has already replaced it.
+   * Closing by label leaves the menu that took its place alone. */
+  function closeMenu(label: string) {
+    setOpenMenu((current) => (current?.label === label ? null : current));
+  }
+
   /* The arrow keys move along the menu bar whether or not a menu is open. If a menu
    * is open, the adjacent menu opens in its place and takes the focus as it mounts.
    * If none is open, only the focus moves. */
@@ -197,7 +205,7 @@ export function MenuBar() {
                 items={items}
                 isPointerHeld={isPointerHeld}
                 onOpenAdjacent={(direction) => moveAlongMenuBar(label, direction)}
-                onClose={() => setOpenMenu(null)}
+                onClose={() => closeMenu(label)}
               />
             )}
           </div>

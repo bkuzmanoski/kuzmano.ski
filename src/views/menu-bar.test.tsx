@@ -50,6 +50,18 @@ describe("opening a menu", () => {
     expect(openWithPointer("Go")).toBe(false);
   });
 
+  test("a press on another title opens its menu on that same press", () => {
+    render(<MenuBar />);
+
+    openWithPointer("File");
+    fireEvent(title("File"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, as a touch tap does.
+    fireEvent.pointerDown(title("Go"));
+    fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }));
+
+    expect(isExpanded("File")).toBe(false);
+    expect(isExpanded("Go")).toBe(true);
+  });
+
   test("a press that closes the menu leaves the focus on the menu title", () => {
     render(<MenuBar />);
 
@@ -97,6 +109,27 @@ describe("holding the pointer across the menu bar", () => {
     fireEvent.pointerDown(anchor, { pointerId: 7, pointerType: "touch" });
 
     expect(releasePointerCapture).toHaveBeenCalledWith(7);
+  });
+});
+
+describe("dismissing a menu", () => {
+  test("a press elsewhere on the page closes it", () => {
+    render(<MenuBar />);
+
+    openWithPointer("Go");
+    fireEvent(title("Go"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, leaving the menu open.
+    fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }));
+
+    expect(openMenu()).toBeNull();
+  });
+
+  test("a hold released away from the menu and its title closes it", () => {
+    render(<MenuBar />);
+
+    openWithPointer("Go");
+    fireEvent(document, new MouseEvent("pointerup", { bubbles: true }));
+
+    expect(openMenu()).toBeNull();
   });
 });
 
