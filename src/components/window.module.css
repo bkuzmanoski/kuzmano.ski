@@ -188,6 +188,22 @@
     --reserved-scrollbar-width: calc(
       var(--scrollbar-width) + 1px
     ); /* +1px for the border defined in `scrollbar.module.css`. */
+
+    /* Nothing to hold once the scrollbar is dropped for good (see `.scrollbar` below). */
+    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+    @container not style(--window-safe-area-inline-end: 0px) {
+      --reserved-scrollbar-width: 0px;
+    }
+  }
+}
+
+/* Only a maximized window carries an inline-end inset, and there the scrollbar would sit
+ * under the display cutout. A device with an inset is touch driven and scrolls the pane
+ * directly, so the scrollbar is dropped rather than pulled back inside the inset. */
+.scrollbar {
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+  @container not style(--window-safe-area-inline-end: 0px) {
+    display: none;
   }
 }
 

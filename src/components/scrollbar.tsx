@@ -89,12 +89,14 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
 export function Scrollbar({
   controls,
   metrics,
+  className,
   onStep,
   onScrollTop,
   resizeControl,
 }: {
   controls: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
+  className?: string;
   onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
   resizeControl?: ReactNode;
@@ -133,7 +135,7 @@ export function Scrollbar({
   return (
     // The state is an attribute rather than a class so that the pane around it can
     // read it and hand the width back to its content (see `window.module.css`).
-    <div className={styles.scrollbar} data-collapsed={isCollapsed || undefined}>
+    <div className={clsx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}

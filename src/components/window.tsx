@@ -94,6 +94,7 @@ function ScrollPane({
         {children}
       </div>
       <Scrollbar
+        className={styles.scrollbar}
         controls={id}
         metrics={metrics}
         onScrollTop={(top) => {
