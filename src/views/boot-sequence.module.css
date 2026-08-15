@@ -363,10 +363,10 @@
     & .block {
       display: inline-block;
 
-      width: 0.55em;
-      height: 0.83em;
-      margin-bottom: -0.03em;
-      margin-left: 0.385em;
+      width: 0.6em;
+      height: 1em;
+      margin-bottom: -0.1em;
+      margin-left: 0.4em;
 
       background-color: currentColor;
 
