@@ -1,21 +1,17 @@
-import type { Size } from "#/lib/geometry";
-import type { WindowId, WindowLayout } from "#/lib/window-manager";
-
-const DEFAULT_SIZE: Record<WindowId, Size> = {
-  entry: { width: 1024, height: 1024 },
-  collection: { width: 1024, height: 1024 },
-  notFound: { width: 480, height: 420 },
-};
-const MIN_SIZE: Size = { width: 320, height: 320 };
+import type { WindowLayout } from "#/lib/window-manager";
 
 export const LAYOUT: WindowLayout = {
+  defaultSize: {
+    entry: { width: 1024, height: 1024 },
+    collection: { width: 1024, height: 1024 },
+    notFound: { width: 480, height: 420 },
+  },
+  minSize: { width: 320, height: 320 },
   openAt: {
     entry: "cascade",
     collection: "cascade",
     notFound: "centre",
   },
-  defaultSize: DEFAULT_SIZE,
-  minSize: MIN_SIZE,
-  cascadeOffset: 28, // Height of the title bar defined in `styles.css`.
+  cascadeOffset: { x: 24, y: 28 }, // y = Height of the title bar defined in `styles.css`.
   padding: 8, // Mirrored by `--window-layer-padding` in `styles.css`.
 };

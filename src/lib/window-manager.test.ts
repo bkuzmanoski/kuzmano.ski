@@ -11,9 +11,9 @@ import type { Action, ManagerState, WindowId, WindowLayout } from "./window-mana
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const LAYOUT: WindowLayout = {
   defaultSize: { entry: DEFAULT_SIZE, collection: DEFAULT_SIZE, notFound: DEFAULT_SIZE },
-  openAt: { entry: "cascade", collection: "cascade", notFound: "cascade" },
   minSize: { width: 480, height: 320 },
-  cascadeOffset: 28,
+  openAt: { entry: "cascade", collection: "cascade", notFound: "cascade" },
+  cascadeOffset: { x: 16, y: 32 },
   padding: 8,
 };
 
@@ -52,8 +52,8 @@ describe("open", () => {
 
     expect(state.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
       ...DEFAULT_SIZE, // A desktop with room to spare places both windows at the default size.
     });
   });
@@ -70,11 +70,23 @@ describe("open", () => {
   });
 
   test("resizes a cascaded window to fit the available space", () => {
-    const surface = { width: 1080, height: 1080 };
+    const surface = { width: 1060, height: 1080 };
+    const centre = {
+      x: (surface.width - DEFAULT_SIZE.width) / 2,
+      y: (surface.height - DEFAULT_SIZE.height) / 2,
+    };
+    const cascaded = {
+      x: centre.x + LAYOUT.cascadeOffset.x,
+      y: centre.y + LAYOUT.cascadeOffset.y,
+    };
     const state = openedOn(surface, "entry", "collection");
 
-    expect(state.geometry.entry).toMatchObject({ x: 28, y: 28, ...DEFAULT_SIZE });
-    expect(state.geometry.collection).toMatchObject({ x: 56, y: 56, width: 1016, height: 1016 });
+    expect(state.geometry.entry).toMatchObject({ ...centre, ...DEFAULT_SIZE });
+    expect(state.geometry.collection).toMatchObject({
+      ...cascaded,
+      width: surface.width - LAYOUT.padding - cascaded.x,
+      height: surface.height - LAYOUT.padding - cascaded.y,
+    });
   });
 
   test("opens every window at a position and size that fits within the desktop", () => {
@@ -267,8 +279,8 @@ describe("organize", () => {
     expect(organizedState.geometry.collection!.maximized).toBe(false);
     expect(organizedState.geometry.entry).toMatchObject(CENTRE_POSITION);
     expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
     });
   });
 
@@ -289,8 +301,8 @@ describe("organize", () => {
       height: 700,
     });
     expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset,
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
       width: 500,
       height: 400,
     });
@@ -328,8 +340,8 @@ describe("per-window layout", () => {
 
   const varyingReducer = createWindowReducer({
     ...LAYOUT,
-    openAt: { ...LAYOUT.openAt, notFound: "centre" },
     defaultSize: { ...LAYOUT.defaultSize, notFound: SMALL_SIZE },
+    openAt: { ...LAYOUT.openAt, notFound: "centre" },
   });
 
   const openedOnDesktop = (...ids: Array<WindowId>) =>
@@ -346,15 +358,15 @@ describe("per-window layout", () => {
   test("a window that opens in the centre is not affected by the cascade", () => {
     const state = openedOnDesktop("entry", "collection", "notFound");
 
-    expect(state.geometry.collection).toMatchObject({ x: CENTRE_POSITION.x + LAYOUT.cascadeOffset }); // The cascade is unaffected.
+    expect(state.geometry.collection).toMatchObject({ x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
     expect(state.geometry.notFound).toMatchObject(centreOf(SMALL_SIZE));
   });
 
   test("organizing cascades every open window, including those that open in the centre", () => {
     const state = varyingReducer(openedOnDesktop("entry", "notFound"), { type: "organize" });
     expect(state.geometry.notFound).toMatchObject({
-      x: centreOf(SMALL_SIZE).x + LAYOUT.cascadeOffset,
-      y: centreOf(SMALL_SIZE).y + LAYOUT.cascadeOffset,
+      x: centreOf(SMALL_SIZE).x + LAYOUT.cascadeOffset.x,
+      y: centreOf(SMALL_SIZE).y + LAYOUT.cascadeOffset.y,
     });
   });
 });

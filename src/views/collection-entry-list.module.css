@@ -1,4 +1,6 @@
 .list {
+  --padding-inline-title: 4px;
+
   display: flex;
   flex-direction: column;
 
@@ -22,8 +24,8 @@
   padding-block: var(--gutter);
 
   /* Inset list content to clear the window safe area and reserved scrollbar width. */
-  padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
-    calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+  padding-inline: calc(var(--gutter) - var(--padding-inline-title) + var(--window-safe-area-inline-start, 0px))
+    calc(var(--gutter) - var(--padding-inline-title) + var(--reserved-scrollbar-width, 0px));
 
   text-decoration: none;
 
@@ -58,7 +60,7 @@
 .title {
   composes: textUIBold from global;
   justify-self: start;
-  padding: 2px 4px;
+  padding: 2px var(--padding-inline-title);
   box-decoration-break: clone;
 
   .card:focus & {
@@ -69,6 +71,6 @@
 
 .meta {
   display: flex;
-  padding-inline: 4px; /* Line up with the inset the title's highlight adds. */
+  padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
   color: var(--color-foreground-muted);
 }

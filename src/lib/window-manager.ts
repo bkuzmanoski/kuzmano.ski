@@ -2,7 +2,7 @@ import { createContext, use } from "react";
 
 import { clamp } from "./math";
 
-import type { Rect, Size } from "./geometry";
+import type { Position, Rect, Size } from "./geometry";
 
 /**
  * The windows the desktop can open. Every route resolves to exactly one of them,
@@ -31,10 +31,10 @@ export interface WindowGeometry extends Rect {
 }
 
 export interface WindowLayout {
-  openAt: Record<WindowId, "cascade" | "centre">;
   defaultSize: Record<WindowId, Size>;
   minSize: Size;
-  cascadeOffset: number;
+  openAt: Record<WindowId, "cascade" | "centre">;
+  cascadeOffset: Position;
   padding: number;
 }
 
@@ -105,16 +105,17 @@ function updateGeometry(
  */
 function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
   const defaultSize = layout.defaultSize[id];
-  const offset = step * layout.cascadeOffset;
+  const offsetX = step * layout.cascadeOffset.x;
+  const offsetY = step * layout.cascadeOffset.y;
 
   /* An unmeasured desktop has no padded area to fit into. CSS places what the server
    * rendered, and the first measurement re-places it (see the `measure` case). */
   if (isUnmeasured(surface)) {
-    return { x: offset, y: offset, ...defaultSize };
+    return { x: offsetX, y: offsetY, ...defaultSize };
   }
 
-  const x = Math.max(layout.padding, (surface.width - defaultSize.width) / 2) + offset;
-  const y = Math.max(layout.padding, (surface.height - defaultSize.height) / 2) + offset;
+  const x = Math.max(layout.padding, (surface.width - defaultSize.width) / 2) + offsetX;
+  const y = Math.max(layout.padding, (surface.height - defaultSize.height) / 2) + offsetY;
 
   return {
     x,
