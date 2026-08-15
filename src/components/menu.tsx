@@ -52,9 +52,9 @@ export function Menu({
   const isStickyRef = useRef(!isPointerHeld);
   const focusedItemRef = useRef(-1);
 
-  /* A plain function, not an Effect Event as the keyboard path calls it straight
-   * from `onKeyDown`. The pointer handlers below are Effect Events, so they
-   * always close over the latest render's copy of this. */
+  // A plain function, not an Effect Event as the keyboard path calls it straight
+  // from `onKeyDown`. The pointer handlers below are Effect Events, so they
+  // always close over the latest render's copy of this.
   function select(index: number) {
     const item = items[index];
 
@@ -134,9 +134,9 @@ export function Menu({
     }
   });
 
-  /* A cancelled gesture never delivers its `pointerup`, so the hold ends here instead:
-   * the menu turns sticky and waits for a press, rather than reading a later unrelated
-   * release as the end of a hold that is long over. */
+  // A cancelled gesture never delivers its `pointerup`, so the hold ends here instead:
+  // the menu turns sticky and waits for a press, rather than reading a later unrelated
+  // release as the end of a hold that is long over.
   const onPointerCancel = useEffectEvent(() => {
     isStickyRef.current = true;
 

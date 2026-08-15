@@ -36,9 +36,9 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const containerSize = useElementSize(layerRef);
   const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
-  /* Only a press on the empty desktop clears the selection. A press on a window or on the
-   * menu bar leaves it standing. The desktop stops showing a selection when it does not hold
-   * keyboard focus. */
+  // Only a press on the empty desktop clears the selection. A press on a window or on
+  // the menu bar leaves it standing. The desktop stops showing a selection when it does
+  // not hold keyboard focus.
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
       if (event.target instanceof HTMLElement && event.target.dataset.desktop !== undefined) {
@@ -71,7 +71,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
   };
 
-  /* Nothing is placed until `positions` has been read on the client which keeps the icons out of the server render. */
+  // Nothing is placed until `positions` has been read on the client which keeps the icons out of the server render.
   const placements: Array<IconPlacement & { iconDefinition: Icon }> = positions
     ? resolveIconPlacements(ICON_IDS, positions, container, ICON_LAYOUT).flatMap((placement) => {
         const iconDefinition = ICONS_BY_ID.get(placement.id);
@@ -93,8 +93,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       return;
     }
 
-    /* The zoom rect grows towards a window that is not on the desktop yet.
-     * A window that is already open only changes what it shows. */
+    // The zoom rect grows towards a window that is not on the desktop yet.
+    // A window that is already open only changes what it shows.
     const windowId = resolveWindow(iconDefinition.route)?.id;
     const element = iconsRef.current[iconDefinition.id];
 
@@ -154,8 +154,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [focusedWindow, isBootSequenceComplete]);
 
-  /* The layer always renders so its ref exists for measurement. */
   return (
+    // The layer always renders so its ref exists for measurement.
     <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
       {placements.map(({ id, iconDefinition, x, y }) => (
         <DesktopIcon

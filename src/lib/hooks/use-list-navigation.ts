@@ -44,8 +44,8 @@ export function useListNavigation({
       return;
     }
 
-    /* `nearest` holds still while the item is already in view, so activating one
-     * does not move the list under the pointer. */
+    // `nearest` holds still while the item is already in view, so
+    // activating one does not move the list under the pointer.
     item.scrollIntoView({ block: "nearest" });
     skipScrollAbove(item);
   }, [activeIndex]);
@@ -61,8 +61,8 @@ export function useListNavigation({
       onFocus: () => setFocusedIndex(index),
       onKeyDown: (event: KeyboardEvent) => {
         if (isActivationKey(event.key)) {
-          /* Suppressed because space scrolls the viewport, and because the click the
-           * browser makes of an Enter press would activate the item a second time. */
+          // Suppressed because space scrolls the viewport, and because the click the
+          // browser makes of an Enter press would activate the item a second time.
           event.preventDefault();
           onActivate(index);
 
@@ -80,17 +80,17 @@ export function useListNavigation({
         const next = clamp(target, 0, count - 1);
         const item = itemsRef.current[next];
 
-        /* A press that runs into either end of the list moves nothing, and a detent
-         * for a list that stayed where it was would report travel that never happened. */
+        // A press that runs into either end of the list moves nothing, and a detent
+        // for a list that stayed where it was would report travel that never happened.
         if (next === index || !item) {
           return;
         }
 
         item.focus();
 
-        /* The focus brings the item into view, which scrolls the window under it.
-         * That scroll belongs to this keypress and is already being sounded by the
-         * detent below, so it is not sounded a second time as travel. */
+        // The focus brings the item into view, which scrolls the window under it.
+        // That scroll belongs to this keypress and is already being sounded by the
+        // detent below, so it is not sounded a second time as travel.
         skipScrollAbove(item);
         playHover();
       },

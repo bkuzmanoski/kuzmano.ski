@@ -17,8 +17,8 @@ export function useElementSize(ref: RefObject<HTMLElement | null>): Size {
       return;
     }
 
-    /* Keep the same object when the size did not change, so the
-     * value can be an effect dependency without causing a loop. */
+    // Keep the same object when the size did not change, so the
+    // value can be an effect dependency without causing a loop.
     const measure = () =>
       setSize((current) => {
         const { width, height } = element.getBoundingClientRect();

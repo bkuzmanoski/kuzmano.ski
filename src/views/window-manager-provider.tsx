@@ -72,9 +72,9 @@ export function WindowManagerProvider({
     };
   }, [dispatch]);
 
-  /* The two effects below keep the focused window and the URL in sync. expectedRouteRef
-   * records internal navigation so the URL→focus effect can ignore it and act only
-   * on external URL changes (deep links, back, forward, etc.). */
+  // The two effects below keep the focused window and the URL in sync. expectedRouteRef
+  // records internal navigation so the URL→focus effect can ignore it and act only
+  // on external URL changes (deep links, back, forward, etc.).
   const expectedRouteRef = useRef<string | null>(null);
 
   const syncUrlToFocus = useEffectEvent((focusedRoute: string | null) => {
@@ -108,9 +108,9 @@ export function WindowManagerProvider({
       return;
     }
 
-    /* "/" is the one route with no window behind it, so it activates the desktop
-     * instead of opening something. Without this a step onto "/" would leave the
-     * window that was focused before it looking active. */
+    // "/" is the one route with no window behind it, so it activates the desktop
+    // instead of opening something. Without this a step onto "/" would leave the
+    // window that was focused before it looking active.
     if (route === "/") {
       actions.focusDesktop();
       return;
@@ -123,8 +123,8 @@ export function WindowManagerProvider({
     syncFocusToUrl(pathname);
   }, [pathname]);
 
-  /* A first visit to the bare desktop opens the default window. A later return
-   * to "/" (e.g. via a click on the desktop) does not reopen it. */
+  // A first visit to the bare desktop opens the default window. A later
+  // return to "/" (e.g. via a click on the desktop) does not reopen it.
   const openInitialWindow = useEffectEvent(() => {
     if (initialRoute && pathname === "/") {
       actions.open(initialRoute, { replaceUrl: true });

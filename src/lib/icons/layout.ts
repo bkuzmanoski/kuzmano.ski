@@ -70,8 +70,8 @@ export function resolveIconPlacements(
       return placement;
     }
 
-    /* Falling back to the clamp keeps an icon on screen when the container is too small to hold
-     * the whole set. That is the one case where icons can still land on top of each other. */
+    // Falling back to the clamp keeps an icon on screen when the container is too small to hold
+    // the whole set. That is the one case where icons can still land on top of each other.
     const slot = freeSlot(placed, container, layout) ?? {
       x: clampToContainer(placement.x, container.width, layout.cellSize),
       y: clampToContainer(placement.y, container.height, layout.cellSize),

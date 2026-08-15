@@ -49,8 +49,8 @@ describe("resolveIconPlacements", () => {
       contact: { top: 120, right: 32 },
     };
 
-    /* A container 300 wide leaves room for the first column only, so the two icons
-     * anchored far from the right edge fall in below the two that still fit. */
+    // A container 300 wide leaves room for the first column only, so the two icons
+    // anchored far from the right edge fall in below the two that still fit.
     expect(resolveIconPlacements(IDS, spread, { width: 300, height: 800 }, LAYOUT)).toEqual([
       { id: "about", x: columnX(300, 0), y: 24 },
       { id: "experience", x: columnX(300, 0), y: 216 },

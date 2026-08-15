@@ -11,8 +11,8 @@ export function RootDocument({ children }: { children: ReactNode }) {
   useEffect(watchFaviconColorScheme, []);
 
   return (
-    /* suppressHydrationWarning: `themeScript` and `bootOverlayScript` set attributes on `<html>`
-     * before hydration, so the client `<html>` differs from the one the server sent. */
+    // suppressHydrationWarning: `themeScript` and `bootOverlayScript` set attributes on `<html>`
+    // before hydration, so the client `<html>` differs from the one the server sent.
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />

@@ -1,4 +1,4 @@
-/* Resolves the site's foreground and background colors from `src/styles.css`. */
+// Resolves the site's foreground and background colors from `src/styles.css`.
 
 import { readFile } from "node:fs/promises";
 

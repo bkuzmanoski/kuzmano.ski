@@ -133,8 +133,8 @@ export function playScroll(element: Element) {
   const elapsed = now - gesture.at;
   const moved = Math.abs(top - gesture.top);
 
-  /* A jump after a long pause is not a scroll gesture: it is a window opening
-   * at a saved position, or content resizing under a fixed scroll offset. */
+  // A jump after a long pause is not a scroll gesture: it is a window opening
+  // at a saved position, or content resizing under a fixed scroll offset.
   if (elapsed > SCROLL_DETENT_IDLE_MS) {
     gestures.set(element, openGesture(top, now));
     return;
@@ -155,9 +155,8 @@ export function playScroll(element: Element) {
       ? gesture.speed * SCROLL_DETENT_SPEED_SMOOTHING + speed * (1 - SCROLL_DETENT_SPEED_SMOOTHING)
       : speed;
 
-  /* Keep the leftover travel, so notches stay evenly spaced however the browser
-   * happens to chunk the movement, but never bank more than one notch of debt
-   * from a fling. */
+  // Keep the leftover travel, so notches stay evenly spaced however the browser happens
+  // to chunk the movement, but never bank more than one notch of debt from a fling.
   gesture.distance = Math.min(gesture.distance - SCROLL_DETENT_PIXELS, SCROLL_DETENT_PIXELS);
 
   playScrollDetent(gesture.speed);

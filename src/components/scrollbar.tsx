@@ -28,17 +28,16 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
     repeatTimer.cancel();
   }
 
-  /* The scroll itself carries the sound so press at the
-   * end of the travel has to be heard on its own */
+  // The scroll itself carries the sound so press at the end of the travel has to be heard on its own.
   function step(isRepeat = false) {
     if (!onStep() && !isRepeat) {
       playClick();
     }
   }
 
-  /* A held arrow waits out `REPEAT_DELAY_MS` before it starts repeating, then repeats
-   * every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
-   * so a release cancels whichever is pending. */
+  // A held arrow waits out `REPEAT_DELAY_MS` before it starts repeating, then repeats
+  // every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
+  // so a release cancels whichever is pending.
   function scheduleRepeat(delay: number) {
     repeatTimer.start(() => {
       step(true);
@@ -64,9 +63,9 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
           return;
         }
 
-        /* Held down, the key repeat drives the repeat, so no timer is started here.
-         * The default is suppressed because both keys raise a click of their own,
-         * which would step the viewport a second time for every press. */
+        // Held down, the key repeat drives the repeat, so no timer is started here.
+        // The default is suppressed because both keys raise a click of their own,
+        // which would step the viewport a second time for every press.
         event.preventDefault();
         setIsPressed(true);
         step(event.repeat);
@@ -132,8 +131,8 @@ export function Scrollbar({
   const isCollapsed = !overflow && !resizeControl;
 
   return (
-    /* The state is an attribute rather than a class so that the pane around it can
-     * read it and hand the width back to its content (see `window.module.css`). */
+    // The state is an attribute rather than a class so that the pane around it can
+    // read it and hand the width back to its content (see `window.module.css`).
     <div className={styles.scrollbar} data-collapsed={isCollapsed || undefined}>
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div

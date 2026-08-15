@@ -1,4 +1,4 @@
-/* Regenerates the favicon and app icons in `public/` from the site logo. */
+// Regenerates the favicon and app icons in `public/` from the site logo.
 
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -34,8 +34,8 @@ async function readArtwork(): Promise<Artwork> {
     throw new Error(`Could not read a viewBox from ${ARTWORK}.`);
   }
 
-  /* The first path is the monogram. The second is the animation-only overlay
-   * that the menu bar and boot sequence fade in, and carries `opacity="0"`. */
+  // The first path is the monogram. The second is the animation-only overlay
+  // that the menu bar and boot sequence fade in, and carries `opacity="0"`.
   const path = /<path\b[^>]*\bd="([^"]+)"/.exec(svg)?.[1];
 
   if (path === undefined) {

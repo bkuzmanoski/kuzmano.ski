@@ -12,8 +12,8 @@ export interface KeyboardShortcut {
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
-  /* The listener is bound once but always runs against the latest shortcuts,
-   * which change identity on every render of the menu bar. */
+  // The listener is bound once but always runs against the latest shortcuts,
+  // which change identity on every render of the menu bar.
   const runMatch = useEffectEvent((event: KeyboardEvent) => {
     const match = shortcuts.find((shortcut) => shortcut.code === event.code && shortcut.enabled !== false);
 

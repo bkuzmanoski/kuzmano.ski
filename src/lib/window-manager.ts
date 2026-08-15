@@ -129,8 +129,8 @@ function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: nu
   const offsetX = step * layout.cascadeOffset.x;
   const offsetY = step * layout.cascadeOffset.y;
 
-  /* An unmeasured desktop has no padded area to fit into. CSS places what the server
-   * rendered, and the first measurement re-places it (see the `measure` case). */
+  // An unmeasured desktop has no padded area to fit into. CSS places what the server
+  // rendered, and the first measurement re-places it (see the `measure` case).
   if (isUnmeasured(surface)) {
     return { x: offsetX, y: offsetY, ...defaultSize };
   }
@@ -297,9 +297,9 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
         const measured = { ...state, surface };
 
-        /* A deep link opens its window before the desktop has been measured, so the first
-         * measurement places what is already open. Subsequent measurements do not affect
-         * windows; the window layer fits them to the desktop. */
+        // A deep link opens its window before the desktop has been measured, so the first
+        // measurement places what is already open. Subsequent measurements do not affect
+        // windows; the window layer fits them to the desktop.
         const isFirstMeasurement = isUnmeasured(state.surface);
 
         return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;

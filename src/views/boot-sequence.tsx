@@ -103,8 +103,8 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
 }
 
 function Sequence() {
-  /* Held for the whole run, so the durations the stylesheet animates over and the
-   * timers for each phase do not disagree if the reduced motion preference changes. */
+  // Held for the whole run, so the durations the stylesheet animates over and the
+  // timers for each phase do not disagree if the reduced motion preference changes.
   const [motion] = useState<Motion>(() => (getPrefersReducedMotion() ? REDUCED_MOTION_MS : MOTION_MS));
 
   const [phase, setPhase] = useState<Phase>("loading");

@@ -98,8 +98,8 @@ export function WindowLayer({ children }: { children: ReactNode }) {
 
   const isUnplaced = isUnmeasured(surface);
 
-  /* The zoom-rect growing from an icon towards the window it opened. While it runs,
-   * the visibility of that window is suppressed until the outline has landed on it. */
+  // The zoom-rect growing from an icon towards the window it opened. While it runs,
+  // the visibility of that window is suppressed until the outline has landed on it.
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
   const zoomTarget = zoomRect ? geometry[zoomRect.windowId] : undefined;
 
@@ -128,12 +128,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
           onDone={() => setZoomRect(null)}
         />
       )}
-      {/* By window id instead of stacking order to avoid reordering nodes in the DOM
-       * which affects the scroll position of elements inside the windows.
-       *
-       * Implications:
-       * - The order of the windows is managed by `zIndex`
-       * - The tab order follows the markup (focus raises the window it lands in) */}
+      {/* Sort by id for stable DOM order (preserves scroll positions). `zIndex` manages the stacking order. */}
       {WINDOW_DOM_ORDER.map((id) => {
         const windowContent = content[id];
         const windowGeometry = geometry[id];

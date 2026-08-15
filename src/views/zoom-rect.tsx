@@ -30,8 +30,8 @@ export function ZoomRect({
   const [box, setBox] = useState(from);
   const [animate, setAnimate] = useState(false);
 
-  /* The window the zoom rect grows towards was opened in the same handler that mounted
-   * this component, so its geometry is in state by the first render. */
+  // The window the zoom rect grows towards was opened in the same handler that
+  // mounted this component, so its geometry is in state by the first render.
   const [latchedTarget] = useState(target);
 
   const start = useEffectEvent(() => {

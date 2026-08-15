@@ -12,8 +12,8 @@ export function useActivationFlash<T>({
   const [flash, setFlash] = useState<{ target: T; isOn: boolean } | null>(null);
   const timers = useTimers();
 
-  /* Read from the timers, not from state, so a caller can latch
-   * on it within the same event that started the flash. */
+  // Read from the timers, not from state, so a caller can latch
+  // on it within the same event that started the flash.
   function isRunning() {
     return timers.isPending();
   }

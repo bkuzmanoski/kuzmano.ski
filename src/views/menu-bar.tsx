@@ -89,17 +89,17 @@ export function MenuBar() {
     setOpenMenu({ label, anchor });
   }
 
-  /* An open menu dismisses itself on a press outside it, and on touch that press is
-   * also what opens the next menu: there is no hover to swap the menus beforehand, so
-   * the press reaches the open menu after the title under it has already replaced it.
-   * Closing by label leaves the menu that took its place alone. */
+  // An open menu dismisses itself on a press outside it, and on touch that press is
+  // also what opens the next menu: there is no hover to swap the menus beforehand, so
+  // the press reaches the open menu after the title under it has already replaced it.
+  // Closing by label leaves the menu that took its place alone.
   function closeMenu(label: string) {
     setOpenMenu((current) => (current?.label === label ? null : current));
   }
 
-  /* The arrow keys move along the menu bar whether or not a menu is open. If a menu
-   * is open, the adjacent menu opens in its place and takes the focus as it mounts.
-   * If none is open, only the focus moves. */
+  // The arrow keys move along the menu bar whether or not a menu is open. If a menu
+  // is open, the adjacent menu opens in its place and takes the focus as it mounts.
+  // If none is open, only the focus moves.
   function moveAlongMenuBar(from: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === from);
     const label = menus[cycle(menus.length, index, direction)]!.label;
@@ -116,15 +116,15 @@ export function MenuBar() {
     }
   }
 
-  /* The handler focuses the title because the markup below prevents the focus the
-   * browser sets on mousedown. The default runs after the menu has mounted and has
-   * taken the focus which would move the focus back to the title preventing the
-   * arrow keys from working.
-   *
-   * A touch pointer is implicitly captured by the element it lands on, so every later
-   * event for that pointer is retargeted to this title and the other titles never see
-   * `pointerenter`. Releasing the capture restores hit testing so a held finger can
-   * drag along the menu bar to change the open menu the way a held mouse does. */
+  // The handler focuses the title because the markup below prevents the focus the
+  // browser sets on mousedown. The default runs after the menu has mounted and has
+  // taken the focus which would move the focus back to the title preventing the
+  // arrow keys from working.
+  //
+  // A touch pointer is implicitly captured by the element it lands on, so every later
+  // event for that pointer is retargeted to this title and the other titles never see
+  // `pointerenter`. Releasing the capture restores hit testing so a held finger can
+  // drag along the menu bar to change the open menu the way a held mouse does.
   function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
     const anchor = event.currentTarget;
 
