@@ -93,7 +93,7 @@ export function startOfPhaseMs(steps: ReadonlyArray<Step>, phase: Phase): number
   return elapsedMs;
 }
 
-export const isStartKey = (event: KeyboardEvent) =>
+export const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
 
 export const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
