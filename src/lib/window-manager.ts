@@ -97,11 +97,32 @@ function updateGeometry(
 }
 
 /**
+ * One axis of a cascade slot: the window's default extent, centred and then stepped along the
+ * axis, constrained to what is left inside the padding. Since a step spends space the window
+ * could otherwise fill, one that would take it below its minimum extent is dropped in full,
+ * leaving the window centred on that axis alone.
+ *
+ * The result is left unrounded so that it matches, to the pixel, where CSS centres a
+ * pre-rendered window (see `.unplaced` in `window.module.css`).
+ */
+function cascadeAxis(
+  padding: number,
+  surfaceLength: number,
+  defaultLength: number,
+  minLength: number,
+  offset: number,
+): { position: number; extent: number } {
+  const centre = Math.max(padding, (surfaceLength - defaultLength) / 2);
+  const extentAt = (position: number) => Math.min(defaultLength, surfaceLength - padding - position);
+  const stepped = centre + offset;
+  const position = extentAt(stepped) < minLength ? centre : stepped;
+
+  return { position, extent: extentAt(position) };
+}
+
+/**
  * A window's default size stepped down and to the right of centre, constrained to the
  * available space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
- *
- * The halves are left unrounded so that they match, to the pixel, where CSS centres a
- * pre-rendered window (see `.unplaced` in `window.module.css`).
  */
 function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
   const defaultSize = layout.defaultSize[id];
@@ -114,14 +135,15 @@ function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: nu
     return { x: offsetX, y: offsetY, ...defaultSize };
   }
 
-  const x = Math.max(layout.padding, (surface.width - defaultSize.width) / 2) + offsetX;
-  const y = Math.max(layout.padding, (surface.height - defaultSize.height) / 2) + offsetY;
+  const { padding, minSize } = layout;
+  const horizontal = cascadeAxis(padding, surface.width, defaultSize.width, minSize.width, offsetX);
+  const vertical = cascadeAxis(padding, surface.height, defaultSize.height, minSize.height, offsetY);
 
   return {
-    x,
-    y,
-    width: Math.min(defaultSize.width, surface.width - layout.padding - x),
-    height: Math.min(defaultSize.height, surface.height - layout.padding - y),
+    x: horizontal.position,
+    y: vertical.position,
+    width: horizontal.extent,
+    height: vertical.extent,
   };
 }
 

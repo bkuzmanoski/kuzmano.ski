@@ -89,6 +89,28 @@ describe("open", () => {
     });
   });
 
+  test("drops the cascade step on an axis where it would take the window below its minimum size", () => {
+    const surface = { width: SURFACE.width, height: 340 }; // Room for a horizontal step, but not a vertical one.
+    const state = openedOn(surface, "entry", "collection");
+    const height = surface.height - 2 * LAYOUT.padding; // Short of the default size, but above the minimum.
+
+    expect(height).toBeGreaterThanOrEqual(LAYOUT.minSize.height);
+    expect(state.geometry.entry).toMatchObject({ x: CENTRE_POSITION.x, y: LAYOUT.padding, height });
+    expect(state.geometry.collection).toMatchObject({
+      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: LAYOUT.padding,
+      height,
+    });
+  });
+
+  test("drops the cascade step when the available space is less than the minimum size", () => {
+    const state = openedOn({ width: SURFACE.width, height: 200 }, "entry");
+    const height = 200 - 2 * LAYOUT.padding;
+
+    expect(height).toBeLessThan(LAYOUT.minSize.height);
+    expect(state.geometry.entry).toMatchObject({ y: LAYOUT.padding, height });
+  });
+
   test("opens every window at a position and size that fits within the desktop", () => {
     const state = opened(...WINDOW_DOM_ORDER);
     const placeWindow = createWindowPlacer(LAYOUT);
