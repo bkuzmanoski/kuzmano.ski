@@ -44,10 +44,10 @@ export function Menu({
   onOpenAdjacent: (direction: 1 | -1) => void;
   onClose: () => void;
 }) {
+  const itemIdPrefix = useId();
   const isMacOS = useIsMacOS();
   const flash = useActivationFlash<number>();
   const [focusedItemId, setFocusedItemId] = useState(-1);
-  const itemIdPrefix = useId();
   const menuRef = useRef<HTMLDivElement>(null);
   const isStickyRef = useRef(!isPointerHeld);
   const focusedItemRef = useRef(-1);

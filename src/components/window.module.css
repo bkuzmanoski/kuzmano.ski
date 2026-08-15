@@ -64,7 +64,7 @@
 }
 
 .titleBar {
-  touch-action: none;
+  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
   user-select: none;
 
   position: relative;
@@ -159,6 +159,9 @@
 
 .controlResize {
   composes: filledControl;
+
+  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+
   width: var(--scrollbar-width);
   height: calc(var(--scrollbar-width) + 1px); /* +1px for the border. */
   border-top: 1px solid var(--color-border);

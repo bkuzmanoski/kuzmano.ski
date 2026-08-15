@@ -1,8 +1,8 @@
 .menuBar {
   composes: textChrome from global;
 
-  /* Set on the bar so it also covers the menus inside it: the browser must not claim a
-   * press as a pan or a zoom, which would cancel the pointer mid-gesture on touch. */
+  /* The drag captures the pointer, so the browser must not claim the gesture for
+   * panning and cancel it. Set on the bar so it also covers the menus inside it. */
   touch-action: none;
 
   transform: translateY(-100%);

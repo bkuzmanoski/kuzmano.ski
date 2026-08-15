@@ -7,8 +7,10 @@ import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
+import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
+import { mergeHandlers } from "#/lib/merge-handlers";
 
 import { Scrollbar } from "./scrollbar";
 import { Tooltip } from "./tooltip";
@@ -163,22 +165,9 @@ export function Window({
 }) {
   const fallbackContentId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
+  const [isResizing, setIsResizing] = useState(false);
   const windowRef = useRef<HTMLElement>(null);
   const hasMovedWindowRef = useRef(false);
-  const [isResizing, setIsResizing] = useState(false);
-
-  const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
-
-  useEffect(() => {
-    const element = windowRef.current;
-
-    /* Do not focus the window if it is:
-     * - hidden: a window opened from an icon waits out the zoom rect behind `visibility: hidden` and cannot be focused
-     * - already focused: a press that landed on a control has focused that control, and must not be overruled. */
-    if (focused && !hidden && element && !element.contains(document.activeElement)) {
-      element.focus({ preventScroll: true });
-    }
-  }, [focused, hidden, contentKey]);
 
   const moveHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
@@ -193,6 +182,19 @@ export function Window({
     },
   });
 
+  const zoomHandlers = useDoublePress({
+    onDoublePress: (event) => {
+      if (!onZoom || (event.target as HTMLElement).closest("button")) {
+        return;
+      }
+
+      if (maximized || !hasMovedWindowRef.current) {
+        playClick();
+        onZoom();
+      }
+    },
+  });
+
   const resizeHandlers = usePointerDrag({
     start: () => {
       playClick();
@@ -204,12 +206,24 @@ export function Window({
     onEnd: () => setIsResizing(false),
   });
 
+  useEffect(() => {
+    const element = windowRef.current;
+
+    // Do not focus the window if it is:
+    // - hidden: a window opened from an icon waits out the zoom rect behind `visibility: hidden` and cannot be focused
+    // - already focused: a press that landed on a control has focused that control, and must not be overruled.
+    if (focused && !hidden && element && !element.contains(document.activeElement)) {
+      element.focus({ preventScroll: true });
+    }
+  }, [focused, hidden, contentKey]);
+
+  const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
   const resizeControl = maximized ? null : (
     <Tooltip label="Resize" suppressed={isResizing}>
       <button
         aria-label="Resize"
         className={clsx(styles.controlResize, isResizing && styles.pressed)}
-        tabIndex={-1} /* Drag handle is not keyboard accessible. */
+        tabIndex={-1} // Drag handle is not keyboard accessible.
         type="button"
         {...resizeHandlers}
       >
@@ -235,20 +249,7 @@ export function Window({
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
-      <header
-        className={styles.titleBar}
-        onDoubleClick={
-          onZoom
-            ? (event) => {
-                if (!(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current)) {
-                  playClick();
-                  onZoom();
-                }
-              }
-            : undefined
-        }
-        {...moveHandlers}
-      >
+      <header className={styles.titleBar} {...mergeHandlers(moveHandlers, zoomHandlers)}>
         {focused && <div className={styles.bars} aria-hidden />}
         <span className={styles.title}>{title}</span>
         {focused && (

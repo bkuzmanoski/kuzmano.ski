@@ -75,6 +75,8 @@
   --thumb-min-height: 20px;
   --thumb-height: min(100%, max(var(--thumb-min-height), calc(var(--thumb-proportion) * 100%)));
 
+  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+
   position: absolute;
   top: calc(var(--thumb-position) * (100% - var(--thumb-height)));
   right: 0;

@@ -11,8 +11,10 @@ import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
 import { playClick } from "#/lib/audio/ui";
+import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { Icon, IconKind } from "#/lib/icons/icon";
+import { mergeHandlers } from "#/lib/merge-handlers";
 
 import styles from "./desktop-icon.module.css";
 
@@ -73,6 +75,14 @@ export function DesktopIcon({
   onMoveEnd: () => void;
   onKeyDown: (event: KeyboardEvent) => void;
 }) {
+  const hasMovedRef = useRef(false);
+  const pressHandlers = useDoublePress({
+    onDoublePress: () => {
+      if (!hasMovedRef.current) {
+        onOpen();
+      }
+    },
+  });
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD,
     canStart: (event) => event.button === 0,
@@ -93,7 +103,6 @@ export function DesktopIcon({
       }
     },
   });
-  const hasMovedRef = useRef(false);
 
   return (
     <div
@@ -104,14 +113,9 @@ export function DesktopIcon({
       role="button"
       style={{ left: x, top: y, width: cellSize }}
       tabIndex={tabIndex}
-      onDoubleClick={() => {
-        if (!hasMovedRef.current) {
-          onOpen();
-        }
-      }}
       onFocus={onSelect}
       onKeyDown={onKeyDown}
-      {...dragHandlers}
+      {...mergeHandlers(dragHandlers, pressHandlers)}
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
       <span className={clsx(styles.label, selected && styles.selected)}>
