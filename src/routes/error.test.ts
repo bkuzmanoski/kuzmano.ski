@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import type * as Content from "#/content";
 import { renderRoute } from "#/test-utils/render-route";
@@ -10,7 +10,6 @@ import { renderRoute } from "#/test-utils/render-route";
 
 vi.mock("#/content", async (importOriginal) => {
   const actual = await importOriginal<typeof Content>();
-
   return {
     ...actual,
     pages: {
@@ -22,10 +21,21 @@ vi.mock("#/content", async (importOriginal) => {
   };
 });
 
+const sendBeacon = vi.fn(() => true);
+
+beforeEach(() => {
+  navigator.sendBeacon = sendBeacon;
+
+  // The throw above is the subject of the test, so the reports by React and the router are expected output.
+  vi.spyOn(console, "error").mockReturnValue();
+  vi.spyOn(console, "warn").mockReturnValue();
+});
+
 test("an error replaces the desktop with a standalone page", async () => {
   renderRoute("/about");
 
   expect(await screen.findByRole("heading", { name: "Error" })).toBeDefined();
   expect(screen.queryByRole("navigation", { name: "Main menu" })).toBeNull();
   expect(screen.queryByRole("region")).toBeNull();
+  expect(sendBeacon).toHaveBeenCalledWith("/api/client-errors", expect.any(Blob));
 });

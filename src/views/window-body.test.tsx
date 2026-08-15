@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import { collections } from "#/content";
@@ -40,14 +40,20 @@ test("the entry list marks the entry the entry window is showing, and only in th
   expect(container.querySelector("[aria-current]")).toBeNull();
 });
 
-test("an entry route suspends on its body chunk, from a collection or the top-level pages", () => {
-  const { rerender } = render(<WindowBody route={`/tech-notes/${entry.slug}`} />);
+test("an entry route suspends on its body chunk, from a collection or the top-level pages", async () => {
+  const mounted = act(() => render(<WindowBody route={`/tech-notes/${entry.slug}`} />));
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined(); // The body arrives in a chunk of its own.
 
-  rerender(<WindowBody route="/about" />);
+  const { rerender } = await mounted;
+  const rerendered = act(() => {
+    rerender(<WindowBody route="/about" />);
+    return null;
+  });
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined();
+
+  await rerendered;
 });
 
 test("a route that matches no content renders the not-found body", () => {

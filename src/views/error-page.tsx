@@ -13,7 +13,7 @@ export function ErrorPage({ error }: ErrorComponentProps) {
   useClearBootOverlay();
 
   useEffect(() => {
-    if (import.meta.env.DEV || import.meta.env.MODE === "test") {
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       return;
     }
 
@@ -29,9 +29,10 @@ export function ErrorPage({ error }: ErrorComponentProps) {
     try {
       const jsonBody = JSON.stringify(report);
       const blob = new Blob([jsonBody], { type: "application/json" });
-      const queued = typeof navigator.sendBeacon === "function" && navigator.sendBeacon("/api/client-errors", blob);
+      const queued = navigator.sendBeacon("/api/client-errors", blob);
 
       if (!queued) {
+        // Fallback to fetch if sendBeacon fails, e.g. due to size limits.
         fetch("/api/client-errors", {
           method: "POST",
           headers: { "content-type": "application/json" },
