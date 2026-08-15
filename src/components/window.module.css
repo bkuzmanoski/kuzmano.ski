@@ -25,7 +25,6 @@
   }
 
   &:not(.focused)::after {
-    pointer-events: none;
     content: "";
 
     position: absolute;
@@ -73,7 +72,7 @@
   flex: none;
   align-items: center;
 
-  height: var(--window-title-bar-height);
+  height: calc(var(--window-title-bar-height) + 1px); /* +1px for the border. */
   padding-inline: var(--window-safe-area-inline-start) var(--window-safe-area-inline-end);
   border-bottom: 1px solid var(--color-border);
 

@@ -23,7 +23,7 @@
 
   width: 100%;
   height: 31px;
-  padding: 0 calc(var(--gutter) + 4px);
+  padding: 0 var(--gutter);
   border: 0;
 
   text-align: left;

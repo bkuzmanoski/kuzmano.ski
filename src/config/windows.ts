@@ -12,6 +12,6 @@ export const LAYOUT: WindowLayout = {
     collection: "cascade",
     notFound: "centre",
   },
-  cascadeOffset: { x: 24, y: 28 }, // y = Height of the title bar defined in `styles.css`.
+  cascadeOffset: { x: 24, y: 29 }, // y = Height of the title bar defined in `styles.css` (+1 for the border).
   padding: 8, // Mirrored by `--window-layer-padding` in `styles.css`.
 };
