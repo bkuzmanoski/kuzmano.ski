@@ -1,6 +1,4 @@
 .menuBar {
-  composes: textChrome from global;
-
   /* The drag captures the pointer, so the browser must not claim the gesture for
    * panning and cancel it. Set on the bar so it also covers the menus inside it. */
   touch-action: none;
@@ -15,8 +13,7 @@
   padding: var(--safe-area-top) calc(var(--gutter) + var(--safe-area-right)) 0
     calc(var(--safe-area-left) + var(--gutter));
 
-  background: var(--color-background);
-  box-shadow: var(--shadow-menu-bar);
+  font: var(--font-chrome);
 
   &.ready {
     transform: none;
@@ -38,8 +35,8 @@
   padding: 0 var(--gutter);
 
   &:active {
-    color: var(--color-selection-foreground);
-    background: var(--color-selection-background);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
   }
 
   & .logoIcon {
@@ -52,22 +49,26 @@
   display: flex;
   align-items: stretch;
   align-self: stretch;
+}
 
-  & .menu {
-    position: relative;
-    display: flex;
-  }
+.item {
+  position: relative;
+  display: flex;
 }
 
 .title {
   composes: focusFrame from global;
+
   user-select: none;
+
+  position: relative;
+
   height: 100%;
   padding: 0 var(--gutter);
 
   &.open {
-    color: var(--color-selection-foreground);
-    background: var(--color-selection-background);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
   }
 
   /* An open title already reads as selected, so the focus frame stays off it. */

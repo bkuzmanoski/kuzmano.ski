@@ -1,5 +1,5 @@
 .skipLink {
-  composes: panel panelElevated from global;
+  composes: panel from global;
 
   position: fixed;
   z-index: var(--layer-skip-link);
@@ -7,16 +7,18 @@
   left: 0;
   transform: translateY(calc(-100% - var(--shadow-length)));
 
-  padding: 8px var(--gutter);
+  padding: 4px 8px;
 
   font: var(--font-ui);
   color: var(--color-foreground);
   text-decoration: none;
 
+  background: var(--color-background-elevated);
+
   &:focus {
     transform: translate(
-      calc(var(--safe-area-left) + var(--tooltip-margin)),
-      calc(var(--safe-area-top) + var(--menu-bar-height) + var(--tooltip-margin))
+      calc(var(--safe-area-left) + var(--gutter)),
+      calc(var(--safe-area-top) + var(--menu-bar-height) + var(--gutter))
     );
   }
 }

@@ -343,6 +343,10 @@ export interface Palette {
   foregroundDark: string;
   backgroundLight: string;
   backgroundDark: string;
+  wallpaperLight: string;
+  wallpaperDark: string;
+  bootBackdropLight: string;
+  bootBackdropDark: string;
 }
 
 export async function readPalette(): Promise<Palette> {
@@ -364,5 +368,9 @@ export async function readPalette(): Promise<Palette> {
     foregroundDark: read("--color-foreground", "dark"),
     backgroundLight: read("--color-background", "light"),
     backgroundDark: read("--color-background", "dark"),
+    wallpaperLight: read("--color-wallpaper", "light"),
+    wallpaperDark: read("--color-wallpaper", "dark"),
+    bootBackdropLight: read("--color-boot-sequence-backdrop", "light"),
+    bootBackdropDark: read("--color-boot-sequence-backdrop", "dark"),
   };
 }

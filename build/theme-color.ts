@@ -9,8 +9,11 @@ import type { Plugin } from "vite";
 
 async function findDrift(palette: Palette): Promise<Array<string>> {
   const dependents = [
-    { file: "public/manifest.json", colors: [palette.backgroundLight] },
-    { file: "src/views/root-document.tsx", colors: [palette.backgroundLight, palette.backgroundDark] },
+    { file: "public/manifest.json", colors: [palette.wallpaperLight] },
+    {
+      file: "src/views/root-document.tsx",
+      colors: [palette.wallpaperLight, palette.wallpaperDark, palette.bootBackdropLight, palette.bootBackdropDark],
+    },
   ];
   const drifted: Array<string> = [];
 

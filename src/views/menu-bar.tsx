@@ -10,7 +10,7 @@ import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/na
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
-import { reset } from "#/lib/boot-sequence/boot";
+import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
@@ -74,7 +74,7 @@ export function MenuBar() {
           action: () => window.open(SITE_SOURCE_URL, "_blank"),
         },
         { kind: "separator" },
-        { kind: "action", label: "Restart", action: reset },
+        { kind: "action", label: "Restart", action: restart },
       ],
     },
   ];
@@ -179,7 +179,7 @@ export function MenuBar() {
 
       <nav className={styles.menus} aria-label="Main menu">
         {menus.map(({ label, items }) => (
-          <div key={label} className={styles.menu}>
+          <div key={label} className={styles.item}>
             <button
               ref={(node) => {
                 titles.current[label] = node;

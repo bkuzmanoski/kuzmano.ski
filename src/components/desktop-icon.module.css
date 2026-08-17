@@ -10,6 +10,7 @@
   gap: 8px;
   align-items: center;
 
+  color: var(--color-highlight-background);
   text-align: center;
 
   & .glyph,
@@ -18,8 +19,7 @@
   }
 
   & .glyph {
-    --color-icon-background: light-dark(var(--color-background), var(--color-foreground));
-    --color-icon-foreground: light-dark(var(--color-foreground), var(--color-background));
+    --color-icon-background: var(--color-background-elevated);
 
     width: auto;
     height: 40px;
@@ -35,11 +35,11 @@
     font: var(--font-ui);
     white-space: nowrap;
 
-    background: var(--color-background);
+    background: var(--color-background-elevated);
 
     &.selected {
-      color: var(--color-selection-foreground);
-      background: var(--color-selection-background);
+      color: var(--color-highlight-foreground);
+      background: var(--color-highlight-background);
     }
 
     & .downloadIcon {

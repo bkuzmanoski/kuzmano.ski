@@ -36,3 +36,11 @@ export function removeStored(key: string) {
     // Ignored.
   }
 }
+
+export function clearStorage() {
+  try {
+    localStorage.clear();
+  } catch {
+    // Ignored.
+  }
+}

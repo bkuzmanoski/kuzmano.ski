@@ -94,9 +94,10 @@ function ScrollPane({
         {children}
       </div>
       <Scrollbar
-        className={styles.scrollbar}
-        controls={id}
+        viewportId={id}
         metrics={metrics}
+        resizeControl={resizeControl}
+        className={styles.scrollbar}
         onScrollTop={(top) => {
           if (contentContainerRef.current) {
             contentContainerRef.current.scrollTop = top;
@@ -121,7 +122,6 @@ function ScrollPane({
 
           return didScroll;
         }}
-        resizeControl={resizeControl}
       />
     </div>
   );

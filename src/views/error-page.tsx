@@ -3,14 +3,14 @@ import { useEffect } from "react";
 import { Button } from "#/components/button";
 import { ButtonGroup } from "#/components/button-group";
 import { documentTitle } from "#/config/site";
-import { useClearBootOverlay } from "#/lib/boot-sequence/use-clear-boot-overlay";
+import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
 
 import styles from "./error-page.module.css";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
 export function ErrorPage({ error }: ErrorComponentProps) {
-  useClearBootOverlay();
+  useDismissBootSequence();
 
   useEffect(() => {
     if (import.meta.env.DEV && import.meta.env.MODE !== "test") {

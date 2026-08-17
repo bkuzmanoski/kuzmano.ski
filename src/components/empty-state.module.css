@@ -7,5 +7,5 @@
   padding: var(--gutter);
 
   font: var(--font-ui);
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }

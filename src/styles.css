@@ -22,86 +22,54 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --menu-bar-height: 32px;
-  --window-layer-padding: 8px; /* Kept clear around a window as it is placed. Mirrors `WINDOW_LAYOUT.padding` in `config/windows.ts`. */
-  --window-title-bar-height: 28px;
-  --window-control-size: 16px;
+  --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `LAYOUT.padding` in `config/windows.ts`. */
+  --gutter: 16px;
   --scrollbar-width: 20px;
   --tooltip-margin: 5px;
-  --gutter: 16px;
-  --shadow-length: 2px;
+  --shadow-length: 3px;
 
   /* Typography */
   --font-family-chrome: ChicagoFLF, sans-serif;
+  --font-chrome: 16px var(--font-family-chrome);
   --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
-  --font-chrome-size: 16px; /* Named as well as set, for layout that has to be scaled. */
-  --font-chrome: var(--font-chrome-size) var(--font-family-chrome);
-  --font-chrome-letter-spacing: -0.01em; /* Set alongside --font-chrome; the shorthand cannot carry it. */
-  --font-ui-line-height: 20px; /* Named as well as set, for layout that has to line up with a line box. */
-  --font-ui: 16px/var(--font-ui-line-height) var(--font-family-ui);
-  --font-ui-bold: bold 14px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui-line-height: 22px;
+  --font-ui: 15px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui-bold: bold 15px/var(--font-ui-line-height) var(--font-family-ui);
+  --font-ui-large-line-height: 22px;
+  --font-ui-large: 16px/var(--font-ui-large-line-height) var(--font-family-ui);
+  --font-ui-large-bold: bold 16px/var(--font-ui-large-line-height) var(--font-family-ui);
 
   /* Colors */
-  --tint-faint: 0.012;
-  --tint-soft: 0.026;
-  --tint-strong: 0.042;
-  --color-accent: #8787b3;
-  --color-background: light-dark(
-    oklch(from var(--color-accent) 97% var(--tint-faint) h),
-    oklch(from var(--color-accent) 21% var(--tint-faint) h)
+  --color-accent: light-dark(#3378a3, #61abda);
+  --color-foreground: light-dark(#353535, #e7e7e7);
+  --color-foreground-secondary: light-dark(#6e6e6e, #8e8e8e);
+  --color-foreground-disabled: light-dark(#8a8a8a, #858585);
+  --color-background: light-dark(#fcfcfc, #292929);
+  --color-background-elevated: light-dark(#fcfcfc, #3a3a3a);
+  --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
+  --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
+  --color-highlight-foreground: var(--color-background);
+  --color-highlight-background: light-dark(var(--color-foreground), #bbb);
+  --color-border: #6e6e6e;
+  --color-border-inactive: color-mix(in srgb, var(--color-background) var(--color-dim-strength), var(--color-border));
+  --color-wallpaper: light-dark(#e6e6e6, #191919);
+  --color-shadow: light-dark(
+    /* In light mode 13% opacity over `--color-wallpaper` equals `--color-border-inactive` given `--color-dim-strength`.  */
+    rgb(0 0 0 / 13%),
+    rgb(0 0 0 / 50%)
   );
-  --color-background-elevated: light-dark(
-    oklch(from var(--color-accent) 94% var(--tint-faint) h),
-    oklch(from var(--color-accent) 27% var(--tint-faint) h)
-  );
-  --color-foreground: light-dark(
-    oklch(from var(--color-accent) 24% var(--tint-soft) h),
-    oklch(from var(--color-accent) 96% var(--tint-faint) h)
-  );
-  --color-foreground-muted: light-dark(
-    oklch(from var(--color-accent) 48% var(--tint-strong) h),
-    oklch(from var(--color-accent) 65% var(--tint-strong) h)
-  );
-  --color-border: light-dark(var(--color-foreground), oklch(from var(--color-accent) 45% var(--tint-strong) h));
-  --color-border-muted: light-dark(
-    oklch(from var(--color-accent) 72% var(--tint-strong) h),
-    oklch(from var(--color-accent) 35% var(--tint-soft) h)
-  );
-  --color-scrim: color-mix(in oklab, var(--color-background) 50%, transparent);
-  --color-selection-foreground: var(--color-background);
-  --color-selection-background: var(--color-foreground);
-  --color-active-background: light-dark(
-    oklch(from var(--color-accent) 88% var(--tint-soft) h),
-    oklch(from var(--color-accent) 24% var(--tint-soft) h)
-  );
-  --color-wallpaper-a: light-dark(
-    oklch(from var(--color-accent) 86% var(--tint-soft) h),
-    oklch(from var(--color-accent) 29% var(--tint-soft) h)
-  );
-  --color-wallpaper-b: light-dark(
-    oklch(from var(--color-accent) 69% var(--tint-soft) h),
-    oklch(from var(--color-accent) 39% var(--tint-soft) h)
-  );
-  --color-icon-foreground: currentColor;
-  --color-icon-background: var(--color-background);
-  --color-boot-sequence-light: light-dark(var(--color-background), var(--color-foreground));
-  --color-boot-sequence-dark: light-dark(var(--color-foreground), var(--color-background));
-  --color-boot-sequence-background: color-mix(in oklab, var(--color-boot-sequence-dark) 80%, var(--color-accent));
+  --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
+  --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
+  --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `build/svgr.ts`). */
+  --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `build/svgr.ts`). */
+  --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
+  --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
 
   /* Shadows */
-  --shadow-menu-bar: 0 var(--shadow-length) 0
-    light-dark(rgb(from var(--color-foreground) r g b / 30%), rgb(from var(--color-background) r g b / 70%));
-  --shadow-drop: var(--shadow-length) var(--shadow-length) 0
-    light-dark(rgb(from var(--color-foreground) r g b / 30%), rgb(from var(--color-background) r g b / 70%));
+  --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
 
   /* Patterns */
   --grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  --wallpaper: conic-gradient(
-      var(--color-wallpaper-b) 0 25%,
-      var(--color-wallpaper-a) 0 50%,
-      var(--color-wallpaper-b) 0 75%,
-      var(--color-wallpaper-a) 0
-    )
-    0 0 / 4px 4px repeat;
   --dotted-frame:
     linear-gradient(90deg, currentColor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
     linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
@@ -135,17 +103,16 @@ body {
 
 html {
   overscroll-behavior: none;
-  background: var(--wallpaper);
-  background-color: var(--color-foreground);
+  background-color: var(--color-wallpaper);
 
-  &[data-boot]::before {
+  &[data-boot-sequence-overlay]::before {
     content: "";
 
     position: fixed;
     z-index: var(--layer-boot-sequence-overlay);
     inset: 0;
 
-    background: var(--color-boot-sequence-dark); /* Match `.loadingCover` in `boot-sequence.module.css`. */
+    background: var(--color-boot-sequence-backdrop);
   }
 }
 
@@ -159,9 +126,7 @@ p {
   margin: 0;
 }
 
-a,
-button,
-div[role="button"] {
+:where(a, button, div[role="button"]) {
   padding: 0;
   border: 0;
 
@@ -175,34 +140,13 @@ div[role="button"] {
 }
 
 ::selection {
-  color: var(--color-selection-foreground);
   background: var(--color-selection-background);
-}
-
-.textChrome {
-  font: var(--font-chrome);
-  color: var(--color-foreground);
-  letter-spacing: var(--font-chrome-letter-spacing);
-}
-
-.textUI {
-  font: var(--font-ui);
-  color: var(--color-foreground);
-}
-
-.textUIBold {
-  font: var(--font-ui-bold);
-  color: var(--color-foreground);
 }
 
 .panel {
   border: 1px solid var(--color-border);
   background: var(--color-background);
-  box-shadow: var(--shadow-drop);
-}
-
-.panelElevated {
-  background: var(--color-background-elevated);
+  box-shadow: var(--shadow);
 }
 
 .focusFrame:focus-visible {

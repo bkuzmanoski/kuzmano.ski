@@ -1,36 +1,71 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import bootOverlayScript from "#/scripts/boot-overlay.ts?inline-script";
+import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay";
+import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session";
+import bootSequenceOverlayScript from "#/scripts/boot-sequence-overlay.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
-// These tests run the bundled scripts as the browser receives them, so they cover
-// the plugin, the tree-shaking and minification, and the logic. Attribute names are
-// defined inline and not imported because the stylesheet uses these exact strings.
+// These tests evaluate the bundled scripts exactly as the browser receives them,
+// covering the plugin, tree-shaking, minification, and runtime behaviour.
+// Attribute names are intentionally defined inline because they must match the
+// strings used by the stylesheet.
 
 function run(script: string) {
   // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- Tests the bundle as it would be evaluated in the browser.
   new Function(script)();
 }
 
+function setThemeColorMetaTags() {
+  const bootLight = document.createElement("meta");
+  bootLight.dataset.bootSequenceThemeColor = "";
+  bootLight.name = "theme-color";
+  bootLight.media = "(prefers-color-scheme: light)";
+  bootLight.content = "#353535";
+
+  const bootDark = document.createElement("meta");
+  bootDark.dataset.bootSequenceThemeColor = "";
+  bootDark.name = "theme-color";
+  bootDark.media = "(prefers-color-scheme: dark)";
+  bootDark.content = "#292929";
+
+  const light = document.createElement("meta");
+  light.name = "theme-color";
+  light.media = "(prefers-color-scheme: light)";
+  light.content = "#e6e6e6";
+
+  const dark = document.createElement("meta");
+  dark.name = "theme-color";
+  dark.media = "(prefers-color-scheme: dark)";
+  dark.content = "#191919";
+
+  document.head.append(bootLight, bootDark, light, dark);
+}
+
+function bootThemeColors() {
+  return document.querySelectorAll(BOOT_SEQUENCE_THEME_COLOR_SELECTOR);
+}
+
 beforeEach(() => {
   document.documentElement.removeAttribute("data-theme");
-  document.documentElement.removeAttribute("data-boot");
+  document.documentElement.removeAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE);
+  sessionStorage.removeItem(BOOT_SEQUENCE_STORAGE_KEY);
+  localStorage.clear();
+  document.head.replaceChildren();
 });
 
 describe("theme", () => {
-  test.for(["light", "dark"])("pins the attribute for %s", (theme) => {
+  test.for(["light", "dark"])("applies a stored %s theme", (theme) => {
     localStorage.setItem("theme", theme);
-
     run(themeScript);
 
     expect(document.documentElement.getAttribute("data-theme")).toBe(theme);
   });
 
   test.for([
-    ["nothing stored", null],
-    ["system", "system"],
-    ["an unrecognised value", "sepia"],
-  ] as const)("leaves the attribute absent for %s", ([, stored]) => {
+    ["no stored theme", null],
+    ["the system theme", "system"],
+    ["an unrecognised theme", "sepia"],
+  ] as const)("does not set the theme attribute for %s", ([, stored]) => {
     if (stored !== null) {
       localStorage.setItem("theme", stored);
     }
@@ -41,27 +76,44 @@ describe("theme", () => {
   });
 });
 
-describe("boot overlay", () => {
-  test("covers the desktop on a first visit to the root", () => {
-    run(bootOverlayScript);
-
-    expect(document.documentElement.hasAttribute("data-boot")).toBe(true);
+describe("boot sequence overlay", () => {
+  test("enables the overlay when the session has not booted", () => {
+    run(bootSequenceOverlayScript);
+    expect(document.documentElement.getAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe("");
   });
 
-  test("stays out of the way once booted", () => {
-    sessionStorage.setItem("has-booted", "1");
+  test("does not enable the overlay when the session has already booted", () => {
+    sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
+    run(bootSequenceOverlayScript);
 
-    run(bootOverlayScript);
-
-    expect(document.documentElement.hasAttribute("data-boot")).toBe(false);
+    expect(document.documentElement.hasAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe(false);
   });
 });
 
-describe("resilience", () => {
+describe("boot sequence theme colors", () => {
+  beforeEach(() => {
+    setThemeColorMetaTags();
+  });
+
+  test("keeps the theme colors while the boot sequence runs", () => {
+    run(bootSequenceOverlayScript);
+    expect(bootThemeColors()).toHaveLength(2);
+  });
+
+  test("removes the theme colors when there is no boot sequence", () => {
+    sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
+    run(bootSequenceOverlayScript);
+
+    expect(bootThemeColors()).toHaveLength(0);
+    expect(document.querySelectorAll('meta[name="theme-color"]')).toHaveLength(2);
+  });
+});
+
+describe("storage failures", () => {
   test.for([
     ["theme", themeScript, "data-theme"],
-    ["boot overlay", bootOverlayScript, "data-boot"],
-  ] as const)("the %s script survives storage that throws", ([, script, attribute]) => {
+    ["boot sequence overlay", bootSequenceOverlayScript, BOOT_SEQUENCE_OVERLAY_ATTRIBUTE],
+  ] as const)("the %s script does not throw when storage access fails", ([, script, attribute]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("Storage access denied.");
     });

@@ -18,7 +18,7 @@
 }
 
 .tip {
-  composes: panel panelElevated from global;
+  composes: panel from global;
 
   pointer-events: none;
   user-select: none;
@@ -42,8 +42,9 @@
 
   font: var(--font-ui);
   color: var(--color-foreground);
-  letter-spacing: normal;
   white-space: nowrap;
+
+  background: var(--color-background-elevated);
 
   @supports not (anchor-name: --tooltip) {
     position: absolute;

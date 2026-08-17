@@ -21,7 +21,7 @@
   }
 
   &:not(.focused) {
-    border-color: var(--color-border-muted);
+    border-color: var(--color-border-inactive);
   }
 
   &:not(.focused)::after {
@@ -63,6 +63,9 @@
 }
 
 .titleBar {
+  --title-bar-height: 28px;
+  --control-size: 16px;
+
   touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
   user-select: none;
 
@@ -72,17 +75,16 @@
   flex: none;
   align-items: center;
 
-  height: calc(var(--window-title-bar-height) + 1px); /* +1px for the border. */
+  height: calc(var(--title-bar-height) + 1px); /* +1px for the border. */
   padding-inline: var(--window-safe-area-inline-start) var(--window-safe-area-inline-end);
   border-bottom: 1px solid var(--color-border);
 
   font: var(--font-chrome);
-  letter-spacing: var(--font-chrome-letter-spacing);
 
   /* Control buttons are placed by the tooltip wrapper around them. */
   & .control {
     position: absolute;
-    top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
+    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
 
     &.controlClose {
       left: calc(var(--gutter) + var(--window-safe-area-inline-start));
@@ -95,11 +97,11 @@
 
   & .bars {
     position: absolute;
-    top: calc((var(--window-title-bar-height) - var(--window-control-size)) / 2);
+    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
     right: calc(4px + var(--window-safe-area-inline-end));
     left: calc(4px + var(--window-safe-area-inline-start));
 
-    height: var(--window-control-size);
+    height: var(--control-size);
 
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
   }
@@ -109,9 +111,9 @@
 
     overflow: hidden;
 
-    max-width: calc(100% - 2 * (var(--gutter) + var(--window-control-size) + 40px));
+    max-width: calc(100% - 2 * (var(--gutter) + var(--control-size) + 40px));
     margin: 0 auto;
-    padding: 0 8px;
+    padding: 0 12px;
 
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -137,14 +139,14 @@
 
   display: flex;
 
-  width: var(--window-control-size);
-  height: var(--window-control-size);
+  width: var(--control-size);
+  height: var(--control-size);
 
   /* Extend the hit target to the height of the title bar. */
   &::before {
     content: "";
     position: absolute;
-    inset-block: calc((var(--window-control-size) - var(--window-title-bar-height)) / 2);
+    inset-block: calc((var(--control-size) - var(--title-bar-height)) / 2);
     inset-inline: -6px;
   }
 

@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 
-import { getIsBootSequenceComplete, serverIsBootSequenceComplete, subscribeToIsBootSequenceComplete } from "./boot";
+import {
+  getIsBootSequenceComplete,
+  serverIsBootSequenceComplete,
+  subscribeToIsBootSequenceComplete,
+} from "./lifecycle";
 
 export function useIsBootSequenceComplete(): boolean {
   return useSyncExternalStore(

@@ -12,8 +12,8 @@
   white-space: nowrap;
 
   &:active:not(.time) {
-    color: var(--color-selection-foreground);
-    background: var(--color-selection-background);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
   }
 }
 

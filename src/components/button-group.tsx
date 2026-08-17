@@ -5,9 +5,9 @@ import styles from "./button-group.module.css";
 import type { ComponentPropsWithoutRef } from "react";
 
 export function ButtonGroup({
-  className,
   alignment = "right",
   children,
+  className,
   ...props
 }: ComponentPropsWithoutRef<"div"> & {
   alignment?: "left" | "center" | "right";

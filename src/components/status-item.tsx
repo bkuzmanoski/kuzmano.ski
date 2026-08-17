@@ -19,14 +19,14 @@ import type { ReactNode } from "react";
 
 function StatusButton({
   label,
-  className,
   persistTooltipOnPress,
+  className,
   onClick,
   children,
 }: {
   label: string;
-  className?: string;
   persistTooltipOnPress?: boolean;
+  className?: string;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -49,7 +49,7 @@ export function OrganizeWindowsStatus() {
   const { organize } = useWindowActions();
 
   return (
-    <StatusButton className={styles.wideOnly} label="Organize Windows" onClick={organize}>
+    <StatusButton label="Organize Windows" className={styles.wideOnly} onClick={organize}>
       <OrganizeIcon className={styles.icon} />
     </StatusButton>
   );

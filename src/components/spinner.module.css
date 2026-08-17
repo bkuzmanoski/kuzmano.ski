@@ -36,6 +36,11 @@
       --hand-index: 7;
     }
   }
+
+  &.small {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @keyframes tick-watch-hand {

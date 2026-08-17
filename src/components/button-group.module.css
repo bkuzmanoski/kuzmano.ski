@@ -1,6 +1,6 @@
 .buttonGroup {
   display: flex;
-  gap: 16px;
+  gap: var(--gutter);
   width: 100%;
 }
 

@@ -1,5 +1,5 @@
 .menu {
-  composes: panel textChrome from global;
+  composes: panel from global;
 
   position: absolute;
   z-index: var(--layer-menu);
@@ -8,7 +8,13 @@
 
   min-width: 220px;
   padding: 4px 0;
+  border-color: var(
+    --color-highlight-background /* Matches the active menu title background in `menu-bar.module.css`. */
+  );
 
+  font: var(--font-chrome);
+
+  background: var(--color-background-elevated);
   outline: none;
 }
 
@@ -32,12 +38,12 @@
   background: transparent;
 
   &.active {
-    color: var(--color-selection-foreground);
-    background: var(--color-selection-background);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
   }
 
   &.disabled {
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-disabled);
   }
 }
 
@@ -64,11 +70,10 @@
   display: flex;
   align-items: center;
   height: 9px;
-  padding: 0 1px;
 
   &::before {
     content: "";
     flex: 1;
-    border-top: 1px dotted var(--color-border);
+    border-top: 1px dotted var(--color-highlight-background);
   }
 }

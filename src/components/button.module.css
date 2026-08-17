@@ -1,14 +1,14 @@
 .button {
-  composes: textChrome from global;
-
   padding: 4px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-foreground);
   border-radius: 6px;
+
+  font: var(--font-chrome);
 
   background: var(--color-background);
 
   &:focus-visible {
-    outline: 3px solid var(--color-border);
+    outline: 2px solid var(--color-foreground);
     outline-offset: 1px;
   }
 }

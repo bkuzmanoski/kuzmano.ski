@@ -87,19 +87,19 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
 }
 
 export function Scrollbar({
-  controls,
+  viewportId,
   metrics,
+  resizeControl,
   className,
   onStep,
   onScrollTop,
-  resizeControl,
 }: {
-  controls: string; // The id of the viewport this scrolls.
+  viewportId: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
+  resizeControl?: ReactNode;
   className?: string;
   onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
-  resizeControl?: ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -139,7 +139,7 @@ export function Scrollbar({
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}
-        aria-controls={controls}
+        aria-controls={viewportId}
         aria-label="Vertical scrollbar"
         aria-orientation="vertical"
         aria-valuemax={100}

@@ -10,8 +10,9 @@ import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
 import { unlockAudio } from "#/lib/audio/context";
-import { clearBootOverlay, setHasBooted, setIsBootSequenceComplete, shouldBoot } from "#/lib/boot-sequence/boot";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
+import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle";
+import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay";
 import {
   MINIMUM_LOADING_MS,
   MOTION_MS,
@@ -26,6 +27,7 @@ import {
   whenIllustrationReady,
 } from "#/lib/boot-sequence/phases";
 import type { Motion, Phase } from "#/lib/boot-sequence/phases";
+import { shouldRunBootSequence } from "#/lib/boot-sequence/session";
 import {
   DISK_ACTIVITY_INDICATOR_PLACEMENT,
   DISPLAY_BEZEL_INSET,
@@ -120,7 +122,7 @@ function Sequence() {
     return () => resizing.abort();
   }, []);
 
-  const startSequence = useEffectEvent(() => {
+  const schedulePhaseExecution = useEffectEvent(() => {
     const phases = sequence(motion);
 
     setPhase(phases[0].phase);
@@ -137,15 +139,14 @@ function Sequence() {
         setPhase(nextPhase);
 
         if (nextPhase === "complete") {
-          setIsBootSequenceComplete();
+          completeBootSequence();
         }
       }, elapsedMs);
     });
   });
 
   useEffect(() => {
-    setHasBooted();
-    clearBootOverlay();
+    beginBootSequence();
 
     const timers: Array<ReturnType<typeof setTimeout>> = [];
     const waitingForInput = new AbortController();
@@ -178,12 +179,13 @@ function Sequence() {
     function runSequence() {
       unlockAudio();
       waitingForInput.abort();
-      timers.push(...startSequence());
+      timers.push(...schedulePhaseExecution());
     }
 
     return () => {
       waitingForInput.abort();
       timers.forEach(clearTimeout);
+      clearBootSequenceThemeColor();
     };
   }, []);
 
@@ -267,8 +269,8 @@ function Sequence() {
   );
 }
 
-const serverShouldBoot = () => false;
+const serverShouldRunBootSequence = () => false;
 
 export function BootSequence() {
-  return useSyncExternalStore(noSubscribe, shouldBoot, serverShouldBoot) ? <Sequence /> : null;
+  return useSyncExternalStore(noSubscribe, shouldRunBootSequence, serverShouldRunBootSequence) ? <Sequence /> : null;
 }

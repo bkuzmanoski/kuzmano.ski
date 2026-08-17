@@ -21,7 +21,7 @@
 
   display: grid;
 
-  padding-block: var(--gutter);
+  padding-block: 8px;
 
   /* Inset list content to clear the window safe area and reserved scrollbar width. */
   padding-inline: calc(var(--gutter) - var(--padding-inline-title) + var(--window-safe-area-inline-start, 0px))
@@ -61,19 +61,19 @@
 }
 
 .title {
-  composes: textUIBold from global;
   justify-self: start;
-  padding: 4px var(--padding-inline-title);
+  padding-inline: var(--padding-inline-title);
+  font: var(--font-ui-bold);
   box-decoration-break: clone;
 
   .card:focus & {
-    color: var(--color-selection-foreground);
-    background: var(--color-selection-background);
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
   }
 }
 
 .meta {
   display: flex;
   padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
-  color: var(--color-foreground-muted);
+  color: var(--color-foreground-secondary);
 }

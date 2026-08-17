@@ -4,7 +4,7 @@ import { Spinner } from "./spinner";
 export function LoadingState({ label }: { label?: string }) {
   return (
     <div className={styles.loadingState}>
-      <Spinner className={styles.spinner} label={label} />
+      <Spinner label={label} size="small" />
     </div>
   );
 }
