@@ -9,7 +9,7 @@ import macintoshAvifUrl from "#/assets/images/macintosh.avif";
 import macintoshWebpUrl from "#/assets/images/macintosh.webp";
 import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
-import { unlockAudio } from "#/lib/audio/context";
+import { needsAudioPriming, primeAudio } from "#/lib/audio/context";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle";
 import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay";
@@ -47,6 +47,8 @@ const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bott
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
 
 const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
+
+type CoverContent = "spinner" | "beginPrompt";
 
 function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
   const { display, scale, viewport } = metrics;
@@ -109,6 +111,7 @@ function Sequence() {
   // timers for each phase do not disagree if the reduced motion preference changes.
   const [motion] = useState<Motion>(() => (getPrefersReducedMotion() ? REDUCED_MOTION_MS : MOTION_MS));
 
+  const [coverContent, setCoverContent] = useState<CoverContent>("spinner");
   const [phase, setPhase] = useState<Phase>("loading");
   const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
   const illustrationImageRef = useRef<HTMLImageElement>(null);
@@ -162,7 +165,13 @@ function Sequence() {
         return;
       }
 
+      if (!needsAudioPriming()) {
+        runSequence();
+        return;
+      }
+
       setPhase("waiting-for-input");
+      setCoverContent("beginPrompt");
 
       const eventListenerOptions = { capture: true, signal: waitingForInput.signal };
 
@@ -177,7 +186,7 @@ function Sequence() {
     }
 
     function runSequence() {
-      unlockAudio();
+      primeAudio();
       waitingForInput.abort();
       timers.push(...schedulePhaseExecution());
     }
@@ -256,7 +265,7 @@ function Sequence() {
       </div>
       <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
       <div className={clsx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
-        {phase === "loading" ? (
+        {coverContent === "spinner" ? (
           <Spinner className={styles.spinner} />
         ) : (
           <div className={styles.prompt}>

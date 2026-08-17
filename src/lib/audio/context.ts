@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { getSettings } from "../settings";
 
-/** Keys that do not give the document user activation. They cannot unlock audio. */
+/** Keys that do not give the document user activation. They cannot open an audio context. */
 export const NON_GESTURE_KEYS = new Set([
   "Alt",
   "CapsLock",
@@ -55,9 +55,9 @@ function openAudioContext(): AudioContext | null {
   return audioContext;
 }
 
-function unlockAudioOnKeyDown(event: KeyboardEvent): void {
+function primeAudioOnKeyDown(event: KeyboardEvent): void {
   if (!NON_GESTURE_KEYS.has(event.key)) {
-    unlockAudio();
+    primeAudio();
   }
 }
 
@@ -118,18 +118,15 @@ export function getGainNode(context: AudioContext): GainNode {
   return output;
 }
 
+export const needsAudioPriming = (): boolean =>
+  getSettings().sound === "on" && !(audioContext !== null && isRunning(audioContext));
+
 /**
  * Readies the audio context for later playback. Browsers only allow this
  * from a trusted user gesture, and the activation is transient, so call
- * it synchronously from the handler—anything awaited first can lose it.
- *
- * iOS notes: the ring/silent switch mutes Web Audio entirely, which looks
- * identical to a failed unlock. And should a context ever wedge in a
- * suspended state despite per-gesture resumes, the escalation is to close
- * and recreate it inside a gesture—which would also mean invalidating the
- * cached output chain here and every cached buffer.
+ * it synchronously from the handler.
  */
-export function unlockAudio(): void {
+export function primeAudio(): void {
   if (getSettings().sound !== "on") {
     return;
   }
@@ -146,9 +143,9 @@ export function useAudioUnlock() {
     const listening = new AbortController();
     const options = { capture: true, passive: true, signal: listening.signal };
 
-    document.addEventListener("pointerdown", unlockAudio, options); // Mouse clicks
-    document.addEventListener("pointerup", unlockAudio, options); // Touch taps
-    document.addEventListener("keydown", unlockAudioOnKeyDown, options);
+    document.addEventListener("pointerdown", primeAudio, options); // Mouse clicks
+    document.addEventListener("pointerup", primeAudio, options); // Touch taps
+    document.addEventListener("keydown", primeAudioOnKeyDown, options);
     document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: listening.signal });
 
     return () => listening.abort();
@@ -156,7 +153,7 @@ export function useAudioUnlock() {
 }
 
 /**
- * If the context is already running (once `unlockAudio` has fired once this
+ * If the context is already running (once `primeAudio` has fired once this
  * session) this is synchronous. If it isn't—e.g. this is the very first
  * interaction—it resumes inline, which only works if this call is inside a
  * trusted user gesture, and plays once the context actually comes up.

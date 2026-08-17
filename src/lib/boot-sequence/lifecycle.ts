@@ -1,8 +1,13 @@
 import { createEmitter } from "../emitter";
-import { clearStorage } from "../storage";
+import { removeStored } from "../storage";
 
 import { clearBootSequenceOverlay } from "./overlay";
-import { forgetBootSequenceRun, rememberBootSequenceRun, shouldRunBootSequence } from "./session";
+import {
+  BOOT_SEQUENCE_STORAGE_KEY,
+  forgetBootSequenceRun,
+  rememberBootSequenceRun,
+  shouldRunBootSequence,
+} from "./session";
 
 let isComplete = false;
 
@@ -23,7 +28,7 @@ export const getIsBootSequenceComplete = () => isComplete || !shouldRunBootSeque
 export const serverIsBootSequenceComplete = () => true;
 
 export function restart() {
-  clearStorage();
+  removeStored(BOOT_SEQUENCE_STORAGE_KEY);
   forgetBootSequenceRun();
   window.location.replace("/");
 }
