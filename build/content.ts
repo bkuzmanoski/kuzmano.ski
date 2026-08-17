@@ -1,13 +1,13 @@
 import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
 import { PAGES_DIRECTORY } from "#/config/content";
 import { COLLECTION_TITLES } from "#/config/navigation";
 
-const CONTENT_DIRECTORY = "src/content";
+import { CONTENT_DIRECTORY, ROOT_DIRECTORY } from "./paths.ts";
 
 const readContentDirectory = (directory: string) => {
-  const entries = readdirSync(`${CONTENT_DIRECTORY}/${directory}`, { withFileTypes: true });
-
+  const entries = readdirSync(join(ROOT_DIRECTORY, CONTENT_DIRECTORY, directory), { withFileTypes: true });
   return {
     slugs: entries
       .filter((entry) => entry.isFile() && entry.name.endsWith(".mdx"))
@@ -25,7 +25,7 @@ const readContentDirectory = (directory: string) => {
  * emits index routes twice).
  */
 export function content(): Array<{ path: string }> {
-  const directoryNames = readdirSync(CONTENT_DIRECTORY, { withFileTypes: true })
+  const directoryNames = readdirSync(join(ROOT_DIRECTORY, CONTENT_DIRECTORY), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
   const collections = directoryNames
@@ -50,7 +50,7 @@ export function content(): Array<{ path: string }> {
   if (unregisteredCollections.length > 0) {
     throw new Error(
       `Collection director(ies) missing titles: ${unregisteredCollections
-        .map(({ name }) => `${CONTENT_DIRECTORY}/${name}/`)
+        .map(({ name }) => `${join(CONTENT_DIRECTORY, name)}/`)
         .join(", ")}`,
     );
   }
@@ -65,9 +65,9 @@ export function content(): Array<{ path: string }> {
 
   const nestedDirectories = [
     ...collections.flatMap(({ name, subdirectories }) =>
-      subdirectories.map((subdirectory) => `${CONTENT_DIRECTORY}/${name}/${subdirectory}/`),
+      subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, name, subdirectory)}/`),
     ),
-    ...pages.subdirectories.map((subdirectory) => `${CONTENT_DIRECTORY}/${PAGES_DIRECTORY}/${subdirectory}/`),
+    ...pages.subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, PAGES_DIRECTORY, subdirectory)}/`),
   ];
 
   if (nestedDirectories.length > 0) {

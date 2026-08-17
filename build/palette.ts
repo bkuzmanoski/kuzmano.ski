@@ -1,10 +1,11 @@
 // Resolves the site's foreground and background colors from `src/styles.css`.
 
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { clamp } from "#/lib/math.ts";
 
-import { STYLESHEET } from "./paths.ts";
+import { ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
 
 const MAX_CHROMA = 0.4; // CSS Color 4 defines 100% chroma in `oklch()` as 0.4.
 
@@ -368,7 +369,7 @@ export interface Palette {
 }
 
 export async function readPalette(): Promise<Palette> {
-  const css = stripComments(await readFile(STYLESHEET, "utf8"));
+  const css = stripComments(await readFile(join(ROOT_DIRECTORY, STYLESHEET), "utf8"));
   const properties = parseCustomProperties(extractRootBlock(css));
 
   const read = (name: string, scheme: Scheme) => {

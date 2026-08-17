@@ -149,9 +149,9 @@ async function main() {
   await write("logo512.png", await rasterize(appIcon, 512));
   await write("logo-maskable-512.png", await rasterize(maskableIcon, 512));
 
-  console.log(`Palette resolved from ${STYLESHEET.replace(`${ROOT_DIRECTORY}/`, "")}:`);
-  console.log(`  foreground  ${palette.foregroundLight} / ${palette.foregroundDark}`);
-  console.log(`  background  ${palette.backgroundLight} / ${palette.backgroundDark}`);
+  console.log(`Palette resolved from ${STYLESHEET}:`);
+  console.log(`  foreground: ${palette.foregroundLight} / ${palette.foregroundDark}`);
+  console.log(`  background: ${palette.backgroundLight} / ${palette.backgroundDark}`);
   console.log(`Wrote ${written.length} files to public/: ${written.join(", ")}`);
 }
 

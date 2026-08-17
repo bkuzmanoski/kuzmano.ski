@@ -87,7 +87,7 @@ export function themeColorPlugin(): Plugin {
     apply: "build",
     applyToEnvironment: (environment) => environment.name === "client",
     async buildStart() {
-      this.addWatchFile(STYLESHEET);
+      this.addWatchFile(join(ROOT_DIRECTORY, STYLESHEET));
 
       let driftedValues: Array<string>;
 
