@@ -118,28 +118,51 @@ test("the window restores focus to itself when its content is replaced", () => {
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
 });
 
-test("the zoom control can be hidden", () => {
-  render(
-    <Window
-      contentKey="/not-found"
-      title="Window"
-      x={0}
-      y={0}
-      width={800}
-      height={600}
-      z={1}
-      focused
-      maximized={false}
-      hidden={false}
-      unplaced={false}
-      onClose={vi.fn()}
-      onZoom={null}
-      onFocus={vi.fn()}
-      onMove={vi.fn()}
-      onResize={vi.fn()}
-    >
-      {shortPane}
-    </Window>,
-  );
+const fixedSizeWindow = (contentKey: string, children: ReactNode) => (
+  <Window
+    contentKey={contentKey}
+    title="Window"
+    x={0}
+    y={0}
+    width={800}
+    height={600}
+    z={1}
+    focused
+    maximized={false}
+    hidden={false}
+    unplaced={false}
+    onClose={vi.fn()}
+    onZoom={null}
+    onFocus={vi.fn()}
+    onMove={vi.fn()}
+    onResize={null}
+  >
+    {children}
+  </Window>
+);
+
+const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
+
+test("a fixed-size window has neither a zoom control nor a resize control", () => {
+  render(fixedSizeWindow("/short", shortPane));
+
   expect(screen.queryByRole("button", { name: "Zoom" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Resize" })).toBeNull();
+});
+
+test("the scrollbar of a fixed-size window collapses when its content does not overflow", () => {
+  const { rerender } = render(fixedSizeWindow("/short", shortPane));
+
+  expect(isScrollbarCollapsed()).toBe(true);
+
+  rerender(fixedSizeWindow("/tall", tallPane));
+
+  expect(isScrollbarCollapsed()).toBe(false);
+});
+
+test("the scrollbar of a window that can be resized stays open to carry the resize control", () => {
+  render(windowShowing("/short", shortPane));
+
+  expect(screen.queryByRole("button", { name: "Resize" })).not.toBeNull();
+  expect(isScrollbarCollapsed()).toBe(false);
 });

@@ -3,16 +3,16 @@ import { describe, expect, test } from "vitest";
 import { EMPTY_STATE, WINDOW_DOM_ORDER, createWindowPlacer, createWindowReducer } from "./window-manager";
 
 import type { Size } from "./geometry";
-import type { Action, ManagerState, WindowId, WindowLayout } from "./window-manager";
+import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window-manager";
 
 // Every window is given the same size and opens the same way, so the suite below reads as
 // one cascade. The layouts that vary by window are covered in `per-window layout`.
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
+const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };
 const LAYOUT: WindowLayout = {
-  defaultSize: { entry: DEFAULT_SIZE, collection: DEFAULT_SIZE, notFound: DEFAULT_SIZE },
+  windows: { entry: SPEC, collection: SPEC, notFound: SPEC },
   minSize: { width: 480, height: 320 },
-  openAt: { entry: "cascade", collection: "cascade", notFound: "cascade" },
   cascadeOffset: { x: 16, y: 32 },
   padding: 8,
 };
@@ -362,8 +362,7 @@ describe("per-window layout", () => {
 
   const varyingReducer = createWindowReducer({
     ...LAYOUT,
-    defaultSize: { ...LAYOUT.defaultSize, notFound: SMALL_SIZE },
-    openAt: { ...LAYOUT.openAt, notFound: "centre" },
+    windows: { ...LAYOUT.windows, notFound: { ...SPEC, defaultSize: SMALL_SIZE, openAt: "centre" } },
   });
 
   const openedOnDesktop = (...ids: Array<WindowId>) =>

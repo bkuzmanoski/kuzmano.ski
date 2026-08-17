@@ -5,14 +5,15 @@ import { clamp } from "./math";
 import type { Position, Rect, Size } from "./geometry";
 
 /**
- * The windows the desktop can open. Every route resolves to exactly one of them,
- * and each one exists at most once: a route that resolves to an open window
- * replaces what that window shows instead of opening a second one.
+ * Every window id, in the order the window layer writes them to the DOM. Stacking is `order`.
  */
-export type WindowId = "entry" | "collection" | "notFound";
+export const WINDOW_DOM_ORDER = ["collection", "entry", "notFound"] as const;
 
-/** Every window id, in the order the window layer writes them to the DOM. Stacking is `order`. */
-export const WINDOW_DOM_ORDER = ["collection", "entry", "notFound"] as const satisfies ReadonlyArray<WindowId>;
+/**
+ * The windows the desktop can open. Every route resolves to exactly one of them, and each one
+ * exists at most once: a route that resolves to an open window replaces what that window shows.
+ */
+export type WindowId = (typeof WINDOW_DOM_ORDER)[number];
 
 const WINDOW_COUNT = WINDOW_DOM_ORDER.length; // The most windows that can be open at once.
 
@@ -30,10 +31,15 @@ export interface WindowGeometry extends Rect {
   maximized: boolean;
 }
 
+export interface WindowSpec {
+  defaultSize: Size;
+  openAt: "cascade" | "centre";
+  fixedSize: boolean; // A fixed-size window has no zoom control and no resize handle.
+}
+
 export interface WindowLayout {
-  defaultSize: Record<WindowId, Size>;
+  windows: Record<WindowId, WindowSpec>;
   minSize: Size;
-  openAt: Record<WindowId, "cascade" | "centre">;
   cascadeOffset: Position;
   padding: number;
 }
@@ -125,7 +131,7 @@ function cascadeAxis(
  * available space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
  */
 function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
-  const defaultSize = layout.defaultSize[id];
+  const { defaultSize } = layout.windows[id];
   const offsetX = step * layout.cascadeOffset.x;
   const offsetY = step * layout.cascadeOffset.y;
 
@@ -154,7 +160,7 @@ function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: nu
 function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect {
   const slotAt = (step: number) => cascadeSlot(layout, state.surface, id, step);
 
-  if (layout.openAt[id] === "centre") {
+  if (layout.windows[id].openAt === "centre") {
     return slotAt(0);
   }
 

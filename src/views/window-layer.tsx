@@ -56,6 +56,7 @@ const DesktopWindow = memo(function OpenWindow({
   unplaced: boolean;
 }) {
   const { close, focus, move, resize, toggleZoom } = useWindowActions();
+  const { fixedSize } = LAYOUT.windows[id];
 
   return (
     <Window
@@ -71,10 +72,10 @@ const DesktopWindow = memo(function OpenWindow({
       hidden={hidden}
       unplaced={unplaced}
       onClose={() => close(id)}
-      onZoom={id === "notFound" ? null : () => toggleZoom(id)}
+      onZoom={fixedSize ? null : () => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
-      onResize={(nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
+      onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
     >
       <WindowBody route={route} />
     </Window>

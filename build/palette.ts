@@ -67,6 +67,24 @@ function parseHex(value: string): Rgb {
   ];
 }
 
+/**
+ * A hex literal in the canonical form `readPalette` returns.
+ * Returns undefined for anything that is not a hex color.
+ */
+export function normalizeHex(value: string): string | undefined {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue.startsWith("#")) {
+    return undefined;
+  }
+
+  try {
+    return toHex(parseHex(trimmedValue));
+  } catch {
+    return undefined;
+  }
+}
+
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 
 // Splits on separators that sit outside any parentheses, dropping empties.
@@ -345,8 +363,8 @@ export interface Palette {
   backgroundDark: string;
   wallpaperLight: string;
   wallpaperDark: string;
-  bootBackdropLight: string;
-  bootBackdropDark: string;
+  bootSequenceBackdropLight: string;
+  bootSequenceBackdropDark: string;
 }
 
 export async function readPalette(): Promise<Palette> {
@@ -370,7 +388,7 @@ export async function readPalette(): Promise<Palette> {
     backgroundDark: read("--color-background", "dark"),
     wallpaperLight: read("--color-wallpaper", "light"),
     wallpaperDark: read("--color-wallpaper", "dark"),
-    bootBackdropLight: read("--color-boot-sequence-backdrop", "light"),
-    bootBackdropDark: read("--color-boot-sequence-backdrop", "dark"),
+    bootSequenceBackdropLight: read("--color-boot-sequence-backdrop", "light"),
+    bootSequenceBackdropDark: read("--color-boot-sequence-backdrop", "dark"),
   };
 }

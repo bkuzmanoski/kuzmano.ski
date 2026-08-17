@@ -161,7 +161,7 @@ export function Window({
   onZoom: (() => void) | null;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
-  onResize: (width: number, height: number) => void;
+  onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which drops the resize control from its scrollbar.
   children: ReactNode;
 }) {
   const fallbackContentId = useId();
@@ -203,7 +203,7 @@ export function Window({
 
       return { width, height };
     },
-    onStart: (delta, from) => onResize(from.width + delta.dx, from.height + delta.dy),
+    onStart: (delta, from) => onResize?.(from.width + delta.dx, from.height + delta.dy),
     onEnd: () => setIsResizing(false),
   });
 
@@ -219,19 +219,20 @@ export function Window({
   }, [focused, hidden, contentKey]);
 
   const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
-  const resizeControl = maximized ? null : (
-    <Tooltip label="Resize" suppressed={isResizing}>
-      <button
-        aria-label="Resize"
-        className={clsx(styles.controlResize, isResizing && styles.pressed)}
-        tabIndex={-1} // Drag handle is not keyboard accessible.
-        type="button"
-        {...resizeHandlers}
-      >
-        <ResizeIcon />
-      </button>
-    </Tooltip>
-  );
+  const resizeControl =
+    !onResize || maximized ? null : (
+      <Tooltip label="Resize" suppressed={isResizing}>
+        <button
+          aria-label="Resize"
+          className={clsx(styles.controlResize, isResizing && styles.pressed)}
+          tabIndex={-1} // Drag handle is not keyboard accessible.
+          type="button"
+          {...resizeHandlers}
+        >
+          <ResizeIcon />
+        </button>
+      </Tooltip>
+    );
 
   return (
     <section
