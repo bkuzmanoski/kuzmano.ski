@@ -92,7 +92,6 @@ export function resolveIconPlacements(
  */
 export function positionFromDrop(point: Position, container: Size, layout: IconLayout): IconPosition {
   const x = clampToContainer(point.x, container.width, layout.cellSize);
-
   return {
     right: container.width - x - layout.cellSize,
     top: clampToContainer(point.y, container.height, layout.cellSize),

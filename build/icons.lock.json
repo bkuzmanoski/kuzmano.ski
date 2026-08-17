@@ -1,0 +1,21 @@
+{
+  "artwork": "3381bfd06c7ba5c208ee5469526bcb405afb197fb029ca1367b54f14c7f9f6ec",
+  "fills": {
+    "favicon": 0.9,
+    "appIcon": 0.8,
+    "maskable": 0.6
+  },
+  "palette": {
+    "foregroundLight": "#353535",
+    "foregroundDark": "#e7e7e7",
+    "backgroundLight": "#fcfcfc"
+  },
+  "outputs": [
+    "favicon.svg",
+    "favicon.ico",
+    "apple-touch-icon.png",
+    "logo192.png",
+    "logo512.png",
+    "logo-maskable-512.png"
+  ]
+}

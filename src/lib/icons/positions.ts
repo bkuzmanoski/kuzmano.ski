@@ -8,7 +8,6 @@ export function createIconPositionsStore(ids: ReadonlyArray<string>, layout: Ico
   const { useValue, getValue, setValue } = createClientStore<IconPositions | null>(null, () =>
     loadPositions(ids, layout, storageKey),
   );
-
   return {
     useIconPositions: useValue, // Null before the client has read them.
     moveIcon: (id: string, position: IconPosition) => setValue({ ...getValue(), [id]: position }), // Moves an icon. Call `commitIconPositions` when the drag ends to persist the layout.

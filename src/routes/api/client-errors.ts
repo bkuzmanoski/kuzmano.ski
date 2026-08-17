@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { isRecord } from "#/lib/guards";
+
 const MAX_BODY_LENGTH = 8_192;
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_ROUTE_LENGTH = 500;
 const MAX_KIND_LENGTH = 100;
 const MAX_STACK_LENGTH = 4_000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function stringField(value: Record<string, unknown>, name: string, maximumLength: number): string | undefined {
   const field = value[name];

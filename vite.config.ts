@@ -7,6 +7,7 @@ import svgr from "vite-plugin-svgr";
 
 import { content } from "./build/content.ts";
 import { frontmatterPlugin } from "./build/frontmatter.ts";
+import { iconDriftPlugin } from "./build/icon-lock.ts";
 import { inlineScriptPlugin } from "./build/inline-script.ts";
 import { mdxPlugin } from "./build/mdx.ts";
 import { verifyPrerenderedPage } from "./build/prerender.ts";
@@ -26,6 +27,7 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [
     themeColorPlugin(),
+    iconDriftPlugin(),
     inlineScriptPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),

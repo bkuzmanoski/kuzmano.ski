@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { isRecord } from "#/lib/guards.ts";
+
 import { normalizeHex, readPalette } from "./palette.ts";
 import { ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
 
@@ -30,15 +32,14 @@ function compare(file: string, key: string, declared: string | undefined, expect
 async function findManifestDrift(palette: Palette): Promise<Array<string>> {
   const manifest: unknown = JSON.parse(await readFile(join(ROOT_DIRECTORY, MANIFEST), "utf8"));
 
-  if (typeof manifest !== "object" || manifest === null) {
+  if (!isRecord(manifest)) {
     return [`${MANIFEST} is not an object`];
   }
 
-  const declarations = manifest as Record<string, unknown>;
   const expected = { theme_color: palette.wallpaperLight, background_color: palette.bootSequenceBackdropLight };
 
   return Object.entries(expected).flatMap(([key, color]) => {
-    const declared = declarations[key];
+    const declared = manifest[key];
     return compare(MANIFEST, `\`${key}\``, typeof declared === "string" ? declared : undefined, color);
   });
 }

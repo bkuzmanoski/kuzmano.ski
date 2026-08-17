@@ -69,7 +69,6 @@ export function insetToViewport(box: Rect, viewport: Size): Inset {
  */
 export function transformBetween(from: Rect, to: Rect): Transform {
   const scale = from.width === 0 ? 1 : to.width / from.width;
-
   return {
     scale,
     x: to.x - from.x * scale,

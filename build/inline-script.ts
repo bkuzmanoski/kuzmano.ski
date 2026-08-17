@@ -23,7 +23,6 @@ const MAX_BYTES = 1024;
  */
 export function inlineScriptPlugin(): Plugin {
   let parent: ResolvedConfig;
-
   return {
     name: "kuzmano.ski:inline-script",
     enforce: "pre",

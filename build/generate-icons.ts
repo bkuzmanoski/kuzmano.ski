@@ -5,15 +5,12 @@ import { join } from "node:path";
 
 import sharp from "sharp";
 
+import { FILLS, writeIconLock } from "./icon-lock.ts";
 import { readPalette } from "./palette.ts";
-import { ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
+import { ICON_ARTWORK, ICON_LOCK, PUBLIC_DIRECTORY, ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
 
-const ARTWORK = join(ROOT_DIRECTORY, "src/assets/images/logo.svg");
-const OUTPUT_DIRECTORY = join(ROOT_DIRECTORY, "public");
-
-const FAVICON_FILL = 0.9;
-const APP_ICON_FILL = 0.8;
-const MASKABLE_FILL = 0.6;
+const ARTWORK = join(ROOT_DIRECTORY, ICON_ARTWORK);
+const OUTPUT_DIRECTORY = join(ROOT_DIRECTORY, PUBLIC_DIRECTORY);
 
 const ICO_SIZES = [16, 32, 48];
 
@@ -45,7 +42,6 @@ async function readArtwork(): Promise<Artwork> {
   return { width, height, path };
 }
 
-/** A square canvas centred on the artwork, with the artwork filling `fill` of its width. */
 function canvas(artwork: Artwork, fill: number) {
   const size = artwork.width / fill;
   return {
@@ -107,35 +103,35 @@ async function main() {
     written.push(name);
   };
 
-  const { viewBox } = canvas(artwork, FAVICON_FILL);
+  const { viewBox } = canvas(artwork, FILLS.favicon);
   await write(
     "favicon.svg",
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">
-      <style>
-        path {
-          fill: ${palette.foregroundLight};
-        }
+  <style>
+    path {
+      fill: ${palette.foregroundLight};
+    }
 
-        @media (prefers-color-scheme: dark) {
-          path {
-            fill: ${palette.foregroundDark};
-          }
-        }
-      </style>
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="${artwork.path}"
-      />
-    </svg>`,
+    @media (prefers-color-scheme: dark) {
+      path {
+        fill: ${palette.foregroundDark};
+      }
+    }
+  </style>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="${artwork.path}"
+  />
+</svg>`,
   );
 
-  const glyph = buildSvg(artwork, FAVICON_FILL, { color: palette.foregroundLight });
-  const appIcon = buildSvg(artwork, APP_ICON_FILL, {
+  const glyph = buildSvg(artwork, FILLS.favicon, { color: palette.foregroundLight });
+  const appIcon = buildSvg(artwork, FILLS.appIcon, {
     color: palette.foregroundLight,
     background: palette.backgroundLight,
   });
-  const maskableIcon = buildSvg(artwork, MASKABLE_FILL, {
+  const maskableIcon = buildSvg(artwork, FILLS.maskable, {
     color: palette.foregroundLight,
     background: palette.backgroundLight,
   });
@@ -149,10 +145,13 @@ async function main() {
   await write("logo512.png", await rasterize(appIcon, 512));
   await write("logo-maskable-512.png", await rasterize(maskableIcon, 512));
 
+  await writeIconLock(written);
+
   console.log(`Palette resolved from ${STYLESHEET}:`);
   console.log(`  foreground: ${palette.foregroundLight} / ${palette.foregroundDark}`);
   console.log(`  background: ${palette.backgroundLight} / ${palette.backgroundDark}`);
-  console.log(`Wrote ${written.length} files to public/: ${written.join(", ")}`);
+  console.log(`Wrote ${written.length} files to ${PUBLIC_DIRECTORY}/: ${written.join(", ")}`);
+  console.log(`Recorded the inputs in ${ICON_LOCK}.`);
 }
 
 await main();

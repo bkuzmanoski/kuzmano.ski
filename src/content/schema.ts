@@ -1,4 +1,5 @@
 import { isIsoDate } from "#/lib/date";
+import { isRecord } from "#/lib/guards";
 
 export interface Frontmatter {
   title: string;
@@ -13,11 +14,11 @@ export interface Entry extends Frontmatter {
 }
 
 export function parseFrontmatter(input: unknown, path: string): Frontmatter {
-  if (typeof input !== "object" || input === null) {
+  if (!isRecord(input)) {
     throw new Error(`"${path}" is missing a frontmatter block.`);
   }
 
-  const { title, description, date, category, draft } = input as Record<string, unknown>;
+  const { title, description, date, category, draft } = input;
 
   if (typeof title !== "string" || title.length === 0) {
     throw new Error(`"${path}" is missing a title.`);
