@@ -124,11 +124,11 @@ describe("open", () => {
 
   test("a route that resolves to an existing window replaces what it shows in place", () => {
     const initialState = opened("collection", "entry");
-    const mutatedState = reducer(initialState, openAction("collection", "/design-notes/entry"));
+    const mutatedState = reducer(initialState, openAction("collection", "/tech-notes/entry"));
 
     expect(mutatedState.order).toEqual(["entry", "collection"]);
     expect(mutatedState.focused).toBe("collection");
-    expect(mutatedState.content.collection).toEqual({ route: "/design-notes/entry", title: "/design-notes/entry" });
+    expect(mutatedState.content.collection).toEqual({ route: "/tech-notes/entry", title: "/tech-notes/entry" });
     expect(mutatedState.geometry.collection).toEqual(initialState.geometry.collection);
   });
 

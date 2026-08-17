@@ -20,9 +20,15 @@ const playHover = vi.hoisted(() => vi.fn());
 const skipScrollAbove = vi.hoisted(() => vi.fn());
 const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
-const collection = collections["design-notes"]!;
+const collection = collections["tech-notes"]!;
 const entries = collection.list();
-const routeOf = (index: number) => `/design-notes/${entries[index]!.slug}`;
+const lastIndex = entries.length - 1;
+
+const routeOf = (index: number) => `/tech-notes/${entries[index]!.slug}`;
+
+if (entries.length < 2) {
+  throw new Error("This suite expects at least two `tech-notes` entries.");
+}
 
 beforeEach(() => {
   open.mockClear();
@@ -33,22 +39,20 @@ beforeEach(() => {
 });
 
 function renderList(activeSlug: string | null) {
-  render(<CollectionEntryList activeSlug={activeSlug} route="/design-notes" collection={collection} />);
+  render(<CollectionEntryList activeSlug={activeSlug} route="/tech-notes" collection={collection} />);
   return screen.getAllByRole("link");
 }
 
 test("a collection with no entries show an empty state", () => {
-  render(
-    <CollectionEntryList activeSlug={null} route="/design-notes" collection={{ ...collection, list: () => [] }} />,
-  );
+  render(<CollectionEntryList activeSlug={null} route="/tech-notes" collection={{ ...collection, list: () => [] }} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
   expect(screen.queryByRole("list")).toBeNull();
 });
 
 test("the list is a single tab stop, on the active entry", () => {
-  const links = renderList(entries[2]!.slug);
-  expect(links.filter((link) => link.tabIndex === 0)).toEqual([links[2]]);
+  const links = renderList(entries[lastIndex]!.slug);
+  expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
 test("the tab stop falls on the first entry when none is active", () => {
@@ -112,8 +116,8 @@ test("the scroll the focus causes is not sounded as travel", () => {
 test("the focus makes the entry it lands on the tab stop", () => {
   const links = renderList(entries[0]!.slug);
 
-  fireEvent.focus(links[3]!);
-  expect(links.filter((link) => link.tabIndex === 0)).toEqual([links[3]]);
+  fireEvent.focus(links.at(-1)!);
+  expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
 test("enter and space open the entry that holds the focus", () => {
@@ -122,8 +126,8 @@ test("enter and space open the entry that holds the focus", () => {
   fireEvent.keyDown(links[1]!, { key: "Enter" });
   expect(open).toHaveBeenLastCalledWith(routeOf(1));
 
-  fireEvent.keyDown(links[2]!, { key: " " });
-  expect(open).toHaveBeenLastCalledWith(routeOf(2));
+  fireEvent.keyDown(links.at(-1)!, { key: " " });
+  expect(open).toHaveBeenLastCalledWith(routeOf(lastIndex));
 });
 
 test("an entry sounds its press through both halves of a pointer press", () => {
