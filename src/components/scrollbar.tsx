@@ -1,8 +1,8 @@
-import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { playClick } from "#/lib/audio/ui";
+import { cx } from "#/lib/class-names";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { useTimer } from "#/lib/hooks/use-timer";
@@ -54,7 +54,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
   return (
     <button
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
-      className={clsx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
+      className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
       tabIndex={hidden ? -1 : undefined}
       type="button"
       onBlur={stop}
@@ -80,7 +80,7 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
       onPointerUp={stop}
     >
       <ScrollArrowIcon
-        className={clsx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)}
+        className={cx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)}
       />
     </button>
   );
@@ -135,7 +135,7 @@ export function Scrollbar({
   return (
     // The state is an attribute rather than a class so that the pane around it can
     // read it and hand the width back to its content (see `window.module.css`).
-    <div className={clsx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
+    <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
       <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
       <div
         ref={trackRef}
@@ -146,7 +146,7 @@ export function Scrollbar({
         aria-valuemin={0}
         aria-valuenow={scrolledPercent}
         aria-valuetext={`${scrolledPercent}% scrolled`}
-        className={clsx(styles.track, overflow && styles.filled)}
+        className={cx(styles.track, overflow && styles.filled)}
         role="scrollbar"
       >
         {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}

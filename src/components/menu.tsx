@@ -1,9 +1,9 @@
-import clsx from "clsx";
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
 import { playClick, playHover } from "#/lib/audio/ui";
+import { cx } from "#/lib/class-names";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos";
 import { cycle } from "#/lib/math";
@@ -228,7 +228,7 @@ export function Menu({
           <div
             key={index}
             aria-disabled={item.disabled || undefined}
-            className={clsx(
+            className={cx(
               styles.item,
               item.disabled && styles.disabled,
               flash.isHighlighted(index, focusedItemId === index) && styles.active,

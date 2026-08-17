@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useEffect, useId, useRef, useState } from "react";
 
 import ActiveIcon from "#/assets/images/window-control-active.svg?react";
@@ -7,6 +6,7 @@ import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
+import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
@@ -35,7 +35,7 @@ function TitleBarButton({
   const [isPressed, setIsPressed] = useState(false);
 
   return (
-    <Tooltip label={label} className={clsx(styles.control, className)}>
+    <Tooltip label={label} className={cx(styles.control, className)}>
       <button
         aria-label={label}
         className={styles.controlButton}
@@ -224,7 +224,7 @@ export function Window({
       <Tooltip label="Resize" suppressed={isResizing}>
         <button
           aria-label="Resize"
-          className={clsx(styles.controlResize, isResizing && styles.pressed)}
+          className={cx(styles.controlResize, isResizing && styles.pressed)}
           tabIndex={-1} // Drag handle is not keyboard accessible.
           type="button"
           {...resizeHandlers}
@@ -238,7 +238,7 @@ export function Window({
     <section
       ref={windowRef}
       aria-label={title}
-      className={clsx(
+      className={cx(
         styles.window,
         focused && styles.focused,
         maximized && styles.maximized,

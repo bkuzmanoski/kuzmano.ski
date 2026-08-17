@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
@@ -12,6 +11,7 @@ import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/ui";
 import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
+import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
@@ -164,7 +164,7 @@ export function MenuBar() {
   }
 
   return (
-    <div className={clsx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
+    <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <Tooltip label="About">
         <button
           aria-label={DESTINATIONS.about.title}
@@ -186,7 +186,7 @@ export function MenuBar() {
               }}
               aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
-              className={clsx(styles.title, openMenu?.label === label && styles.open)}
+              className={cx(styles.title, openMenu?.label === label && styles.open)}
               type="button"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
               onMouseDown={(event) => event.preventDefault()}

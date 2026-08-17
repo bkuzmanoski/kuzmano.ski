@@ -1,6 +1,5 @@
-import clsx from "clsx";
-
 import WatchIcon from "#/assets/images/spinner.svg?react";
+import { cx } from "#/lib/class-names";
 
 import styles from "./spinner.module.css";
 
@@ -21,7 +20,7 @@ export function Spinner({
 }) {
   return (
     <WatchIcon
-      className={clsx(styles.spinner, className, size === "small" && styles.small)}
+      className={cx(styles.spinner, className, size === "small" && styles.small)}
       role="status"
       aria-label={label}
     />

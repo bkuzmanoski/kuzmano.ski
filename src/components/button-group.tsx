@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cx } from "#/lib/class-names";
 
 import styles from "./button-group.module.css";
 
@@ -13,7 +13,7 @@ export function ButtonGroup({
   alignment?: "left" | "center" | "right";
 }) {
   return (
-    <div {...props} className={clsx(styles.buttonGroup, styles[alignment], className)}>
+    <div {...props} className={cx(styles.buttonGroup, styles[alignment], className)}>
       {children}
     </div>
   );

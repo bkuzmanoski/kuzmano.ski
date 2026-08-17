@@ -1,8 +1,7 @@
-import clsx from "clsx";
-
 import { EmptyState } from "#/components/empty-state";
 import type { Collection } from "#/content";
 import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/ui";
+import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { useWindowActions } from "#/lib/window-manager";
@@ -56,7 +55,7 @@ export function CollectionEntryList({
               {...scrollSafeClickSoundHandlers}
               aria-current={isActive || undefined}
               aria-label={entry.title}
-              className={clsx(styles.card, isActive && styles.active)}
+              className={cx(styles.card, isActive && styles.active)}
               href={`${route}/${entry.slug}`}
               onClick={(event) => {
                 event.preventDefault();

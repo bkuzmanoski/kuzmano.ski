@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
@@ -6,6 +5,7 @@ import { ICONS, ICON_IDS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPos
 import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
+import { cx } from "#/lib/class-names";
 import { downloadFile } from "#/lib/download";
 import type { Rect } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
@@ -156,7 +156,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   return (
     // The layer always renders so its ref exists for measurement.
-    <div ref={layerRef} className={clsx(styles.layer, isBootSequenceComplete && styles.ready)}>
+    <div ref={layerRef} className={cx(styles.layer, isBootSequenceComplete && styles.ready)}>
       {placements.map(({ id, iconDefinition, x, y }) => (
         <DesktopIcon
           key={id}

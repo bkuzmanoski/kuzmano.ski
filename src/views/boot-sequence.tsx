@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
@@ -35,6 +34,7 @@ import {
   stageMetricsFor,
 } from "#/lib/boot-sequence/stage";
 import type { StageMetrics } from "#/lib/boot-sequence/stage";
+import { cx } from "#/lib/class-names";
 import { noSubscribe } from "#/lib/emitter";
 import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Size, Transform } from "#/lib/geometry";
@@ -76,12 +76,12 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
 
   return (
     <div
-      className={clsx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
+      className={cx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
     >
       <DisplayBackdrop className={styles.displayBackdrop} />
       <div
-        className={clsx(
+        className={cx(
           styles.display,
           !isDisplayOn && styles.hidden,
           isWarmingUp && styles.warmingUp,
@@ -90,13 +90,13 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
         style={{ clipPath: screenClipPath }}
       >
         {isScreenContentVisible && (
-          <div className={clsx(styles.screen, isGlassHidden && styles.leaving)}>
+          <div className={cx(styles.screen, isGlassHidden && styles.leaving)}>
             <LogoIcon className={styles.logo} />
           </div>
         )}
       </div>
       <DisplayGlassLayer
-        className={clsx(
+        className={cx(
           styles.glassOverlay,
           isPreparingToLeave && styles.preparingToLeave,
           isGlassHidden && styles.leaving,
@@ -228,7 +228,7 @@ function Sequence() {
   return (
     <div className={styles.container} style={containerStyle}>
       <div
-        className={clsx(
+        className={cx(
           styles.stage,
           hasZoom && isZoomedOut && styles.zoomedOut,
           hasZoom && isPreparingToZoom && styles.preparingToZoom,
@@ -237,7 +237,7 @@ function Sequence() {
       >
         <Display metrics={metrics} phase={phase} />
         <div
-          className={clsx(
+          className={cx(
             styles.illustration,
             isLoadingCoverUp && styles.hidden,
             isPreparingToLeave && styles.preparingToLeave,
@@ -248,7 +248,7 @@ function Sequence() {
           <div className={styles.spotlight} />
           <div className={styles.illustrationBody}>
             <DiskActivityIndicator
-              className={clsx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
+              className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
               style={{
                 left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
                 top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
@@ -263,8 +263,8 @@ function Sequence() {
           </div>
         </div>
       </div>
-      <div className={clsx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
-      <div className={clsx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
+      <div className={cx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
+      <div className={cx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
         {coverContent === "spinner" ? (
           <Spinner className={styles.spinner} />
         ) : (

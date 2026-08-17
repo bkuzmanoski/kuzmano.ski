@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useRef } from "react";
 
 import AppSelectedIcon from "#/assets/images/application-selected.svg?react";
@@ -11,6 +10,7 @@ import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
 import { playClick } from "#/lib/audio/ui";
+import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { Icon, IconKind } from "#/lib/icons/icon";
@@ -118,7 +118,7 @@ export function DesktopIcon({
       {...mergeHandlers(dragHandlers, pressHandlers)}
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
-      <span className={clsx(styles.label, selected && styles.selected)}>
+      <span className={cx(styles.label, selected && styles.selected)}>
         {iconDefinition.label}
         {iconDefinition.kind === "download" && <DownloadIcon className={styles.downloadIcon} />}
       </span>

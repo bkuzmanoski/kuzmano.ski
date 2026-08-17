@@ -1,6 +1,6 @@
-import clsx from "clsx";
 import { cloneElement, isValidElement, useId, useState } from "react";
 
+import { cx } from "#/lib/class-names";
 import { useTimer } from "#/lib/hooks/use-timer";
 
 import styles from "./tooltip.module.css";
@@ -66,7 +66,7 @@ export function Tooltip({
 
   return (
     <span
-      className={clsx(styles.wrapper, className)}
+      className={cx(styles.wrapper, className)}
       onFocusCapture={(event) => {
         if (event.target.matches(":focus-visible")) {
           show(0);

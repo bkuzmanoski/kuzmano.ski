@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useEffect, useState } from "react";
 
 import OrganizeIcon from "#/assets/images/organize-windows.svg?react";
@@ -7,6 +6,7 @@ import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
 import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
 import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
 import { playClick } from "#/lib/audio/ui";
+import { cx } from "#/lib/class-names";
 import { cycle } from "#/lib/math";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
@@ -34,7 +34,7 @@ function StatusButton({
     <Tooltip label={label} persistOnPress={persistTooltipOnPress}>
       <button
         aria-label={label}
-        className={clsx(styles.control, className)}
+        className={cx(styles.control, className)}
         type="button"
         onClick={onClick}
         onPointerDown={playClick}
@@ -133,7 +133,7 @@ export function TimeStatus() {
 
   return (
     <Tooltip label="Sydney, Australia">
-      <time className={clsx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
+      <time className={cx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
     </Tooltip>
   );
 }
