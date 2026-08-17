@@ -64,6 +64,17 @@
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `build/svgr.ts`). */
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
+  --color-syntax-foreground: var(--color-foreground);
+  --color-syntax-background: var(--color-background);
+  --color-syntax-comment: light-dark(#8e8e8e, #6e6e6e);
+  --color-syntax-keyword: light-dark(#9f5090, #cf86c1);
+  --color-syntax-function: var(--color-accent);
+  --color-syntax-property: light-dark(#6a519e, #9d86ce);
+  --color-syntax-type: light-dark(#417b81, #65b8c1);
+  --color-syntax-constant: light-dark(#9f5a38, #d68c67);
+  --color-syntax-string: light-dark(#446f53, #64b280);
+  --color-syntax-punctuation: var(--color-foreground-secondary);
+  --color-syntax-invalid: light-dark(#b03645, #de6e7c);
 
   /* Shadows */
   --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
