@@ -34,12 +34,7 @@
   height: 100%;
   padding: 0 var(--gutter);
 
-  &:active {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight-background);
-  }
-
-  & .logoIcon {
+  & svg {
     width: 19px;
     height: 19px;
   }

@@ -4,7 +4,6 @@ import LogoIcon from "#/assets/images/logo.svg?react";
 import { Menu } from "#/components/menu";
 import type { MenuItem } from "#/components/menu";
 import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "#/components/status-item";
-import { Tooltip } from "#/components/tooltip";
 import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
@@ -165,18 +164,9 @@ export function MenuBar() {
 
   return (
     <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
-      <Tooltip label="About">
-        <button
-          aria-label={DESTINATIONS.about.title}
-          className={styles.logo}
-          type="button"
-          onClick={() => open(DESTINATIONS.about.route)}
-          onPointerDown={playClick}
-        >
-          <LogoIcon className={styles.logoIcon} />
-        </button>
-      </Tooltip>
-
+      <div className={styles.logo}>
+        <LogoIcon className={styles.logoIcon} />
+      </div>
       <nav className={styles.menus} aria-label="Main menu">
         {menus.map(({ label, items }) => (
           <div key={label} className={styles.item}>
