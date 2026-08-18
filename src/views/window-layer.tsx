@@ -1,9 +1,9 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
 import { LAYOUT } from "#/config/windows";
 import type { Rect } from "#/lib/geometry";
-import { useElementSize } from "#/lib/hooks/use-element-size";
+import { useElementResize } from "#/lib/hooks/use-element-size";
 import {
   WINDOW_DOM_ORDER,
   createWindowPlacer,
@@ -95,7 +95,10 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const focusedWindow = useFocusedWindow();
   const { focusDesktop, measure } = useWindowActions();
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const measuredSurface = useElementSize(surfaceRef);
+
+  // The surface size lives in the window state, so it is reported straight there
+  // rather than being held here and forwarded by an effect a render later.
+  useElementResize(surfaceRef, measure);
 
   const isUnplaced = isUnmeasured(surface);
 
@@ -103,10 +106,6 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   // the visibility of that window is suppressed until the outline has landed on it.
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
   const zoomTarget = zoomRect ? geometry[zoomRect.windowId] : undefined;
-
-  useEffect(() => {
-    measure(measuredSurface);
-  }, [measure, measuredSurface]);
 
   return (
     <div

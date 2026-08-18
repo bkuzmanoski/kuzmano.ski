@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { useElementSize } from "./use-element-size";
-
 import type { RefObject } from "react";
 
 export interface ScrollMetrics {
@@ -13,7 +11,6 @@ export interface ScrollMetrics {
 /** Tracks an element's scrollable height and scroll position. */
 export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
   const [metrics, setMetrics] = useState<ScrollMetrics>({ top: 0, scrollHeight: 0, clientHeight: 0 });
-  const size = useElementSize(ref);
 
   const measure = useCallback(() => {
     const element = ref.current;
@@ -32,13 +29,15 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
   }, [ref]);
 
   useEffect(() => {
-    measure();
-  }, [size, measure]);
-
-  useEffect(() => {
     const element = ref.current;
 
-    if (!element || typeof ResizeObserver === "undefined") {
+    if (!element) {
+      return;
+    }
+
+    measure();
+
+    if (typeof ResizeObserver === "undefined") {
       return;
     }
 
@@ -59,6 +58,7 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
       }
     };
 
+    resizeObserver.observe(element);
     observeChildren();
 
     let mutationObserver: MutationObserver | undefined;
