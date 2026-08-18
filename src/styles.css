@@ -45,7 +45,6 @@
   --color-foreground-secondary: light-dark(#6e6e6e, #8e8e8e);
   --color-foreground-disabled: light-dark(#8a8a8a, #858585);
   --color-background: light-dark(#fcfcfc, #292929);
-  --color-background-elevated: light-dark(#fcfcfc, #3a3a3a);
   --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
   --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
   --color-highlight-foreground: var(--color-background);

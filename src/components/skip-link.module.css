@@ -13,8 +13,6 @@
   color: var(--color-foreground);
   text-decoration: none;
 
-  background: var(--color-background-elevated);
-
   &:focus {
     transform: translate(
       calc(var(--safe-area-left) + var(--gutter)),

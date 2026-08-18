@@ -44,8 +44,6 @@
   color: var(--color-foreground);
   white-space: nowrap;
 
-  background: var(--color-background-elevated);
-
   @supports not (anchor-name: --tooltip) {
     position: absolute;
     top: calc(100% + var(--tooltip-margin));

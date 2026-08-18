@@ -19,8 +19,6 @@
   }
 
   & .glyph {
-    --color-icon-background: var(--color-background-elevated);
-
     width: auto;
     height: 40px;
   }
@@ -35,7 +33,7 @@
     font: var(--font-ui);
     white-space: nowrap;
 
-    background: var(--color-background-elevated);
+    background: var(--color-icon-background);
 
     &.selected {
       color: var(--color-highlight-foreground);
