@@ -23,16 +23,16 @@ export function RootDocument({ children }: { children: ReactNode }) {
           data-boot-sequence-theme-color
           name="theme-color"
           media="(prefers-color-scheme: light)"
-          content="#353535"
+          content="#2e363c"
         />
         <meta
           data-boot-sequence-theme-color
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="#292929"
+          content="#242a2e"
         />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e6e6e6" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#191919" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e2e7ea" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161a1d" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: bootSequenceOverlayScript }} />
       </head>

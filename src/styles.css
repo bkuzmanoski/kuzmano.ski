@@ -41,17 +41,17 @@
 
   /* Colors */
   --color-accent: light-dark(#3378a3, #61abda);
-  --color-foreground: light-dark(#353535, #e7e7e7);
-  --color-foreground-secondary: light-dark(#6e6e6e, #8e8e8e);
-  --color-foreground-disabled: light-dark(#8a8a8a, #858585);
-  --color-background: light-dark(#fcfcfc, #292929);
+  --color-foreground: light-dark(#2e363c, #e3e8eb);
+  --color-foreground-secondary: light-dark(#637079, #839099);
+  --color-foreground-disabled: light-dark(#818c93, #7a8790);
+  --color-background: light-dark(#fcfcfd, #242a2e);
   --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
   --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
   --color-highlight-foreground: var(--color-background);
-  --color-highlight-background: light-dark(var(--color-foreground), #bbb);
-  --color-border: #6e6e6e;
+  --color-highlight-background: light-dark(var(--color-foreground), #b4bbc2);
+  --color-border: #637079;
   --color-border-inactive: color-mix(in srgb, var(--color-background) var(--color-dim-strength), var(--color-border));
-  --color-wallpaper: light-dark(#e6e6e6, #191919);
+  --color-wallpaper: light-dark(#e2e7ea, #161a1d);
   --color-shadow: light-dark(
     /* In light mode 13% opacity over `--color-wallpaper` equals `--color-border-inactive` given `--color-dim-strength`.  */
     rgb(0 0 0 / 13%),
@@ -65,7 +65,7 @@
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-background: var(--color-background);
-  --color-syntax-comment: light-dark(#8e8e8e, #6e6e6e);
+  --color-syntax-comment: light-dark(#839099, #637079);
   --color-syntax-keyword: light-dark(#9f5090, #cf86c1);
   --color-syntax-function: var(--color-accent);
   --color-syntax-property: light-dark(#6a519e, #9d86ce);

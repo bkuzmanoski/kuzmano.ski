@@ -20,23 +20,23 @@ function setThemeColorMetaTags() {
   bootLight.dataset.bootSequenceThemeColor = "";
   bootLight.name = "theme-color";
   bootLight.media = "(prefers-color-scheme: light)";
-  bootLight.content = "#353535";
+  bootLight.content = "#2e363c";
 
   const bootDark = document.createElement("meta");
   bootDark.dataset.bootSequenceThemeColor = "";
   bootDark.name = "theme-color";
   bootDark.media = "(prefers-color-scheme: dark)";
-  bootDark.content = "#292929";
+  bootDark.content = "#242a2e";
 
   const light = document.createElement("meta");
   light.name = "theme-color";
   light.media = "(prefers-color-scheme: light)";
-  light.content = "#e6e6e6";
+  light.content = "#e2e7ea";
 
   const dark = document.createElement("meta");
   dark.name = "theme-color";
   dark.media = "(prefers-color-scheme: dark)";
-  dark.content = "#191919";
+  dark.content = "#161a1d";
 
   document.head.append(bootLight, bootDark, light, dark);
 }
