@@ -248,6 +248,7 @@ export function Window({
       )}
       style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }} // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
+      data-maximized={maximized || undefined}
       onFocus={onFocus}
       onPointerDownCapture={onFocus}
     >
