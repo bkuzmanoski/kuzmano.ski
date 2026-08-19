@@ -1,8 +1,9 @@
-import { memo, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
 import { LAYOUT } from "#/config/windows";
 import type { Rect } from "#/lib/geometry";
+import { DismissContext } from "#/lib/hooks/use-dismiss-window";
 import { useElementResize } from "#/lib/hooks/use-element-size";
 import {
   WINDOW_DOM_ORDER,
@@ -56,6 +57,7 @@ const DesktopWindow = memo(function OpenWindow({
   unplaced: boolean;
 }) {
   const { close, focus, move, resize, toggleZoom } = useWindowActions();
+  const dismiss = useCallback(() => close(id), [close, id]);
   const { fixedSize } = LAYOUT.windows[id];
 
   return (
@@ -71,13 +73,15 @@ const DesktopWindow = memo(function OpenWindow({
       maximized={maximized}
       hidden={hidden}
       unplaced={unplaced}
-      onClose={() => close(id)}
+      onClose={dismiss}
       onZoom={fixedSize ? null : () => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
     >
-      <WindowBody route={route} />
+      <DismissContext value={dismiss}>
+        <WindowBody route={route} />
+      </DismissContext>
     </Window>
   );
 });

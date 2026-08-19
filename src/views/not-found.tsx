@@ -1,14 +1,10 @@
-import { documentTitle } from "#/config/site";
-import { NOT_FOUND_TITLE } from "#/content/window-registry";
+import { NOT_FOUND_TITLE, documentTitle } from "#/config/site";
+
+import { DialogBody } from "./dialog-body";
 
 /** The body of the not-found window. */
 export function NotFoundBody() {
-  return (
-    <article>
-      <h1>{NOT_FOUND_TITLE}</h1>
-      <p>This page doesn&rsquo;t exist.</p>
-    </article>
-  );
+  return <DialogBody message="This page doesn’t exist." />;
 }
 
 /**

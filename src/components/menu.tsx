@@ -12,9 +12,9 @@ import styles from "./menu.module.css";
 
 import type { KeyboardEvent } from "react";
 
-const CHAR_OPTION_KEY = "\u2325";
+const CHAR_OPTION_KEY = "⌥";
 const CHAR_NBSP = "\u00A0";
-const NARROW_NBSP = "\u202F";
+const CHAR_NARROW_NBSP = "\u202F";
 
 export type MenuItem =
   | {
@@ -257,7 +257,7 @@ function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
           {CHAR_NBSP}
         </>
       ) : (
-        `Alt${NARROW_NBSP}+${NARROW_NBSP}`
+        `Alt${CHAR_NARROW_NBSP}+${CHAR_NARROW_NBSP}`
       )}
       {label}
     </span>

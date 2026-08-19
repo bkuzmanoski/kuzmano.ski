@@ -40,23 +40,23 @@ describe("mergeHandlers", () => {
   });
 
   test("passes the event to every handler", () => {
-    const first = vi.fn();
-    const second = vi.fn();
+    const firstHandler = vi.fn();
+    const secondHandler = vi.fn();
 
-    mergeHandlers({ onPointerUp: first }, { onPointerUp: second }).onPointerUp(event);
+    mergeHandlers({ onPointerUp: firstHandler }, { onPointerUp: secondHandler }).onPointerUp(event);
 
-    expect(first).toHaveBeenCalledWith(event);
-    expect(second).toHaveBeenCalledWith(event);
+    expect(firstHandler).toHaveBeenCalledWith(event);
+    expect(secondHandler).toHaveBeenCalledWith(event);
   });
 
   test("tolerates an empty bag on either side", () => {
-    const first = vi.fn();
-    const second = vi.fn();
+    const firstHandler = vi.fn();
+    const secondHandler = vi.fn();
 
-    mergeHandlers({ onPointerUp: first }, {}).onPointerUp(event);
-    mergeHandlers({}, { onPointerUp: second }).onPointerUp(event);
+    mergeHandlers({ onPointerUp: firstHandler }, {}).onPointerUp(event);
+    mergeHandlers({}, { onPointerUp: secondHandler }).onPointerUp(event);
 
-    expect(first).toHaveBeenCalledTimes(1);
-    expect(second).toHaveBeenCalledTimes(1);
+    expect(firstHandler).toHaveBeenCalledTimes(1);
+    expect(secondHandler).toHaveBeenCalledTimes(1);
   });
 });
