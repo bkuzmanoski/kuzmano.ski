@@ -27,7 +27,7 @@
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx,css,json,md}": [
+    "*.{ts,tsx,css,json,md,mdx}": [
       "prettier --write"
     ],
     "*.{ts,tsx}": [
@@ -36,7 +36,7 @@
     "*.css": [
       "stylelint --fix"
     ],
-    "*.md": [
+    "*.{md,mdx}": [
       "markdownlint-cli2 --fix"
     ]
   },
