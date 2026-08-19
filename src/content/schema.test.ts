@@ -45,8 +45,26 @@ describe("parseFrontmatter", () => {
     );
   });
 
+  test("accepts an ISO calendar date", () => {
+    expect(parseFrontmatter({ ...VALID_FRONTMATTER, date: "2028-02-29" }, "test-path").date).toBe("2028-02-29");
+  });
+
   test("rejects a date that is not ISO", () => {
-    expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, date: "last tuesday" }, "test-path")).toThrow(/ISO date/);
+    for (const date of ["last tuesday", "2026/08/19", "Aug 19 2026", "08/19/2026", "2026-8-9"]) {
+      expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, date }, "test-path")).toThrow(/ISO date/);
+    }
+  });
+
+  test("rejects a date that does not exist on the calendar", () => {
+    for (const date of ["2026-02-30", "2026-13-01", "2026-00-10"]) {
+      expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, date }, "test-path")).toThrow(/ISO date/);
+    }
+  });
+
+  test("rejects a date carrying a time component", () => {
+    expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, date: "2026-08-19T10:00:00Z" }, "test-path")).toThrow(
+      /ISO date/,
+    );
   });
 
   test("names the entry in the message", () => {
