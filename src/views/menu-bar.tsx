@@ -19,6 +19,11 @@ import styles from "./menu-bar.module.css";
 
 import type { KeyboardEvent, PointerEvent } from "react";
 
+const destinationShortcut = (id: DestinationId) => {
+  const number = DESTINATION_ORDER.indexOf(id) + 1;
+  return { code: `Digit${number}`, label: String(number) };
+};
+
 export function MenuBar() {
   const { open, close } = useWindowActions();
   const focusedWindow = useFocusedWindow();
@@ -28,11 +33,6 @@ export function MenuBar() {
   const titles = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const hasWindow = focusedWindow !== null;
-
-  const destinationShortcut = (id: DestinationId) => {
-    const number = DESTINATION_ORDER.indexOf(id) + 1;
-    return { code: `Digit${number}`, label: String(number) };
-  };
 
   const closeWindow = () => focusedWindow && close(focusedWindow);
 
@@ -58,6 +58,7 @@ export function MenuBar() {
             kind: "action",
             label: DESTINATIONS[id].title,
             shortcut: destinationShortcut(id),
+            href: DESTINATIONS[id].route,
             action: () => open(DESTINATIONS[id].route),
           })),
         ]),
@@ -66,12 +67,7 @@ export function MenuBar() {
     {
       label: "Special",
       items: [
-        {
-          kind: "action",
-          label: "View Source",
-          accessory: "external-link",
-          action: () => window.open(SITE_SOURCE_URL, "_blank"),
-        },
+        { kind: "action", label: "View Source", accessory: "external-link", href: SITE_SOURCE_URL, target: "_blank" },
         { kind: "separator" },
         { kind: "action", label: "Restart", action: restart },
       ],

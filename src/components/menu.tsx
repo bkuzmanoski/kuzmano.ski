@@ -6,30 +6,50 @@ import { playClick, playHover } from "#/lib/audio/ui";
 import { cx } from "#/lib/class-names";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos";
+import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link";
 import { cycle } from "#/lib/math";
 
 import styles from "./menu.module.css";
 
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 
 const CHAR_OPTION_KEY = "⌥";
 const CHAR_NBSP = "\u00A0";
 const CHAR_NARROW_NBSP = "\u202F";
 
 export type MenuItem =
-  | {
+  | ({
       kind: "action";
       label: string;
       shortcut?: { code: string; label: string };
       accessory?: MenuItemAccessory;
-      disabled?: boolean;
-      action: () => void;
-    }
+    } & (
+      | { href?: undefined; target?: undefined; disabled?: boolean; action: () => void }
+      | { href: string; target?: "_blank"; disabled?: undefined; action?: () => void }
+    ))
   | { kind: "separator" };
 
 type MenuItemAccessory = "download" | "external-link";
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
+const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
+
+// The index of the item under a point, or -1 if the point is not over one.
+function indexAt(x: number, y: number): number {
+  const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
+  return element ? Number(element.dataset.index) : -1;
+}
+
+// Items activate from the document-level `pointerup` handler in `Menu`: `select` waits for the
+// activation flash effect to finish, then runs the action or follows the link. A plain click is
+// suppressed here so the anchor cannot navigate before that.
+//
+// A modified or non-primary click is left to the browser.
+function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
+  if (!isFollowingLink(event.currentTarget) && !isBrowserHandledClick(event)) {
+    event.preventDefault();
+  }
+}
 
 function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
   return (
@@ -68,31 +88,6 @@ export function Menu({
   const isStickyRef = useRef(!isPointerHeld);
   const focusedItemRef = useRef(-1);
 
-  // A plain function, not an Effect Event as the keyboard path calls it straight
-  // from `onKeyDown`. The pointer handlers below are Effect Events, so they
-  // always close over the latest render's copy of this.
-  function select(index: number) {
-    const item = items[index];
-
-    if (item?.kind !== "action" || item.disabled || flash.isRunning()) {
-      return;
-    }
-
-    focusedItemRef.current = index;
-    setFocusedItemId(index);
-    playClick();
-
-    flash.start(index, () => {
-      item.action();
-      onClose();
-    });
-  }
-
-  function indexAt(x: number, y: number): number {
-    const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
-    return element ? Number(element.dataset.index) : -1;
-  }
-
   function focusItem(index: number) {
     if (index === focusedItemRef.current) {
       return;
@@ -120,6 +115,31 @@ export function Menu({
     }
   }
 
+  // A plain function, not an Effect Event as the keyboard path calls it straight
+  // from `onKeyDown`. The pointer handlers below are Effect Events, so they
+  // always close over the latest render's copy of this.
+  function select(index: number) {
+    const item = items[index];
+
+    if (item?.kind !== "action" || item.disabled || flash.isRunning()) {
+      return;
+    }
+
+    focusedItemRef.current = index;
+    setFocusedItemId(index);
+    playClick();
+
+    flash.start(index, () => {
+      if (item.action) {
+        item.action();
+      } else {
+        followLink(menuRef.current?.querySelector<HTMLAnchorElement>(`a[data-index="${index}"]`));
+      }
+
+      onClose();
+    });
+  }
+
   const onPointerMove = useEffectEvent((event: PointerEvent) => {
     if (flash.isRunning()) {
       return;
@@ -132,21 +152,18 @@ export function Menu({
 
   const onPointerUp = useEffectEvent((event: PointerEvent) => {
     const index = indexAt(event.clientX, event.clientY);
+    const wasSticky = isStickyRef.current;
 
-    if (!isStickyRef.current) {
-      isStickyRef.current = true;
-
-      if (index >= 0) {
-        select(index);
-      } else if (!anchor?.contains(event.target as Node)) {
-        onClose();
-      }
-
-      return;
-    }
+    isStickyRef.current = true;
 
     if (index >= 0) {
+      if (isLink(items[index]) && isBrowserHandledClick(event)) {
+        return; // A release the browser will act on itself is the anchor's, not the menu's.
+      }
+
       select(index);
+    } else if (!wasSticky && !anchor?.contains(event.target as Node)) {
+      onClose();
     }
   });
 
@@ -237,29 +254,50 @@ export function Menu({
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
-      {items.map((item, index) =>
-        item.kind === "separator" ? (
-          <div key={index} className={styles.separator} role="separator" />
-        ) : (
-          <div
-            key={index}
-            aria-disabled={item.disabled || undefined}
-            className={cx(
-              styles.item,
-              item.disabled && styles.disabled,
-              flash.isHighlighted(index, focusedItemId === index) && styles.active,
-            )}
-            data-index={index}
-            id={`${itemIdPrefix}-${index}`}
-            role="menuitem"
-          >
+      {items.map((item, index) => {
+        if (item.kind === "separator") {
+          return <div key={index} className={styles.separator} role="separator" />;
+        }
+
+        const itemProps = {
+          "aria-disabled": item.disabled || undefined,
+          className: cx(
+            styles.item,
+            item.disabled && styles.disabled,
+            flash.isHighlighted(index, focusedItemId === index) && styles.active,
+          ),
+          "data-index": index,
+          id: `${itemIdPrefix}-${index}`,
+          role: "menuitem" as const,
+        };
+        const content = (
+          <>
             <span>{item.label}</span>
             {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
             {item.accessory === "download" && <DownloadIcon className={styles.accessory} />}
             {item.accessory === "external-link" && <ExternalLinkIcon className={styles.accessory} />}
+          </>
+        );
+
+        return item.href === undefined ? (
+          <div key={index} {...itemProps}>
+            {content}
           </div>
-        ),
-      )}
+        ) : (
+          <a
+            key={index}
+            {...itemProps}
+            draggable={false}
+            href={item.href}
+            rel={item.target && "noreferrer"}
+            tabIndex={-1}
+            target={item.target}
+            onClick={onItemClick}
+          >
+            {content}
+          </a>
+        );
+      })}
     </div>
   );
 }

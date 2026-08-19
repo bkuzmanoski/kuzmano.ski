@@ -13,12 +13,14 @@ import { playClick } from "#/lib/audio/ui";
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { iconHref } from "#/lib/icons/icon";
 import type { Icon, IconKind } from "#/lib/icons/icon";
+import { isBrowserHandledClick, isFollowingLink, isRepeatClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
 
 import styles from "./desktop-icon.module.css";
 
-import type { ComponentType, KeyboardEvent, Ref } from "react";
+import type { ComponentType, KeyboardEvent, MouseEvent, Ref } from "react";
 
 type GlyphIcon = ComponentType<{ className?: string }>;
 
@@ -62,7 +64,7 @@ export function DesktopIcon({
   onKeyDown,
 }: {
   iconDefinition: Icon;
-  ref: Ref<HTMLDivElement>;
+  ref: Ref<HTMLAnchorElement>;
   x: number;
   y: number;
   cellSize: number;
@@ -77,8 +79,8 @@ export function DesktopIcon({
 }) {
   const hasMovedRef = useRef(false);
   const pressHandlers = useDoublePress({
-    onDoublePress: () => {
-      if (!hasMovedRef.current) {
+    onDoublePress: (event) => {
+      if (!hasMovedRef.current && !isBrowserHandledClick(event)) {
         onOpen();
       }
     },
@@ -104,15 +106,29 @@ export function DesktopIcon({
     },
   });
 
+  function onClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (isFollowingLink(event.currentTarget)) {
+      return;
+    }
+
+    if (hasMovedRef.current || isRepeatClick(event) || !isBrowserHandledClick(event)) {
+      event.preventDefault();
+    }
+  }
+
   return (
-    <div
+    <a
       ref={ref}
       aria-label={iconDefinition.label}
       className={styles.icon}
       data-icon={iconDefinition.id}
-      role="button"
+      download={iconDefinition.kind === "download" || undefined}
+      draggable={false}
+      href={iconHref(iconDefinition)}
       style={{ left: x, top: y, width: cellSize }}
       tabIndex={tabIndex}
+      onClick={onClick}
+      onDragStart={(event) => event.preventDefault()}
       onFocus={onSelect}
       onKeyDown={onKeyDown}
       {...mergeHandlers(dragHandlers, pressHandlers)}
@@ -122,6 +138,6 @@ export function DesktopIcon({
         {iconDefinition.label}
         {iconDefinition.kind === "download" && <DownloadIcon className={styles.downloadIcon} />}
       </span>
-    </div>
+    </a>
   );
 }

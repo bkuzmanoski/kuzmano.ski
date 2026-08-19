@@ -36,6 +36,8 @@
 
   background: transparent;
 
+  -webkit-touch-callout: none;
+
   &.active {
     color: var(--color-highlight-foreground);
     background: var(--color-highlight-background);

@@ -136,7 +136,7 @@ p {
   margin: 0;
 }
 
-:where(a, button, div[role="button"]) {
+:where(a, button) {
   padding: 0;
   border: 0;
 

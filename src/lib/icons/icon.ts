@@ -8,6 +8,8 @@ export type Icon = { id: string; label: string } & (
   { kind: "entry" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
 );
 
+export const iconHref = (icon: Icon) => (icon.kind === "download" ? icon.downloadUrl : icon.route);
+
 /** Anchored to the right edge so it adapts to the width of the desktop. */
 export interface IconPosition {
   top: number;

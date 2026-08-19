@@ -1,6 +1,6 @@
 .menuBar {
   /* The drag captures the pointer, so the browser must not claim the gesture for
-   * panning and cancel it. Set on the bar so it also covers the menus inside it. */
+   * panning and cancel it. Set on the menu bar so it covers the menus inside it. */
   touch-action: none;
 
   transform: translateY(-100%);

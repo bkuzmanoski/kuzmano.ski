@@ -63,7 +63,7 @@ function primeAudioOnKeyDown(event: KeyboardEvent): void {
 
 // Every call issues a fresh `resume()`. Concurrent calls are safe—they all settle
 // when the context transitions—while a resume issued from a moment iOS does not
-// honor (e.g. the touchstart phase of a tap) can stay pending forever. Deduping on
+// honor (e.g., the touchstart phase of a tap) can stay pending forever. Deduping on
 // such a promise would swallow the resume from the next, valid gesture and leave
 // audio dead for the session.
 function ensureResumed(context: AudioContext): void {
@@ -154,7 +154,7 @@ export function useAudioUnlock() {
 
 /**
  * If the context is already running (once `primeAudio` has fired once this
- * session) this is synchronous. If it isn't—e.g. this is the very first
+ * session) this is synchronous. If it isn't—e.g., this is the very first
  * interaction—it resumes inline, which only works if this call is inside a
  * trusted user gesture, and plays once the context actually comes up.
  */

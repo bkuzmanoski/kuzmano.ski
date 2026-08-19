@@ -1,5 +1,6 @@
 .icon {
   pointer-events: auto;
+  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
   cursor: default;
   user-select: none;
 
@@ -12,6 +13,8 @@
 
   color: var(--color-highlight-background);
   text-align: center;
+
+  -webkit-touch-callout: none;
 
   & .glyph,
   & .label {

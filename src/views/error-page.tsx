@@ -32,7 +32,7 @@ export function ErrorPage({ error }: ErrorComponentProps) {
       const queued = navigator.sendBeacon("/api/client-errors", blob);
 
       if (!queued) {
-        // Fallback to fetch if sendBeacon fails, e.g. due to size limits.
+        // Fallback to fetch if sendBeacon fails (e.g., due to size limits).
         fetch("/api/client-errors", {
           method: "POST",
           headers: { "content-type": "application/json" },

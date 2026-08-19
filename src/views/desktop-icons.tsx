@@ -6,7 +6,6 @@ import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/ui";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
-import { downloadFile } from "#/lib/download";
 import type { Rect } from "#/lib/geometry";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useElementSize } from "#/lib/hooks/use-element-size";
@@ -15,6 +14,7 @@ import { positionFromDrop, resolveIconPlacements } from "#/lib/icons/layout";
 import { adjacentIconId } from "#/lib/icons/navigation";
 import { isArrowKey } from "#/lib/keys";
 import type { ArrowKey } from "#/lib/keys";
+import { followLink } from "#/lib/link";
 import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager";
 import type { WindowId } from "#/lib/window-manager";
 
@@ -34,7 +34,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
-  const iconsRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const iconsRef = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   // Only a press on the empty desktop clears the selection. A press on a window or on
   // the menu bar leaves it standing. The desktop stops showing a selection when it does
@@ -89,7 +89,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     flash.start(iconDefinition.id);
 
     if (iconDefinition.kind === "download") {
-      downloadFile(iconDefinition.downloadUrl);
+      followLink(iconsRef.current[iconDefinition.id]);
       return;
     }
 

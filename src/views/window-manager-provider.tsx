@@ -124,7 +124,7 @@ export function WindowManagerProvider({
   }, [pathname]);
 
   // A first visit to the bare desktop opens the default window. A later
-  // return to "/" (e.g. via a click on the desktop) does not reopen it.
+  // return to "/" (e.g., via a click on the desktop) does not reopen it.
   const openInitialWindow = useEffectEvent(() => {
     if (initialRoute && pathname === "/") {
       actions.open(initialRoute, { replaceUrl: true });
