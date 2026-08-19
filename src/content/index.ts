@@ -1,5 +1,4 @@
-import { PAGES_DIRECTORY } from "#/config/content";
-import { COLLECTION_TITLES } from "#/config/navigation";
+import { COLLECTIONS, PAGES_DIRECTORY } from "#/config/content";
 
 import { parseFrontmatter } from "./schema";
 
@@ -20,6 +19,7 @@ export interface ContentIndex {
 /** A content index that enumerates what it holds, most recent first. */
 export interface Collection extends ContentIndex {
   title: string;
+  description: string;
   list: () => Array<Entry>;
 }
 
@@ -87,7 +87,7 @@ function contentIndex(directory: string): { index: ContentIndex; paths: Map<stri
   };
 }
 
-function collection(directory: string, title: string): Collection {
+function collection(directory: string, title: string, description: string): Collection {
   const { paths, index } = contentIndex(directory);
 
   let entries: Array<Entry> | null = null;
@@ -95,6 +95,7 @@ function collection(directory: string, title: string): Collection {
   return {
     ...index,
     title,
+    description,
     list() {
       entries ??= [...paths]
         .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))
@@ -107,7 +108,10 @@ function collection(directory: string, title: string): Collection {
 }
 
 export const collections: Record<string, Collection> = Object.fromEntries(
-  Object.entries(COLLECTION_TITLES).map(([segment, title]) => [segment, collection(segment, title)]),
+  Object.entries(COLLECTIONS).map(([segment, { title, description }]) => [
+    segment,
+    collection(segment, title, description),
+  ]),
 );
 export const pages: ContentIndex = contentIndex(PAGES_DIRECTORY).index;
 

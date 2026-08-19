@@ -8,7 +8,7 @@ const SCHEME_PARAMETER = "color-scheme";
  * `favicon.svg` already carries its own `prefers-color-scheme` media query, but
  * Chromium evaluates only once at load time.
  *
- * Remove this once https://crbug.com/1026539 is fixed.
+ * TODO: Remove this once https://crbug.com/1026539 is fixed.
  */
 export function watchFaviconColorScheme(): () => void {
   const media = (window as Partial<Window>).matchMedia?.(DARK_SCHEME_QUERY);

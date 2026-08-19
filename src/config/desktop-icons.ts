@@ -5,7 +5,7 @@ import { createIconPositionsStore } from "#/lib/icons/positions";
 export const ICONS: Array<Icon> = [
   ...DESTINATION_ORDER.map((id) => ({
     id,
-    kind: DESTINATIONS[id].iconKind,
+    kind: DESTINATIONS[id].type,
     label: DESTINATIONS[id].title,
     route: DESTINATIONS[id].route,
   })),

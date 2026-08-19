@@ -2,64 +2,83 @@
 
 ## Get started
 
-This project needs the Node version in `.nvmrc`.
+Requires the Node version in `.nvmrc`.
 
 ```bash
 npm install
-npm run dev # Starts the dev server on http://localhost:3000
+npm run dev
 ```
 
 ## Content
 
-Content files are in `src/content/<collection>/*.mdx`. At build time,
-`src/content/schema.ts` validates their frontmatter.
+Content is written in MDX. Frontmatter uses:
 
-```mdx
----
+```yaml
 title: Post Title
-description: The listings and the meta description show this text.
+description: Collection entry lists and the meta description show this text.
 date: 2026-07-19
 draft: false # Optional. The dev server renders a draft. The build omits it.
----
 ```
 
-`src/content/mdx-components.tsx` maps HTML elements in the MDX files to app
-components.
+Frontmatter is validated by `src/content/schema.ts`. MDX elements are mapped to
+app components by `src/content/mdx-components.tsx`.
 
-`build/content.ts` makes a list of pages to prerender from the content
-directory. A new post needs no configuration.
+Content is located in:
 
-The routes are dynamic (`src/routes/$segment/`), so a collection needs no route
-files of its own. To add a collection:
+- `src/content/_pages/*.mdx` — standalone pages
+- `src/content/<collection>/*.mdx` — collection entries
 
-1. Make a subfolder in `src/content`
-2. Add it to `DESTINATIONS` and `DESTINATION_GROUPS` in
-   `src/config/navigation.ts`.
+File and folder names become URL segments and must be URL-safe.
+`build/content.ts` validates this and generates the prerender list and sitemap
+data. A page uses its frontmatter date as `lastmod`; a collection uses the
+newest date among its entries.
 
-## Deploy
+Routes are dynamic (`src/routes/$segment/`), so pages and collections do not
+need route files.
 
-`.github/workflows/ci.yml` deploys `main` after the verify job passes.
+### Pages
 
-To deploy manually, first run `wrangler login`.
+1. Add an MDX file to `src/content/_pages`.
+2. Add its file name, without `.mdx`, to PAGE_SLUGS in `src/config/content.ts`.
+3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
+
+Page titles come from frontmatter; the configuration only needs the file name.
+
+### Collections
+
+1. Create a subfolder in `src/content`.
+2. Add its title and description to COLLECTIONS in `src/config/content.ts`,
+   keyed by the folder name.
+3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
+
+## Deployment
+
+`main` is deployed by `.github/workflows/ci.yml` after the verify job passes.
+
+To deploy manually:
 
 ```bash
+wrangler login
 npm run build
 npx wrangler deploy
 ```
 
-The build makes two things:
+The build produces:
 
-- Prerendered pages, which Cloudflare sends as static assets
-- `dist/server/server.js`, the TanStack Start SSR handler
+- Prerendered pages as static assets
+- `dist/server/server.js` as the TanStack Start SSR handler
 
-If a matching asset exists, Cloudflare sends that asset. If no asset matches,
-Cloudflare calls the Worker.
+Cloudflare serves a matching static asset; otherwise, it invokes the Worker.
 
-## Tests
+## Testing
 
-`npm test` renders real routes through the router. A post can render correctly
-alone but still fail in the app. This happens because the router resolves an MDX
-module through a path but the path works only after a loader runs.
+```bash
+npm test
+```
 
-`vitest.config.ts` uses the same MDX pipeline as the build through
-`build/mdx.ts`, but without syntax highlighting for speed.
+Tests render real routes through the router. This catches issues that isolated
+MDX rendering can miss, such as routes that depend on a loader to resolve an MDX
+module.
+
+vitest.config.ts uses the same MDX pipeline as the build via build/mdx.ts, with
+syntax highlighting disabled for speed.

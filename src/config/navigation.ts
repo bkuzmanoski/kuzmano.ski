@@ -1,25 +1,36 @@
-import type { IconKind } from "#/lib/icons/icon";
+import { COLLECTIONS } from "#/config/content";
+import type { CollectionSegment, PageSlug } from "#/config/content";
+import { pages } from "#/content";
 
+/** A navigation target: one entry, or a collection of them. */
 export interface Destination {
+  type: "entry" | "collection";
   title: string;
-  iconKind: Extract<IconKind, "entry" | "collection">;
   route: string;
 }
 
-const entry = (slug: string, title: string): Destination => ({ title, iconKind: "entry", route: `/${slug}` });
-const collection = (segment: string, title: string): Destination => ({
-  title: title,
-  iconKind: "collection",
+const titleOf = (slug: PageSlug) => {
+  try {
+    return pages.frontmatterOf(slug)?.title ?? slug;
+  } catch {
+    // Throwing here would tear down the desktop before the error boundary exists; use the slug as a fallback.
+    return slug;
+  }
+};
+const entry = (slug: PageSlug): Destination => ({ type: "entry", title: titleOf(slug), route: `/${slug}` });
+const collection = (segment: CollectionSegment): Destination => ({
+  type: "collection",
+  title: COLLECTIONS[segment].title,
   route: `/${segment}`,
 });
 
 export const DESTINATIONS = {
-  about: entry("about", "About"),
-  experience: entry("experience", "Experience"),
-  work: collection("work", "Work"),
-  "tech-notes": collection("tech-notes", "Tech Notes"),
-  "design-notes": collection("design-notes", "Design Notes"),
-  contact: entry("contact", "Contact"),
+  about: entry("about"),
+  experience: entry("experience"),
+  work: collection("work"),
+  "tech-notes": collection("tech-notes"),
+  "design-notes": collection("design-notes"),
+  contact: entry("contact"),
 } as const satisfies Record<string, Destination>;
 
 export type DestinationId = keyof typeof DESTINATIONS;
@@ -35,12 +46,5 @@ export const DESTINATION_GROUPS = [
 ] as const satisfies ReadonlyArray<ReadonlyArray<DestinationId>>;
 
 export const DESTINATION_ORDER: ReadonlyArray<DestinationId> = DESTINATION_GROUPS.flat();
-
-/** A mapping of URL segment -> title, for folder destinations only. */
-export const COLLECTION_TITLES: Record<string, string> = Object.fromEntries(
-  Object.values(DESTINATIONS)
-    .filter((destination) => destination.iconKind === "collection")
-    .map((destination) => [destination.route.slice(1), destination.title]),
-);
 
 export const INITIAL_WINDOW_ROUTE = DESTINATIONS.about.route;

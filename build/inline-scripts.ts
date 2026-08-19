@@ -21,10 +21,10 @@ const MAX_BYTES = 1024;
  * that runs code at initialization, so an import that reaches React puts React in
  * the document head.
  */
-export function inlineScriptPlugin(): Plugin {
+export function inlineScriptsPlugin(): Plugin {
   let parent: ResolvedConfig;
   return {
-    name: "kuzmano.ski:inline-script",
+    name: "kuzmano.ski:inline-scripts",
     enforce: "pre",
     configResolved(config) {
       parent = config;

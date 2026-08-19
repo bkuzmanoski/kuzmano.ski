@@ -1,41 +1,34 @@
 import { notFound } from "@tanstack/react-router";
 
-import { documentTitle } from "#/config/site";
+import { documentHead } from "#/config/site";
+import type { DocumentMetadata } from "#/config/site";
 
 import { collections, pages } from "./index";
 
 import type { Frontmatter } from "./index";
 
-const documentHead = ({ loaderData }: { loaderData?: { title: string; description?: string } }) => ({
-  meta: loaderData
-    ? [
-        { title: documentTitle(loaderData.title) },
-        ...(loaderData.description ? [{ name: "description", content: loaderData.description }] : []),
-      ]
-    : [],
-});
-
-function documentData(frontmatter: Frontmatter | null | undefined) {
+function documentData(frontmatter: Frontmatter | null | undefined, path: string, kind: DocumentMetadata["kind"]) {
   if (!frontmatter) {
     throw notFound();
   }
 
-  return { title: frontmatter.title, description: frontmatter.description };
+  return { title: frontmatter.title, description: frontmatter.description, path, kind };
 }
 
 export const contentRoute = {
-  loader: ({ params }: { params: { segment: string; slug?: string } }): { title: string; description?: string } => {
+  loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
     if (params.slug !== undefined) {
-      return documentData(collections[params.segment]?.frontmatterOf(params.slug));
+      const path = `/${params.segment}/${params.slug}`;
+      return documentData(collections[params.segment]?.frontmatterOf(params.slug), path, "article");
     }
 
     const collection = collections[params.segment];
 
     if (collection) {
-      return { title: collection.title };
+      return { title: collection.title, description: collection.description, path: `/${params.segment}` };
     }
 
-    return documentData(pages.frontmatterOf(params.segment));
+    return documentData(pages.frontmatterOf(params.segment), `/${params.segment}`, "website");
   },
-  head: documentHead,
+  head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),
 };

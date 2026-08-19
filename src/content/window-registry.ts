@@ -67,9 +67,8 @@ export function resolveWindow(pathname: string): WindowTarget | null {
 /**
  * Returns the desktop destination route associated with an open window.
  *
- * A collection entry is associated with its containing collection; a top-level entry or a
- * collection is associated with its own route. Returns `null` for routes that do not open a
- * window.
+ * A collection entry is associated with its containing collection; a page or a collection is
+ * associated with its own route. Returns `null` for routes that do not open a window.
  */
 export function destinationRouteOf(windowRoute: string): string | null {
   const target = resolveWindow(windowRoute);

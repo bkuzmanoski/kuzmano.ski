@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { SITE_NAME } from "#/config/site";
+import { SITE_DESCRIPTION, SITE_NAME, documentHead } from "#/config/site";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: SITE_NAME }] }),
+  head: () => documentHead({ title: SITE_NAME, description: SITE_DESCRIPTION, path: "/" }),
   component: () => null,
 });
