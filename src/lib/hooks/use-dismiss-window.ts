@@ -1,19 +1,9 @@
 import { createContext, use } from "react";
 
-/**
- * The dismiss action for the window a subtree renders inside, provided by the
- * window layer. Null for views that are not rendered inside a window layer.
- */
+/** The dismiss action for the window a subtree renders in, provided by the window layer if present. */
 export const DismissContext = createContext<(() => void) | null>(null);
 
-function goHome() {
-  location.href = "/";
-}
-
-/**
- * Dismisses the window the current subtree renders in, or navigates to the
- * home page if there is no window layer.
- */
-export function useDismissWindow(): () => void {
-  return use(DismissContext) ?? goHome;
+/** Dismisses the window the current subtree renders in, or null if there is no window layer. */
+export function useDismissWindow(): (() => void) | null {
+  return use(DismissContext);
 }

@@ -342,9 +342,6 @@ export interface WindowActions {
 // use it. A window drag rewrites `geometry` many times per second; keeping window
 // content, the order, and the focus state separate means the menu bar, status items
 // and desktop icons do not re-render with it.
-//
-// They are exported for `window-manager-provider`, which is the only thing that
-// writes to them. Everything else reads through the hooks below.
 export const ActionsContext = createContext<WindowActions | null>(null);
 export const ContentContext = createContext<WindowRecord<WindowContent>>({});
 export const GeometryContext = createContext<WindowRecord<WindowGeometry>>({});

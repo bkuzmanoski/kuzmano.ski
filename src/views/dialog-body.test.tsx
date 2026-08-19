@@ -38,3 +38,8 @@ test("the title renders at heading level two by default, and at the specified le
   render(<DialogBody title="Error" headingLevel={1} message="" />);
   expect(screen.getByRole("heading", { name: "Error", level: 1 })).toBeDefined();
 });
+
+test("no close button is rendered if no actions are supplied and the dialog is not in a window", () => {
+  render(<DialogBody message="" />);
+  expect(screen.queryByRole("button", { name: "OK" })).toBeNull();
+});

@@ -31,6 +31,22 @@ type MenuItemAccessory = "download" | "external-link";
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
 
+function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
+  return (
+    <span className={styles.shortcut}>
+      {isMacOS ? (
+        <>
+          <span className={styles.modifierIcon}>{CHAR_OPTION_KEY}</span>
+          {CHAR_NBSP}
+        </>
+      ) : (
+        `Alt${CHAR_NARROW_NBSP}+${CHAR_NARROW_NBSP}`
+      )}
+      {label}
+    </span>
+  );
+}
+
 export function Menu({
   items,
   anchor,
@@ -245,21 +261,5 @@ export function Menu({
         ),
       )}
     </div>
-  );
-}
-
-function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
-  return (
-    <span className={styles.shortcut}>
-      {isMacOS ? (
-        <>
-          <span className={styles.modifierIcon}>{CHAR_OPTION_KEY}</span>
-          {CHAR_NBSP}
-        </>
-      ) : (
-        `Alt${CHAR_NARROW_NBSP}+${CHAR_NARROW_NBSP}`
-      )}
-      {label}
-    </span>
   );
 }

@@ -147,3 +147,14 @@ test("a press opens the entry without leaving the page", () => {
   expect(click).toBe(false); // The default was prevented.
   expect(open).toHaveBeenCalledWith(routeOf(1));
 });
+
+test("a modified press is handled by the browser so the entry opens in a new tab", () => {
+  const links = renderList(entries[0]!.slug);
+
+  for (const modifier of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }]) {
+    expect(fireEvent.click(links[1]!, modifier)).toBe(true);
+  }
+
+  expect(fireEvent.click(links[1]!, { button: 1 })).toBe(true);
+  expect(open).not.toHaveBeenCalled();
+});

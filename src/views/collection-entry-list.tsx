@@ -4,6 +4,7 @@ import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/ui";
 import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
+import { isBrowserHandledClick } from "#/lib/link";
 import { useWindowActions } from "#/lib/window-manager";
 
 import styles from "./collection-entry-list.module.css";
@@ -58,6 +59,10 @@ export function CollectionEntryList({
               className={cx(styles.card, isActive && styles.active)}
               href={`${route}/${entry.slug}`}
               onClick={(event) => {
+                if (isBrowserHandledClick(event)) {
+                  return;
+                }
+
                 event.preventDefault();
                 openEntry(entry.slug);
               }}

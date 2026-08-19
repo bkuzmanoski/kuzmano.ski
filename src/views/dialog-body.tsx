@@ -35,7 +35,9 @@ export function DialogBody({
         {title && <Heading className={styles.title}>{title}</Heading>}
         <p>{message}</p>
       </div>
-      <div className={styles.actions}>{actions ?? <Button children="OK" autoFocus onClick={dismiss} />}</div>
+      <div className={styles.actions}>
+        {actions ?? (dismiss && <Button children="OK" autoFocus onClick={dismiss} />)}
+      </div>
     </article>
   );
 }

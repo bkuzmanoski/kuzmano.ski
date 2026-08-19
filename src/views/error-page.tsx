@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { Button } from "#/components/button";
 import { documentTitle } from "#/config/site";
 import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
-import { useDismissWindow } from "#/lib/hooks/use-dismiss-window";
 
 import { DialogBody } from "./dialog-body";
 import styles from "./error-page.module.css";
@@ -11,8 +10,6 @@ import styles from "./error-page.module.css";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
 export function ErrorPage({ error }: ErrorComponentProps) {
-  const dismiss = useDismissWindow();
-
   useDismissBootSequence();
 
   useEffect(() => {
@@ -62,7 +59,7 @@ export function ErrorPage({ error }: ErrorComponentProps) {
           actions={
             <>
               <Button children="Try Again" onClick={() => location.reload()} />
-              <Button children="Go Home" autoFocus onClick={dismiss} />
+              <Button children="Go Home" autoFocus href="/" />
             </>
           }
           className={styles.dialog}
