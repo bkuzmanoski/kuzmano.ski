@@ -8,6 +8,7 @@ import { useAudioUnlock } from "#/lib/audio/context";
 import { BootSequence } from "./boot-sequence";
 import styles from "./desktop.module.css";
 import { MenuBar } from "./menu-bar";
+import { Screensaver } from "./screensaver";
 import { SiteIndex } from "./site-index";
 import { WindowLayer } from "./window-layer";
 import { WindowManagerProvider } from "./window-manager-provider";
@@ -31,6 +32,7 @@ export function Desktop({ children }: { children: ReactNode }) {
         <WindowLayer>{children}</WindowLayer>
       </div>
       <BootSequence />
+      <Screensaver />
     </WindowManagerProvider>
   );
 }

@@ -13,8 +13,9 @@
   --layer-menu: 200;
   --layer-tooltip: 300;
   --layer-skip-link: 400;
-  --layer-boot-sequence-overlay: 500;
-  --layer-boot-sequence: 600;
+  --layer-screensaver: 500;
+  --layer-boot-sequence-overlay: 700;
+  --layer-boot-sequence: 700;
 
   /* Metrics */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -63,6 +64,7 @@
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `build/svgr.ts`). */
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
+  --color-screensaver-backdrop: #161a1d;
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-background: var(--color-background);
   --color-syntax-comment: light-dark(#839099, #637079);

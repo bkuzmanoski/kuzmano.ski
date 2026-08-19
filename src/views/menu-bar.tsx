@@ -13,6 +13,7 @@ import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-seque
 import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
+import { sleep } from "#/lib/screensaver/lifecycle";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
 import styles from "./menu-bar.module.css";
@@ -69,6 +70,7 @@ export function MenuBar() {
       items: [
         { kind: "action", label: "View Source", accessory: "external-link", href: SITE_SOURCE_URL, target: "_blank" },
         { kind: "separator" },
+        { kind: "action", label: "Sleep", action: sleep },
         { kind: "action", label: "Restart", action: restart },
       ],
     },
