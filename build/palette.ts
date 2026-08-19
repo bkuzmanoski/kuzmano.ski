@@ -8,6 +8,7 @@ import { clamp } from "#/lib/math.ts";
 import { ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
 
 const MAX_CHROMA = 0.4; // CSS Color 4 defines 100% chroma in `oklch()` as 0.4.
+const GAMUT_TOLERANCE = 1e-4; // Three orders of magnitude above the float error an in-gamut conversion carries, two below the smallest excursion a color outside sRGB produces.
 
 type Rgb = readonly [number, number, number]; // Channels in 0-255.
 type Oklch = readonly [number, number, number]; // Lightness 0-1, chroma, hue in degrees.
@@ -33,17 +34,26 @@ function rgbToOklch([r, g, b]: Rgb): Oklch {
 }
 
 function oklchToRgb([lightness, chroma, hue]: Oklch): Rgb {
-  const radians = (hue * Math.PI) / 180;
-  const a = chroma * Math.cos(radians);
-  const b = chroma * Math.sin(radians);
+  // CSS clamps these two components rather than reading them as out of range.
+  const clampedLightness = clamp(lightness, 0, 1);
+  const clampedChroma = Math.max(chroma, 0);
 
-  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
-  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const radians = (hue * Math.PI) / 180;
+  const a = clampedChroma * Math.cos(radians);
+  const b = clampedChroma * Math.sin(radians);
+
+  const l = (clampedLightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (clampedLightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (clampedLightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
 
   const red = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
   const green = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
   const blue = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+
+  if ([red, green, blue].some((channel) => channel < -GAMUT_TOLERANCE || channel > 1 + GAMUT_TOLERANCE)) {
+    const components = [clampedLightness, clampedChroma, hue].map((component) => Number(component.toFixed(4)));
+    throw new Error(`\`oklch(${components.join(" ")})\` is outside sRGB. Reduce the chroma.`); // CSS Color 4 gamut mapping not implemented.
+  }
 
   const encode = (channel: number) => Math.round(clamp(linearToSrgb(channel), 0, 1) * 255);
 
@@ -368,9 +378,13 @@ export interface Palette {
   bootSequenceBackdropDark: string;
 }
 
-export async function readPalette(): Promise<Palette> {
-  const css = stripComments(await readFile(join(ROOT_DIRECTORY, STYLESHEET), "utf8"));
-  const properties = parseCustomProperties(extractRootBlock(css));
+/**
+ * Resolves the palette from stylesheet source.
+ *
+ * Takes the CSS as a value so the color forms can be exercised without a stylesheet on disk.
+ */
+export function paletteFrom(css: string): Palette {
+  const properties = parseCustomProperties(extractRootBlock(stripComments(css)));
 
   const read = (name: string, scheme: Scheme) => {
     const declared = properties.get(name);
@@ -393,3 +407,6 @@ export async function readPalette(): Promise<Palette> {
     bootSequenceBackdropDark: read("--color-boot-sequence-backdrop", "dark"),
   };
 }
+
+export const readPalette = async (): Promise<Palette> =>
+  paletteFrom(await readFile(join(ROOT_DIRECTORY, STYLESHEET), "utf8"));

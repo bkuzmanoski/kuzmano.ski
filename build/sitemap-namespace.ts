@@ -21,7 +21,7 @@ const NAMESPACE = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
  *
  * TODO: Remove once the namespace is fixed upstream.
  */
-export function sitemapNamespaceFixPlugin(): Plugin {
+export function sitemapNamespacePlugin(): Plugin {
   return {
     name: "kuzmano.ski:sitemap-namespace",
     enforce: "post",

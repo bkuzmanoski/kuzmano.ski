@@ -1,4 +1,4 @@
-import { documentTitle } from "#/config/site";
+import { documentTitle } from "#/config/site.ts";
 
 const TITLE_SUFFIX = documentTitle(""); // The suffix on every page title. It comes from `documentTitle` so the two agree.
 const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `src/components/menu-bar.tsx`

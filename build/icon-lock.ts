@@ -117,7 +117,7 @@ export async function findIconDrift(): Promise<Array<string>> {
 }
 
 /** Fails the build when the generated icons no longer match the palette or the artwork behind them. */
-export function iconDriftCheckPlugin(): Plugin {
+export function iconDriftPlugin(): Plugin {
   return {
     name: "kuzmano.ski:icon-drift",
     apply: "build",

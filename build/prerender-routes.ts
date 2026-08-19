@@ -1,8 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { COLLECTIONS, PAGES_DIRECTORY, PAGE_SLUGS } from "#/config/content";
-import { isRecord } from "#/lib/guards";
+import { COLLECTIONS, PAGES_DIRECTORY, PAGE_SLUGS } from "#/config/content.ts";
+import { isRecord } from "#/lib/guards.ts";
 
 import { frontmatterOf } from "./frontmatter.ts";
 import { CONTENT_DIRECTORY, ROOT_DIRECTORY } from "./paths.ts";
@@ -64,8 +64,13 @@ const readContentDirectory = (directory: string) => {
  * make a complete, duplicate-free list on their own (`autoStaticPathsDiscovery`
  * misses dynamic routes, `crawlLinks` misses unlinked routes, and enabling both
  * emits index routes twice).
+ *
+ * Walking the tree validates the content structure and throws if a path is not
+ * URL-safe, a declared page has no file, a page conflicts with a collection,
+ * a collection has no directory or title, or a directory is nested. The build
+ * fails rather than emitting an invalid or ambiguous route.
  */
-export function content(): Array<PrerenderRoute> {
+export function prerenderRoutes(): Array<PrerenderRoute> {
   const directoryNames = readdirSync(join(ROOT_DIRECTORY, CONTENT_DIRECTORY), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
