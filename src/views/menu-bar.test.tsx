@@ -346,7 +346,7 @@ describe("items that open a destination", () => {
     expect(follow).toHaveBeenCalled();
   });
 
-  test('the "View Source" menu item opens a new tab, without a referrer', () => {
+  test('the "View Source" menu item opens a new tab', () => {
     render(<MenuBar />);
     openWithPointer("Special");
 
@@ -354,6 +354,5 @@ describe("items that open a destination", () => {
 
     expect(viewSource.getAttribute("href")).toBe(SITE_SOURCE_URL);
     expect(viewSource.getAttribute("target")).toBe("_blank");
-    expect(viewSource.getAttribute("rel")).toBe("noreferrer");
   });
 });

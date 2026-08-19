@@ -289,7 +289,7 @@ export function Menu({
             {...itemProps}
             draggable={false}
             href={item.href}
-            rel={item.target && "noreferrer"}
+            rel={item.target}
             tabIndex={-1}
             target={item.target}
             onClick={onItemClick}
