@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { SPOTLIGHT_SPILL, stageMetricsFor } from "./stage";
+import { stageMetricsFor } from "./stage";
 
 import type { Rect, Size, Transform } from "../geometry";
 
@@ -137,30 +137,12 @@ describe("the zoomed in framing", () => {
 
 describe("the vertical placement of both framings", () => {
   const boxesFor = (viewport: Size) => [zoomedOutBoxFor(viewport), zoomedInBoxFor(viewport)];
-  const spaceBelowSpotlight = (box: Rect, viewport: Size) =>
-    viewport.height - (box.y + box.height * (1 + SPOTLIGHT_SPILL));
-
-  test("centres the illustration and the spotlight underneath it when the width is what binds", () => {
-    for (const viewport of [PORTRAIT_VIEWPORT, TALL_VIEWPORT]) {
-      for (const box of boxesFor(viewport)) {
-        expect(spaceBelowSpotlight(box, viewport)).toBeCloseTo(box.y);
-      }
-    }
-  });
-
-  test("places the illustration above its own centre, allowing the spotlight to fall below it", () => {
-    for (const viewport of [PORTRAIT_VIEWPORT, TALL_VIEWPORT]) {
-      for (const box of boxesFor(viewport)) {
-        expect(box.y).toBeLessThan((viewport.height - box.height) / 2); // Where centring the illustration alone would put it.
-      }
-    }
-  });
 
   test("holds a minimum margin above the illustration", () => {
     for (const viewport of [WIDE_VIEWPORT, LANDSCAPE_VIEWPORT]) {
       for (const box of boxesFor(viewport)) {
         expect(box.y).toBeGreaterThan(0);
-        expect(box.y).toBeGreaterThan((viewport.height - box.height * (1 + SPOTLIGHT_SPILL)) / 2); // Centring the composition would reach past the top of the viewport, so the margin is holding it down.
+        expect(box.y).toBeGreaterThan((viewport.height - box.height) / 2);
       }
     }
   });

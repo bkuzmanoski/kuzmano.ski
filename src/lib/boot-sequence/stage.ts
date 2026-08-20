@@ -1,14 +1,12 @@
 import { transformBetween } from "../geometry";
 
-import type { Inset, Rect, Size, Transform } from "../geometry";
+import type { Inset, Position, Rect, Size, Transform } from "../geometry";
 
 // Metrics derived from the illustration, in its own coordinates.
 const ILLUSTRATION_RECT: Rect = { x: 0, y: 0, width: 1214, height: 1067 };
 const DISPLAY_RECT: Rect = { x: 330, y: 99, width: 554, height: 410 };
 const DISK_ACTIVITY_INDICATOR_RECT: Rect = { x: 890, y: 670, width: 6, height: 6 };
 const FOCUS_AREA_RECT: Rect = { x: 271, y: 0, width: 672, height: 784 };
-
-export const DISPLAY_BEZEL_INSET: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
 // Metrics as fractions of the illustration's box.
 const DISPLAY_PLACEMENT: Rect = {
@@ -17,6 +15,8 @@ const DISPLAY_PLACEMENT: Rect = {
   width: DISPLAY_RECT.width / ILLUSTRATION_RECT.width,
   height: DISPLAY_RECT.height / ILLUSTRATION_RECT.height,
 };
+
+export const DISPLAY_BEZEL_INSET: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 export const DISK_ACTIVITY_INDICATOR_PLACEMENT: Rect = {
   x: DISK_ACTIVITY_INDICATOR_RECT.x / ILLUSTRATION_RECT.width,
   y: DISK_ACTIVITY_INDICATOR_RECT.y / ILLUSTRATION_RECT.height,
@@ -24,8 +24,10 @@ export const DISK_ACTIVITY_INDICATOR_PLACEMENT: Rect = {
   height: DISK_ACTIVITY_INDICATOR_RECT.height / ILLUSTRATION_RECT.height,
 };
 
-/** How far the light pooled under the illustration reaches below it, as a fraction of the illustration's height. */
-export const SPOTLIGHT_SPILL = 0.08;
+export const FOCAL_POINT: Position = {
+  x: DISPLAY_PLACEMENT.x + DISPLAY_PLACEMENT.width / 2,
+  y: DISPLAY_PLACEMENT.y + DISPLAY_PLACEMENT.height / 2,
+};
 
 // How much of each viewport axis a framed area is allowed to fill.
 const ZOOMED_OUT_EXTENT: Size = { width: 1.4, height: 0.9 };
@@ -49,7 +51,7 @@ function framedOn(area: Rect, scaleExtent: Size, viewport: Size): Rect {
   );
   const height = ILLUSTRATION_RECT.height * scale;
   const minimumTop = ((1 - scaleExtent.height) * viewport.height) / 2 - area.y * scale; // Ensure top margin.
-  const centredTop = (viewport.height - height * (1 + SPOTLIGHT_SPILL)) / 2; // Centering includes the spill below it.
+  const centredTop = (viewport.height - height) / 2;
 
   return {
     x: viewport.width / 2 - (area.x + area.width / 2) * scale,

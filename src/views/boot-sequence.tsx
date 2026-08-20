@@ -1,11 +1,13 @@
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
+import macintoshBodyAvifUrl from "#/assets/images/macintosh-body.avif";
+import macintoshBodyWebpUrl from "#/assets/images/macintosh-body.webp";
 import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
 import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
 import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg?react";
-import macintoshAvifUrl from "#/assets/images/macintosh.avif";
-import macintoshWebpUrl from "#/assets/images/macintosh.webp";
+import macintoshKeyboardAvifUrl from "#/assets/images/macintosh-keyboard.avif";
+import macintoshKeyboardWebpUrl from "#/assets/images/macintosh-keyboard.webp";
 import { Spinner } from "#/components/spinner";
 import { playBootChime } from "#/lib/audio/boot-chime";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context";
@@ -30,7 +32,7 @@ import { shouldRunBootSequence } from "#/lib/boot-sequence/session";
 import {
   DISK_ACTIVITY_INDICATOR_PLACEMENT,
   DISPLAY_BEZEL_INSET,
-  SPOTLIGHT_SPILL,
+  FOCAL_POINT,
   stageMetricsFor,
 } from "#/lib/boot-sequence/stage";
 import type { StageMetrics } from "#/lib/boot-sequence/stage";
@@ -114,7 +116,8 @@ function Sequence() {
   const [coverContent, setCoverContent] = useState<CoverContent>("spinner");
   const [phase, setPhase] = useState<Phase>("loading");
   const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
-  const illustrationImageRef = useRef<HTMLImageElement>(null);
+  const bodyImageRef = useRef<HTMLImageElement>(null);
+  const keyboardImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const resizing = new AbortController();
@@ -156,7 +159,7 @@ function Sequence() {
 
     const loading = [
       whenFontReady(),
-      whenIllustrationReady(illustrationImageRef.current),
+      whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
       new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_MS))),
     ];
 
@@ -212,11 +215,12 @@ function Sequence() {
     "--logo-draw-ms": `${motion.logoDraw}ms`,
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
+    "--focal-point-x": `${FOCAL_POINT.x * 100}%`,
+    "--focal-point-y": `${FOCAL_POINT.y * 100}%`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
   const stageStyle: StyleWithVars = {
     "--zoom-out": cssTransform(metrics.zoomOut),
-    "--spotlight-spill": `${SPOTLIGHT_SPILL * 100}%`,
   };
   const illustrationStyle = {
     left: metrics.illustration.x,
@@ -226,7 +230,7 @@ function Sequence() {
   };
 
   return (
-    <div className={styles.container} style={containerStyle}>
+    <div className={cx(styles.container, hasZoom && !isZoomedOut && styles.zoomedIn)} style={containerStyle}>
       <div
         className={cx(
           styles.stage,
@@ -245,22 +249,23 @@ function Sequence() {
           )}
           style={illustrationStyle}
         >
-          <div className={styles.spotlight} />
-          <div className={styles.illustrationBody}>
-            <DiskActivityIndicator
-              className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
-              style={{
-                left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
-                top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
-                width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.width * 100}%`,
-                height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
-              }}
-            />
-            <picture>
-              <source srcSet={macintoshAvifUrl} type="image/avif" />
-              <img ref={illustrationImageRef} alt="Illustration of a classic Mac 128K." src={macintoshWebpUrl} />
-            </picture>
-          </div>
+          <picture className={styles.bodyLayer}>
+            <source srcSet={macintoshBodyAvifUrl} type="image/avif" />
+            <img ref={bodyImageRef} alt="Illustration of a classic Mac 128K." src={macintoshBodyWebpUrl} />
+          </picture>
+          <DiskActivityIndicator
+            className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
+            style={{
+              left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
+              top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
+              width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.width * 100}%`,
+              height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
+            }}
+          />
+          <picture className={styles.keyboardLayer}>
+            <source srcSet={macintoshKeyboardAvifUrl} type="image/avif" />
+            <img ref={keyboardImageRef} alt="" src={macintoshKeyboardWebpUrl} />
+          </picture>
         </div>
       </div>
       <div className={cx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />

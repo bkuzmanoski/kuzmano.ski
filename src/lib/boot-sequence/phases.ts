@@ -118,6 +118,8 @@ export async function whenFontReady(): Promise<void> {
   }
 }
 
-export function whenIllustrationReady(image: HTMLImageElement | null): Promise<unknown> {
-  return image?.decode ? image.decode().catch(() => undefined) : Promise.resolve();
+export function whenIllustrationReady(...images: Array<HTMLImageElement | null>): Promise<unknown> {
+  return Promise.all(
+    images.map((image) => (image?.decode ? image.decode().catch(() => undefined) : Promise.resolve())),
+  );
 }

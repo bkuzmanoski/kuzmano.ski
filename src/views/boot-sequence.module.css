@@ -1,3 +1,7 @@
+.hidden {
+  opacity: 0;
+}
+
 .container {
   --loading-cover-fade-ms: 0ms; /* Set from JS. */
   --stage-zoom-ms: 0ms; /* Set from JS. */
@@ -5,21 +9,28 @@
   --logo-draw-ms: 0ms; /* Set from JS. */
   --glass-fade-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
+  --focal-point-x: 50%; /* Set from JS. */
+  --focal-point-y: 50%; /* Set from JS. */
 
   position: fixed;
   z-index: var(--layer-boot-sequence);
   inset: 0;
   background: var(--color-boot-sequence-backdrop);
 
+  /* Ambient glow behind the stage. */
   &::after {
+    --parallax: scale(1.1);
+    --parallax-opacity: 0.4;
+
     content: "";
 
     position: absolute;
     inset: 0;
+    transform-origin: var(--focal-point-x) var(--focal-point-y);
 
-    opacity: 0.4;
+    opacity: 0.3;
     background: radial-gradient(
-      100% 80% at 50% 80%,
+      200% 50dvh at 70% 50dvh,
       var(--color-accent) 0%,
       color-mix(in oklab, var(--color-accent) 93%, transparent) 13%,
       color-mix(in oklab, var(--color-accent) 74%, transparent) 27%,
@@ -30,12 +41,20 @@
     );
 
     mask-image: var(--grain-texture);
+
+    transition:
+      transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1),
+      opacity var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &.zoomedIn::after {
+    transform: var(--parallax);
+    opacity: var(--parallax-opacity);
   }
 }
 
 .stage {
   --zoom-out: none; /* Set from JS. */
-  --spotlight-spill: 0%; /* Set from JS. */
 
   position: absolute;
   z-index: 1;
@@ -44,8 +63,7 @@
 
   transition: transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Only the zoom in is animated: a framing that changes while the stage is still zoomed out
-   * (a resize) takes effect at once. */
+  /* Only the zoom in is animated; a re-frame while the stage is zoomed out (e.g., via a resize) takes effect immediately. */
   &.zoomedOut {
     transform: var(--zoom-out);
     transition: none;
@@ -56,8 +74,102 @@
   }
 }
 
-.hidden {
-  opacity: 0;
+.displayMask {
+  --display-scale: 1; /* Set from JS. */
+  --screen-radius: 0px; /* Set from JS */
+  --inset: 0; /* Set from JS. */
+
+  position: absolute;
+  z-index: 1;
+  transition: opacity var(--loading-cover-fade-ms) ease-out;
+
+  &.revealing {
+    z-index: 3;
+  }
+
+  & .displayBackdrop,
+  & .glassOverlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  & .display {
+    position: absolute;
+    inset: var(--inset);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: var(--screen-radius);
+
+    background: var(--color-wallpaper);
+
+    &.warmingUp {
+      mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+      mask-repeat: no-repeat;
+      mask-position: center;
+      animation: crt-warm-up var(--crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
+    }
+
+    &.growing {
+      border-radius: 0;
+      transition:
+        inset var(--desktop-reveal-ms) ease-in,
+        border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
+    }
+
+    & .screen {
+      display: flex;
+
+      & .logo {
+        width: calc(108px * var(--display-scale));
+        height: auto;
+        animation: draw-logo var(--logo-draw-ms) steps(10, jump-start) both;
+
+        :global(.foreground) {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  & .glassOverlay {
+    pointer-events: none;
+
+    &.preparingToLeave {
+      will-change: opacity;
+    }
+  }
+
+  & .screen.leaving,
+  & .glassOverlay.leaving {
+    opacity: 0;
+    transition: opacity var(--glass-fade-ms) ease-out;
+  }
+}
+
+@keyframes crt-warm-up {
+  0%,
+  15% {
+    mask-size: 100% 0%;
+  }
+
+  100% {
+    mask-size: 100% 150%; /* Grow past the screen so that both of the gradient's ramps clear it (100% / (1 - 2 * 15%) = 143%). */
+  }
+}
+
+@keyframes draw-logo {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 .illustration {
@@ -65,85 +177,41 @@
   z-index: 2; /* Over the display, which shows through the transparent cutout in it. */
   transition: opacity var(--loading-cover-fade-ms) ease-out;
 
-  & .illustrationBody {
-    position: absolute;
-    inset: 0;
-  }
-
   &.preparingToLeave {
-    will-change: opacity, transform;
-
-    & .illustrationBody {
-      will-change: filter;
-    }
+    will-change: opacity, transform, filter;
   }
 
   &.leaving {
     transform: scale(0.9);
     opacity: 0;
+    filter: blur(16px);
     transition:
       opacity var(--desktop-reveal-ms) ease-in,
-      transform var(--desktop-reveal-ms) ease-in;
-
-    & .illustrationBody {
-      filter: blur(8px);
-      transition: filter var(--desktop-reveal-ms) ease-in;
-    }
+      transform var(--desktop-reveal-ms) ease-in,
+      filter var(--desktop-reveal-ms) ease-in;
   }
 
-  & .spotlight {
+  & picture,
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  & .bodyLayer,
+  & .keyboardLayer {
     position: absolute;
     inset: 0;
+  }
 
-    /* Sized against the illustration rather than the viewport: the zoom scales whatever is on
-     * the stage, so a floor sized in viewport units would stop short of the sides while the
-     * stage is zoomed out. Four illustrations wide covers the viewport at every framing. */
-    &::before {
-      content: "";
+  & .keyboardLayer {
+    --parallax: scale(1.05) translateY(0.5%);
+    --parallax-opacity: 1;
 
-      position: absolute;
-      top: 100%;
-      right: -150%;
-      left: -150%;
-
-      height: 100%;
-
-      opacity: 0.8;
-      background: linear-gradient(
-        transparent 0%,
-        color-mix(in oklab, var(--color-boot-sequence-backdrop) 16%, transparent) 3%,
-        color-mix(in oklab, var(--color-boot-sequence-backdrop) 50%, transparent) 6%,
-        color-mix(in oklab, var(--color-boot-sequence-backdrop) 84%, transparent) 9%,
-        var(--color-boot-sequence-backdrop) 12%
-      );
-    }
-
-    &::after {
-      --spotlight-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-boot-sequence-foreground));
-
-      content: "";
-
-      position: absolute;
-      right: -100%;
-      bottom: calc(-1 * var(--spotlight-spill));
-      left: -100%;
-
-      height: calc(2.2 * var(--spotlight-spill));
-
-      opacity: 0.8;
-      background: radial-gradient(
-        ellipse closest-side,
-        var(--spotlight-color) 0%,
-        color-mix(in oklab, var(--spotlight-color) 93%, transparent) 12%,
-        color-mix(in oklab, var(--spotlight-color) 74%, transparent) 23%,
-        color-mix(in oklab, var(--spotlight-color) 50%, transparent) 35%,
-        color-mix(in oklab, var(--spotlight-color) 26%, transparent) 47%,
-        color-mix(in oklab, var(--spotlight-color) 7%, transparent) 58%,
-        transparent 70%
-      );
-
-      mask-image: var(--grain-texture);
-    }
+    transform-origin: var(--focal-point-x) var(--focal-point-y);
+    transition:
+      transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1),
+      opacity var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   & .diskActivityIndicator {
@@ -160,11 +228,9 @@
     }
   }
 
-  & picture,
-  & img {
-    display: block;
-    width: 100%;
-    height: 100%;
+  .zoomedIn & .keyboardLayer {
+    transform: var(--parallax);
+    opacity: var(--parallax-opacity);
   }
 }
 
@@ -231,112 +297,6 @@
 
   88% {
     opacity: 0;
-  }
-}
-
-.displayMask {
-  --display-scale: 1; /* Set from JS. */
-  --screen-radius: 0px; /* Set from JS */
-  --inset: 0; /* Set from JS. */
-
-  position: absolute;
-  z-index: 1;
-  transition: opacity var(--loading-cover-fade-ms) ease-out;
-
-  & .displayBackdrop,
-  & .glassOverlay {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  & .glassOverlay {
-    pointer-events: none;
-
-    &.preparingToLeave {
-      will-change: opacity;
-    }
-  }
-
-  &.revealing {
-    z-index: 3;
-  }
-}
-
-.filterDefinition {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
-.display {
-  position: absolute;
-  inset: var(--inset);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: var(--screen-radius);
-
-  background: var(--color-wallpaper);
-
-  &.warmingUp {
-    mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    animation: crt-warm-up var(--crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
-  }
-
-  &.growing {
-    border-radius: 0;
-    transition:
-      inset var(--desktop-reveal-ms) ease-in,
-      border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
-  }
-}
-
-@keyframes crt-warm-up {
-  0%,
-  15% {
-    mask-size: 100% 0%;
-  }
-
-  100% {
-    mask-size: 100% 150%; /* Grow past the screen so that both of the gradient's ramps clear it (100% / (1 - 2 * 15%) = 143%). */
-  }
-}
-
-.screen {
-  display: flex;
-
-  & .logo {
-    width: calc(108px * var(--display-scale));
-    height: auto;
-    animation: draw-logo var(--logo-draw-ms) steps(10, jump-start) both;
-
-    :global(.foreground) {
-      opacity: 1;
-    }
-  }
-}
-
-@keyframes draw-logo {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-.screen,
-.glassOverlay {
-  &.leaving {
-    opacity: 0;
-    transition: opacity var(--glass-fade-ms) ease-out;
   }
 }
 
