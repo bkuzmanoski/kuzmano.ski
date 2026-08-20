@@ -138,12 +138,22 @@ describe("the zoomed in framing", () => {
 describe("the vertical placement of both framings", () => {
   const boxesFor = (viewport: Size) => [zoomedOutBoxFor(viewport), zoomedInBoxFor(viewport)];
 
+  test("centres the illustration when the width is what binds", () => {
+    for (const viewport of [PORTRAIT_VIEWPORT, TALL_VIEWPORT]) {
+      for (const box of boxesFor(viewport)) {
+        expect(box.y).toBeCloseTo((viewport.height - box.height) / 2);
+      }
+    }
+  });
+
   test("holds a minimum margin above the illustration", () => {
     for (const viewport of [WIDE_VIEWPORT, LANDSCAPE_VIEWPORT]) {
       for (const box of boxesFor(viewport)) {
         expect(box.y).toBeGreaterThan(0);
-        expect(box.y).toBeGreaterThan((viewport.height - box.height) / 2);
+        expect(box.y).toBeGreaterThanOrEqual((viewport.height - box.height) / 2); // Never placed above where centring it alone would.
       }
+
+      expect((viewport.height - zoomedInBoxFor(viewport).height) / 2).toBeLessThan(0);
     }
   });
 });

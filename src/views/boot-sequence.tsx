@@ -215,6 +215,8 @@ function Sequence() {
     "--logo-draw-ms": `${motion.logoDraw}ms`,
     "--glass-fade-ms": `${motion.glassFade}ms`,
     "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
+    "--glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,
+    "--glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
     "--focal-point-x": `${FOCAL_POINT.x * 100}%`,
     "--focal-point-y": `${FOCAL_POINT.y * 100}%`,
   };
@@ -230,7 +232,11 @@ function Sequence() {
   };
 
   return (
-    <div className={cx(styles.container, hasZoom && !isZoomedOut && styles.zoomedIn)} style={containerStyle}>
+    <div
+      className={cx(styles.container, hasZoom && (isZoomedOut ? styles.zoomedOut : styles.zoomedIn))}
+      style={containerStyle}
+    >
+      <div className={styles.glow} />
       <div
         className={cx(
           styles.stage,

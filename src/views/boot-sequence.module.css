@@ -9,6 +9,8 @@
   --logo-draw-ms: 0ms; /* Set from JS. */
   --glass-fade-ms: 0ms; /* Set from JS. */
   --desktop-reveal-ms: 0ms; /* Set from JS. */
+  --glow-origin-x: 50%; /* Set from JS. */
+  --glow-origin-y: 50%; /* Set from JS. */
   --focal-point-x: 50%; /* Set from JS. */
   --focal-point-y: 50%; /* Set from JS. */
 
@@ -16,21 +18,29 @@
   z-index: var(--layer-boot-sequence);
   inset: 0;
   background: var(--color-boot-sequence-backdrop);
+}
 
-  /* Ambient glow behind the stage. */
-  &::after {
-    --parallax: scale(1.1);
-    --parallax-opacity: 0.4;
+/* Ambient glow behind the stage. */
+.glow {
+  --spill: 25vw;
+
+  position: absolute;
+  inset: 0 calc(-1 * var(--spill));
+  mask-image: var(--grain-texture);
+
+  &::before {
+    --initial-transform: translate3d(0, -3%, 0) scale3d(0.86, 0.94, 1);
+    --initial-opacity: 0.22;
 
     content: "";
 
     position: absolute;
     inset: 0;
-    transform-origin: var(--focal-point-x) var(--focal-point-y);
+    transform-origin: calc(var(--glow-origin-x) + var(--spill)) var(--glow-origin-y);
 
-    opacity: 0.3;
+    opacity: 0.44;
     background: radial-gradient(
-      200% 50dvh at 70% 50dvh,
+      200vw 50% at calc(70vw + var(--spill)) 50%,
       var(--color-accent) 0%,
       color-mix(in oklab, var(--color-accent) 93%, transparent) 13%,
       color-mix(in oklab, var(--color-accent) 74%, transparent) 27%,
@@ -40,16 +50,14 @@
       transparent 80%
     );
 
-    mask-image: var(--grain-texture);
-
     transition:
-      transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1),
-      opacity var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
+      transform var(--stage-zoom-ms) cubic-bezier(0.33, 0, 0.1, 1),
+      opacity calc(var(--stage-zoom-ms) + 120ms) cubic-bezier(0.4, 0, 0.6, 1); /* The light settles a little after the stage does, within `HOLD_MS.stageZoom`. */
   }
 
-  &.zoomedIn::after {
-    transform: var(--parallax);
-    opacity: var(--parallax-opacity);
+  .zoomedOut &::before {
+    transform: var(--initial-transform);
+    opacity: var(--initial-opacity);
   }
 }
 
@@ -205,13 +213,10 @@
   }
 
   & .keyboardLayer {
-    --parallax: scale(1.05) translateY(0.5%);
-    --parallax-opacity: 1;
+    --parallax-transform: translate3d(0, 1%, 0) scale3d(1.07, 1.045, 1);
 
     transform-origin: var(--focal-point-x) var(--focal-point-y);
-    transition:
-      transform var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1),
-      opacity var(--stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform calc(var(--stage-zoom-ms) + 80ms) cubic-bezier(0.3, 0, 0.15, 1); /* Trails the stage slightly, within `HOLD_MS.stageZoom`. */
   }
 
   & .diskActivityIndicator {
@@ -229,8 +234,7 @@
   }
 
   .zoomedIn & .keyboardLayer {
-    transform: var(--parallax);
-    opacity: var(--parallax-opacity);
+    transform: var(--parallax-transform);
   }
 }
 
