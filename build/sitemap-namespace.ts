@@ -19,7 +19,7 @@ const NAMESPACE = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
  * Runs in `buildApp` after TanStack Start's own post-build hook, which is where the
  * sitemap is written.
  *
- * TODO: Remove once the namespace is fixed upstream.
+ * TODO: Remove this one https://github.com/TanStack/router/pull/8127 is merged.
  */
 export function sitemapNamespacePlugin(): Plugin {
   return {
