@@ -87,6 +87,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
           styles.display,
           !isDisplayOn && styles.hidden,
           isWarmingUp && styles.warmingUp,
+          isGlassHidden && styles.coolingDown,
           isRevealingDesktop && styles.growing,
         )}
         style={{ clipPath: screenClipPath }}

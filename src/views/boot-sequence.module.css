@@ -104,6 +104,10 @@
   }
 
   & .display {
+    --crt-grade: brightness(1.1) contrast(0.9) saturate(1.3);
+    --crt-grade-struck: brightness(1.9) contrast(0.7) saturate(1.1); /* The over-bright raster of a tube that has only just been struck. */
+    --crt-grade-none: brightness(1) contrast(1) saturate(1); /* Spelled out instead of `none` so that every engine interpolates the grade function by function. */
+
     position: absolute;
     inset: var(--inset);
 
@@ -114,6 +118,7 @@
     border-radius: var(--screen-radius);
 
     background: var(--color-wallpaper);
+    filter: var(--crt-grade);
 
     &.warmingUp {
       mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
@@ -122,8 +127,14 @@
       animation: crt-warm-up var(--crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
     }
 
+    &.coolingDown {
+      filter: var(--crt-grade-none);
+      transition: filter var(--glass-fade-ms) ease-out;
+    }
+
     &.growing {
       border-radius: 0;
+      filter: none; /* Ordered after `coolingDown`, which has already landed on the same grade, to keep the full-viewport reveal off a filtered layer. */
       transition:
         inset var(--desktop-reveal-ms) ease-in,
         border-radius calc(var(--desktop-reveal-ms) / 2) ease-in calc(var(--desktop-reveal-ms) / 4);
@@ -162,10 +173,17 @@
 @keyframes crt-warm-up {
   0%,
   15% {
+    filter: var(--crt-grade-struck);
     mask-size: 100% 0%;
   }
 
+  /* The flare is held while the raster opens, so that it decays into the settled grade rather than with it. */
+  45% {
+    filter: var(--crt-grade-struck);
+  }
+
   100% {
+    filter: var(--crt-grade);
     mask-size: 100% 150%; /* Grow past the screen so that both of the gradient's ramps clear it (100% / (1 - 2 * 15%) = 143%). */
   }
 }
