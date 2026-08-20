@@ -2,7 +2,7 @@ import { HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { watchFaviconColorScheme } from "#/lib/favicon";
-import bootSequenceOverlayScript from "#/scripts/boot-sequence-overlay.ts?inline-script";
+import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
 import type { ReactNode } from "react";
@@ -11,14 +11,14 @@ export function RootDocument({ children }: { children: ReactNode }) {
   useEffect(watchFaviconColorScheme, []);
 
   return (
-    // suppressHydrationWarning: `themeScript` and `bootSequenceOverlayScript` set attributes on
+    // suppressHydrationWarning: `themeScript` and `bootSequenceScript` set attributes on
     // `<html>` before hydration, so the client `<html>` differs from the one the server sent.
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* The `theme-color` pairs are declared here because `HeadContent` de-duplicates meta tags
             by `name`. The boot sequence colors override the normal theme colors and are removed by
-            `boot-sequence-overlay.ts` when the boot sequence is skipped or completes. */}
+            `scripts/boot-sequence.ts` when the boot sequence is skipped or completes. */}
         <meta
           data-boot-sequence-theme-color
           name="theme-color"
@@ -34,7 +34,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e2e7ea" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161a1d" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script dangerouslySetInnerHTML={{ __html: bootSequenceOverlayScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootSequenceScript }} />
       </head>
       <body>
         {children}

@@ -3,7 +3,7 @@
 
 /**
  * Set on `<html>` to hide the server-rendered desktop until the boot sequence has
- * taken over. The stylesheet shows the cover while this attribute is set.
+ * taken loaded. The stylesheet shows the cover while this attribute is set.
  */
 export const BOOT_SEQUENCE_OVERLAY_ATTRIBUTE = "data-boot-sequence-overlay";
 

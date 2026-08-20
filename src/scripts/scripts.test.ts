@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay";
 import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session";
-import bootSequenceOverlayScript from "#/scripts/boot-sequence-overlay.ts?inline-script";
+import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
 // These tests evaluate the bundled scripts exactly as the browser receives them,
@@ -76,15 +76,15 @@ describe("theme", () => {
   });
 });
 
-describe("boot sequence overlay", () => {
+describe("boot sequence", () => {
   test("enables the overlay when the session has not booted", () => {
-    run(bootSequenceOverlayScript);
+    run(bootSequenceScript);
     expect(document.documentElement.getAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe("");
   });
 
   test("does not enable the overlay when the session has already booted", () => {
     sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
-    run(bootSequenceOverlayScript);
+    run(bootSequenceScript);
 
     expect(document.documentElement.hasAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe(false);
   });
@@ -96,13 +96,13 @@ describe("boot sequence theme colors", () => {
   });
 
   test("keeps the theme colors while the boot sequence runs", () => {
-    run(bootSequenceOverlayScript);
+    run(bootSequenceScript);
     expect(bootThemeColors()).toHaveLength(2);
   });
 
   test("removes the theme colors when there is no boot sequence", () => {
     sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
-    run(bootSequenceOverlayScript);
+    run(bootSequenceScript);
 
     expect(bootThemeColors()).toHaveLength(0);
     expect(document.querySelectorAll('meta[name="theme-color"]')).toHaveLength(2);
@@ -111,8 +111,8 @@ describe("boot sequence theme colors", () => {
 
 describe("storage failures", () => {
   test.for([
+    ["boot sequence", bootSequenceScript, BOOT_SEQUENCE_OVERLAY_ATTRIBUTE],
     ["theme", themeScript, "data-theme"],
-    ["boot sequence overlay", bootSequenceOverlayScript, BOOT_SEQUENCE_OVERLAY_ATTRIBUTE],
   ] as const)("the %s script does not throw when storage access fails", ([, script, attribute]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("Storage access denied.");

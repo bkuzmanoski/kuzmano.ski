@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { FADE_IN_MS, sleep, useSleepState, wake } from "./lifecycle";
 
+const themeColors = () => document.querySelectorAll('meta[data-screensaver-theme-color][name="theme-color"]');
+
 function getState() {
   const { result } = renderHook(() => useSleepState());
   return () => result.current;
@@ -16,7 +18,10 @@ function completeFadeIn() {
 
 describe("screensaver lifecycle", () => {
   beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    document.documentElement.style.removeProperty("--color-screensaver-backdrop");
+  });
 
   test("transitions from awake to asleep, then wakes immediately", () => {
     const state = getState();
@@ -64,5 +69,21 @@ describe("screensaver lifecycle", () => {
     expect(state()).toBe("asleep");
 
     act(wake);
+  });
+
+  test("applies the backdrop color to the theme-color meta tag while asleep", () => {
+    document.documentElement.style.setProperty("--color-screensaver-backdrop", "#161a1d");
+
+    expect(themeColors()).toHaveLength(0);
+
+    act(sleep);
+
+    expect(themeColors()).toHaveLength(1);
+    expect(themeColors()[0]?.getAttribute("content")).toBe("#161a1d");
+
+    completeFadeIn();
+    act(wake);
+
+    expect(themeColors()).toHaveLength(0);
   });
 });

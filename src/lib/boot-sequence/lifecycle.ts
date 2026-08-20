@@ -1,7 +1,7 @@
 import { createEmitter } from "../emitter";
 import { removeStored } from "../storage";
 
-import { clearBootSequenceOverlay } from "./overlay";
+import { clearBootSequenceOverlay, clearBootSequenceThemeColor } from "./overlay";
 import {
   BOOT_SEQUENCE_STORAGE_KEY,
   forgetBootSequenceRun,
@@ -19,6 +19,7 @@ export function beginBootSequence() {
 }
 
 export function completeBootSequence() {
+  clearBootSequenceThemeColor();
   isComplete = true;
   emit();
 }

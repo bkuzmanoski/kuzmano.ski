@@ -11,6 +11,7 @@
 
   overflow: hidden;
 
+  visibility: hidden; /* Prevent the backdrop from tinting browser chrome in Safari 26+. */
   opacity: 0;
   background-color: var(--color-screensaver-backdrop);
 
@@ -43,6 +44,7 @@
 
   &.up {
     pointer-events: auto;
+    visibility: visible;
     opacity: 1;
     transition: opacity var(--fade-in-ms) ease-out;
   }

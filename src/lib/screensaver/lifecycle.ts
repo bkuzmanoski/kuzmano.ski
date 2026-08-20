@@ -2,6 +2,8 @@ import { useSyncExternalStore } from "react";
 
 import { createEmitter } from "../emitter";
 
+import { clearScreensaverThemeColor, setScreensaverThemeColor } from "./theme-color";
+
 export const FADE_IN_MS = 300;
 
 /**
@@ -19,6 +21,14 @@ const serverState = (): SleepState => "awake";
 
 function enter(next: SleepState) {
   state = next;
+
+  // The browser chrome follows the screensaver up and back down with it (see `theme-color.ts`).
+  if (next === "awake") {
+    clearScreensaverThemeColor();
+  } else {
+    setScreensaverThemeColor();
+  }
+
   emit();
 }
 

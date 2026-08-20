@@ -9,7 +9,7 @@
   position: fixed;
   z-index: var(--layer-boot-sequence);
   inset: 0;
-  background: radial-gradient(100% 80% at 50% 80%, var(--color-accent), var(--color-boot-sequence-backdrop) 80%);
+  background: var(--color-boot-sequence-backdrop);
 
   &::after {
     content: "";
@@ -17,8 +17,19 @@
     position: absolute;
     inset: 0;
 
-    opacity: 0.8;
-    background-image: var(--grain-texture);
+    opacity: 0.4;
+    background: radial-gradient(
+      100% 80% at 50% 80%,
+      var(--color-accent) 0%,
+      color-mix(in oklab, var(--color-accent) 93%, transparent) 13%,
+      color-mix(in oklab, var(--color-accent) 74%, transparent) 27%,
+      color-mix(in oklab, var(--color-accent) 50%, transparent) 40%,
+      color-mix(in oklab, var(--color-accent) 26%, transparent) 53%,
+      color-mix(in oklab, var(--color-accent) 7%, transparent) 67%,
+      transparent 80%
+    );
+
+    mask-image: var(--grain-texture);
   }
 }
 
@@ -99,26 +110,39 @@
 
       opacity: 0.8;
       background: linear-gradient(
-        transparent,
-        var(--color-boot-sequence-backdrop) 5%,
-        var(--color-boot-sequence-backdrop) 100%
+        transparent 0%,
+        color-mix(in oklab, var(--color-boot-sequence-backdrop) 16%, transparent) 3%,
+        color-mix(in oklab, var(--color-boot-sequence-backdrop) 50%, transparent) 6%,
+        color-mix(in oklab, var(--color-boot-sequence-backdrop) 84%, transparent) 9%,
+        var(--color-boot-sequence-backdrop) 12%
       );
     }
 
     &::after {
+      --spotlight-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-boot-sequence-foreground));
+
       content: "";
 
       position: absolute;
-      right: -50%;
+      right: -100%;
       bottom: calc(-1 * var(--spotlight-spill));
-      left: -50%;
+      left: -100%;
 
-      height: calc(2 * var(--spotlight-spill));
-      border-radius: 50%;
+      height: calc(2.2 * var(--spotlight-spill));
 
-      opacity: 0.4;
-      background: color-mix(in oklab, var(--color-accent) 60%, var(--color-boot-sequence-foreground));
-      filter: blur(40px);
+      opacity: 0.8;
+      background: radial-gradient(
+        ellipse closest-side,
+        var(--spotlight-color) 0%,
+        color-mix(in oklab, var(--spotlight-color) 93%, transparent) 12%,
+        color-mix(in oklab, var(--spotlight-color) 74%, transparent) 23%,
+        color-mix(in oklab, var(--spotlight-color) 50%, transparent) 35%,
+        color-mix(in oklab, var(--spotlight-color) 26%, transparent) 47%,
+        color-mix(in oklab, var(--spotlight-color) 7%, transparent) 58%,
+        transparent 70%
+      );
+
+      mask-image: var(--grain-texture);
     }
   }
 
