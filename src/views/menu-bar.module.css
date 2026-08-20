@@ -47,7 +47,9 @@
 }
 
 .item {
-  position: relative;
+  position: relative; /* Only for the fallback in `menu.module.css` where anchor positioning is unsupported. */
+  anchor-name: --menu;
+  anchor-scope: --menu; /* Confines the name to this title so its menu cannot anchor to another one. */
   display: flex;
 }
 

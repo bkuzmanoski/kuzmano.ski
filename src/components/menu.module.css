@@ -1,10 +1,20 @@
+@position-try --menu-align-end {
+  inset-inline: auto anchor(end);
+}
+
+@position-try --menu-align-viewport-end {
+  inset-inline: auto var(--safe-area-right);
+}
+
 .menu {
   composes: panel from global;
 
-  position: absolute;
+  position: fixed;
   z-index: var(--layer-menu);
-  top: 100%;
-  left: 0;
+  inset-block-start: anchor(end);
+  inset-inline: anchor(start) auto;
+  position-anchor: --menu; /* Declared on the menu title's wrapper in `menu-bar.module.css`. */
+  position-try-fallbacks: --menu-align-end, --menu-align-viewport-end;
 
   min-width: 220px;
   padding: 4px 0;
@@ -15,6 +25,12 @@
   font: var(--font-chrome);
 
   outline: none;
+
+  @supports not (anchor-name: --menu) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
 }
 
 .item {
