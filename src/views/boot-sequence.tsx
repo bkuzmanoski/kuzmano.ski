@@ -268,7 +268,7 @@ function Sequence() {
               height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
             }}
           />
-          <picture className={styles.keyboardLayer}>
+          <picture className={styles.keyboardLayer} aria-hidden>
             <source srcSet={macintoshKeyboardAvifUrl} type="image/avif" />
             <img ref={keyboardImageRef} alt="" src={macintoshKeyboardWebpUrl} />
           </picture>
