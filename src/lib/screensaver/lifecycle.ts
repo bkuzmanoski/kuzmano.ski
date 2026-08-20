@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 
 import { createEmitter } from "../emitter";
 
-export const FADE_IN_MS = 600;
+export const FADE_IN_MS = 300;
 
 /**
  * Only `asleep` answers to input. The gesture that chose Sleep from the menu must not
