@@ -18,18 +18,10 @@
   color: var(--color-foreground);
 
   background: var(--color-background);
+  outline: 2px solid var(--color-border);
+  outline-offset: -5px;
 
   animation: draw-alert 250ms steps(10, jump-start) both;
-
-  &::before {
-    pointer-events: none;
-    content: "";
-
-    position: absolute;
-    inset: 2px;
-
-    border: 2px solid var(--color-border);
-  }
 
   &::backdrop {
     background: var(--color-scrim);
