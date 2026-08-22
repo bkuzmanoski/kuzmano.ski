@@ -32,8 +32,8 @@ export function ContactBody() {
   const fromFieldRef = useRef<HTMLInputElement>(null);
   const decoyFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
-  const sendAttemptRef = useRef<AbortController | null>(null);
   const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
+  const sendAttemptRef = useRef<AbortController | null>(null);
 
   const hasUnsavedInput = form.isDirty;
   const characterCount = characterCountStatus(form.values.message.length);
