@@ -1,7 +1,7 @@
 import { useRef } from "react";
 
-import AppSelectedIcon from "#/assets/images/application-selected.svg?react";
-import AppIcon from "#/assets/images/application.svg?react";
+import ApplicationSelectedIcon from "#/assets/images/application-selected.svg?react";
+import ApplicationIcon from "#/assets/images/application.svg?react";
 import DocumentSelectedIcon from "#/assets/images/document-selected.svg?react";
 import DocumentIcon from "#/assets/images/document.svg?react";
 import DownloadIcon from "#/assets/images/download.svg?react";
@@ -9,8 +9,6 @@ import FolderOpenSelectedIcon from "#/assets/images/folder-open-selected.svg?rea
 import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
-import MailboxSelectedIcon from "#/assets/images/mailbox-selected.svg?react";
-import MailboxIcon from "#/assets/images/mailbox.svg?react";
 import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
@@ -27,9 +25,9 @@ import type { ComponentType, KeyboardEvent, MouseEvent, Ref } from "react";
 type GlyphIcon = ComponentType<{ className?: string }>;
 
 const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
-  entry: { closed: [AppIcon, AppSelectedIcon] },
+  entry: { closed: [DocumentIcon, DocumentSelectedIcon] },
   collection: { closed: [FolderIcon, FolderSelectedIcon], open: [FolderOpenIcon, FolderOpenSelectedIcon] },
-  contact: { closed: [MailboxIcon, MailboxSelectedIcon] },
+  contact: { closed: [ApplicationIcon, ApplicationSelectedIcon] },
   download: { closed: [DocumentIcon, DocumentSelectedIcon] },
 };
 
