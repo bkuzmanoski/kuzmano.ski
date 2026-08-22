@@ -9,6 +9,7 @@ const writeText = vi.fn<(value: string) => Promise<void>>();
 
 beforeEach(() => {
   vi.useFakeTimers();
+  writeText.mockReset();
   writeText.mockResolvedValue(undefined);
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
 });
@@ -18,8 +19,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const renderButton = () =>
-  render(<CopyButton value="test@example.com" label="Copy email address" confirmation="Copied" />);
+const renderButton = (value: string | null = "test@example.com") =>
+  render(<CopyButton value={value} label="Copy email address" confirmation="Copied" />);
 
 const clickCopy = async () => {
   fireEvent.click(screen.getByRole("button"));
@@ -61,4 +62,14 @@ test("a failed copy leaves the button in its original state", async () => {
   await clickCopy();
 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
+});
+
+test("a button with nothing to copy yet is disabled and copies nothing", async () => {
+  renderButton(null);
+
+  expect(screen.getByRole("button").hasAttribute("disabled")).toBe(true);
+
+  await clickCopy();
+
+  expect(writeText).not.toHaveBeenCalled();
 });

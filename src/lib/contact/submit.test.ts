@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { CONTACT_ENDPOINT, sendMessage } from "./submit";
+import { CONTACT_ENDPOINT } from "./endpoint";
+import { sendMessage } from "./submit";
 
 import type { ContactSubmission } from "./message";
 

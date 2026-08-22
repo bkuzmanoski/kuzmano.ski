@@ -11,7 +11,6 @@ import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
-  define: { __CONTACT_EMAIL_ADDRESS__: JSON.stringify("test@example.com") },
   plugins: [
     workersRuntimePlugin(),
     inlineScriptsPlugin(),

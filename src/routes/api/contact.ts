@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { parseSubmission } from "#/lib/contact/message";
 import { isRecord } from "#/lib/guards";
+import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings";
+import { contactEmailAddress } from "#/server/contact-email-address";
 import { deliver } from "#/server/mail";
 import type { Delivery } from "#/server/mail";
 import { isWithinRateLimit } from "#/server/rate-limit";
-import { isOversized, isSameOrigin } from "#/server/request";
+import { isOversized, isSameOrigin, isSameSite } from "#/server/request";
 
 const RATE_LIMIT_FALLBACK_KEY = "unknown";
 const DELIVERY_STATUS: Record<Delivery, number> = {
@@ -16,12 +18,30 @@ const DELIVERY_STATUS: Record<Delivery, number> = {
 };
 
 const json = (body: unknown, status: number) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
+  });
 const senderKey = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
 
+// The route id should match `CONTACT_ENDPOINT` in `src/lib/contact/endpoint.ts`.
 export const Route = createFileRoute("/api/contact")({
   server: {
     handlers: {
+      GET: async ({ request }) => {
+        if (!isSameSite(request)) {
+          return new Response(null, { status: 403 });
+        }
+
+        if (!(await isWithinRateLimit(CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, senderKey(request)))) {
+          return new Response(null, { status: 429 });
+        }
+
+        const emailAddress = await contactEmailAddress();
+
+        return emailAddress === null ? new Response(null, { status: 502 }) : json({ emailAddress }, 200);
+      },
+
       POST: async ({ request }) => {
         if (!isSameOrigin(request)) {
           return new Response(null, { status: 403 });
@@ -31,7 +51,7 @@ export const Route = createFileRoute("/api/contact")({
           return new Response(null, { status: 413 });
         }
 
-        if (!(await isWithinRateLimit(senderKey(request)))) {
+        if (!(await isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, senderKey(request)))) {
           return new Response(null, { status: 429 });
         }
 

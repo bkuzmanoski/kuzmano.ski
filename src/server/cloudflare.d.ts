@@ -52,6 +52,7 @@ declare module "cloudflare:workers" {
     SEND_EMAIL?: SendEmailBinding;
     SEND_EMAIL_RATELIMIT?: RateLimitBinding;
     CONTACT_EMAIL_ADDRESS?: string;
+    CONTACT_EMAIL_ADDRESS_RATELIMIT?: RateLimitBinding;
   }
 
   export const env: WorkerEnv;

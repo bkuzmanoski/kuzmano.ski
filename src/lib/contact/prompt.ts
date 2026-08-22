@@ -22,8 +22,11 @@ export interface PromptAlert {
 /** Sentinel value for the alert component when there is no prompt. */
 export const NO_ALERT: PromptAlert = { variant: "information", message: "", primaryLabel: "OK" };
 
-/** `directEmailAddress` is offered as a fallback when a send fails outright. */
-export function alertFor(prompt: Prompt, directEmailAddress: string): PromptAlert {
+/**
+ * `directEmailAddress` is offered as a fallback when a send fails outright. It is `null` until
+ * the window has read it, so an alert raised before it arrives omits the email address.
+ */
+export function alertFor(prompt: Prompt, directEmailAddress: string | null): PromptAlert {
   switch (prompt.kind) {
     case "discard":
       return {
@@ -46,9 +49,10 @@ export function alertFor(prompt: Prompt, directEmailAddress: string): PromptAler
     case "failed":
       return {
         variant: "error",
-        message: prompt.suggestDirectEmail
-          ? `${prompt.message} You can write directly to ${directEmailAddress} instead.`
-          : prompt.message,
+        message:
+          prompt.suggestDirectEmail && directEmailAddress
+            ? `${prompt.message} You can write directly to ${directEmailAddress} instead.`
+            : prompt.message,
         primaryLabel: "OK",
       };
   }

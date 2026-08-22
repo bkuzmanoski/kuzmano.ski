@@ -7,7 +7,7 @@ import { CopyButton } from "#/components/copy-button";
 import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
-import { CONTACT_EMAIL_ADDRESS } from "#/config/contact";
+import { CONTACT_DISPLAY_NAME } from "#/config/contact";
 import { playFieldScroll, playScrollStep } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
@@ -15,6 +15,7 @@ import { CONTACT_SCHEMA, EMPTY_MESSAGE } from "#/lib/contact/message";
 import { NO_ALERT, alertFor, characterCountStatus } from "#/lib/contact/prompt";
 import type { Prompt } from "#/lib/contact/prompt";
 import { sendMessage } from "#/lib/contact/submit";
+import { useContactEmailAddress } from "#/lib/contact/use-contact-email-address";
 import { useField } from "#/lib/forms/use-field";
 import { useForm } from "#/lib/forms/use-form";
 import { useCloseGuard, useCloseWindow } from "#/lib/hooks/use-close-window";
@@ -27,6 +28,7 @@ const SENDING_MESSAGE = "Sending message";
 
 export function ContactBody() {
   const form = useForm({ initialValues: EMPTY_MESSAGE, schema: CONTACT_SCHEMA });
+  const contactEmailAddress = useContactEmailAddress();
   const fromField = useField(form.visibleErrors.from);
   const messageField = useField(form.visibleErrors.message);
   const [isSending, setIsSending] = useState(false);
@@ -40,7 +42,7 @@ export function ContactBody() {
 
   const hasUnsavedInput = form.isDirty;
   const characterCount = characterCountStatus(form.values.message.length);
-  const alert = prompt ? alertFor(prompt, CONTACT_EMAIL_ADDRESS) : NO_ALERT;
+  const alert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;
 
   const closeWindow = useCloseWindow();
   const forceCloseWindow = useCloseGuard(() => {
@@ -146,9 +148,9 @@ export function ContactBody() {
           <div className={styles.header}>
             <ComposeValue
               label="To:"
-              actions={<CopyButton value={CONTACT_EMAIL_ADDRESS} label="Copy email address" confirmation="Copied" />}
+              actions={<CopyButton value={contactEmailAddress} label="Copy email address" confirmation="Copied" />}
             >
-              {CONTACT_EMAIL_ADDRESS}
+              {CONTACT_DISPLAY_NAME}
             </ComposeValue>
             <ComposeField label="From:" field={fromField}>
               <TextInput

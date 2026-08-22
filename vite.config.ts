@@ -2,7 +2,7 @@ import babel from "@rolldown/plugin-babel";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import postcssPresetEnv from "postcss-preset-env";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
 import { frontmatterPlugin } from "./build/frontmatter.ts";
@@ -18,18 +18,11 @@ import { themeColorPlugin } from "./build/theme-color.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 import { SITE_URL } from "./src/config/site.ts";
 
-export default defineConfig(({ command, mode }) => {
-  const { VITE_CONTACT_EMAIL_ADDRESS } = loadEnv(mode, process.cwd(), "VITE_");
-
-  if (command === "build" && !VITE_CONTACT_EMAIL_ADDRESS) {
-    throw new Error("`VITE_CONTACT_EMAIL_ADDRESS` is unset. See `.env.example`.");
-  }
-
+export default defineConfig(({ command }) => {
   const compilerBailouts = reactCompilerBailouts();
 
   return {
     resolve: { tsconfigPaths: true },
-    define: { __CONTACT_EMAIL_ADDRESS__: JSON.stringify(VITE_CONTACT_EMAIL_ADDRESS ?? "") },
     css: {
       postcss: {
         plugins: [

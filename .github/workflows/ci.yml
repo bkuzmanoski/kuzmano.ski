@@ -37,8 +37,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          VITE_CONTACT_EMAIL_ADDRESS: ${{ vars.CONTACT_EMAIL_ADDRESS }}
 
       - name: Check for stale generated routes
         run: git diff --exit-code -- src/routeTree.gen.ts

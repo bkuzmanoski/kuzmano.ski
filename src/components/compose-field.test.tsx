@@ -59,7 +59,7 @@ test("a field without an error is neither invalid nor described", () => {
 });
 
 test("an error is described without creating a second live region", () => {
-  const { container } = render(<Field label="From:" error="Not an address." />);
+  const { container } = render(<Field label="From:" error="Not an email address." />);
 
   expect(container.querySelector("[aria-live]")).toBeNull();
   expect(container.querySelector('[role="status"]')).toBeNull();

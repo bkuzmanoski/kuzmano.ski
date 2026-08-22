@@ -39,7 +39,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("a message is addressed to the configured destination, replying to its sender", async () => {
+test("a message is addressed to the configured destination email address, replying to its sender", async () => {
   await expect(deliver(MESSAGE)).resolves.toBe("sent");
   expect(send).toHaveBeenCalledWith({
     from: SENDER,

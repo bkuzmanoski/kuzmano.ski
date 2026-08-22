@@ -29,7 +29,7 @@ test("a control is described by the error and marked invalid only while there is
   expect(harness.field.control["aria-invalid"]).toBeUndefined();
   expect(harness.field.control["aria-describedby"]).toBeUndefined();
 
-  harness.show("Not an address.");
+  harness.show("Not an email address.");
 
   expect(harness.field.control["aria-invalid"]).toBe(true);
   expect(harness.field.control["aria-describedby"]).toBe(harness.field.errorId);
@@ -38,9 +38,9 @@ test("a control is described by the error and marked invalid only while there is
 test("the error is carried to the field that reports it", () => {
   const harness = renderField();
 
-  harness.show("Not an address.");
+  harness.show("Not an email address.");
 
-  expect(harness.field.error).toBe("Not an address.");
+  expect(harness.field.error).toBe("Not an email address.");
 });
 
 test("a control keeps its attributes across renders that don't change the error", () => {
@@ -51,7 +51,7 @@ test("a control keeps its attributes across renders that don't change the error"
 
   expect(harness.field.control).toBe(unchanged);
 
-  harness.show("Not an address.");
+  harness.show("Not an email address.");
 
   expect(harness.field.control).not.toBe(unchanged);
 });

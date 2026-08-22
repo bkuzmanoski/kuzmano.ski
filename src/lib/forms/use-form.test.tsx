@@ -15,16 +15,16 @@ interface Fields {
 
 const SCHEMA: Schema<Fields> = {
   name: [required("Enter a name.")],
-  email: [required("Enter an address."), emailAddress("Not an address.")],
+  email: [required("Enter an email address."), emailAddress("Not an email address.")],
 };
 
-const INITIAL: Fields = { name: "", email: "" };
+const INITIAL_VALUES: Fields = { name: "", email: "" };
 
 function renderForm() {
   let form!: Form<Fields>;
 
   function Harness() {
-    form = useForm({ initialValues: INITIAL, schema: SCHEMA });
+    form = useForm({ initialValues: INITIAL_VALUES, schema: SCHEMA });
     return null;
   }
 
@@ -58,8 +58,8 @@ test("revealing errors shows all errors at once and reports them to the caller",
     reported = harness.form.revealErrors();
   });
 
-  expect(reported).toEqual({ name: "Enter a name.", email: "Enter an address." });
-  expect(harness.form.visibleErrors).toEqual({ name: "Enter a name.", email: "Enter an address." });
+  expect(reported).toEqual({ name: "Enter a name.", email: "Enter an email address." });
+  expect(harness.form.visibleErrors).toEqual({ name: "Enter a name.", email: "Enter an email address." });
 });
 
 test("a submission with no errors reports null", () => {
@@ -87,12 +87,12 @@ test("an error is cleared as soon as the value stops failing, with no second sub
     harness.form.revealErrors();
   });
 
-  expect(harness.form.visibleErrors.email).toBe("Enter an address.");
+  expect(harness.form.visibleErrors.email).toBe("Enter an email address.");
 
   act(() => {
     harness.form.setValue("email", "nope");
   });
-  expect(harness.form.visibleErrors.email).toBe("Not an address.");
+  expect(harness.form.visibleErrors.email).toBe("Not an email address.");
 
   act(() => {
     harness.form.setValue("email", "test@example.com");
@@ -120,7 +120,7 @@ test("`isDirty` tracks whether anything has been entered, and a reset clears the
   });
 
   expect(harness.form.isDirty).toBe(false);
-  expect(harness.form.values).toEqual(INITIAL);
+  expect(harness.form.values).toEqual(INITIAL_VALUES);
   expect(harness.form.visibleErrors).toEqual({});
 });
 

@@ -15,12 +15,12 @@ export const maxLength =
     value.length <= limit ? null : message;
 
 /**
- * A dot-atom local part and a dotted domain of letter-digit-hyphen labels: the shape
- * of the addresses accepted here, and a strict subset of RFC 5322. Quoted local parts
- * comments and address literals are legal but rejected here.
+ * The shape of accepted email addresses: a dot-atom local part and a dotted domain of
+ * letter-digit-hyphen labels and a strict subset of RFC 5322. Quoted local parts
+ * comments and address literals are legal but rejected.
  *
- * This catches a typo before the message is sent. Whether an address can receive mail
- * is left to the mail server to determine.
+ * This catches a typo before the message is sent. Whether an email address can
+ * receive mail is left for the mail server to determine.
  */
 const ATOM = String.raw`[A-Za-z0-9!#$%&'*+/=?^_\`{|}~-]+`;
 const LABEL = String.raw`[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?`;
@@ -29,15 +29,15 @@ const MAX_ADDRESS_LENGTH = 254;
 const MAX_LOCAL_LENGTH = 64;
 
 export function isEmailAddress(value: string): boolean {
-  const address = value.trim();
-  const at = address.lastIndexOf("@");
+  const emailAddress = value.trim();
+  const at = emailAddress.lastIndexOf("@");
 
   return (
-    address.length <= MAX_ADDRESS_LENGTH &&
+    emailAddress.length <= MAX_ADDRESS_LENGTH &&
     at > 0 &&
     at <= MAX_LOCAL_LENGTH &&
-    !address.endsWith(".") &&
-    EMAIL.test(address)
+    !emailAddress.endsWith(".") &&
+    EMAIL.test(emailAddress)
   );
 }
 

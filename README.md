@@ -88,12 +88,6 @@ npx wrangler types /tmp/worker-configuration.d.ts
 The dev server uses the same Worker code path through Miniflare, but does not
 send messages. Local messages are written to `.wrangler/tmp/email/`.
 
-`VITE_CONTACT_EMAIL_ADDRESS` is the public address shown by the contact window.
-It is injected into the client bundle at build time, so it is set in `.env`
-locally and as the `VITE_CONTACT_EMAIL_ADDRESS` repository variable for CI.
-Cloudflare Email Obfuscation protects the published email address on the site
-(if enabled).
-
 ### Delivery failures
 
 The browser only receives a status. Check the Worker logs for:
@@ -105,9 +99,9 @@ The browser only receives a status. Check the Worker logs for:
 
 ## Rate limiting
 
-- `/api/contact` uses a Workers rate limiting binding declared in
-  `wrangler.jsonc`. It is deployed with the Worker and needs no additional
-  configuration.
+- `/api/contact` uses two Workers rate limiting bindings declared in
+  `wrangler.jsonc`, one for sending and one for reading the email address. They
+  are deployed with the Worker and need no additional configuration.
 - `/api/client-errors` uses a
   [Cloudflare rate limiting rule](https://dash.cloudflare.com/?to=/:account/:zone/security/security-rules).
 

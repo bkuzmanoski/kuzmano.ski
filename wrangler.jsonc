@@ -17,8 +17,13 @@
   "ratelimits": [
     {
       "name": "SEND_EMAIL_RATELIMIT",
-      "namespace_id": "1001", // An arbitrary identifier, not a resource ID; keep it stable across deploys.
+      "namespace_id": "1001",
       "simple": { "limit": 5, "period": 60 }
+    },
+    {
+      "name": "CONTACT_EMAIL_ADDRESS_RATELIMIT",
+      "namespace_id": "1002",
+      "simple": { "limit": 30, "period": 60 }
     }
   ],
   "observability": {

@@ -8,4 +8,8 @@
  */
 export const SEND_EMAIL_BINDING = "SEND_EMAIL";
 export const SEND_EMAIL_RATELIMIT_BINDING = "SEND_EMAIL_RATELIMIT";
+export const CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING = "CONTACT_EMAIL_ADDRESS_RATELIMIT";
 export const CONTACT_EMAIL_ADDRESS_BINDING = "CONTACT_EMAIL_ADDRESS";
+
+/** The bindings that `rate-limit.ts` can count a request against. */
+export type RateLimitBindingName = typeof SEND_EMAIL_RATELIMIT_BINDING | typeof CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING;

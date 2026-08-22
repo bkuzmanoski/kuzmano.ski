@@ -10,13 +10,14 @@ import { TAP_DISMISS_MS, Tooltip } from "./tooltip";
 
 const CONFIRMATION_MS = TAP_DISMISS_MS + 100;
 
+/** A `null` value means the text is not available yet, and the button waits for it. */
 export function CopyButton({
   value,
   label,
   confirmation,
   className,
 }: {
-  value: string;
+  value: string | null;
   label: string;
   confirmation: string;
   className?: string;
@@ -25,6 +26,10 @@ export function CopyButton({
   const timer = useTimer();
 
   async function copy() {
+    if (value === null) {
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(value);
     } catch {
@@ -38,7 +43,7 @@ export function CopyButton({
   return (
     <>
       <Tooltip label={isCopied ? confirmation : label} persistOnPress className={className}>
-        <Button aria-label={label} variant="icon" onClick={() => void copy()}>
+        <Button aria-label={label} disabled={value === null} variant="icon" onClick={() => void copy()}>
           {isCopied ? <ConfirmedIcon /> : <CopyIcon />}
         </Button>
       </Tooltip>

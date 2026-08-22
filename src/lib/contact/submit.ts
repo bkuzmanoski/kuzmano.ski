@@ -1,9 +1,9 @@
 import type { Errors } from "#/lib/forms/validation";
 import { isRecord } from "#/lib/guards";
 
-import type { ContactFields, ContactSubmission } from "./message";
+import { CONTACT_ENDPOINT } from "./endpoint";
 
-export const CONTACT_ENDPOINT = "/api/contact";
+import type { ContactFields, ContactSubmission } from "./message";
 
 const TOO_MANY_MESSAGES = "You’ve sent too many messages. Try again later.";
 const UNAVAILABLE = "The message couldn’t be sent. Try again, or write directly instead.";

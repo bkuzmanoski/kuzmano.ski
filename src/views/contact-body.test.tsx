@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { CONTACT_EMAIL_ADDRESS } from "#/config/contact";
+import { CONTACT_DISPLAY_NAME } from "#/config/contact";
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
 import type { CloseGuard } from "#/lib/window-manager";
 
@@ -27,13 +27,42 @@ vi.mock("#/lib/audio/sounds", () => ({
   playClick: vi.fn(),
 }));
 
+const CONTACT_EMAIL_ADDRESS = "inbox@example.com";
+
 const fetchMock = vi.fn<typeof fetch>();
+
+// The window makes two kinds of request: it reads the contact email address on mount and posts
+// the message on send. The mock routes by method so each can be resolved independently.
+let publishEmailAddress: (response: Response) => void;
+let respondToSendMessage: (response: Response) => void;
+let sendResponse: Promise<Response>;
+
+const emailAddressReads = () => fetchMock.mock.calls.filter(([, request]) => request?.method !== "POST");
+const sendMessageCalls = () => fetchMock.mock.calls.filter(([, request]) => request?.method === "POST");
+
+async function readEmailAddress() {
+  publishEmailAddress(
+    new Response(JSON.stringify({ emailAddress: CONTACT_EMAIL_ADDRESS }), {
+      headers: { "content-type": "application/json" },
+    }),
+  );
+  await waitFor(() => expect(button("Copy email address").hasAttribute("disabled")).toBe(false));
+}
 
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 
+  const emailAddressResponse = new Promise<Response>((resolve) => {
+    publishEmailAddress = resolve;
+  });
+
+  sendResponse = Promise.resolve(new Response(null, { status: 204 }));
+  respondToSendMessage = (response) => {
+    sendResponse = Promise.resolve(response);
+  };
+
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+  fetchMock.mockImplementation((_input, request) => (request?.method === "POST" ? sendResponse : emailAddressResponse));
 
   playError.mockClear();
   playSuccess.mockClear();
@@ -47,6 +76,10 @@ beforeEach(() => {
 
   forceCloseWindow.mockClear();
   closeGuardRef.current = null;
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 const input = (label: string) => screen.getByLabelText(label);
@@ -72,15 +105,52 @@ function describedBy(label: string) {
 
 async function submit() {
   fireEvent.click(button("Send"));
-  await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+  await waitFor(() => expect(sendMessageCalls()).not.toHaveLength(0));
 }
 
-test("the contact address is published as text with a copy action", () => {
+test("the contact window addresses its recipient by name and does not render the email address itself", async () => {
   render(<ContactBody />);
 
   expect(screen.queryByLabelText("To:")).toBeNull();
-  expect(screen.getByText(CONTACT_EMAIL_ADDRESS).tagName).toBe("P");
-  expect(button("Copy email address")).toBeDefined();
+  expect(screen.getByText(CONTACT_DISPLAY_NAME).tagName).toBe("P");
+  expect(button("Copy email address").hasAttribute("disabled")).toBe(true);
+
+  await readEmailAddress();
+
+  expect(screen.queryByText(CONTACT_EMAIL_ADDRESS)).toBeNull();
+});
+
+test("the copy email address action uses the address that was read", async () => {
+  const writeText = vi.fn<(value: string) => Promise<void>>().mockResolvedValue(undefined);
+
+  vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+  render(<ContactBody />);
+  await readEmailAddress();
+  fireEvent.click(button("Copy email address"));
+
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(CONTACT_EMAIL_ADDRESS));
+});
+
+test("reopening the window reuses the email address read earlier in the session", async () => {
+  const { unmount } = render(<ContactBody />);
+
+  await readEmailAddress();
+  expect(emailAddressReads()).toHaveLength(1);
+
+  unmount();
+  render(<ContactBody />);
+
+  await waitFor(() => expect(button("Copy email address").hasAttribute("disabled")).toBe(false));
+  expect(emailAddressReads()).toHaveLength(1);
+});
+
+test("a window without a contact email address still sends messages", async () => {
+  render(<ContactBody />);
+  compose();
+  await submit();
+
+  expect(button("Copy email address").hasAttribute("disabled")).toBe(true);
+  expect(await screen.findByText("Message sent!")).toBeDefined();
 });
 
 test("the message field remains accessible without a visible label", () => {
@@ -94,7 +164,7 @@ test("sending an incomplete message shows an alert and does not submit", () => {
   fireEvent.click(button("Send"));
 
   expect(playError).toHaveBeenCalledOnce();
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(sendMessageCalls()).toHaveLength(0);
 
   const alert = screen.getByRole("dialog");
 
@@ -153,7 +223,7 @@ test("the message counter appears when fewer than 100 characters remain", () => 
   expect(screen.getByText("10 left")).toBeDefined();
 });
 
-test("a message that exceeds the limit shows the excess character count and cannot be sent", () => {
+test("a message that exceeds the length limit shows the excess character count and cannot be sent", () => {
   render(<ContactBody />);
 
   fill("From:", "test@example.com");
@@ -163,7 +233,7 @@ test("a message that exceeds the limit shows the excess character count and cann
 
   fireEvent.click(button("Send"));
 
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(sendMessageCalls()).toHaveLength(0);
   expect(
     within(screen.getByRole("dialog")).getByText(
       `Keep the message under ${MESSAGE_MAX_LENGTH.toLocaleString()} characters.`,
@@ -184,7 +254,7 @@ test("a successful submission shows a confirmation, plays the message sent sound
 
   await submit();
 
-  const body = fetchMock.mock.calls[0]![1]!.body as string;
+  const body = sendMessageCalls()[0]![1]!.body as string;
 
   expect(JSON.parse(body)).toMatchObject({
     from: "test@example.com",
@@ -203,16 +273,17 @@ test("a successful submission shows a confirmation, plays the message sent sound
 });
 
 test("a failed submission shows an error and preserves the message", async () => {
-  fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
-
   render(<ContactBody />);
+  await readEmailAddress();
+
+  respondToSendMessage(new Response(null, { status: 502 }));
   compose();
 
   await submit();
 
   expect(
     await screen.findByText(
-      "The message couldn’t be sent. Try again, or write directly instead. You can write directly to test@example.com instead.",
+      `The message couldn’t be sent. Try again, or write directly instead. You can write directly to ${CONTACT_EMAIL_ADDRESS} instead.`,
     ),
   ).toBeDefined();
   expect(playError).toHaveBeenCalledOnce();
@@ -223,11 +294,9 @@ test("a failed submission shows an error and preserves the message", async () =>
 function startPendingSubmission() {
   let resolveRequest: (response: Response) => void = () => undefined;
 
-  fetchMock.mockReturnValue(
-    new Promise<Response>((resolve) => {
-      resolveRequest = resolve;
-    }),
-  );
+  sendResponse = new Promise<Response>((resolve) => {
+    resolveRequest = resolve;
+  });
 
   render(<ContactBody />);
   compose();
@@ -264,7 +333,7 @@ test("cancelling during submission aborts the request and ignores its result", a
   fireEvent.click(button("Cancel"));
   fireEvent.click(alertButton("Discard"));
 
-  const [, request] = fetchMock.mock.calls[0]!;
+  const [, request] = sendMessageCalls()[0]!;
 
   expect(request?.signal?.aborted).toBe(true);
 

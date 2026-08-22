@@ -11,3 +11,11 @@ export const isOversized = (value: Request | string) =>
 
 /** Returns whether a request's `Origin` matches the request URL's origin. */
 export const isSameOrigin = (request: Request) => request.headers.get("origin") === new URL(request.url).origin;
+
+/**
+ * Returns whether a request was issued by a page on this site.
+ *
+ * Browsers omit `Origin` on same-origin GET requests, so a read is checked with
+ * `Sec-Fetch-Site` instead. (Easy to forge, but basic friction.)
+ */
+export const isSameSite = (request: Request) => request.headers.get("sec-fetch-site") === "same-origin";

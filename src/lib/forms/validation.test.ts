@@ -55,7 +55,7 @@ describe("isEmailAddress", () => {
     expect(isEmailAddress(value)).toBe(false);
   });
 
-  test("rejects an address that exceeds SMTP's maximum length", () => {
+  test("rejects an email address that exceeds SMTP's maximum length", () => {
     const label = `${"b".repeat(60)}.`;
 
     expect(isEmailAddress(`${"a".repeat(64)}@${label.repeat(2)}com`)).toBe(true); // 190 characters.
@@ -72,11 +72,11 @@ describe("isEmailAddress", () => {
 });
 
 describe("emailAddress", () => {
-  const rule = emailAddress("Not an address.");
+  const rule = emailAddress("Not an email address.");
 
   test("allows an empty value, leaving emptiness for `required` to report", () => {
     expect(rule("")).toBeNull();
-    expect(rule("nope")).toBe("Not an address.");
+    expect(rule("nope")).toBe("Not an email address.");
   });
 });
 
@@ -98,13 +98,13 @@ describe("validate", () => {
 
   const schema: Schema<Fields> = {
     name: [required("Enter a name.")],
-    email: [required("Enter an address."), emailAddress("Not an address.")],
+    email: [required("Enter an email address."), emailAddress("Not an email address.")],
   };
 
   test("reports the first failure for every invalid field", () => {
     expect(validate(schema, { name: "", email: "nope" })).toEqual({
       name: "Enter a name.",
-      email: "Not an address.",
+      email: "Not an email address.",
     });
   });
 
