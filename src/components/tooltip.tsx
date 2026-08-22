@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useId, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import { cx } from "#/lib/class-names";
 import { useTimer } from "#/lib/hooks/use-timer";
@@ -7,7 +7,9 @@ import styles from "./tooltip.module.css";
 
 import type { ReactNode } from "react";
 
-const DELAY_MS = 400;
+const HOVER_DELAY_MS = 400;
+
+export const TAP_DISMISS_MS = 1_500;
 
 /**
  * The wrapper sits between the caller and the control, so a control that is
@@ -41,6 +43,8 @@ export function Tooltip({
   const [isOpen, setIsOpen] = useState(false);
   const [wasSuppressed, setWasSuppressed] = useState(suppressed);
   const timer = useTimer();
+  const labelAtTap = useRef<string | null>(null);
+  const isTapDismissPending = useRef(false);
 
   if (suppressed !== wasSuppressed) {
     setWasSuppressed(suppressed);
@@ -50,6 +54,10 @@ export function Tooltip({
   const isVisible = isOpen && !suppressed;
 
   function show(delay: number) {
+    if (isTapDismissPending.current) {
+      return;
+    }
+
     timer.cancel();
 
     if (suppressed) {
@@ -59,7 +67,41 @@ export function Tooltip({
     timer.start(() => setIsOpen(true), delay);
   }
 
+  function startTapDismissal() {
+    timer.start(() => {
+      isTapDismissPending.current = false;
+      labelAtTap.current = null;
+      setIsOpen(false);
+    }, TAP_DISMISS_MS);
+  }
+
+  function startTapFeedback() {
+    timer.cancel();
+
+    if (suppressed) {
+      return;
+    }
+
+    isTapDismissPending.current = true;
+    labelAtTap.current = label;
+    startTapDismissal();
+  }
+
+  const showTapFeedback = useEffectEvent(() => {
+    labelAtTap.current = null;
+    setIsOpen(true);
+    startTapDismissal();
+  });
+
+  useEffect(() => {
+    if (labelAtTap.current !== null && labelAtTap.current !== label) {
+      showTapFeedback();
+    }
+  }, [label]);
+
   function hide() {
+    isTapDismissPending.current = false;
+    labelAtTap.current = null;
     timer.cancel();
     setIsOpen(false);
   }
@@ -74,8 +116,18 @@ export function Tooltip({
       }}
       onBlurCapture={hide}
       onPointerDownCapture={persistOnPress ? undefined : hide}
-      onPointerEnter={() => show(DELAY_MS)}
-      onPointerLeave={hide}
+      onPointerEnter={() => show(HOVER_DELAY_MS)}
+      onPointerLeave={(event) => {
+        if (!persistOnPress || event.pointerType !== "touch") {
+          hide();
+        }
+      }}
+      onPointerCancel={hide}
+      onPointerUp={(event) => {
+        if (persistOnPress && event.pointerType === "touch") {
+          startTapFeedback();
+        }
+      }}
     >
       {isValidElement<{ "aria-describedby"?: string }>(children)
         ? cloneElement(children, { "aria-describedby": isVisible ? id : undefined })

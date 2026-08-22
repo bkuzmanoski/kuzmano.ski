@@ -2,6 +2,7 @@
   --window-safe-area-inline-start: 0px;
   --window-safe-area-inline-end: 0px;
   --window-safe-area-block-end: 0px;
+  --window-focused: 1;
 
   composes: panel from global;
 
@@ -20,7 +21,11 @@
     transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 2); /* Follow menu bar and icons reveal. */
   }
 
+  /* The property is inherited rather than a class so that content deep in the window can
+   * read the state through a style query (see `scrollbar.module.css`). */
   &:not(.focused) {
+    --window-focused: 0;
+
     border-color: var(--color-border-inactive);
   }
 
@@ -166,6 +171,14 @@
   width: var(--scrollbar-width);
   height: calc(var(--scrollbar-width) + 1px); /* +1px for the border. */
   border-top: 1px solid var(--color-border);
+
+  /* An unfocused window empties its scrollbar (see `scrollbar.module.css`). The control
+   * keeps its space and top border, but drops its icon along with the rest. */
+  @container style(--window-focused: 0) {
+    & svg {
+      visibility: hidden;
+    }
+  }
 
   /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */
   &.pressed {

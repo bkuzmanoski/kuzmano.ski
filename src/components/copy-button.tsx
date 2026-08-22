@@ -6,9 +6,9 @@ import { useTimer } from "#/lib/hooks/use-timer";
 
 import { Button } from "./button";
 import styles from "./copy-button.module.css";
-import { Tooltip } from "./tooltip";
+import { TAP_DISMISS_MS, Tooltip } from "./tooltip";
 
-const CONFIRMATION_MS = 1_600;
+const CONFIRMATION_MS = TAP_DISMISS_MS + 100;
 
 export function CopyButton({
   value,

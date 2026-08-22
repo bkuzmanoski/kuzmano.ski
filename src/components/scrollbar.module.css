@@ -87,3 +87,14 @@
 
   background: var(--color-background);
 }
+
+@container style(--window-focused: 0) {
+  .arrow,
+  .thumb {
+    visibility: hidden;
+  }
+
+  .track.filled::before {
+    content: none;
+  }
+}
