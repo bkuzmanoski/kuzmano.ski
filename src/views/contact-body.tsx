@@ -134,6 +134,24 @@ export function ContactBody() {
     forceCloseWindow();
   }
 
+  function confirmSent() {
+    setPrompt(null);
+    closeWindow?.();
+  }
+
+  function confirmPrompt() {
+    switch (prompt?.kind) {
+      case "discard":
+        return confirmDiscard();
+
+      case "sent":
+        return confirmSent();
+
+      default:
+        return closePrompt();
+    }
+  }
+
   return (
     <>
       <form
@@ -219,7 +237,7 @@ export function ContactBody() {
         </div>
         <div className={styles.actions}>
           <span className={styles.characterCount}>{characterCount}</span>
-          <Button children={isSending ? "Cancel" : "Discard"} onClick={() => closeWindow?.()} />
+          <Button children={!hasUnsavedInput || isSending ? "Cancel" : "Discard"} onClick={() => closeWindow?.()} />
           <Button children="Send" disabled={isSending} type="submit" />
         </div>
         <div aria-label="Message status" className={cx(styles.scrim, isSending && styles.sending)} role="status">
@@ -232,7 +250,7 @@ export function ContactBody() {
         message={alert.message}
         primaryAction={{
           label: alert.primaryLabel,
-          onAction: prompt?.kind === "discard" ? confirmDiscard : closePrompt,
+          onAction: confirmPrompt,
         }}
         secondaryAction={
           alert.secondaryLabel === undefined ? undefined : { label: alert.secondaryLabel, onAction: closePrompt }

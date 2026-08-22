@@ -272,6 +272,18 @@ test("a successful submission shows a confirmation, plays the message sent sound
   expect((input("Message:") as HTMLTextAreaElement).value).toBe("");
 });
 
+test("dismissing the sent confirmation closes the window", async () => {
+  render(<ContactBody />);
+  compose();
+  await submit();
+  await screen.findByRole("dialog");
+  fireEvent.click(alertButton("OK"));
+
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(closeWindow).toHaveBeenCalledOnce();
+  expect(forceCloseWindow).toHaveBeenCalledOnce();
+});
+
 test("a failed submission shows an error and preserves the message", async () => {
   render(<ContactBody />);
   await readEmailAddress();
