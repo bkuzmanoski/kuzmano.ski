@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 
+import { playError } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
+import { containsPoint } from "#/lib/geometry";
 
 import styles from "./alert.module.css";
 import { Button } from "./button";
 
-import type { Ref } from "react";
+import type { PointerEvent as ReactPointerEvent, Ref } from "react";
 
 const CHAR_INFORMATION_ICON = "💁";
 const CHAR_ERROR_ICON = "⯃";
@@ -13,6 +15,10 @@ const CHAR_ERROR_ICON = "⯃";
 export interface AlertAction {
   label: string;
   onAction: (() => void) | string;
+}
+
+function isPressOutside(event: ReactPointerEvent<HTMLDialogElement>) {
+  return !containsPoint(event.currentTarget.getBoundingClientRect(), { x: event.clientX, y: event.clientY });
 }
 
 function runAction({ onAction }: AlertAction) {
@@ -74,6 +80,11 @@ export function Alert(
       aria-label={label}
       className={styles.alert}
       open={modal ? undefined : open}
+      onPointerDown={(event) => {
+        if (isPressOutside(event)) {
+          playError();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault(); // Prevent the browser from closing it; the owner controls `open`.
         runAction(secondaryAction ?? primaryAction);

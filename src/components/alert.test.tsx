@@ -1,14 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
+import { playError } from "#/lib/audio/sounds";
+
 import { Alert } from "./alert";
 
-vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
+vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playError: vi.fn() }));
 
 const CONTENT = {
   heading: { text: "Discard this message?" },
   message: "Your message will be lost.",
 };
+
+const stubDialogBox = (rect: { x: number; y: number; width: number; height: number }) =>
+  vi.spyOn(screen.getByRole("dialog"), "getBoundingClientRect").mockReturnValue(rect as DOMRect);
 
 const escape = () => fireEvent(screen.getByRole("dialog"), new Event("cancel", { bubbles: false, cancelable: true }));
 
@@ -131,4 +136,36 @@ test("the Escape key runs the primary action when there is no secondary action",
   escape();
 
   expect(onPrimary).toHaveBeenCalledOnce();
+});
+
+test("pressing outside a modal alert sounds the error tone", () => {
+  render(
+    <Alert
+      {...CONTENT}
+      open
+      primaryAction={{ label: "Discard", onAction: vi.fn<() => void>() }}
+      secondaryAction={{ label: "Cancel", onAction: vi.fn<() => void>() }}
+    />,
+  );
+  stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
+  vi.mocked(playError).mockClear();
+  fireEvent.pointerDown(screen.getByRole("dialog"), { clientX: 40, clientY: 320 });
+
+  expect(playError).toHaveBeenCalledOnce();
+});
+
+test("pressing within the alert, including its padding, does not sound the error tone", () => {
+  render(
+    <Alert
+      {...CONTENT}
+      open
+      primaryAction={{ label: "Discard", onAction: vi.fn<() => void>() }}
+      secondaryAction={{ label: "Cancel", onAction: vi.fn<() => void>() }}
+    />,
+  );
+  stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
+  vi.mocked(playError).mockClear();
+  fireEvent.pointerDown(screen.getByRole("dialog"), { clientX: 110, clientY: 110 });
+
+  expect(playError).not.toHaveBeenCalled();
 });
