@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { SITE_NAME } from "#/config/site";
+
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings";
 import { deliver } from "./mail";
 
@@ -12,12 +14,12 @@ vi.mock("./env", () => ({
 }));
 
 const MESSAGE = {
-  from: { name: "Worker", email: "worker@example.com" },
   replyTo: "sender@example.com",
   subject: "Message from sender@example.com",
   text: "Hello.",
 };
 const DESTINATION = "inbox@example.com";
+const SENDER = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
 
 const send = vi.fn<NonNullable<WorkerEnv["SEND_EMAIL"]>["send"]>();
 
@@ -40,7 +42,7 @@ afterEach(() => {
 test("a message is addressed to the configured destination, replying to its sender", async () => {
   await expect(deliver(MESSAGE)).resolves.toBe("sent");
   expect(send).toHaveBeenCalledWith({
-    from: MESSAGE.from,
+    from: SENDER,
     to: DESTINATION,
     replyTo: MESSAGE.replyTo,
     subject: MESSAGE.subject,
@@ -84,7 +86,7 @@ test("a failed send logs the refused sender and recipient", async () => {
   await deliver(MESSAGE);
 
   expect(console.error).toHaveBeenCalledWith(
-    expect.objectContaining({ from: MESSAGE.from.email, to: DESTINATION, code: "E_RECIPIENT_NOT_ALLOWED" }),
+    expect.objectContaining({ from: SENDER.email, to: DESTINATION, code: "E_RECIPIENT_NOT_ALLOWED" }),
   );
 });
 
