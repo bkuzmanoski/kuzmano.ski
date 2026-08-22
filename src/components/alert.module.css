@@ -5,6 +5,10 @@
   grid-template-columns: auto 1fr;
   gap: 28px;
 
+  /* WebKit stretches a grid dialog's `fit-content` height to the available space unless the
+   * rows are explicitly packed, which leaves the alert full-height with oversized actions. */
+  align-content: start;
+
   width: min(512px, calc(100% - 2 * var(--window-layer-padding)));
   padding: 24px;
   padding-inline-start: 36px;
