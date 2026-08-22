@@ -26,9 +26,20 @@
   }
 
   & .message {
+    /* The width the field holds back for the scrollbar. Declared here rather than only
+     * under the collapsed state so the parent pane's own reservation is not inherited. */
+    --reserved-scrollbar-width: 0px;
+
     flex: 1;
+    gap: 0;
     align-items: stretch;
     border-top: 1px solid var(--color-border);
+
+    &:has(> [data-collapsed]) {
+      --reserved-scrollbar-width: calc(
+        var(--scrollbar-width) + 1px
+      ); /* +1px for the border defined in `scrollbar.module.css`. */
+    }
   }
 
   & .actions {

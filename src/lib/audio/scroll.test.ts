@@ -2,7 +2,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { fakeScrollViewport } from "#/test-utils/audio";
 
-import { DETENT_PIXELS, IDLE_MS, playScroll, playScrollStep, skipScrollAbove, skipScrollAt } from "./scroll";
+import {
+  DETENT_PIXELS,
+  IDLE_MS,
+  playFieldScroll,
+  playScroll,
+  playScrollStep,
+  skipScrollAbove,
+  skipScrollAt,
+} from "./scroll";
 import { playScrollDetent } from "./sounds";
 
 vi.mock("./sounds", () => ({ playScrollDetent: vi.fn() }));
@@ -144,6 +152,45 @@ describe("skipScrollAbove", () => {
     playScroll(parent);
 
     expect(detents()).toBe(0);
+  });
+});
+
+describe("playFieldScroll", () => {
+  test("plays a detent when the content height has not changed", () => {
+    const element = fakeScrollViewport();
+
+    playFieldScroll(element);
+    now += 16;
+    element.scrollTop = DETENT_PIXELS;
+    playFieldScroll(element);
+
+    expect(detents()).toBe(1);
+  });
+
+  test("records the scroll an edit causes without playing a detent", () => {
+    const element = fakeScrollViewport();
+
+    playFieldScroll(element);
+    now += 16;
+    element.scrollHeight += 20; // A line the edit added.
+    element.scrollTop = 20;
+    playFieldScroll(element);
+
+    expect(detents()).toBe(0);
+  });
+
+  test("plays the next scroll using the field height after an edit", () => {
+    const element = fakeScrollViewport();
+
+    playFieldScroll(element);
+    element.scrollHeight += 20;
+    element.scrollTop = 20;
+    playFieldScroll(element);
+    now += 16;
+    element.scrollTop = 20 + DETENT_PIXELS;
+    playFieldScroll(element);
+
+    expect(detents()).toBe(1);
   });
 });
 

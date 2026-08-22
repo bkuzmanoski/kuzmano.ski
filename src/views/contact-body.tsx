@@ -1,12 +1,14 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert } from "#/components/alert";
 import { Button } from "#/components/button";
 import { ComposeField, ComposeValue } from "#/components/compose-field";
 import { CopyButton } from "#/components/copy-button";
+import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
 import { CONTACT_EMAIL_ADDRESS } from "#/config/contact";
+import { playFieldScroll, playScrollStep } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE } from "#/lib/contact/message";
@@ -15,6 +17,7 @@ import type { Prompt } from "#/lib/contact/prompt";
 import { sendMessage } from "#/lib/contact/submit";
 import { useForm } from "#/lib/forms/use-form";
 import { useCloseGuard, useCloseWindow } from "#/lib/hooks/use-close-window";
+import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
 import styles from "./contact-body.module.css";
 
@@ -30,6 +33,7 @@ export function ContactBody() {
   const decoyFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
   const sendAttemptRef = useRef<AbortController | null>(null);
+  const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
 
   const hasUnsavedInput = form.isDirty;
   const characterCount = characterCountStatus(form.values.message.length);
@@ -46,6 +50,10 @@ export function ContactBody() {
 
     return true;
   });
+
+  // A textarea holds no child boxes for the metrics' resize observer to watch,
+  // so its scroll height is remeasured whenever the value it renders changes.
+  useEffect(measureMessage, [form.values.message, measureMessage]);
 
   async function send() {
     const invalidFields = form.revealErrors();
@@ -156,12 +164,46 @@ export function ContactBody() {
           </div>
           <ComposeField label="Message:" className={styles.message} error={form.visibleErrors.message} labelHidden>
             {(control) => (
-              <TextArea
-                {...control}
-                {...form.fieldProps("message")}
-                ref={messageFieldRef}
-                placeholder="Write a message…"
-              />
+              <>
+                <TextArea
+                  {...control}
+                  {...form.fieldProps("message")}
+                  ref={messageFieldRef}
+                  placeholder="Write a message…"
+                  onScroll={(event) => {
+                    measureMessage();
+                    playFieldScroll(event.currentTarget);
+                  }}
+                />
+                <Scrollbar
+                  viewportId={control.id}
+                  metrics={messageMetrics}
+                  onScrollTop={(top) => {
+                    if (messageFieldRef.current) {
+                      messageFieldRef.current.scrollTop = top;
+                    }
+                  }}
+                  onStep={(delta) => {
+                    const field = messageFieldRef.current;
+
+                    if (!field) {
+                      return false;
+                    }
+
+                    const initialScrollTop = field.scrollTop;
+
+                    field.scrollBy({ top: delta });
+
+                    const didScroll = field.scrollTop !== initialScrollTop;
+
+                    if (didScroll) {
+                      playScrollStep(field);
+                    }
+
+                    return didScroll;
+                  }}
+                />
+              </>
             )}
           </ComposeField>
           <input

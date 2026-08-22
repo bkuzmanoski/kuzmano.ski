@@ -4,8 +4,8 @@
   min-width: 0;
   min-height: 0;
 
-  /* Keep the content width stable when a hidden scrollbar appears or disappears.
-   * The content is anchored to the inline end, so only its full-width edges move. */
+  /* Keep the content width stable when a the scrollbar appears or disappears. The
+   * content is anchored to the inline end, so only its full-width edges move. */
   &:has(> [data-collapsed]) {
     --reserved-scrollbar-width: calc(
       var(--scrollbar-width) + 1px

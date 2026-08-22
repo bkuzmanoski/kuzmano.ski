@@ -31,8 +31,14 @@
 
   &.multiline {
     resize: none;
+    scrollbar-width: none; /* The field is paired with a `Scrollbar` of its own. */
+
     align-self: stretch;
+
     height: 100%;
     padding: var(--gutter);
+
+    /* Keep the line length stable when the scrollbar appears or disappears. */
+    padding-inline-end: calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
   }
 }

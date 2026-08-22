@@ -15,6 +15,7 @@ interface ScrollGesture {
 }
 
 const gestures = new WeakMap<Element, ScrollGesture>();
+const contentHeights = new WeakMap<Element, number>();
 
 // Ignore overscroll so it cannot produce detents.
 function getScrollTop(element: Element) {
@@ -87,6 +88,28 @@ export function playScroll(element: Element) {
   gesture.distance = Math.min(gesture.distance - DETENT_PIXELS, DETENT_PIXELS);
 
   playScrollDetent(gesture.speed);
+}
+
+/**
+ * Plays a sound for scrolling a field whose content grows and shrinks as it is edited.
+ *
+ * An edit that changes the wrapped height scrolls the caret back into view, which arrives
+ * as an ordinary scroll event. `skipScrollAt` cannot be called ahead of it as it can for
+ * `focus` or `scrollIntoView`: the browser scrolls the field while laying it out, after
+ * the edit's effects have already run. The change in content height identifies such a
+ * scroll, so it is recorded here instead.
+ */
+export function playFieldScroll(element: Element) {
+  const contentHeight = contentHeights.get(element);
+
+  contentHeights.set(element, element.scrollHeight);
+
+  if (contentHeight !== undefined && contentHeight !== element.scrollHeight) {
+    skipScrollAt(element);
+    return;
+  }
+
+  playScroll(element);
 }
 
 export function playScrollStep(element: Element) {
