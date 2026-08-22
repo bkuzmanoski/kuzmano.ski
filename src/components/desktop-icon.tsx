@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo, useRef } from "react";
 
 import ApplicationSelectedIcon from "#/assets/images/application-selected.svg?react";
 import ApplicationIcon from "#/assets/images/application.svg?react";
@@ -14,13 +14,13 @@ import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { iconHref } from "#/lib/icons/icon";
-import type { Icon, IconKind } from "#/lib/icons/icon";
+import type { Icon as IconDefinition, IconKind } from "#/lib/icons/icon";
 import { isBrowserHandledClick, isFollowingLink, isRepeatClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
 
 import styles from "./desktop-icon.module.css";
 
-import type { ComponentType, KeyboardEvent, MouseEvent, Ref } from "react";
+import type { ComponentType, KeyboardEvent, MouseEvent } from "react";
 
 type GlyphIcon = ComponentType<{ className?: string }>;
 
@@ -49,9 +49,14 @@ function Glyph({
   return <GlyphComponent className={className} />;
 }
 
-export function DesktopIcon({
+/**
+ * Memoized because the desktop rebuilds every icon on every frame of a drag: the icon
+ * elements are built inside a `map`, which the React Compiler caches as one array rather
+ * than per item. Every handler takes the icon it belongs to rather than closing over it,
+ * so the desktop can hold one copy of each and only the icon being dragged re-renders.
+ */
+export const DesktopIcon = memo(function Icon({
   iconDefinition,
-  ref,
   x,
   y,
   cellSize,
@@ -64,25 +69,24 @@ export function DesktopIcon({
   onMoveEnd,
   onKeyDown,
 }: {
-  iconDefinition: Icon;
-  ref: Ref<HTMLAnchorElement>;
+  iconDefinition: IconDefinition;
   x: number;
   y: number;
   cellSize: number;
   tabIndex: number;
   selected: boolean;
   open: boolean;
-  onSelect: () => void;
-  onOpen: () => void;
-  onMoveStart: (x: number, y: number) => void;
+  onSelect: (iconDefinition: IconDefinition) => void;
+  onOpen: (iconDefinition: IconDefinition) => void;
+  onMoveStart: (iconDefinition: IconDefinition, x: number, y: number) => void;
   onMoveEnd: () => void;
-  onKeyDown: (event: KeyboardEvent) => void;
+  onKeyDown: (event: KeyboardEvent, iconDefinition: IconDefinition) => void;
 }) {
   const hasMovedRef = useRef(false);
   const pressHandlers = useDoublePress({
     onDoublePress: (event) => {
       if (!hasMovedRef.current && !isBrowserHandledClick(event)) {
-        onOpen();
+        onOpen(iconDefinition);
       }
     },
   });
@@ -91,12 +95,12 @@ export function DesktopIcon({
     canStart: (event) => event.button === 0,
     start: () => {
       playClick();
-      onSelect();
+      onSelect(iconDefinition);
       hasMovedRef.current = false;
 
       return { x, y };
     },
-    onStart: (delta, from) => onMoveStart(from.x + delta.dx, from.y + delta.dy),
+    onStart: (delta, from) => onMoveStart(iconDefinition, from.x + delta.dx, from.y + delta.dy),
     onEnd: (moved) => {
       hasMovedRef.current = moved;
 
@@ -119,7 +123,6 @@ export function DesktopIcon({
 
   return (
     <a
-      ref={ref}
       aria-label={iconDefinition.label}
       className={styles.icon}
       data-icon={iconDefinition.id}
@@ -130,8 +133,8 @@ export function DesktopIcon({
       tabIndex={tabIndex}
       onClick={onClick}
       onDragStart={(event) => event.preventDefault()}
-      onFocus={onSelect}
-      onKeyDown={onKeyDown}
+      onFocus={() => onSelect(iconDefinition)}
+      onKeyDown={(event) => onKeyDown(event, iconDefinition)}
       {...mergeHandlers(dragHandlers, pressHandlers)}
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
@@ -141,4 +144,4 @@ export function DesktopIcon({
       </span>
     </a>
   );
-}
+});

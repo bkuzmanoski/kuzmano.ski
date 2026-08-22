@@ -11,6 +11,7 @@ import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { mdxPlugin } from "./build/mdx.ts";
 import { prerenderRoutes } from "./build/prerender/routes.ts";
 import { verifyPrerenderedPage } from "./build/prerender/verify.ts";
+import { reactCompilerBailouts } from "./build/react-compiler.ts";
 import { sitemapNamespacePlugin } from "./build/sitemap-namespace.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { themeColorPlugin } from "./build/theme-color.ts";
@@ -23,6 +24,8 @@ export default defineConfig(({ command, mode }) => {
   if (command === "build" && !VITE_CONTACT_EMAIL_ADDRESS) {
     throw new Error("`VITE_CONTACT_EMAIL_ADDRESS` is unset. See `.env.example`.");
   }
+
+  const compilerBailouts = reactCompilerBailouts();
 
   return {
     resolve: { tsconfigPaths: true },
@@ -57,7 +60,8 @@ export default defineConfig(({ command, mode }) => {
       }),
       sitemapNamespacePlugin(),
       viteReact({ include: /\.(tsx?|mdx)$/ }),
-      babel({ presets: [reactCompilerPreset()] }),
+      babel({ presets: [reactCompilerPreset({ logger: compilerBailouts.logger })] }),
+      compilerBailouts.plugin,
     ],
     server: { host: true },
   };

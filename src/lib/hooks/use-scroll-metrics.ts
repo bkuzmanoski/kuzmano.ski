@@ -44,7 +44,11 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
     let frame: number | null = null;
 
     const schedule = () => {
-      frame ??= requestAnimationFrame(() => {
+      if (frame !== null) {
+        return;
+      }
+
+      frame = requestAnimationFrame(() => {
         frame = null;
         measure();
       });

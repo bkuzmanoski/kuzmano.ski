@@ -39,10 +39,12 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
   // every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
   // so a release cancels whichever is pending.
   function scheduleRepeat(delay: number) {
-    repeatTimer.start(() => {
+    const repeat = () => {
       step(true);
-      scheduleRepeat(REPEAT_MS);
-    }, delay);
+      repeatTimer.start(repeat, REPEAT_MS);
+    };
+
+    repeatTimer.start(repeat, delay);
   }
 
   function start() {

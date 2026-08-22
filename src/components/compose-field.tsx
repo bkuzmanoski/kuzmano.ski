@@ -1,6 +1,5 @@
-import { useId } from "react";
-
 import { cx } from "#/lib/class-names";
+import type { FieldBinding } from "#/lib/forms/use-field";
 
 import styles from "./compose-field.module.css";
 
@@ -26,28 +25,25 @@ export function ComposeValue({
 
 export function ComposeField({
   label,
+  field,
   labelHidden = false,
-  error,
   className,
   children,
 }: {
   label: string;
+  field: FieldBinding;
   labelHidden?: boolean;
-  error?: string;
   className?: string;
-  children: (control: { id: string; "aria-invalid"?: boolean; "aria-describedby"?: string }) => ReactNode;
+  children: ReactNode;
 }) {
-  const id = useId();
-  const errorId = `${id}-error`;
-
   return (
     <div className={cx(styles.composeField, className)}>
-      <label className={labelHidden ? styles.hidden : styles.label} htmlFor={id}>
+      <label className={labelHidden ? styles.hidden : styles.label} htmlFor={field.control.id}>
         {label}
       </label>
-      {children({ id, "aria-invalid": error ? true : undefined, "aria-describedby": error ? errorId : undefined })}
-      <p className={styles.error} id={errorId}>
-        {error}
+      {children}
+      <p className={styles.error} id={field.errorId}>
+        {field.error}
       </p>
     </div>
   );

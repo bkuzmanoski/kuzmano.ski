@@ -1,5 +1,5 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect, useEffectEvent, useMemo, useReducer, useRef } from "react";
+import { useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 
 import { resolveRoute } from "#/content/window-registry";
 import {
@@ -59,8 +59,7 @@ export function WindowManagerProvider({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const reducer = useMemo(() => createWindowReducer(layout), [layout]);
-  const closeGuardsRef = useRef<CloseGuards>(null);
-  const closeGuards = (closeGuardsRef.current ??= createCloseGuards());
+  const [closeGuards] = useState<CloseGuards>(createCloseGuards);
   const [state, dispatch] = useReducer(reducer, router, (initialRouter) =>
     initialState(reducer, initialRouter.state.location.pathname),
   );

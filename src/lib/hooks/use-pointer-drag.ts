@@ -75,7 +75,11 @@ export function usePointerDrag<T>({
 
     pendingDeltaRef.current = { delta, value: active.value };
 
-    frameRef.current ??= requestAnimationFrame(() => {
+    if (frameRef.current !== null) {
+      return;
+    }
+
+    frameRef.current = requestAnimationFrame(() => {
       frameRef.current = null;
       flush();
     });

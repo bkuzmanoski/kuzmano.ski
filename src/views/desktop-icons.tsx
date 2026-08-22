@@ -34,7 +34,6 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
-  const iconsRef = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   // Only a press on the empty desktop clears the selection. A press on a window or on
   // the menu bar leaves it standing. The desktop stops showing a selection when it does
@@ -50,6 +49,10 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
+
+  // Read from the DOM rather than from a ref map, so an icon does not have
+  // to take a ref callback that its parent rebuilds on every render.
+  const iconElement = (id: string) => layerRef.current?.querySelector<HTMLAnchorElement>(`[data-icon="${id}"]`);
 
   /** The box of an element in the layer's own coordinates. */
   function relativeRect(element: Element): Rect {
@@ -79,24 +82,33 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       })
     : [];
 
-  function selectIcon(id: string) {
-    setSelectedIconId(id);
+  // The handlers below read the layout through this ref rather than capturing it from render.
+  // Both the placements and container are rebuilt on every frame of a drag, so capturing either
+  // would recreate the handlers and re-render every icon they are passed to.
+  const layoutRef = useRef({ placements, container });
+
+  useEffect(() => {
+    layoutRef.current = { placements, container };
+  });
+
+  function selectIcon(iconDefinition: Icon) {
+    setSelectedIconId(iconDefinition.id);
     focusDesktop(); // Activate the desktop so the selection is shown and the arrow keys move it.
-    iconsRef.current[id]?.focus();
+    iconElement(iconDefinition.id)?.focus();
   }
 
   function openIcon(iconDefinition: Icon) {
     flash.start(iconDefinition.id);
 
     if (iconDefinition.kind === "download") {
-      followLink(iconsRef.current[iconDefinition.id]);
+      followLink(iconElement(iconDefinition.id));
       return;
     }
 
     // The zoom rect grows towards a window that is not on the desktop yet.
     // A window that is already open only changes what it shows.
     const windowId = resolveWindow(iconDefinition.route)?.id;
-    const element = iconsRef.current[iconDefinition.id];
+    const element = iconElement(iconDefinition.id);
 
     if (element && windowId && !content[windowId]) {
       onZoomRect({ windowId, from: relativeRect(element) });
@@ -106,11 +118,17 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   }
 
   function moveSelection(fromId: string | null, key: ArrowKey) {
-    const nextId = fromId === null ? placements[0]?.id : adjacentIconId(placements, fromId, key);
+    const current = layoutRef.current.placements;
+    const nextId = (fromId === null ? current[0]?.id : adjacentIconId(current, fromId, key)) ?? null;
+    const nextIcon = nextId === null ? undefined : ICONS_BY_ID.get(nextId);
 
-    if (nextId) {
-      selectIcon(nextId);
+    if (nextIcon) {
+      selectIcon(nextIcon);
     }
+  }
+
+  function moveIconTo(iconDefinition: Icon, x: number, y: number) {
+    moveIcon(iconDefinition.id, positionFromDrop({ x, y }, layoutRef.current.container, ICON_LAYOUT));
   }
 
   function onIconKeyDown(event: ReactKeyboardEvent, iconDefinition: Icon) {
@@ -160,9 +178,6 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       {placements.map(({ id, iconDefinition, x, y }) => (
         <DesktopIcon
           key={id}
-          ref={(element) => {
-            iconsRef.current[id] = element;
-          }}
           iconDefinition={iconDefinition}
           x={x}
           y={y}
@@ -170,11 +185,11 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           tabIndex={tabStop === id ? 0 : -1}
           open={iconDefinition.kind === "collection" && openDestinationRoutes.has(iconDefinition.route)}
           selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
-          onSelect={() => selectIcon(id)}
-          onOpen={() => openIcon(iconDefinition)}
-          onMoveStart={(nextX, nextY) => moveIcon(id, positionFromDrop({ x: nextX, y: nextY }, container, ICON_LAYOUT))}
+          onSelect={selectIcon}
+          onOpen={openIcon}
+          onMoveStart={moveIconTo}
           onMoveEnd={commitIconPositions}
-          onKeyDown={(event) => onIconKeyDown(event, iconDefinition)}
+          onKeyDown={onIconKeyDown}
         />
       ))}
     </div>

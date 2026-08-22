@@ -20,7 +20,6 @@ beforeEach(() => {
 function renderIcon() {
   render(
     <DesktopIcon
-      ref={{ current: null }}
       iconDefinition={ICON}
       x={0}
       y={0}

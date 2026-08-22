@@ -15,6 +15,7 @@ import { CONTACT_SCHEMA, EMPTY_MESSAGE } from "#/lib/contact/message";
 import { NO_ALERT, alertFor, characterCountStatus } from "#/lib/contact/prompt";
 import type { Prompt } from "#/lib/contact/prompt";
 import { sendMessage } from "#/lib/contact/submit";
+import { useField } from "#/lib/forms/use-field";
 import { useForm } from "#/lib/forms/use-form";
 import { useCloseGuard, useCloseWindow } from "#/lib/hooks/use-close-window";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
@@ -26,6 +27,8 @@ const SENDING_MESSAGE = "Sending message";
 
 export function ContactBody() {
   const form = useForm({ initialValues: EMPTY_MESSAGE, schema: CONTACT_SCHEMA });
+  const fromField = useField(form.visibleErrors.from);
+  const messageField = useField(form.visibleErrors.message);
   const [isSending, setIsSending] = useState(false);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [openedAt] = useState(() => Date.now());
@@ -147,64 +150,60 @@ export function ContactBody() {
             >
               {CONTACT_EMAIL_ADDRESS}
             </ComposeValue>
-            <ComposeField label="From:" error={form.visibleErrors.from}>
-              {(control) => (
-                <TextInput
-                  {...control}
-                  {...form.fieldProps("from")}
-                  ref={fromFieldRef}
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="you@example.com"
-                  spellCheck={false}
-                  type="email"
-                />
-              )}
+            <ComposeField label="From:" field={fromField}>
+              <TextInput
+                {...fromField.control}
+                {...form.handlers.from}
+                ref={fromFieldRef}
+                autoComplete="email"
+                inputMode="email"
+                placeholder="you@example.com"
+                spellCheck={false}
+                type="email"
+                value={form.values.from}
+              />
             </ComposeField>
           </div>
-          <ComposeField label="Message:" className={styles.message} error={form.visibleErrors.message} labelHidden>
-            {(control) => (
-              <>
-                <TextArea
-                  {...control}
-                  {...form.fieldProps("message")}
-                  ref={messageFieldRef}
-                  placeholder="Write a message…"
-                  onScroll={(event) => {
-                    measureMessage();
-                    playFieldScroll(event.currentTarget);
-                  }}
-                />
-                <Scrollbar
-                  viewportId={control.id}
-                  metrics={messageMetrics}
-                  onScrollTop={(top) => {
-                    if (messageFieldRef.current) {
-                      messageFieldRef.current.scrollTop = top;
-                    }
-                  }}
-                  onStep={(delta) => {
-                    const field = messageFieldRef.current;
+          <ComposeField label="Message:" field={messageField} className={styles.message} labelHidden>
+            <TextArea
+              {...messageField.control}
+              {...form.handlers.message}
+              ref={messageFieldRef}
+              placeholder="Write a message…"
+              value={form.values.message}
+              onScroll={(event) => {
+                measureMessage();
+                playFieldScroll(event.currentTarget);
+              }}
+            />
+            <Scrollbar
+              viewportId={messageField.control.id}
+              metrics={messageMetrics}
+              onScrollTop={(top) => {
+                if (messageFieldRef.current) {
+                  messageFieldRef.current.scrollTop = top;
+                }
+              }}
+              onStep={(delta) => {
+                const field = messageFieldRef.current;
 
-                    if (!field) {
-                      return false;
-                    }
+                if (!field) {
+                  return false;
+                }
 
-                    const initialScrollTop = field.scrollTop;
+                const initialScrollTop = field.scrollTop;
 
-                    field.scrollBy({ top: delta });
+                field.scrollBy({ top: delta });
 
-                    const didScroll = field.scrollTop !== initialScrollTop;
+                const didScroll = field.scrollTop !== initialScrollTop;
 
-                    if (didScroll) {
-                      playScrollStep(field);
-                    }
+                if (didScroll) {
+                  playScrollStep(field);
+                }
 
-                    return didScroll;
-                  }}
-                />
-              </>
-            )}
+                return didScroll;
+              }}
+            />
           </ComposeField>
           <input
             ref={decoyFieldRef}

@@ -6,6 +6,7 @@ import { emailAddress, required } from "./validation";
 
 import type { Form } from "./use-form";
 import type { Schema } from "./validation";
+import type { ChangeEvent } from "react";
 
 interface Fields {
   name: string;
@@ -42,7 +43,7 @@ test("a field's error is withheld until the field has been visited", () => {
   expect(harness.form.visibleErrors).toEqual({});
 
   act(() => {
-    harness.form.fieldProps("name").onBlur();
+    harness.form.handlers.name.onBlur();
   });
 
   expect(harness.form.visibleErrors).toEqual({ name: "Enter a name." });
@@ -121,6 +122,32 @@ test("`isDirty` tracks whether anything has been entered, and a reset clears the
   expect(harness.form.isDirty).toBe(false);
   expect(harness.form.values).toEqual(INITIAL);
   expect(harness.form.visibleErrors).toEqual({});
+});
+
+test("a field's handlers are fixed while its value changes", () => {
+  const harness = renderForm();
+  const nameHandlers = harness.form.handlers.name;
+  const emailHandlers = harness.form.handlers.email;
+
+  act(() => {
+    harness.form.setValue("email", "test@example.com");
+  });
+
+  expect(harness.form.handlers.name).toBe(nameHandlers);
+  expect(harness.form.handlers.email).toBe(emailHandlers);
+  expect(harness.form.values.email).toBe("test@example.com");
+});
+
+test("a change handler writes to its own field", () => {
+  const harness = renderForm();
+
+  act(() => {
+    harness.form.handlers.name.onChange({
+      currentTarget: { value: "Ada" },
+    } as ChangeEvent<HTMLInputElement>);
+  });
+
+  expect(harness.form.values).toEqual({ name: "Ada", email: "" });
 });
 
 test("an untouched form shows no errors but is still invalid", () => {

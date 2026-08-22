@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
+import { memo, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
@@ -30,6 +30,7 @@ export type MenuItem =
   | { kind: "separator" };
 
 type MenuItemAccessory = "download" | "external-link";
+type MenuAction = Extract<MenuItem, { kind: "action" }>;
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
 const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
@@ -66,6 +67,58 @@ function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
     </span>
   );
 }
+
+/**
+ * Memoized because the menu rebuilds every row whenever the highlight moves: the row
+ * elements are built inside a `map`, which the React Compiler caches as one array
+ * rather than per item. Without this, moving the pointer down the menu re-renders
+ * every row in it to change the appearance of two.
+ */
+const MenuItemRow = memo(function MenuRow({
+  item,
+  index,
+  id,
+  isActive,
+  isMacOS,
+}: {
+  item: MenuAction;
+  index: number;
+  id: string;
+  isActive: boolean;
+  isMacOS: boolean;
+}) {
+  const itemProps = {
+    "aria-disabled": item.disabled || undefined,
+    className: cx(styles.item, item.disabled && styles.disabled, isActive && styles.active),
+    "data-index": index,
+    id,
+    role: "menuitem" as const,
+  };
+  const content = (
+    <>
+      <span>{item.label}</span>
+      {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
+      {item.accessory === "download" && <DownloadIcon className={styles.accessory} />}
+      {item.accessory === "external-link" && <ExternalLinkIcon className={styles.accessory} />}
+    </>
+  );
+
+  return item.href === undefined ? (
+    <div {...itemProps}>{content}</div>
+  ) : (
+    <a
+      {...itemProps}
+      draggable={false}
+      href={item.href}
+      rel={item.target}
+      tabIndex={-1}
+      target={item.target}
+      onClick={onItemClick}
+    >
+      {content}
+    </a>
+  );
+});
 
 export function Menu({
   items,
@@ -254,50 +307,20 @@ export function Menu({
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
-      {items.map((item, index) => {
-        if (item.kind === "separator") {
-          return <div key={index} className={styles.separator} role="separator" />;
-        }
-
-        const itemProps = {
-          "aria-disabled": item.disabled || undefined,
-          className: cx(
-            styles.item,
-            item.disabled && styles.disabled,
-            flash.isHighlighted(index, focusedItemId === index) && styles.active,
-          ),
-          "data-index": index,
-          id: `${itemIdPrefix}-${index}`,
-          role: "menuitem" as const,
-        };
-        const content = (
-          <>
-            <span>{item.label}</span>
-            {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
-            {item.accessory === "download" && <DownloadIcon className={styles.accessory} />}
-            {item.accessory === "external-link" && <ExternalLinkIcon className={styles.accessory} />}
-          </>
-        );
-
-        return item.href === undefined ? (
-          <div key={index} {...itemProps}>
-            {content}
-          </div>
+      {items.map((item, index) =>
+        item.kind === "separator" ? (
+          <div key={index} className={styles.separator} role="separator" />
         ) : (
-          <a
+          <MenuItemRow
             key={index}
-            {...itemProps}
-            draggable={false}
-            href={item.href}
-            rel={item.target}
-            tabIndex={-1}
-            target={item.target}
-            onClick={onItemClick}
-          >
-            {content}
-          </a>
-        );
-      })}
+            item={item}
+            index={index}
+            id={`${itemIdPrefix}-${index}`}
+            isActive={flash.isHighlighted(index, focusedItemId === index)}
+            isMacOS={isMacOS}
+          />
+        ),
+      )}
     </div>
   );
 }

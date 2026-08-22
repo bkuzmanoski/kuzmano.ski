@@ -63,11 +63,15 @@ export default defineConfig(
           varsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/prefer-nullish-coalescing": ["error", { ignorePrimitives: { boolean: true } }],
       "@typescript-eslint/only-throw-error": [
         "error",
         { allow: [{ from: "package", package: "@tanstack/router-core", name: ["NotFoundError", "AnyRedirect"] }] },
       ],
+      "@typescript-eslint/prefer-nullish-coalescing": "off", // Rewrites to `??=`, which the compiler cannot lower.
+      "react-hooks/todo": "error", // Syntax the compiler cannot lower yet.
+      "react-hooks/invariant": "error", // Syntax the compiler cannot lower yet.
+      "react-hooks/syntax": "error", // Syntax the compiler cannot lower yet.
+      "react-hooks/unsupported-syntax": "error", // Syntax the compiler cannot lower yet.
     },
   },
   {
