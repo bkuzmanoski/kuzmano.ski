@@ -1,11 +1,28 @@
 import { describe, expect, test } from "vitest";
 
-import { insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry";
+import { containsPoint, insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry";
 
 import type { Inset, Rect, Transform } from "./geometry";
 
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
 const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
+
+describe("containsPoint", () => {
+  test("a point within the rect is contained", () => {
+    expect(containsPoint(rect, { x: 300, y: 200 })).toBe(true);
+  });
+
+  test("a point on an edge is contained", () => {
+    expect(containsPoint(rect, { x: 100, y: 350 })).toBe(true);
+  });
+
+  test("a point beyond any side is not contained", () => {
+    expect(containsPoint(rect, { x: 99, y: 200 })).toBe(false);
+    expect(containsPoint(rect, { x: 501, y: 200 })).toBe(false);
+    expect(containsPoint(rect, { x: 300, y: 49 })).toBe(false);
+    expect(containsPoint(rect, { x: 300, y: 351 })).toBe(false);
+  });
+});
 
 describe("scaleInset", () => {
   test("scales every edge", () => {

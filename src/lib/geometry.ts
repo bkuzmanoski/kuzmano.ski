@@ -25,6 +25,11 @@ export interface Transform {
   y: number;
 }
 
+/** Whether a point falls within a rect, counting its edges as within. */
+export function containsPoint(rect: Rect, { x, y }: Position): boolean {
+  return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+}
+
 /** Clamps a cell's leading edge so a cell of `cellSize` stays inside a container of `containerSize`. */
 export function clampToContainer(position: number, containerSize: number, cellSize: number): number {
   return clamp(position, 0, containerSize - cellSize);
