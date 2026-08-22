@@ -1,0 +1,44 @@
+.scrollPane {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+
+  /* Keep the content width stable when a hidden scrollbar appears or disappears.
+   * The content is anchored to the inline end, so only its full-width edges move. */
+  &:has(> [data-collapsed]) {
+    --reserved-scrollbar-width: calc(
+      var(--scrollbar-width) + 1px
+    ); /* +1px for the border defined in `scrollbar.module.css`. */
+
+    /* A safe-area inset means the scrollbar is removed permanently. */
+    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+    @container not style(--window-safe-area-inline-end: 0px) {
+      --reserved-scrollbar-width: 0px;
+    }
+  }
+}
+
+/* On maximized windows, the inline-end inset places the scrollbar under the display cutout.
+ * Touch devices scroll the pane directly, so remove the scrollbar instead. */
+.scrollbar {
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+  @container not style(--window-safe-area-inline-end: 0px) {
+    display: none;
+  }
+}
+
+.contentContainer {
+  scrollbar-width: none;
+
+  overflow-y: auto;
+  flex: 1;
+
+  min-width: 0;
+
+  /* The window provides these values; the fallbacks match its uninset default. */
+  padding-block-end: var(--window-safe-area-block-end, 0);
+  padding-inline: var(--window-safe-area-inline-start, 0) var(--window-safe-area-inline-end, 0);
+
+  outline: none;
+}

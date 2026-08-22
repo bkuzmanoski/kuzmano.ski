@@ -4,25 +4,34 @@ import { cx } from "#/lib/class-names";
 import styles from "./spinner.module.css";
 
 /**
- * A System 6-era watch, its minute hand ticking clockwise to mark time passing.
+ * A loading indicator.
  *
- * The watch takes its color from `currentColor`; `--step-ms` sets how long each
- * position of the hand is held for. Caller can set each via `className`.
+ * `inline` renders at its natural size and is announced as an image when reached.
+ * `fill` centres itself in its container and uses a live region for content that
+ * arrives after the surrounding page.
+ *
+ * `label` describes the work being waited for rather than the indicator itself.
+ *
+ * `data-loading-indicator` marks the indicator for `build/prerender.ts`, which fails
+ * the build if a page is prerendered while a Suspense boundary is still pending.
  */
 export function Spinner({
+  variant = "inline",
   label = "Loading",
-  size = "regular",
   className,
 }: {
+  variant?: "inline" | "fill";
   label?: string;
-  size?: "regular" | "small";
   className?: string;
 }) {
   return (
-    <WatchIcon
-      className={cx(styles.spinner, className, size === "small" && styles.small)}
-      role="status"
+    <span
+      className={cx(styles.spinner, styles[variant], className)}
+      data-loading-indicator=""
+      role={variant === "fill" ? "status" : "img"}
       aria-label={label}
-    />
+    >
+      <WatchIcon aria-hidden />
+    </span>
   );
 }

@@ -7,15 +7,17 @@ import type { Position, Rect, Size } from "./geometry";
 /**
  * Every window id, in the order the window layer writes them to the DOM. Stacking is `order`.
  */
-export const WINDOW_DOM_ORDER = ["collection", "entry", "notFound"] as const;
+export const WINDOW_DOM_ORDER = ["collection", "entry", "contact"] as const;
 
-/**
- * The windows the desktop can open. Every route resolves to exactly one of them, and each one
- * exists at most once: a route that resolves to an open window replaces what that window shows.
- */
 export type WindowId = (typeof WINDOW_DOM_ORDER)[number];
 
 const WINDOW_COUNT = WINDOW_DOM_ORDER.length; // The most windows that can be open at once.
+
+export interface Destination {
+  type: WindowId;
+  title: string;
+  route: string;
+}
 
 /** A value held per window. A missing entry means that window is closed. */
 export type WindowRecord<T> = Partial<Record<WindowId, T>>;
@@ -33,7 +35,7 @@ export interface WindowGeometry extends Rect {
 
 export interface WindowSpec {
   defaultSize: Size;
-  openAt: "cascade" | "centre";
+  openAt: "cascade" | "center";
   fixedSize: boolean; // A fixed-size window has no zoom control and no resize handle.
 }
 
@@ -50,6 +52,7 @@ export interface ManagerState {
   order: Array<WindowId>; // Back to front, so the last is on top.
   focused: WindowId | null; // `null` means the desktop has focus.
   surface: Size; // {0, 0} until the window layer has measured it.
+  notFoundRoute: string | null; // The route the desktop is reporting as missing, or `null` when there is nothing to report
 }
 
 export type Action =
@@ -61,7 +64,9 @@ export type Action =
   | { type: "zoom"; id: WindowId }
   | { type: "measure"; surface: Size }
   | { type: "organize" }
-  | { type: "focusDesktop" };
+  | { type: "focusDesktop" }
+  | { type: "notFound"; route: string }
+  | { type: "dismissNotFound" };
 
 export const EMPTY_STATE: ManagerState = {
   content: {},
@@ -69,6 +74,7 @@ export const EMPTY_STATE: ManagerState = {
   order: [],
   focused: null,
   surface: { width: 0, height: 0 },
+  notFoundRoute: null,
 };
 
 /** Whether window layer has reported the size of the desktop yet. */
@@ -103,12 +109,12 @@ function updateGeometry(
 }
 
 /**
- * One axis of a cascade slot: the window's default extent, centred and then stepped along the
+ * One axis of a cascade slot: the window's default extent, centered and then stepped along the
  * axis, constrained to what is left inside the padding. Since a step spends space the window
  * could otherwise fill, one that would take it below its minimum extent is dropped in full,
- * leaving the window centred on that axis alone.
+ * leaving the window centered on that axis alone.
  *
- * The result is left unrounded so that it matches, to the pixel, where CSS centres a
+ * The result is left unrounded so that it matches, to the pixel, where CSS centers a
  * pre-rendered window (see `.unplaced` in `window.module.css`).
  */
 function cascadeAxis(
@@ -118,16 +124,16 @@ function cascadeAxis(
   minLength: number,
   offset: number,
 ): { position: number; extent: number } {
-  const centre = Math.max(padding, (surfaceLength - defaultLength) / 2);
+  const center = Math.max(padding, (surfaceLength - defaultLength) / 2);
   const extentAt = (position: number) => Math.min(defaultLength, surfaceLength - padding - position);
-  const stepped = centre + offset;
-  const position = extentAt(stepped) < minLength ? centre : stepped;
+  const stepped = center + offset;
+  const position = extentAt(stepped) < minLength ? center : stepped;
 
   return { position, extent: extentAt(position) };
 }
 
 /**
- * A window's default size stepped down and to the right of centre, constrained to the
+ * A window's default size stepped down and to the right of center, constrained to the
  * available space. A slot is already placed, so `createWindowPlacer` returns it unchanged.
  */
 function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
@@ -155,12 +161,12 @@ function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: nu
 
 /**
  * Where a window opens. A cascading window takes the first slot no open window stands on, so
- * it is never hidden behind one the same size; a centred window always opens in the middle.
+ * it is never hidden behind one the same size; a centered window always opens in the middle.
  */
 function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect {
   const slotAt = (step: number) => cascadeSlot(layout, state.surface, id, step);
 
-  if (layout.windows[id].openAt === "centre") {
+  if (layout.windows[id].openAt === "center") {
     return slotAt(0);
   }
 
@@ -177,9 +183,9 @@ function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect
   return slotAt(0);
 }
 
-// Every open window cascaded from the centre of the desktop, back to front, at its existing
+// Every open window cascaded from the center of the desktop, back to front, at its existing
 // size unless that size overflows the slot it lands in. Organizing is a deliberate tidy-up
-// of the whole desktop, so it cascades windows that would open in the centre as well.
+// of the whole desktop, so it cascades windows that would open in the center as well.
 function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 
@@ -198,6 +204,10 @@ function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord
   });
 
   return geometry;
+}
+
+function clearNotFound(state: ManagerState): ManagerState {
+  return state.notFoundRoute === null ? state : { ...state, notFoundRoute: null };
 }
 
 /** How a window is positioned and sized on a desktop of a given size. Bound to a layout by `createWindowPlacer`. */
@@ -236,7 +246,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
         if (current) {
           const raised = focusWindow(state, id); // The window is already open, so it shows the new route in place and comes to the front.
-          return content === state.content ? raised : { ...raised, content };
+          return clearNotFound(content === state.content ? raised : { ...raised, content });
         }
 
         return {
@@ -248,6 +258,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           },
           order: [...state.order, id],
           focused: id,
+          notFoundRoute: null,
         };
       }
 
@@ -316,7 +327,15 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
       }
 
       case "focusDesktop": {
-        return state.focused === null ? state : { ...state, focused: null };
+        return clearNotFound(state.focused === null ? state : { ...state, focused: null });
+      }
+
+      case "notFound": {
+        return state.notFoundRoute === action.route ? state : { ...state, notFoundRoute: action.route };
+      }
+
+      case "dismissNotFound": {
+        return clearNotFound(state);
       }
     }
   };
@@ -326,9 +345,22 @@ export interface OpenOptions {
   replaceUrl?: boolean;
 }
 
+export interface CloseOptions {
+  force?: boolean;
+}
+
+/**
+ * Guards a window close request.
+ *
+ * Returning `true` claims the request and keeps the window open. The guard must then
+ * complete the close using the function returned by `useCloseGuard`.
+ */
+export type CloseGuard = () => boolean;
+
 export interface WindowActions {
   open: (route: string, options?: OpenOptions) => void;
-  close: (id: WindowId) => void;
+  close: (id: WindowId, options?: CloseOptions) => void;
+  registerCloseGuard: (id: WindowId, guard: CloseGuard) => () => void;
   focus: (id: WindowId) => void;
   move: (id: WindowId, x: number, y: number) => void;
   resize: (id: WindowId, width: number, height: number) => void;
@@ -336,9 +368,38 @@ export interface WindowActions {
   measure: (surface: Size) => void;
   organize: () => void;
   focusDesktop: () => void;
+  showNotFound: (route: string) => void;
+  dismissNotFound: () => void;
 }
 
-// The state is split across six contexts so a change reaches only the parts that
+/**
+ * Registry of close guards for window bodies.
+ *
+ * Uses mutable state because `close` reads the current guard when a
+ * request is made; the registry itself does not affect rendering.
+ */
+export interface CloseGuards {
+  register: (id: WindowId, guard: CloseGuard) => () => void;
+  claim: (id: WindowId) => boolean; // Invokes the window's guard and returns whether it claimed the close request.
+}
+
+export function createCloseGuards(): CloseGuards {
+  const guards = new Map<WindowId, CloseGuard>();
+
+  return {
+    register(id, guard) {
+      guards.set(id, guard);
+      return () => {
+        if (guards.get(id) === guard) {
+          guards.delete(id);
+        }
+      };
+    },
+    claim: (id) => guards.get(id)?.() === true,
+  };
+}
+
+// The state is split across seven contexts so a change reaches only the parts that
 // use it. A window drag rewrites `geometry` many times per second; keeping window
 // content, the order, and the focus state separate means the menu bar, status items
 // and desktop icons do not re-render with it.
@@ -348,6 +409,7 @@ export const GeometryContext = createContext<WindowRecord<WindowGeometry>>({});
 export const OrderContext = createContext<Array<WindowId>>([]);
 export const FocusContext = createContext<WindowId | null>(null);
 export const SurfaceContext = createContext<Size>(EMPTY_STATE.surface);
+export const NotFoundContext = createContext<string | null>(null);
 
 export function useWindowActions(): WindowActions {
   const actions = use(ActionsContext);
@@ -386,4 +448,9 @@ export function useFocusedWindow(): WindowId | null {
  */
 export function useSurface(): Size {
   return use(SurfaceContext);
+}
+
+/** The route the desktop is reporting as missing, or null when there is nothing to report. */
+export function useNotFoundRoute(): string | null {
+  return use(NotFoundContext);
 }

@@ -7,7 +7,7 @@ import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 
-import { CONTENT_DIRECTORY, ROOT_DIRECTORY } from "./paths.ts";
+import { CONTENT_DIRECTORY, fromRoot } from "./paths.ts";
 import { shikiTheme } from "./shiki-theme.ts";
 
 import type { Plugin } from "vite";
@@ -30,7 +30,7 @@ function contentLanguages(): Array<string> {
     }
   };
 
-  walk(join(ROOT_DIRECTORY, CONTENT_DIRECTORY));
+  walk(fromRoot(CONTENT_DIRECTORY));
 
   return [...languages];
 }

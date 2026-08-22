@@ -1,0 +1,38 @@
+.field {
+  flex: 1;
+
+  margin-top: 2px; /* Optical alignment with label. */
+  padding: 0;
+  border: 0;
+
+  font: var(--font-ui-large);
+  color: var(--color-foreground);
+
+  background: transparent;
+
+  &::placeholder {
+    color: var(--color-foreground-disabled);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    pointer-events: none;
+    cursor: default;
+    color: var(--color-foreground-disabled);
+  }
+
+  &[aria-invalid="true"]:not(:placeholder-shown, :focus, .multiline) {
+    text-decoration: underline wavy var(--color-error);
+    text-underline-offset: 2px;
+  }
+
+  &.multiline {
+    resize: none;
+    align-self: stretch;
+    height: 100%;
+    padding: var(--gutter);
+  }
+}

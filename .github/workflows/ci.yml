@@ -37,9 +37,14 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_CONTACT_EMAIL_ADDRESS: ${{ vars.CONTACT_EMAIL_ADDRESS }}
 
       - name: Check for stale generated routes
         run: git diff --exit-code -- src/routeTree.gen.ts
+
+      - name: Check worker configuration
+        run: npm exec -- wrangler deploy --dry-run
 
       - name: Upload build
         if: github.event_name != 'pull_request'
@@ -75,7 +80,7 @@ jobs:
           path: dist
 
       - name: Deploy to Cloudflare
-        run: npx wrangler deploy
+        run: npm exec -- wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

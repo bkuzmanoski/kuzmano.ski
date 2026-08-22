@@ -4,15 +4,14 @@ import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
-import { playClick, playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/ui";
+import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
-import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { mergeHandlers } from "#/lib/merge-handlers";
 
-import { Scrollbar } from "./scrollbar";
+import { ScrollPane } from "./scroll-pane";
 import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 
@@ -52,78 +51,6 @@ function TitleBarButton({
         {isPressed ? <ActiveIcon /> : icon}
       </button>
     </Tooltip>
-  );
-}
-
-function ScrollPane({
-  id,
-  isResizing,
-  resizeControl,
-  children,
-}: {
-  id: string;
-  isResizing: boolean;
-  resizeControl?: ReactNode;
-  children: ReactNode;
-}) {
-  const contentContainerRef = useRef<HTMLDivElement>(null);
-  const { metrics, measure } = useScrollMetrics(contentContainerRef);
-
-  const overscrolledEnd =
-    metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
-
-  return (
-    <div className={styles.scrollPane}>
-      <div
-        ref={contentContainerRef}
-        className={styles.contentContainer}
-        data-overscrolled={overscrolledEnd}
-        id={id}
-        tabIndex={-1}
-        onScroll={(event) => {
-          measure();
-
-          if (isResizing) {
-            skipScrollAt(event.currentTarget);
-            return;
-          }
-
-          playScroll(event.currentTarget);
-        }}
-      >
-        {children}
-      </div>
-      <Scrollbar
-        viewportId={id}
-        metrics={metrics}
-        resizeControl={resizeControl}
-        className={styles.scrollbar}
-        onScrollTop={(top) => {
-          if (contentContainerRef.current) {
-            contentContainerRef.current.scrollTop = top;
-          }
-        }}
-        onStep={(delta) => {
-          const element = contentContainerRef.current;
-
-          if (!element) {
-            return false;
-          }
-
-          const initialScrollTop = element.scrollTop;
-
-          element.scrollBy({ top: delta });
-
-          const didScroll = element.scrollTop !== initialScrollTop;
-
-          if (didScroll) {
-            playScrollStep(element);
-          }
-
-          return didScroll;
-        }}
-      />
-    </div>
   );
 }
 

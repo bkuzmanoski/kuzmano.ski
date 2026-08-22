@@ -1,6 +1,5 @@
 import { Outlet } from "@tanstack/react-router";
 
-import { SkipLink } from "#/components/skip-link";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { LAYOUT } from "#/config/windows";
 import { useAudioUnlock } from "#/lib/audio/context";
@@ -8,20 +7,19 @@ import { useAudioUnlock } from "#/lib/audio/context";
 import { BootSequence } from "./boot-sequence";
 import styles from "./desktop.module.css";
 import { MenuBar } from "./menu-bar";
+import { NotFoundAlert } from "./not-found";
 import { Screensaver } from "./screensaver";
 import { SiteIndex } from "./site-index";
+import { SkipLink } from "./skip-link";
 import { WindowLayer } from "./window-layer";
 import { WindowManagerProvider } from "./window-manager-provider";
 
-import type { ReactNode } from "react";
-
 /**
- * The desktop environment, mounted once by the root route above the outlet so it
- * does not remount on navigation.
+ * The desktop environment, mounted once by the root route above the
+ * outlet so it does not remount on navigation.
  */
-export function Desktop({ children }: { children: ReactNode }) {
-  // The first gesture anywhere on the page readies the audio context (see lib/audio/context).
-  useAudioUnlock();
+export function Desktop() {
+  useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `lib/audio/context.ts`).
 
   return (
     <WindowManagerProvider layout={LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
@@ -29,19 +27,13 @@ export function Desktop({ children }: { children: ReactNode }) {
         <SkipLink />
         <SiteIndex />
         <MenuBar />
-        <WindowLayer>{children}</WindowLayer>
+        <WindowLayer>
+          <Outlet />
+        </WindowLayer>
+        <NotFoundAlert />
       </div>
       <BootSequence />
       <Screensaver />
     </WindowManagerProvider>
-  );
-}
-
-/** The root route's component: the desktop wrapped around the outlet every route renders into. */
-export function DesktopRoot() {
-  return (
-    <Desktop>
-      <Outlet />
-    </Desktop>
   );
 }

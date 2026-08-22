@@ -8,7 +8,7 @@ export const PAGES_DIRECTORY = "_pages";
  * Slugs of the pages the site links to, each backed by `<slug>.mdx` in the pages directory.
  * Page titles and descriptions are read from the page's frontmatter.
  */
-export const PAGE_SLUGS = ["about", "experience", "contact"] as const;
+export const PAGE_SLUGS = ["about", "experience"] as const;
 
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 

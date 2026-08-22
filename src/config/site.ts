@@ -2,7 +2,7 @@ export const SITE_NAME = "Brian Kuzmanoski";
 export const SITE_URL = "https://kuzmano.ski";
 export const SITE_DESCRIPTION = "The personal site of Brian Kuzmanoski: work, notes and experience.";
 export const SITE_SOURCE_URL = "https://github.com/bkuzmanoski/kuzmano.ski";
-export const NOT_FOUND_TITLE = "Page not found (404)";
+export const NOT_FOUND_PAGE_TITLE = "Page not found (404)";
 
 const SOCIAL_IMAGE = "/logo512.png";
 

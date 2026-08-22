@@ -1,11 +1,8 @@
 import { useEffect } from "react";
 
-import { Button } from "#/components/button";
+import { Alert } from "#/components/alert";
 import { documentTitle } from "#/config/site";
 import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
-
-import { DialogBody } from "./dialog-body";
-import styles from "./error-page.module.css";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
@@ -50,21 +47,13 @@ export function ErrorPage({ error }: ErrorComponentProps) {
   return (
     <>
       <title>{documentTitle("Error")}</title>
-      <main className={styles.errorPage}>
-        <DialogBody
-          variant="error"
-          title="Error"
-          headingLevel={1}
-          message="There was a problem loading this page."
-          actions={
-            <>
-              <Button children="Try Again" onClick={() => location.reload()} />
-              <Button children="Go Home" autoFocus href="/" />
-            </>
-          }
-          className={styles.dialog}
-        />
-      </main>
+      <Alert
+        modal={false} // The error boundary replaces the app.
+        variant="error"
+        message="There was a problem loading this page."
+        primaryAction={{ label: "Go Home", onAction: "/" }}
+        secondaryAction={{ label: "Try Again", onAction: () => location.reload() }}
+      />
     </>
   );
 }

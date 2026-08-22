@@ -1,11 +1,4 @@
 .emptyState {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  height: 100%;
-  padding: var(--gutter);
-
+  composes: placeholder from global;
   font: var(--font-ui);
-  color: var(--color-foreground-secondary);
 }

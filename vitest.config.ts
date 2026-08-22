@@ -7,10 +7,13 @@ import { frontmatterPlugin } from "./build/frontmatter.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { mdxPlugin } from "./build/mdx.ts";
 import { svgrOptions } from "./build/svgr.ts";
+import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
+  define: { __CONTACT_EMAIL_ADDRESS__: JSON.stringify("test@example.com") },
   plugins: [
+    workersRuntimePlugin(),
     inlineScriptsPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),

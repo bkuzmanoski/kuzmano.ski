@@ -3,7 +3,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { DesktopIcon } from "#/components/desktop-icon";
 import { ICONS, ICON_IDS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
 import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
-import { playClick } from "#/lib/audio/ui";
+import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import type { Rect } from "#/lib/geometry";

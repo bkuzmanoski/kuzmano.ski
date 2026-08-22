@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import DownloadIcon from "#/assets/images/download.svg?react";
 import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
-import { playClick, playHover } from "#/lib/audio/ui";
+import { playClick, playHover } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos";

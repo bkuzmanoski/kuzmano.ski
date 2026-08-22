@@ -5,8 +5,8 @@ import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window";
 
 import type { ReactNode } from "react";
 
-vi.mock("#/lib/audio/ui", () => ({
-  playClick: vi.fn(),
+vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
+vi.mock("#/lib/audio/scroll", () => ({
   playScroll: vi.fn(),
   playScrollStep: vi.fn(),
   skipScrollAt: vi.fn(),

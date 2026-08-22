@@ -6,6 +6,7 @@ Requires the Node version in `.nvmrc`.
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
@@ -50,6 +51,71 @@ Page titles come from frontmatter; the configuration only needs the file name.
 2. Add its title and description to COLLECTIONS in `src/config/content.ts`,
    keyed by the folder name.
 3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
+
+## Contact form
+
+Messages are sent through Cloudflare's `send_email` binding.
+
+### Cloudflare Worker types
+
+`src/cloudflare.d.ts` contains the minimal type declarations for the Worker APIs
+used by the application. They are maintained manually because `wrangler types`
+does not provide a usable declaration for `cloudflare:workers`.
+
+If the Workers runtime or Wrangler version changes, check these declarations
+against the generated types:
+
+```bash
+npx wrangler types /tmp/worker-configuration.d.ts
+```
+
+### Configuration
+
+1. Enable
+   [Email Sending](https://dash.cloudflare.com/?to=/:account/email-service/sending)
+   for the domain.
+2. Add and verify the inbox as a
+   [destination address](https://dash.cloudflare.com/?to=/:account/email-service/routing/destination-addresses).
+3. Set the destination address as the `CONTACT_EMAIL_ADDRESS` Worker secret:
+
+   ```bash
+   npm exec -- wrangler secret put CONTACT_EMAIL_ADDRESS
+   ```
+
+4. Put the same email address in `.env` as `CONTACT_EMAIL_ADDRESS` for local
+   development.
+
+The dev server uses the same Worker code path through Miniflare, but does not
+send messages. Local messages are written to `.wrangler/tmp/email/`.
+
+`VITE_CONTACT_EMAIL_ADDRESS` is the public address shown by the contact window.
+It is injected into the client bundle at build time, so it is set in `.env`
+locally and as the `VITE_CONTACT_EMAIL_ADDRESS` repository variable for CI.
+Cloudflare Email Obfuscation protects the published email address on the site
+(if enabled).
+
+### Delivery failures
+
+The browser only receives a status. Check the Worker logs for:
+
+- `contact_binding_missing`: the required binding or secret is missing.
+- `contact_delivery_failed`: Cloudflare rejected the message. The error code
+  identifies the cause, such as `E_SENDER_NOT_VERIFIED`,
+  `E_RECIPIENT_NOT_ALLOWED`, `E_DELIVERY_FAILED`, or a quota error.
+
+## Rate limiting
+
+- `/api/contact` uses a Workers rate limiting binding declared in
+  `wrangler.jsonc`. It is deployed with the Worker and needs no additional
+  configuration.
+- `/api/client-errors` uses a
+  [Cloudflare rate limiting rule](https://dash.cloudflare.com/?to=/:account/:zone/security/security-rules).
+
+  Expression:
+
+  ```
+  (http.request.method eq "POST" and http.request.uri.path eq "/api/client-errors")
+  ```
 
 ## Deployment
 

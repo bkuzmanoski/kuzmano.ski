@@ -7,7 +7,7 @@ export const LAYOUT: WindowLayout = {
   windows: {
     entry: { defaultSize: { width: 1024, height: 1024 }, openAt: "cascade", fixedSize: false },
     collection: { defaultSize: { width: 1024, height: 1024 }, openAt: "cascade", fixedSize: false },
-    notFound: { defaultSize: { width: 480, height: MIN_SIZE.height }, openAt: "centre", fixedSize: true },
+    contact: { defaultSize: { width: 572, height: 480 }, openAt: "center", fixedSize: true },
   },
   minSize: MIN_SIZE,
   cascadeOffset: {

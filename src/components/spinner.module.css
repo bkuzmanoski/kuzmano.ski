@@ -36,8 +36,16 @@
       --hand-index: 7;
     }
   }
+}
 
-  &.small {
+.inline {
+  display: inline-flex;
+}
+
+.fill {
+  composes: placeholder from global;
+
+  & svg {
     width: 24px;
     height: 24px;
   }

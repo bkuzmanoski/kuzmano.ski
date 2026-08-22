@@ -9,14 +9,14 @@ import { WindowBody } from "./window-body";
 const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; title: string } }>(() => ({})));
 
 vi.mock("#/lib/window-manager", async () =>
-  (await import("#/test-utils/window-manager-mock")).windowManagerMock({ content: openWindows }),
+  (await import("#/test-utils/window-manager")).windowManagerMock({ content: openWindows }),
 );
-vi.mock("#/lib/audio/ui", () => ({
+vi.mock("#/lib/audio/sounds", () => ({
   playClick: vi.fn(),
   playHover: vi.fn(),
-  skipScrollAbove: vi.fn(),
   scrollSafeClickSoundHandlers: {},
 }));
+vi.mock("#/lib/audio/scroll", () => ({ skipScrollAbove: vi.fn() }));
 
 const entry = newestEntry("tech-notes");
 
@@ -55,7 +55,7 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
   await rerendered;
 });
 
-test("a route that matches no content renders the not-found body", () => {
-  render(<WindowBody route="/no-such-page" />);
-  expect(screen.getByText("This page doesn’t exist.")).toBeDefined(); // Matches dialog message defined in `not-found.tsx`.
+test("a route that matches no content renders nothing", () => {
+  const { container } = render(<WindowBody route="/no-such-page" />);
+  expect(container.innerHTML).toBe("");
 });

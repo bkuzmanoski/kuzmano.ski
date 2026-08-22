@@ -1,0 +1,25 @@
+.composeField {
+  display: flex;
+  gap: 8px;
+}
+
+.label {
+  user-select: none;
+  flex: none;
+  width: 64px;
+  font: var(--font-chrome);
+}
+
+.value {
+  flex: 1;
+
+  font: var(--font-ui-large);
+  color: var(--color-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hidden,
+.error {
+  composes: visuallyHidden from global;
+}

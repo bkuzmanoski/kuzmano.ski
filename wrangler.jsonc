@@ -9,6 +9,18 @@
     "binding": "ASSETS",
     "html_handling": "drop-trailing-slash"
   },
+  "send_email": [
+    {
+      "name": "SEND_EMAIL"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "SEND_EMAIL_RATELIMIT",
+      "namespace_id": "1001", // An arbitrary identifier, not a resource ID; keep it stable across deploys.
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1

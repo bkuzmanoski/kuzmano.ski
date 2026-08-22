@@ -1,20 +1,16 @@
-import { COLLECTIONS } from "#/config/content";
-import type { CollectionSegment, PageSlug } from "#/config/content";
-import { pages } from "#/content";
+import { pages } from "#/content/index";
+import type { Destination } from "#/lib/window-manager";
 
-/** A navigation target: one entry, or a collection of them. */
-export interface Destination {
-  type: "entry" | "collection";
-  title: string;
-  route: string;
-}
+import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "./contact";
+import { COLLECTIONS } from "./content";
+
+import type { CollectionSegment, PageSlug } from "./content";
 
 const titleOf = (slug: PageSlug) => {
   try {
     return pages.frontmatterOf(slug)?.title ?? slug;
   } catch {
-    // Throwing here would tear down the desktop before the error boundary exists; use the slug as a fallback.
-    return slug;
+    return slug; // Throwing here would tear down the desktop before the error boundary exists; use the slug as a fallback.
   }
 };
 const entry = (slug: PageSlug): Destination => ({ type: "entry", title: titleOf(slug), route: `/${slug}` });
@@ -30,7 +26,11 @@ export const DESTINATIONS = {
   work: collection("work"),
   "tech-notes": collection("tech-notes"),
   "design-notes": collection("design-notes"),
-  contact: entry("contact"),
+  contact: {
+    type: "contact",
+    title: CONTACT_PAGE_TITLE,
+    route: CONTACT_PAGE_ROUTE,
+  },
 } as const satisfies Record<string, Destination>;
 
 export type DestinationId = keyof typeof DESTINATIONS;

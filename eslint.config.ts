@@ -8,7 +8,7 @@ import tseslint from "typescript-eslint";
 const BUILD_IGNORE_PATTERN = "**/build/**";
 
 // TanStack's shared config ignores every `build` directory; in this
-// project build/` contains first-party Vite plugins and script.
+// project build/` contains first-party Vite plugins and scripts.
 const baseConfig = tanstackConfig.map((config) =>
   config.name === "tanstack/ignores"
     ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== BUILD_IGNORE_PATTERN) }
@@ -22,12 +22,6 @@ export default defineConfig(
   ...tseslint.configs.stylisticTypeChecked,
   reactHooks.configs.flat["recommended-latest"],
   reactRefresh.configs.vite,
-  {
-    files: ["src/routes/**/*.tsx"],
-    rules: {
-      "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
-    },
-  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -73,6 +67,29 @@ export default defineConfig(
       "@typescript-eslint/only-throw-error": [
         "error",
         { allow: [{ from: "package", package: "@tanstack/router-core", name: ["NotFoundError", "AnyRedirect"] }] },
+      ],
+    },
+  },
+  {
+    files: ["src/routes/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/routes/api/**", "src/server/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: String.raw`^(#/server/|(\.\./)+server/)`,
+              message: "`src/server` may only be imported from a server handler in `src/routes/api/`.",
+            },
+          ],
+        },
       ],
     },
   },

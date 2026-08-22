@@ -1,20 +1,28 @@
-import { NOT_FOUND_TITLE, documentTitle } from "#/config/site";
+import { Alert } from "#/components/alert";
+import { NOT_FOUND_PAGE_TITLE, documentTitle } from "#/config/site";
+import { useNotFoundRoute, useWindowActions } from "#/lib/window-manager";
 
-import { DialogBody } from "./dialog-body";
+export function NotFoundAlert() {
+  const notFoundRoute = useNotFoundRoute();
+  const { dismissNotFound } = useWindowActions();
 
-/** The body of the not-found window. */
-export function NotFoundBody() {
-  return <DialogBody message="This page doesn’t exist." />;
+  return (
+    <Alert
+      open={notFoundRoute !== null}
+      label={NOT_FOUND_PAGE_TITLE}
+      message={`This page doesn’t exist. Try finding the page you were looking for in the “Go” menu.`}
+      primaryAction={{ label: "OK", onAction: dismissNotFound }}
+    />
+  );
 }
 
 /**
- * The route-level not-found boundary for every route including the root. The
- * window manager opens a not-found window from the URL so this supplies only
- * the document title.
+ * The route-level not-found boundary for every route including the root. The window manager
+ * reports an unmatched route from the URL, so this supplies only the document title.
  *
- * It renders into the root route's outlet, which sits on the desktop beside
- * the windows, so it must not render anything visible of its own.
+ * It renders into the root route's outlet, which sits on the desktop beside the windows, so it
+ * must not render anything visible of its own.
  */
-export function NotFoundPage() {
-  return <title>{documentTitle(NOT_FOUND_TITLE)}</title>;
+export function NotFound() {
+  return <title>{documentTitle(NOT_FOUND_PAGE_TITLE)}</title>;
 }

@@ -51,11 +51,11 @@ function framedOn(area: Rect, scaleExtent: Size, viewport: Size): Rect {
   );
   const height = ILLUSTRATION_RECT.height * scale;
   const minimumTop = ((1 - scaleExtent.height) * viewport.height) / 2 - area.y * scale; // Ensure top margin.
-  const centredTop = (viewport.height - height) / 2;
+  const centeredTop = (viewport.height - height) / 2;
 
   return {
     x: viewport.width / 2 - (area.x + area.width / 2) * scale,
-    y: Math.max(minimumTop, centredTop),
+    y: Math.max(minimumTop, centeredTop),
     width: ILLUSTRATION_RECT.width * scale,
     height,
   };

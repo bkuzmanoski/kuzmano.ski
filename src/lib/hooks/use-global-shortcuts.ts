@@ -1,5 +1,7 @@
 import { useEffect, useEffectEvent } from "react";
 
+import { isEditableTarget } from "../keys";
+
 /**
  * A global keyboard shortcut. Modifier is Option/Alt. `code` is the
  * physical key from KeyboardEvent.code. `key` is not used because
@@ -12,8 +14,6 @@ export interface KeyboardShortcut {
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
-  // The listener is bound once but always runs against the latest shortcuts,
-  // which change identity on every render of the menu bar.
   const runMatch = useEffectEvent((event: KeyboardEvent) => {
     const match = shortcuts.find((shortcut) => shortcut.code === event.code && shortcut.enabled !== false);
 
@@ -25,7 +25,7 @@ export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!event.altKey || event.metaKey || event.ctrlKey) {
+      if (!event.altKey || event.metaKey || event.ctrlKey || isEditableTarget(event.target)) {
         return;
       }
 

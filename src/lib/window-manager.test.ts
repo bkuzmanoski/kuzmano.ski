@@ -1,9 +1,15 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 
-import { EMPTY_STATE, WINDOW_DOM_ORDER, createWindowPlacer, createWindowReducer } from "./window-manager";
+import {
+  EMPTY_STATE,
+  WINDOW_DOM_ORDER,
+  createCloseGuards,
+  createWindowPlacer,
+  createWindowReducer,
+} from "./window-manager";
 
 import type { Size } from "./geometry";
-import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window-manager";
+import type { Action, CloseGuards, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window-manager";
 
 // Every window is given the same size and opens the same way, so the suite below reads as
 // one cascade. The layouts that vary by window are covered in `per-window layout`.
@@ -11,14 +17,14 @@ import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from ".
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };
 const LAYOUT: WindowLayout = {
-  windows: { entry: SPEC, collection: SPEC, notFound: SPEC },
+  windows: { entry: SPEC, collection: SPEC, contact: SPEC },
   minSize: { width: 480, height: 320 },
   cascadeOffset: { x: 16, y: 32 },
   padding: 8,
 };
 
 const SURFACE = { width: 1600, height: 1200 }; // Room for the default size plus a cascade step on every edge.
-const CENTRE_POSITION = {
+const CENTER_POSITION = {
   x: (SURFACE.width - DEFAULT_SIZE.width) / 2,
   y: (SURFACE.height - DEFAULT_SIZE.height) / 2,
 };
@@ -47,13 +53,13 @@ describe("open", () => {
     expect(state.content.entry).toEqual({ route: "/entry", title: "/entry" });
   });
 
-  test("the first window is centred on the desktop and subsequent windows cascade from there", () => {
+  test("the first window is centered on the desktop and subsequent windows cascade from there", () => {
     const state = opened("entry", "collection");
 
-    expect(state.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...DEFAULT_SIZE });
+    expect(state.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
+      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
       ...DEFAULT_SIZE, // A desktop with room to spare places both windows at the default size.
     });
   });
@@ -71,17 +77,17 @@ describe("open", () => {
 
   test("resizes a cascaded window to fit the available space", () => {
     const surface = { width: 1060, height: 1080 };
-    const centre = {
+    const center = {
       x: (surface.width - DEFAULT_SIZE.width) / 2,
       y: (surface.height - DEFAULT_SIZE.height) / 2,
     };
     const cascaded = {
-      x: centre.x + LAYOUT.cascadeOffset.x,
-      y: centre.y + LAYOUT.cascadeOffset.y,
+      x: center.x + LAYOUT.cascadeOffset.x,
+      y: center.y + LAYOUT.cascadeOffset.y,
     };
     const state = openedOn(surface, "entry", "collection");
 
-    expect(state.geometry.entry).toMatchObject({ ...centre, ...DEFAULT_SIZE });
+    expect(state.geometry.entry).toMatchObject({ ...center, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
       ...cascaded,
       width: surface.width - LAYOUT.padding - cascaded.x,
@@ -95,9 +101,9 @@ describe("open", () => {
     const height = surface.height - 2 * LAYOUT.padding; // Short of the default size, but above the minimum.
 
     expect(height).toBeGreaterThanOrEqual(LAYOUT.minSize.height);
-    expect(state.geometry.entry).toMatchObject({ x: CENTRE_POSITION.x, y: LAYOUT.padding, height });
+    expect(state.geometry.entry).toMatchObject({ x: CENTER_POSITION.x, y: LAYOUT.padding, height });
     expect(state.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
+      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
       y: LAYOUT.padding,
       height,
     });
@@ -162,7 +168,7 @@ describe("close", () => {
 
   test("is a no-op on a closed window", () => {
     const state = opened("entry");
-    expect(reducer(state, { type: "close", id: "notFound" })).toBe(state);
+    expect(reducer(state, { type: "close", id: "contact" })).toBe(state);
   });
 });
 
@@ -181,7 +187,7 @@ describe("focus", () => {
 
   test("is a no-op on a closed window", () => {
     const state = opened("entry");
-    expect(reducer(state, { type: "focus", id: "notFound" })).toBe(state);
+    expect(reducer(state, { type: "focus", id: "contact" })).toBe(state);
   });
 });
 
@@ -203,7 +209,7 @@ describe("move", () => {
 
   test("a closed window is a no-op", () => {
     const state = opened("entry");
-    expect(reducer(state, { type: "move", id: "notFound", x: 1, y: 2 })).toBe(state);
+    expect(reducer(state, { type: "move", id: "contact", x: 1, y: 2 })).toBe(state);
   });
 });
 
@@ -233,7 +239,7 @@ describe("resize", () => {
     const initialState = reducer(opened("entry"), { type: "measure", surface: narrowSurface });
     const mutatedState = reducer(initialState, { type: "resize", id: "entry", width: 560, height: 400 });
 
-    expect(initialState.geometry.entry).toMatchObject({ x: CENTRE_POSITION.x, width: DEFAULT_SIZE.width });
+    expect(initialState.geometry.entry).toMatchObject({ x: CENTER_POSITION.x, width: DEFAULT_SIZE.width });
     expect(mutatedState.geometry.entry).toMatchObject({ x: LAYOUT.padding, width: 560 });
   });
 });
@@ -250,7 +256,7 @@ describe("zoom", () => {
 
   test("is a no-op on a closed window", () => {
     const state = opened("entry");
-    expect(reducer(state, { type: "zoom", id: "notFound" })).toBe(state);
+    expect(reducer(state, { type: "zoom", id: "contact" })).toBe(state);
   });
 });
 
@@ -260,7 +266,7 @@ describe("measure", () => {
     const measured = reducer(preRendered, { type: "measure", surface: SURFACE });
 
     expect(preRendered.geometry.entry).toMatchObject({ x: 0, y: 0, ...DEFAULT_SIZE });
-    expect(measured.geometry.entry).toMatchObject({ ...CENTRE_POSITION, ...DEFAULT_SIZE });
+    expect(measured.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
   });
 
   test("the first measurement fits a pre-rendered window into the padded area", () => {
@@ -299,10 +305,10 @@ describe("organize", () => {
     // Zooming raised the collection window, so the cascade now runs the entry window, then it.
     expect(organizedState.order).toEqual(["entry", "collection"]);
     expect(organizedState.geometry.collection!.maximized).toBe(false);
-    expect(organizedState.geometry.entry).toMatchObject(CENTRE_POSITION);
+    expect(organizedState.geometry.entry).toMatchObject(CENTER_POSITION);
     expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
+      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
     });
   });
 
@@ -318,13 +324,13 @@ describe("organize", () => {
 
     // The entry window loses the width its slot cannot hold and keeps the height that fits.
     expect(organizedState.geometry.entry).toMatchObject({
-      ...CENTRE_POSITION,
+      ...CENTER_POSITION,
       width: DEFAULT_SIZE.width,
       height: 700,
     });
     expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTRE_POSITION.y + LAYOUT.cascadeOffset.y,
+      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
+      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
       width: 500,
       height: 400,
     });
@@ -355,14 +361,14 @@ describe("focusDesktop", () => {
 describe("per-window layout", () => {
   const SMALL_SIZE: Size = { width: 480, height: 420 };
 
-  const centreOf = (size: Size) => ({
+  const centerOf = (size: Size) => ({
     x: (SURFACE.width - size.width) / 2,
     y: (SURFACE.height - size.height) / 2,
   });
 
   const varyingReducer = createWindowReducer({
     ...LAYOUT,
-    windows: { ...LAYOUT.windows, notFound: { ...SPEC, defaultSize: SMALL_SIZE, openAt: "centre" } },
+    windows: { ...LAYOUT.windows, contact: { ...SPEC, defaultSize: SMALL_SIZE, openAt: "center" } },
   });
 
   const openedOnDesktop = (...ids: Array<WindowId>) =>
@@ -373,21 +379,21 @@ describe("per-window layout", () => {
 
   test("a window opens at the specified default size", () => {
     expect(openedOnDesktop("entry").geometry.entry).toMatchObject(DEFAULT_SIZE);
-    expect(openedOnDesktop("notFound").geometry.notFound).toMatchObject(SMALL_SIZE);
+    expect(openedOnDesktop("contact").geometry.contact).toMatchObject(SMALL_SIZE);
   });
 
-  test("a window that opens in the centre is not affected by the cascade", () => {
-    const state = openedOnDesktop("entry", "collection", "notFound");
+  test("a window that opens in the center is not affected by the cascade", () => {
+    const state = openedOnDesktop("entry", "collection", "contact");
 
-    expect(state.geometry.collection).toMatchObject({ x: CENTRE_POSITION.x + LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
-    expect(state.geometry.notFound).toMatchObject(centreOf(SMALL_SIZE));
+    expect(state.geometry.collection).toMatchObject({ x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
+    expect(state.geometry.contact).toMatchObject(centerOf(SMALL_SIZE));
   });
 
-  test("organizing cascades every open window, including those that open in the centre", () => {
-    const state = varyingReducer(openedOnDesktop("entry", "notFound"), { type: "organize" });
-    expect(state.geometry.notFound).toMatchObject({
-      x: centreOf(SMALL_SIZE).x + LAYOUT.cascadeOffset.x,
-      y: centreOf(SMALL_SIZE).y + LAYOUT.cascadeOffset.y,
+  test("organizing cascades every open window, including those that open in the center", () => {
+    const state = varyingReducer(openedOnDesktop("entry", "contact"), { type: "organize" });
+    expect(state.geometry.contact).toMatchObject({
+      x: centerOf(SMALL_SIZE).x + LAYOUT.cascadeOffset.x,
+      y: centerOf(SMALL_SIZE).y + LAYOUT.cascadeOffset.y,
     });
   });
 });
@@ -437,5 +443,88 @@ describe("createWindowPlacer", () => {
   test("resizes a window to zero dimensions on a desktop with no room to place it", () => {
     const placedRect = placeWindow(windowRect, { width: LAYOUT.padding, height: LAYOUT.padding });
     expect(placedRect).toEqual({ x: LAYOUT.padding, y: LAYOUT.padding, width: 0, height: 0 });
+  });
+});
+
+describe("close guards", () => {
+  let guards: CloseGuards;
+
+  beforeEach(() => {
+    guards = createCloseGuards();
+  });
+
+  test("a window without a guard leaves the close request unclaimed", () => {
+    expect(guards.claim("entry")).toBe(false);
+  });
+
+  test("a guard only claims close requests for its own window", () => {
+    const unregister = guards.register("contact", () => true);
+
+    expect(guards.claim("contact")).toBe(true);
+    expect(guards.claim("entry")).toBe(false);
+
+    unregister();
+
+    expect(guards.claim("contact")).toBe(false);
+  });
+
+  test("a guard that declines a request leaves the window closable", () => {
+    guards.register("contact", () => false);
+    expect(guards.claim("contact")).toBe(false);
+  });
+
+  test("unregistering a replaced guard leaves the replacement registered", () => {
+    const unregisterFirst = guards.register("contact", () => false);
+
+    guards.register("contact", () => true);
+    unregisterFirst();
+
+    expect(guards.claim("contact")).toBe(true);
+  });
+});
+
+describe("the not-found route", () => {
+  const reportNotFound = (state: ManagerState, route: string) => reducer(state, { type: "notFound", route });
+
+  test("records the route without changing the open windows or focus", () => {
+    const initialState = opened("collection", "entry");
+    const state = reportNotFound(initialState, "/no-such-page");
+
+    expect(state.notFoundRoute).toBe("/no-such-page");
+    expect(state.focused).toBe("entry");
+    expect(state.content).toBe(initialState.content);
+    expect(state.order).toBe(initialState.order);
+  });
+
+  test("repeating the same route is a no-op, while a different route replaces it", () => {
+    const state = reportNotFound(opened("entry"), "/no-such-page");
+
+    expect(reportNotFound(state, "/no-such-page")).toBe(state);
+    expect(reportNotFound(state, "/another-typo").notFoundRoute).toBe("/another-typo");
+  });
+
+  test("clears the route when dismissed, but not when a window closes", () => {
+    const state = reportNotFound(opened("entry"), "/no-such-page");
+
+    expect(reducer(state, { type: "dismissNotFound" }).notFoundRoute).toBeNull();
+    expect(reducer(state, { type: "close", id: "entry" }).notFoundRoute).toBe("/no-such-page");
+  });
+
+  test("dismisses to the window that was previously focused", () => {
+    const state = reportNotFound(opened("entry"), "/no-such-page");
+    expect(reducer(state, { type: "dismissNotFound" }).focused).toBe("entry");
+  });
+
+  test("dismissing when there is no not-found route is a no-op", () => {
+    const state = opened("entry");
+    expect(reducer(state, { type: "dismissNotFound" })).toBe(state);
+  });
+
+  test("clears the route when navigation resolves to a real destination", () => {
+    const state = reportNotFound(opened("entry"), "/no-such-page");
+
+    expect(reducer(state, openAction("collection", "/tech-notes")).notFoundRoute).toBeNull();
+    expect(reducer(state, openAction("entry", "/entry")).notFoundRoute).toBeNull();
+    expect(reducer(state, { type: "focusDesktop" }).notFoundRoute).toBeNull();
   });
 });

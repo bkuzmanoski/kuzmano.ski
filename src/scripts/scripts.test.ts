@@ -54,7 +54,7 @@ beforeEach(() => {
 });
 
 describe("theme", () => {
-  test.for(["light", "dark"])("applies a stored %s theme", (theme) => {
+  test.for(["light", "dark"])("applies a stored %s theme setting", (theme) => {
     localStorage.setItem("theme", theme);
     run(themeScript);
 
@@ -65,7 +65,7 @@ describe("theme", () => {
     ["no stored theme", null],
     ["the system theme", "system"],
     ["an unrecognised theme", "sepia"],
-  ] as const)("does not set the theme attribute for %s", ([, stored]) => {
+  ] as const)("leaves the theme attribute unset for %s", ([, stored]) => {
     if (stored !== null) {
       localStorage.setItem("theme", stored);
     }

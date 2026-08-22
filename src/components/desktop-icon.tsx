@@ -9,7 +9,9 @@ import FolderOpenSelectedIcon from "#/assets/images/folder-open-selected.svg?rea
 import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
 import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
 import FolderIcon from "#/assets/images/folder.svg?react";
-import { playClick } from "#/lib/audio/ui";
+import MailboxSelectedIcon from "#/assets/images/mailbox-selected.svg?react";
+import MailboxIcon from "#/assets/images/mailbox.svg?react";
+import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
@@ -27,6 +29,7 @@ type GlyphIcon = ComponentType<{ className?: string }>;
 const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
   entry: { closed: [AppIcon, AppSelectedIcon] },
   collection: { closed: [FolderIcon, FolderSelectedIcon], open: [FolderOpenIcon, FolderOpenSelectedIcon] },
+  contact: { closed: [MailboxIcon, MailboxSelectedIcon] },
   download: { closed: [DocumentIcon, DocumentSelectedIcon] },
 };
 

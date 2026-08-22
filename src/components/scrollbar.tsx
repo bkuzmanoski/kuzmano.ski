@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
 import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
-import { playClick } from "#/lib/audio/ui";
+import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";

@@ -138,7 +138,7 @@ describe("the zoomed in framing", () => {
 describe("the vertical placement of both framings", () => {
   const boxesFor = (viewport: Size) => [zoomedOutBoxFor(viewport), zoomedInBoxFor(viewport)];
 
-  test("centres the illustration when the width is what binds", () => {
+  test("centers the illustration when the width is what binds", () => {
     for (const viewport of [PORTRAIT_VIEWPORT, TALL_VIEWPORT]) {
       for (const box of boxesFor(viewport)) {
         expect(box.y).toBeCloseTo((viewport.height - box.height) / 2);

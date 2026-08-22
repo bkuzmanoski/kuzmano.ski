@@ -9,8 +9,8 @@ import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg
 import macintoshKeyboardAvifUrl from "#/assets/images/macintosh-keyboard.avif";
 import macintoshKeyboardWebpUrl from "#/assets/images/macintosh-keyboard.webp";
 import { Spinner } from "#/components/spinner";
-import { playBootChime } from "#/lib/audio/boot-chime";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context";
+import { playBootChime } from "#/lib/audio/sounds";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle";
 import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay";

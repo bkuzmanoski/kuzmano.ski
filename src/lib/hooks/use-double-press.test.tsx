@@ -86,7 +86,6 @@ describe("pointer input", () => {
       clientY: 0,
       pointerType: "touch",
     });
-
     at(DOUBLE_PRESS_INTERVAL);
     press({ x: 80, y: 0 });
 
@@ -96,7 +95,6 @@ describe("pointer input", () => {
   test("a cancelled press does not participate in a double press", () => {
     press();
     fireEvent.pointerCancel(target(), { pointerType: "touch" });
-
     at(DOUBLE_PRESS_INTERVAL);
     press();
 
@@ -107,7 +105,6 @@ describe("pointer input", () => {
     press();
     at(DOUBLE_PRESS_INTERVAL);
     press();
-
     fireEvent.doubleClick(target());
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);
@@ -127,7 +124,6 @@ describe("mouse", () => {
     press({ pointerType: "mouse" });
     at(DOUBLE_PRESS_INTERVAL);
     press({ pointerType: "mouse" });
-
     fireEvent.doubleClick(target());
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);

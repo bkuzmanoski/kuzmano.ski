@@ -1,11 +1,12 @@
 import { readStoredJson, writeStored } from "../storage";
 
 import type { Position } from "../geometry";
+import type { WindowId } from "../window-manager";
 
-export type IconKind = "entry" | "collection" | "download";
+export type IconKind = WindowId | "download";
 
 export type Icon = { id: string; label: string } & (
-  { kind: "entry" | "collection"; route: string } | { kind: "download"; downloadUrl: string }
+  { kind: WindowId; route: string } | { kind: "download"; downloadUrl: string }
 );
 
 export const iconHref = (icon: Icon) => (icon.kind === "download" ? icon.downloadUrl : icon.route);

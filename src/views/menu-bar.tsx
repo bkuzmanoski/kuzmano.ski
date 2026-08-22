@@ -1,29 +1,157 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
+import OrganizeIcon from "#/assets/images/organize-windows.svg?react";
+import SoundOffIcon from "#/assets/images/sound-effects-off.svg?react";
+import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
+import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
+import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
 import { Menu } from "#/components/menu";
 import type { MenuItem } from "#/components/menu";
-import { OrganizeWindowsStatus, SoundStatus, ThemeStatus, TimeStatus } from "#/components/status-item";
+import { Tooltip } from "#/components/tooltip";
 import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
-import { playClick } from "#/lib/audio/ui";
+import { playClick } from "#/lib/audio/sounds";
 import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
 import { sleep } from "#/lib/screensaver/lifecycle";
+import { setSound, setTheme, useSettings } from "#/lib/settings";
+import type { Theme } from "#/lib/settings";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
 import styles from "./menu-bar.module.css";
 
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
   const number = DESTINATION_ORDER.indexOf(id) + 1;
   return { code: `Digit${number}`, label: String(number) };
 };
+
+function StatusButton({
+  label,
+  persistTooltipOnPress,
+  className,
+  onClick,
+  children,
+}: {
+  label: string;
+  persistTooltipOnPress?: boolean;
+  className?: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip label={label} persistOnPress={persistTooltipOnPress} className={styles.statusItemTooltipWrapper}>
+      <button
+        aria-label={label}
+        className={cx(styles.control, className)}
+        type="button"
+        onClick={onClick}
+        onPointerDown={playClick}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  );
+}
+
+export function OrganizeWindowsStatus() {
+  const { organize } = useWindowActions();
+
+  return (
+    <StatusButton label="Organize Windows" className={styles.wideOnly} onClick={organize}>
+      <OrganizeIcon className={styles.icon} />
+    </StatusButton>
+  );
+}
+
+const THEME_ORDER: Array<Theme> = ["system", "light", "dark"];
+const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", dark: "Dark" };
+
+export function ThemeStatus() {
+  const { theme } = useSettings();
+  const next = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
+  const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
+
+  return (
+    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} persistTooltipOnPress onClick={() => setTheme(next)}>
+      <Icon className={styles.icon} />
+    </StatusButton>
+  );
+}
+
+export function SoundStatus() {
+  const { sound } = useSettings();
+  const Icon = sound === "on" ? SoundOnIcon : SoundOffIcon;
+
+  return (
+    <StatusButton
+      label={`Sound: ${sound === "on" ? "On" : "Off"}`}
+      persistTooltipOnPress
+      onClick={() => {
+        setSound(sound === "on" ? "off" : "on");
+
+        // Switching on: the press itself was gated by the setting it just changed.
+        if (sound === "off") {
+          playClick();
+        }
+      }}
+    >
+      <Icon className={styles.icon} />
+    </StatusButton>
+  );
+}
+
+const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
+  timeZone: "Australia/Sydney",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZoneName: "short",
+});
+
+function sydneyTime(): string {
+  const parts = TIME_FORMAT.formatToParts(new Date());
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${value("hour")}:${value("minute")} ${value("dayPeriod")} (${value("timeZoneName")})`;
+}
+
+export function TimeStatus() {
+  const [time, setTime] = useState("");
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      setTime(sydneyTime());
+
+      const now = new Date();
+      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+      timer = setTimeout(tick, msToNextMinute);
+    };
+
+    tick();
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!time) {
+    return null;
+  }
+
+  return (
+    <Tooltip label="Sydney, Australia">
+      <time className={cx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
+    </Tooltip>
+  );
+}
 
 export function MenuBar() {
   const { open, close } = useWindowActions();
@@ -86,17 +214,15 @@ export function MenuBar() {
     setOpenMenu({ label, anchor });
   }
 
-  // An open menu dismisses itself on a press outside it, and on touch that press is
-  // also what opens the next menu: there is no hover to swap the menus beforehand, so
-  // the press reaches the open menu after the title under it has already replaced it.
-  // Closing by label leaves the menu that took its place alone.
+  // On touch, the press that dismisses an open menu can also open the next menu.
+  // There is no hover to switch menus first, so the new menu replaces the old one
+  // before its outside-press handler runs. Closing by label leaves the replacement open.
   function closeMenu(label: string) {
     setOpenMenu((current) => (current?.label === label ? null : current));
   }
 
-  // The arrow keys move along the menu bar whether or not a menu is open. If a menu
-  // is open, the adjacent menu opens in its place and takes the focus as it mounts.
-  // If none is open, only the focus moves.
+  // Arrow keys always move along the menu bar. With a menu open, the adjacent menu
+  // replaces it and receives focus; otherwise only the title receives focus.
   function moveAlongMenuBar(from: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === from);
     const label = menus[cycle(menus.length, index, direction)]!.label;
@@ -113,15 +239,13 @@ export function MenuBar() {
     }
   }
 
-  // The handler focuses the title because the markup below prevents the focus the
-  // browser sets on mousedown. The default runs after the menu has mounted and has
-  // taken the focus which would move the focus back to the title preventing the
-  // arrow keys from working.
+  // The browser's mousedown focus is prevented by the markup below. The menu mounts and
+  // focuses itself, so the default focus action must be delayed until after that focus;
+  // otherwise it steals focus back from the menu and arrow-key navigation stops.
   //
-  // A touch pointer is implicitly captured by the element it lands on, so every later
-  // event for that pointer is retargeted to this title and the other titles never see
-  // `pointerenter`. Releasing the capture restores hit testing so a held finger can
-  // drag along the menu bar to change the open menu the way a held mouse does.
+  // Touch input is implicitly captured by the title it lands on, so other titles never
+  // receive `pointerenter` while the finger is held. Releasing the capture lets the
+  // pointer move between titles and change the open menu like a held mouse.
   function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
     const anchor = event.currentTarget;
 

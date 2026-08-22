@@ -20,7 +20,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "build": "vite build",
-    "generate:icons": "node build/generate-icons.ts",
+    "generate:icons": "node scripts/generate-icons.ts",
     "preview": "vite preview"
   },
   "simple-git-hooks": {

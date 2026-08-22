@@ -57,7 +57,7 @@ describe("watchFaviconColorScheme", () => {
   test.for([
     ["dark", true, `${HREF}?color-scheme=dark`],
     ["light", false, `${HREF}?color-scheme=light`],
-  ] as const)("gives the icon a fresh URL for %s", ([, matches, expected]) => {
+  ] as const)("gives the icon a fresh URL for a %s color scheme", ([, matches, expected]) => {
     const change = stubMatchMedia();
     const icon = addIcon();
 

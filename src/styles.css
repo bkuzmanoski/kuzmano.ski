@@ -31,14 +31,14 @@
 
   /* Typography */
   --font-family-chrome: ChicagoFLF, sans-serif;
-  --font-chrome: 16px var(--font-family-chrome);
+  --font-chrome-line-height: 26px;
+  --font-chrome: 16px/var(--font-chrome-line-height) var(--font-family-chrome);
   --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
   --font-ui-line-height: 22px;
   --font-ui: 15px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-bold: bold 15px/var(--font-ui-line-height) var(--font-family-ui);
-  --font-ui-large-line-height: 22px;
-  --font-ui-large: 16px/var(--font-ui-large-line-height) var(--font-family-ui);
-  --font-ui-large-bold: bold 16px/var(--font-ui-large-line-height) var(--font-family-ui);
+  --font-ui-large-line-height: 26px;
+  --font-ui-large: 17px/var(--font-ui-large-line-height) var(--font-family-ui);
 
   /* Colors */
   --color-accent: light-dark(#3378a3, #61abda);
@@ -60,6 +60,7 @@
   );
   --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
+  --color-error: light-dark(#b03645, #de6e7c);
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `build/svgr.ts`). */
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `build/svgr.ts`). */
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
@@ -134,7 +135,6 @@ body {
   color: var(--color-foreground);
 }
 
-h1,
 p {
   margin: 0;
 }
@@ -172,4 +172,31 @@ p {
     inset: 2px;
     background: var(--dotted-frame);
   }
+}
+
+/* Fills a container to stand in for pending content: a spinner, or a message. */
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  padding: var(--gutter);
+
+  color: var(--color-foreground-secondary);
+}
+
+/* Removed from view but retained in the accessibility tree. */
+.visuallyHidden {
+  position: absolute;
+
+  overflow: hidden;
+
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+
+  white-space: nowrap;
+
+  clip-path: inset(50%);
 }

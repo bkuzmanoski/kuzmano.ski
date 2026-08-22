@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { playHover, skipScrollAbove } from "../audio/ui";
+import { skipScrollAbove } from "../audio/scroll";
+import { playHover } from "../audio/sounds";
 import { isActivationKey } from "../keys";
 import { clamp } from "../math";
 
@@ -14,17 +15,7 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   End: (_index, lastIndex) => lastIndex,
 };
 
-/**
- * Keyboard navigation for a vertical list. The list is a single tab stop, which lands on
- * the active item, and the arrow keys move the focus from there. Enter and space activate
- * the item that holds the focus.
- *
- * The active item is also scrolled into view as it changes, so a list that opens scrolled
- * to the top still shows what is selected.
- *
- * Spread the returned props onto each item, in the order the list renders them. An
- * `activeIndex` of -1 means nothing is active, and the tab stop falls on the first item.
- */
+/** Keyboard navigation for a vertical list. */
 export function useListNavigation({
   count,
   activeIndex,
@@ -34,8 +25,8 @@ export function useListNavigation({
   activeIndex: number;
   onActivate: (index: number) => void;
 }) {
-  const itemsRef = useRef<Array<HTMLElement | null>>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const itemsRef = useRef<Array<HTMLElement | null>>([]);
 
   useEffect(() => {
     const item = itemsRef.current[activeIndex];
@@ -61,9 +52,7 @@ export function useListNavigation({
       onFocus: () => setFocusedIndex(index),
       onKeyDown: (event: KeyboardEvent) => {
         if (isActivationKey(event.key)) {
-          // Suppressed because space scrolls the viewport, and because the click the
-          // browser makes of an Enter press would activate the item a second time.
-          event.preventDefault();
+          event.preventDefault(); // Prevent the browser's default scroll and click behaviour so activation happens only once.
           onActivate(index);
 
           return;
@@ -80,18 +69,13 @@ export function useListNavigation({
         const next = clamp(target, 0, count - 1);
         const item = itemsRef.current[next];
 
-        // A press that runs into either end of the list moves nothing, and a detent
-        // for a list that stayed where it was would report travel that never happened.
         if (next === index || !item) {
-          return;
+          return; // Nothing moves at either end of the list, so there is no travel to report.
         }
 
         item.focus();
 
-        // The focus brings the item into view, which scrolls the window under it.
-        // That scroll belongs to this keypress and is already being sounded by the
-        // detent below, so it is not sounded a second time as travel.
-        skipScrollAbove(item);
+        skipScrollAbove(item); // Focusing the item may scroll the window. That scroll is part of this keypress.
         playHover();
       },
     };

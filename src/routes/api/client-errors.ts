@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { isRecord } from "#/lib/guards";
+import { isOversized, isSameOrigin } from "#/server/request";
 
-const MAX_BODY_LENGTH = 8_192;
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_ROUTE_LENGTH = 500;
 const MAX_KIND_LENGTH = 100;
@@ -17,21 +17,17 @@ export const Route = createFileRoute("/api/client-errors")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const origin = request.headers.get("origin");
-
-        if (origin !== new URL(request.url).origin) {
+        if (!isSameOrigin(request)) {
           return new Response(null, { status: 403 });
         }
 
-        const contentLength = Number(request.headers.get("content-length") ?? 0);
-
-        if (contentLength > MAX_BODY_LENGTH) {
+        if (isOversized(request)) {
           return new Response(null, { status: 413 });
         }
 
         const body = await request.text();
 
-        if (body.length > MAX_BODY_LENGTH) {
+        if (isOversized(body)) {
           return new Response(null, { status: 413 });
         }
 

@@ -1,10 +1,9 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 
 import { isRecord } from "#/lib/guards.ts";
 
 import { normalizeHex, readPalette } from "./palette.ts";
-import { ROOT_DIRECTORY, STYLESHEET } from "./paths.ts";
+import { STYLESHEET, fromRoot } from "./paths.ts";
 
 import type { Palette } from "./palette.ts";
 import type { Plugin } from "vite";
@@ -30,7 +29,7 @@ function compare(file: string, key: string, declared: string | undefined, expect
 }
 
 async function findManifestDrift(palette: Palette): Promise<Array<string>> {
-  const manifest: unknown = JSON.parse(await readFile(join(ROOT_DIRECTORY, MANIFEST), "utf8"));
+  const manifest: unknown = JSON.parse(await readFile(fromRoot(MANIFEST), "utf8"));
 
   if (!isRecord(manifest)) {
     return [`${MANIFEST} is not an object`];
@@ -45,7 +44,7 @@ async function findManifestDrift(palette: Palette): Promise<Array<string>> {
 }
 
 async function findDocumentDrift(palette: Palette): Promise<Array<string>> {
-  const source = await readFile(join(ROOT_DIRECTORY, DOCUMENT), "utf8");
+  const source = await readFile(fromRoot(DOCUMENT), "utf8");
   const expected = new Map([
     ["boot sequence backdrop light", palette.bootSequenceBackdropLight],
     ["boot sequence backdrop dark", palette.bootSequenceBackdropDark],
@@ -88,7 +87,7 @@ export function themeColorPlugin(): Plugin {
     apply: "build",
     applyToEnvironment: (environment) => environment.name === "client",
     async buildStart() {
-      this.addWatchFile(join(ROOT_DIRECTORY, STYLESHEET));
+      this.addWatchFile(fromRoot(STYLESHEET));
 
       let driftedValues: Array<string>;
 

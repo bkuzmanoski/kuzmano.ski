@@ -6,14 +6,10 @@ import { collections } from "#/content";
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
 
 vi.mock("#/lib/window-manager", async () =>
-  (await import("#/test-utils/window-manager-mock")).windowManagerMock({ actions: { open } }),
+  (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/ui", () => ({
-  playClick: vi.fn(),
-  playHover,
-  skipScrollAbove,
-  scrollSafeClickSoundHandlers,
-}));
+vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playHover, scrollSafeClickSoundHandlers }));
+vi.mock("#/lib/audio/scroll", () => ({ skipScrollAbove }));
 
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
@@ -75,15 +71,19 @@ test("home and end reach the ends of the list, and the arrow keys stop there", (
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "End" });
+
   expect(document.activeElement).toBe(links.at(-1));
 
   fireEvent.keyDown(links.at(-1)!, { key: "ArrowDown" });
+
   expect(document.activeElement).toBe(links.at(-1));
 
   fireEvent.keyDown(links.at(-1)!, { key: "Home" });
+
   expect(document.activeElement).toBe(links[0]);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
+
   expect(document.activeElement).toBe(links[0]);
 });
 
@@ -91,9 +91,11 @@ test("a key that moves the focus sounds a detent", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
+
   expect(playHover).toHaveBeenCalledTimes(1);
 
   fireEvent.keyDown(links[1]!, { key: "End" });
+
   expect(playHover).toHaveBeenCalledTimes(2);
 });
 
@@ -110,6 +112,7 @@ test("the scroll the focus causes is not sounded as travel", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
+
   expect(skipScrollAbove).toHaveBeenCalledWith(links[1]);
 });
 
@@ -117,6 +120,7 @@ test("the focus makes the entry it lands on the tab stop", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.focus(links.at(-1)!);
+
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
@@ -124,9 +128,11 @@ test("enter and space open the entry that holds the focus", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[1]!, { key: "Enter" });
+
   expect(open).toHaveBeenLastCalledWith(routeOf(1));
 
   fireEvent.keyDown(links.at(-1)!, { key: " " });
+
   expect(open).toHaveBeenLastCalledWith(routeOf(lastIndex));
 });
 

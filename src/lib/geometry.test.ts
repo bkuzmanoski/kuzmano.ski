@@ -31,7 +31,7 @@ describe("insetRect", () => {
     expect(insetRect(rect, inset)).toEqual({ x: 124, y: 78, width: 352, height: 244 });
   });
 
-  test("leaves the box centred when the inset is symmetric", () => {
+  test("leaves the box centered when the inset is symmetric", () => {
     const innerRect = insetRect(rect, inset);
 
     expect(innerRect.x + innerRect.width / 2).toBeCloseTo(rect.x + rect.width / 2);

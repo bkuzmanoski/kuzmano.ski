@@ -2,52 +2,63 @@ import babel from "@rolldown/plugin-babel";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import postcssPresetEnv from "postcss-preset-env";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import svgr from "vite-plugin-svgr";
 
 import { frontmatterPlugin } from "./build/frontmatter.ts";
-import { iconDriftPlugin } from "./build/icon-lock.ts";
+import { iconDriftPlugin } from "./build/icons/drift.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { mdxPlugin } from "./build/mdx.ts";
-import { prerenderRoutes } from "./build/prerender-routes.ts";
-import { verifyPrerenderedPage } from "./build/prerender.ts";
+import { prerenderRoutes } from "./build/prerender/routes.ts";
+import { verifyPrerenderedPage } from "./build/prerender/verify.ts";
 import { sitemapNamespacePlugin } from "./build/sitemap-namespace.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { themeColorPlugin } from "./build/theme-color.ts";
+import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 import { SITE_URL } from "./src/config/site.ts";
 
-export default defineConfig(({ command }) => ({
-  resolve: { tsconfigPaths: true },
-  css: {
-    postcss: {
-      plugins: [
-        postcssPresetEnv({
-          features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
-        }),
-      ],
-    },
-  },
-  plugins: [
-    themeColorPlugin(),
-    iconDriftPlugin(),
-    inlineScriptsPlugin(),
-    svgr({ svgrOptions }),
-    frontmatterPlugin(),
-    mdxPlugin(),
-    tanstackStart({
-      router: { routeFileIgnorePattern: "\\.test\\." },
-      pages: command === "build" ? prerenderRoutes() : [],
-      sitemap: { host: SITE_URL },
-      prerender: {
-        enabled: true,
-        crawlLinks: false,
-        autoStaticPathsDiscovery: false,
-        onSuccess: verifyPrerenderedPage,
+export default defineConfig(({ command, mode }) => {
+  const { VITE_CONTACT_EMAIL_ADDRESS } = loadEnv(mode, process.cwd(), "VITE_");
+
+  if (command === "build" && !VITE_CONTACT_EMAIL_ADDRESS) {
+    throw new Error("`VITE_CONTACT_EMAIL_ADDRESS` is unset. See `.env.example`.");
+  }
+
+  return {
+    resolve: { tsconfigPaths: true },
+    define: { __CONTACT_EMAIL_ADDRESS__: JSON.stringify(VITE_CONTACT_EMAIL_ADDRESS ?? "") },
+    css: {
+      postcss: {
+        plugins: [
+          postcssPresetEnv({
+            features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
+          }),
+        ],
       },
-    }),
-    sitemapNamespacePlugin(),
-    viteReact({ include: /\.(tsx?|mdx)$/ }),
-    babel({ presets: [reactCompilerPreset()] }),
-  ],
-  server: { host: true },
-}));
+    },
+    plugins: [
+      workersRuntimePlugin(),
+      themeColorPlugin(),
+      iconDriftPlugin(),
+      inlineScriptsPlugin(),
+      svgr({ svgrOptions }),
+      frontmatterPlugin(),
+      mdxPlugin(),
+      tanstackStart({
+        router: { routeFileIgnorePattern: "\\.test\\." },
+        pages: command === "build" ? prerenderRoutes() : [],
+        sitemap: { host: SITE_URL },
+        prerender: {
+          enabled: true,
+          crawlLinks: false,
+          autoStaticPathsDiscovery: false,
+          onSuccess: verifyPrerenderedPage,
+        },
+      }),
+      sitemapNamespacePlugin(),
+      viteReact({ include: /\.(tsx?|mdx)$/ }),
+      babel({ presets: [reactCompilerPreset()] }),
+    ],
+    server: { host: true },
+  };
+});

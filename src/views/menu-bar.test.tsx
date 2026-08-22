@@ -12,7 +12,7 @@ let focusedWindow: WindowId | null = null;
 const open = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager", async () =>
-  (await import("#/test-utils/window-manager-mock")).windowManagerMock({
+  (await import("#/test-utils/window-manager")).windowManagerMock({
     actions: { open, close: vi.fn() },
     focusedWindow: () => focusedWindow,
   }),

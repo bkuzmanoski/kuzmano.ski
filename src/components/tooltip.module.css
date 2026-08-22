@@ -4,7 +4,7 @@
   anchor-scope: --tooltip;
 
   display: inline-flex;
-  align-self: stretch;
+  align-self: center;
 }
 
 @position-try --tooltip-align-end {

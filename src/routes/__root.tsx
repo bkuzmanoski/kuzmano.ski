@@ -2,9 +2,9 @@ import { createRootRoute } from "@tanstack/react-router";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import stylesheet from "#/styles.css?url";
-import { DesktopRoot } from "#/views/desktop";
+import { Desktop } from "#/views/desktop";
 import { ErrorPage } from "#/views/error-page";
-import { NotFoundPage } from "#/views/not-found";
+import { NotFound } from "#/views/not-found";
 import { RootDocument } from "#/views/root-document";
 
 export const Route = createRootRoute({
@@ -23,7 +23,7 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
-  component: DesktopRoot,
+  component: Desktop,
   errorComponent: ErrorPage,
-  notFoundComponent: NotFoundPage,
+  notFoundComponent: NotFound,
 });

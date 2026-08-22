@@ -1,18 +1,15 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import { NOT_FOUND_TITLE } from "#/config/site";
+import { NOT_FOUND_PAGE_TITLE } from "#/config/site";
 import { newestEntry } from "#/test-utils/content";
-import { renderRoute } from "#/test-utils/render-route";
+import { renderRoute } from "#/test-utils/router";
 
 // These tests use the real route tree to cover route wiring.
 
 const firstEntry = () => newestEntry("tech-notes");
-
 const openWindows = () => screen.queryAllByRole("region");
-
-// The focused window renders its title bar controls, so their presence stands in for focus.
-const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
+const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // The focused window renders its title bar controls, so their presence stands in for focus.
 
 test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
   const entry = firstEntry();
@@ -74,14 +71,15 @@ test("a second collection reuses the collection window", async () => {
   expect(openWindows()).toHaveLength(1);
 });
 
-test("a second unknown path reuses the not-found window", async () => {
+test("a new unknown path replaces the current not-found dialog", async () => {
   const { history } = renderRoute("/no-such-page");
 
-  await screen.findByRole("region", { name: NOT_FOUND_TITLE });
+  await screen.findByRole("dialog", { name: NOT_FOUND_PAGE_TITLE });
   history.push("/another-typo");
 
   await waitFor(() => expect(history.location.pathname).toBe("/another-typo"));
-  expect(openWindows()).toHaveLength(1);
+  expect(screen.getAllByRole("dialog")).toHaveLength(1);
+  expect(openWindows()).toHaveLength(0);
 });
 
 // A push would leave an entry that reopens the window as soon as Back reached it,
@@ -114,12 +112,76 @@ test("stepping back and forward over the desktop route follows the window focus 
   expect(history.location.pathname).toBe("/");
 });
 
-test("an unknown path under a collection opens a not-found window", async () => {
-  renderRoute("/tech-notes/does-not-exist");
-  expect(await screen.findByRole("region", { name: NOT_FOUND_TITLE })).toBeDefined();
+test("an unknown path opens the not-found dialog instead of a window", async () => {
+  renderRoute("/no-such-page");
+
+  expect(await screen.findByRole("dialog", { name: NOT_FOUND_PAGE_TITLE })).toBeDefined();
+  expect(openWindows()).toHaveLength(0);
 });
 
-test("an unknown top-level path opens a not-found window", async () => {
-  renderRoute("/no-such-page");
-  expect(await screen.findByRole("region", { name: NOT_FOUND_TITLE })).toBeDefined();
+test("an unknown entry in a collection opens the not-found dialog", async () => {
+  renderRoute("/tech-notes/does-not-exist");
+  expect(await screen.findByRole("dialog", { name: NOT_FOUND_PAGE_TITLE })).toBeDefined();
+});
+
+test("dismissing a deep-linked not-found dialog returns to the desktop", async () => {
+  const { history } = renderRoute("/no-such-page");
+
+  fireEvent.click(await screen.findByRole("button", { name: "OK" }));
+
+  await waitFor(() => expect(history.location.pathname).toBe("/"));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(openWindows()).toHaveLength(0);
+});
+
+test("dismissing a not-found dialog reached from a window returns to that window", async () => {
+  const { history } = renderRoute("/tech-notes");
+  const window = await screen.findByRole("region", { name: "Tech Notes" });
+
+  history.push("/no-such-page");
+  fireEvent.click(await screen.findByRole("button", { name: "OK" }));
+
+  await waitFor(() => expect(history.location.pathname).toBe("/tech-notes"));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(isFocused(window)).toBe(true);
+  expect(openWindows()).toHaveLength(1);
+});
+
+test("the contact route opens a compose window rather than resolving a document", async () => {
+  const { history } = renderRoute("/contact");
+  const window = await screen.findByRole("region", { name: "Contact" });
+
+  expect(history.location.pathname).toBe("/contact");
+  expect(openWindows()).toHaveLength(1);
+  expect(within(window).getByLabelText("From:")).toBeDefined();
+  expect(within(window).getByLabelText("Message:")).toBeDefined();
+});
+
+test("closing the contact window with an unsent message prompts for confirmation", async () => {
+  renderRoute("/contact");
+
+  const window = await screen.findByRole("region", { name: "Contact" });
+
+  fireEvent.change(within(window).getByLabelText("Message:"), { target: { value: "Hello." } });
+  fireEvent.click(within(window).getByRole("button", { name: "Close" }));
+
+  const alert = await screen.findByRole("dialog");
+
+  expect(within(alert).getByText("Discard this message?")).toBeDefined();
+  expect(openWindows()).toHaveLength(1);
+
+  fireEvent.click(within(alert).getByRole("button", { name: "Discard" }));
+
+  await waitFor(() => expect(openWindows()).toHaveLength(0));
+});
+
+test("closing the contact window with no message closes without prompting", async () => {
+  renderRoute("/contact");
+
+  const window = await screen.findByRole("region", { name: "Contact" });
+
+  fireEvent.click(within(window).getByRole("button", { name: "Close" }));
+
+  await waitFor(() => expect(openWindows()).toHaveLength(0));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

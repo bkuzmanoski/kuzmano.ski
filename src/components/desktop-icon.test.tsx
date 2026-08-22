@@ -5,7 +5,7 @@ import type { Icon } from "#/lib/icons/icon";
 
 import { DesktopIcon } from "./desktop-icon";
 
-vi.mock("#/lib/audio/ui", () => ({ playClick: vi.fn() }));
+vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
 
 const ICON: Icon = { id: "about", kind: "entry", label: "About", route: "/about" };
 

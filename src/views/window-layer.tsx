@@ -1,9 +1,10 @@
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
 import { LAYOUT } from "#/config/windows";
 import type { Rect } from "#/lib/geometry";
-import { DismissContext } from "#/lib/hooks/use-dismiss-window";
+import { WindowCloseContext } from "#/lib/hooks/use-close-window";
+import type { WindowClose } from "#/lib/hooks/use-close-window";
 import { useElementResize } from "#/lib/hooks/use-element-size";
 import {
   WINDOW_DOM_ORDER,
@@ -56,8 +57,19 @@ const DesktopWindow = memo(function OpenWindow({
   hidden: boolean;
   unplaced: boolean;
 }) {
-  const { close, focus, move, resize, toggleZoom } = useWindowActions();
-  const dismiss = useCallback(() => close(id), [close, id]);
+  const { close, registerCloseGuard, focus, move, resize, toggleZoom } = useWindowActions();
+
+  // The close API for this window, passed to its body. Memoized because the body registers
+  // its close guard against this object, so changing its identity would re-register the guard.
+  const windowClose = useMemo<WindowClose>(
+    () => ({
+      forceClose: () => close(id, { force: true }),
+      close: () => close(id),
+      registerGuard: (guard) => registerCloseGuard(id, guard),
+    }),
+    [close, id, registerCloseGuard],
+  );
+
   const { fixedSize } = LAYOUT.windows[id];
 
   return (
@@ -73,15 +85,15 @@ const DesktopWindow = memo(function OpenWindow({
       maximized={maximized}
       hidden={hidden}
       unplaced={unplaced}
-      onClose={dismiss}
+      onClose={windowClose.close}
       onZoom={fixedSize ? null : () => toggleZoom(id)}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
     >
-      <DismissContext value={dismiss}>
+      <WindowCloseContext value={windowClose}>
         <WindowBody route={route} />
-      </DismissContext>
+      </WindowCloseContext>
     </Window>
   );
 });

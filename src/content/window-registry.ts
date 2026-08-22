@@ -1,4 +1,4 @@
-import { NOT_FOUND_TITLE } from "#/config/site";
+import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
 import { collections, pages } from "#/content";
 import type { Collection, ContentIndex } from "#/content";
 import type { WindowId } from "#/lib/window-manager";
@@ -8,7 +8,7 @@ type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
     entry: { slug: string; collectionRoute: string | null; contentIndex: ContentIndex };
     collection: { collection: Collection; route: string };
-    notFound: Record<never, never>;
+    contact: Record<never, never>;
   }[K];
 }[WindowId];
 
@@ -18,20 +18,26 @@ export type EntryTarget = Extract<WindowTarget, { id: "entry" }>;
 /** A window that lists collection entries. */
 export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
 
-/** A window that reports a route with no matching content. */
-export type NotFoundTarget = Extract<WindowTarget, { id: "notFound" }>;
+/** The result of resolving a route: a window, the desktop, or a not-found page. */
+export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" };
 
-export function resolveWindow(pathname: string): WindowTarget | null {
+const CONTACT_PAGE_SEGMENT = CONTACT_PAGE_ROUTE.slice(1);
+
+export function resolveRoute(pathname: string): ResolvedRoute {
   const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length === 0) {
-    return null;
+    return { id: "desktop" };
   }
 
   const segment = segments[0]!;
   const collection = collections[segment];
 
   if (segments.length === 1) {
+    if (segment === CONTACT_PAGE_SEGMENT) {
+      return { id: "contact", title: CONTACT_PAGE_TITLE };
+    }
+
     if (collection) {
       return { id: "collection", title: collection.title, collection, route: `/${segment}` };
     }
@@ -61,7 +67,13 @@ export function resolveWindow(pathname: string): WindowTarget | null {
     }
   }
 
-  return { id: "notFound", title: NOT_FOUND_TITLE };
+  return { id: "notFound" };
+}
+
+/** The window a route opens, or `null` if it does not open a window. */
+export function resolveWindow(pathname: string): WindowTarget | null {
+  const resolvedRoute = resolveRoute(pathname);
+  return resolvedRoute.id === "desktop" || resolvedRoute.id === "notFound" ? null : resolvedRoute;
 }
 
 /**
@@ -79,6 +91,9 @@ export function destinationRouteOf(windowRoute: string): string | null {
 
     case "collection":
       return target.route;
+
+    case "contact":
+      return windowRoute;
 
     default:
       return null;
