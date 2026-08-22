@@ -2,13 +2,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+
+  /* The software keyboard covers part of the viewport without shrinking it on iOS,
+   * so the space it takes is subtracted here (see `lib/hooks/use-keyboard-inset.ts`). */
+  height: calc(100dvh - var(--keyboard-inset, 0px));
 
   /* On iOS, the browser toolbar can leave a gap between the dynamic viewport and the
    * bottom of the screen. Extend the maximized window by 1px so its bottom border fills
    * the gap. When there is no gap, the extra pixel is clipped by the viewport. */
   &:has([data-maximized]) {
-    height: calc(100dvh + 1px);
+    height: calc(100dvh - var(--keyboard-inset, 0px) + 1px);
     border-bottom: 1px solid var(--color-border);
   }
 }
