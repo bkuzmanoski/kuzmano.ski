@@ -6,7 +6,7 @@ import { cx } from "#/lib/class-names";
 import { useIdleTimeout } from "#/lib/hooks/use-idle-timeout";
 import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 import { FLOCK } from "#/lib/screensaver/flock";
-import { FADE_IN_MS, sleep, useSleepState, wake } from "#/lib/screensaver/lifecycle";
+import { FADE_IN_MS, sleepOnIdle, useSleepState, wake } from "#/lib/screensaver/lifecycle";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./screensaver.module.css";
@@ -30,7 +30,7 @@ export function Screensaver() {
   const isUp = state !== "awake";
   const isDismissible = state === "asleep";
 
-  useIdleTimeout(IDLE_DELAY_MS, isIdleSleepEnabled, sleep);
+  useIdleTimeout(IDLE_DELAY_MS, isIdleSleepEnabled, sleepOnIdle);
 
   useEffect(() => {
     if (!isDismissible) {

@@ -1,13 +1,21 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { FADE_IN_MS, sleep, useSleepState, wake } from "./lifecycle";
+import { FADE_IN_MS, sleep, sleepOnIdle, useSleepState, wake } from "./lifecycle";
 
 const themeColors = () => document.querySelectorAll('meta[data-screensaver-theme-color][name="theme-color"]');
 
 function getState() {
   const { result } = renderHook(() => useSleepState());
   return () => result.current;
+}
+
+function openAlert() {
+  const alert = document.createElement("dialog");
+  document.body.append(alert);
+  alert.showModal();
+
+  return alert;
 }
 
 function completeFadeIn() {
@@ -69,6 +77,31 @@ describe("screensaver lifecycle", () => {
     expect(state()).toBe("asleep");
 
     act(wake);
+  });
+
+  test("prevents idle sleep while an alert is open", () => {
+    const state = getState();
+    const alert = openAlert();
+
+    act(sleepOnIdle);
+
+    expect(state()).toBe("awake");
+
+    alert.remove();
+  });
+
+  test("sleeps on idle once the alert has been dismissed", () => {
+    const state = getState();
+    const alert = openAlert();
+    alert.close();
+
+    act(sleepOnIdle);
+
+    expect(state()).toBe("falling-asleep");
+
+    completeFadeIn();
+    act(wake);
+    alert.remove();
   });
 
   test("applies the backdrop color to the theme-color meta tag while asleep", () => {
