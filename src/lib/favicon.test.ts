@@ -4,8 +4,6 @@ import { watchFaviconColorScheme } from "./favicon";
 
 const HREF = "/favicon.svg";
 
-// Stands in for `matchMedia`, which jsdom does not implement, and
-// exposes the scheme change the browser would otherwise report.
 function stubMatchMedia() {
   const listeners = new Set<(event: MediaQueryListEvent) => void>();
   const media = {
@@ -22,6 +20,17 @@ function stubMatchMedia() {
     for (const listener of listeners) {
       listener({ matches } as MediaQueryListEvent);
     }
+  };
+}
+
+function stubVisibility() {
+  let state: DocumentVisibilityState = "visible";
+
+  vi.spyOn(document, "visibilityState", "get").mockImplementation(() => state);
+
+  return (next: DocumentVisibilityState) => {
+    state = next;
+    document.dispatchEvent(new Event("visibilitychange"));
   };
 }
 
@@ -42,22 +51,29 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("watchFaviconColorScheme", () => {
-  test("leaves the icon alone until the scheme changes", () => {
-    stubMatchMedia();
+  test.for([
+    ["dark", true, `${HREF}?color-scheme=dark`],
+    ["light", false, `${HREF}?color-scheme=light`],
+  ] as const)("gives the icon an updated URL for a %s color scheme on start", ([, matches, expected]) => {
+    const change = stubMatchMedia();
+
+    change(matches);
+
     const icon = addIcon();
 
     watchFaviconColorScheme();
 
-    expect(icon.getAttribute("href")).toBe(HREF);
+    expect(icon.getAttribute("href")).toBe(expected);
   });
 
   test.for([
     ["dark", true, `${HREF}?color-scheme=dark`],
     ["light", false, `${HREF}?color-scheme=light`],
-  ] as const)("gives the icon a fresh URL for a %s color scheme", ([, matches, expected]) => {
+  ] as const)("gives the icon an updated URL for a %s color scheme when it changes", ([, matches, expected]) => {
     const change = stubMatchMedia();
     const icon = addIcon();
 
@@ -78,17 +94,67 @@ describe("watchFaviconColorScheme", () => {
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });
 
-  test("stops repointing the icon once torn down", () => {
+  test("waits for a hidden tab to become visible before updating the icon", () => {
+    stubMatchMedia();
+
+    const show = stubVisibility();
+    const icon = addIcon();
+
+    show("hidden");
+    watchFaviconColorScheme();
+
+    expect(icon.getAttribute("href")).toBe(HREF);
+
+    show("visible");
+
+    expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
+  });
+
+  test("updates to a scheme changed while the tab was hidden", () => {
     const change = stubMatchMedia();
+    const show = stubVisibility();
+    const icon = addIcon();
+
+    watchFaviconColorScheme();
+    show("hidden");
+    change(true);
+
+    expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
+
+    show("visible");
+
+    expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=dark`);
+  });
+
+  test("does not update the icon when the scheme returns to the one already shown", () => {
+    const change = stubMatchMedia();
+    const show = stubVisibility();
+    const icon = addIcon();
+
+    watchFaviconColorScheme();
+    show("hidden");
+    icon.setAttribute("href", "sentinel");
+    change(true);
+    change(false);
+    show("visible");
+
+    expect(icon.getAttribute("href")).toBe("sentinel");
+  });
+
+  test("does not update the icon after teardown", () => {
+    const change = stubMatchMedia();
+    const show = stubVisibility();
     const icon = addIcon();
 
     watchFaviconColorScheme()();
     change(true);
+    show("hidden");
+    show("visible");
 
-    expect(icon.getAttribute("href")).toBe(HREF);
+    expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });
 
-  test("does nothing without an SVG icon", () => {
+  test("does nothing when the favicon is not an SVG", () => {
     const change = stubMatchMedia();
 
     expect(() => {

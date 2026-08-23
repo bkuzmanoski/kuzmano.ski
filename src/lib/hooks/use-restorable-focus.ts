@@ -44,7 +44,8 @@ function focusTarget(container: HTMLElement, record: FocusRecord | null, content
  * when it becomes active again, so a window switched away from and back to is left as the user
  * had it. It falls back to the container itself, which is where focus starts.
  *
- * A record is stamped with the `contentKey` it was created under.
+ * A record stores the `contentKey` it was created under. When the container is reactivated
+ * under a different key, the record is ignored.
  *
  * A press on the container's chrome keeps the focus where it is, rather than moving it to the
  * container. The press that activates an inactive container is not handled by this hook: it

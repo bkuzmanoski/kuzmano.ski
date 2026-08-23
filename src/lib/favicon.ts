@@ -3,10 +3,14 @@ const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 const SCHEME_PARAMETER = "color-scheme";
 
 /**
- * Repoints the SVG favicon when the system color scheme changes.
+ * Updates the SVG favicon to match the current system color scheme.
  *
- * `favicon.svg` already carries its own `prefers-color-scheme` media query, but
- * Chromium evaluates only once at load time.
+ * `favicon.svg` already has a `prefers-color-scheme` query, but Chromium evaluates it only
+ * once at load time and may cache the result from an earlier visit. The favicon is therefore
+ * updated on start and whenever the scheme changes.
+ *
+ * Changes are deferred while the tab is hidden because the browser does not re-fetch its
+ * favicon. `applied` avoids a redundant re-fetch when the scheme changes back while hidden.
  *
  * TODO: Remove this once https://crbug.com/1026539 is fixed.
  */
@@ -19,11 +23,29 @@ export function watchFaviconColorScheme(): () => void {
     return () => undefined;
   }
 
-  const onChange = ({ matches }: MediaQueryListEvent) => {
-    icon.href = `${source}?${SCHEME_PARAMETER}=${matches ? "dark" : "light"}`;
+  let applied: string | undefined;
+
+  const sync = () => {
+    if (document.visibilityState !== "visible") {
+      return;
+    }
+
+    const scheme = media.matches ? "dark" : "light";
+
+    if (scheme === applied) {
+      return;
+    }
+
+    applied = scheme;
+    icon.href = `${source}?${SCHEME_PARAMETER}=${scheme}`;
   };
 
-  media.addEventListener("change", onChange);
+  media.addEventListener("change", sync);
+  document.addEventListener("visibilitychange", sync);
+  sync();
 
-  return () => media.removeEventListener("change", onChange);
+  return () => {
+    media.removeEventListener("change", sync);
+    document.removeEventListener("visibilitychange", sync);
+  };
 }
