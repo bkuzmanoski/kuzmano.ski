@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { playScroll, skipScrollAt } from "#/lib/audio/scroll";
+import { playPaneScroll } from "#/lib/audio/scroll";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
 import styles from "./scroll-pane.module.css";
@@ -16,12 +16,10 @@ import type { ReactNode } from "react";
  */
 export function ScrollPane({
   id,
-  isResizing,
   resizeControl,
   children,
 }: {
   id: string;
-  isResizing: boolean;
   resizeControl?: ReactNode;
   children: ReactNode;
 }) {
@@ -41,13 +39,7 @@ export function ScrollPane({
         tabIndex={-1}
         onScroll={(event) => {
           measure();
-
-          if (isResizing) {
-            skipScrollAt(event.currentTarget);
-            return;
-          }
-
-          playScroll(event.currentTarget);
+          playPaneScroll(event.currentTarget);
         }}
       >
         {children}

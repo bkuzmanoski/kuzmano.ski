@@ -22,6 +22,9 @@ import type { ReactNode } from "react";
 /** A known id carried by the focused window's content container to give the skip link a stable target. */
 export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 
+/** Where a window is being dragged to, reported while the gesture runs so an outline can stand in for it. */
+export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
+
 function TitleBarButton({
   icon,
   label,
@@ -73,6 +76,7 @@ export function Window({
   onFocus,
   onMove,
   onResize,
+  onDrag,
   toolbar,
   children,
 }: {
@@ -92,6 +96,7 @@ export function Window({
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which drops the resize control from its scrollbar.
+  onDrag: (drag: WindowDrag | null) => void; // Where the gesture stands, or `null` once it has ended.
   toolbar?: ReactNode; // Sits between the title bar and the scroll pane, so it stays put while the content scrolls under it.
   children: ReactNode;
 }) {
@@ -100,6 +105,21 @@ export function Window({
   const [isResizing, setIsResizing] = useState(false);
   const windowRef = useRef<HTMLElement>(null);
   const hasMovedWindowRef = useRef(false);
+  const dragRef = useRef<WindowDrag | null>(null);
+
+  function reportDrag(drag: WindowDrag) {
+    dragRef.current = drag;
+    onDrag(drag);
+  }
+
+  function endDrag() {
+    const drag = dragRef.current;
+
+    dragRef.current = null;
+    onDrag(null);
+
+    return drag;
+  }
 
   const moveHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
@@ -108,9 +128,15 @@ export function Window({
       hasMovedWindowRef.current = false;
       return { x, y };
     },
-    onStart: (delta, from) => onMove(from.x + delta.dx, from.y + delta.dy),
+    onStart: (delta, from) => reportDrag({ kind: "move", x: from.x + delta.dx, y: from.y + delta.dy }),
     onEnd: (moved) => {
+      const drag = endDrag();
+
       hasMovedWindowRef.current = moved;
+
+      if (drag?.kind === "move") {
+        onMove(drag.x, drag.y);
+      }
     },
   });
 
@@ -134,8 +160,17 @@ export function Window({
 
       return { width, height };
     },
-    onStart: (delta, from) => onResize?.(from.width + delta.dx, from.height + delta.dy),
-    onEnd: () => setIsResizing(false),
+    onStart: (delta, from) =>
+      reportDrag({ kind: "resize", width: from.width + delta.dx, height: from.height + delta.dy }),
+    onEnd: () => {
+      const drag = endDrag();
+
+      setIsResizing(false);
+
+      if (drag?.kind === "resize") {
+        onResize?.(drag.width, drag.height);
+      }
+    },
   });
 
   useRestorableFocus(windowRef, { isActive: focused && !hidden, contentKey });
@@ -194,7 +229,7 @@ export function Window({
         )}
       </header>
       {toolbar}
-      <ScrollPane key={contentKey} id={contentId} isResizing={isResizing} resizeControl={resizeControl}>
+      <ScrollPane key={contentKey} id={contentId} resizeControl={resizeControl}>
         {children}
       </ScrollPane>
     </section>

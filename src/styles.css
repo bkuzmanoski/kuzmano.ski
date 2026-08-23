@@ -25,7 +25,8 @@
   --menu-bar-height: 32px;
   --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `LAYOUT.padding` in `config/windows.ts`. */
   --gutter: 16px;
-  --scrollbar-width: 20px;
+  --title-bar-height: 28px; /* Excludes its bottom border. Read by the drag outline as well as the window itself. */
+  --scrollbar-width: 20px; /* Excludes its leading border. Read by the drag outline as well as the scrollbar itself. */
   --tooltip-margin: 5px;
   --shadow-length: 3px;
 

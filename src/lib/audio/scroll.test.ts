@@ -6,6 +6,7 @@ import {
   DETENT_PIXELS,
   IDLE_MS,
   playFieldScroll,
+  playPaneScroll,
   playScroll,
   playScrollStep,
   skipScrollAbove,
@@ -209,6 +210,45 @@ describe("playScrollStep", () => {
     const [first, second] = vi.mocked(playScrollDetent).mock.calls;
 
     expect(first![0]).toBe(second![0]);
+  });
+});
+
+describe("playPaneScroll", () => {
+  test("plays a detent when the viewport height has not changed", () => {
+    const element = fakeScrollViewport();
+
+    playPaneScroll(element);
+    now += 16;
+    element.scrollTop = DETENT_PIXELS;
+    playPaneScroll(element);
+
+    expect(detents()).toBe(1);
+  });
+
+  test("records the scroll a resize causes without playing a detent", () => {
+    const element = fakeScrollViewport();
+
+    playPaneScroll(element);
+    now += 16;
+    element.clientHeight += 40; // The window the pane sits in was made taller.
+    element.scrollTop = 40;
+    playPaneScroll(element);
+
+    expect(detents()).toBe(0);
+  });
+
+  test("plays the next scroll using the viewport height after a resize", () => {
+    const element = fakeScrollViewport();
+
+    playPaneScroll(element);
+    element.clientHeight += 40;
+    element.scrollTop = 40;
+    playPaneScroll(element);
+    now += 16;
+    element.scrollTop = 40 + DETENT_PIXELS;
+    playPaneScroll(element);
+
+    expect(detents()).toBe(1);
   });
 });
 

@@ -1,17 +1,17 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 import { isTouchOnly } from "#/lib/device";
 
 import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window";
 
+import type { WindowDrag } from "./window";
 import type { ReactNode } from "react";
 
 vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
 vi.mock("#/lib/audio/scroll", () => ({
-  skipScrollAt: vi.fn(),
   stepScroll: vi.fn(),
-  playScroll: vi.fn(),
+  playPaneScroll: vi.fn(),
 }));
 vi.mock("#/lib/boot-sequence/use-is-boot-sequence-complete", () => ({ useIsBootSequenceComplete: () => true }));
 vi.mock("#/lib/device", () => ({ isTouchOnly: vi.fn() }));
@@ -51,12 +51,18 @@ afterAll(() => {
   }
 });
 
-const windowShowing = (contentKey: string, children: ReactNode, focused = true) => (
+interface DragHandlers {
+  onMove?: (x: number, y: number) => void;
+  onResize?: (width: number, height: number) => void;
+  onDrag?: (drag: WindowDrag | null) => void;
+}
+
+const windowShowing = (contentKey: string, children: ReactNode, focused = true, handlers: DragHandlers = {}) => (
   <Window
     contentKey={contentKey}
     title="Window"
-    x={0}
-    y={0}
+    x={40}
+    y={20}
     width={800}
     height={600}
     z={1}
@@ -67,8 +73,33 @@ const windowShowing = (contentKey: string, children: ReactNode, focused = true) 
     onClose={vi.fn()}
     onZoom={vi.fn()}
     onFocus={vi.fn()}
+    onMove={handlers.onMove ?? vi.fn()}
+    onResize={handlers.onResize ?? vi.fn()}
+    onDrag={handlers.onDrag ?? vi.fn()}
+  >
+    {children}
+  </Window>
+);
+
+const fixedSizeWindow = (contentKey: string, children: ReactNode) => (
+  <Window
+    contentKey={contentKey}
+    title="Window"
+    x={0}
+    y={0}
+    width={800}
+    height={600}
+    z={1}
+    focused
+    maximized={false}
+    hidden={false}
+    unplaced={false}
+    onClose={vi.fn()}
+    onZoom={null}
+    onFocus={vi.fn()}
     onMove={vi.fn()}
-    onResize={vi.fn()}
+    onResize={null}
+    onDrag={vi.fn()}
   >
     {children}
   </Window>
@@ -80,6 +111,26 @@ const button = <button type="button">Button</button>;
 
 const pane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const hasScrollableContent = () => screen.getByRole("button", { name: "Scroll up" }).tabIndex === 0; // An arrow is out of the tab order while the pane has nothing to scroll to.
+const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
+
+// `usePointerDrag` reports a move on the frame that follows it, so the outline
+// is redrawn once per frame however often the pointer is sampled.
+const settleFrame = () => act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+
+const titleBarOf = () => screen.getByText("Window").parentElement!;
+
+async function dragBy(handle: Element, ...steps: Array<[number, number]>) {
+  fireEvent.pointerDown(handle, { clientX: 0, clientY: 0, button: 0 });
+
+  for (const [clientX, clientY] of steps) {
+    fireEvent.pointerMove(handle, { clientX, clientY });
+    await settleFrame();
+  }
+
+  const [lastX, lastY] = steps.at(-1) ?? [0, 0];
+
+  fireEvent.pointerUp(handle, { clientX: lastX, clientY: lastY });
+}
 
 function switchAwayAndBack(rerender: (ui: ReactNode) => void, contentKey: string, children: ReactNode) {
   rerender(windowShowing(contentKey, children, false));
@@ -222,31 +273,6 @@ test("the window restores focus to itself when its content is replaced", () => {
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
 });
 
-const fixedSizeWindow = (contentKey: string, children: ReactNode) => (
-  <Window
-    contentKey={contentKey}
-    title="Window"
-    x={0}
-    y={0}
-    width={800}
-    height={600}
-    z={1}
-    focused
-    maximized={false}
-    hidden={false}
-    unplaced={false}
-    onClose={vi.fn()}
-    onZoom={null}
-    onFocus={vi.fn()}
-    onMove={vi.fn()}
-    onResize={null}
-  >
-    {children}
-  </Window>
-);
-
-const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
-
 test("a fixed-size window has neither a zoom control nor a resize control", () => {
   render(fixedSizeWindow("/short", shortPane));
 
@@ -269,4 +295,68 @@ test("the scrollbar of a window that can be resized stays open to carry the resi
 
   expect(screen.queryByRole("button", { name: "Resize" })).not.toBeNull();
   expect(isScrollbarCollapsed()).toBe(false);
+});
+
+test("dragging the title bar reports where the window is headed and moves it once the drag ends", async () => {
+  const onMove = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onMove, onDrag }));
+
+  const titleBar = titleBarOf();
+
+  fireEvent.pointerDown(titleBar, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerMove(titleBar, { clientX: 30, clientY: 10 });
+  await settleFrame();
+
+  expect(onDrag).toHaveBeenLastCalledWith({ kind: "move", x: 70, y: 30 });
+  expect(onMove).not.toHaveBeenCalled();
+
+  fireEvent.pointerUp(titleBar, { clientX: 30, clientY: 10 });
+
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(70, 30);
+  expect(onDrag).toHaveBeenLastCalledWith(null);
+});
+
+test("dragging the resize control reports the size being chosen and applies it once the drag ends", async () => {
+  const onResize = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+
+  const control = screen.getByRole("button", { name: "Resize" });
+
+  fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerMove(control, { clientX: -50, clientY: 100 });
+  await settleFrame();
+
+  expect(onDrag).toHaveBeenLastCalledWith({ kind: "resize", width: 750, height: 700 });
+  expect(onResize).not.toHaveBeenCalled();
+
+  fireEvent.pointerUp(control, { clientX: -50, clientY: 100 });
+
+  expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
+  expect(onDrag).toHaveBeenLastCalledWith(null);
+});
+
+test("a press on the title bar that stays within the jitter of a click leaves the window alone", async () => {
+  const onMove = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onMove, onDrag }));
+
+  await dragBy(titleBarOf(), [2, 2]);
+
+  expect(onDrag).not.toHaveBeenCalledWith(expect.objectContaining({ kind: "move" }));
+  expect(onMove).not.toHaveBeenCalled();
+});
+
+test("a drag that comes back within the jitter of a click keeps reporting, so the outline stays with the pointer", async () => {
+  const onMove = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onMove }));
+
+  await dragBy(titleBarOf(), [40, 0], [1, 0]);
+
+  expect(onMove).toHaveBeenCalledExactlyOnceWith(41, 20);
 });

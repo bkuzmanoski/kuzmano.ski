@@ -232,11 +232,38 @@ export function createWindowPlacer(layout: WindowLayout): WindowPlacer {
   };
 }
 
+/**
+ * The rect a window takes when resized to a given size, fitted to the desktop. Bound to a
+ * layout by `createWindowResizer`.
+ *
+ * The window is placed before applying the new size so a window outside the padded area is
+ * brought into it first, then placed again so the new size is fitted to what remains.
+ */
+export type WindowResizer = (geometry: Rect, surface: Size, size: Size) => Rect;
+
+export function createWindowResizer(layout: WindowLayout): WindowResizer {
+  const placeWindow = createWindowPlacer(layout);
+
+  return function resizeWindow(geometry, surface, size) {
+    const placed = placeWindow(geometry, surface);
+
+    return placeWindow(
+      {
+        ...placed,
+        width: Math.max(layout.minSize.width, size.width),
+        height: Math.max(layout.minSize.height, size.height),
+      },
+      surface,
+    );
+  };
+}
+
 export type WindowReducer = (state: ManagerState, action: Action) => ManagerState;
 
 /** The app dispatches through the provider; the reducer is built here so it can be unit tested. */
 export function createWindowReducer(layout: WindowLayout): WindowReducer {
   const placeWindow = createWindowPlacer(layout);
+  const resizeWindow = createWindowResizer(layout);
 
   return function reducer(state: ManagerState, action: Action): ManagerState {
     switch (action.type) {
@@ -288,16 +315,9 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
       }
 
       case "resize": {
-        return updateGeometry(state, action.id, (target) => {
-          const placedRect = placeWindow(target, state.surface);
-          const resizedRect = {
-            ...placedRect,
-            width: Math.max(layout.minSize.width, action.width),
-            height: Math.max(layout.minSize.height, action.height),
-          };
-
-          return placeWindow(resizedRect, state.surface);
-        });
+        return updateGeometry(state, action.id, (target) =>
+          resizeWindow(target, state.surface, { width: action.width, height: action.height }),
+        );
       }
 
       case "zoom": {

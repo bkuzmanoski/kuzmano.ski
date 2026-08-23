@@ -6,6 +6,7 @@ import {
   createCloseGuards,
   createWindowPlacer,
   createWindowReducer,
+  createWindowResizer,
 } from "./window-manager";
 
 import type { Size } from "./geometry";
@@ -479,6 +480,26 @@ describe("createWindowPlacer", () => {
   test("resizes a window to zero dimensions on a desktop with no room to place it", () => {
     const placedRect = placeWindow(windowRect, { width: LAYOUT.padding, height: LAYOUT.padding });
     expect(placedRect).toEqual({ x: LAYOUT.padding, y: LAYOUT.padding, width: 0, height: 0 });
+  });
+});
+
+describe("createWindowResizer", () => {
+  const resizeWindow = createWindowResizer(LAYOUT);
+
+  test.each([
+    ["a size that fits", { width: 640, height: 480 }],
+    ["a size below the minimum", { width: 10, height: 10 }],
+    ["a size larger than the desktop", { width: 5000, height: 5000 }],
+  ])("lands a window on the rect the reducer gives it for %s", (_, size) => {
+    const state = opened("entry");
+    const resized = reducer(state, { type: "resize", id: "entry", ...size });
+
+    expect(resizeWindow(state.geometry.entry!, SURFACE, size)).toEqual({
+      x: resized.geometry.entry!.x,
+      y: resized.geometry.entry!.y,
+      width: resized.geometry.entry!.width,
+      height: resized.geometry.entry!.height,
+    });
   });
 });
 

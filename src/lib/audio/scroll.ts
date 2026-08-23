@@ -15,6 +15,7 @@ interface ScrollGesture {
 }
 
 const gestures = new WeakMap<Element, ScrollGesture>();
+const viewportHeights = new WeakMap<Element, number>();
 const contentHeights = new WeakMap<Element, number>();
 
 // Ignore overscroll so it cannot produce detents.
@@ -49,6 +50,11 @@ export function skipScrollAbove(element: Element) {
       skipScrollAt(parent);
     }
   }
+}
+
+export function playScrollStep(element: Element) {
+  skipScrollAt(element);
+  playScrollDetent(STEP_SPEED);
 }
 
 /**
@@ -110,9 +116,25 @@ export function playScroll(element: Element) {
   playScrollDetent(gesture.speed);
 }
 
-export function playScrollStep(element: Element) {
-  skipScrollAt(element);
-  playScrollDetent(STEP_SPEED);
+/**
+ * Plays a sound for scrolling a viewport that is also resized, such as the pane of a window
+ * being made larger or smaller.
+ *
+ * Shortening a viewport clamps its scroll position, which arrives as an ordinary scroll event a
+ * frame after the resize. A scroll that comes in with a viewport height that has changed since
+ * the last one was therefore taken to be the layout moving the content rather than the reader.
+ */
+export function playPaneScroll(element: Element) {
+  const viewportHeight = viewportHeights.get(element);
+
+  viewportHeights.set(element, element.clientHeight);
+
+  if (viewportHeight !== undefined && viewportHeight !== element.clientHeight) {
+    skipScrollAt(element);
+    return;
+  }
+
+  playScroll(element);
 }
 
 /**

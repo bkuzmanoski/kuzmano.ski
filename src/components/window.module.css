@@ -68,7 +68,6 @@
 }
 
 .titleBar {
-  --title-bar-height: 28px;
   --control-size: 16px;
 
   touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */

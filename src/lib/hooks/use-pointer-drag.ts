@@ -73,6 +73,14 @@ export function usePointerDrag<T>({
       active.moved = true;
     }
 
+    // Nothing is reported until the press has travelled past the threshold, so a handle that
+    // also answers a click is not nudged by the jitter of one. Once set, the flag stays set for
+    // the rest of the press, so a drag that comes back within the threshold keeps reporting
+    // rather than stalling where it last crossed it.
+    if (!active.moved) {
+      return;
+    }
+
     pendingDeltaRef.current = { delta, value: active.value };
 
     if (frameRef.current !== null) {
