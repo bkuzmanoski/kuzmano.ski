@@ -10,6 +10,7 @@ import {
   playScrollStep,
   skipScrollAbove,
   skipScrollAt,
+  stepScroll,
 } from "./scroll";
 import { playScrollDetent } from "./sounds";
 
@@ -155,6 +156,62 @@ describe("skipScrollAbove", () => {
   });
 });
 
+describe("stepScroll", () => {
+  test("scrolls by the step and plays a detent", () => {
+    const element = fakeScrollViewport();
+
+    expect(stepScroll(element, 40)).toBe(true);
+    expect(element.scrollTop).toBe(40);
+    expect(detents()).toBe(1);
+  });
+
+  test("reports a step that cannot move the viewport and stays silent", () => {
+    const element = fakeScrollViewport();
+
+    expect(stepScroll(element, -40)).toBe(false);
+    expect(element.scrollTop).toBe(0);
+    expect(detents()).toBe(0);
+  });
+
+  test("ignores the scroll the step causes", () => {
+    const element = fakeScrollViewport();
+
+    playScroll(element);
+    stepScroll(element, 40);
+    scrollTo(element, 40);
+
+    expect(detents()).toBe(1);
+  });
+});
+
+describe("playScrollStep", () => {
+  test("plays a detent and ignores the scroll it causes", () => {
+    const element = fakeScrollViewport();
+
+    playScroll(element);
+    element.scrollTop = 40;
+    playScrollStep(element);
+
+    expect(detents()).toBe(1);
+
+    scrollTo(element, 40);
+
+    expect(detents()).toBe(1);
+  });
+
+  test("uses the same speed for every step", () => {
+    const element = fakeScrollViewport();
+
+    playScrollStep(element);
+    now += 200;
+    playScrollStep(element);
+
+    const [first, second] = vi.mocked(playScrollDetent).mock.calls;
+
+    expect(first![0]).toBe(second![0]);
+  });
+});
+
 describe("playFieldScroll", () => {
   test("plays a detent when the content height has not changed", () => {
     const element = fakeScrollViewport();
@@ -191,33 +248,5 @@ describe("playFieldScroll", () => {
     playFieldScroll(element);
 
     expect(detents()).toBe(1);
-  });
-});
-
-describe("playScrollStep", () => {
-  test("plays a detent and ignores the scroll it causes", () => {
-    const element = fakeScrollViewport();
-
-    playScroll(element);
-    element.scrollTop = 40;
-    playScrollStep(element);
-
-    expect(detents()).toBe(1);
-
-    scrollTo(element, 40);
-
-    expect(detents()).toBe(1);
-  });
-
-  test("uses the same speed for every step", () => {
-    const element = fakeScrollViewport();
-
-    playScrollStep(element);
-    now += 200;
-    playScrollStep(element);
-
-    const [first, second] = vi.mocked(playScrollDetent).mock.calls;
-
-    expect(first![0]).toBe(second![0]);
   });
 });
