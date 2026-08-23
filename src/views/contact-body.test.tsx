@@ -389,7 +389,7 @@ test("confirming a discard closes the window", () => {
 test("discarding an empty message closes the window without confirmation", () => {
   render(<ContactBody />);
 
-  fireEvent.click(button("Discard"));
+  fireEvent.click(button("Cancel"));
 
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(playError).not.toHaveBeenCalled();
