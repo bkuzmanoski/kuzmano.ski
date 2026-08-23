@@ -67,11 +67,28 @@ export default defineConfig(
         "error",
         { allow: [{ from: "package", package: "@tanstack/router-core", name: ["NotFoundError", "AnyRedirect"] }] },
       ],
-      "@typescript-eslint/prefer-nullish-coalescing": "off", // Rewrites to `??=`, which the compiler cannot lower.
-      "react-hooks/todo": "error", // Syntax the compiler cannot lower yet.
-      "react-hooks/invariant": "error", // Syntax the compiler cannot lower yet.
-      "react-hooks/syntax": "error", // Syntax the compiler cannot lower yet.
-      "react-hooks/unsupported-syntax": "error", // Syntax the compiler cannot lower yet.
+      // `ignoreIfStatements` avoids introducing `??=` in transformations that React Compiler
+      // cannot lower. `||=` is not a workaround: `react-hooks/todo` rejects both operators
+      // inside components and hooks. `ignorePrimitives.boolean` preserves `||` for booleans,
+      // where replacing it with `??` changes the result for `false`.
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        { ignoreIfStatements: true, ignorePrimitives: { boolean: true } },
+      ],
+      // Compiler diagnostics that `recommended-latest` leaves off. Each one is a React
+      // Compiler bailout (the function stays uncompiled and re-renders unmemoized).
+      "react-hooks/capitalized-calls": "error",
+      "react-hooks/hooks": "error",
+      "react-hooks/invariant": "error",
+      "react-hooks/memo-dependencies": "error",
+      "react-hooks/rule-suppression": "error",
+      "react-hooks/syntax": "error",
+      "react-hooks/todo": "error",
+      "react-hooks/unsupported-syntax": "error",
+      // Rules that reject effects that fight memoization by re-running or re-rendering on every commit.
+      "react-hooks/exhaustive-effect-dependencies": "error",
+      "react-hooks/memoized-effect-dependencies": "error",
+      "react-hooks/no-deriving-state-in-effects": "error",
     },
   },
   {
