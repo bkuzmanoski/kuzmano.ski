@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 
-import ScrollArrowIcon from "#/assets/images/scroll-arrow.svg?react";
+import ArrowIcon from "#/assets/images/arrow.svg?react";
+import { stepScroll } from "#/lib/audio/scroll";
 import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
@@ -12,13 +13,21 @@ import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./scrollbar.module.css";
 
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 const STEP = 40;
 const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
 const REPEAT_MS = 90;
 
-function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden: boolean; onStep: () => boolean }) {
+function ScrollArrow({
+  direction,
+  hidden,
+  onStep,
+}: {
+  direction: "up" | "down";
+  hidden: boolean;
+  onStep: () => boolean;
+}) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimer = useTimer();
 
@@ -81,26 +90,22 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
       onPointerLeave={stop}
       onPointerUp={stop}
     >
-      <ScrollArrowIcon
-        className={cx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)}
-      />
+      <ArrowIcon className={cx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)} />
     </button>
   );
 }
 
 export function Scrollbar({
+  viewportRef,
   viewportId,
   metrics,
   className,
-  onStep,
-  onScrollTop,
   resizeControl,
 }: {
+  viewportRef: RefObject<HTMLElement | null>; // The viewport this scrolls.
   viewportId: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
   className?: string;
-  onStep: (delta: number) => boolean; // Whether the viewport moved.
-  onScrollTop: (top: number) => void;
   resizeControl?: ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -126,11 +131,13 @@ export function Scrollbar({
       travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
     }),
     onStart: (delta, from) => {
-      if (from.travel > 0) {
-        onScrollTop(from.top + (delta.dy / from.travel) * range);
+      if (viewportRef.current && from.travel > 0) {
+        viewportRef.current.scrollTop = from.top + (delta.dy / from.travel) * range;
       }
     },
   });
+
+  const step = (delta: number) => (viewportRef.current ? stepScroll(viewportRef.current, delta) : false);
 
   const isCollapsed = !overflow && !resizeControl;
 
@@ -138,7 +145,7 @@ export function Scrollbar({
     // The state is an attribute rather than a class so that the pane around it can
     // read it and hand the width back to its content (see `window.module.css`).
     <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
-      <Arrow direction="up" hidden={!overflow} onStep={() => onStep(-STEP)} />
+      <ScrollArrow direction="up" hidden={!overflow} onStep={() => step(-STEP)} />
       <div
         ref={trackRef}
         aria-controls={viewportId}
@@ -153,7 +160,7 @@ export function Scrollbar({
       >
         {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>
-      <Arrow direction="down" hidden={!overflow} onStep={() => onStep(STEP)} />
+      <ScrollArrow direction="down" hidden={!overflow} onStep={() => step(STEP)} />
       {resizeControl}
     </div>
   );

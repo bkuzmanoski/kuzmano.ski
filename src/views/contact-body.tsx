@@ -8,7 +8,7 @@ import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact";
-import { playFieldScroll, playScrollStep } from "#/lib/audio/scroll";
+import { playFieldScroll } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
@@ -204,34 +204,7 @@ export function ContactBody() {
                 playFieldScroll(event.currentTarget);
               }}
             />
-            <Scrollbar
-              viewportId={messageField.control.id}
-              metrics={messageMetrics}
-              onScrollTop={(top) => {
-                if (messageFieldRef.current) {
-                  messageFieldRef.current.scrollTop = top;
-                }
-              }}
-              onStep={(delta) => {
-                const field = messageFieldRef.current;
-
-                if (!field) {
-                  return false;
-                }
-
-                const initialScrollTop = field.scrollTop;
-
-                field.scrollBy({ top: delta });
-
-                const didScroll = field.scrollTop !== initialScrollTop;
-
-                if (didScroll) {
-                  playScrollStep(field);
-                }
-
-                return didScroll;
-              }}
-            />
+            <Scrollbar viewportRef={messageFieldRef} viewportId={messageField.control.id} metrics={messageMetrics} />
           </ComposeField>
           <input
             ref={decoyFieldRef}

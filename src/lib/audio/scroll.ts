@@ -51,6 +51,26 @@ export function skipScrollAbove(element: Element) {
   }
 }
 
+/**
+ * Scrolls `element` by `delta` and reports whether the viewport moved.
+ *
+ * A step at the end of the travel moves nothing and so makes no sound, which is why the
+ * result is returned: the control that asked for the step is left to sound on its own.
+ */
+export function stepScroll(element: Element, delta: number) {
+  const initialScrollTop = element.scrollTop;
+
+  element.scrollBy({ top: delta });
+
+  if (element.scrollTop === initialScrollTop) {
+    return false;
+  }
+
+  playScrollStep(element);
+
+  return true;
+}
+
 export function playScroll(element: Element) {
   const now = performance.now();
   const top = getScrollTop(element);
@@ -90,6 +110,11 @@ export function playScroll(element: Element) {
   playScrollDetent(gesture.speed);
 }
 
+export function playScrollStep(element: Element) {
+  skipScrollAt(element);
+  playScrollDetent(STEP_SPEED);
+}
+
 /**
  * Plays a sound for scrolling a field whose content grows and shrinks as it is edited.
  *
@@ -110,9 +135,4 @@ export function playFieldScroll(element: Element) {
   }
 
   playScroll(element);
-}
-
-export function playScrollStep(element: Element) {
-  skipScrollAt(element);
-  playScrollDetent(STEP_SPEED);
 }

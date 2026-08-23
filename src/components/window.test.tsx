@@ -7,9 +7,9 @@ import type { ReactNode } from "react";
 
 vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
 vi.mock("#/lib/audio/scroll", () => ({
-  playScroll: vi.fn(),
-  playScrollStep: vi.fn(),
   skipScrollAt: vi.fn(),
+  stepScroll: vi.fn(),
+  playScroll: vi.fn(),
 }));
 vi.mock("#/lib/boot-sequence/use-is-boot-sequence-complete", () => ({ useIsBootSequenceComplete: () => true }));
 

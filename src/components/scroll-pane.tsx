@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { playScroll, playScrollStep, skipScrollAt } from "#/lib/audio/scroll";
+import { playScroll, skipScrollAt } from "#/lib/audio/scroll";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
 import styles from "./scroll-pane.module.css";
@@ -53,33 +53,10 @@ export function ScrollPane({
         {children}
       </div>
       <Scrollbar
+        viewportRef={contentContainerRef}
         viewportId={id}
         metrics={metrics}
         className={styles.scrollbar}
-        onScrollTop={(top) => {
-          if (contentContainerRef.current) {
-            contentContainerRef.current.scrollTop = top;
-          }
-        }}
-        onStep={(delta) => {
-          const element = contentContainerRef.current;
-
-          if (!element) {
-            return false;
-          }
-
-          const initialScrollTop = element.scrollTop;
-
-          element.scrollBy({ top: delta });
-
-          const didScroll = element.scrollTop !== initialScrollTop;
-
-          if (didScroll) {
-            playScrollStep(element);
-          }
-
-          return didScroll;
-        }}
         resizeControl={resizeControl}
       />
     </div>
