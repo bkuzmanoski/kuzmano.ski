@@ -64,6 +64,15 @@ export const fakeAudioContext = (sampleRate = 22_050): AudioContext =>
 
 /** A scrollable element stand-in; `scrollTop` is set directly as it is by the browser. */
 export function fakeScrollViewport({ scrollHeight = 1000, clientHeight = 100 } = {}) {
-  const element = { scrollTop: 0, scrollHeight, clientHeight, parentElement: null as Element | null };
+  const element = {
+    scrollTop: 0,
+    scrollHeight,
+    clientHeight,
+    parentElement: null as Element | null,
+    scrollBy({ top = 0 }: ScrollToOptions = {}) {
+      element.scrollTop = Math.min(Math.max(element.scrollTop + top, 0), scrollHeight - clientHeight);
+    },
+  };
+
   return element as unknown as Element & typeof element;
 }
