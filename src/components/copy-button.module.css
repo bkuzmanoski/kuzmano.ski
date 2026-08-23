@@ -1,3 +1,7 @@
+.pressed {
+  composes: pressed from "./button.module.css";
+}
+
 .announcement {
   composes: visuallyHidden from global;
 }

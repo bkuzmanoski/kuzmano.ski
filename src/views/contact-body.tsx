@@ -167,7 +167,14 @@ export function ContactBody() {
           <div className={styles.header}>
             <ComposeValue
               label="To:"
-              actions={<CopyButton value={contactEmailAddress} label="Copy email address" confirmation="Copied" />}
+              actions={
+                <CopyButton
+                  value={contactEmailAddress}
+                  entity="email address"
+                  label="Copy email address"
+                  confirmation="Copied"
+                />
+              }
             >
               {CONTACT_DISPLAY_NAME}
             </ComposeValue>
