@@ -48,14 +48,13 @@ function StatusButton({
   return (
     <Tooltip label={label} persistOnPress={persistTooltipOnPress} className={styles.statusItemTooltipWrapper}>
       <button
-        aria-label={label}
-        className={cx(styles.control, className)}
         type="button"
+        aria-label={label}
+        children={children}
+        className={cx(styles.control, className)}
         onClick={onClick}
         onPointerDown={playClick}
-      >
-        {children}
-      </button>
+      />
     </Tooltip>
   );
 }
@@ -296,10 +295,11 @@ export function MenuBar() {
               ref={(node) => {
                 titles.current[label] = node;
               }}
+              type="button"
+              children={label}
+              className={cx(styles.title, openMenu?.label === label && styles.open)}
               aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
-              className={cx(styles.title, openMenu?.label === label && styles.open)}
-              type="button"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
               onMouseDown={(event) => event.preventDefault()}
               onPointerDown={(event) => onTitlePointerDown(event, label)}
@@ -308,9 +308,7 @@ export function MenuBar() {
                   openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
               }}
-            >
-              {label}
-            </button>
+            />
             {openMenu?.label === label && (
               <Menu
                 anchor={openMenu.anchor}

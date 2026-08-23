@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { collections } from "#/content";
+import { testCollection } from "#/test-utils/content";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
 
@@ -16,15 +16,8 @@ const playHover = vi.hoisted(() => vi.fn());
 const skipScrollAbove = vi.hoisted(() => vi.fn());
 const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
-const collection = collections["tech-notes"]!;
-const entries = collection.list();
+const { collection, entries, routeOf } = testCollection("tech-notes", 2);
 const lastIndex = entries.length - 1;
-
-const routeOf = (index: number) => `/tech-notes/${entries[index]!.slug}`;
-
-if (entries.length < 2) {
-  throw new Error("This suite expects at least two `tech-notes` entries.");
-}
 
 beforeEach(() => {
   open.mockClear();
@@ -35,12 +28,12 @@ beforeEach(() => {
 });
 
 function renderList(activeSlug: string | null) {
-  render(<CollectionEntryList activeSlug={activeSlug} route="/tech-notes" collection={collection} />);
+  render(<CollectionEntryList activeSlug={activeSlug} collection={collection} />);
   return screen.getAllByRole("link");
 }
 
 test("a collection with no entries show an empty state", () => {
-  render(<CollectionEntryList activeSlug={null} route="/tech-notes" collection={{ ...collection, list: () => [] }} />);
+  render(<CollectionEntryList activeSlug={null} collection={{ ...collection, list: () => [] }} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
   expect(screen.queryByRole("list")).toBeNull();

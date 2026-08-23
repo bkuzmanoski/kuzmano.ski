@@ -43,8 +43,8 @@ test("both variants populate a caller-supplied ref, and the anchor still applies
 
   render(
     <>
-      <Button children="Button" ref={buttonRef} />
-      <Button children="Anchor" autoFocus href="/" ref={linkRef} />
+      <Button ref={buttonRef} children="Button" />
+      <Button ref={linkRef} children="Anchor" autoFocus href="/" />
     </>,
   );
 

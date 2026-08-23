@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { collections, pages } from "#/content";
-import { newestEntry } from "#/test-utils/content";
+import { pages } from "#/content";
+import { testCollection } from "#/test-utils/content";
 
 import { destinationRouteOf, resolveRoute, resolveWindow } from "./window-registry";
 
-const collection = collections["tech-notes"]!;
-const entry = newestEntry("tech-notes");
+const { collection, entries } = testCollection("tech-notes");
+const entry = entries[0]!;
 
 describe("resolveRoute", () => {
   test("resolves a top-level entry", () => {

@@ -20,6 +20,8 @@ export interface ContentIndex {
 export interface Collection extends ContentIndex {
   title: string;
   description: string;
+  route: string;
+  routeOf: (slug: string) => string;
   list: () => Array<Entry>;
 }
 
@@ -89,6 +91,7 @@ function contentIndex(directory: string): { index: ContentIndex; paths: Map<stri
 
 function collection(directory: string, title: string, description: string): Collection {
   const { paths, index } = contentIndex(directory);
+  const route = `/${directory}`; // The directory a collection reads from is also the segment it is served under.
 
   let entries: Array<Entry> | null = null;
 
@@ -96,6 +99,8 @@ function collection(directory: string, title: string, description: string): Coll
     ...index,
     title,
     description,
+    route,
+    routeOf: (slug) => `${route}/${slug}`,
     list() {
       entries ??= [...paths]
         .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))

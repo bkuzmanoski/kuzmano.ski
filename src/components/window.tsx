@@ -36,9 +36,9 @@ function TitleBarButton({
   return (
     <Tooltip label={label} className={cx(styles.control, className)}>
       <button
+        type="button"
         aria-label={label}
         className={styles.controlButton}
-        type="button"
         onClick={onClick}
         onPointerDown={(event) => {
           event.stopPropagation();
@@ -71,6 +71,7 @@ export function Window({
   onFocus,
   onMove,
   onResize,
+  toolbar,
   children,
 }: {
   contentKey: string; // Used to invalidate scroll position when the content changes.
@@ -89,6 +90,7 @@ export function Window({
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which drops the resize control from its scrollbar.
+  toolbar?: ReactNode; // Sits between the title bar and the scroll pane, so it stays put while the content scrolls under it.
   children: ReactNode;
 }) {
   const fallbackContentId = useId();
@@ -150,10 +152,10 @@ export function Window({
     !onResize || maximized ? null : (
       <Tooltip label="Resize" suppressed={isResizing}>
         <button
-          aria-label="Resize"
-          className={cx(styles.controlResize, isResizing && styles.pressed)}
-          tabIndex={-1} // Drag handle is not keyboard accessible.
           type="button"
+          aria-label="Resize"
+          tabIndex={-1} // Drag handle is not keyboard accessible.
+          className={cx(styles.controlResize, isResizing && styles.pressed)}
           {...resizeHandlers}
         >
           <ResizeIcon />
@@ -191,6 +193,7 @@ export function Window({
           </>
         )}
       </header>
+      {toolbar}
       <ScrollPane key={contentKey} id={contentId} isResizing={isResizing} resizeControl={resizeControl}>
         {children}
       </ScrollPane>

@@ -1,0 +1,13 @@
+.icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+
+  &.previous {
+    transform: rotate(-90deg);
+  }
+
+  &.next {
+    transform: rotate(90deg);
+  }
+}

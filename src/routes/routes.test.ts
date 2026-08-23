@@ -7,12 +7,12 @@ import { renderRoute } from "#/test-utils/router";
 
 // These tests use the real route tree to cover route wiring.
 
-const firstEntry = () => newestEntry("tech-notes");
+const entry = newestEntry("tech-notes");
+
 const openWindows = () => screen.queryAllByRole("region");
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // The focused window renders its title bar controls, so their presence stands in for focus.
 
 test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
-  const entry = firstEntry();
   const { container } = renderRoute(`/tech-notes/${entry.slug}`);
 
   expect(await screen.findByRole("region", { name: entry.title })).toBeDefined();
@@ -20,7 +20,6 @@ test("a collection entry route opens a window titled by its frontmatter, holding
 });
 
 test("a collection route opens a window with the collection title and its entry list", async () => {
-  const entry = firstEntry();
   const { history } = renderRoute("/tech-notes");
   const window = await screen.findByRole("region", { name: "Tech Notes" });
 
@@ -32,7 +31,6 @@ test("a collection route opens a window with the collection title and its entry 
 });
 
 test("a collection entry link opens a new window", async () => {
-  const entry = firstEntry();
   const { history } = renderRoute("/tech-notes");
   const window = await screen.findByRole("region", { name: "Tech Notes" });
 
@@ -45,7 +43,6 @@ test("a collection entry link opens a new window", async () => {
 });
 
 test("closing a collection entry window focuses and updates the state the collection window behind it", async () => {
-  const entry = firstEntry();
   const { history } = renderRoute("/tech-notes");
   const collectionWindow = await screen.findByRole("region", { name: "Tech Notes" });
 
@@ -93,7 +90,6 @@ test("the initial window opened by the desktop replaces the desktop in the sessi
 });
 
 test("stepping back and forward over the desktop route follows the window focus both ways", async () => {
-  const entry = firstEntry();
   const { history } = renderRoute(`/tech-notes/${entry.slug}`);
   const window = await screen.findByRole("region", { name: entry.title });
 

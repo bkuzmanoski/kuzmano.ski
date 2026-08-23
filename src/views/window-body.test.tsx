@@ -1,8 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { collections } from "#/content";
-import { newestEntry } from "#/test-utils/content";
+import { testCollection } from "#/test-utils/content";
 
 import { WindowBody } from "./window-body";
 
@@ -18,12 +17,13 @@ vi.mock("#/lib/audio/sounds", () => ({
 }));
 vi.mock("#/lib/audio/scroll", () => ({ skipScrollAbove: vi.fn() }));
 
-const entry = newestEntry("tech-notes");
+const { entries } = testCollection("tech-notes");
+const entry = entries[0]!;
 
 test("a collection route renders a link for every entry in the collection", () => {
   render(<WindowBody route="/tech-notes" />);
 
-  expect(screen.getAllByRole("link")).toHaveLength(collections["tech-notes"]!.list().length);
+  expect(screen.getAllByRole("link")).toHaveLength(entries.length);
   expect(screen.getByRole("link", { name: entry.title })).toBeDefined();
 });
 

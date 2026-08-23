@@ -64,10 +64,10 @@ function ScrollArrow({
 
   return (
     <button
-      aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
-      className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
-      tabIndex={hidden ? -1 : undefined}
       type="button"
+      aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
+      tabIndex={hidden ? -1 : undefined}
+      className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
       onBlur={stop}
       onKeyDown={(event) => {
         if (!isActivationKey(event.key)) {

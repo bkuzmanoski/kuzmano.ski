@@ -48,9 +48,9 @@ export function ErrorPage({ error }: ErrorComponentProps) {
     <>
       <title>{documentTitle("Error")}</title>
       <Alert
-        modal={false} // The error boundary replaces the app.
         variant="error"
         message="There was a problem loading this page."
+        modal={false} // The error boundary replaces the app.
         primaryAction={{ label: "Go Home", onAction: "/" }}
         secondaryAction={{ label: "Try Again", onAction: () => location.reload() }}
       />

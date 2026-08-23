@@ -1,0 +1,63 @@
+.toolbar {
+  user-select: none;
+
+  display: flex;
+  flex: none;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 38px; /* 34px +1px per border line, +2px for the gap between them. */
+  padding-block-end: 3px;
+  padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
+    calc(var(--gutter) + var(--window-safe-area-inline-end, 0px));
+  border-bottom: 1px solid var(--color-border);
+
+  font: var(--font-ui);
+  color: var(--color-foreground);
+
+  /* Second border line. */
+  background-image: linear-gradient(var(--color-border), var(--color-border));
+  background-repeat: no-repeat;
+  background-position: left bottom 2px;
+  background-size: 100% 1px;
+}
+
+.meta {
+  overflow: hidden;
+
+  /* The controls hold their width, so neither field may spill into them. */
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+
+  & > * {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* The category absorbs all of the pressure in a narrow window. */
+.category {
+  margin-inline-end: 24px;
+}
+
+/* Never shrink while the category still has room to give. */
+.date {
+  flex: none;
+}
+
+.controls {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Sets the control that leaves the entry apart from the pair that steps through it. It
+ * leads so that its arrow does not sit directly above the scroll pane's own up arrow. */
+.enclosing {
+  margin-inline-end: 12px;
+}

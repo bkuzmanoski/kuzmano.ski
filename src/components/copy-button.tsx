@@ -57,11 +57,11 @@ export function CopyButton({
     <>
       <Tooltip label={isCopied ? confirmation : label} persistOnPress className={className}>
         <Button
+          variant="icon"
           aria-label={label}
           disabled={value === null}
-          variant="icon"
+          holdPressed={state === "copying" || isCopied}
           onClick={() => void copy()}
-          className={state === "copying" || state === "copied" ? styles.pressed : undefined}
         >
           {isCopied ? <CheckmarkIcon /> : <CopyIcon />}
         </Button>
@@ -70,9 +70,9 @@ export function CopyButton({
         {isCopied ? confirmation : ""}
       </span>
       <Alert
-        open={state === "failed"}
         variant="error"
         message={failureMessage(entity)}
+        open={state === "failed"}
         primaryAction={{ label: "OK", onAction: () => setState("idle") }}
       />
     </>

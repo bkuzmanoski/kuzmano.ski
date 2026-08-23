@@ -3,10 +3,14 @@ import { collections, pages } from "#/content";
 import type { Collection, ContentIndex } from "#/content";
 import type { WindowId } from "#/lib/window-manager";
 
-// The type of window a route opens.
+// The type of window a route opens. An entry that belongs to a collection carries that
+// collection rather than the bare index, so a window showing it can also read the
+// entries either side of it; a page belongs to no collection and offers only its lookup.
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
-    entry: { slug: string; collectionRoute: string | null; contentIndex: ContentIndex };
+    entry: { slug: string } & (
+      { collectionRoute: null; contentIndex: ContentIndex } | { collectionRoute: string; contentIndex: Collection }
+    );
     collection: { collection: Collection; route: string };
     contact: Record<never, never>;
   }[K];
@@ -39,7 +43,7 @@ export function resolveRoute(pathname: string): ResolvedRoute {
     }
 
     if (collection) {
-      return { id: "collection", title: collection.title, collection, route: `/${segment}` };
+      return { id: "collection", title: collection.title, collection, route: collection.route };
     }
 
     if (pages.has(segment)) {
@@ -61,7 +65,7 @@ export function resolveRoute(pathname: string): ResolvedRoute {
         id: "entry",
         title: collection.frontmatterOf(slug)?.title ?? slug,
         slug,
-        collectionRoute: `/${segment}`,
+        collectionRoute: collection.route,
         contentIndex: collection,
       };
     }

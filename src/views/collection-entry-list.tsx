@@ -1,33 +1,26 @@
 import { EmptyState } from "#/components/empty-state";
+import { ENTRY_DATE_FORMAT } from "#/config/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
 import type { CollectionTarget } from "#/content/window-registry";
 import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
+import { useDateFormat } from "#/lib/hooks/use-date-format";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { isBrowserHandledClick } from "#/lib/link";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager";
 
 import styles from "./collection-entry-list.module.css";
 
-const DATE_FORMAT = new Intl.DateTimeFormat("en-AU", { year: "numeric", month: "short", day: "numeric" });
-
 export const EMPTY_COLLECTION_MESSAGE = "Nothing to see here.";
 
-export function CollectionEntryList({
-  collection,
-  route,
-  activeSlug,
-}: {
-  collection: Collection;
-  route: string;
-  activeSlug: string | null;
-}) {
+export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const { open } = useWindowActions();
+  const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
 
   const entries = collection.list();
-  const openEntry = (slug: string) => open(`${route}/${slug}`);
+  const openEntry = (slug: string) => open(collection.routeOf(slug));
 
   const itemProps = useListNavigation({
     count: entries.length,
@@ -59,7 +52,7 @@ export function CollectionEntryList({
               aria-current={isActive || undefined}
               aria-label={entry.title}
               className={cx(styles.card, isActive && styles.active)}
-              href={`${route}/${entry.slug}`}
+              href={collection.routeOf(entry.slug)}
               onClick={(event) => {
                 if (isBrowserHandledClick(event)) {
                   return;
@@ -71,7 +64,7 @@ export function CollectionEntryList({
             >
               <span className={styles.title}>{entry.title}</span>
               <span className={styles.meta}>
-                <time dateTime={entry.date}>{formatDate(entry.date, DATE_FORMAT)}</time>
+                <time dateTime={entry.date}>{formatDate(entry.date, dateFormat)}</time>
               </span>
             </a>
           </li>
@@ -92,5 +85,5 @@ function useOpenEntrySlug(collectionRoute: string): string | null {
 
 export function CollectionBody({ target }: { target: CollectionTarget }) {
   const activeSlug = useOpenEntrySlug(target.route);
-  return <CollectionEntryList activeSlug={activeSlug} collection={target.collection} route={target.route} />;
+  return <CollectionEntryList activeSlug={activeSlug} collection={target.collection} />;
 }

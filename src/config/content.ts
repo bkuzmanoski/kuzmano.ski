@@ -1,8 +1,21 @@
+import type { DateFormat } from "#/lib/hooks/use-date-format";
+
 /**
  * Directory under `src/content/` whose files are pages (`/<slug>`): entries that do  not
  * belong to a collection (`/<collection>/<slug>`).
  */
 export const PAGES_DIRECTORY = "_pages";
+
+/**
+ * How an entry dates are formatted throughout the site.
+ *
+ * The reader's own locale orders and names the fields. `locale` is the one the
+ * prerendered markup is written in, which stands in until the browser's is known.
+ */
+export const ENTRY_DATE_FORMAT: DateFormat = {
+  locale: "en-AU",
+  options: { year: "numeric", month: "short", day: "numeric" },
+};
 
 /**
  * Slugs of the pages the site links to, each backed by `<slug>.mdx` in the pages directory.

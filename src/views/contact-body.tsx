@@ -219,16 +219,16 @@ export function ContactBody() {
         <div className={styles.actions}>
           <span className={styles.characterCount}>{isCharacterCountVisible && characterCount.toLocaleString()}</span>
           <Button children={!hasUnsavedInput || isSending ? "Cancel" : "Discard"} onClick={() => closeWindow?.()} />
-          <Button children="Send" disabled={isSending} type="submit" />
+          <Button type="submit" children="Send" disabled={isSending} />
         </div>
         <div aria-label="Message status" className={cx(styles.scrim, isSending && styles.sending)} role="status">
           {isSending && <Spinner label={SENDING_MESSAGE} />}
         </div>
       </form>
       <Alert
-        open={prompt !== null}
         variant={alert.variant}
         message={alert.message}
+        open={prompt !== null}
         primaryAction={{
           label: alert.primaryLabel,
           onAction: confirmPrompt,

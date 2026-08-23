@@ -22,6 +22,7 @@ import type { WindowId } from "#/lib/window-manager";
 import { DesktopIcons } from "./desktop-icons";
 import { WindowBody } from "./window-body";
 import styles from "./window-layer.module.css";
+import { WindowToolbar } from "./window-toolbar";
 import { ZoomRect } from "./zoom-rect";
 
 import type { ReactNode } from "react";
@@ -90,6 +91,7 @@ const DesktopWindow = memo(function OpenWindow({
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
+      toolbar={<WindowToolbar route={route} />}
     >
       <WindowCloseContext value={windowClose}>
         <WindowBody route={route} />
