@@ -211,16 +211,16 @@ test("an invalid email is checked on blur and clears when corrected", () => {
   expect(describedBy("From:")).toBeNull();
 });
 
-test("the message counter appears when fewer than 100 characters remain", () => {
+test("the message counter appears as the message approaches the length limit", () => {
   render(<ContactBody />);
 
   fill("Message:", "a".repeat(100));
 
-  expect(screen.queryByText(/left$/)).toBeNull();
+  expect(screen.queryByText((MESSAGE_MAX_LENGTH - 100).toLocaleString())).toBeNull();
 
   fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH - 10));
 
-  expect(screen.getByText("10 left")).toBeDefined();
+  expect(screen.getByText("10")).toBeDefined();
 });
 
 test("a message that exceeds the length limit shows the excess character count and cannot be sent", () => {
@@ -229,7 +229,7 @@ test("a message that exceeds the length limit shows the excess character count a
   fill("From:", "test@example.com");
   fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH + 5));
 
-  expect(screen.getByText("5 over")).toBeDefined();
+  expect(screen.getByText("-5")).toBeDefined();
 
   fireEvent.click(button("Send"));
 

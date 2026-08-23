@@ -2,8 +2,9 @@ import { MESSAGE_MAX_LENGTH } from "./message";
 
 import type { ContactFields } from "./message";
 
-const CHARACTER_COUNT_VISIBILITY_THRESHOLD = 0.75;
-const CHARACTER_COUNT_START_VALUE = Math.floor(MESSAGE_MAX_LENGTH * CHARACTER_COUNT_VISIBILITY_THRESHOLD);
+const CHARACTER_COUNT_VISIBILITY_RATIO = 0.75;
+export const CHARACTER_COUNT_VISIBLE_FROM =
+  MESSAGE_MAX_LENGTH - Math.floor(MESSAGE_MAX_LENGTH * CHARACTER_COUNT_VISIBILITY_RATIO);
 
 /** What the compose window is currently asking the reader about, if anything. */
 export type Prompt =
@@ -56,20 +57,4 @@ export function alertFor(prompt: Prompt, directEmailAddress: string | null): Pro
         primaryLabel: "OK",
       };
   }
-}
-
-/**
- * How much of the message allowance is left, or `null` while
- * there is enough room that a count would only be noise.
- */
-export function characterCountStatus(length: number): string | null {
-  const remainingCharacters = MESSAGE_MAX_LENGTH - length;
-
-  if (length < CHARACTER_COUNT_START_VALUE) {
-    return null;
-  }
-
-  return remainingCharacters < 0
-    ? `${(-remainingCharacters).toLocaleString()} over`
-    : `${remainingCharacters.toLocaleString()} left`;
 }

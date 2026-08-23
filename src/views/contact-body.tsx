@@ -11,8 +11,8 @@ import { CONTACT_DISPLAY_NAME } from "#/config/contact";
 import { playFieldScroll, playScrollStep } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
-import { CONTACT_SCHEMA, EMPTY_MESSAGE } from "#/lib/contact/message";
-import { NO_ALERT, alertFor, characterCountStatus } from "#/lib/contact/prompt";
+import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
+import { CHARACTER_COUNT_VISIBLE_FROM, NO_ALERT, alertFor } from "#/lib/contact/prompt";
 import type { Prompt } from "#/lib/contact/prompt";
 import { sendMessage } from "#/lib/contact/submit";
 import { useContactEmailAddress } from "#/lib/contact/use-contact-email-address";
@@ -41,7 +41,8 @@ export function ContactBody() {
   const sendAttemptRef = useRef<AbortController | null>(null);
 
   const hasUnsavedInput = form.isDirty;
-  const characterCount = characterCountStatus(form.values.message.length);
+  const characterCount = MESSAGE_MAX_LENGTH - form.values.message.length;
+  const isCharacterCountVisible = characterCount <= CHARACTER_COUNT_VISIBLE_FROM;
   const alert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;
 
   const closeWindow = useCloseWindow();
@@ -236,7 +237,7 @@ export function ContactBody() {
           />
         </div>
         <div className={styles.actions}>
-          <span className={styles.characterCount}>{characterCount}</span>
+          <span className={styles.characterCount}>{isCharacterCountVisible && characterCount.toLocaleString()}</span>
           <Button children={!hasUnsavedInput || isSending ? "Cancel" : "Discard"} onClick={() => closeWindow?.()} />
           <Button children="Send" disabled={isSending} type="submit" />
         </div>
