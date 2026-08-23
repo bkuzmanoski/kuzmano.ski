@@ -87,8 +87,8 @@ describe("destinationRouteOf", () => {
     expect(destinationRouteOf("/tech-notes")).toBe("/tech-notes");
   });
 
-  test("returns the route for a collection entry", () => {
-    expect(destinationRouteOf(`/tech-notes/${entry.slug}`)).toBe("/tech-notes");
+  test("returns its own route for a collection entry, not the route of its collection", () => {
+    expect(destinationRouteOf(`/tech-notes/${entry.slug}`)).toBe(`/tech-notes/${entry.slug}`);
   });
 
   test("returns the route for the contact window", () => {

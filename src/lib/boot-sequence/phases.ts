@@ -96,8 +96,6 @@ export function startOfPhaseMs(steps: ReadonlyArray<Step>, phase: Phase): number
 export const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
 
-export const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
-
 export async function whenFontReady(): Promise<void> {
   const fontSet = (document as Partial<Document>).fonts;
 

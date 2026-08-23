@@ -1,5 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
+
+import { isTouchOnly } from "#/lib/device";
 
 import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window";
 
@@ -12,6 +14,7 @@ vi.mock("#/lib/audio/scroll", () => ({
   playScroll: vi.fn(),
 }));
 vi.mock("#/lib/boot-sequence/use-is-boot-sequence-complete", () => ({ useIsBootSequenceComplete: () => true }));
+vi.mock("#/lib/device", () => ({ isTouchOnly: vi.fn() }));
 
 const BASE_PANE_HEIGHT = 100;
 
@@ -48,7 +51,7 @@ afterAll(() => {
   }
 });
 
-const windowShowing = (contentKey: string, children: ReactNode) => (
+const windowShowing = (contentKey: string, children: ReactNode, focused = true) => (
   <Window
     contentKey={contentKey}
     title="Window"
@@ -57,7 +60,7 @@ const windowShowing = (contentKey: string, children: ReactNode) => (
     width={800}
     height={600}
     z={1}
-    focused
+    focused={focused}
     maximized={false}
     hidden={false}
     unplaced={false}
@@ -73,9 +76,16 @@ const windowShowing = (contentKey: string, children: ReactNode) => (
 
 const tallPane = <div data-height={BASE_PANE_HEIGHT * 8} />;
 const shortPane = <div data-height={BASE_PANE_HEIGHT / 4} />;
+const button = <button type="button">Button</button>;
 
 const pane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const hasScrollableContent = () => screen.getByRole("button", { name: "Scroll up" }).tabIndex === 0; // An arrow is out of the tab order while the pane has nothing to scroll to.
+
+function switchAwayAndBack(rerender: (ui: ReactNode) => void, contentKey: string, children: ReactNode) {
+  rerender(windowShowing(contentKey, children, false));
+  (document.activeElement as HTMLElement).blur();
+  rerender(windowShowing(contentKey, children));
+}
 
 test("the scrollbar describes the current content rendered by the window", () => {
   const { rerender } = render(windowShowing("/tall", tallPane));
@@ -103,6 +113,100 @@ test("the scroll position is maintained when the content does not change", () =>
   rerender(windowShowing("/tall", tallPane));
 
   expect(pane().scrollTop).toBe(240);
+});
+
+test("the window restores the focus it last held when it is activated again", () => {
+  const { rerender } = render(windowShowing("/tall", button));
+  const focusableElement = screen.getByRole("button", { name: "Button" });
+
+  focusableElement.focus();
+  switchAwayAndBack(rerender, "/tall", button);
+
+  expect(document.activeElement).toBe(focusableElement);
+});
+
+test("the window does not restore focus to its resize control", () => {
+  const { rerender } = render(windowShowing("/tall", button));
+  const focusableElement = screen.getByRole("button", { name: "Button" });
+
+  focusableElement.focus();
+  screen.getByRole("button", { name: "Resize" }).focus();
+  switchAwayAndBack(rerender, "/tall", button);
+
+  expect(document.activeElement).toBe(focusableElement);
+});
+
+test("a press on an inactive window leaves the focus to the restore that follows it", () => {
+  const { rerender } = render(windowShowing("/tall", button, false));
+  const windowElement = screen.getByRole("region", { name: "Window" });
+
+  fireEvent.pointerDown(windowElement);
+
+  expect(fireEvent.mouseDown(windowElement)).toBe(false);
+
+  rerender(windowShowing("/tall", button));
+  fireEvent.pointerDown(windowElement);
+
+  expect(fireEvent.mouseDown(windowElement)).toBe(true);
+});
+
+test("a press on an inactive window is not passed on to what it lands over", () => {
+  const onClick = vi.fn();
+  const { rerender } = render(
+    windowShowing(
+      "/tall",
+      <button type="button" onClick={onClick}>
+        Button
+      </button>,
+      false,
+    ),
+  );
+
+  const target = screen.getByRole("button", { name: "Button" });
+
+  // The press activates the window, so the click that ends it is dispatched
+  // to the content the scrim was covering (see `swallowNextPress`).
+  fireEvent.pointerDown(screen.getByRole("region", { name: "Window" }));
+  rerender(
+    windowShowing(
+      "/tall",
+      <button type="button" onClick={onClick}>
+        Button
+      </button>,
+    ),
+  );
+
+  expect(fireEvent.click(target)).toBe(false);
+  expect(onClick).not.toHaveBeenCalled();
+  expect(fireEvent.click(target)).toBe(true);
+  expect(onClick).toHaveBeenCalledTimes(1);
+});
+
+test("a press on the chrome of a window leaves the focus within it unchanged", () => {
+  const { rerender } = render(windowShowing("/tall", button));
+  const focusableElement = screen.getByRole("button", { name: "Button" });
+
+  focusableElement.focus();
+
+  expect(fireEvent.mouseDown(screen.getByRole("button", { name: "Zoom" }))).toBe(false);
+  expect(fireEvent.mouseDown(screen.getByRole("button", { name: "Resize" }))).toBe(false);
+  expect(document.activeElement).toBe(focusableElement);
+
+  switchAwayAndBack(rerender, "/tall", button);
+
+  expect(document.activeElement).toBe(focusableElement);
+});
+
+test("a touch device is not returned to a field, which would reopen its software keyboard", () => {
+  vi.mocked(isTouchOnly).mockReturnValue(true);
+
+  const field = <input aria-label="Field" />;
+  const { rerender } = render(windowShowing("/tall", field));
+
+  screen.getByRole("textbox", { name: "Field" }).focus();
+  switchAwayAndBack(rerender, "/tall", field);
+
+  expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
 });
 
 test("the window restores focus to itself when its content is replaced", () => {

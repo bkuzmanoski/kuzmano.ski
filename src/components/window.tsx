@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import ActiveIcon from "#/assets/images/window-control-active.svg?react";
 import CloseIcon from "#/assets/images/window-control-close.svg?react";
@@ -9,7 +9,9 @@ import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-seque
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus";
 import { mergeHandlers } from "#/lib/merge-handlers";
+import { swallowNextPress } from "#/lib/press";
 
 import { ScrollPane } from "./scroll-pane";
 import { Tooltip } from "./tooltip";
@@ -136,16 +138,7 @@ export function Window({
     onEnd: () => setIsResizing(false),
   });
 
-  useEffect(() => {
-    const element = windowRef.current;
-
-    // Do not focus the window if it is:
-    // - hidden: a window opened from an icon waits out the zoom rect behind `visibility: hidden` and cannot be focused
-    // - already focused: a press that landed on a control has focused that control, and must not be overruled.
-    if (focused && !hidden && element && !element.contains(document.activeElement)) {
-      element.focus({ preventScroll: true });
-    }
-  }, [focused, hidden, contentKey]);
+  useRestorableFocus(windowRef, { isActive: focused && !hidden, contentKey });
 
   const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
   const resizeControl =
@@ -156,6 +149,7 @@ export function Window({
           aria-label="Resize"
           tabIndex={-1} // Drag handle is not keyboard accessible.
           className={cx(styles.controlResize, isResizing && styles.pressed)}
+          {...PRESERVE_FOCUS_PROPS}
           {...resizeHandlers}
         >
           <ResizeIcon />
@@ -179,9 +173,15 @@ export function Window({
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
       data-maximized={maximized || undefined}
       onFocus={onFocus}
-      onPointerDownCapture={onFocus}
+      onPointerDownCapture={() => {
+        if (!focused) {
+          swallowNextPress();
+        }
+
+        onFocus();
+      }}
     >
-      <header className={styles.titleBar} {...mergeHandlers(moveHandlers, zoomHandlers)}>
+      <header className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
         {focused && <div className={styles.bars} aria-hidden />}
         <span className={styles.title}>{title}</span>
         {focused && (

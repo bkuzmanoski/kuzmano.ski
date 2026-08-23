@@ -20,7 +20,6 @@ import {
   REDUCED_MOTION_MS,
   hasStageZoom,
   isBeginKey,
-  isTouchOnly,
   phaseFlags,
   sequence,
   startOfPhaseMs,
@@ -37,6 +36,7 @@ import {
 } from "#/lib/boot-sequence/stage";
 import type { StageMetrics } from "#/lib/boot-sequence/stage";
 import { cx } from "#/lib/class-names";
+import { isTouchOnly } from "#/lib/device";
 import { noSubscribe } from "#/lib/emitter";
 import { insetToViewport } from "#/lib/geometry";
 import type { Inset, Size, Transform } from "#/lib/geometry";

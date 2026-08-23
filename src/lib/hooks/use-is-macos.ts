@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 
-import { noSubscribe } from "./../emitter";
+import { isMacOS } from "../device";
+import { noSubscribe } from "../emitter";
 
-const getIsMacOS = () => /Mac/i.test(navigator.userAgent);
 const serverIsMacOS = () => true; // Note: Assume macOS for this audience.
 
 /**
@@ -12,5 +12,5 @@ const serverIsMacOS = () => true; // Note: Assume macOS for this audience.
  * store exists to keep the server render and hydration agreeing on macOS.
  */
 export function useIsMacOS(): boolean {
-  return useSyncExternalStore(noSubscribe, getIsMacOS, serverIsMacOS);
+  return useSyncExternalStore(noSubscribe, isMacOS, serverIsMacOS);
 }

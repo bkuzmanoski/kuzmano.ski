@@ -80,22 +80,15 @@ export function resolveWindow(pathname: string): WindowTarget | null {
   return resolvedRoute.id === "desktop" || resolvedRoute.id === "notFound" ? null : resolvedRoute;
 }
 
-/**
- * Returns the desktop destination route associated with an open window.
- *
- * A collection entry is associated with its containing collection; a page or a collection is
- * associated with its own route. Returns `null` for routes that do not open a window.
- */
+/* Returns the desktop destination route an open window stands  for, or `null` for routes that do not open a window. */
 export function destinationRouteOf(windowRoute: string): string | null {
   const target = resolveWindow(windowRoute);
 
   switch (target?.id) {
-    case "entry":
-      return target.collectionRoute ?? windowRoute;
-
     case "collection":
       return target.route;
 
+    case "entry":
     case "contact":
       return windowRoute;
 
