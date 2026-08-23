@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" fill="none" viewBox="0 0 21 20">
-  <path
-    fill="black"
-    d="M4 11h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1H4zm4 3v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v-1h1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1H8z"
-  />
-  <path class="dither" stroke="black" stroke-dasharray="1 1" d="M20.5 1v19M0 19.5h21" />
-</svg>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import ConfirmedIcon from "#/assets/images/copy-confirmed.svg?react";
+import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
 import CopyIcon from "#/assets/images/copy.svg?react";
 import { useTimer } from "#/lib/hooks/use-timer";
 
@@ -44,7 +44,7 @@ export function CopyButton({
     <>
       <Tooltip label={isCopied ? confirmation : label} persistOnPress className={className}>
         <Button aria-label={label} disabled={value === null} variant="icon" onClick={() => void copy()}>
-          {isCopied ? <ConfirmedIcon /> : <CopyIcon />}
+          {isCopied ? <CheckmarkIcon /> : <CopyIcon />}
         </Button>
       </Tooltip>
       <span className={styles.announcement} role="status">

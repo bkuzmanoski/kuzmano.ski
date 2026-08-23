@@ -1,8 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" fill="none" viewBox="0 0 21 20">
-  <path fill="white" d="M3 3h6v1h1v1h1v1h1v8H3zM9 6h6v1h1v1h1v1h1v8H9z" />
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="26" fill="none" viewBox="0 0 28 26">
+  <path fill="white" d="M5 5h7v1h1v1h1v1h1v10H5zM13 8h7v1h1v1h1v1h1v10H13z" />
   <path
     fill="black"
-    d="M3 3h6v1H4v9h6v1H3zm5 1h2v1h-1v1h3v1H8zm2 1h1v1h-1zm-5 1h2v1H5zm0 2h5v1H5zm0 2h5v1H5zM9 6h6v1h-5v9h8v1H9zm5 1h2v1h-1v1h3v1h-4zm2 1h1v1h-1zm1 1h1v7h-1zm-6 0h2v1h-2zm0 2h5v1h-5zm0 2h5v1h-5z"
+    d="M5 5h7v1H6v11h8v1H5zm6 1h2v1h-1v1h3v1H11zm2 1h1v1h-1zm-6 1h3v1H7zm0 2h6v1H7zm0 2h6v1H7zm0 2h6v1H7zM13 8h7v1H14v11h9v1H13zm9 3h1v9H22zm-3-2h2v1h-1v1h3v1H19zm2 1h1v1h-1zm-6 1h3v1H15zm0 2h6v1H15zm0 2h6v1H15zm0 2h6v1H15z"
   />
-  <path class="dither" stroke="black" stroke-dasharray="1 1" d="M20.5 1v19M0 19.5h21" />
 </svg>
