@@ -10,10 +10,10 @@ export function ContentBody({ content }: { content: Promise<{ default: MDXConten
   const { default: MDXContent } = use(content);
 
   return (
-    <article>
-      <MDXProvider components={mdxComponents}>
+    <MDXProvider components={mdxComponents}>
+      <article>
         <MDXContent />
-      </MDXProvider>
-    </article>
+      </article>
+    </MDXProvider>
   );
 }
