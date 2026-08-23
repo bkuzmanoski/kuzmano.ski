@@ -11,11 +11,18 @@ export interface KeyboardShortcut {
   code: string;
   run: () => void;
   enabled?: boolean;
+  runsWhileEditing?: boolean;
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
   const runMatch = useEffectEvent((event: KeyboardEvent) => {
-    const match = shortcuts.find((shortcut) => shortcut.code === event.code && shortcut.enabled !== false);
+    const isEditing = isEditableTarget(event.target);
+    const match = shortcuts.find(
+      (shortcut) =>
+        shortcut.code === event.code &&
+        shortcut.enabled !== false &&
+        (!isEditing || shortcut.runsWhileEditing === true),
+    );
 
     if (match) {
       event.preventDefault();
@@ -25,7 +32,7 @@ export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (!event.altKey || event.metaKey || event.ctrlKey || isEditableTarget(event.target)) {
+      if (!event.altKey || event.metaKey || event.ctrlKey) {
         return;
       }
 

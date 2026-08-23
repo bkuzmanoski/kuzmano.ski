@@ -64,6 +64,7 @@ export type Action =
   | { type: "zoom"; id: WindowId }
   | { type: "measure"; surface: Size }
   | { type: "organize" }
+  | { type: "cycleWindows" }
   | { type: "focusDesktop" }
   | { type: "notFound"; route: string }
   | { type: "dismissNotFound" };
@@ -80,18 +81,6 @@ export const EMPTY_STATE: ManagerState = {
 /** Whether window layer has reported the size of the desktop yet. */
 export function isUnmeasured(surface: Size): boolean {
   return surface.width === 0 || surface.height === 0;
-}
-
-function focusWindow(state: ManagerState, id: WindowId): ManagerState {
-  if (!state.content[id]) {
-    return state;
-  }
-
-  if (state.focused === id && state.order.at(-1) === id) {
-    return state;
-  }
-
-  return { ...state, order: [...state.order.filter((open) => open !== id), id], focused: id };
 }
 
 function updateGeometry(
@@ -210,6 +199,18 @@ function clearNotFound(state: ManagerState): ManagerState {
   return state.notFoundRoute === null ? state : { ...state, notFoundRoute: null };
 }
 
+function focusWindow(state: ManagerState, id: WindowId): ManagerState {
+  if (!state.content[id]) {
+    return state;
+  }
+
+  if (state.focused === id && state.order.at(-1) === id) {
+    return state;
+  }
+
+  return { ...state, order: [...state.order.filter((open) => open !== id), id], focused: id };
+}
+
 /** How a window is positioned and sized on a desktop of a given size. Bound to a layout by `createWindowPlacer`. */
 export type WindowPlacer = (geometry: Rect, surface: Size) => Rect;
 
@@ -326,6 +327,11 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         return { ...state, geometry: cascadeWindows(layout, state) };
       }
 
+      case "cycleWindows": {
+        const next = state.focused === null ? state.order.at(-1) : state.order[0];
+        return next ? focusWindow(state, next) : state;
+      }
+
       case "focusDesktop": {
         return clearNotFound(state.focused === null ? state : { ...state, focused: null });
       }
@@ -367,6 +373,7 @@ export interface WindowActions {
   toggleZoom: (id: WindowId) => void;
   measure: (surface: Size) => void;
   organize: () => void;
+  cycleWindows: () => void;
   focusDesktop: () => void;
   showNotFound: (route: string) => void;
   dismissNotFound: () => void;

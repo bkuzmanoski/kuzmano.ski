@@ -153,7 +153,7 @@ export function TimeStatus() {
 }
 
 export function MenuBar() {
-  const { open, close } = useWindowActions();
+  const { open, close, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
@@ -205,6 +205,7 @@ export function MenuBar() {
 
   useGlobalShortcuts([
     { code: "KeyW", run: closeWindow, enabled: hasWindow },
+    { code: "Tab", run: cycleWindows, runsWhileEditing: true },
     ...DESTINATION_ORDER.map((id) => ({ code: destinationShortcut(id).code, run: () => open(DESTINATIONS[id].route) })),
   ]);
 

@@ -342,6 +342,42 @@ describe("organize", () => {
   });
 });
 
+describe("cycleWindows", () => {
+  const cycled = (state: ManagerState) => reducer(state, { type: "cycleWindows" });
+
+  test("walks the focus down through the stack and back around to where it started", () => {
+    const initialState = opened("collection", "entry", "contact");
+    const secondWindow = cycled(initialState);
+    const thirdWindow = cycled(secondWindow);
+    const backToTheStart = cycled(thirdWindow);
+
+    expect(secondWindow.focused).toBe("collection");
+    expect(secondWindow.order).toEqual(["entry", "contact", "collection"]);
+    expect(thirdWindow.focused).toBe("entry");
+    expect(backToTheStart.focused).toBe("contact");
+    expect(backToTheStart.order).toEqual(initialState.order);
+  });
+
+  test("activates the window on top when the desktop is active", () => {
+    const state = cycled(reducer(opened("collection", "entry"), { type: "focusDesktop" }));
+
+    expect(state.focused).toBe("entry");
+    expect(state.order).toEqual(["collection", "entry"]);
+  });
+
+  test("does not change the geometry of any window", () => {
+    const initialState = opened("collection", "entry");
+    expect(cycled(initialState).geometry).toBe(initialState.geometry);
+  });
+
+  test("is a no-op with one window open, and with none", () => {
+    const state = opened("entry");
+
+    expect(cycled(state)).toBe(state);
+    expect(cycled(EMPTY_STATE)).toBe(EMPTY_STATE);
+  });
+});
+
 describe("focusDesktop", () => {
   test("keeps the windows open and makes the desktop active", () => {
     const initialState = opened("collection", "entry");

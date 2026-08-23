@@ -91,6 +91,7 @@ export function WindowManagerProvider({
       toggleZoom: (id) => dispatch({ type: "zoom", id }),
       measure: (surface) => dispatch({ type: "measure", surface }),
       organize: () => dispatch({ type: "organize" }),
+      cycleWindows: () => dispatch({ type: "cycleWindows" }),
       focusDesktop: () => dispatch({ type: "focusDesktop" }),
       showNotFound: (route) => dispatch({ type: "notFound", route }),
       dismissNotFound: () => dispatch({ type: "dismissNotFound" }),
