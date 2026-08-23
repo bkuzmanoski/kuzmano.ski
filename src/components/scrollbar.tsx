@@ -91,17 +91,17 @@ function Arrow({ direction, hidden, onStep }: { direction: "up" | "down"; hidden
 export function Scrollbar({
   viewportId,
   metrics,
-  resizeControl,
   className,
   onStep,
   onScrollTop,
+  resizeControl,
 }: {
   viewportId: string; // The id of the viewport this scrolls.
   metrics: ScrollMetrics;
-  resizeControl?: ReactNode;
   className?: string;
   onStep: (delta: number) => boolean; // Whether the viewport moved.
   onScrollTop: (top: number) => void;
+  resizeControl?: ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);

@@ -55,7 +55,6 @@ export function ScrollPane({
       <Scrollbar
         viewportId={id}
         metrics={metrics}
-        resizeControl={resizeControl}
         className={styles.scrollbar}
         onScrollTop={(top) => {
           if (contentContainerRef.current) {
@@ -81,6 +80,7 @@ export function ScrollPane({
 
           return didScroll;
         }}
+        resizeControl={resizeControl}
       />
     </div>
   );
