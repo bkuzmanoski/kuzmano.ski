@@ -48,8 +48,8 @@
     transform: rotate(180deg);
   }
 
-  &.filled path {
-    fill: var(--color-icon-foreground);
+  &.filled {
+    --color-icon-background: var(--color-icon-foreground);
   }
 }
 
