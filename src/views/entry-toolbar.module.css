@@ -50,14 +50,16 @@
 }
 
 .controls {
+  --control-gap: 5px; /* Matches the space above/below the control in the toolbar. */
+
   display: flex;
   flex: none;
-  gap: 6px;
+  gap: var(--control-gap);
   align-items: center;
 }
 
 /* Sets the control that leaves the entry apart from the pair that steps through it. It
  * leads so that its arrow does not sit directly above the scroll pane's own up arrow. */
 .enclosing {
-  margin-inline-end: 12px;
+  margin-inline-end: max(calc(var(--gutter) - var(--control-gap)), var(--control-gap));
 }

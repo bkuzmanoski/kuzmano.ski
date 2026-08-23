@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import ArrowIcon from "#/assets/images/arrow.svg?react";
+import ArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { stepScroll } from "#/lib/audio/scroll";
 import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
