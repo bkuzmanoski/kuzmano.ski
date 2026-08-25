@@ -117,6 +117,26 @@ export function playScroll(element: Element) {
 }
 
 /**
+ * Plays a sound for scrolling an element whose own height moves the content under the reader.
+ *
+ * A height that has changed since the last scroll marks the scroll as one the layout caused,
+ * so it is recorded without being played. The height to watch is the caller's to choose: what
+ * shifts the content differs by element, even though the response to it does not.
+ */
+function playScrollUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
+  const previousHeight = heights.get(element);
+
+  heights.set(element, height);
+
+  if (previousHeight !== undefined && previousHeight !== height) {
+    skipScrollAt(element);
+    return;
+  }
+
+  playScroll(element);
+}
+
+/**
  * Plays a sound for scrolling a viewport that is also resized, such as the pane of a window
  * being made larger or smaller.
  *
@@ -125,16 +145,7 @@ export function playScroll(element: Element) {
  * the last one was therefore taken to be the layout moving the content rather than the reader.
  */
 export function playPaneScroll(element: Element) {
-  const viewportHeight = viewportHeights.get(element);
-
-  viewportHeights.set(element, element.clientHeight);
-
-  if (viewportHeight !== undefined && viewportHeight !== element.clientHeight) {
-    skipScrollAt(element);
-    return;
-  }
-
-  playScroll(element);
+  playScrollUnlessResized(element, viewportHeights, element.clientHeight);
 }
 
 /**
@@ -147,14 +158,5 @@ export function playPaneScroll(element: Element) {
  * scroll, so it is recorded here instead.
  */
 export function playFieldScroll(element: Element) {
-  const contentHeight = contentHeights.get(element);
-
-  contentHeights.set(element, element.scrollHeight);
-
-  if (contentHeight !== undefined && contentHeight !== element.scrollHeight) {
-    skipScrollAt(element);
-    return;
-  }
-
-  playScroll(element);
+  playScrollUnlessResized(element, contentHeights, element.scrollHeight);
 }
