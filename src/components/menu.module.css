@@ -86,7 +86,10 @@
 .separator {
   display: flex;
   align-items: center;
+
   height: 9px;
+  margin: 0;
+  border: 0;
 
   &::before {
     content: "";

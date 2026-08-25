@@ -12,24 +12,28 @@ const TAP_DISMISS_MS = 1_500;
 const MOUSE = { pointerType: "mouse" };
 const TOUCH = { pointerType: "touch" };
 
-function renderTooltip({ persistOnPress = false, label = "Appearance: System" } = {}) {
-  const { container, rerender } = render(
-    <Tooltip label={label} persistOnPress={persistOnPress}>
-      <button type="button">Appearance</button>
-    </Tooltip>,
+function renderTooltip({ label = "Tip", suppressed = false, persistOnPress = false } = {}) {
+  let props = { label, suppressed };
+
+  const view = () => (
+    <Tooltip label={props.label} suppressed={props.suppressed} persistOnPress={persistOnPress}>
+      <button type="button">Control</button>
+    </Tooltip>
   );
 
-  /** Stands in for the press being handled and the control re-reading. */
-  const relabel = (next: string) =>
+  const { container, rerender } = render(view());
+
+  const update = (next: Partial<typeof props>) =>
     act(() => {
-      rerender(
-        <Tooltip label={next} persistOnPress={persistOnPress}>
-          <button type="button">Appearance</button>
-        </Tooltip>,
-      );
+      props = { ...props, ...next };
+      rerender(view());
     });
 
-  return { wrapper: container.firstElementChild!, relabel };
+  return {
+    wrapper: container.firstElementChild!,
+    relabel: (next: string) => update({ label: next }),
+    suppress: (next: boolean) => update({ suppressed: next }),
+  };
 }
 
 const tip = () => screen.queryByRole("tooltip");
@@ -68,23 +72,23 @@ test("hovering shows the tooltip after the delay, and leaving hides it", () => {
 
   advance(HOVER_DELAY_MS);
 
-  expect(tip()?.textContent).toBe("Appearance: System");
+  expect(tip()?.textContent).toBe("Tip");
 
   fireEvent.pointerLeave(wrapper, MOUSE);
 
   expect(tip()).toBeNull();
 });
 
-test("a tap holds the tooltip hidden until the label reports the press", () => {
+test("a tap keeps the tooltip hidden until the label reports the press", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
 
   expect(tip()).toBeNull();
 
-  relabel("Appearance: Light");
+  relabel("New Tip");
 
-  expect(tip()?.textContent).toBe("Appearance: Light");
+  expect(tip()?.textContent).toBe("New Tip");
 });
 
 test("a tap whose press does not change the label does not show the tooltip", () => {
@@ -105,7 +109,7 @@ test("a tapped tooltip hides itself without further input", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  relabel("Appearance: Light");
+  relabel("New Tip");
   advance(TAP_DISMISS_MS - 1);
 
   expect(tip()).not.toBeNull();
@@ -120,7 +124,7 @@ test("the dismissal delay runs from when the tooltip appears, not from the tap",
 
   tap(wrapper);
   advance(TAP_DISMISS_MS - 200); // The press is still being handled.
-  relabel("Appearance: Light");
+  relabel("New Tip");
   advance(TAP_DISMISS_MS - 1);
 
   expect(tip()).not.toBeNull();
@@ -134,7 +138,7 @@ test("a tap has no effect on a tooltip without `persistOnPress`", () => {
   const { wrapper, relabel } = renderTooltip();
 
   tap(wrapper);
-  relabel("Appearance: Light");
+  relabel("New Tip");
   advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
@@ -144,14 +148,14 @@ test("tapping again re-reads the label and restarts the dismissal delay", () => 
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  relabel("Appearance: Light");
+  relabel("New Tip");
   advance(TAP_DISMISS_MS - 100);
 
   tap(wrapper);
-  relabel("Appearance: Dark");
+  relabel("Another New Tip");
   advance(TAP_DISMISS_MS - 100);
 
-  expect(tip()?.textContent).toBe("Appearance: Dark");
+  expect(tip()?.textContent).toBe("Another New Tip");
 
   advance(100);
 
@@ -162,13 +166,13 @@ test("tapping again holds the tooltip visible even when the label does not chang
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  relabel("Copied");
+  relabel("New Tip");
   advance(TAP_DISMISS_MS - 100);
 
-  tap(wrapper); // The label already reads "Copied", so the press changes nothing.
+  tap(wrapper); // The label already reads "New Tip", so the press changes nothing.
   advance(TAP_DISMISS_MS - 100);
 
-  expect(tip()?.textContent).toBe("Copied");
+  expect(tip()?.textContent).toBe("New Tip");
 
   advance(100);
 
@@ -212,7 +216,7 @@ test("a tap still dismisses itself when the synthesised mouse pointer arrives la
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tapWithLateMouse(wrapper);
-  relabel("Appearance: Light");
+  relabel("New Tip");
 
   expect(tip()).not.toBeNull();
 
@@ -221,14 +225,45 @@ test("a tap still dismisses itself when the synthesised mouse pointer arrives la
   expect(tip()).toBeNull();
 });
 
-test("a suppressed control does not raise a tooltip on tap", () => {
-  const { container } = render(
-    <Tooltip label="Resize" suppressed persistOnPress>
-      <button type="button">Resize</button>
-    </Tooltip>,
-  );
+test("a suppressed control does not show a tooltip on tap", () => {
+  const { wrapper } = renderTooltip({ label: "Resize", persistOnPress: true, suppressed: true });
 
-  tap(container.firstElementChild!);
+  tap(wrapper);
+
+  expect(tip()).toBeNull();
+});
+
+test("a control with nothing to describe does not show a tooltip", () => {
+  const { wrapper } = renderTooltip({ label: "Next", suppressed: true });
+
+  fireEvent.pointerEnter(wrapper, MOUSE);
+  advance(HOVER_DELAY_MS);
+
+  expect(tip()).toBeNull();
+});
+
+test("a tooltip left open when it is suppressed does not return once suppression lifts", () => {
+  const { wrapper, suppress } = renderTooltip({ label: "Next" });
+
+  fireEvent.pointerEnter(wrapper, MOUSE);
+  advance(HOVER_DELAY_MS);
+
+  expect(tip()).not.toBeNull();
+
+  suppress(true);
+
+  expect(tip()).toBeNull();
+
+  suppress(false);
+
+  expect(tip()).toBeNull();
+});
+
+test("a late synthesised mouse pointer does not show the tooltip when the press leaves the state unchanged", () => {
+  const { wrapper } = renderTooltip({ persistOnPress: true });
+
+  tapWithLateMouse(wrapper); // The press leaves the label as it was, so nothing should be shown.
+  advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });

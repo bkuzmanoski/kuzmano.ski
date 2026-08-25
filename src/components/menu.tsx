@@ -309,10 +309,10 @@ export function Menu({
     >
       {items.map((item, index) =>
         item.kind === "separator" ? (
-          <div key={index} className={styles.separator} role="separator" />
+          <hr key={`separator-${index}`} className={styles.separator} />
         ) : (
           <MenuItemRow
-            key={index}
+            key={item.label}
             item={item}
             index={index}
             id={`${itemIdPrefix}-${index}`}

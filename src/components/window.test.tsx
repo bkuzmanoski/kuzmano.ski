@@ -251,10 +251,10 @@ test("a press on the chrome of a window leaves the focus within it unchanged", (
 test("a touch device is not returned to a field, which would reopen its software keyboard", () => {
   vi.mocked(isTouchOnly).mockReturnValue(true);
 
-  const field = <input aria-label="Field" />;
+  const field = <input aria-label="Message" />;
   const { rerender } = render(windowShowing("/tall", field));
 
-  screen.getByRole("textbox", { name: "Field" }).focus();
+  screen.getByRole("textbox", { name: "Message" }).focus();
   switchAwayAndBack(rerender, "/tall", field);
 
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
