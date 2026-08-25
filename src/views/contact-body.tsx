@@ -8,7 +8,7 @@ import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact";
-import { playFieldScroll } from "#/lib/audio/scroll";
+import { playFieldScroll, skipScrollAt } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
@@ -26,6 +26,17 @@ import styles from "./contact-body.module.css";
 const SEND_FAILED_MESSAGE = "The message couldn’t be sent.";
 const SENDING_MESSAGE = "Sending message";
 
+const CARET_SCROLL_KEYS = new Set([
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+  "PageUp",
+  "PageDown",
+]); // Keys whose default action can move the caret out of view, scrolling the field.
+
 export function ContactBody() {
   const form = useForm({ initialValues: EMPTY_MESSAGE, schema: CONTACT_SCHEMA });
   const contactEmailAddress = useContactEmailAddress();
@@ -38,6 +49,7 @@ export function ContactBody() {
   const decoyFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
   const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
+  const caretScrollRef = useRef(false); // Set by a key that may scroll the field to move the caret into view.
   const sendAttemptRef = useRef<AbortController | null>(null);
 
   const hasUnsavedInput = form.isDirty;
@@ -201,8 +213,26 @@ export function ContactBody() {
               placeholder="Write a message…"
               required
               value={form.values.message}
+              onKeyDown={(event) => {
+                if (!CARET_SCROLL_KEYS.has(event.key)) {
+                  return;
+                }
+
+                caretScrollRef.current = true;
+
+                requestAnimationFrame(() => {
+                  caretScrollRef.current = false; // Nothing came of the key if no scroll event has claimed the flag by the next frame.
+                });
+              }}
               onScroll={(event) => {
                 measureMessage();
+
+                if (caretScrollRef.current) {
+                  caretScrollRef.current = false;
+                  skipScrollAt(event.currentTarget);
+                  return;
+                }
+
                 playFieldScroll(event.currentTarget);
               }}
             />
