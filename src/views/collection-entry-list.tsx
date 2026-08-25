@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import { EmptyState } from "#/components/empty-state";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
 import type { Collection } from "#/content";
@@ -21,11 +23,12 @@ export const EMPTY_COLLECTION_MESSAGE = "Nothing to see here.";
 export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const { open } = useWindowActions();
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const entries = collection.list();
   const openEntry = (slug: string) => open(collection.routeOf(slug));
 
-  const itemProps = useListNavigation({
+  const itemProps = useListNavigation(listRef, {
     count: entries.length,
     activeIndex: entries.findIndex((entry) => entry.slug === activeSlug),
     onActivate: (index) => {
@@ -43,7 +46,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
   }
 
   return (
-    <ul className={styles.list}>
+    <ul ref={listRef} className={styles.list}>
       {entries.map((entry, index) => {
         const isActive = entry.slug === activeSlug;
 

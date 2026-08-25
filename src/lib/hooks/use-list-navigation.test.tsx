@@ -1,11 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { useRef } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { mergeHandlers } from "../merge-handlers";
 
 import { useListNavigation } from "./use-list-navigation";
 
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
@@ -17,15 +18,20 @@ function List({
   count,
   activeIndex,
   guardedIndex,
+  label = "Item",
+  children,
 }: {
   count: number;
   activeIndex: number;
   guardedIndex?: number; // An item with its own onMouseDown, merged ahead of the hook's.
+  label?: string;
+  children?: ReactNode; // A nested list, rendered inside the first item as a sublist would be.
 }) {
-  const itemProps = useListNavigation({ count, activeIndex, onActivate: vi.fn() });
+  const listRef = useRef<HTMLUListElement>(null);
+  const itemProps = useListNavigation(listRef, { count, activeIndex, onActivate: vi.fn() });
 
   return (
-    <ul>
+    <ul ref={listRef}>
       {Array.from({ length: count }, (_, index) => (
         <li key={index}>
           <a
@@ -34,8 +40,9 @@ function List({
               ? mergeHandlers({ onMouseDown: (event: MouseEvent) => event.preventDefault() }, itemProps(index))
               : itemProps(index))}
           >
-            Item {index}
+            {label} {index}
           </a>
+          {index === 0 ? children : null}
         </li>
       ))}
     </ul>
@@ -103,4 +110,35 @@ test("the tab stop stays on the list once it shrinks past the focused entry", ()
   const remaining = screen.getAllByRole("link");
 
   expect(remaining.filter((link) => link.tabIndex === 0)).toEqual([remaining[0]]);
+});
+
+test("navigation follows the rendered list after it shrinks", () => {
+  const { links, rerender } = renderList({ count: 4, activeIndex: 0 });
+
+  links[0]!.focus();
+  rerender(<List count={2} activeIndex={0} />);
+
+  const remaining = screen.getAllByRole("link");
+
+  fireEvent.keyDown(remaining[0]!, { key: "End" });
+
+  expect(remaining).toHaveLength(2);
+  expect(document.activeElement).toBe(remaining[1]);
+});
+
+test("a list navigates its own items, not those of a list nested inside it", () => {
+  render(
+    <List count={2} activeIndex={0}>
+      <List count={3} activeIndex={0} label="Inner" />
+    </List>,
+  );
+
+  const outer = screen.getAllByRole("link", { name: /^Item/ });
+  const inner = screen.getAllByRole("link", { name: /^Inner/ });
+
+  outer[0]!.focus();
+  fireEvent.keyDown(outer[0]!, { key: "End" }); // The outer list's own last item, not the sublist's first.
+
+  expect(document.activeElement).toBe(outer[1]);
+  expect(inner.map((item) => item.textContent)).toEqual(["Inner 0", "Inner 1", "Inner 2"]);
 });

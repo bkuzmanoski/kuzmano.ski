@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { scrollIntoViewSilently } from "../audio/scroll";
 import { playHover } from "../audio/sounds";
 import { isActivationKey } from "../keys";
 import { clamp } from "../math";
 
-import type { KeyboardEvent, MouseEvent } from "react";
+import type { KeyboardEvent, MouseEvent, RefObject } from "react";
+
+// Marks an item as belonging to one list, by that list's own id. Spread from `itemProps`
+// rather than set by the caller, so an item cannot be navigable but unreachable. The id
+// prevents a list from claiming the items of another nested inside it: a container search
+// reaches the whole subtree, so the mark has to identify which list the item belongs to.
+const ITEM_ATTRIBUTE = "data-list-item";
 
 // Where each key moves the focus, from the item that received it.
 const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number) | undefined> = {
@@ -15,6 +21,22 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   End: (_index, lastIndex) => lastIndex,
 };
 
+function itemAt(list: HTMLElement | null, listId: string, index: number) {
+  const items = list?.querySelectorAll<HTMLElement>(`[${ITEM_ATTRIBUTE}]`) ?? [];
+
+  let found = -1;
+
+  // The id is compared rather than selected on: `useId` values are
+  // opaque so nothing here should assume they are selector-safe.
+  for (const item of items) {
+    if (item.getAttribute(ITEM_ATTRIBUTE) === listId && ++found === index) {
+      return item;
+    }
+  }
+
+  return null;
+}
+
 // `preventScroll` overrides the browser's focus-scroll which can stop short of
 // bringing an element fully into view and sounds a scroll detent.
 function focusItem(item: HTMLElement) {
@@ -22,36 +44,44 @@ function focusItem(item: HTMLElement) {
   scrollIntoViewSilently(item);
 }
 
-/** Keyboard navigation for a vertical list. */
-export function useListNavigation({
-  count,
-  activeIndex,
-  onActivate,
-}: {
-  count: number;
-  activeIndex: number;
-  onActivate: (index: number) => void;
-}) {
+/**
+ * Keyboard navigation for a vertical list.
+ *
+ * The items are read back from `listRef` rather than collected as they mount: the DOM
+ * already holds them, in order, for exactly as long as they are rendered. A registry of
+ * its own would have to be filled by a ref on every item, emptied as items unmount, and
+ * kept from being read past its end once the list shrinks.
+ */
+export function useListNavigation(
+  listRef: RefObject<HTMLElement | null>,
+  {
+    count,
+    activeIndex,
+    onActivate,
+  }: {
+    count: number;
+    activeIndex: number;
+    onActivate: (index: number) => void;
+  },
+) {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const itemsRef = useRef<Array<HTMLElement | null>>([]);
+  const listId = useId();
 
   useEffect(() => {
-    const item = itemsRef.current[activeIndex];
+    const item = itemAt(listRef.current, listId, activeIndex);
 
     if (!item) {
       return;
     }
 
     scrollIntoViewSilently(item);
-  }, [activeIndex]);
+  }, [listRef, listId, activeIndex]);
 
   const tabStop = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
 
   return function itemProps(index: number) {
     return {
-      ref: (element: HTMLElement | null) => {
-        itemsRef.current[index] = element;
-      },
+      [ITEM_ATTRIBUTE]: listId,
       tabIndex: index === tabStop ? 0 : -1,
       onFocus: () => setFocusedIndex(index),
       onMouseDown: (event: MouseEvent<HTMLElement>) => {
@@ -82,7 +112,7 @@ export function useListNavigation({
         event.preventDefault();
 
         const next = clamp(target, 0, count - 1);
-        const item = itemsRef.current[next];
+        const item = itemAt(listRef.current, listId, next);
 
         if (next === index || !item) {
           return; // Nothing moves at either end of the list, so there is no travel to report.
