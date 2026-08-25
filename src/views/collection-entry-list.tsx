@@ -3,6 +3,7 @@ import { ENTRY_DATE_FORMAT } from "#/config/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
 import type { CollectionTarget } from "#/content/window-registry";
+import { skipScrollAbove } from "#/lib/audio/scroll";
 import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
@@ -53,6 +54,18 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
               aria-label={entry.title}
               className={cx(styles.card, isActive && styles.active)}
               href={collection.routeOf(entry.slug)}
+              onMouseDown={(event) => {
+                if (isBrowserHandledClick(event)) {
+                  return;
+                }
+
+                // The browser's own focus-scroll may leave a partly visible item still
+                // partly hidden, and sounds like ordinary scrolling; take it over instead.
+                event.preventDefault();
+                event.currentTarget.focus({ preventScroll: true });
+                event.currentTarget.scrollIntoView({ block: "nearest", behavior: "instant" });
+                skipScrollAbove(event.currentTarget);
+              }}
               onClick={(event) => {
                 if (isBrowserHandledClick(event)) {
                   return;
