@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { CodeBlock } from "#/components/code-block";
 import { scrollIntoViewSilently } from "#/lib/audio/scroll";
 import { isBrowserHandledClick } from "#/lib/link";
 
@@ -8,13 +9,6 @@ import type { ComponentProps } from "react";
 
 type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
-/**
- * Renders a heading as its own fragment target.
- *
- * `rehype-slug` gives every heading an id, which a link can address. A target has to be
- * focusable for the keyboard to follow the link to it, and `-1` grants that without
- * putting every heading in the tab order.
- */
 const heading = (Tag: HeadingTag) =>
   function Heading(props: ComponentProps<"h1">) {
     return <Tag {...props} tabIndex={-1} />;
@@ -71,4 +65,5 @@ export const mdxComponents: MDXComponents = {
       </a>
     );
   },
+  pre: CodeBlock,
 };

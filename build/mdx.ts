@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import mdx from "@mdx-js/rollup";
 import rehypeShiki from "@shikijs/rehype";
+import { toString } from "hast-util-to-string";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
@@ -11,6 +12,7 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { CONTENT_DIRECTORY, fromRoot } from "./paths.ts";
 import { shikiTheme } from "./shiki-theme.ts";
 
+import type { Options as AutolinkOptions } from "rehype-autolink-headings";
 import type { Plugin } from "vite";
 
 const FENCE = /^[ \t]*(?:```|~~~)([\w#+-]+)/gm;
@@ -36,6 +38,20 @@ function contentLanguages(): Array<string> {
   return [...languages];
 }
 
+const autolinkOptions: AutolinkOptions = {
+  behavior: "append",
+  properties: (heading) => ({
+    "data-heading-link": "", // Styled in `content/content.module.css`. A class here would be a global name, out of reach of the module.
+    ariaLabel: `Link to ${toString(heading)}`,
+  }),
+  content: {
+    type: "element",
+    tagName: "span",
+    properties: { ariaHidden: "true" },
+    children: [{ type: "text", value: "#" }],
+  },
+};
+
 export function mdxPlugin({ syntaxHighlight = true } = {}): Plugin {
   return {
     enforce: "pre",
@@ -43,8 +59,12 @@ export function mdxPlugin({ syntaxHighlight = true } = {}): Plugin {
       providerImportSource: "@mdx-js/react",
       remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       rehypePlugins: syntaxHighlight
-        ? [rehypeSlug, rehypeAutolinkHeadings, [rehypeShiki, { theme: shikiTheme, langs: contentLanguages() }]]
-        : [rehypeSlug, rehypeAutolinkHeadings],
+        ? [
+            rehypeSlug,
+            [rehypeAutolinkHeadings, autolinkOptions],
+            [rehypeShiki, { theme: shikiTheme, langs: contentLanguages() }],
+          ]
+        : [rehypeSlug, [rehypeAutolinkHeadings, autolinkOptions]],
     }),
   };
 }

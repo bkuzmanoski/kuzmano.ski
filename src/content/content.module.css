@@ -1,0 +1,117 @@
+/* Styles for content authored in MDX. Chrome styles live in `src/styles.css`.
+ *
+ * Element rules are wrapped in `:where()` so a page's own stylesheet overrides them with a
+ * plain selector of its own, without depending on the order the two modules are bundled in. */
+
+.content {
+  /* Tokens only content uses: chrome renders no body copy, and no code. */
+  --content-measure: 72ch;
+  --content-flow: 16px;
+  --content-section-flow: 24px;
+  --font-family-mono: ui-monospace, "SF Mono", "Menlo", monospace; /* TODO */
+  --color-syntax-foreground: var(--color-foreground);
+  --color-syntax-background: var(--color-background);
+  --color-syntax-comment: light-dark(#839099, #637079);
+  --color-syntax-keyword: light-dark(#9f5090, #cf86c1);
+  --color-syntax-function: var(--color-accent);
+  --color-syntax-property: light-dark(#6a519e, #9d86ce);
+  --color-syntax-type: light-dark(#417b81, #65b8c1);
+  --color-syntax-constant: light-dark(#9f5a38, #d68c67);
+  --color-syntax-string: light-dark(#446f53, #64b280);
+  --color-syntax-punctuation: var(--color-foreground-secondary);
+  --color-syntax-invalid: var(--color-error);
+
+  max-width: var(--content-measure);
+  margin-inline: auto;
+  padding-block: var(--gutter);
+  padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
+    calc(var(--gutter) + var(--reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px));
+
+  font: var(--font-ui);
+  text-wrap: pretty;
+
+  /* MDX emits a flat run of blocks, so the vertical rhythm lives on the top level.
+   * Nested blocks (a list, a quote) set their own below. */
+  & > :where(* + *) {
+    margin-block-start: var(--content-flow);
+  }
+
+  & > :where(* + h1, * + h2, * + h3, * + h4, * + h5, * + h6) {
+    margin-block-start: var(--content-section-flow);
+  }
+
+  /* TODO */
+  & :where(h1, h2, h3, h4, h5, h6) {
+    margin-block: 0;
+    margin-inline: auto;
+    font: var(--font-ui-bold);
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  & :where(a:not([data-heading-link])) {
+    text-decoration: underline;
+  }
+
+  & :where([data-heading-link]) {
+    margin-inline-start: 6px;
+    color: var(--color-foreground-secondary);
+    opacity: 0;
+  }
+
+  & :where(:hover, :focus-within) > :where([data-heading-link]),
+  & :where([data-heading-link]):focus-visible {
+    opacity: 1;
+  }
+
+  & :where(ul, ol) {
+    margin-block: 0;
+    padding-inline-start: 24px;
+  }
+
+  & :where(li + li) {
+    margin-block-start: 4px;
+  }
+
+  & :where(code) {
+    font-family: var(--font-family-mono);
+    font-size: 0.9em;
+  }
+
+  & :where(pre) {
+    overflow-x: auto;
+    margin-block: 0;
+    padding: 12px var(--gutter);
+    border: 1px solid var(--color-border);
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  & :where(blockquote) {
+    margin: 0;
+    padding-inline-start: var(--gutter);
+    border-inline-start: 2px solid var(--color-border);
+    color: var(--color-foreground-secondary);
+  }
+
+  & :where(hr) {
+    margin-block: var(--content-section-flow);
+    border: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  & :where(img, video) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (hover: none) {
+    & :where([data-heading-link]) {
+      opacity: 1;
+    }
+  }
+}

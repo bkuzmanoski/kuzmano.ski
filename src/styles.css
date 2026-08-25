@@ -67,17 +67,6 @@
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
   --color-screensaver-backdrop: #161a1d;
-  --color-syntax-foreground: var(--color-foreground);
-  --color-syntax-background: var(--color-background);
-  --color-syntax-comment: light-dark(#839099, #637079);
-  --color-syntax-keyword: light-dark(#9f5090, #cf86c1);
-  --color-syntax-function: var(--color-accent);
-  --color-syntax-property: light-dark(#6a519e, #9d86ce);
-  --color-syntax-type: light-dark(#417b81, #65b8c1);
-  --color-syntax-constant: light-dark(#9f5a38, #d68c67);
-  --color-syntax-string: light-dark(#446f53, #64b280);
-  --color-syntax-punctuation: var(--color-foreground-secondary);
-  --color-syntax-invalid: var(--color-error);
 
   /* Shadows */
   --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
@@ -170,13 +159,22 @@ p {
   box-shadow: var(--shadow);
 }
 
-.focusFrame:focus-visible {
+/* The frame a focused element wears: `focusFrame` on the element that takes the focus,
+ * `focusFrameWithin` on a wrapper around it, for a control whose focus lands on a child.
+ * `--focus-frame-inset` moves the frame off the edge it is drawn against. */
+.focusFrame:focus-visible,
+.focusFrameWithin:has(> :focus-visible) {
   position: relative;
 
   &::after {
+    pointer-events: none;
     content: "";
+
     position: absolute;
-    inset: 2px;
+    inset: var(--focus-frame-inset, 2px);
+
+    color: var(--color-border);
+
     background: var(--dotted-frame);
   }
 }

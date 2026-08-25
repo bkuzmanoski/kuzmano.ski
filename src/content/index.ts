@@ -5,8 +5,16 @@ import { parseFrontmatter } from "./schema";
 import type { Entry, Frontmatter } from "./schema";
 import type { MDXContent } from "mdx/types";
 
-interface MDXModule {
+/**
+ * A compiled content file: its body, and the optional class its page styles itself with.
+ *
+ * A page declares the class by importing a CSS module of its own and re-exporting a class
+ * from it (`export const className = styles.page`). `ContentBody` sets it on the article
+ * alongside the shared `content.module.css` class.
+ */
+export interface MDXModule {
   default: MDXContent;
+  className?: string;
 }
 
 /** Slug-keyed lookup of the content in a directory. */
