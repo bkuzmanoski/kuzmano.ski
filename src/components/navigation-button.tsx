@@ -28,11 +28,12 @@ export function NavigationButton({
   return (
     <Tooltip label={label} className={className}>
       {route === null ? (
-        <Button variant="icon" children={icon} aria-label={label} disabled />
+        <Button variant="icon" aria-label={label} disabled>
+          {icon}
+        </Button>
       ) : (
         <Button
           variant="icon"
-          children={icon}
           aria-label={label}
           href={route}
           onClick={(event) => {
@@ -43,7 +44,9 @@ export function NavigationButton({
             event.preventDefault();
             open(route);
           }}
-        />
+        >
+          {icon}
+        </Button>
       )}
     </Tooltip>
   );

@@ -31,9 +31,13 @@ function runAction({ onAction }: AlertAction) {
 
 function ActionButton({ action, autoFocus, ref }: { action: AlertAction; autoFocus: boolean; ref?: Ref<never> }) {
   return typeof action.onAction === "string" ? (
-    <Button ref={ref} children={action.label} autoFocus={autoFocus} href={action.onAction} />
+    <Button ref={ref} autoFocus={autoFocus} href={action.onAction}>
+      {action.label}
+    </Button>
   ) : (
-    <Button ref={ref} children={action.label} autoFocus={autoFocus} onClick={action.onAction} />
+    <Button ref={ref} autoFocus={autoFocus} onClick={action.onAction}>
+      {action.label}
+    </Button>
   );
 }
 

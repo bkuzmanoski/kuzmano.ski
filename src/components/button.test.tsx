@@ -8,8 +8,12 @@ import type { RefObject } from "react";
 test("forwards native disabled, autofocus, and accessibility props", () => {
   render(
     <>
-      <Button children="Disabled" disabled aria-describedby="disabled-description" />
-      <Button children="Focused" autoFocus aria-describedby="focused-description" />
+      <Button disabled aria-describedby="disabled-description">
+        Disabled
+      </Button>
+      <Button autoFocus aria-describedby="focused-description">
+        Focused
+      </Button>
     </>,
   );
 
@@ -28,7 +32,11 @@ test("forwards native disabled, autofocus, and accessibility props", () => {
 });
 
 test("an href renders an anchor, which still applies autoFocus", () => {
-  render(<Button children="Go Home" autoFocus href="/" />);
+  render(
+    <Button autoFocus href="/">
+      Go Home
+    </Button>,
+  );
 
   const link = screen.getByRole("link", { name: "Go Home" });
 
@@ -43,8 +51,10 @@ test("both variants populate a caller-supplied ref, and the anchor still applies
 
   render(
     <>
-      <Button ref={buttonRef} children="Button" />
-      <Button ref={linkRef} children="Anchor" autoFocus href="/" />
+      <Button ref={buttonRef}>Button</Button>
+      <Button ref={linkRef} autoFocus href="/">
+        Anchor
+      </Button>
     </>,
   );
 

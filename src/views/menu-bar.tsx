@@ -50,11 +50,12 @@ function StatusButton({
       <button
         type="button"
         aria-label={label}
-        children={children}
         className={cx(styles.control, className)}
         onClick={onClick}
         onPointerDown={playClick}
-      />
+      >
+        {children}
+      </button>
     </Tooltip>
   );
 }
@@ -297,7 +298,6 @@ export function MenuBar() {
                 titles.current[label] = node;
               }}
               type="button"
-              children={label}
               className={cx(styles.title, openMenu?.label === label && styles.open)}
               aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
@@ -309,7 +309,9 @@ export function MenuBar() {
                   openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
               }}
-            />
+            >
+              {label}
+            </button>
             {openMenu?.label === label && (
               <Menu
                 anchor={openMenu.anchor}

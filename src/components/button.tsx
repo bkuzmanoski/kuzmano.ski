@@ -38,21 +38,19 @@ export function Button(
             node?.focus(); // Manual focus as React does not apply `autoFocus` to anchors.
           }
         })}
-        children={children}
         className={className}
         {...mergeHandlers({ onPointerDown: playClick }, linkProps)}
-      />
+      >
+        {children}
+      </a>
     );
   }
 
   const { children, type = "button", variant: _variant, holdPressed: _holdPressed, ...buttonProps } = props;
 
   return (
-    <button
-      type={type}
-      children={children}
-      className={className}
-      {...mergeHandlers({ onPointerDown: playClick }, buttonProps)}
-    />
+    <button type={type} className={className} {...mergeHandlers({ onPointerDown: playClick }, buttonProps)}>
+      {children}
+    </button>
   );
 }
