@@ -20,7 +20,7 @@ const CLICK: Strike = {
 const DETENT: Strike = {
   durationSeconds: 0.008,
   seed: 0xfee1e7,
-  toneHz: 4200,
+  toneHz: 6400,
   toneQ: 0.9,
   dampingHz: 9000,
   attackSeconds: 0.0001,
