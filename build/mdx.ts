@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import mdx from "@mdx-js/rollup";
 import rehypeShiki from "@shikijs/rehype";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
@@ -42,8 +43,8 @@ export function mdxPlugin({ syntaxHighlight = true } = {}): Plugin {
       providerImportSource: "@mdx-js/react",
       remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       rehypePlugins: syntaxHighlight
-        ? [rehypeSlug, [rehypeShiki, { theme: shikiTheme, langs: contentLanguages() }]]
-        : [rehypeSlug],
+        ? [rehypeSlug, rehypeAutolinkHeadings, [rehypeShiki, { theme: shikiTheme, langs: contentLanguages() }]]
+        : [rehypeSlug, rehypeAutolinkHeadings],
     }),
   };
 }
