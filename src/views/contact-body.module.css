@@ -17,7 +17,7 @@
 
     & > * {
       align-items: center;
-      padding: 7px var(--gutter) 9px; /* Optical centring: the row carries the odd pixel below its text rather than above. */
+      padding: 8px var(--gutter);
     }
 
     & > * + * {

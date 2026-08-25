@@ -5,12 +5,19 @@
 
 .label {
   user-select: none;
+
+  transform: translateY(-0.5px); /* ChicagoFLF baseline alignment. */
+
   flex: none;
+
   width: 64px;
+
   font: var(--font-chrome);
 }
 
 .value {
+  transform: translateY(0.5px); /* Helvetica baseline alignment. */
+
   flex: 1;
 
   font: var(--font-ui-large);
