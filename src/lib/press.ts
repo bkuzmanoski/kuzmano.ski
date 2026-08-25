@@ -1,7 +1,13 @@
+import type { MouseEvent as ReactMouseEvent } from "react";
+
 /** The longest a click can take to arrive after the press it belongs to. */
 export const MAX_CLICK_DELAY_MS = 1_000;
 
 let standDown: (() => void) | null = null;
+
+export function isPrimaryPress(event: ReactMouseEvent | MouseEvent): boolean {
+  return event.button === 0;
+}
 
 /**
  * Swallows the rest of the press, including its focus change and click.

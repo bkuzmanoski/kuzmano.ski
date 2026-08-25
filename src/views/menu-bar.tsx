@@ -18,6 +18,7 @@ import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-seque
 import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
+import { isPrimaryPress } from "#/lib/press";
 import { sleep } from "#/lib/screensaver/lifecycle";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
@@ -248,6 +249,10 @@ export function MenuBar() {
   // receive `pointerenter` while the finger is held. Releasing the capture lets the
   // pointer move between titles and change the open menu like a held mouse.
   function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
+    if (!isPrimaryPress(event)) {
+      return;
+    }
+
     const anchor = event.currentTarget;
 
     if (anchor.hasPointerCapture(event.pointerId)) {

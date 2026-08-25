@@ -123,7 +123,7 @@ async function dragBy(handle: Element, ...steps: Array<[number, number]>) {
   fireEvent.pointerDown(handle, { clientX: 0, clientY: 0, button: 0 });
 
   for (const [clientX, clientY] of steps) {
-    fireEvent.pointerMove(handle, { clientX, clientY });
+    fireEvent.pointerMove(handle, { clientX, clientY, buttons: 1 });
     await settleFrame();
   }
 
@@ -306,7 +306,7 @@ test("dragging the title bar reports where the window is headed and moves it onc
   const titleBar = titleBarOf();
 
   fireEvent.pointerDown(titleBar, { clientX: 0, clientY: 0, button: 0 });
-  fireEvent.pointerMove(titleBar, { clientX: 30, clientY: 10 });
+  fireEvent.pointerMove(titleBar, { clientX: 30, clientY: 10, buttons: 1 });
   await settleFrame();
 
   expect(onDrag).toHaveBeenLastCalledWith({ kind: "move", x: 70, y: 30 });
@@ -318,25 +318,19 @@ test("dragging the title bar reports where the window is headed and moves it onc
   expect(onDrag).toHaveBeenLastCalledWith(null);
 });
 
-test("dragging the resize control reports the size being chosen and applies it once the drag ends", async () => {
-  const onResize = vi.fn();
-  const onDrag = vi.fn();
+test("a secondary press on the title bar does not start a drag, as the browser opens its own menu", async () => {
+  const onMove = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+  render(windowShowing("/tall", tallPane, true, { onMove }));
 
-  const control = screen.getByRole("button", { name: "Resize" });
+  const titleBar = titleBarOf();
 
-  fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
-  fireEvent.pointerMove(control, { clientX: -50, clientY: 100 });
+  fireEvent.pointerDown(titleBar, { clientX: 0, clientY: 0, button: 2 });
+  fireEvent.pointerMove(titleBar, { clientX: 40, clientY: 40, buttons: 2 });
   await settleFrame();
+  fireEvent.pointerUp(titleBar, { clientX: 40, clientY: 40 });
 
-  expect(onDrag).toHaveBeenLastCalledWith({ kind: "resize", width: 750, height: 700 });
-  expect(onResize).not.toHaveBeenCalled();
-
-  fireEvent.pointerUp(control, { clientX: -50, clientY: 100 });
-
-  expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
-  expect(onDrag).toHaveBeenLastCalledWith(null);
+  expect(onMove).not.toHaveBeenCalled();
 });
 
 test("a press on the title bar that stays within the jitter of a click leaves the window alone", async () => {
@@ -359,4 +353,93 @@ test("a drag that comes back within the jitter of a click keeps reporting, so th
   await dragBy(titleBarOf(), [40, 0], [1, 0]);
 
   expect(onMove).toHaveBeenCalledExactlyOnceWith(41, 20);
+});
+
+test("dragging the resize control reports the size being chosen and applies it once the drag ends", async () => {
+  const onResize = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+
+  const control = screen.getByRole("button", { name: "Resize" });
+
+  fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
+  await settleFrame();
+
+  expect(onDrag).toHaveBeenLastCalledWith({ kind: "resize", width: 750, height: 700 });
+  expect(onResize).not.toHaveBeenCalled();
+
+  fireEvent.pointerUp(control, { clientX: -50, clientY: 100 });
+
+  expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
+  expect(onDrag).toHaveBeenLastCalledWith(null);
+});
+
+test("the resize control clears its pressed state when the active pointer exits its bounds", async () => {
+  render(windowShowing("/tall", tallPane));
+
+  const control = screen.getByRole("button", { name: "Resize" });
+
+  vi.spyOn(control, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 16, 16));
+  fireEvent.pointerDown(control, { clientX: 8, clientY: 8, button: 0 });
+
+  expect(control.className).toContain("pressed");
+
+  fireEvent.pointerMove(control, { clientX: 12, clientY: 12, buttons: 1 });
+  await settleFrame();
+
+  expect(control.className).toContain("pressed");
+
+  fireEvent.pointerMove(control, { clientX: 80, clientY: 80, buttons: 1 });
+  await settleFrame();
+
+  expect(control.className).not.toContain("pressed");
+
+  fireEvent.pointerMove(control, { clientX: 10, clientY: 10, buttons: 1 });
+  await settleFrame();
+
+  expect(control.className).not.toContain("pressed"); // Once cleared, the press state does not return even if the pointer returns to the control.
+
+  fireEvent.pointerUp(control, { clientX: 10, clientY: 10 });
+
+  expect(control.className).not.toContain("pressed");
+});
+
+test("a resize drag commits and clears its preview when pointerup is dispatched outside the control", async () => {
+  const onResize = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+
+  const control = screen.getByRole("button", { name: "Resize" });
+
+  fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
+  await settleFrame();
+
+  // The browser releases pointer capture whenever it decides the control can no longer hold it,
+  // which leaves the release to land on whatever the pointer is over.
+  fireEvent.pointerUp(document.body, { clientX: -50, clientY: 100 });
+
+  expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
+  expect(onDrag).toHaveBeenLastCalledWith(null);
+});
+
+test("an active resize drag commits on a pointermove with no pressed buttons after a missed pointerup", async () => {
+  const onResize = vi.fn();
+  const onDrag = vi.fn();
+
+  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+
+  const control = screen.getByRole("button", { name: "Resize" });
+
+  fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
+  await settleFrame();
+
+  fireEvent.pointerMove(document.body, { clientX: 20, clientY: 20, buttons: 0 });
+
+  expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
+  expect(onDrag).toHaveBeenLastCalledWith(null);
 });

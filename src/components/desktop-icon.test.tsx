@@ -57,6 +57,16 @@ test("a plain double press opens the icon in place", () => {
   expect(onOpen).toHaveBeenCalledOnce();
 });
 
+test("a secondary press does not select the icon, as the browser opens its own menu over it", () => {
+  const icon = renderIcon();
+
+  fireEvent.pointerDown(icon, { button: 2 });
+
+  expect(fireEvent.mouseDown(icon, { button: 2 })).toBe(false); // The default, which selects the icon by focusing it, was prevented.
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(fireEvent.mouseDown(icon)).toBe(true); // A press that does select it keeps that default.
+});
+
 test("a modified press is left to the browser, which opens the route in a new tab", () => {
   const icon = renderIcon();
 

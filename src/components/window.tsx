@@ -7,11 +7,12 @@ import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
+import { containsPoint } from "#/lib/geometry";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
 import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus";
 import { mergeHandlers } from "#/lib/merge-handlers";
-import { swallowNextPress } from "#/lib/press";
+import { isPrimaryPress, swallowNextPress } from "#/lib/press";
 
 import { ScrollPane } from "./scroll-pane";
 import { Tooltip } from "./tooltip";
@@ -47,6 +48,11 @@ function TitleBarButton({
         onClick={onClick}
         onPointerDown={(event) => {
           event.stopPropagation();
+
+          if (!isPrimaryPress(event)) {
+            return;
+          }
+
           setIsPressed(true);
           playClick();
         }}
@@ -103,9 +109,12 @@ export function Window({
   const fallbackContentId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [isResizing, setIsResizing] = useState(false);
+  const [isResizePressed, setIsResizePressed] = useState(false);
   const windowRef = useRef<HTMLElement>(null);
   const hasMovedWindowRef = useRef(false);
   const dragRef = useRef<WindowDrag | null>(null);
+
+  useRestorableFocus(windowRef, { isActive: focused && !hidden, contentKey });
 
   function reportDrag(drag: WindowDrag) {
     dragRef.current = drag;
@@ -125,10 +134,12 @@ export function Window({
     threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
     start: () => {
+      playClick();
       hasMovedWindowRef.current = false;
+
       return { x, y };
     },
-    onStart: (delta, from) => reportDrag({ kind: "move", x: from.x + delta.dx, y: from.y + delta.dy }),
+    onDragMove: (delta, from) => reportDrag({ kind: "move", x: from.x + delta.dx, y: from.y + delta.dy }),
     onEnd: (moved) => {
       const drag = endDrag();
 
@@ -146,34 +157,46 @@ export function Window({
         return;
       }
 
-      if (maximized || !hasMovedWindowRef.current) {
+      if (maximized) {
         playClick();
+        onZoom();
+      } else if (!hasMovedWindowRef.current) {
         onZoom();
       }
     },
   });
 
   const resizeHandlers = usePointerDrag({
-    start: () => {
+    start: (event) => {
       playClick();
       setIsResizing(true);
+      setIsResizePressed(true);
 
-      return { width, height };
+      return {
+        width,
+        height,
+        origin: { x: event.clientX, y: event.clientY },
+        bounds: event.currentTarget.getBoundingClientRect(),
+      };
     },
-    onStart: (delta, from) =>
-      reportDrag({ kind: "resize", width: from.width + delta.dx, height: from.height + delta.dy }),
+    onDragMove: (delta, from) => {
+      reportDrag({ kind: "resize", width: from.width + delta.dx, height: from.height + delta.dy });
+
+      if (!containsPoint(from.bounds, { x: from.origin.x + delta.dx, y: from.origin.y + delta.dy })) {
+        setIsResizePressed(false);
+      }
+    },
     onEnd: () => {
       const drag = endDrag();
 
       setIsResizing(false);
+      setIsResizePressed(false);
 
       if (drag?.kind === "resize") {
         onResize?.(drag.width, drag.height);
       }
     },
   });
-
-  useRestorableFocus(windowRef, { isActive: focused && !hidden, contentKey });
 
   const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
   const resizeControl =
@@ -183,7 +206,7 @@ export function Window({
           type="button"
           aria-label="Resize"
           tabIndex={-1} // Drag handle is not keyboard accessible.
-          className={cx(styles.controlResize, isResizing && styles.pressed)}
+          className={cx(styles.controlResize, isResizePressed && styles.pressed)}
           {...PRESERVE_FOCUS_PROPS}
           {...resizeHandlers}
         >

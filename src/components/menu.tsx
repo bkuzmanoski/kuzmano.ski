@@ -8,6 +8,7 @@ import { useActivationFlash } from "#/lib/hooks/use-activation-flash";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link";
 import { cycle } from "#/lib/math";
+import { isPrimaryPress } from "#/lib/press";
 
 import styles from "./menu.module.css";
 
@@ -210,6 +211,10 @@ export function Menu({
     isStickyRef.current = true;
 
     if (index >= 0) {
+      if (!isPrimaryPress(event)) {
+        return;
+      }
+
       if (isLink(items[index]) && isBrowserHandledClick(event)) {
         return; // A release the browser will act on itself is the anchor's, not the menu's.
       }

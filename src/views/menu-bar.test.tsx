@@ -139,6 +139,14 @@ describe("opening a menu", () => {
     expect(menu()).toBeNull();
     expect(document.activeElement).toBe(menuTitle("Go"));
   });
+
+  test("a secondary press leaves the menu closed, as the browser opens its own over the page", () => {
+    render(<MenuBar />);
+    fireEvent.pointerDown(menuTitle("File"), { button: 2 });
+
+    expect(isExpanded("File")).toBe(false);
+    expect(menu()).toBeNull();
+  });
 });
 
 describe("dismissing a menu", () => {
@@ -318,6 +326,17 @@ describe("items that open a destination", () => {
     expect(fireEvent.click(about, init)).toBe(true); // The default was not prevented.
     expect(open).not.toHaveBeenCalled();
     expect(menu()).not.toBeNull();
+  });
+
+  test("a secondary release chooses nothing, as the browser opens its own menu over this one", () => {
+    vi.useFakeTimers();
+    focusedWindow = "entry";
+    render(<MenuBar />);
+    openWithPointer("File");
+    releasePointerOver(menuItem("Close"), { button: 2 });
+    runActivationFlash();
+
+    expect(menu()).not.toBeNull(); // An item that was chosen would have run and closed the menu behind it.
   });
 
   test("a middle click is left for the browser to handle, and the menu stays open", () => {

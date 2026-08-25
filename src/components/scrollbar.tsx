@@ -9,11 +9,12 @@ import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { useTimer } from "#/lib/hooks/use-timer";
 import { isActivationKey } from "#/lib/keys";
 import { clamp } from "#/lib/math";
+import { isPrimaryPress } from "#/lib/press";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./scrollbar.module.css";
 
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode, PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 const STEP = 40;
 const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
@@ -56,7 +57,11 @@ function ScrollArrow({
     repeatTimer.start(repeat, delay);
   }
 
-  function start() {
+  function start(event: ReactPointerEvent) {
+    if (!isPrimaryPress(event)) {
+      return;
+    }
+
     setIsPressed(true);
     step();
     scheduleRepeat(REPEAT_DELAY_MS);
@@ -130,7 +135,7 @@ export function Scrollbar({
       top: metrics.top,
       travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
     }),
-    onStart: (delta, from) => {
+    onDragMove: (delta, from) => {
       if (viewportRef.current && from.travel > 0) {
         viewportRef.current.scrollTop = from.top + (delta.dy / from.travel) * range;
       }

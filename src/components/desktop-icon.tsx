@@ -17,6 +17,7 @@ import { iconHref } from "#/lib/icons/icon";
 import type { Icon as IconDefinition, IconKind } from "#/lib/icons/icon";
 import { isBrowserHandledClick, isFollowingLink, isRepeatClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
+import { isPrimaryPress } from "#/lib/press";
 
 import styles from "./desktop-icon.module.css";
 
@@ -92,7 +93,6 @@ export const DesktopIcon = memo(function Icon({
   });
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD,
-    canStart: (event) => event.button === 0,
     start: () => {
       playClick();
       onSelect(iconDefinition);
@@ -100,7 +100,7 @@ export const DesktopIcon = memo(function Icon({
 
       return { x, y };
     },
-    onStart: (delta, from) => onMoveStart(iconDefinition, from.x + delta.dx, from.y + delta.dy),
+    onDragMove: (delta, from) => onMoveStart(iconDefinition, from.x + delta.dx, from.y + delta.dy),
     onEnd: (moved) => {
       hasMovedRef.current = moved;
 
@@ -133,6 +133,11 @@ export const DesktopIcon = memo(function Icon({
       tabIndex={tabIndex}
       onClick={onClick}
       onDragStart={(event) => event.preventDefault()}
+      onMouseDown={(event) => {
+        if (!isPrimaryPress(event)) {
+          event.preventDefault();
+        }
+      }}
       onFocus={() => onSelect(iconDefinition)}
       onKeyDown={(event) => onKeyDown(event, iconDefinition)}
       {...mergeHandlers(dragHandlers, pressHandlers)}
