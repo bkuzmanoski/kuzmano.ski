@@ -29,14 +29,6 @@ export function writeStored(key: string, value: string) {
   }
 }
 
-export function removeStored(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Ignored.
-  }
-}
-
 export function clearStorage() {
   try {
     localStorage.clear();

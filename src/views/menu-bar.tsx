@@ -60,7 +60,7 @@ function StatusButton({
   );
 }
 
-export function OrganizeWindowsStatus() {
+function OrganizeWindowsStatus() {
   const { organize } = useWindowActions();
 
   return (
@@ -73,7 +73,7 @@ export function OrganizeWindowsStatus() {
 const THEME_ORDER: Array<Theme> = ["system", "light", "dark"];
 const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", dark: "Dark" };
 
-export function ThemeStatus() {
+function ThemeStatus() {
   const { theme } = useSettings();
   const next = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
   const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
@@ -85,7 +85,7 @@ export function ThemeStatus() {
   );
 }
 
-export function SoundStatus() {
+function SoundStatus() {
   const { sound } = useSettings();
   const Icon = sound === "on" ? SoundOnIcon : SoundOffIcon;
 
@@ -122,7 +122,7 @@ function sydneyTime(): string {
   return `${value("hour")}:${value("minute")} ${value("dayPeriod")} (${value("timeZoneName")})`;
 }
 
-export function TimeStatus() {
+function TimeStatus() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
