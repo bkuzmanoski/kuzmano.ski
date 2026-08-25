@@ -24,7 +24,7 @@
   }
 
   &[aria-invalid="true"]:not(:placeholder-shown, :focus, .multiline) {
-    text-decoration: underline wavy var(--color-error);
+    text-decoration: underline 1px wavy var(--color-error);
     text-underline-offset: 2px;
   }
 
