@@ -270,7 +270,7 @@ function Sequence() {
             }}
             aria-hidden
           />
-          <picture className={styles.keyboardLayer} aria-hidden>
+          <picture className={styles.keyboardLayer}>
             <source srcSet={macintoshKeyboardAvifUrl} type="image/avif" />
             <img ref={keyboardImageRef} alt="" src={macintoshKeyboardWebpUrl} />
           </picture>

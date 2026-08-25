@@ -65,3 +65,20 @@ test("does not fire when disabled", () => {
 
   expect(onIdle).toHaveBeenCalledOnce();
 });
+
+test("clears the pending timer and stops listening once unmounted", () => {
+  const onIdle = vi.fn();
+  const { unmount } = renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
+
+  unmount();
+  wait(DELAY_MS * 2);
+
+  expect(onIdle).not.toHaveBeenCalled();
+
+  act(() => {
+    document.dispatchEvent(new Event("keydown")); // A listener that outlived the effect would restart the timer here.
+  });
+  wait(DELAY_MS * 2);
+
+  expect(onIdle).not.toHaveBeenCalled();
+});
