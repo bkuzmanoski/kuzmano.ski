@@ -188,6 +188,7 @@ export function ContactBody() {
                 placeholder="you@example.com"
                 spellCheck={false}
                 type="email"
+                required
                 value={form.values.from}
               />
             </ComposeField>
@@ -198,6 +199,7 @@ export function ContactBody() {
               {...form.handlers.message}
               ref={messageFieldRef}
               placeholder="Write a message…"
+              required
               value={form.values.message}
               onScroll={(event) => {
                 measureMessage();

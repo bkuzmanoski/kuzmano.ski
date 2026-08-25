@@ -80,6 +80,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
     <div
       className={cx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
+      aria-hidden
     >
       <DisplayBackdrop className={styles.displayBackdrop} />
       <div

@@ -30,6 +30,7 @@
 
 .contentContainer {
   scrollbar-width: none;
+  scroll-padding-block-start: var(--gutter);
 
   overflow-y: auto;
   flex: 1;
@@ -41,4 +42,8 @@
   padding-inline: var(--window-safe-area-inline-start, 0) var(--window-safe-area-inline-end, 0);
 
   outline: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    scroll-behavior: smooth;
+  }
 }

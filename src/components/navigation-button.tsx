@@ -26,7 +26,7 @@ export function NavigationButton({
   );
 
   return (
-    <Tooltip label={label} className={className}>
+    <Tooltip label={label} disabled={route === null} className={className}>
       {route === null ? (
         <Button variant="icon" aria-label={label} disabled>
           {icon}

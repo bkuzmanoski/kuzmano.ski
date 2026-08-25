@@ -288,7 +288,7 @@ export function MenuBar() {
   return (
     <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <div className={styles.logo}>
-        <LogoIcon className={styles.logoIcon} />
+        <LogoIcon className={styles.logoIcon} aria-hidden />
       </div>
       <nav className={styles.menus} aria-label="Main menu">
         {menus.map(({ label, items }) => (

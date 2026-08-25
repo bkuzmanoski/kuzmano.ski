@@ -16,6 +16,8 @@ export const TAP_DISMISS_MS = 1_500;
  * placed or sized by its parent hands `className` here instead of styling
  * itself. The tooltip anchors to the wrapper, so both stay together.
  *
+ * `disabled` suppresses the tooltip entirely for a control that is not interactive.
+ *
  * `suppressed` is for controls that capture the pointer, such as a drag handle.
  * Capture retargets every pointer event to the control, so the wrapper never
  * sees the pointer leave and cannot dismiss the tooltip on its own. The control
@@ -28,12 +30,14 @@ export const TAP_DISMISS_MS = 1_500;
  */
 export function Tooltip({
   label,
+  disabled = false,
   suppressed = false,
   persistOnPress = false,
   className,
   children,
 }: {
   label: string;
+  disabled?: boolean;
   suppressed?: boolean;
   persistOnPress?: boolean;
   className?: string;
@@ -104,6 +108,10 @@ export function Tooltip({
     labelAtTap.current = null;
     timer.cancel();
     setIsOpen(false);
+  }
+
+  if (disabled) {
+    return <span className={cx(styles.wrapper, className)}>{children}</span>;
   }
 
   return (

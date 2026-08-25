@@ -55,7 +55,7 @@ export function CopyButton({
 
   return (
     <>
-      <Tooltip label={isCopied ? confirmation : label} persistOnPress className={className}>
+      <Tooltip label={isCopied ? confirmation : label} disabled={value === null} persistOnPress className={className}>
         <Button
           variant="icon"
           aria-label={label}
