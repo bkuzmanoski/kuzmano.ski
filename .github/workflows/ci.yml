@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload build
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site
           path: dist
@@ -72,7 +72,7 @@ jobs:
         run: npm ci
 
       - name: Download build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: site
           path: dist
