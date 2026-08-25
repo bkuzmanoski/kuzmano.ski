@@ -9,11 +9,11 @@ vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playHover, scrollSafeClickSoundHandlers }));
-vi.mock("#/lib/audio/scroll", () => ({ skipScrollAbove }));
+vi.mock("#/lib/audio/scroll", () => ({ scrollIntoViewSilently }));
 
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
-const skipScrollAbove = vi.hoisted(() => vi.fn());
+const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
 const { collection, entries, routeOf } = testCollection("tech-notes", 2);
@@ -22,7 +22,7 @@ const lastIndex = entries.length - 1;
 beforeEach(() => {
   open.mockClear();
   playHover.mockClear();
-  skipScrollAbove.mockClear();
+  scrollIntoViewSilently.mockClear();
   scrollSafeClickSoundHandlers.onPointerDown.mockClear();
   scrollSafeClickSoundHandlers.onPointerUp.mockClear();
 });
@@ -106,7 +106,7 @@ test("the scroll the focus causes is not sounded as travel", () => {
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
-  expect(skipScrollAbove).toHaveBeenCalledWith(links[1]);
+  expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
 
 test("the focus makes the entry it lands on the tab stop", () => {
@@ -137,6 +137,34 @@ test("an entry sounds its press through both halves of a pointer press", () => {
 
   expect(scrollSafeClickSoundHandlers.onPointerDown).toHaveBeenCalled();
   expect(scrollSafeClickSoundHandlers.onPointerUp).toHaveBeenCalled();
+});
+
+test("a press on a partly visible entry takes over the browser's own focus-scroll", () => {
+  const links = renderList(entries[0]!.slug);
+
+  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
+
+  expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The default was prevented.
+  expect(document.activeElement).toBe(links[1]);
+  expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
+});
+
+test.each([
+  ["a command press", { metaKey: true }],
+  ["a control press", { ctrlKey: true }],
+  ["a shift press", { shiftKey: true }],
+  ["an option press", { altKey: true }],
+  ["a middle press", { button: 1 }],
+])("%s opens the link in the background, leaving the list's focus and scroll unchanged", (_name, press) => {
+  const links = renderList(entries[0]!.slug);
+  const focus = vi.spyOn(links[1]!, "focus");
+
+  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
+
+  expect(fireEvent.mouseDown(links[1]!, press)).toBe(false); // Only the native focus is prevented, not the link's own click.
+  expect(focus).not.toHaveBeenCalled();
+  expect(document.activeElement).not.toBe(links[1]);
+  expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
 test("a press opens the entry without leaving the page", () => {

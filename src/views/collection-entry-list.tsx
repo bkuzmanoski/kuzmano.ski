@@ -3,16 +3,18 @@ import { ENTRY_DATE_FORMAT } from "#/config/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
 import type { CollectionTarget } from "#/content/window-registry";
-import { skipScrollAbove } from "#/lib/audio/scroll";
 import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
 import { useDateFormat } from "#/lib/hooks/use-date-format";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { isBrowserHandledClick } from "#/lib/link";
+import { mergeHandlers } from "#/lib/merge-handlers";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager";
 
 import styles from "./collection-entry-list.module.css";
+
+import type { MouseEvent } from "react";
 
 export const EMPTY_COLLECTION_MESSAGE = "Nothing to see here.";
 
@@ -48,24 +50,21 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
         return (
           <li key={entry.slug}>
             <a
-              {...itemProps(index)}
-              {...scrollSafeClickSoundHandlers}
               aria-current={isActive || undefined}
               aria-label={entry.title}
               className={cx(styles.card, isActive && styles.active)}
               href={collection.routeOf(entry.slug)}
-              onMouseDown={(event) => {
-                if (isBrowserHandledClick(event)) {
-                  return;
-                }
-
-                // The browser's own focus-scroll may leave a partly visible item still
-                // partly hidden, and sounds like ordinary scrolling; take it over instead.
-                event.preventDefault();
-                event.currentTarget.focus({ preventScroll: true });
-                event.currentTarget.scrollIntoView({ block: "nearest", behavior: "instant" });
-                skipScrollAbove(event.currentTarget);
-              }}
+              {...mergeHandlers(
+                {
+                  onMouseDown: (event: MouseEvent<HTMLAnchorElement>) => {
+                    if (isBrowserHandledClick(event)) {
+                      event.preventDefault();
+                    }
+                  },
+                },
+                itemProps(index),
+              )}
+              {...scrollSafeClickSoundHandlers}
               onClick={(event) => {
                 if (isBrowserHandledClick(event)) {
                   return;

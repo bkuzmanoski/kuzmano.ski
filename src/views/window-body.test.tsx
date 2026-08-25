@@ -15,7 +15,7 @@ vi.mock("#/lib/audio/sounds", () => ({
   playHover: vi.fn(),
   scrollSafeClickSoundHandlers: {},
 }));
-vi.mock("#/lib/audio/scroll", () => ({ skipScrollAbove: vi.fn() }));
+vi.mock("#/lib/audio/scroll", () => ({ scrollIntoViewSilently: vi.fn() }));
 
 const { entries } = testCollection("tech-notes");
 const entry = entries[0]!;

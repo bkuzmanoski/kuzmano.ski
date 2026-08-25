@@ -9,6 +9,7 @@ import {
   playPaneScroll,
   playScroll,
   playScrollStep,
+  scrollIntoViewSilently,
   skipScrollAbove,
   skipScrollAt,
   stepScroll,
@@ -166,6 +167,15 @@ describe("stepScroll", () => {
     expect(detents()).toBe(1);
   });
 
+  test("scrolls instantly, so the move is complete before the result is read", () => {
+    const element = fakeScrollViewport();
+    const scrollBy = vi.spyOn(element, "scrollBy");
+
+    stepScroll(element, 40);
+
+    expect(scrollBy).toHaveBeenCalledWith({ top: 40, behavior: "instant" });
+  });
+
   test("reports a step that cannot move the viewport and stays silent", () => {
     const element = fakeScrollViewport();
 
@@ -182,6 +192,46 @@ describe("stepScroll", () => {
     scrollTo(element, 40);
 
     expect(detents()).toBe(1);
+  });
+});
+
+describe("scrollIntoViewSilently", () => {
+  function fakeItem(parent: Element) {
+    const scrollIntoView = vi.fn();
+    const item = { parentElement: parent, scrollIntoView } as unknown as Element;
+
+    return { item, scrollIntoView };
+  }
+
+  test("scrolls instantly, so the jump cannot arrive as a stream of scroll events", () => {
+    const { item, scrollIntoView } = fakeItem(fakeScrollViewport());
+
+    scrollIntoViewSilently(item);
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
+  });
+
+  test("keeps the caller's alignment but never its behaviour", () => {
+    const { item, scrollIntoView } = fakeItem(fakeScrollViewport());
+
+    scrollIntoViewSilently(item, { block: "start" });
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
+  });
+
+  test("records the scroll it causes so the viewport does not sound it as travel", () => {
+    const viewport = fakeScrollViewport();
+    const { item, scrollIntoView } = fakeItem(viewport);
+
+    playScroll(viewport); // Opens a gesture at 0.
+    scrollIntoView.mockImplementation(() => {
+      viewport.scrollTop = 500; // `scrollIntoView` moves the viewport before it returns.
+    });
+
+    scrollIntoViewSilently(item);
+    scrollTo(viewport, 500); // The scroll event the jump left behind.
+
+    expect(detents()).toBe(0);
   });
 });
 

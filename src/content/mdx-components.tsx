@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { scrollIntoViewSilently } from "#/lib/audio/scroll";
 import { isBrowserHandledClick } from "#/lib/link";
 
 import type { MDXComponents } from "mdx/types";
@@ -46,8 +47,8 @@ export const mdxComponents: MDXComponents = {
 
             if (target) {
               event.preventDefault();
-              target.scrollIntoView();
-              target.focus({ preventScroll: true }); // The pane is already scrolling to it.
+              target.focus({ preventScroll: true }); // The scroll below places it.
+              scrollIntoViewSilently(target, { block: "start" });
             }
           }}
         >

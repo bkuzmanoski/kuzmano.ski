@@ -8,8 +8,8 @@ import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact";
-import { playFieldScroll, skipScrollAt } from "#/lib/audio/scroll";
 import { playError, playSuccess } from "#/lib/audio/sounds";
+import { useFieldScrollSound } from "#/lib/audio/use-field-scroll-sound";
 import { cx } from "#/lib/class-names";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
 import { CHARACTER_COUNT_VISIBLE_FROM, NO_ALERT, alertFor } from "#/lib/contact/prompt";
@@ -20,22 +20,12 @@ import { useField } from "#/lib/forms/use-field";
 import { useForm } from "#/lib/forms/use-form";
 import { useCloseGuard, useCloseWindow } from "#/lib/hooks/use-close-window";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
+import { mergeHandlers } from "#/lib/merge-handlers";
 
 import styles from "./contact-body.module.css";
 
 const SEND_FAILED_MESSAGE = "The message couldn’t be sent.";
 const SENDING_MESSAGE = "Sending message";
-
-const CARET_SCROLL_KEYS = new Set([
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "Home",
-  "End",
-  "PageUp",
-  "PageDown",
-]); // Keys whose default action can move the caret out of view, scrolling the field.
 
 export function ContactBody() {
   const form = useForm({ initialValues: EMPTY_MESSAGE, schema: CONTACT_SCHEMA });
@@ -49,7 +39,7 @@ export function ContactBody() {
   const decoyFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
   const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
-  const caretScrollRef = useRef(false); // Set by a key that may scroll the field to move the caret into view.
+  const messageFieldScrollSound = useFieldScrollSound<HTMLTextAreaElement>();
   const sendAttemptRef = useRef<AbortController | null>(null);
 
   const hasUnsavedInput = form.isDirty;
@@ -207,34 +197,13 @@ export function ContactBody() {
           </div>
           <ComposeField label="Message:" field={messageField} className={styles.message} labelHidden>
             <TextArea
-              {...messageField.control}
-              {...form.handlers.message}
               ref={messageFieldRef}
               placeholder="Write a message…"
               required
               value={form.values.message}
-              onKeyDown={(event) => {
-                if (!CARET_SCROLL_KEYS.has(event.key)) {
-                  return;
-                }
-
-                caretScrollRef.current = true;
-
-                requestAnimationFrame(() => {
-                  caretScrollRef.current = false; // Nothing came of the key if no scroll event has claimed the flag by the next frame.
-                });
-              }}
-              onScroll={(event) => {
-                measureMessage();
-
-                if (caretScrollRef.current) {
-                  caretScrollRef.current = false;
-                  skipScrollAt(event.currentTarget);
-                  return;
-                }
-
-                playFieldScroll(event.currentTarget);
-              }}
+              {...messageField.control}
+              {...form.handlers.message}
+              {...mergeHandlers({ onScroll: measureMessage }, messageFieldScrollSound)}
             />
             <Scrollbar viewportRef={messageFieldRef} viewportId={messageField.control.id} metrics={messageMetrics} />
           </ComposeField>

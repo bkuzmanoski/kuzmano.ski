@@ -4,6 +4,10 @@ type Handler = (event: SyntheticEvent) => void;
 
 /**
  * Combines two bags of event handler props. Handlers run in the order the bags are given.
+ *
+ * Nothing is skipped once a handler prevents the default: a later handler that wants to
+ * stand aside for an earlier one reads `event.defaultPrevented` itself, so opting out
+ * stays a decision the handler makes rather than one made on its behalf here.
  */
 export function mergeHandlers<TFirst extends object, TSecond extends object>(
   first: TFirst,

@@ -9,6 +9,8 @@ import { ContactBody } from "./contact-body";
 
 const playError = vi.hoisted(() => vi.fn());
 const playSuccess = vi.hoisted(() => vi.fn());
+const playFieldScroll = vi.hoisted(() => vi.fn());
+const skipScrollAt = vi.hoisted(() => vi.fn());
 const closeWindow = vi.hoisted(() => vi.fn());
 const forceCloseWindow = vi.hoisted(() => vi.fn());
 const closeGuardRef = vi.hoisted(() => ({ current: null as CloseGuard | null }));
@@ -21,6 +23,7 @@ vi.mock("#/lib/hooks/use-close-window", () => ({
   },
 }));
 
+vi.mock("#/lib/audio/scroll", () => ({ playFieldScroll, skipScrollAt }));
 vi.mock("#/lib/audio/sounds", () => ({
   playError,
   playSuccess,
@@ -66,6 +69,8 @@ beforeEach(() => {
 
   playError.mockClear();
   playSuccess.mockClear();
+  playFieldScroll.mockClear();
+  skipScrollAt.mockClear();
 
   closeWindow.mockReset();
   closeWindow.mockImplementation(() => {
@@ -156,6 +161,27 @@ test("a window without a contact email address still sends messages", async () =
 test("the message field remains accessible without a visible label", () => {
   render(<ContactBody />);
   expect(input("Message:").tagName).toBe("TEXTAREA");
+});
+
+test("a key that can move the caret out of view prevents the scroll sound", () => {
+  render(<ContactBody />);
+  const field = input("Message:");
+
+  fireEvent.keyDown(field, { key: "ArrowDown" });
+  fireEvent.scroll(field);
+
+  expect(skipScrollAt).toHaveBeenCalledWith(field);
+  expect(playFieldScroll).not.toHaveBeenCalled();
+});
+
+test("a scroll that follows no caret-moving key plays the scroll sound", () => {
+  render(<ContactBody />);
+  const field = input("Message:");
+
+  fireEvent.scroll(field);
+
+  expect(playFieldScroll).toHaveBeenCalledWith(field);
+  expect(skipScrollAt).not.toHaveBeenCalled();
 });
 
 test("sending an incomplete message shows an alert and does not submit", () => {

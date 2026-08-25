@@ -52,6 +52,12 @@ export function skipScrollAbove(element: Element) {
   }
 }
 
+/** Brings `element` into view without sounding the scroll it causes. */
+export function scrollIntoViewSilently(element: Element, options?: Omit<ScrollIntoViewOptions, "behavior">) {
+  element.scrollIntoView({ block: "nearest", ...options, behavior: "instant" });
+  skipScrollAbove(element);
+}
+
 export function playScrollStep(element: Element) {
   skipScrollAt(element);
   playScrollDetent(STEP_SPEED);
@@ -66,7 +72,7 @@ export function playScrollStep(element: Element) {
 export function stepScroll(element: Element, delta: number) {
   const initialScrollTop = element.scrollTop;
 
-  element.scrollBy({ top: delta });
+  element.scrollBy({ top: delta, behavior: "instant" });
 
   if (element.scrollTop === initialScrollTop) {
     return false;

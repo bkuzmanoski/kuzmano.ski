@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-import { skipScrollAbove } from "../audio/scroll";
+import { scrollIntoViewSilently } from "../audio/scroll";
 import { playHover } from "../audio/sounds";
 import { isActivationKey } from "../keys";
 import { clamp } from "../math";
 
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 
 // Where each key moves the focus, from the item that received it.
 const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number) | undefined> = {
@@ -14,6 +14,13 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   Home: () => 0,
   End: (_index, lastIndex) => lastIndex,
 };
+
+// `preventScroll` overrides the browser's focus-scroll which can stop short of
+// bringing an element fully into view and sounds a scroll detent.
+function focusItem(item: HTMLElement) {
+  item.focus({ preventScroll: true });
+  scrollIntoViewSilently(item);
+}
 
 /** Keyboard navigation for a vertical list. */
 export function useListNavigation({
@@ -35,13 +42,10 @@ export function useListNavigation({
       return;
     }
 
-    // `nearest` holds still while the item is already in view, so
-    // activating one does not move the list under the pointer.
-    item.scrollIntoView({ block: "nearest" });
-    skipScrollAbove(item);
+    scrollIntoViewSilently(item);
   }, [activeIndex]);
 
-  const tabStop = focusedIndex ?? Math.max(activeIndex, 0);
+  const tabStop = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
 
   return function itemProps(index: number) {
     return {
@@ -50,6 +54,17 @@ export function useListNavigation({
       },
       tabIndex: index === tabStop ? 0 : -1,
       onFocus: () => setFocusedIndex(index),
+      onMouseDown: (event: MouseEvent<HTMLElement>) => {
+        // A handler merged ahead of this one (see `mergeHandlers`) may prevent the default
+        // to opt a press out of this hook's own handling, e.g. one the browser should
+        // keep, such as a link opened in a new tab.
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        event.preventDefault(); // Suppress the native focus so `focusItem` can place it without the browser's scroll.
+        focusItem(event.currentTarget);
+      },
       onKeyDown: (event: KeyboardEvent) => {
         if (isActivationKey(event.key)) {
           event.preventDefault(); // Prevent the browser's default scroll and click behaviour so activation happens only once.
@@ -73,9 +88,7 @@ export function useListNavigation({
           return; // Nothing moves at either end of the list, so there is no travel to report.
         }
 
-        item.focus();
-
-        skipScrollAbove(item); // Focusing the item may scroll the window. That scroll is part of this keypress.
+        focusItem(item);
         playHover();
       },
     };

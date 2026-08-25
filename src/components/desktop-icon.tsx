@@ -138,9 +138,9 @@ export const DesktopIcon = memo(function Icon({
           event.preventDefault();
         }
       }}
+      {...mergeHandlers(dragHandlers, pressHandlers)}
       onFocus={() => onSelect(iconDefinition)}
       onKeyDown={(event) => onKeyDown(event, iconDefinition)}
-      {...mergeHandlers(dragHandlers, pressHandlers)}
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
       <span className={cx(styles.label, selected && styles.selected)}>
