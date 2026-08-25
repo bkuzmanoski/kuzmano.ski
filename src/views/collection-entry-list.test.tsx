@@ -8,8 +8,12 @@ import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entr
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playHover, scrollSafeClickSoundHandlers }));
-vi.mock("#/lib/audio/scroll", () => ({ scrollIntoViewSilently }));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover, scrollSafeClickSoundHandlers }),
+);
+vi.mock("#/lib/audio/scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
+);
 
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());

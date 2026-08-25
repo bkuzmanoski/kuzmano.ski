@@ -10,12 +10,12 @@ const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; titl
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ content: openWindows }),
 );
-vi.mock("#/lib/audio/sounds", () => ({
-  playClick: vi.fn(),
-  playHover: vi.fn(),
-  scrollSafeClickSoundHandlers: {},
-}));
-vi.mock("#/lib/audio/scroll", () => ({ scrollIntoViewSilently: vi.fn() }));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
+vi.mock("#/lib/audio/scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
 
 const { entries } = testCollection("tech-notes");
 const entry = entries[0]!;

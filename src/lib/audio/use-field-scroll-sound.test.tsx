@@ -6,7 +6,9 @@ import { useFieldScrollSound } from "./use-field-scroll-sound";
 const playFieldScroll = vi.hoisted(() => vi.fn());
 const skipScrollAt = vi.hoisted(() => vi.fn());
 
-vi.mock("./scroll", () => ({ playFieldScroll, skipScrollAt }));
+vi.mock("./scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, skipScrollAt }),
+);
 
 // A real control, so the handlers see the events React actually delivers.
 function Field() {

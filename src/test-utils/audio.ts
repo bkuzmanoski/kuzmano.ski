@@ -1,3 +1,57 @@
+import { vi } from "vitest";
+
+// A bag of event handlers, such as `scrollSafeClickSoundHandlers`, spread onto an element.
+function isHandlerBag(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Object.getPrototypeOf(value) === Object.prototype &&
+    Object.values(value).length > 0 &&
+    Object.values(value).every((entry) => typeof entry === "function")
+  );
+}
+
+function stub(value: unknown): unknown {
+  if (typeof value === "function") {
+    return vi.fn();
+  }
+
+  // Stubbed entry by entry, so spreading the bag onto an element still leaves each
+  // handler assertable rather than reaching the real sound it would have played.
+  if (isHandlerBag(value)) {
+    return Object.fromEntries(Object.keys(value).map((name) => [name, vi.fn()]));
+  }
+
+  return value; // A constant the module exports which a test can assert on.
+}
+
+/**
+ * Mocks an audio module by stubbing every export, then applying `overrides`.
+ *
+ * A mock that lists only the exports it needs can silently fall behind the module it replaces.
+ * A newly added export becomes `undefined`, and code that calls it can fail later from an event
+ * handler without failing the test. Stubbing every export keeps the mock in sync with the
+ * module, while `overrides` lets each test provide the exports it needs to assert on.
+ *
+ * The factory has to reach the original module through a dynamic import because `vi.mock` is
+ * hoisted above the file's own imports:
+ *
+ * ```ts
+ * vi.mock("#/lib/audio/scroll", async (importOriginal) =>
+ *   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { skipScrollAbove }),
+ * );
+ * ```
+ */
+export async function audioModuleMock<T extends object>(
+  importOriginal: () => Promise<T>,
+  overrides: Partial<T> = {},
+): Promise<T> {
+  const actual = await importOriginal();
+  const stubbed = Object.entries(actual).map(([name, value]) => [name, stub(value)]);
+
+  return { ...Object.fromEntries(stubbed), ...overrides } as T;
+}
+
 export class FakeAudioContext {
   static initialState: AudioContextState = "suspended";
   static instances: Array<FakeAudioContext> = [];

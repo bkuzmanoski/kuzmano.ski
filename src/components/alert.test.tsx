@@ -5,7 +5,9 @@ import { playError } from "#/lib/audio/sounds";
 
 import { Alert } from "./alert";
 
-vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playError: vi.fn() }));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
 
 const CONTENT = {
   heading: { text: "Discard this message?" },

@@ -16,7 +16,7 @@ import {
 } from "./scroll";
 import { playScrollDetent } from "./sounds";
 
-vi.mock("./sounds", () => ({ playScrollDetent: vi.fn() }));
+vi.mock("./sounds", async (importOriginal) => (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}));
 
 let now = 0;
 

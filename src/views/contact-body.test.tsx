@@ -23,12 +23,12 @@ vi.mock("#/lib/hooks/use-close-window", () => ({
   },
 }));
 
-vi.mock("#/lib/audio/scroll", () => ({ playFieldScroll, skipScrollAt }));
-vi.mock("#/lib/audio/sounds", () => ({
-  playError,
-  playSuccess,
-  playClick: vi.fn(),
-}));
+vi.mock("#/lib/audio/scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, skipScrollAt }),
+);
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playError, playSuccess }),
+);
 
 const CONTACT_EMAIL_ADDRESS = "inbox@example.com";
 

@@ -13,7 +13,9 @@ const playClick = vi.hoisted(() => vi.fn());
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
-vi.mock("#/lib/audio/sounds", () => ({ playClick }));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playClick }),
+);
 
 beforeEach(() => {
   open.mockClear();

@@ -5,7 +5,9 @@ import { playError } from "#/lib/audio/sounds";
 
 import { CopyButton } from "./copy-button";
 
-vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn(), playError: vi.fn() }));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
 
 const writeText = vi.fn<(value: string) => Promise<void>>();
 

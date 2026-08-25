@@ -8,11 +8,12 @@ import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window";
 import type { WindowDrag } from "./window";
 import type { ReactNode } from "react";
 
-vi.mock("#/lib/audio/sounds", () => ({ playClick: vi.fn() }));
-vi.mock("#/lib/audio/scroll", () => ({
-  stepScroll: vi.fn(),
-  playPaneScroll: vi.fn(),
-}));
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
+vi.mock("#/lib/audio/scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal),
+);
 vi.mock("#/lib/boot-sequence/use-is-boot-sequence-complete", () => ({ useIsBootSequenceComplete: () => true }));
 vi.mock("#/lib/device", () => ({ isTouchOnly: vi.fn() }));
 

@@ -11,8 +11,12 @@ import type { MouseEvent, ReactNode } from "react";
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 
-vi.mock("../audio/scroll", () => ({ scrollIntoViewSilently }));
-vi.mock("../audio/sounds", () => ({ playHover }));
+vi.mock("../audio/scroll", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
+);
+vi.mock("../audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover }),
+);
 
 function List({
   count,
