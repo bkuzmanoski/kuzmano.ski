@@ -297,52 +297,6 @@ describe("measure", () => {
   });
 });
 
-describe("organize", () => {
-  test("un-maximizes and re-cascades every window in stack order", () => {
-    const zoomedState = reducer(opened("collection", "entry"), { type: "zoom", id: "collection" });
-    const movedState = reducer(zoomedState, { type: "move", id: "collection", x: 999, y: 999 });
-    const organizedState = reducer(movedState, { type: "organize" });
-
-    // Zooming raised the collection window, so the cascade now runs the entry window, then it.
-    expect(organizedState.order).toEqual(["entry", "collection"]);
-    expect(organizedState.geometry.collection!.maximized).toBe(false);
-    expect(organizedState.geometry.entry).toMatchObject(CENTER_POSITION);
-    expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
-    });
-  });
-
-  test("resizes a window down to its cascade slot if it does not fit", () => {
-    const enlargedState = reducer(opened("entry", "collection"), {
-      type: "resize",
-      id: "entry",
-      width: 1200,
-      height: 700,
-    });
-    const resizedState = reducer(enlargedState, { type: "resize", id: "collection", width: 500, height: 400 });
-    const organizedState = reducer(resizedState, { type: "organize" });
-
-    // The entry window loses the width its slot cannot hold and keeps the height that fits.
-    expect(organizedState.geometry.entry).toMatchObject({
-      ...CENTER_POSITION,
-      width: DEFAULT_SIZE.width,
-      height: 700,
-    });
-    expect(organizedState.geometry.collection).toMatchObject({
-      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
-      width: 500,
-      height: 400,
-    });
-  });
-
-  test("keeps the focus where it was", () => {
-    expect(reducer(opened("collection", "entry"), { type: "organize" }).focused).toBe("entry");
-    expect(reducer(reducer(opened("entry"), { type: "focusDesktop" }), { type: "organize" }).focused).toBeNull();
-  });
-});
-
 describe("cycleWindows", () => {
   const cycled = (state: ManagerState) => reducer(state, { type: "cycleWindows" });
 
@@ -424,14 +378,6 @@ describe("per-window layout", () => {
 
     expect(state.geometry.collection).toMatchObject({ x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
     expect(state.geometry.contact).toMatchObject(centerOf(SMALL_SIZE));
-  });
-
-  test("organizing cascades every open window, including those that open in the center", () => {
-    const state = varyingReducer(openedOnDesktop("entry", "contact"), { type: "organize" });
-    expect(state.geometry.contact).toMatchObject({
-      x: centerOf(SMALL_SIZE).x + LAYOUT.cascadeOffset.x,
-      y: centerOf(SMALL_SIZE).y + LAYOUT.cascadeOffset.y,
-    });
   });
 });
 

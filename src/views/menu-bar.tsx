@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
-import OrganizeIcon from "#/assets/images/organize-windows.svg?react";
 import SoundOffIcon from "#/assets/images/sound-effects-off.svg?react";
 import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
 import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
@@ -61,16 +60,6 @@ function StatusButton({
         {children}
       </button>
     </Tooltip>
-  );
-}
-
-function OrganizeWindowsStatus() {
-  const { organize } = useWindowActions();
-
-  return (
-    <StatusButton label="Organize Windows" className={styles.wideOnly} onClick={organize}>
-      <OrganizeIcon className={styles.icon} />
-    </StatusButton>
   );
 }
 
@@ -334,7 +323,6 @@ export function MenuBar() {
       </nav>
       <div className={styles.spacer} />
       <div className={styles.statusItems}>
-        <OrganizeWindowsStatus />
         <ThemeStatus />
         <SoundStatus />
         <TimeStatus />

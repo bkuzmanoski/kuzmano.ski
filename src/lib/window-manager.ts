@@ -63,7 +63,6 @@ export type Action =
   | { type: "resize"; id: WindowId; width: number; height: number }
   | { type: "zoom"; id: WindowId }
   | { type: "measure"; surface: Size }
-  | { type: "organize" }
   | { type: "cycleWindows" }
   | { type: "focusDesktop" }
   | { type: "notFound"; route: string }
@@ -343,10 +342,6 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;
       }
 
-      case "organize": {
-        return { ...state, geometry: cascadeWindows(layout, state) };
-      }
-
       case "cycleWindows": {
         const next = state.focused === null ? state.order.at(-1) : state.order[0];
         return next ? focusWindow(state, next) : state;
@@ -392,7 +387,6 @@ export interface WindowActions {
   resize: (id: WindowId, width: number, height: number) => void;
   toggleZoom: (id: WindowId) => void;
   measure: (surface: Size) => void;
-  organize: () => void;
   cycleWindows: () => void;
   focusDesktop: () => void;
   showNotFound: (route: string) => void;
