@@ -65,14 +65,5 @@
     & > svg {
       display: block;
     }
-
-    @media not all and (any-hover: hover) and (any-pointer: fine) {
-      &::before {
-        content: "";
-        position: absolute;
-        inset-block: -4px;
-        inset-inline: -4px;
-      }
-    }
   }
 }
