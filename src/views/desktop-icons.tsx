@@ -149,6 +149,22 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     }
   }
 
+  const restoreFocusToSelection = useEffectEvent(() => {
+    const activeElement = document.activeElement;
+
+    if (selectedIconId === null || (activeElement !== null && activeElement !== document.body)) {
+      return;
+    }
+
+    iconElement(selectedIconId)?.focus({ preventScroll: true });
+  });
+
+  useEffect(() => {
+    if (focusedWindow === null) {
+      restoreFocusToSelection();
+    }
+  }, [focusedWindow]);
+
   const onDesktopArrowKeyPress = useEffectEvent((key: ArrowKey) => moveSelection(selectedIconId, key));
 
   useEffect(() => {
