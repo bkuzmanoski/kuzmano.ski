@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { playClick } from "#/lib/audio/sounds";
 import { testCollection } from "#/test-utils/content";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
@@ -9,7 +10,7 @@ vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover, scrollSafeClickSoundHandlers }),
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover }),
 );
 vi.mock("#/lib/audio/scroll", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
@@ -18,7 +19,6 @@ vi.mock("#/lib/audio/scroll", async (importOriginal) =>
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
-const scrollSafeClickSoundHandlers = vi.hoisted(() => ({ onPointerDown: vi.fn(), onPointerUp: vi.fn() }));
 
 const { collection, entries, routeOf } = testCollection("tech-notes", 2);
 const lastIndex = entries.length - 1;
@@ -27,8 +27,7 @@ beforeEach(() => {
   open.mockClear();
   playHover.mockClear();
   scrollIntoViewSilently.mockClear();
-  scrollSafeClickSoundHandlers.onPointerDown.mockClear();
-  scrollSafeClickSoundHandlers.onPointerUp.mockClear();
+  vi.mocked(playClick).mockClear();
 });
 
 function renderList(activeSlug: string | null) {
@@ -133,14 +132,29 @@ test("enter and space open the entry that holds the focus", () => {
   expect(open).toHaveBeenLastCalledWith(routeOf(lastIndex));
 });
 
-test("an entry sounds its press through both halves of a pointer press", () => {
+test("pressing an entry with the mouse plays a click sound", () => {
   const links = renderList(entries[0]!.slug);
 
-  fireEvent.pointerDown(links[1]!);
-  fireEvent.pointerUp(links[1]!);
+  fireEvent.pointerDown(links[1]!, { pointerType: "mouse" });
 
-  expect(scrollSafeClickSoundHandlers.onPointerDown).toHaveBeenCalled();
-  expect(scrollSafeClickSoundHandlers.onPointerUp).toHaveBeenCalled();
+  expect(playClick).toHaveBeenCalledTimes(1);
+});
+
+test("a tap holds the pressed state until release, but clears it when scrolling starts", () => {
+  const links = renderList(entries[0]!.slug);
+
+  fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
+
+  expect(playClick).not.toHaveBeenCalled();
+
+  fireEvent.pointerUp(links[1]!, { pointerType: "touch" });
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+
+  fireEvent.pointerDown(links[2 % links.length]!, { pointerType: "touch" });
+  fireEvent.pointerCancel(links[2 % links.length]!, { pointerType: "touch" });
+
+  expect(playClick).toHaveBeenCalledTimes(1);
 });
 
 test("a press on a partly visible entry takes over the browser's own focus-scroll", () => {

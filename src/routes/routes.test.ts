@@ -68,7 +68,7 @@ test("a second collection reuses the collection window", async () => {
   expect(openWindows()).toHaveLength(1);
 });
 
-test("a new unknown path replaces the current not-found dialog", async () => {
+test("a new unknown path replaces the current not-found alert", async () => {
   const { history } = renderRoute("/no-such-page");
 
   await screen.findByRole("dialog", { name: NOT_FOUND_PAGE_TITLE });
@@ -120,7 +120,7 @@ test("an unknown entry in a collection opens the not-found dialog", async () => 
   expect(await screen.findByRole("dialog", { name: NOT_FOUND_PAGE_TITLE })).toBeDefined();
 });
 
-test("dismissing a deep-linked not-found dialog returns to the desktop", async () => {
+test("dismissing a deep-linked not-found alert returns to the desktop", async () => {
   const { history } = renderRoute("/no-such-page");
 
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
@@ -130,7 +130,7 @@ test("dismissing a deep-linked not-found dialog returns to the desktop", async (
   expect(openWindows()).toHaveLength(0);
 });
 
-test("dismissing a not-found dialog reached from a window returns to that window", async () => {
+test("dismissing a not-found alert reached from a window returns to that window", async () => {
   const { history } = renderRoute("/tech-notes");
   const window = await screen.findByRole("region", { name: "Tech Notes" });
 

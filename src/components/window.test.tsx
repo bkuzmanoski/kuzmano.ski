@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
+import { playClick } from "#/lib/audio/sounds";
 import { isTouchOnly } from "#/lib/device";
 
 import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window";
@@ -443,4 +444,32 @@ test("an active resize drag commits on a pointermove with no pressed buttons aft
 
   expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
   expect(onDrag).toHaveBeenLastCalledWith(null);
+});
+
+// iOS can retarget a tap near a control to the control, but only the click event follows.
+// The touch pointer events stay with the element under the finger, which sounds the press.
+test("a tap retargeted from the title bar to a control sounds the press once", () => {
+  render(windowShowing("sounded-press", button));
+
+  vi.mocked(playClick).mockClear();
+
+  fireEvent.pointerDown(titleBarOf(), { clientX: 0, clientY: 0, button: 0 }); // The touch press.
+  fireEvent.pointerUp(titleBarOf(), { clientX: 0, clientY: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Close" }), { detail: 1 });
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+});
+
+test("a press on a title bar control sounds once without triggering the title bar's press sound", () => {
+  render(windowShowing("sounded-control", button));
+
+  const close = screen.getByRole("button", { name: "Close" });
+
+  vi.mocked(playClick).mockClear();
+
+  fireEvent.pointerDown(close, { clientX: 0, clientY: 0, button: 0 });
+  fireEvent.pointerUp(close, { clientX: 0, clientY: 0 });
+  fireEvent.click(close, { detail: 1 });
+
+  expect(playClick).toHaveBeenCalledTimes(1);
 });

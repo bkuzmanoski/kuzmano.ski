@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { HOLD_MS, MOTION_MS, REDUCED_MOTION_MS, hasStageZoom, phaseFlags, sequence, startOfPhaseMs } from "./phases";
+import {
+  HOLD_DURATION_MS,
+  MOTION_DURATION_MS,
+  REDUCED_MOTION_DURATION_MS,
+  hasStageZoom,
+  phaseFlags,
+  sequence,
+  startOfPhaseMs,
+} from "./phases";
 
 describe("phaseFlags", () => {
   test("the loading cover stays up until the illustration is revealed", () => {
@@ -46,18 +54,18 @@ describe("phaseFlags", () => {
 });
 
 describe("hasStageZoom", () => {
-  test("the stage zooms when there is motion to zoom with", () => {
-    expect(hasStageZoom(MOTION_MS)).toBe(true);
+  test("returns true when stage zoom phase has a duration", () => {
+    expect(hasStageZoom(MOTION_DURATION_MS)).toBe(true);
   });
 
-  test("reduced motion holds the framing the zoom lands at instead of jumping to it", () => {
-    expect(hasStageZoom(REDUCED_MOTION_MS)).toBe(false);
+  test("returns false when reduced motion disables stage zoom phase", () => {
+    expect(hasStageZoom(REDUCED_MOTION_DURATION_MS)).toBe(false);
   });
 });
 
 describe("sequence", () => {
   test("steps through the phases in order, ending before complete", () => {
-    expect(sequence(MOTION_MS).map(({ phase }) => phase)).toEqual([
+    expect(sequence(MOTION_DURATION_MS).map(({ phase }) => phase)).toEqual([
       "macintosh-reveal",
       "stage-zoom",
       "display-on",
@@ -67,25 +75,25 @@ describe("sequence", () => {
     ]);
   });
 
-  test("each step holds for its motion plus its hold time", () => {
-    const steps = sequence(MOTION_MS);
+  test("each step holds for its motion duration plus its hold duration", () => {
+    const steps = sequence(MOTION_DURATION_MS);
 
-    expect(steps[0].durationMs).toBe(MOTION_MS.loadingCoverFade + HOLD_MS.illustrationReveal);
-    expect(steps[1].durationMs).toBe(MOTION_MS.stageZoom + HOLD_MS.stageZoom);
-    expect(steps[3].durationMs).toBe(MOTION_MS.logoDraw + HOLD_MS.logo);
+    expect(steps[0].durationMs).toBe(MOTION_DURATION_MS.loadingCoverFade + HOLD_DURATION_MS.illustrationReveal);
+    expect(steps[1].durationMs).toBe(MOTION_DURATION_MS.stageZoom + HOLD_DURATION_MS.stageZoom);
+    expect(steps[3].durationMs).toBe(MOTION_DURATION_MS.logoDraw + HOLD_DURATION_MS.logo);
   });
 
-  test("reduced motion removes the zoom, warm-up and desktop reveal motion but keeps the holds", () => {
-    const steps = sequence(REDUCED_MOTION_MS);
+  test("reduced motion disables the zoom, warm-up and desktop reveal motion but keeps their hold durations", () => {
+    const steps = sequence(REDUCED_MOTION_DURATION_MS);
 
-    expect(steps[1].durationMs).toBe(HOLD_MS.stageZoom);
-    expect(steps[2].durationMs).toBe(HOLD_MS.displayOn);
+    expect(steps[1].durationMs).toBe(HOLD_DURATION_MS.stageZoom);
+    expect(steps[2].durationMs).toBe(HOLD_DURATION_MS.displayOn);
     expect(steps[5].durationMs).toBe(0);
   });
 });
 
 describe("startOfPhaseMs", () => {
-  const steps = sequence(MOTION_MS);
+  const steps = sequence(MOTION_DURATION_MS);
   const runMs = steps.reduce((total, { durationMs }) => total + durationMs, 0);
 
   test("the first phase begins as the sequence starts", () => {

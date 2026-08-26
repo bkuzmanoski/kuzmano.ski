@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useTimers } from "./use-timer";
 
 const DEFAULT_FLASH_COUNT = 2;
-const DEFAULT_FLASH_MS = 80;
+const DEFAULT_FLASH_INTERVAL_MS = 80;
 
 export function useActivationFlash<T>({
   count = DEFAULT_FLASH_COUNT,
-  intervalMs = DEFAULT_FLASH_MS,
+  intervalMs = DEFAULT_FLASH_INTERVAL_MS,
 }: { count?: number; intervalMs?: number } = {}) {
   const [flash, setFlash] = useState<{ target: T; isOn: boolean } | null>(null);
   const timers = useTimers();

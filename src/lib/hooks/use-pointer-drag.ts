@@ -19,7 +19,7 @@ interface ActiveDrag<T> {
   value: T;
   moved: boolean;
   handle: Element;
-  listening: AbortController;
+  controller: AbortController;
 }
 
 export function usePointerDrag<T>({
@@ -37,16 +37,16 @@ export function usePointerDrag<T>({
   onDragMove: (delta: DragDelta, start: T) => void;
   onEnd?: (moved: boolean) => void;
 }) {
-  const dragRef = useRef<ActiveDrag<T> | null>(null);
+  const activeDragRef = useRef<ActiveDrag<T> | null>(null);
   const pendingDeltaRef = useRef<{ delta: DragDelta; value: T } | null>(null);
   const frameRef = useRef<number | null>(null);
 
   // The listeners a drag registers outlive the render that registered them, so the gesture is
   // reported through the handlers the caller holds now rather than the ones it held at the press.
-  const reportRef = useRef({ onDragMove, onEnd });
+  const handlersRef = useRef({ onDragMove, onEnd });
 
   useEffect(() => {
-    reportRef.current = { onDragMove, onEnd };
+    handlersRef.current = { onDragMove, onEnd };
   });
 
   function cancelFrame() {
@@ -61,28 +61,28 @@ export function usePointerDrag<T>({
     pendingDeltaRef.current = null;
 
     if (nextDelta) {
-      reportRef.current.onDragMove(nextDelta.delta, nextDelta.value);
+      handlersRef.current.onDragMove(nextDelta.delta, nextDelta.value);
     }
   }
 
-  function finish(active: ActiveDrag<T>) {
-    dragRef.current = null;
-    active.listening.abort();
+  function finish(activeDrag: ActiveDrag<T>) {
+    activeDragRef.current = null;
+    activeDrag.controller.abort();
 
-    if (active.handle.hasPointerCapture(active.pointerId)) {
-      active.handle.releasePointerCapture(active.pointerId);
+    if (activeDrag.handle.hasPointerCapture(activeDrag.pointerId)) {
+      activeDrag.handle.releasePointerCapture(activeDrag.pointerId);
     }
 
     cancelFrame();
     flush();
-    reportRef.current.onEnd?.(active.moved);
+    handlersRef.current.onEnd?.(activeDrag.moved);
   }
 
   useEffect(
     () => () => {
       cancelFrame();
-      dragRef.current?.listening.abort();
-      dragRef.current = null;
+      activeDragRef.current?.controller.abort();
+      activeDragRef.current = null;
     },
     [],
   );
@@ -98,27 +98,27 @@ export function usePointerDrag<T>({
 
     // A press that arrives with a drag still in flight closes that one out first, so the gesture
     // it starts is the only one running and the listeners of the previous one are removed.
-    if (dragRef.current) {
-      finish(dragRef.current);
+    if (activeDragRef.current) {
+      finish(activeDragRef.current);
     }
 
     const handle = event.currentTarget;
-    const listening = new AbortController();
+    const controller = new AbortController();
 
-    dragRef.current = {
+    activeDragRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       value: start(event),
       moved: false,
       handle,
-      listening,
+      controller,
     };
 
     // Capture lets these listeners observe pointer events even when a handler below stops them.
     // Install them before requesting pointer capture, which can throw if the pointer is no longer
     // active. Once the drag starts, these listeners must be in place to end it.
-    const options = { capture: true, signal: listening.signal };
+    const options = { capture: true, signal: controller.signal };
 
     window.addEventListener("pointermove", onWindowPointerMove, options);
     window.addEventListener("pointerup", onWindowPointerEnd, options);
@@ -128,33 +128,33 @@ export function usePointerDrag<T>({
   }
 
   function onWindowPointerMove(event: PointerEvent) {
-    const active = dragRef.current;
+    const activeDrag = activeDragRef.current;
 
-    if (active?.pointerId !== event.pointerId) {
+    if (activeDrag?.pointerId !== event.pointerId) {
       return;
     }
 
     // No buttons are held, so the pointer was released without the gesture receiving the release.
     if (event.buttons === 0) {
-      finish(active);
+      finish(activeDrag);
       return;
     }
 
-    const delta = { dx: event.clientX - active.x, dy: event.clientY - active.y };
+    const delta = { dx: event.clientX - activeDrag.x, dy: event.clientY - activeDrag.y };
 
     if (Math.abs(delta.dx) > threshold || Math.abs(delta.dy) > threshold) {
-      active.moved = true;
+      activeDrag.moved = true;
     }
 
     // Nothing is reported until the press has travelled past the threshold, so a handle that
     // also answers a click is not nudged by the jitter of one. Once set, the flag stays set for
     // the rest of the press, so a drag that comes back within the threshold keeps reporting
     // rather than stalling where it last crossed it.
-    if (!active.moved) {
+    if (!activeDrag.moved) {
       return;
     }
 
-    pendingDeltaRef.current = { delta, value: active.value };
+    pendingDeltaRef.current = { delta, value: activeDrag.value };
 
     if (frameRef.current !== null) {
       return;
@@ -167,7 +167,7 @@ export function usePointerDrag<T>({
   }
 
   function onWindowPointerEnd(event: PointerEvent) {
-    const active = dragRef.current;
+    const active = activeDragRef.current;
 
     if (active?.pointerId === event.pointerId) {
       finish(active);

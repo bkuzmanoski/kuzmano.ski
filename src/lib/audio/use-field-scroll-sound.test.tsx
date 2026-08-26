@@ -4,10 +4,10 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { useFieldScrollSound } from "./use-field-scroll-sound";
 
 const playFieldScroll = vi.hoisted(() => vi.fn());
-const skipScrollAt = vi.hoisted(() => vi.fn());
+const silenceScrollAt = vi.hoisted(() => vi.fn());
 
 vi.mock("./scroll", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, skipScrollAt }),
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, silenceScrollAt }),
 );
 
 // A real control, so the handlers see the events React actually delivers.
@@ -25,53 +25,53 @@ const nextFrame = () => act(() => new Promise<void>((resolve) => requestAnimatio
 
 beforeEach(() => {
   playFieldScroll.mockClear();
-  skipScrollAt.mockClear();
+  silenceScrollAt.mockClear();
 });
 
-test("a scroll with no caret-moving key before it sounds like ordinary scrolling", () => {
+test("a scroll without a preceding key press plays the ordinary scroll sound", () => {
   const field = renderField();
 
   fireEvent.scroll(field);
 
   expect(playFieldScroll).toHaveBeenCalledWith(field);
-  expect(skipScrollAt).not.toHaveBeenCalled();
+  expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
 test.each(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"])(
-  "the scroll %s causes to keep the caret in view is skipped instead of sounded",
+  "the scroll %s causes to keep the caret in view is silenced",
   (key) => {
     const field = renderField();
 
     fireEvent.keyDown(field, { key });
     fireEvent.scroll(field);
 
-    expect(skipScrollAt).toHaveBeenCalledWith(field);
+    expect(silenceScrollAt).toHaveBeenCalledWith(field);
     expect(playFieldScroll).not.toHaveBeenCalled();
   },
 );
 
-test("a key that cannot move the caret out of view does not mark the next scroll", () => {
+test("a key press that cannot move the caret out of view does not mark the next scroll", () => {
   const field = renderField();
 
   fireEvent.keyDown(field, { key: "a" });
   fireEvent.scroll(field);
 
   expect(playFieldScroll).toHaveBeenCalledWith(field);
-  expect(skipScrollAt).not.toHaveBeenCalled();
+  expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test("the mark is spent by the first scroll, so a second one sounds normally", () => {
+test("a key press only silences the first scroll, so the next plays its sound", () => {
   const field = renderField();
 
   fireEvent.keyDown(field, { key: "ArrowDown" });
   fireEvent.scroll(field);
   fireEvent.scroll(field);
 
-  expect(skipScrollAt).toHaveBeenCalledTimes(1);
+  expect(silenceScrollAt).toHaveBeenCalledTimes(1);
   expect(playFieldScroll).toHaveBeenCalledTimes(1);
 });
 
-test("a key that scrolls nothing clears its mark on the next frame", async () => {
+test("a key press that does not cause scrolling clears its mark on the next frame", async () => {
   const field = renderField();
 
   fireEvent.keyDown(field, { key: "ArrowDown" });
@@ -79,10 +79,10 @@ test("a key that scrolls nothing clears its mark on the next frame", async () =>
   fireEvent.scroll(field);
 
   expect(playFieldScroll).toHaveBeenCalledWith(field);
-  expect(skipScrollAt).not.toHaveBeenCalled();
+  expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test("a held key keeps its mark alive across repeats", async () => {
+test("a held key press keeps its mark alive across repeats", async () => {
   const field = renderField();
 
   fireEvent.keyDown(field, { key: "ArrowDown", repeat: true });
@@ -90,7 +90,7 @@ test("a held key keeps its mark alive across repeats", async () => {
   fireEvent.keyDown(field, { key: "ArrowDown", repeat: true });
   fireEvent.scroll(field);
 
-  expect(skipScrollAt).toHaveBeenCalledWith(field);
+  expect(silenceScrollAt).toHaveBeenCalledWith(field);
   expect(playFieldScroll).not.toHaveBeenCalled();
 });
 

@@ -10,7 +10,7 @@ import { ContactBody } from "./contact-body";
 const playError = vi.hoisted(() => vi.fn());
 const playSuccess = vi.hoisted(() => vi.fn());
 const playFieldScroll = vi.hoisted(() => vi.fn());
-const skipScrollAt = vi.hoisted(() => vi.fn());
+const silenceScrollAt = vi.hoisted(() => vi.fn());
 const closeWindow = vi.hoisted(() => vi.fn());
 const forceCloseWindow = vi.hoisted(() => vi.fn());
 const closeGuardRef = vi.hoisted(() => ({ current: null as CloseGuard | null }));
@@ -24,7 +24,7 @@ vi.mock("#/lib/hooks/use-close-window", () => ({
 }));
 
 vi.mock("#/lib/audio/scroll", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, skipScrollAt }),
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, silenceScrollAt }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playError, playSuccess }),
@@ -70,7 +70,7 @@ beforeEach(() => {
   playError.mockClear();
   playSuccess.mockClear();
   playFieldScroll.mockClear();
-  skipScrollAt.mockClear();
+  silenceScrollAt.mockClear();
 
   closeWindow.mockReset();
   closeWindow.mockImplementation(() => {
@@ -170,7 +170,7 @@ test("a key that can move the caret out of view prevents the scroll sound", () =
   fireEvent.keyDown(field, { key: "ArrowDown" });
   fireEvent.scroll(field);
 
-  expect(skipScrollAt).toHaveBeenCalledWith(field);
+  expect(silenceScrollAt).toHaveBeenCalledWith(field);
   expect(playFieldScroll).not.toHaveBeenCalled();
 });
 
@@ -181,7 +181,7 @@ test("a scroll that follows no caret-moving key plays the scroll sound", () => {
   fireEvent.scroll(field);
 
   expect(playFieldScroll).toHaveBeenCalledWith(field);
-  expect(skipScrollAt).not.toHaveBeenCalled();
+  expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
 test("sending an incomplete message shows an alert and does not submit", () => {

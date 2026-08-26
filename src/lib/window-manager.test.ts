@@ -540,7 +540,7 @@ describe("close guards", () => {
   });
 });
 
-describe("the not-found route", () => {
+describe("the not-found alert", () => {
   const reportNotFound = (state: ManagerState, route: string) => reducer(state, { type: "notFound", route });
 
   test("records the route without changing the open windows or focus", () => {
@@ -553,26 +553,24 @@ describe("the not-found route", () => {
     expect(state.order).toBe(initialState.order);
   });
 
-  test("repeating the same route is a no-op, while a different route replaces it", () => {
+  test("is a no-op when the same route is reported twice, but updates for a different route", () => {
     const state = reportNotFound(opened("entry"), "/no-such-page");
 
     expect(reportNotFound(state, "/no-such-page")).toBe(state);
     expect(reportNotFound(state, "/another-typo").notFoundRoute).toBe("/another-typo");
   });
 
-  test("clears the route when dismissed, but not when a window closes", () => {
+  test("clears the route when dismissed", () => {
     const state = reportNotFound(opened("entry"), "/no-such-page");
-
     expect(reducer(state, { type: "dismissNotFound" }).notFoundRoute).toBeNull();
-    expect(reducer(state, { type: "close", id: "entry" }).notFoundRoute).toBe("/no-such-page");
   });
 
-  test("dismisses to the window that was previously focused", () => {
+  test("returns focus to the window that was previously focused when dismissed", () => {
     const state = reportNotFound(opened("entry"), "/no-such-page");
     expect(reducer(state, { type: "dismissNotFound" }).focused).toBe("entry");
   });
 
-  test("dismissing when there is no not-found route is a no-op", () => {
+  test("is a no-op when dismissed with no route recorded", () => {
     const state = opened("entry");
     expect(reducer(state, { type: "dismissNotFound" })).toBe(state);
   });

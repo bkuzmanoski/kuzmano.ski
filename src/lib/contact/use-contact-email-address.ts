@@ -13,15 +13,15 @@ export function useContactEmailAddress(): string | null {
   const [address, setAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    const attempt = new AbortController();
+    const controller = new AbortController();
 
-    void readContactEmailAddress(attempt.signal).then((resolved) => {
-      if (!attempt.signal.aborted) {
+    void readContactEmailAddress(controller.signal).then((resolved) => {
+      if (!controller.signal.aborted) {
         setAddress(resolved);
       }
     });
 
-    return () => attempt.abort();
+    return () => controller.abort();
   }, []);
 
   return address;

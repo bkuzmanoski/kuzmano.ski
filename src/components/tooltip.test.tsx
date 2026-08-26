@@ -1,13 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { Tooltip } from "./tooltip";
+import { HOVER_DELAY_MS, TAP_FEEDBACK_DURATION_MS, Tooltip } from "./tooltip";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
-
-const HOVER_DELAY_MS = 400;
-const TAP_DISMISS_MS = 1_500;
 
 const MOUSE = { pointerType: "mouse" };
 const TOUCH = { pointerType: "touch" };
@@ -105,7 +102,7 @@ test("a tap whose press does not change the label does not show the tooltip", ()
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  advance(TAP_DISMISS_MS);
+  advance(TAP_FEEDBACK_DURATION_MS);
 
   expect(tip()).toBeNull();
 
@@ -120,7 +117,7 @@ test("a tapped tooltip hides itself without further input", () => {
 
   tap(wrapper);
   relabel("New Tip");
-  advance(TAP_DISMISS_MS - 1);
+  advance(TAP_FEEDBACK_DURATION_MS - 1);
 
   expect(tip()).not.toBeNull();
 
@@ -129,13 +126,13 @@ test("a tapped tooltip hides itself without further input", () => {
   expect(tip()).toBeNull();
 });
 
-test("the dismissal delay starts when the tooltip appears, not when the tap occurs", () => {
+test("the feedback duration interval starts when the tooltip appears, not when the tap occurs", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  advance(TAP_DISMISS_MS - 200); // The press is still being handled.
+  advance(TAP_FEEDBACK_DURATION_MS - 200); // The press is still being handled.
   relabel("New Tip");
-  advance(TAP_DISMISS_MS - 1);
+  advance(TAP_FEEDBACK_DURATION_MS - 1);
 
   expect(tip()).not.toBeNull();
 
@@ -154,16 +151,16 @@ test("a tap has no effect on a tooltip without `persistOnPress`", () => {
   expect(tip()).toBeNull();
 });
 
-test("tapping again re-reads the label and restarts the dismissal delay", () => {
+test("tapping again re-reads the label and restarts the feedback interval", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
   relabel("New Tip");
-  advance(TAP_DISMISS_MS - 100);
+  advance(TAP_FEEDBACK_DURATION_MS - 100);
 
   tap(wrapper);
   relabel("Another New Tip");
-  advance(TAP_DISMISS_MS - 100);
+  advance(TAP_FEEDBACK_DURATION_MS - 100);
 
   expect(tip()?.textContent).toBe("Another New Tip");
 
@@ -177,10 +174,10 @@ test("tapping again holds the tooltip visible even when the label does not chang
 
   tap(wrapper);
   relabel("New Tip");
-  advance(TAP_DISMISS_MS - 100);
+  advance(TAP_FEEDBACK_DURATION_MS - 100);
 
   tap(wrapper); // The label already reads "New Tip", so the press changes nothing.
-  advance(TAP_DISMISS_MS - 100);
+  advance(TAP_FEEDBACK_DURATION_MS - 100);
 
   expect(tip()?.textContent).toBe("New Tip");
 
@@ -206,7 +203,7 @@ test("a cancelled touch event hides the tooltip", () => {
   expect(tip()).toBeNull();
 });
 
-test("a mouse press does not start the tap dismissal timer", () => {
+test("a mouse press does not start the tap feedback interval", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   fireEvent.pointerEnter(wrapper, MOUSE);
@@ -214,7 +211,7 @@ test("a mouse press does not start the tap dismissal timer", () => {
   fireEvent.pointerDown(wrapper, MOUSE);
   fireEvent.pointerUp(wrapper, MOUSE);
   fireEvent.click(wrapper, CLICK);
-  advance(TAP_DISMISS_MS);
+  advance(TAP_FEEDBACK_DURATION_MS);
 
   expect(tip()).not.toBeNull();
 
@@ -223,7 +220,7 @@ test("a mouse press does not start the tap dismissal timer", () => {
   expect(tip()).toBeNull();
 });
 
-test("a tap still dismisses the tooltip if a synthesized mouse event arrives after it", () => {
+test("a tap still hides the tooltip if a synthesized mouse event arrives after it", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tapWithLateMouseEvent(wrapper);
@@ -231,7 +228,7 @@ test("a tap still dismisses the tooltip if a synthesized mouse event arrives aft
 
   expect(tip()).not.toBeNull();
 
-  advance(TAP_DISMISS_MS);
+  advance(TAP_FEEDBACK_DURATION_MS);
 
   expect(tip()).toBeNull();
 });
@@ -287,7 +284,7 @@ test("a tap iOS moves onto the control still reports the press", () => {
 
   expect(tip()?.textContent).toBe("New Tip");
 
-  advance(TAP_DISMISS_MS);
+  advance(TAP_FEEDBACK_DURATION_MS);
 
   expect(tip()).toBeNull();
 });

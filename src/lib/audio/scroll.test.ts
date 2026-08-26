@@ -4,14 +4,15 @@ import { fakeScrollViewport } from "#/test-utils/audio";
 
 import {
   DETENT_PIXELS,
-  IDLE_MS,
+  IDLE_DURATION_MS,
   playFieldScroll,
   playPaneScroll,
   playScroll,
   playScrollStep,
+  recordScrollAt,
+  recordScrollIntoView,
   scrollIntoViewSilently,
-  skipScrollAbove,
-  skipScrollAt,
+  silenceScrollIntoView,
   stepScroll,
 } from "./scroll";
 import { playScrollDetent } from "./sounds";
@@ -32,9 +33,9 @@ afterEach(() => {
 
 const detents = () => vi.mocked(playScrollDetent).mock.calls.length;
 
-// Scroll to `top` after `elapsedMs`.
-function scrollTo(element: Element & { scrollTop: number }, top: number, elapsedMs = 16) {
-  now += elapsedMs;
+// Scroll to `top` after `elapsedTimeMs`.
+function scrollTo(element: Element & { scrollTop: number }, top: number, elapsedTimeMs = 16) {
+  now += elapsedTimeMs;
   element.scrollTop = top;
   playScroll(element);
 }
@@ -70,21 +71,22 @@ describe("playScroll", () => {
 
   test("sounds one detent per notch of travel, not one per event", () => {
     const element = fakeScrollViewport();
+    const move = DETENT_PIXELS / 4; // Four events to the notch, so one per event would sound eight.
 
     playScroll(element);
 
-    for (let top = 2; top <= 24; top += 2) {
-      scrollTo(element, top);
+    for (let event = 1; event <= 8; event += 1) {
+      scrollTo(element, move * event);
     }
 
-    expect(detents()).toBe(3);
+    expect(detents()).toBe(3); // The notch the gesture opens with, then one for each travelled.
   });
 
   test("starts a new gesture after a long pause", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
-    scrollTo(element, 500, IDLE_MS + 1);
+    scrollTo(element, 500, IDLE_DURATION_MS + 1);
 
     expect(detents()).toBe(0);
   });
@@ -114,13 +116,13 @@ describe("playScroll", () => {
   });
 });
 
-describe("skipScrollAt", () => {
+describe("recordScrollAt", () => {
   test("records a position without playing a detent", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
     element.scrollTop = 500;
-    skipScrollAt(element);
+    recordScrollAt(element);
 
     expect(detents()).toBe(0);
 
@@ -130,7 +132,7 @@ describe("skipScrollAt", () => {
   });
 });
 
-describe("skipScrollAbove", () => {
+describe("recordScrollIntoView", () => {
   test("records the position of a scrolling ancestor", () => {
     const parent = fakeScrollViewport();
     const child = fakeScrollViewport();
@@ -139,7 +141,7 @@ describe("skipScrollAbove", () => {
 
     playScroll(parent);
     parent.scrollTop = 500;
-    skipScrollAbove(child);
+    recordScrollIntoView(child);
     scrollTo(parent, 500);
 
     expect(detents()).toBe(0);
@@ -150,11 +152,63 @@ describe("skipScrollAbove", () => {
     const child = fakeScrollViewport();
 
     Object.defineProperty(child, "parentElement", { value: parent });
-    skipScrollAbove(child);
+
+    recordScrollIntoView(child);
     parent.scrollTop = 500;
     playScroll(parent);
 
     expect(detents()).toBe(0);
+  });
+
+  test("leaves the ancestor's scroll audible", () => {
+    const parent = fakeScrollViewport();
+    const child = fakeScrollViewport();
+
+    Object.defineProperty(child, "parentElement", { value: parent });
+
+    playScroll(parent);
+    parent.scrollTop = 500;
+    recordScrollIntoView(child);
+    scrollTo(parent, 500 + DETENT_PIXELS);
+
+    expect(detents()).toBe(1);
+  });
+});
+
+describe("silenceScrollIntoView", () => {
+  // Safari animates the scroll that reveals a focused element, so it arrives afterwards as a
+  // run of scroll events rather than as one move that could have been recorded beforehand.
+  test("silences a scrolling ancestor for as long as the scroll it causes is still running", () => {
+    const parent = fakeScrollViewport();
+    const child = fakeScrollViewport();
+
+    Object.defineProperty(child, "parentElement", { value: parent });
+
+    playScroll(parent);
+    silenceScrollIntoView(child); // The ancestor has not moved yet.
+
+    for (let frame = 1; frame <= 6; frame += 1) {
+      scrollTo(parent, DETENT_PIXELS * frame);
+    }
+
+    expect(detents()).toBe(0);
+  });
+
+  test("resumes the ancestor's scroll sounds after its scroll has settled", () => {
+    const parent = fakeScrollViewport();
+    const child = fakeScrollViewport();
+
+    Object.defineProperty(child, "parentElement", { value: parent });
+
+    playScroll(parent);
+    silenceScrollIntoView(child);
+    scrollTo(parent, DETENT_PIXELS * 4);
+
+    now += IDLE_DURATION_MS * 2; // The scroll has settled.
+    scrollTo(parent, DETENT_PIXELS * 5);
+    scrollTo(parent, DETENT_PIXELS * 6);
+
+    expect(detents()).toBe(1);
   });
 });
 

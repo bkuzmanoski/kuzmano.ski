@@ -9,7 +9,7 @@ const SUBMISSION: ContactSubmission = {
   from: "test@example.com",
   message: "Hello.",
   website: "",
-  elapsedMs: 5_000,
+  elapsedTimeMs: 5_000,
 };
 
 const fetchMock = vi.fn<typeof fetch>();

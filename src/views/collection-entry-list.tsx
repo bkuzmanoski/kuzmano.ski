@@ -5,7 +5,8 @@ import { ENTRY_DATE_FORMAT } from "#/config/content";
 import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
 import type { CollectionTarget } from "#/content/window-registry";
-import { playClick, scrollSafeClickSoundHandlers } from "#/lib/audio/sounds";
+import { playClick } from "#/lib/audio/sounds";
+import { usePressSound } from "#/lib/audio/use-press-sound";
 import { cx } from "#/lib/class-names";
 import { formatDate } from "#/lib/date";
 import { useDateFormat } from "#/lib/hooks/use-date-format";
@@ -27,6 +28,10 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
 
   const entries = collection.list();
   const openEntry = (slug: string) => open(collection.routeOf(slug));
+
+  // One instance serves every card: the list is scrolled by touch, so a press that becomes a
+  // scroll must not sound, and only one press runs at a time (see `usePressSound`).
+  const pressSoundHandlers = usePressSound({ scrollSafe: true });
 
   const itemProps = useListNavigation(listRef, {
     count: entries.length,
@@ -50,6 +55,24 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
       {entries.map((entry, index) => {
         const isActive = entry.slug === activeSlug;
 
+        // Merged ahead of `itemProps` so the opt-out below runs before the list's own press
+        // handling, which stands aside for a press whose default is already prevented.
+        const entryEventHandlers = mergeHandlers(pressSoundHandlers, {
+          onMouseDown: (event: MouseEvent<HTMLAnchorElement>) => {
+            if (isBrowserHandledClick(event)) {
+              event.preventDefault();
+            }
+          },
+          onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+            if (isBrowserHandledClick(event)) {
+              return;
+            }
+
+            event.preventDefault();
+            openEntry(entry.slug);
+          },
+        });
+
         return (
           <li key={entry.slug}>
             <a
@@ -57,25 +80,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
               aria-label={entry.title}
               className={cx(styles.card, isActive && styles.active)}
               href={collection.routeOf(entry.slug)}
-              {...mergeHandlers(
-                {
-                  onMouseDown: (event: MouseEvent<HTMLAnchorElement>) => {
-                    if (isBrowserHandledClick(event)) {
-                      event.preventDefault();
-                    }
-                  },
-                },
-                itemProps(index),
-              )}
-              {...scrollSafeClickSoundHandlers}
-              onClick={(event) => {
-                if (isBrowserHandledClick(event)) {
-                  return;
-                }
-
-                event.preventDefault();
-                openEntry(entry.slug);
-              }}
+              {...mergeHandlers(entryEventHandlers, itemProps(index))}
             >
               <span className={styles.title}>{entry.title}</span>
               <span className={styles.meta}>

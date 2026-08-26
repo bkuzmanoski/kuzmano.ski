@@ -40,14 +40,14 @@ export function useKeyboardInset(): void {
       }
     };
 
-    const watching = new AbortController();
+    const controller = new AbortController();
 
-    viewport.addEventListener("resize", update, { signal: watching.signal });
-    viewport.addEventListener("scroll", update, { signal: watching.signal });
+    viewport.addEventListener("resize", update, { signal: controller.signal });
+    viewport.addEventListener("scroll", update, { signal: controller.signal });
     update();
 
     return () => {
-      watching.abort();
+      controller.abort();
       document.documentElement.style.removeProperty("--keyboard-inset");
     };
   }, []);

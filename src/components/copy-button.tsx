@@ -8,9 +8,9 @@ import { useTimer } from "#/lib/hooks/use-timer";
 import { Alert } from "./alert";
 import { Button } from "./button";
 import styles from "./copy-button.module.css";
-import { TAP_DISMISS_MS, Tooltip } from "./tooltip";
+import { TAP_FEEDBACK_DURATION_MS, Tooltip } from "./tooltip";
 
-const CONFIRMATION_MS = TAP_DISMISS_MS + 100;
+const CONFIRMATION_DURATION_MS = TAP_FEEDBACK_DURATION_MS + 100;
 const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. Check your browser permissions.`;
 
 type State = "idle" | "copying" | "copied" | "failed";
@@ -50,7 +50,7 @@ export function CopyButton({
     }
 
     setState("copied");
-    timer.start(() => setState("idle"), CONFIRMATION_MS);
+    timer.start(() => setState("idle"), CONFIRMATION_DURATION_MS);
   }
 
   return (

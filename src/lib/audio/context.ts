@@ -133,15 +133,15 @@ function primeAudioOnKeyDown(event: KeyboardEvent): void {
 
 export function useAudioUnlock() {
   useEffect(() => {
-    const listening = new AbortController();
-    const options = { capture: true, passive: true, signal: listening.signal };
+    const controller = new AbortController();
+    const options = { capture: true, passive: true, signal: controller.signal };
 
     document.addEventListener("pointerdown", primeAudio, options); // Mouse clicks.
     document.addEventListener("pointerup", primeAudio, options); // Touch taps.
     document.addEventListener("keydown", primeAudioOnKeyDown, options);
-    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: listening.signal });
+    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: controller.signal });
 
-    return () => listening.abort();
+    return () => controller.abort();
   }, []);
 }
 

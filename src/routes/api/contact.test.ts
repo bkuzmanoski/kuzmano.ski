@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { MESSAGE_MAX_LENGTH, MIN_COMPOSE_MS } from "#/lib/contact/message";
+import { MESSAGE_MAX_LENGTH, MIN_COMPOSE_DURATION_MS } from "#/lib/contact/message";
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings";
 import type { Delivery } from "#/server/mail";
 import { MAX_BODY_LENGTH } from "#/server/request";
@@ -28,7 +28,12 @@ beforeEach(() => {
 
 const ORIGIN = "https://kuzmano.ski";
 const URL = `${ORIGIN}/api/contact`;
-const VALID_SUBMISSION = { from: "test@example.com", message: "Hello.", website: "", elapsedMs: MIN_COMPOSE_MS };
+const VALID_SUBMISSION = {
+  from: "test@example.com",
+  message: "Hello.",
+  website: "",
+  elapsedTimeMs: MIN_COMPOSE_DURATION_MS,
+};
 
 // Use the exported route handler to exercise the endpoint as it is served.
 // This route exports a handler record rather than a handler factory.
@@ -166,10 +171,10 @@ test.each([
     },
   ],
   [
-    "claims an implausibly short composition time",
+    "claims an implausibly short composition duration",
     {
       ...VALID_SUBMISSION,
-      elapsedMs: MIN_COMPOSE_MS - 1,
+      elapsedTimeMs: MIN_COMPOSE_DURATION_MS - 1,
     },
   ],
 ])("a submission that  %s is accepted but not delivered", async (_label, body) => {

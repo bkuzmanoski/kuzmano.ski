@@ -3,7 +3,7 @@ import type { Errors, Schema } from "#/lib/forms/validation";
 
 export const FROM_MAX_LENGTH = 254;
 export const MESSAGE_MAX_LENGTH = 4_000;
-export const MIN_COMPOSE_MS = 3_000;
+export const MIN_COMPOSE_DURATION_MS = 3_000;
 
 export interface ContactFields {
   from: string;
@@ -28,11 +28,11 @@ export const EMPTY_MESSAGE: ContactFields = { from: "", message: "" };
  * A message plus its bot trap.
  *
  * - `website` is a field only a form-filler can see.
- * - `elapsedMs` is how long the form was open, measured by the client.
+ * - `elapsedTimeMs` is how long the form was open, measured by the client.
  */
 export interface ContactSubmission extends ContactFields {
   website: string;
-  elapsedMs: number;
+  elapsedTimeMs: number;
 }
 
 export type ParsedSubmission =
@@ -50,13 +50,13 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
   const from = trimmedString(value.from, FROM_MAX_LENGTH);
   const message = trimmedString(value.message, MESSAGE_MAX_LENGTH);
   const website = trimmedString(value.website, WEBSITE_MAX_LENGTH);
-  const elapsedMs = value.elapsedMs;
+  const elapsedTimeMs = value.elapsedTimeMs;
 
-  if (from === null || message === null || website === null || typeof elapsedMs !== "number") {
+  if (from === null || message === null || website === null || typeof elapsedTimeMs !== "number") {
     return { ok: false, reason: "malformed" };
   }
 
-  if (website.length > 0 || !Number.isFinite(elapsedMs) || elapsedMs < MIN_COMPOSE_MS) {
+  if (website.length > 0 || !Number.isFinite(elapsedTimeMs) || elapsedTimeMs < MIN_COMPOSE_DURATION_MS) {
     return { ok: false, reason: "rejected" };
   }
 

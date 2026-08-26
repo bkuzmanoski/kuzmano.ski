@@ -4,8 +4,8 @@ import type { Rect } from "#/lib/geometry";
 
 import styles from "./zoom-rect.module.css";
 
-const ZOOM_RECT_ANIMATION_MS = 200;
-const ZOOM_RECT_HOLD_MS = 260;
+const ZOOM_RECT_ANIMATION_DURATION_MS = 200;
+const ZOOM_RECT_HOLD_INTERVAL_MS = 260;
 
 /**
  * The zoom-rect that grows from an icon to the window it opened. It is a sibling
@@ -57,7 +57,7 @@ export function ZoomRect({
   const finish = useEffectEvent(onDone);
 
   useEffect(() => {
-    const timer = setTimeout(finish, ZOOM_RECT_HOLD_MS);
+    const timer = setTimeout(finish, ZOOM_RECT_HOLD_INTERVAL_MS);
     const frames = start();
 
     return () => {
@@ -75,7 +75,7 @@ export function ZoomRect({
         width: box.width,
         height: box.height,
         zIndex: z,
-        transition: animate ? `all ${ZOOM_RECT_ANIMATION_MS}ms ease-out` : "none",
+        transition: animate ? `all ${ZOOM_RECT_ANIMATION_DURATION_MS}ms ease-out` : "none",
       }}
     />
   );

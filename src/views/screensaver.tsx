@@ -6,14 +6,14 @@ import { cx } from "#/lib/class-names";
 import { useIdleTimeout } from "#/lib/hooks/use-idle-timeout";
 import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion";
 import { FLOCK } from "#/lib/screensaver/flock";
-import { FADE_IN_MS, sleepOnIdle, useSleepState, wake } from "#/lib/screensaver/lifecycle";
+import { FADE_IN_DURATION_MS, sleepOnIdle, useSleepState, wake } from "#/lib/screensaver/lifecycle";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./screensaver.module.css";
 
 import type { PointerEvent } from "react";
 
-const screensaverStyle: StyleWithVars = { "--fade-in-ms": `${FADE_IN_MS}ms` };
+const screensaverStyle: StyleWithVars = { "--fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
 
 function wakeOnMovement(event: PointerEvent<HTMLDivElement>) {
   if (event.buttons === 0) {
@@ -37,11 +37,11 @@ export function Screensaver() {
       return;
     }
 
-    const listening = new AbortController();
+    const controller = new AbortController();
 
-    document.addEventListener("keydown", wake, { signal: listening.signal });
+    document.addEventListener("keydown", wake, { signal: controller.signal });
 
-    return () => listening.abort();
+    return () => controller.abort();
   }, [isDismissible]);
 
   return (

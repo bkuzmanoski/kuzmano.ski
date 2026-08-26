@@ -2,9 +2,10 @@ import { clamp } from "#/lib/math";
 
 import { playScrollDetent } from "./sounds";
 
-export const IDLE_MS = 250;
-export const DETENT_PIXELS = 12; // Content distance between detents.
-const STEP_SPEED = 450; // Fixed speed for keyboard/menu scroll steps.
+export const IDLE_DURATION_MS = 250;
+export const DETENT_PIXELS = 40; // Content distance between detents.
+
+const STEP_SPEED = 450;
 const SPEED_SMOOTHING = 0;
 
 interface ScrollGesture {
@@ -12,6 +13,7 @@ interface ScrollGesture {
   at: number;
   speed: number;
   distance: number;
+  silent: boolean;
 }
 
 const gestures = new WeakMap<Element, ScrollGesture>();
@@ -24,42 +26,51 @@ function getScrollTop(element: Element) {
 }
 
 // Start with a full detent so the first real movement sounds immediately.
-function openGesture(top: number, at: number): ScrollGesture {
-  return { top, at, speed: 0, distance: DETENT_PIXELS };
+function openGesture(top: number, at: number, silent = false): ScrollGesture {
+  return { top, at, speed: 0, distance: DETENT_PIXELS, silent };
 }
 
-/**
- * Records the current position without playing a detent.
- *
- * Use this when layout moves the viewport rather than the user scrolling it.
- */
-export function skipScrollAt(element: Element) {
+/** Records the current position without playing a detent. */
+export function recordScrollAt(element: Element) {
   gestures.set(element, openGesture(getScrollTop(element), performance.now()));
 }
 
-/**
- * Records the scroll caused by bringing `element` into view without playing it.
- *
- * `focus` and `scrollIntoView` update the viewport before returning, while the
- * resulting scroll event is asynchronous. Recording the position here prevents
- * that jump from being mistaken for user scrolling.
- */
-export function skipScrollAbove(element: Element) {
+/** Silences an element's scrolling until it settles. */
+export function silenceScrollAt(element: Element) {
+  gestures.set(element, openGesture(getScrollTop(element), performance.now(), true));
+}
+
+function forEachScrollingAncestor(element: Element, apply: (parent: Element) => void) {
   for (let parent = element.parentElement; parent; parent = parent.parentElement) {
     if (gestures.has(parent)) {
-      skipScrollAt(parent);
+      apply(parent);
     }
   }
+}
+
+/** Records every scrolling ancestor after a scroll caused by the page, without playing detents. */
+export function recordScrollIntoView(element: Element) {
+  forEachScrollingAncestor(element, recordScrollAt);
+}
+
+/**
+ * Silences every scrolling ancestor while the browser brings `element` into view.
+ *
+ * Safari animates this scroll, so it produces a series of scroll events rather than
+ * a single completed move.
+ */
+export function silenceScrollIntoView(element: Element) {
+  forEachScrollingAncestor(element, silenceScrollAt);
 }
 
 /** Brings `element` into view without sounding the scroll it causes. */
 export function scrollIntoViewSilently(element: Element, options?: Omit<ScrollIntoViewOptions, "behavior">) {
   element.scrollIntoView({ block: "nearest", ...options, behavior: "instant" });
-  skipScrollAbove(element);
+  recordScrollIntoView(element);
 }
 
 export function playScrollStep(element: Element) {
-  skipScrollAt(element);
+  recordScrollAt(element);
   playScrollDetent(STEP_SPEED);
 }
 
@@ -67,7 +78,8 @@ export function playScrollStep(element: Element) {
  * Scrolls `element` by `delta` and reports whether the viewport moved.
  *
  * A step at the end of the travel moves nothing and so makes no sound, which is why the
- * result is returned: the control that asked for the step is left to sound on its own.
+ * result is returned: the control that asked for the step is left to play audible feedback
+ * if desired.
  */
 export function stepScroll(element: Element, delta: number) {
   const initialScrollTop = element.scrollTop;
@@ -98,13 +110,18 @@ export function playScroll(element: Element) {
 
   // A long pause starts a new gesture, so saved positions and layout changes
   // do not inherit the previous gesture's accumulated distance.
-  if (elapsed > IDLE_MS) {
+  if (elapsed > IDLE_DURATION_MS) {
     gestures.set(element, openGesture(top, now));
     return;
   }
 
   gesture.top = top;
   gesture.at = now;
+
+  if (gesture.silent) {
+    return;
+  }
+
   gesture.distance += moved;
 
   if (elapsed <= 0 || moved <= 0 || gesture.distance < DETENT_PIXELS) {
@@ -123,11 +140,11 @@ export function playScroll(element: Element) {
 }
 
 /**
- * Plays a sound for scrolling an element whose own height moves the content under the reader.
+ * Plays a scroll sound unless the scroll was caused by the element resizing.
  *
- * A height that has changed since the last scroll marks the scroll as one the layout caused,
- * so it is recorded without being played. The height to watch is the caller's to choose: what
- * shifts the content differs by element, even though the response to it does not.
+ * A height change since the last scroll indicates a layout-driven scroll, which is recorded
+ * without playing a sound. The caller supplies the height to watch because the relevant
+ * element varies by context.
  */
 function playScrollUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
@@ -135,7 +152,7 @@ function playScrollUnlessResized(element: Element, heights: WeakMap<Element, num
   heights.set(element, height);
 
   if (previousHeight !== undefined && previousHeight !== height) {
-    skipScrollAt(element);
+    recordScrollAt(element);
     return;
   }
 
@@ -155,13 +172,11 @@ export function playPaneScroll(element: Element) {
 }
 
 /**
- * Plays a sound for scrolling a field whose content grows and shrinks as it is edited.
+ * Plays a sound for scrolling a field whose content grows or shrinks as it is edited.
  *
- * An edit that changes the wrapped height scrolls the caret back into view, which arrives
- * as an ordinary scroll event. `skipScrollAt` cannot be called ahead of it as it can for
- * `focus` or `scrollIntoView`: the browser scrolls the field while laying it out, after
- * the edit's effects have already run. The change in content height identifies such a
- * scroll, so it is recorded here instead.
+ * Editing can change the wrapped content height and cause the browser to scroll the caret
+ * back into view. That scroll happens after the edit, so it cannot be identified beforehand.
+ * A change in content height identifies the layout-driven scroll, which is recorded silently.
  */
 export function playFieldScroll(element: Element) {
   playScrollUnlessResized(element, contentHeights, element.scrollHeight);

@@ -1,9 +1,20 @@
-import { render, screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import { playClick } from "#/lib/audio/sounds";
 
 import { Button } from "./button";
 
 import type { RefObject } from "react";
+
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
+
+beforeEach(() => vi.mocked(playClick).mockClear());
+
+const MOUSE = { pointerType: "mouse" };
+const CLICK = { detail: 1 };
 
 test("forwards native disabled, autofocus, and accessibility props", () => {
   render(
@@ -61,4 +72,24 @@ test("both variants populate a caller-supplied ref, and the anchor still applies
   expect(buttonRef.current).toBe(screen.getByRole("button", { name: "Button" }));
   expect(linkRef.current).toBe(screen.getByRole("link", { name: "Anchor" }));
   expect(document.activeElement).toBe(linkRef.current);
+});
+
+test("a press plays a single click sound, on the press itself", () => {
+  render(<Button>Press</Button>);
+
+  const button = screen.getByRole("button", { name: "Press" });
+
+  fireEvent.pointerDown(button, MOUSE);
+  fireEvent.pointerUp(button, MOUSE);
+  fireEvent.click(button, CLICK);
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+});
+
+test("a tap whose touch pointer events do not reach the button still plays a click sound", () => {
+  render(<Button>Press</Button>);
+
+  fireEvent.click(screen.getByRole("button", { name: "Press" }), CLICK);
+
+  expect(playClick).toHaveBeenCalledTimes(1);
 });

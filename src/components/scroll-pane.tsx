@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { playPaneScroll, skipScrollAbove } from "#/lib/audio/scroll";
+import { playPaneScroll, silenceScrollIntoView } from "#/lib/audio/scroll";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 
 import styles from "./scroll-pane.module.css";
@@ -37,7 +37,7 @@ export function ScrollPane({
         data-overscrolled={overscrolledEnd}
         id={id}
         tabIndex={-1}
-        onFocus={(event) => skipScrollAbove(event.target)}
+        onFocus={(event) => silenceScrollIntoView(event.target)}
         onScroll={(event) => {
           measure();
           playPaneScroll(event.currentTarget);

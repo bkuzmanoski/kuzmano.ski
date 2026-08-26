@@ -48,6 +48,7 @@
     transform: rotate(180deg);
   }
 
+  .arrow:active &,
   &.filled {
     --color-icon-background: var(--color-icon-foreground);
   }

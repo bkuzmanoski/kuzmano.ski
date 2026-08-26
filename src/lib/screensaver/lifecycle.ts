@@ -4,11 +4,11 @@ import { createEmitter } from "../emitter";
 
 import { clearScreensaverThemeColor, setScreensaverThemeColor } from "./theme-color";
 
-export const FADE_IN_MS = 300;
+export const FADE_IN_DURATION_MS = 300;
 
 /**
- * Only `asleep` answers to input. The gesture that chose Sleep from the menu must not
- * trail into dismissing the screensaver on its way out, so `falling-asleep` ignores it.
+ * Only `asleep` responds to input. The gesture that selected Sleep from the menu must not
+ * carry through and dismiss the screensaver, so `falling-asleep` ignores input.
  */
 export type SleepState = "awake" | "falling-asleep" | "asleep";
 
@@ -36,7 +36,7 @@ function enter(next: SleepState) {
 export function sleep() {
   if (state === "awake") {
     enter("falling-asleep");
-    setTimeout(() => enter("asleep"), FADE_IN_MS); // Nothing else can leave `falling-asleep`, so this needs no guard of its own.
+    setTimeout(() => enter("asleep"), FADE_IN_DURATION_MS); // Nothing else can leave `falling-asleep`, so this needs no guard of its own.
   }
 }
 

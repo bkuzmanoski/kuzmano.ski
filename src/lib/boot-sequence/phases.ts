@@ -16,7 +16,7 @@ const PHASES = [
 export type Phase = (typeof PHASES)[number];
 
 // The motion the stylesheet animates over.
-export const MOTION_MS = {
+export const MOTION_DURATION_MS = {
   loadingCoverFade: 600,
   stageZoom: 800,
   crtWarmUp: 500,
@@ -25,24 +25,24 @@ export const MOTION_MS = {
   desktopReveal: 350, // Matches `--duration-desktop-reveal-step` in `styles.css`.
 };
 
-export type Motion = typeof MOTION_MS;
+export type Motion = typeof MOTION_DURATION_MS;
 
 // Substituted under a reduced motion preference.
-export const REDUCED_MOTION_MS: Motion = {
-  ...MOTION_MS,
+export const REDUCED_MOTION_DURATION_MS: Motion = {
+  ...MOTION_DURATION_MS,
   stageZoom: 0,
   crtWarmUp: 0,
   desktopReveal: 0,
 };
 
-export const HOLD_MS = {
+export const HOLD_DURATION_MS = {
   illustrationReveal: 400,
   stageZoom: 150,
   displayOn: 500,
   logo: 1400,
 };
 
-export const MINIMUM_LOADING_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
+export const MINIMUM_LOADING_DURATION_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
 
 export function phaseFlags(phase: Phase) {
   const step = PHASES.indexOf(phase);
@@ -62,7 +62,7 @@ export function phaseFlags(phase: Phase) {
   };
 }
 
-export const hasStageZoom = (motion: Motion) => motion.stageZoom > 0;
+export const hasStageZoom = (motionDuration: Motion) => motionDuration.stageZoom > 0;
 
 export interface Step {
   phase: Phase;
@@ -71,26 +71,26 @@ export interface Step {
 
 export const sequence = (motion: Motion) =>
   [
-    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_MS.illustrationReveal },
-    { phase: "stage-zoom", durationMs: motion.stageZoom + HOLD_MS.stageZoom },
-    { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_MS.displayOn },
-    { phase: "logo", durationMs: motion.logoDraw + HOLD_MS.logo },
+    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_DURATION_MS.illustrationReveal },
+    { phase: "stage-zoom", durationMs: motion.stageZoom + HOLD_DURATION_MS.stageZoom },
+    { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_DURATION_MS.displayOn },
+    { phase: "logo", durationMs: motion.logoDraw + HOLD_DURATION_MS.logo },
     { phase: "glass-fade", durationMs: motion.glassFade },
     { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<Step>;
 
 export function startOfPhaseMs(steps: ReadonlyArray<Step>, phase: Phase): number {
-  let elapsedMs = 0;
+  let elapsedTimeMs = 0;
 
   for (const step of steps) {
     if (step.phase === phase) {
       break;
     }
 
-    elapsedMs += step.durationMs;
+    elapsedTimeMs += step.durationMs;
   }
 
-  return elapsedMs;
+  return elapsedTimeMs;
 }
 
 export const isBeginKey = (event: KeyboardEvent) =>

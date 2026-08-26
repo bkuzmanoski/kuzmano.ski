@@ -247,15 +247,15 @@ export function Menu({
   useEffect(() => {
     menuRef.current?.focus();
 
-    const listening = new AbortController();
-    const options = { signal: listening.signal };
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
 
     document.addEventListener("pointermove", onPointerMove, options);
     document.addEventListener("pointerup", onPointerUp, options);
     document.addEventListener("pointercancel", onPointerCancel, options);
     document.addEventListener("pointerdown", onPointerDown, options);
 
-    return () => listening.abort();
+    return () => controller.abort();
   }, []);
 
   function onKeyDown(event: KeyboardEvent) {

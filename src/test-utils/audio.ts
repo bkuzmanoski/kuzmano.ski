@@ -1,25 +1,8 @@
 import { vi } from "vitest";
 
-// A bag of event handlers, such as `scrollSafeClickSoundHandlers`, spread onto an element.
-function isHandlerBag(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Object.getPrototypeOf(value) === Object.prototype &&
-    Object.values(value).length > 0 &&
-    Object.values(value).every((entry) => typeof entry === "function")
-  );
-}
-
 function stub(value: unknown): unknown {
   if (typeof value === "function") {
     return vi.fn();
-  }
-
-  // Stubbed entry by entry, so spreading the bag onto an element still leaves each
-  // handler assertable rather than reaching the real sound it would have played.
-  if (isHandlerBag(value)) {
-    return Object.fromEntries(Object.keys(value).map((name) => [name, vi.fn()]));
   }
 
   return value; // A constant the module exports which a test can assert on.

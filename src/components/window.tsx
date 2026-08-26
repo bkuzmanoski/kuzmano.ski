@@ -5,6 +5,7 @@ import CloseIcon from "#/assets/images/window-control-close.svg?react";
 import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
 import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
 import { playClick } from "#/lib/audio/sounds";
+import { usePressSound } from "#/lib/audio/use-press-sound";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { containsPoint } from "#/lib/geometry";
@@ -18,7 +19,7 @@ import { ScrollPane } from "./scroll-pane";
 import { Tooltip } from "./tooltip";
 import styles from "./window.module.css";
 
-import type { ReactNode } from "react";
+import type { PointerEvent, ReactNode } from "react";
 
 /** A known id carried by the focused window's content container to give the skip link a stable target. */
 export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
@@ -39,25 +40,28 @@ function TitleBarButton({
 }) {
   const [isPressed, setIsPressed] = useState(false);
 
+  // iOS sends the touch press to the title bar when it retargets the tap to this button.
+  // The title bar already sounds that press, so standing in for it would sound twice.
+  const pressSoundHandlers = usePressSound({ standInForMissedPress: false });
+
   return (
     <Tooltip label={label} className={cx(styles.control, className)}>
       <button
         type="button"
         aria-label={label}
         className={styles.controlButton}
-        onClick={onClick}
-        onPointerDown={(event) => {
-          event.stopPropagation();
+        {...mergeHandlers(pressSoundHandlers, {
+          onClick,
+          onPointerDown: (event: PointerEvent) => {
+            event.stopPropagation();
 
-          if (!isPrimaryPress(event)) {
-            return;
-          }
-
-          setIsPressed(true);
-          playClick();
-        }}
-        onPointerLeave={() => setIsPressed(false)}
-        onPointerUp={() => setIsPressed(false)}
+            if (isPrimaryPress(event)) {
+              setIsPressed(true);
+            }
+          },
+          onPointerLeave: () => setIsPressed(false),
+          onPointerUp: () => setIsPressed(false),
+        })}
       >
         {isPressed ? <ActiveIcon /> : icon}
       </button>

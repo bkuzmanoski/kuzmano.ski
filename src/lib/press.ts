@@ -9,14 +9,15 @@ export function isPrimaryPress(event: ReactMouseEvent | MouseEvent): boolean {
   return event.button === 0;
 }
 
+export function isPointerClick(event: ReactMouseEvent | MouseEvent): boolean {
+  return event.detail > 0;
+}
+
 /**
- * Swallows the rest of the press, including its focus change and click.
+ * Swallows the rest of the current press, including its focus change and click.
  *
- * Normalizes the handling of a press across touch and mouse, whose click targets are resolved
- * at different points in the press.
- *
- * Touch resolves the click target on release, so changes beneath the pointer can affect it;
- * mouse resolves it on press.
+ * Normalizes touch and mouse handling, whose click targets are resolved at different
+ * points in the press: touch on release, mouse on press.
  */
 export function swallowNextPress(): void {
   standDown?.();

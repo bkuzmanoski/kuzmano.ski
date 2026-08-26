@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { playFieldScroll, skipScrollAt } from "./scroll";
+import { playFieldScroll, silenceScrollAt } from "./scroll";
 
 import type { KeyboardEvent, UIEvent } from "react";
 
@@ -16,15 +16,14 @@ const CARET_SCROLL_KEYS = new Set([
 ]); // Keys whose default action can move the caret out of view, scrolling the field.
 
 /**
- * Sounds a field's own scrolling, without sounding the scroll a caret movement causes.
+ * Produces a sound for a field's own scrolling without playing a sound for caret movement.
  *
- * The field scrolls to keep the caret in view only once the key's default action runs,
- * which happens after this handler returns, so a caret-moving key only marks the scroll
- * that may follow. The mark is claimed by the next scroll event, or otherwise cleared on
- * the next frame once it is clear the key moved nothing.
+ * A key moves the caret before the browser scrolls the field, so the handler marks keys that
+ * may cause scrolling. The next scroll event consumes that mark and silences the field until
+ * scrolling settles. If no scroll occurs, the mark is cleared on the next frame.
  *
- * This lives apart from `playFieldScroll` because it holds state between two events; the
- * pane's scrolling reads everything it needs from the one event and stays a function.
+ * This is separate from `playFieldScroll` because it carries state between the key and scroll
+ * events; `playFieldScroll` can handle each scroll event independently.
  */
 export function useFieldScrollSound<T extends HTMLElement>() {
   const caretScrollRef = useRef(false);
@@ -60,7 +59,7 @@ export function useFieldScrollSound<T extends HTMLElement>() {
     onScroll: (event: UIEvent<T>) => {
       if (caretScrollRef.current) {
         caretScrollRef.current = false;
-        skipScrollAt(event.currentTarget);
+        silenceScrollAt(event.currentTarget);
         return;
       }
 

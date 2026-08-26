@@ -75,17 +75,17 @@ export function ContactBody() {
       return;
     }
 
-    const attempt = new AbortController();
+    const controller = new AbortController();
 
-    sendAttemptRef.current = attempt;
+    sendAttemptRef.current = controller;
     setIsSending(true);
 
     const result = await sendMessage(
-      { ...form.values, website: decoyFieldRef.current?.value ?? "", elapsedMs: Date.now() - openedAt },
-      attempt.signal,
+      { ...form.values, website: decoyFieldRef.current?.value ?? "", elapsedTimeMs: Date.now() - openedAt },
+      controller.signal,
     );
 
-    if (attempt.signal.aborted) {
+    if (controller.signal.aborted) {
       return;
     }
 

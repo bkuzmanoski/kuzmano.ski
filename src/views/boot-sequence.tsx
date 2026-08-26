@@ -15,9 +15,9 @@ import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle";
 import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay";
 import {
-  MINIMUM_LOADING_MS,
-  MOTION_MS,
-  REDUCED_MOTION_MS,
+  MINIMUM_LOADING_DURATION_MS,
+  MOTION_DURATION_MS,
+  REDUCED_MOTION_DURATION_MS,
   hasStageZoom,
   isBeginKey,
   phaseFlags,
@@ -113,7 +113,9 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
 function Sequence() {
   // Held for the whole run, so the durations the stylesheet animates over and the
   // timers for each phase do not disagree if the reduced motion preference changes.
-  const [motion] = useState<Motion>(() => (getPrefersReducedMotion() ? REDUCED_MOTION_MS : MOTION_MS));
+  const [motion] = useState<Motion>(() =>
+    getPrefersReducedMotion() ? REDUCED_MOTION_DURATION_MS : MOTION_DURATION_MS,
+  );
 
   const [coverContent, setCoverContent] = useState<CoverContent>("spinner");
   const [phase, setPhase] = useState<Phase>("loading");
@@ -122,12 +124,12 @@ function Sequence() {
   const keyboardImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    const resizing = new AbortController();
+    const controller = new AbortController();
     const updateMetrics = () => setMetrics(stageMetricsFor(viewportSize()));
 
-    window.addEventListener("resize", updateMetrics, { signal: resizing.signal });
+    window.addEventListener("resize", updateMetrics, { signal: controller.signal });
 
-    return () => resizing.abort();
+    return () => controller.abort();
   }, []);
 
   const schedulePhaseExecution = useEffectEvent(() => {
@@ -136,12 +138,12 @@ function Sequence() {
     setPhase(phases[0].phase);
     playBootChime({ delaySeconds: startOfPhaseMs(phases, "display-on") / 1000 });
 
-    let elapsedMs = 0;
+    let elapsedTimeMs = 0;
 
     return phases.map(({ durationMs }, index) => {
       const nextPhase: Phase = phases[index + 1]?.phase ?? "complete";
 
-      elapsedMs += durationMs;
+      elapsedTimeMs += durationMs;
 
       return setTimeout(() => {
         setPhase(nextPhase);
@@ -149,7 +151,7 @@ function Sequence() {
         if (nextPhase === "complete") {
           completeBootSequence();
         }
-      }, elapsedMs);
+      }, elapsedTimeMs);
     });
   });
 
@@ -157,16 +159,16 @@ function Sequence() {
     beginBootSequence();
 
     const timers: Array<ReturnType<typeof setTimeout>> = [];
-    const waitingForInput = new AbortController();
+    const controller = new AbortController();
 
     const loading = [
       whenFontReady(),
       whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
-      new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_MS))),
+      new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_DURATION_MS))),
     ];
 
     void Promise.all(loading).then(() => {
-      if (waitingForInput.signal.aborted) {
+      if (controller.signal.aborted) {
         return;
       }
 
@@ -178,7 +180,7 @@ function Sequence() {
       setPhase("waiting-for-input");
       setCoverContent("beginPrompt");
 
-      const eventListenerOptions = { capture: true, signal: waitingForInput.signal };
+      const eventListenerOptions = { capture: true, signal: controller.signal };
 
       document.addEventListener("keydown", onKeyDown, eventListenerOptions);
       document.addEventListener("pointerup", runSequence, eventListenerOptions);
@@ -192,12 +194,12 @@ function Sequence() {
 
     function runSequence() {
       primeAudio();
-      waitingForInput.abort();
+      controller.abort();
       timers.push(...schedulePhaseExecution());
     }
 
     return () => {
-      waitingForInput.abort();
+      controller.abort();
       timers.forEach(clearTimeout);
       clearBootSequenceThemeColor();
     };

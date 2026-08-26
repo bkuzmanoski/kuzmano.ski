@@ -36,11 +36,11 @@ test("an email address stored by an earlier window is returned without a request
 });
 
 test("an abort signal is passed to the request", async () => {
-  const attempt = new AbortController();
+  const controller = new AbortController();
 
-  await readContactEmailAddress(attempt.signal);
+  await readContactEmailAddress(controller.signal);
 
-  expect(fetchMock.mock.calls[0]![1]?.signal).toBe(attempt.signal);
+  expect(fetchMock.mock.calls[0]![1]?.signal).toBe(controller.signal);
 });
 
 test.each([

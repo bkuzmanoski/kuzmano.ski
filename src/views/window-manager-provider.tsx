@@ -105,7 +105,7 @@ export function WindowManagerProvider({
 
   const syncUrlToFocus = useEffectEvent((focusedRoute: string | null, notFoundRoute: string | null) => {
     if (notFoundRoute !== null) {
-      return; // The not-found route owns the URL until dismissal clears `notFoundRoute`.
+      return; // The not-found route owns the URL until its alert is dismissed.
     }
 
     const route = focusedRoute ?? "/";

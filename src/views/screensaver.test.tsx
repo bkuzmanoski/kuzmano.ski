@@ -1,7 +1,7 @@
 import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { FADE_IN_MS, sleep, wake } from "#/lib/screensaver/lifecycle";
+import { FADE_IN_DURATION_MS, sleep, wake } from "#/lib/screensaver/lifecycle";
 
 import { Screensaver } from "./screensaver";
 
@@ -17,7 +17,7 @@ afterEach(() => {
 
 const fadeIn = () =>
   act(() => {
-    vi.advanceTimersByTime(FADE_IN_MS);
+    vi.advanceTimersByTime(FADE_IN_DURATION_MS);
   });
 
 function raise() {

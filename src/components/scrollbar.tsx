@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ArrowIcon from "#/assets/images/scroll-arrow.svg?react";
 import { stepScroll } from "#/lib/audio/scroll";
@@ -7,18 +7,17 @@ import { cx } from "#/lib/class-names";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { useTimer } from "#/lib/hooks/use-timer";
-import { isActivationKey } from "#/lib/keys";
 import { clamp } from "#/lib/math";
-import { isPrimaryPress } from "#/lib/press";
+import { isPointerClick, isPrimaryPress } from "#/lib/press";
 import type { StyleWithVars } from "#/lib/style";
 
 import styles from "./scrollbar.module.css";
 
-import type { ReactNode, PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 
-const STEP = 40;
-const REPEAT_DELAY_MS = 400; // The hold a repeat waits out. An ordinary click outlasts the interval below, so without this it steps twice.
-const REPEAT_MS = 90;
+export const ARROW_STEP_PX = 40;
+export const ARROW_STEP_REPEAT_INTERVAL_MS = 70;
+export const ARROW_STEP_REPEAT_DELAY_MS = 400; // Delay repeating so an ordinary press does not step twice.
 
 function ScrollArrow({
   direction,
@@ -31,69 +30,85 @@ function ScrollArrow({
 }) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimer = useTimer();
+  const arrowRef = useRef<HTMLButtonElement>(null);
+  const hasUnconsumedPressRef = useRef(false);
+  const holdControllerRef = useRef<AbortController | null>(null);
 
-  // Also run on unmount, so the repeat is cancelled if the scrollbar goes away mid-press.
-  function stop() {
+  // Keep the hold alive until the pointer is released, even if it leaves the arrow's bounds.
+  function endHold(event: PointerEvent) {
+    holdControllerRef.current?.abort();
+    holdControllerRef.current = null;
+
+    // A click event only follows a release on the arrow. If the release happens elsewhere,
+    // the press has no click to consume it, so it must not affect the next activation.
+    const wasReleasedOnArrow = event.target instanceof Node && arrowRef.current?.contains(event.target);
+
+    if (event.type === "pointercancel" || !wasReleasedOnArrow) {
+      hasUnconsumedPressRef.current = false;
+    }
+
     setIsPressed(false);
     repeatTimer.cancel();
   }
 
-  // The scroll itself carries the sound so press at the end of the travel has to be heard on its own.
+  function beginHold() {
+    const holdController = new AbortController();
+
+    holdControllerRef.current?.abort();
+    holdControllerRef.current = holdController;
+
+    window.addEventListener("pointerup", endHold, { signal: holdController.signal });
+    window.addEventListener("pointercancel", endHold, { signal: holdController.signal });
+  }
+
+  // The scrollbar can unmount while the pointer is held, so the window listener must also be removed.
+  useEffect(() => () => holdControllerRef.current?.abort(), []);
+
+  // A successful step plays its own sound. At the scroll boundary, where no step occur a click is played to indicate the press was received.
   function step(isRepeat = false) {
     if (!onStep() && !isRepeat) {
       playClick();
     }
   }
 
-  // A held arrow waits out `REPEAT_DELAY_MS` before it starts repeating, then repeats
-  // every `REPEAT_MS`. One timer rescheduling itself keeps the two rates to one handle,
-  // so a release cancels whichever is pending.
-  function scheduleRepeat(delay: number) {
+  function startRepeating() {
     const repeat = () => {
       step(true);
-      repeatTimer.start(repeat, REPEAT_MS);
+      repeatTimer.start(repeat, ARROW_STEP_REPEAT_INTERVAL_MS);
     };
 
-    repeatTimer.start(repeat, delay);
-  }
-
-  function start(event: ReactPointerEvent) {
-    if (!isPrimaryPress(event)) {
-      return;
-    }
-
-    setIsPressed(true);
-    step();
-    scheduleRepeat(REPEAT_DELAY_MS);
+    repeatTimer.start(repeat, ARROW_STEP_REPEAT_DELAY_MS);
   }
 
   return (
     <button
+      ref={arrowRef}
       type="button"
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
       tabIndex={hidden ? -1 : undefined}
       className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
-      onBlur={stop}
-      onKeyDown={(event) => {
-        if (!isActivationKey(event.key)) {
+      // Keyboard activation produces a click without a preceding pointer press, so it steps
+      // here. A pointer click belongs to the press that already stepped on pointerdown and
+      // only needs to clear that press. iOS can deliver a tap's click without its touch
+      // pointer events reaching the arrow, so such a click must step here too.
+      onClick={(event) => {
+        if (!isPointerClick(event) || !hasUnconsumedPressRef.current) {
+          step();
+        }
+
+        hasUnconsumedPressRef.current = false;
+      }}
+      onPointerDown={(event) => {
+        if (!isPrimaryPress(event)) {
           return;
         }
 
-        // Held down, the key repeat drives the repeat, so no timer is started here.
-        // The default is suppressed because both keys raise a click of their own,
-        // which would step the viewport a second time for every press.
-        event.preventDefault();
+        hasUnconsumedPressRef.current = true;
+        beginHold();
         setIsPressed(true);
-        step(event.repeat);
+        step();
+        startRepeating();
       }}
-      onKeyUp={(event) => {
-        if (isActivationKey(event.key)) {
-          stop();
-        }
-      }}
-      onPointerDown={start}
-      onPointerLeave={stop}
-      onPointerUp={stop}
     >
       <ArrowIcon className={cx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)} />
     </button>
@@ -131,10 +146,14 @@ export function Scrollbar({
 
   const thumbHandlers = usePointerDrag({
     preventDefault: true,
-    start: () => ({
-      top: metrics.top,
-      travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
-    }),
+    start: () => {
+      playClick();
+
+      return {
+        top: metrics.top,
+        travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
+      };
+    },
     onDragMove: (delta, from) => {
       if (viewportRef.current && from.travel > 0) {
         viewportRef.current.scrollTop = from.top + (delta.dy / from.travel) * range;
@@ -147,10 +166,8 @@ export function Scrollbar({
   const isCollapsed = !overflow && !resizeControl;
 
   return (
-    // The state is an attribute rather than a class so that the pane around it can
-    // read it and hand the width back to its content (see `window.module.css`).
     <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
-      <ScrollArrow direction="up" hidden={!overflow} onStep={() => step(-STEP)} />
+      <ScrollArrow direction="up" hidden={!overflow} onStep={() => step(-ARROW_STEP_PX)} />
       <div
         ref={trackRef}
         aria-controls={viewportId}
@@ -165,7 +182,7 @@ export function Scrollbar({
       >
         {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>
-      <ScrollArrow direction="down" hidden={!overflow} onStep={() => step(STEP)} />
+      <ScrollArrow direction="down" hidden={!overflow} onStep={() => step(ARROW_STEP_PX)} />
       {resizeControl}
     </div>
   );

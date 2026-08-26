@@ -132,24 +132,3 @@ export function playError() {
 export function playSuccess() {
   playSound((context) => playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME, level: SUCCESS_LEVEL }));
 }
-
-/**
- * Sounds a click only when a press does not become a scroll.
- *
- * A touch press may still become one, so the click waits for the release. If the browser
- * takes the gesture for panning, it fires `pointercancel` instead of `pointerup`, so the
- * click is never played. Mouse and pen presses cannot become a scroll, so they sound on
- * the way down.
- */
-export const scrollSafeClickSoundHandlers = {
-  onPointerDown: ({ pointerType }: { pointerType: string }) => {
-    if (pointerType !== "touch") {
-      playClick();
-    }
-  },
-  onPointerUp: ({ pointerType }: { pointerType: string }) => {
-    if (pointerType === "touch") {
-      playClick();
-    }
-  },
-};

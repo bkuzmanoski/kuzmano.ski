@@ -13,11 +13,13 @@ import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/na
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
 import { playClick } from "#/lib/audio/sounds";
+import { usePressSound } from "#/lib/audio/use-press-sound";
 import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
 import { cycle } from "#/lib/math";
+import { mergeHandlers } from "#/lib/merge-handlers";
 import { isPrimaryPress } from "#/lib/press";
 import { sleep } from "#/lib/screensaver/lifecycle";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
@@ -46,14 +48,15 @@ function StatusButton({
   onClick: () => void;
   children: ReactNode;
 }) {
+  const pressSoundHandlers = usePressSound();
+
   return (
     <Tooltip label={label} persistOnPress={persistTooltipOnPress} className={styles.statusItemTooltipWrapper}>
       <button
         type="button"
         aria-label={label}
         className={cx(styles.control, className)}
-        onClick={onClick}
-        onPointerDown={playClick}
+        {...mergeHandlers(pressSoundHandlers, { onClick })}
       >
         {children}
       </button>

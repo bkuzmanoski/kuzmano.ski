@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { FADE_IN_MS, sleep, sleepOnIdle, useSleepState, wake } from "./lifecycle";
+import { FADE_IN_DURATION_MS, sleep, sleepOnIdle, useSleepState, wake } from "./lifecycle";
 
 const themeColors = () => document.querySelectorAll('meta[data-screensaver-theme-color][name="theme-color"]');
 
@@ -20,7 +20,7 @@ function openAlert() {
 
 function completeFadeIn() {
   act(() => {
-    vi.advanceTimersByTime(FADE_IN_MS);
+    vi.advanceTimersByTime(FADE_IN_DURATION_MS);
   });
 }
 

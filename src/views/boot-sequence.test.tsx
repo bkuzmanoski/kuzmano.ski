@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import type * as AudioContext from "#/lib/audio/context";
 import type * as AudioSounds from "#/lib/audio/sounds";
-import { MINIMUM_LOADING_MS } from "#/lib/boot-sequence/phases";
+import { MINIMUM_LOADING_DURATION_MS } from "#/lib/boot-sequence/phases";
 
 import { BootSequence } from "./boot-sequence";
 
@@ -30,7 +30,7 @@ async function renderWaitingForInput() {
   const view = render(<BootSequence />);
 
   await act(async () => {
-    vi.advanceTimersByTime(MINIMUM_LOADING_MS);
+    vi.advanceTimersByTime(MINIMUM_LOADING_DURATION_MS);
     await Promise.resolve();
   });
 
