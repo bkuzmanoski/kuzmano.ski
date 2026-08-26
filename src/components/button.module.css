@@ -70,8 +70,8 @@
       &::before {
         content: "";
         position: absolute;
-        inset-block: -2px;
-        inset-inline: -2px;
+        inset-block: -4px;
+        inset-inline: -4px;
       }
     }
   }
