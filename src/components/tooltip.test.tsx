@@ -43,7 +43,7 @@ const advance = (ms: number) =>
     vi.advanceTimersByTime(ms);
   });
 
-/** The pointer sequence iOS Safari dispatches for a tap, including its synthesized mouse pointer. */
+// The pointer sequence iOS Safari dispatches for a tap, including the synthesized mouse events.
 function tap(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
@@ -53,8 +53,8 @@ function tap(wrapper: Element) {
   fireEvent.click(wrapper);
 }
 
-/** A tap where the synthesized mouse pointer enters after the touch sequence completes. */
-function tapWithLateMouse(wrapper: Element) {
+// A tap where the synthesized mouse events arrive after the touch sequence.
+function tapWithMousePointerAfterTouch(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
   fireEvent.pointerUp(wrapper, TOUCH);
@@ -215,7 +215,7 @@ test("a mouse press does not start the tap dismissal", () => {
 test("a tap still dismisses itself when the synthesised mouse pointer arrives late", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
-  tapWithLateMouse(wrapper);
+  tapWithMousePointerAfterTouch(wrapper);
   relabel("New Tip");
 
   expect(tip()).not.toBeNull();
@@ -262,7 +262,7 @@ test("a tooltip left open when it is suppressed does not return once suppression
 test("a late synthesised mouse pointer does not show the tooltip when the press leaves the state unchanged", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
-  tapWithLateMouse(wrapper); // The press leaves the label as it was, so nothing should be shown.
+  tapWithMousePointerAfterTouch(wrapper); // The press leaves the label as it was, so nothing should be shown.
   advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
