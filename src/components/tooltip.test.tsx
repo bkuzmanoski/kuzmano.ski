@@ -63,7 +63,7 @@ function tapWithMousePointerAfterTouch(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, MOUSE);
 }
 
-test("hovering shows the tooltip after the delay, and leaving hides it", () => {
+test("hovering shows the tooltip after the delay, and a pointer leaving hides it", () => {
   const { wrapper } = renderTooltip();
 
   fireEvent.pointerEnter(wrapper, MOUSE);
@@ -119,7 +119,7 @@ test("a tapped tooltip hides itself without further input", () => {
   expect(tip()).toBeNull();
 });
 
-test("the dismissal delay runs from when the tooltip appears, not from the tap", () => {
+test("the dismissal delay starts when the tooltip appears, not when the tap occurs", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
@@ -179,7 +179,7 @@ test("tapping again holds the tooltip visible even when the label does not chang
   expect(tip()).toBeNull();
 });
 
-test("a cancelled touch takes the tooltip down rather than stranding it", () => {
+test("a cancelled touch event hides the tooltip", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
@@ -196,7 +196,7 @@ test("a cancelled touch takes the tooltip down rather than stranding it", () => 
   expect(tip()).toBeNull();
 });
 
-test("a mouse press does not start the tap dismissal", () => {
+test("a mouse press does not start the tap dismissal timer", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   fireEvent.pointerEnter(wrapper, MOUSE);
@@ -212,7 +212,7 @@ test("a mouse press does not start the tap dismissal", () => {
   expect(tip()).toBeNull();
 });
 
-test("a tap still dismisses itself when the synthesised mouse pointer arrives late", () => {
+test("a tap still dismisses the tooltip if a synthesized mouse event arrives after it", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
   tapWithMousePointerAfterTouch(wrapper);
@@ -221,6 +221,15 @@ test("a tap still dismisses itself when the synthesised mouse pointer arrives la
   expect(tip()).not.toBeNull();
 
   advance(TAP_DISMISS_MS);
+
+  expect(tip()).toBeNull();
+});
+
+test("a synthesized mouse event that arrives following a tap does not show the tooltip when the press leaves the state unchanged", () => {
+  const { wrapper } = renderTooltip({ persistOnPress: true });
+
+  tapWithMousePointerAfterTouch(wrapper); // The press leaves the label as it was, so nothing should be shown.
+  advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -242,7 +251,7 @@ test("a control with nothing to describe does not show a tooltip", () => {
   expect(tip()).toBeNull();
 });
 
-test("a tooltip left open when it is suppressed does not return once suppression lifts", () => {
+test("a tooltip that is open when it is suppressed does not return once its suppression is removed", () => {
   const { wrapper, suppress } = renderTooltip({ label: "Next" });
 
   fireEvent.pointerEnter(wrapper, MOUSE);
@@ -255,15 +264,6 @@ test("a tooltip left open when it is suppressed does not return once suppression
   expect(tip()).toBeNull();
 
   suppress(false);
-
-  expect(tip()).toBeNull();
-});
-
-test("a late synthesised mouse pointer does not show the tooltip when the press leaves the state unchanged", () => {
-  const { wrapper } = renderTooltip({ persistOnPress: true });
-
-  tapWithMousePointerAfterTouch(wrapper); // The press leaves the label as it was, so nothing should be shown.
-  advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
