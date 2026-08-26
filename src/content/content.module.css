@@ -53,6 +53,8 @@
 
   & :where(a:not([data-heading-link])) {
     text-decoration: underline;
+
+    -webkit-touch-callout: default;
   }
 
   & :where([data-heading-link]) {

@@ -14,8 +14,6 @@
   color: var(--color-highlight-background);
   text-align: center;
 
-  -webkit-touch-callout: none;
-
   & .glyph,
   & .label {
     pointer-events: none;
