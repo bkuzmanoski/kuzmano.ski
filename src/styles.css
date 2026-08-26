@@ -39,7 +39,7 @@
   --font-ui: 15px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-bold: bold 15px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-large-line-height: 26px;
-  --font-ui-large: 17px/var(--font-ui-large-line-height) var(--font-family-ui);
+  --font-ui-large: 16.5px/var(--font-ui-large-line-height) var(--font-family-ui);
 
   /* Colors */
   --color-accent: light-dark(#3378a3, #61abda);
