@@ -11,6 +11,7 @@ const TAP_DISMISS_MS = 1_500;
 
 const MOUSE = { pointerType: "mouse" };
 const TOUCH = { pointerType: "touch" };
+const CLICK = { detail: 1 }; // A click a pointer sent, as opposed to a keyboard activation.
 
 function renderTooltip({ label = "Tip", suppressed = false, persistOnPress = false } = {}) {
   let props = { label, suppressed };
@@ -43,24 +44,33 @@ const advance = (ms: number) =>
     vi.advanceTimersByTime(ms);
   });
 
-// The pointer sequence iOS Safari dispatches for a tap, including the synthesized mouse events.
+// The pointer sequence iOS Safari dispatches for a tap, including the synthesized mouse event.
 function tap(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
   fireEvent.pointerEnter(wrapper, MOUSE);
   fireEvent.pointerUp(wrapper, TOUCH);
   fireEvent.pointerLeave(wrapper, TOUCH);
-  fireEvent.click(wrapper);
+  fireEvent.click(wrapper, CLICK);
 }
 
-// A tap where the synthesized mouse events arrive after the touch sequence.
-function tapWithMousePointerAfterTouch(wrapper: Element) {
+// A tap where the synthesized mouse event arrives after the touch sequence.
+function tapWithLateMouseEvent(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
   fireEvent.pointerUp(wrapper, TOUCH);
   fireEvent.pointerLeave(wrapper, TOUCH);
-  fireEvent.click(wrapper);
+  fireEvent.click(wrapper, CLICK);
   fireEvent.pointerEnter(wrapper, MOUSE);
+}
+
+/**
+ * A tap iOS moves onto the control from just outside it. Only the synthesized mouse events and
+ * the click follow the control; the touch's own pointer events went where the finger landed.
+ */
+function tapAdjustedOntoControl(wrapper: Element) {
+  fireEvent.pointerEnter(wrapper, MOUSE);
+  fireEvent.click(wrapper, CLICK);
 }
 
 test("hovering shows the tooltip after the delay, and a pointer leaving hides it", () => {
@@ -203,6 +213,7 @@ test("a mouse press does not start the tap dismissal timer", () => {
   advance(HOVER_DELAY_MS);
   fireEvent.pointerDown(wrapper, MOUSE);
   fireEvent.pointerUp(wrapper, MOUSE);
+  fireEvent.click(wrapper, CLICK);
   advance(TAP_DISMISS_MS);
 
   expect(tip()).not.toBeNull();
@@ -215,7 +226,7 @@ test("a mouse press does not start the tap dismissal timer", () => {
 test("a tap still dismisses the tooltip if a synthesized mouse event arrives after it", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
-  tapWithMousePointerAfterTouch(wrapper);
+  tapWithLateMouseEvent(wrapper);
   relabel("New Tip");
 
   expect(tip()).not.toBeNull();
@@ -228,7 +239,7 @@ test("a tap still dismisses the tooltip if a synthesized mouse event arrives aft
 test("a synthesized mouse event that arrives following a tap does not show the tooltip when the press leaves the state unchanged", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
-  tapWithMousePointerAfterTouch(wrapper); // The press leaves the label as it was, so nothing should be shown.
+  tapWithLateMouseEvent(wrapper); // The press leaves the label as it was, so nothing should be shown.
   advance(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
@@ -264,6 +275,28 @@ test("a tooltip that is open when it is suppressed does not return once its supp
   expect(tip()).toBeNull();
 
   suppress(false);
+
+  expect(tip()).toBeNull();
+});
+
+test("a tap iOS moves onto the control still reports the press", () => {
+  const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
+
+  tapAdjustedOntoControl(wrapper);
+  relabel("New Tip");
+
+  expect(tip()?.textContent).toBe("New Tip");
+
+  advance(TAP_DISMISS_MS);
+
+  expect(tip()).toBeNull();
+});
+
+test("a keyboard activation does not report a press", () => {
+  const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
+
+  fireEvent.click(wrapper); // A keyboard-driven click carries no detail.
+  relabel("New Tip");
 
   expect(tip()).toBeNull();
 });
