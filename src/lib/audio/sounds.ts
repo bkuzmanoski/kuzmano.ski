@@ -8,7 +8,7 @@ import type { Tone } from "./tone";
 const CLICK: Strike = {
   durationSeconds: 0.015,
   seed: 0x5eed1e5,
-  toneHz: 2000,
+  toneHz: 3000,
   toneQ: 1.2,
   dampingHz: 5000,
   attackSeconds: 0.0002,
@@ -16,12 +16,12 @@ const CLICK: Strike = {
   fadeSeconds: 0.002,
 };
 
-// Shared by hover and by the scroll detents.
+// Shared by hover and the scroll detents.
 const DETENT: Strike = {
-  durationSeconds: 0.008,
+  durationSeconds: 0.01,
   seed: 0xfee1e7,
-  toneHz: 6400,
-  toneQ: 0.9,
+  toneHz: 7000,
+  toneQ: 1.0,
   dampingHz: 9000,
   attackSeconds: 0.0001,
   decaySeconds: 0.0012,
@@ -58,13 +58,13 @@ const SUCCESS: Tone = {
   fadeSeconds: 0.02,
 };
 
-const HOVER_LEVEL = 0.22;
 const HOVER_INTERVAL_S = 0.03;
+const HOVER_LEVEL = 0.22;
 
-const SCROLL_DETENT_FULL_SPEED = 2200; // The speed, in pixels per second, at which a detent is at full strength.
-const SCROLL_DETENT_LEVEL = { quiet: 0.3, loud: 0.45 };
-const SCROLL_DETENT_RATE = { slow: 0.92, fast: 1.08 };
-const SCROLL_DETENT_INTERVAL_S = 0.018;
+const SCROLL_DETENT_INTERVAL_S = 0.03;
+const SCROLL_DETENT_FULL_SPEED = 2000; // The speed, in pixels per second, at which a detent is at full strength.
+const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.3 };
+const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
 
 const BOOT_CHIME_LEVEL = 0.5;
 const ERROR_LEVEL = 0.5;

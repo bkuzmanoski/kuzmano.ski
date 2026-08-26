@@ -5,7 +5,7 @@ import { playScrollDetent } from "./sounds";
 export const IDLE_MS = 250;
 export const DETENT_PIXELS = 12; // Content distance between detents.
 const STEP_SPEED = 450; // Fixed speed for keyboard/menu scroll steps.
-const SPEED_SMOOTHING = 0.5;
+const SPEED_SMOOTHING = 0;
 
 interface ScrollGesture {
   top: number;

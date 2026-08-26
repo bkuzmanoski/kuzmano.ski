@@ -43,7 +43,7 @@ const advance = (ms: number) =>
     vi.advanceTimersByTime(ms);
   });
 
-/** The sequence iOS Safari dispatches for a tap, synthesised mouse pointer and all. */
+/** The pointer sequence iOS Safari dispatches for a tap, including its synthesized mouse pointer. */
 function tap(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
@@ -53,7 +53,7 @@ function tap(wrapper: Element) {
   fireEvent.click(wrapper);
 }
 
-/** The same tap where the synthesised mouse pointer arrives after the press instead. */
+/** A tap where the synthesized mouse pointer enters after the touch sequence completes. */
 function tapWithLateMouse(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
