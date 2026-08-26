@@ -15,7 +15,7 @@ const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. 
 
 type State = "idle" | "copying" | "copied" | "failed";
 
-/** A `null` value means the text is not available yet, and the button waits for it. */
+/** The button is disabled until the value is available. */
 export function CopyButton({
   value,
   entity,
