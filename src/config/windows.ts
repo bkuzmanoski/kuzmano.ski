@@ -1,7 +1,7 @@
 import type { Size } from "#/lib/geometry";
 import type { WindowLayout } from "#/lib/window-manager";
 
-const MIN_SIZE: Size = { width: 320, height: 188 };
+const MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (will be clamped by `padding` below).
 
 export const LAYOUT: WindowLayout = {
   windows: {

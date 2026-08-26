@@ -114,7 +114,9 @@
 
 /* A short viewport only means "no room" on a phone in landscape; a desktop window can be short
  * and still plenty wide. `pointer` describes the primary input rather than any attached one,
- * so this holds on a tablet with a mouse and does not affect a touchscreen laptop. */
+ * so this holds on a tablet with a mouse and does not affect a touchscreen laptop
+ *
+ * 744px is the horizontal resolution of an iPad mini in portrait. */
 @media (width < 744px), ((height < 744px) and (pointer: coarse)) {
   .wideOnly {
     display: none;
