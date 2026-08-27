@@ -74,6 +74,38 @@ function renderTooltipGroup() {
   return { first: wrapperOf("First"), second: wrapperOf("Second"), elsewhere: container.lastElementChild! };
 }
 
+function renderStateControls() {
+  let props = { first: false, second: false, third: false };
+
+  const view = () => (
+    <span>
+      <Tooltip label="First" showsState={props.first}>
+        <button type="button">First</button>
+      </Tooltip>
+      <Tooltip label="Second" showsState={props.second}>
+        <button type="button">Second</button>
+      </Tooltip>
+      <Tooltip label="Third" showsState={props.third}>
+        <button type="button">Third</button>
+      </Tooltip>
+    </span>
+  );
+
+  const { rerender } = render(view());
+
+  const update = (next: Partial<typeof props>) =>
+    act(() => {
+      props = { ...props, ...next };
+      rerender(view());
+    });
+
+  return {
+    showFirst: () => update({ first: true }),
+    showSecond: () => update({ second: true }),
+    showThird: () => update({ third: true }),
+  };
+}
+
 const tip = () => screen.queryByRole("tooltip");
 
 const advance = (ms: number) =>
@@ -500,4 +532,30 @@ test("a tooltip shown during a tap remains visible after the synthesized mouse e
   advance(HIDE_DELAY_MS);
 
   expect(tip()?.textContent).toBe("Tip");
+});
+
+test("showing state on one control replaces the tooltip shown by another", () => {
+  const { showFirst, showSecond } = renderStateControls();
+
+  showFirst();
+
+  expect(tip()?.textContent).toBe("First");
+
+  showSecond();
+
+  expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  expect(tip()?.textContent).toBe("Second");
+});
+
+// The tooltip that is being replaced is deregistered as it is hidden. That must not
+// deregister the tooltip that replaced it.
+test("replacing a tooltip leaves the replacement registered", () => {
+  const { showFirst, showSecond, showThird } = renderStateControls();
+
+  showFirst();
+  showSecond();
+  showThird();
+
+  expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  expect(tip()?.textContent).toBe("Third");
 });

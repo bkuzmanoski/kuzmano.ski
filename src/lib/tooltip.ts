@@ -10,6 +10,7 @@ export const STATE_DISPLAY_DURATION_MS = 1_200;
 
 let groupInGracePeriod: Element | null = null;
 let gracePeriodTimeout: ReturnType<typeof setTimeout> | undefined;
+let shownTooltip: { id: string; hideAction: () => void } | null = null;
 let pendingHideAction: (() => void) | null = null;
 let hideTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -24,6 +25,28 @@ export function resetGroupGracePeriod(wrapper: Element | null) {
 export function startGroupGracePeriod() {
   clearTimeout(gracePeriodTimeout);
   gracePeriodTimeout = setTimeout(() => (groupInGracePeriod = null), GRACE_PERIOD_MS);
+}
+
+/**
+ * Records the tooltip on screen, hiding whichever was there before it.
+ *
+ * A tooltip a control shows to report its own state appears without a pointer having travelled to
+ * it, so there is no hand-over to take the previous one down. Without this, two controls tapped in
+ * turn would overlap.
+ */
+export function registerShownTooltip(id: string, hideAction: () => void) {
+  if (shownTooltip !== null && shownTooltip.id !== id) {
+    shownTooltip.hideAction();
+  }
+
+  shownTooltip = { id, hideAction };
+}
+
+/** Ignores a tooltip that has since been replaced, so it cannot clear its replacement. */
+export function unregisterShownTooltip(id: string) {
+  if (shownTooltip?.id === id) {
+    shownTooltip = null;
+  }
 }
 
 /**
@@ -50,6 +73,8 @@ export function hideAfterDelay(hideAction: () => void) {
 export function resetTooltipState() {
   clearTimeout(gracePeriodTimeout);
   clearTimeout(hideTimeout);
+
+  shownTooltip = null;
   groupInGracePeriod = null;
   pendingHideAction = null;
 }

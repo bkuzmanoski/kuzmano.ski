@@ -5,9 +5,11 @@ import { useTimer } from "#/lib/hooks/use-timer";
 import {
   hideAfterDelay,
   isGroupInGracePeriod,
+  registerShownTooltip,
   resetGroupGracePeriod,
   runPendingHideAction,
   startGroupGracePeriod,
+  unregisterShownTooltip,
 } from "#/lib/tooltip";
 
 import styles from "./tooltip.module.css";
@@ -63,13 +65,15 @@ export function Tooltip({
       return;
     }
 
+    registerShownTooltip(id, () => setIsOpen(false));
     resetGroupGracePeriod(wrapperRef.current);
 
     return () => {
+      unregisterShownTooltip(id);
       startGroupGracePeriod();
       reportHidden();
     };
-  }, [isVisible]);
+  }, [isVisible, id]);
 
   function show(delay: number) {
     timer.cancel();
