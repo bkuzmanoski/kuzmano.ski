@@ -20,10 +20,6 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
 
   return (
     <div className={styles.toolbar}>
-      <nav aria-label="Entry" className={styles.controls}>
-        <NavigationButton variant="previous" label="Previous entry" route={previous} />
-        <NavigationButton variant="next" label="Next entry" route={next} />
-      </nav>
       <div className={styles.meta}>
         {frontmatter?.category && <span className={styles.category}>{frontmatter.category}</span>}
         {frontmatter && (
@@ -32,6 +28,10 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
           </time>
         )}
       </div>
+      <nav aria-label="Entry" className={styles.controls}>
+        <NavigationButton variant="previous" label="Previous entry" route={previous} />
+        <NavigationButton variant="next" label="Next entry" route={next} />
+      </nav>
     </div>
   );
 }
