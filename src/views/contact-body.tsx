@@ -178,7 +178,7 @@ export function ContactBody() {
                 />
               }
             >
-              {CONTACT_DISPLAY_NAME}
+              {contactEmailAddress ?? CONTACT_DISPLAY_NAME}
             </ComposeValue>
             <ComposeField label="From:" field={fromField}>
               <TextInput
