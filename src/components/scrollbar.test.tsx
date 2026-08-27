@@ -39,7 +39,6 @@ function renderPane() {
 
   const viewport = document.getElementById("pane")!;
   const track = screen.getByRole("scrollbar");
-  const thumb = track.firstElementChild as HTMLElement;
 
   Object.defineProperty(viewport, "scrollHeight", { value: 1000, configurable: true });
   Object.defineProperty(viewport, "clientHeight", { value: 100, configurable: true });
@@ -49,6 +48,8 @@ function renderPane() {
   }) as typeof viewport.scrollBy;
 
   fireEvent.scroll(viewport); // Report the metrics, so the scrollbar sees the overflow.
+
+  const thumb = track.firstElementChild as HTMLElement; // The thumb only renders once the reported metrics show the overflow; query after the scroll.
 
   Object.defineProperty(track, "clientHeight", { value: TRACK_HEIGHT, configurable: true });
   Object.defineProperty(thumb, "clientHeight", { value: THUMB_HEIGHT, configurable: true });

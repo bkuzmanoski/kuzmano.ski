@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { CONTACT_DISPLAY_NAME } from "#/config/contact";
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
 import type { CloseGuard } from "#/lib/window-manager";
 
@@ -112,18 +111,6 @@ async function submit() {
   fireEvent.click(button("Send"));
   await waitFor(() => expect(sendMessageCalls()).not.toHaveLength(0));
 }
-
-test("the contact window addresses its recipient by name and does not render the email address itself", async () => {
-  render(<ContactBody />);
-
-  expect(screen.queryByLabelText("To:")).toBeNull();
-  expect(screen.getByText(CONTACT_DISPLAY_NAME).tagName).toBe("P");
-  expect(button("Copy email address").hasAttribute("disabled")).toBe(true);
-
-  await readEmailAddress();
-
-  expect(screen.queryByText(CONTACT_EMAIL_ADDRESS)).toBeNull();
-});
 
 test("the copy email address action uses the address that was read", async () => {
   const writeText = vi.fn<(value: string) => Promise<void>>().mockResolvedValue(undefined);

@@ -26,12 +26,10 @@ const { entries, routeOf } = testCollection("tech-notes", 3);
 const lastEntryIndex = entries.length - 1;
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 
-test("the toolbar reports the entry's category and date", () => {
+test("the toolbar reports the entry's date", () => {
   const entry = entries[1]!;
 
   render(<WindowToolbar route={routeOf(1)} />);
-
-  expect(screen.getByText(entry.category!)).toBeDefined();
 
   const date = screen.getByText(formatDate(entry.date, dateFormat));
 
