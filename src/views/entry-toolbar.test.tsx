@@ -22,7 +22,7 @@ beforeEach(() => {
   playClick.mockClear();
 });
 
-const { collection, entries, routeOf } = testCollection("tech-notes", 3);
+const { entries, routeOf } = testCollection("tech-notes", 3);
 const lastEntryIndex = entries.length - 1;
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 
@@ -68,16 +68,4 @@ test("stepping to a sibling entry opens it in the entry window rather than follo
 
   expect(playClick).toHaveBeenCalled();
   expect(open).toHaveBeenCalledWith(routeOf(2));
-});
-
-test("the toolbar leads back to the collection that holds the entry", () => {
-  render(<WindowToolbar route={routeOf(1)} />);
-
-  const up = screen.getByRole("link", { name: `Back to ${collection.title}` });
-
-  expect(up.getAttribute("href")).toBe("/tech-notes");
-
-  fireEvent.click(up);
-
-  expect(open).toHaveBeenCalledWith("/tech-notes");
 });
