@@ -14,7 +14,7 @@ export function NavigationButton({
   className,
 }: {
   label: string;
-  variant: "up" | "previous" | "next";
+  variant: "previous" | "next";
   route: string | null;
   className?: string;
 }) {

@@ -429,6 +429,18 @@ describe("status controls", () => {
     expect(tooltip()).toBeNull();
   });
 
+  test("pressing a second control hides the tooltip the first was showing", () => {
+    render(<MenuBar />);
+
+    const soundControl = screen.getByRole("button", { name: /^Sound:/ });
+
+    fireEvent.click(appearanceControl());
+    fireEvent.click(soundControl);
+
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+    expect(tooltip()?.textContent).toBe(soundControl.getAttribute("aria-label"));
+  });
+
   test("a pointer leaving hides the tooltip before the duration is up", () => {
     render(<MenuBar />);
 

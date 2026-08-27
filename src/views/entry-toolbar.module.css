@@ -25,8 +25,6 @@
 
 .meta {
   overflow: hidden;
-
-  /* The controls hold their width, so neither field may spill into them. */
   display: flex;
   align-items: baseline;
   min-width: 0;
@@ -56,10 +54,4 @@
   flex: none;
   gap: var(--control-gap);
   align-items: center;
-}
-
-/* Sets the control that leaves the entry apart from the pair that steps through it. It
- * leads so that its arrow does not sit directly above the scroll pane's own up arrow. */
-.enclosing {
-  margin-inline-end: max(calc(var(--gutter) - var(--control-gap)), var(--control-gap));
 }

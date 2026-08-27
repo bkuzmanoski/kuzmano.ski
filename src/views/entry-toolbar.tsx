@@ -14,19 +14,13 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
     return null; // Standalone entries have no collection to step through, so they render no toolbar.
   }
 
-  const { collectionRoute, contentIndex, slug } = target;
+  const { contentIndex, slug } = target;
   const frontmatter = contentIndex.frontmatterOf(slug);
   const { previous, next } = entrySiblings(contentIndex, slug);
 
   return (
     <div className={styles.toolbar}>
       <nav aria-label="Entry" className={styles.controls}>
-        <NavigationButton
-          variant="up"
-          label={`Back to ${contentIndex.title}`}
-          route={collectionRoute}
-          className={styles.enclosing}
-        />
         <NavigationButton variant="previous" label="Previous entry" route={previous} />
         <NavigationButton variant="next" label="Next entry" route={next} />
       </nav>
