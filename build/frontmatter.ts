@@ -14,11 +14,17 @@ export function frontmatterOf(source: string): unknown {
   return block ? parse(block[1]!) : null;
 }
 
+const moduleFor = (source: string) => `export default ${JSON.stringify(frontmatterOf(source))};`;
+
 /**
  * Serves `<name>.mdx?frontmatter` as a module that holds the frontmatter alone.
  * The module gets a virtual id, so the MDX pipeline does not also compile it.
  */
 export function frontmatterPlugin(): Plugin {
+  const lastLoadedCode = new Map<string, string>();
+
+  const key = (environment: string, path: string) => `${environment}\0${path}`;
+
   return {
     name: "kuzmano.ski:frontmatter",
     enforce: "pre",
@@ -38,9 +44,33 @@ export function frontmatterPlugin(): Plugin {
         return null;
       }
 
-      const source = await readFile(id.slice(PREFIX.length), "utf8");
+      const path = id.slice(PREFIX.length);
+      const code = moduleFor(await readFile(path, "utf8"));
 
-      return `export default ${JSON.stringify(frontmatterOf(source))};`;
+      lastLoadedCode.set(key(this.environment.name, path), code);
+
+      return code;
+    },
+    async hotUpdate({ file, modules, read }) {
+      if (!file.endsWith(".mdx")) {
+        return;
+      }
+
+      const module = this.environment.moduleGraph.getModuleById(`${PREFIX}${file}`);
+
+      if (!module) {
+        return;
+      }
+
+      const nextCode = moduleFor(await read());
+
+      if (nextCode === lastLoadedCode.get(key(this.environment.name, file))) {
+        return;
+      }
+
+      this.environment.moduleGraph.invalidateModule(module);
+
+      return [...modules, module];
     },
   };
 }

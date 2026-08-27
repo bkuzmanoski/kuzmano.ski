@@ -52,6 +52,12 @@ Page titles come from frontmatter; the configuration only needs the file name.
    keyed by the folder name.
 3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
 
+### Styling
+
+All content shares `src/content/content.module.css`. To give a page or entry
+styles of its own, add a CSS module that exports a `page` class beside its MDX
+file under the same name (e.g., `about.mdx` and `about.module.css`).
+
 ## Contact form
 
 Messages are sent through Cloudflare's `send_email` binding.

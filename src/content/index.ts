@@ -5,13 +5,7 @@ import { parseFrontmatter } from "./schema";
 import type { Entry, Frontmatter } from "./schema";
 import type { MDXContent } from "mdx/types";
 
-/**
- * A compiled content file: its body, and the optional class its page styles itself with.
- *
- * A page declares the class by importing a CSS module of its own and re-exporting a class
- * from it (`export const className = styles.page`). `ContentBody` sets it on the article
- * alongside the shared `content.module.css` class.
- */
+/** A compiled MDX file and the optional class applied to its page. */
 export interface MDXModule {
   default: MDXContent;
   className?: string;
@@ -40,17 +34,18 @@ export interface Collection extends ContentIndex {
  */
 const frontmatterModules = import.meta.glob<{ default: unknown }>("./*/*.mdx", { query: "?frontmatter", eager: true });
 
-const contentModules = import.meta.glob<MDXModule>("./*/*.mdx");
-const contentCache = new Map<string, Promise<MDXModule>>();
+const contentModules = import.meta.glob<{ default: MDXContent }>("./*/*.mdx");
+const styleModules = import.meta.glob<{ default: { page?: string } }>("./*/*.module.css");
+const loadedModules = new Map<string, Promise<MDXModule>>();
 
 const slugFromPath = (path: string) => path.replace(/^\.\/[^/]+\//, "").replace(/\.mdx$/, "");
 const frontmatterFromPath = (path: string) => parseFrontmatter(frontmatterModules[path]?.default, path);
 
 function loadContent(path: string): Promise<MDXModule> {
-  const cachedContent = contentCache.get(path);
+  const loadedModule = loadedModules.get(path);
 
-  if (cachedContent) {
-    return cachedContent;
+  if (loadedModule) {
+    return loadedModule;
   }
 
   const importer = contentModules[path];
@@ -59,9 +54,15 @@ function loadContent(path: string): Promise<MDXModule> {
     throw new Error(`Content not found for path: ${path}`);
   }
 
-  const promise = importer();
+  const stylesheet = styleModules[path.replace(/\.mdx$/, ".module.css")];
+  const promise: Promise<MDXModule> = stylesheet
+    ? Promise.all([importer(), stylesheet()]).then(([module, styles]) => ({
+        ...module,
+        className: styles.default.page,
+      }))
+    : importer();
 
-  contentCache.set(path, promise);
+  loadedModules.set(path, promise);
 
   return promise;
 }
