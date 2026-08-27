@@ -27,7 +27,8 @@
   --gutter: 16px;
   --title-bar-height: 28px; /* Excludes its bottom border. Read by the drag outline as well as the window itself. */
   --scrollbar-width: 20px; /* Excludes its leading border. Read by the drag outline as well as the scrollbar itself. */
-  --tooltip-margin: 5px;
+  --tooltip-margin: 5px; /* The gap between a tooltip and its anchor. */
+  --tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
   --shadow-length: 3px;
 
   /* Typography */

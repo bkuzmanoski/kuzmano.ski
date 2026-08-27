@@ -37,7 +37,8 @@
   justify-self: anchor-center;
 
   width: max-content;
-  margin-block-start: var(--tooltip-margin);
+  margin-block: var(--tooltip-margin) var(--tooltip-viewport-margin);
+  margin-inline: var(--tooltip-viewport-margin);
   padding: 4px 8px;
 
   font: var(--font-ui);
@@ -50,6 +51,6 @@
     left: 50%;
     transform: translateX(-50%);
 
-    margin-block-start: 0;
+    margin: 0;
   }
 }
