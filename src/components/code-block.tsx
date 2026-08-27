@@ -25,7 +25,7 @@ export function CodeBlock(props: ComponentProps<"pre">) {
   return (
     <div className={styles.codeBlock}>
       <pre {...props} ref={blockRef} />
-      <CopyButton value={source} entity="code" label="Copy code" confirmation="Copied" className={styles.copy} />
+      <CopyButton value={source} entity="code" label="Copy code" confirmation="Copied" className={styles.copyButton} />
     </div>
   );
 }
