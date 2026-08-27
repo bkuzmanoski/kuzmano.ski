@@ -8,16 +8,16 @@ export interface DateFormat {
 }
 
 /**
- * A date formatter in the reader's own locale.
+ * A date formatter in the user's own locale.
  *
  * The server pass and the hydration pass both use the locale the server prerendered.
- * React re-renders with browser's locale own once hydration has finished.
+ * React re-renders with browser's own locale once hydration has finished.
  */
 export function useDateFormat({ locale, options }: DateFormat): Intl.DateTimeFormat {
-  const readerLocale = useSyncExternalStore(
+  const userLocale = useSyncExternalStore(
     noSubscribe,
     () => navigator.language || locale,
     () => locale,
   );
-  return useMemo(() => new Intl.DateTimeFormat(readerLocale, options), [readerLocale, options]);
+  return useMemo(() => new Intl.DateTimeFormat(userLocale, options), [userLocale, options]);
 }

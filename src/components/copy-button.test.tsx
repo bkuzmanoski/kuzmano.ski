@@ -2,8 +2,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playError } from "#/lib/audio/sounds";
+import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip";
 
 import { CopyButton } from "./copy-button";
+import { HOVER_DELAY_MS } from "./tooltip";
 
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
@@ -13,6 +15,7 @@ const writeText = vi.fn<(value: string) => Promise<void>>();
 
 beforeEach(() => {
   vi.useFakeTimers();
+  resetTooltipState(); // Shared across tooltips, so it outlives the one that set it.
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
@@ -25,6 +28,18 @@ afterEach(() => {
 
 const renderButton = (value: string | null = "test@example.com") =>
   render(<CopyButton value={value} entity="email address" label="Copy email address" confirmation="Copied" />);
+
+const advance = (ms: number) =>
+  act(() => {
+    vi.advanceTimersByTime(ms);
+  });
+
+const wrapper = () => screen.getByRole("button").parentElement!;
+
+function hoverUntilTooltipShown() {
+  fireEvent.pointerEnter(wrapper(), { pointerType: "mouse" });
+  advance(HOVER_DELAY_MS);
+}
 
 const clickCopy = async () => {
   fireEvent.click(screen.getByRole("button"));
@@ -41,7 +56,7 @@ test("clicking the button copies the value", async () => {
   expect(writeText).toHaveBeenCalledWith("test@example.com");
 });
 
-test("the button confirms a successful copy and returns to its original state", async () => {
+test("the button confirms a successful copy, then returns to its original state", async () => {
   renderButton();
 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
@@ -51,15 +66,13 @@ test("the button confirms a successful copy and returns to its original state", 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
-  act(() => {
-    vi.advanceTimersByTime(2_000);
-  });
+  advance(STATE_DISPLAY_DURATION_MS);
 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
-test("the button stays pressed from the press until the confirmation ends", async () => {
+test("the button stays pressed until the confirmation ends", async () => {
   let completeWrite: (() => void) | undefined;
 
   writeText.mockReturnValue(new Promise<void>((resolve) => (completeWrite = resolve)));
@@ -78,14 +91,12 @@ test("the button stays pressed from the press until the confirmation ends", asyn
 
   expect(screen.getByRole("button").className).toContain("pressed");
 
-  act(() => {
-    vi.advanceTimersByTime(2_000);
-  });
+  advance(STATE_DISPLAY_DURATION_MS);
 
   expect(screen.getByRole("button").className).not.toContain("pressed");
 });
 
-test("a failed copy leaves the button in its original state and alerts the reader", async () => {
+test("a failed copy leaves the button in its original state and alerts the user", async () => {
   writeText.mockRejectedValue(new Error("Denied"));
   renderButton();
 
@@ -109,4 +120,47 @@ test("a button with nothing to copy yet is disabled and copies nothing", async (
   await clickCopy();
 
   expect(writeText).not.toHaveBeenCalled();
+});
+
+test("the confirmation clears on its own delay while the pointer stays on the button", async () => {
+  renderButton();
+  hoverUntilTooltipShown();
+  await clickCopy();
+
+  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(screen.getByRole("status").textContent).toBe("Copied");
+
+  advance(STATE_DISPLAY_DURATION_MS - 1);
+
+  expect(screen.getByRole("status").textContent).toBe("Copied");
+
+  advance(1);
+
+  expect(screen.getByRole("status").textContent).toBe("");
+  expect(screen.getByRole("tooltip").textContent).toBe("Copy email address"); // Still hovered.
+});
+
+test("the confirmation clears as soon as the tooltip carrying it leaves the screen", async () => {
+  renderButton();
+  hoverUntilTooltipShown();
+  await clickCopy();
+
+  fireEvent.pointerLeave(wrapper(), { pointerType: "mouse" });
+  advance(HIDE_DELAY_MS);
+
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(screen.getByRole("status").textContent).toBe("");
+});
+
+test("a tap shows the confirmation, then clears it after a delay", async () => {
+  renderButton();
+  await clickCopy(); // A tap leaves no pointer on the control to show a tooltip.
+
+  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(screen.getByRole("status").textContent).toBe("Copied");
+
+  advance(STATE_DISPLAY_DURATION_MS);
+
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(screen.getByRole("status").textContent).toBe("");
 });

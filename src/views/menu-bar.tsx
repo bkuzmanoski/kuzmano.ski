@@ -17,12 +17,14 @@ import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts";
+import { useTimer } from "#/lib/hooks/use-timer";
 import { cycle } from "#/lib/math";
 import { mergeHandlers } from "#/lib/merge-handlers";
 import { isPrimaryPress } from "#/lib/press";
 import { sleep } from "#/lib/screensaver/lifecycle";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
+import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
 
 import styles from "./menu-bar.module.css";
@@ -36,26 +38,47 @@ const destinationShortcut = (id: DestinationId) => {
 
 function StatusButton({
   label,
-  persistTooltipOnPress,
   className,
   onClick,
   children,
 }: {
   label: string;
-  persistTooltipOnPress?: boolean;
   className?: string;
   onClick: () => void;
   children: ReactNode;
 }) {
+  const [isShowingState, setIsShowingState] = useState(false);
+  const timer = useTimer();
   const pressSoundHandlers = usePressSound();
 
+  function showState() {
+    setIsShowingState(true);
+    timer.start(() => setIsShowingState(false), STATE_DISPLAY_DURATION_MS);
+  }
+
+  function clearState() {
+    timer.cancel();
+    setIsShowingState(false);
+  }
+
   return (
-    <Tooltip label={label} persistOnPress={persistTooltipOnPress} className={styles.statusItemTooltipWrapper}>
+    <Tooltip
+      label={label}
+      persistOnPress
+      showsState={isShowingState}
+      onDidHide={clearState}
+      className={styles.statusItemTooltipWrapper}
+    >
       <button
         type="button"
         aria-label={label}
         className={cx(styles.control, className)}
-        {...mergeHandlers(pressSoundHandlers, { onClick })}
+        {...mergeHandlers(pressSoundHandlers, {
+          onClick: () => {
+            showState();
+            onClick();
+          },
+        })}
       >
         {children}
       </button>
@@ -72,7 +95,7 @@ function ThemeStatus() {
   const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
 
   return (
-    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} persistTooltipOnPress onClick={() => setTheme(next)}>
+    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(next)}>
       <Icon className={styles.icon} />
     </StatusButton>
   );
@@ -85,7 +108,6 @@ function SoundStatus() {
   return (
     <StatusButton
       label={`Sound: ${sound === "on" ? "On" : "Off"}`}
-      persistTooltipOnPress
       onClick={() => {
         setSound(sound === "on" ? "off" : "on");
 

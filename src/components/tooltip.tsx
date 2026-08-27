@@ -1,151 +1,160 @@
-import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import { cx } from "#/lib/class-names";
 import { useTimer } from "#/lib/hooks/use-timer";
-import { isPointerClick } from "#/lib/press";
+import {
+  hideAfterDelay,
+  isGroupInGracePeriod,
+  resetGroupGracePeriod,
+  runPendingHideAction,
+  startGroupGracePeriod,
+} from "#/lib/tooltip";
 
 import styles from "./tooltip.module.css";
 
 import type { ReactNode } from "react";
 
 export const HOVER_DELAY_MS = 400;
-export const TAP_FEEDBACK_DURATION_MS = 1_500;
 
-/**
- * The wrapper sits between the caller and the control, so a control that is positioned or
- * sized by its parent can pass `className` here instead of styling itself. The tooltip anchors
- * to the wrapper, keeping it aligned with the control.
- *
- * `suppressed` prevents the tooltip from being shown and hides one that is already visible.
- * It is useful for controls with nothing to describe, such as a navigation button with nowhere
- * to go, and for controls that capture the pointer, such as a drag handle. Pointer capture
- * sends subsequent pointer events to the control, so the wrapper cannot detect when the pointer
- * leaves. The control therefore reports that it is busy, which also prevents the tooltip from
- * reappearing when the press gives the control focus.
- *
- * `persistOnPress` is for controls whose label describes the state they toggle. The label itself
- * provides feedback for the press, so the tooltip remains visible and updates to the new value.
- */
 export function Tooltip({
   label,
-  suppressed = false,
   persistOnPress = false,
+  showsState = false,
+  suppressed = false,
+  onDidHide, // Run when a visible tooltip is hidden. Use it to clear transient state once the tooltip has finished displaying it.
   className,
   children,
 }: {
   label: string;
-  suppressed?: boolean;
   persistOnPress?: boolean;
+  showsState?: boolean;
+  suppressed?: boolean;
+  onDidHide?: () => void;
   className?: string;
   children: ReactNode;
 }) {
   const id = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [wasShowingState, setWasShowingState] = useState(showsState);
   const [wasSuppressed, setWasSuppressed] = useState(suppressed);
-  const [tapFeedbackLabel, setTapFeedbackLabel] = useState<string | null>(null);
-  const [tapFeedbackVersion, setTapFeedbackVersion] = useState(0);
+  const [isPointerHovering, setIsPointerHovering] = useState(false);
   const timer = useTimer();
-  const pressPointerTypeRef = useRef<string | null>(null);
-  const isTapFeedbackActiveRef = useRef(false);
-
-  useEffect(() => {
-    if (tapFeedbackVersion === 0) {
-      return;
-    }
-
-    const tapFeedbackTimeout = setTimeout(() => {
-      isTapFeedbackActiveRef.current = false;
-      setTapFeedbackLabel(null);
-      setIsOpen(false);
-    }, TAP_FEEDBACK_DURATION_MS);
-
-    return () => clearTimeout(tapFeedbackTimeout);
-  }, [tapFeedbackVersion]);
+  const wrapperRef = useRef<HTMLSpanElement>(null);
+  const lastPointerTypeRef = useRef<string | null>(null);
+  const reportHidden = useEffectEvent(() => onDidHide?.());
 
   if (suppressed !== wasSuppressed) {
     setWasSuppressed(suppressed);
     setIsOpen(false);
   }
 
-  if (tapFeedbackLabel !== null && tapFeedbackLabel !== label) {
-    setTapFeedbackLabel(null);
-    setIsOpen(true);
-    setTapFeedbackVersion((count) => count + 1);
+  if (showsState !== wasShowingState) {
+    setWasShowingState(showsState);
+
+    // The control takes the tooltip over from the pointer while it displays its state. When it
+    // stops, the tooltip goes with it unless a pointer is still on the control to keep it visible.
+    setIsOpen(showsState || isPointerHovering);
   }
 
   const isVisible = isOpen && !suppressed;
 
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+
+    resetGroupGracePeriod(wrapperRef.current);
+
+    return () => {
+      startGroupGracePeriod();
+      reportHidden();
+    };
+  }, [isVisible]);
+
   function show(delay: number) {
-    if (isTapFeedbackActiveRef.current) {
-      return;
-    }
-
     timer.cancel();
 
     if (suppressed) {
       return;
     }
 
-    timer.start(() => setIsOpen(true), delay);
+    timer.start(() => {
+      runPendingHideAction();
+      setIsOpen(true);
+    }, delay);
   }
 
-  function showTapFeedback() {
+  function hide(immediately: boolean = false) {
     timer.cancel();
 
-    if (suppressed) {
+    if (isVisible && !immediately) {
+      hideAfterDelay(() => setIsOpen(false));
       return;
     }
 
-    isTapFeedbackActiveRef.current = true;
-    setTapFeedbackLabel(label);
-    setTapFeedbackVersion((count) => count + 1);
-  }
-
-  function hide() {
-    timer.cancel();
-    isTapFeedbackActiveRef.current = false;
-    setTapFeedbackLabel(null);
     setIsOpen(false);
   }
 
   return (
     <span
+      ref={wrapperRef}
       className={cx(styles.wrapper, className)}
       onFocusCapture={(event) => {
         if (event.target.matches(":focus-visible")) {
           show(0);
         }
       }}
-      onBlurCapture={hide}
+      onBlurCapture={() => {
+        hide(true);
+      }}
       onPointerDownCapture={(event) => {
-        pressPointerTypeRef.current = event.pointerType;
+        lastPointerTypeRef.current = event.pointerType;
 
         if (!persistOnPress) {
-          hide();
+          hide(true);
         }
       }}
-      onPointerEnter={() => show(HOVER_DELAY_MS)}
+      onPointerEnter={(event) => {
+        // iOS raises a synthesized mouse event after a tap. No pointer has arrived to hover,
+        // so acting on it would surface a tooltip after the tap that dismissed it.
+        const isSynthesizedAfterTouch = event.pointerType !== "touch" && lastPointerTypeRef.current === "touch";
+
+        lastPointerTypeRef.current = event.pointerType;
+
+        if (isSynthesizedAfterTouch) {
+          return;
+        }
+
+        const isHovering = event.pointerType !== "touch";
+
+        setIsPointerHovering(isHovering);
+
+        // The grace period is a hover affordance. A touch pointer has not travelled from a
+        // neighbouring control, and showing on contact would pre-empt the press it is about to make.
+        const skipsHoverDelay = isHovering && isGroupInGracePeriod(wrapperRef.current);
+
+        show(skipsHoverDelay ? 0 : HOVER_DELAY_MS);
+      }}
       onPointerLeave={(event) => {
-        if (!persistOnPress || event.pointerType !== "touch") {
-          hide();
+        const wasHovering = isPointerHovering;
+
+        setIsPointerHovering(false);
+        timer.cancel();
+        lastPointerTypeRef.current = event.pointerType;
+
+        // Only a pointer that was hovering can leave one. A touch lifting, and the synthesized
+        // mouse event iOS raises around a tap, are the tap finishing rather than a pointer moving
+        // away, and must not hide a tooltip the press has just shown.
+        if (!wasHovering) {
+          return;
         }
-      }}
-      onPointerCancel={() => {
-        pressPointerTypeRef.current = null;
+
         hide();
       }}
-      onClick={(event) => {
-        // iOS expands the hit target for small controls, but the resulting tap only delivers compatibility
-        // mouse events and a click to the control. The touch pointer events go to the element under the
-        // finger, so a click with no recorded press is treated as a tap. Keyboard activation has no detail.
-        const isTap =
-          pressPointerTypeRef.current === null ? isPointerClick(event) : pressPointerTypeRef.current === "touch";
-
-        pressPointerTypeRef.current = null;
-
-        if (persistOnPress && isTap) {
-          showTapFeedback();
-        }
+      onPointerCancel={(event) => {
+        lastPointerTypeRef.current = event.pointerType;
+        setIsPointerHovering(false);
+        hide(true);
       }}
     >
       {isValidElement<{ "aria-describedby"?: string }>(children)

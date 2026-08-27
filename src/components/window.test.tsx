@@ -378,7 +378,7 @@ test("dragging the resize control reports the size being chosen and applies it o
   expect(onDrag).toHaveBeenLastCalledWith(null);
 });
 
-test("the resize control clears its pressed state when the active pointer exits its bounds", async () => {
+test("the resize control clears its pressed state when the pointer leaves it", async () => {
   render(windowShowing("/tall", tallPane));
 
   const control = screen.getByRole("button", { name: "Resize" });

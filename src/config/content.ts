@@ -9,7 +9,7 @@ export const PAGES_DIRECTORY = "_pages";
 /**
  * How an entry dates are formatted throughout the site.
  *
- * The reader's own locale orders and names the fields. `locale` is the one the
+ * The users's own locale orders and names the fields. `locale` is the one the
  * prerendered markup is written in, which stands in until the browser's is known.
  */
 export const ENTRY_DATE_FORMAT: DateFormat = {

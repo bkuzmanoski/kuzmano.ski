@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { DESTINATIONS } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
+import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip";
 import type { WindowId } from "#/lib/window-manager";
 
 import { MenuBar } from "./menu-bar";
@@ -21,6 +22,7 @@ vi.mock("#/lib/window-manager", async () =>
 beforeEach(() => {
   focusedWindow = null;
   open.mockClear();
+  resetTooltipState();
 });
 
 afterEach(() => {
@@ -373,5 +375,73 @@ describe("items that open a destination", () => {
 
     expect(viewSource.getAttribute("href")).toBe(SITE_SOURCE_URL);
     expect(viewSource.getAttribute("target")).toBe("_blank");
+  });
+});
+
+describe("status controls", () => {
+  const appearanceControl = () => screen.getByRole("button", { name: /^Appearance:/ });
+  const appearanceLabel = () => appearanceControl().getAttribute("aria-label");
+  const tooltip = () => screen.queryByRole("tooltip");
+
+  const advance = (ms: number) =>
+    act(() => {
+      vi.advanceTimersByTime(ms);
+    });
+
+  beforeEach(() => vi.useFakeTimers());
+
+  test("a press shows the tooltip without a pointer over the control", () => {
+    render(<MenuBar />);
+
+    const before = appearanceLabel();
+
+    fireEvent.click(appearanceControl());
+
+    expect(appearanceLabel()).not.toBe(before);
+    expect(tooltip()?.textContent).toBe(appearanceLabel());
+  });
+
+  test("the tooltip is hidden after the display duration", () => {
+    render(<MenuBar />);
+
+    fireEvent.click(appearanceControl());
+    advance(STATE_DISPLAY_DURATION_MS - 1);
+
+    expect(tooltip()?.textContent).toBe(appearanceLabel());
+
+    advance(1);
+
+    expect(tooltip()).toBeNull();
+  });
+
+  test("pressing again extends the tooltip display duration", () => {
+    render(<MenuBar />);
+
+    fireEvent.click(appearanceControl());
+    advance(STATE_DISPLAY_DURATION_MS - 100);
+    fireEvent.click(appearanceControl());
+    advance(STATE_DISPLAY_DURATION_MS - 100);
+
+    expect(tooltip()?.textContent).toBe(appearanceLabel());
+
+    advance(100);
+
+    expect(tooltip()).toBeNull();
+  });
+
+  test("a pointer leaving hides the tooltip before the duration is up", () => {
+    render(<MenuBar />);
+
+    const wrapper = appearanceControl().parentElement!;
+
+    fireEvent.pointerEnter(wrapper, { pointerType: "mouse" });
+    fireEvent.click(appearanceControl());
+
+    expect(tooltip()?.textContent).toBe(appearanceLabel());
+
+    fireEvent.pointerLeave(wrapper, { pointerType: "mouse" });
+    advance(HIDE_DELAY_MS);
+
+    expect(tooltip()).toBeNull();
   });
 });

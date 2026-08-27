@@ -6,7 +6,7 @@ const CHARACTER_COUNT_VISIBILITY_RATIO = 0.75;
 export const CHARACTER_COUNT_VISIBLE_FROM =
   MESSAGE_MAX_LENGTH - Math.floor(MESSAGE_MAX_LENGTH * CHARACTER_COUNT_VISIBILITY_RATIO);
 
-/** What the compose window is currently asking the reader about, if anything. */
+/** What the compose window is currently asking the user about, if anything. */
 export type Prompt =
   | { kind: "discard" }
   | { kind: "incomplete"; message: string; field: keyof ContactFields }

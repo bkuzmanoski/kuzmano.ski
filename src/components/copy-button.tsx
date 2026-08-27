@@ -4,16 +4,16 @@ import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
 import CopyIcon from "#/assets/images/copy.svg?react";
 import { playError } from "#/lib/audio/sounds";
 import { useTimer } from "#/lib/hooks/use-timer";
+import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip";
 
 import { Alert } from "./alert";
 import { Button } from "./button";
 import styles from "./copy-button.module.css";
-import { TAP_FEEDBACK_DURATION_MS, Tooltip } from "./tooltip";
-
-const CONFIRMATION_DURATION_MS = TAP_FEEDBACK_DURATION_MS + 100;
-const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. Check your browser permissions.`;
+import { Tooltip } from "./tooltip";
 
 type State = "idle" | "copying" | "copied" | "failed";
+
+const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. Check your browser permissions.`;
 
 /** The button is disabled until the value is available. */
 export function CopyButton({
@@ -33,6 +33,14 @@ export function CopyButton({
   const timer = useTimer();
   const isCopied = state === "copied";
 
+  // The confirmation stands until it is read, so it clears on its own delay, or as soon as the
+  // tooltip carrying it leaves the screen. A failed copy is left alone: its alert waits on the
+  // user, not the press.
+  function clearConfirmation() {
+    timer.cancel();
+    setState((current) => (current === "copied" ? "idle" : current));
+  }
+
   async function copy() {
     if (value === null) {
       return;
@@ -50,12 +58,19 @@ export function CopyButton({
     }
 
     setState("copied");
-    timer.start(() => setState("idle"), CONFIRMATION_DURATION_MS);
+    timer.start(clearConfirmation, STATE_DISPLAY_DURATION_MS);
   }
 
   return (
     <>
-      <Tooltip label={isCopied ? confirmation : label} suppressed={value === null} persistOnPress className={className}>
+      <Tooltip
+        label={isCopied ? confirmation : label}
+        persistOnPress
+        showsState={isCopied}
+        suppressed={value === null}
+        onDidHide={clearConfirmation}
+        className={className}
+      >
         <Button
           variant="icon"
           aria-label={label}

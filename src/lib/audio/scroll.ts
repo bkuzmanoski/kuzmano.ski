@@ -165,7 +165,7 @@ function playScrollUnlessResized(element: Element, heights: WeakMap<Element, num
  *
  * Shortening a viewport clamps its scroll position, which arrives as an ordinary scroll event a
  * frame after the resize. A scroll that comes in with a viewport height that has changed since
- * the last one was therefore taken to be the layout moving the content rather than the reader.
+ * the last one was therefore taken to be the layout moving the content rather than the user.
  */
 export function playPaneScroll(element: Element) {
   playScrollUnlessResized(element, viewportHeights, element.clientHeight);

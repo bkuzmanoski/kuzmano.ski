@@ -122,7 +122,7 @@ test("a keyboard activation steps the viewport", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-// A press released outside the arrow's bounds does not deliver a click to clear the press it
+// A press released outside the arrow does not deliver a click to clear the press it
 // recorded, so a keyboard activation must not be mistaken for that press arriving late.
 test("a keyboard activation steps the viewport after a press is abandoned outside the arrow", () => {
   const { viewport, down } = renderPane();
@@ -137,7 +137,7 @@ test("a keyboard activation steps the viewport after a press is abandoned outsid
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
-test("a held press keeps scrolling after leaving the arrow's bounds", () => {
+test("a held press keeps scrolling when the pointer leaves the arrow", () => {
   const { viewport, down } = renderPane();
 
   fireEvent.pointerDown(down, { button: 0 });
@@ -151,7 +151,7 @@ test("a held press keeps scrolling after leaving the arrow's bounds", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 4);
 });
 
-test("a release away from the arrow's bounds ends the press", () => {
+test("a release away from the arrow ends the press", () => {
   const { viewport, down } = renderPane();
 
   fireEvent.pointerDown(down, { button: 0 });
@@ -162,7 +162,6 @@ test("a release away from the arrow's bounds ends the press", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-// Releasing away from the arrow does not deliver a click event, so the press must not affect a later activation.
 test("a press released away from the arrow does not affect the next activation", () => {
   const { viewport, down } = renderPane();
 

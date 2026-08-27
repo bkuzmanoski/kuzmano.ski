@@ -44,7 +44,7 @@ export function Button(
         setIsPressing(true);
       }
     },
-    // A pointer leaving the control's bounds while pressed will not produce a click to clear
+    // A pointer leaving the control while pressed will not produce a click to clear
     // the pressed state. A tap can also produce `pointerleave`, but `buttons` is zero.
     onPointerLeave: (event: PointerEvent) => {
       if (event.buttons !== 0) {
