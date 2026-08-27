@@ -10,7 +10,7 @@ export interface DragDelta {
 }
 
 /** The travel past which a press counts as a drag, for handles that also answer a click. */
-export const DRAG_THRESHOLD = 4;
+export const DRAG_THRESHOLD_PX = 4;
 
 interface ActiveDrag<T> {
   pointerId: number;

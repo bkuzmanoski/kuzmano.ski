@@ -55,6 +55,7 @@
 }
 
 .track {
+  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
   position: relative;
   flex: 1;
 

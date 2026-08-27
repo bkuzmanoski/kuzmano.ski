@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import ArrowIcon from "#/assets/images/scroll-arrow.svg?react";
-import { stepScroll } from "#/lib/audio/scroll";
+import { recordScrollAt, silenceScrollAt, stepScroll } from "#/lib/audio/scroll";
 import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
-import { usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import type { DragDelta } from "#/lib/hooks/use-pointer-drag";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { useTimer } from "#/lib/hooks/use-timer";
 import { clamp } from "#/lib/math";
@@ -144,21 +145,60 @@ export function Scrollbar({
     borderBottomWidth: isAtBottom ? 0 : undefined,
   };
 
+  // The thumb runs the length of the track less its own height. A drag maps that travel onto the scroll range.
+  const thumbTravel = () => (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0);
+
+  function dragScroll(delta: DragDelta, from: { top: number; travel: number; jumped?: boolean }) {
+    const viewport = viewportRef.current;
+
+    if (!viewport || from.travel <= 0) {
+      return;
+    }
+
+    if (from.jumped) {
+      from.jumped = false;
+      recordScrollAt(viewport); // Resume scroll sounds after a jump.
+    }
+
+    viewport.scrollTop = from.top + (delta.dy / from.travel) * range;
+  }
+
   const thumbHandlers = usePointerDrag({
     preventDefault: true,
     start: () => {
       playClick();
+      return { top: metrics.top, travel: thumbTravel() };
+    },
+    onDragMove: dragScroll,
+  });
 
-      return {
-        top: metrics.top,
-        travel: (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0),
-      };
-    },
-    onDragMove: (delta, from) => {
-      if (viewportRef.current && from.travel > 0) {
-        viewportRef.current.scrollTop = from.top + (delta.dy / from.travel) * range;
+  // A press on the track jumps to the pressed point, placing the thumb's centre under the pointer
+  // so the point pressed becomes the position scrolled to, and carries forward as a drag from there.
+  const trackHandlers = usePointerDrag({
+    preventDefault: true,
+    threshold: DRAG_THRESHOLD_PX,
+    canStart: (event) => event.target === trackRef.current,
+    start: (event) => {
+      const track = trackRef.current;
+      const thumb = thumbRef.current;
+      const viewport = viewportRef.current;
+      const travel = thumbTravel();
+
+      playClick();
+
+      if (!track || !thumb || !viewport || travel <= 0 || range <= 0) {
+        return { top: metrics.top, travel };
       }
+
+      const thumbTop = event.clientY - track.getBoundingClientRect().top - thumb.clientHeight / 2;
+      const top = clamp(thumbTop / travel, 0, 1) * range;
+
+      silenceScrollAt(viewport); // Suppress scroll sounds for a jump.
+      viewport.scrollTop = top;
+
+      return { top, travel, jumped: true };
     },
+    onDragMove: dragScroll,
   });
 
   const step = (delta: number) => (viewportRef.current ? stepScroll(viewportRef.current, delta) : false);
@@ -179,6 +219,7 @@ export function Scrollbar({
         aria-valuetext={`${scrolledPercent}% scrolled`}
         className={cx(styles.track, overflow && styles.filled)}
         role="scrollbar"
+        {...trackHandlers}
       >
         {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>

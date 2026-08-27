@@ -10,7 +10,7 @@ import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-seque
 import { cx } from "#/lib/class-names";
 import { containsPoint } from "#/lib/geometry";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
-import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus";
 import { mergeHandlers } from "#/lib/merge-handlers";
 import { isPrimaryPress, swallowNextPress } from "#/lib/press";
@@ -135,7 +135,7 @@ export function Window({
   }
 
   const moveHandlers = usePointerDrag({
-    threshold: DRAG_THRESHOLD, // The title bar also answers a double click, which must survive the jitter of a press.
+    threshold: DRAG_THRESHOLD_PX, // The title bar also answers a double click, which must survive the jitter of a press.
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
     start: () => {
       playClick();

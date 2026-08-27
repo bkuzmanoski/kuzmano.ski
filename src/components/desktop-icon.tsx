@@ -12,7 +12,7 @@ import FolderIcon from "#/assets/images/folder.svg?react";
 import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { useDoublePress } from "#/lib/hooks/use-double-press";
-import { DRAG_THRESHOLD, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
 import { iconHref } from "#/lib/icons/icon";
 import type { Icon as IconDefinition, IconKind } from "#/lib/icons/icon";
 import { isBrowserHandledClick, isFollowingLink, isRepeatClick } from "#/lib/link";
@@ -92,7 +92,7 @@ export const DesktopIcon = memo(function Icon({
     },
   });
   const dragHandlers = usePointerDrag({
-    threshold: DRAG_THRESHOLD,
+    threshold: DRAG_THRESHOLD_PX,
     start: () => {
       playClick();
       onSelect(iconDefinition);
