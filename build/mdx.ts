@@ -7,7 +7,6 @@ import { toString } from "hast-util-to-string";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
-import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 
 import { CONTENT_DIRECTORY, fromRoot } from "./paths.ts";
 import { shikiTheme } from "./shiki-theme.ts";
@@ -57,7 +56,7 @@ export function mdxPlugin({ syntaxHighlight = true } = {}): Plugin {
     enforce: "pre",
     ...mdx({
       providerImportSource: "@mdx-js/react",
-      remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
+      remarkPlugins: [remarkFrontmatter],
       rehypePlugins: syntaxHighlight
         ? [
             rehypeSlug,

@@ -75,7 +75,6 @@
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "remark-frontmatter": "^5.0.0",
-    "remark-mdx-frontmatter": "^5.2.0",
     "sharp": "^0.35.3",
     "simple-git-hooks": "^2.13.1",
     "stylelint": "^17.13.0",
