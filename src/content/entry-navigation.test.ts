@@ -7,11 +7,11 @@ import { entrySiblings } from "./entry-navigation";
 const { collection, entries, routeOf } = testCollection("tech-notes", 3);
 const lastEntryIndex = entries.length - 1;
 
-test("the newest entry has nothing before it", () => {
+test("the newest entry does not have a previous entry", () => {
   expect(entrySiblings(collection, entries[0]!.slug)).toEqual({ previous: null, next: routeOf(1) });
 });
 
-test("the oldest entry has nothing after it", () => {
+test("the oldest entry does not have a next entry", () => {
   expect(entrySiblings(collection, entries[lastEntryIndex]!.slug)).toEqual({
     previous: routeOf(lastEntryIndex - 1),
     next: null,

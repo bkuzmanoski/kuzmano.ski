@@ -90,7 +90,7 @@ describe("resolveIconPlacements", () => {
     expect(placements[1]).toEqual({ id: "experience", x: 880, y: 40 }); // 1000 - 48 - cellSize: its own anchor, not a column.
   });
 
-  test("passes positions through untouched before the container has been measured", () => {
+  test("projects positions without moving any icon to a free slot before the container has been measured", () => {
     expect(resolveIconPlacements(IDS, COLUMN, { width: 0, height: 0 }, LAYOUT)).toEqual([
       { id: "about", x: columnX(0, 0), y: 24 },
       { id: "experience", x: columnX(0, 0), y: 120 },

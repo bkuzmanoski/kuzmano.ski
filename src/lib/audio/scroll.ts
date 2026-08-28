@@ -25,7 +25,7 @@ function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
-// Start with a full detent so the first real movement sounds immediately.
+// Start with a full detent so the first real movement plays a sound immediately.
 function openGesture(top: number, at: number, silent = false): ScrollGesture {
   return { top, at, speed: 0, distance: DETENT_PIXELS, silent };
 }
@@ -63,7 +63,7 @@ export function silenceScrollIntoView(element: Element) {
   forEachScrollingAncestor(element, silenceScrollAt);
 }
 
-/** Brings `element` into view without sounding the scroll it causes. */
+/** Brings `element` into view without playing a sound for the scroll it causes. */
 export function scrollIntoViewSilently(element: Element, options?: Omit<ScrollIntoViewOptions, "behavior">) {
   element.scrollIntoView({ block: "nearest", ...options, behavior: "instant" });
   recordScrollIntoView(element);
@@ -74,13 +74,7 @@ export function playScrollStep(element: Element) {
   playScrollDetent(STEP_SPEED);
 }
 
-/**
- * Scrolls `element` by `delta` and reports whether the viewport moved.
- *
- * A step at the end of the travel moves nothing and so makes no sound, which is why the
- * result is returned: the control that asked for the step is left to play audible feedback
- * if desired.
- */
+/** Scrolls `element` by `delta` and reports whether the viewport moved. */
 export function stepScroll(element: Element, delta: number) {
   const initialScrollTop = element.scrollTop;
 

@@ -36,7 +36,7 @@ function enter(next: SleepState) {
 export function sleep() {
   if (state === "awake") {
     enter("falling-asleep");
-    setTimeout(() => enter("asleep"), FADE_IN_DURATION_MS); // Nothing else can leave `falling-asleep`, so this needs no guard of its own.
+    setTimeout(() => enter("asleep"), FADE_IN_DURATION_MS); // Only this timer leaves the `falling-asleep` state, so it does not need a guard of its own.
   }
 }
 

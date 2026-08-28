@@ -49,7 +49,7 @@ test.each([
   ["the response is not JSON", () => fetchMock.mockResolvedValue(new Response("nope", { status: 200 }))],
   ["the response has no email address", () => fetchMock.mockResolvedValue(jsonResponse({}))],
   ["the email address is not a string", () => fetchMock.mockResolvedValue(jsonResponse({ emailAddress: 42 }))],
-])("nothing is returned when %s", async (_label, arrange) => {
+])("does not return an email address when %s", async (_label, arrange) => {
   arrange();
 
   await expect(readContactEmailAddress()).resolves.toBeNull();

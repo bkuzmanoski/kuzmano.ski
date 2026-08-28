@@ -126,8 +126,8 @@ const DesktopWindow = memo(function OpenWindow({
 
 /**
  * The surface that hosts the open windows, stacked back to front by `zIndex`.
- * `children` is the router outlet. It shows nothing but keeps the matched route
- * mounted for SSR and head tags.
+ * `children` is the router outlet. It does not render visible output but keeps
+ * the matched route mounted for SSR and head tags.
  */
 export function WindowLayer({ children }: { children: ReactNode }) {
   const surface = useSurface();
@@ -138,8 +138,6 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const { focusDesktop, measure } = useWindowActions();
   const surfaceRef = useRef<HTMLDivElement>(null);
 
-  // The surface size lives in the window state, so it is reported straight there
-  // rather than being held here and forwarded by an effect a render later.
   useElementResize(surfaceRef, measure);
 
   const isUnplaced = isUnmeasured(surface);

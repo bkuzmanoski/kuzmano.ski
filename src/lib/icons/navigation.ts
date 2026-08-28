@@ -4,7 +4,7 @@ import type { ArrowKey } from "../keys";
 const OFF_AXIS_DISTANCE_WEIGHT = 2; // How much further an icon off the arrow's axis has to be before it loses to one on that axis during keyboard navigation.
 
 /**
- * The icon an arrow key selects, or null when nothing lies the given direction.
+ * The icon an arrow key selects, or null when no icon lies in that direction.
  * Candidates are the icons in the half-plane the arrow points at. Distance off
  * the arrow's axis is weighted over distance along it.
  */

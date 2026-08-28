@@ -52,7 +52,7 @@ export interface ManagerState {
   order: Array<WindowId>; // Back to front, so the last is on top.
   focused: WindowId | null; // `null` means the desktop has focus.
   surface: Size; // {0, 0} until the window layer has measured it.
-  notFoundRoute: string | null; // The route the desktop is reporting as missing, or `null` when there is nothing to report
+  notFoundRoute: string | null; // The route the desktop is reporting as missing, or `null` if it is not showing a not-found route.
 }
 
 export type Action =
@@ -471,7 +471,7 @@ export function useSurface(): Size {
   return use(SurfaceContext);
 }
 
-/** The route the desktop is reporting as missing, or null when there is nothing to report. */
+/** The route the desktop is reporting as missing, or null while the desktop is not showing a not-found route. */
 export function useNotFoundRoute(): string | null {
   return use(NotFoundContext);
 }

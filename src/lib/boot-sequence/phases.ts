@@ -1,6 +1,6 @@
 import { NON_GESTURE_KEYS } from "../audio/context";
 
-// Note: `phaseFlags` answers from a phase's position. Phases must be defined in sequence order.
+// Note: `phaseFlags` derives its flags from a phase's position. Phases must be defined in sequence order.
 const PHASES = [
   "loading",
   "waiting-for-input",

@@ -78,7 +78,7 @@ export const Route = createFileRoute("/api/contact")({
         if (!parsedSubmission.ok) {
           switch (parsedSubmission.reason) {
             case "rejected":
-              return new Response(null, { status: 204 }); // A bot trap; answered as success.
+              return new Response(null, { status: 204 }); // A bot trap; responds with success.
 
             case "malformed":
               return new Response(null, { status: 400 });

@@ -154,7 +154,7 @@ describe("watchFaviconColorScheme", () => {
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });
 
-  test("does nothing when the favicon is not an SVG", () => {
+  test("does not throw when the favicon is not an SVG", () => {
     const change = stubMatchMedia();
 
     expect(() => {
@@ -163,7 +163,7 @@ describe("watchFaviconColorScheme", () => {
     }).not.toThrow();
   });
 
-  test("does nothing without `matchMedia`", () => {
+  test("does not throw or change the favicon href without `matchMedia`", () => {
     const icon = addIcon();
 
     expect(() => watchFaviconColorScheme()()).not.toThrow();

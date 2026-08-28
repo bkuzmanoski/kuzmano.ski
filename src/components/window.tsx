@@ -41,7 +41,7 @@ function TitleBarButton({
   const [isPressed, setIsPressed] = useState(false);
 
   // iOS sends the touch press to the title bar when it retargets the tap to this button.
-  // The title bar already sounds that press, so standing in for it would sound twice.
+  // The title bar already plays that press sound, so standing in for it would play it twice.
   const pressSoundHandlers = usePressSound({ standInForMissedPress: false });
 
   return (
@@ -135,7 +135,7 @@ export function Window({
   }
 
   const moveHandlers = usePointerDrag({
-    threshold: DRAG_THRESHOLD_PX, // The title bar also answers a double click, which must survive the jitter of a press.
+    threshold: DRAG_THRESHOLD_PX, // The title bar also responds to a double click, which must survive the jitter of a press.
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
     start: () => {
       playClick();

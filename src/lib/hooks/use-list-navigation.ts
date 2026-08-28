@@ -27,7 +27,7 @@ function itemAt(list: HTMLElement | null, listId: string, index: number) {
   let found = -1;
 
   // The id is compared rather than selected on: `useId` values are
-  // opaque so nothing here should assume they are selector-safe.
+  // opaque so this lookup must not assume they are selector-safe.
   for (const item of items) {
     if (item.getAttribute(ITEM_ATTRIBUTE) === listId && ++found === index) {
       return item;
@@ -37,8 +37,6 @@ function itemAt(list: HTMLElement | null, listId: string, index: number) {
   return null;
 }
 
-// `preventScroll` overrides the browser's focus-scroll which can stop short of
-// bringing an element fully into view and sounds a scroll detent.
 function focusItem(item: HTMLElement) {
   item.focus({ preventScroll: true });
   scrollIntoViewSilently(item);
@@ -115,7 +113,7 @@ export function useListNavigation(
         const item = itemAt(listRef.current, listId, next);
 
         if (next === index || !item) {
-          return; // Nothing moves at either end of the list, so there is no travel to report.
+          return; // The focus stays put at either end of the list, so there is no travel to report.
         }
 
         focusItem(item);

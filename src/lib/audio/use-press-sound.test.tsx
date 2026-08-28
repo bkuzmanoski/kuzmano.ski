@@ -42,7 +42,7 @@ test("a pointer click event without a preceding pointer down event plays a sound
 });
 
 test("a keyboard activation does not play a sound", () => {
-  fireEvent.click(renderControl()); // Keyboard activation reports no click detail.
+  fireEvent.click(renderControl());
   expect(playClick).not.toHaveBeenCalled();
 });
 

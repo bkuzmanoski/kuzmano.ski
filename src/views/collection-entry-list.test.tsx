@@ -35,7 +35,7 @@ function renderList(activeSlug: string | null) {
   return screen.getAllByRole("link");
 }
 
-test("a collection with no entries show an empty state", () => {
+test("a collection with no entries shows an empty state", () => {
   render(<CollectionEntryList activeSlug={null} collection={{ ...collection, list: () => [] }} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
@@ -83,7 +83,7 @@ test("home and end reach the ends of the list, and the arrow keys stop there", (
   expect(document.activeElement).toBe(links[0]);
 });
 
-test("a key that moves the focus sounds a detent", () => {
+test("a key that moves the focus plays a detent", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
@@ -95,7 +95,7 @@ test("a key that moves the focus sounds a detent", () => {
   expect(playHover).toHaveBeenCalledTimes(2);
 });
 
-test("a key that runs into the end of the list sounds nothing", () => {
+test("a key that runs into the end of the list does not play a detent", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
@@ -104,7 +104,7 @@ test("a key that runs into the end of the list sounds nothing", () => {
   expect(playHover).not.toHaveBeenCalled();
 });
 
-test("the scroll the focus causes is not sounded as travel", () => {
+test("the scroll the focus causes does not play a detent", () => {
   const links = renderList(entries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });

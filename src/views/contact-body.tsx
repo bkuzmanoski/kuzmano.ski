@@ -59,7 +59,7 @@ export function ContactBody() {
     return true;
   });
 
-  // A textarea holds no child boxes for the metrics' resize observer to watch,
+  // A textarea does not hold child boxes for the metrics' resize observer to watch,
   // so its scroll height is remeasured whenever the value it renders changes.
   useEffect(measureMessage, [form.values.message, measureMessage]);
 

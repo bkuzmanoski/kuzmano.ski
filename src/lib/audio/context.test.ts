@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe("playSound", () => {
-  test("does nothing while sound is off", async () => {
+  test("does not play a sound or create an audio context if sound is turned off", async () => {
     settings.sound = "off";
 
     const { playSound } = await loadContextModule();
@@ -42,7 +42,7 @@ describe("playSound", () => {
     expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  test("does nothing before the document has had a user gesture", async () => {
+  test("does not play a sound or create an audio context before the document has had a user gesture", async () => {
     setUserActivation(false);
 
     const { playSound } = await loadContextModule();
@@ -110,7 +110,7 @@ describe("playSound", () => {
 });
 
 describe("primeAudio", () => {
-  test("does nothing while sound is off", async () => {
+  test("does not create an audio context if sound is turned off", async () => {
     settings.sound = "off";
 
     const { primeAudio } = await loadContextModule();
@@ -183,7 +183,7 @@ describe("primeAudio", () => {
 });
 
 describe("needsAudioPriming", () => {
-  test("is false while sound is off", async () => {
+  test("is false if sound is turned off", async () => {
     settings.sound = "off";
 
     const { needsAudioPriming } = await loadContextModule();

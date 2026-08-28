@@ -19,7 +19,7 @@ describe("adjacentIconId", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "contact", "ArrowUp")).toBe("experience");
   });
 
-  test("returns null when there is no neighbour a given direction", () => {
+  test("returns null when there is no neighbour in a given direction", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "about", "ArrowUp")).toBeNull();
     expect(adjacentIconId(ICON_PLACEMENTS, "about", "ArrowLeft")).toBeNull();
     expect(adjacentIconId(ICON_PLACEMENTS, "contact", "ArrowDown")).toBeNull();

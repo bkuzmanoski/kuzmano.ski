@@ -144,7 +144,7 @@ test("a step at the scroll boundary still plays a click sound", () => {
 test("a keyboard activation steps the viewport", () => {
   const { viewport, down } = renderPane();
 
-  fireEvent.click(down); // A keyboard-driven click reports no detail.
+  fireEvent.click(down);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
@@ -230,10 +230,10 @@ test("a press on the thumb does not scroll the viewport", () => {
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
 
   expect(viewport.scrollTop).toBe(0);
-  expect(playClick).toHaveBeenCalledTimes(1); // The thumb answers its own press.
+  expect(playClick).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
 });
 
-test("a secondary press on the track does nothing", () => {
+test("a secondary press on the track is ignored", () => {
   const { viewport, track } = renderPane();
 
   fireEvent.pointerDown(track, { button: 2, clientY: TRACK_TOP + TRACK_HEIGHT / 2 });
@@ -242,7 +242,7 @@ test("a secondary press on the track does nothing", () => {
   expect(playClick).not.toHaveBeenCalled();
 });
 
-test("the scroll a track press causes makes no scroll sound", () => {
+test("the scroll a track press causes does not play a scroll sound", () => {
   const { viewport, track } = renderPane();
 
   advance(1);

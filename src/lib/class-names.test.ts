@@ -7,7 +7,7 @@ describe("cx", () => {
     expect(cx("one", "two", "three")).toBe("one two three");
   });
 
-  test("drops falsy values, leaving no stray separators", () => {
+  test("drops falsy values without leaving stray separators", () => {
     expect(cx("one", false, null, undefined, "", 0, "two")).toBe("one two");
   });
 

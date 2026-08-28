@@ -38,7 +38,7 @@ export interface ContactSubmission extends ContactFields {
 export type ParsedSubmission =
   | { ok: true; fields: ContactFields }
   | { ok: false; reason: "malformed" }
-  | { ok: false; reason: "rejected" } // Tripped the bot trap. Answered as success.
+  | { ok: false; reason: "rejected" } // Tripped the bot trap. The API responds with success.
   | { ok: false; reason: "invalid"; errors: Errors<ContactFields> };
 
 const WEBSITE_MAX_LENGTH = 4_000;

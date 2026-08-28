@@ -40,8 +40,6 @@ function ScrollArrow({
     holdControllerRef.current?.abort();
     holdControllerRef.current = null;
 
-    // A click event only follows a release on the arrow. If the release happens elsewhere,
-    // the press has no click to consume it, so it must not affect the next activation.
     const wasReleasedOnArrow = event.target instanceof Node && arrowRef.current?.contains(event.target);
 
     if (event.type === "pointercancel" || !wasReleasedOnArrow) {

@@ -9,7 +9,7 @@ export interface DragDelta {
   dy: number;
 }
 
-/** The travel past which a press counts as a drag, for handles that also answer a click. */
+/** The travel past which a press counts as a drag, for handles that also respond to a click. */
 export const DRAG_THRESHOLD_PX = 4;
 
 interface ActiveDrag<T> {
@@ -146,10 +146,6 @@ export function usePointerDrag<T>({
       activeDrag.moved = true;
     }
 
-    // Nothing is reported until the press has travelled past the threshold, so a handle that
-    // also answers a click is not nudged by the jitter of one. Once set, the flag stays set for
-    // the rest of the press, so a drag that comes back within the threshold keeps reporting
-    // rather than stalling where it last crossed it.
     if (!activeDrag.moved) {
       return;
     }

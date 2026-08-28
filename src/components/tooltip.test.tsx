@@ -437,7 +437,7 @@ test("a suppressed tooltip does not start a grace period", () => {
   fireEvent.pointerEnter(first, MOUSE);
   advance(HOVER_DELAY_MS - 1);
 
-  expect(tip()).toBeNull(); // The suppressed control showed nothing, so no grace period began.
+  expect(tip()).toBeNull();
 
   advance(1);
 

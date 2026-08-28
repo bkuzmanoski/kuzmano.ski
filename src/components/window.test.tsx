@@ -112,7 +112,7 @@ const shortPane = <div data-height={BASE_PANE_HEIGHT / 4} />;
 const button = <button type="button">Button</button>;
 
 const pane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
-const hasScrollableContent = () => screen.getByRole("button", { name: "Scroll up" }).tabIndex === 0; // An arrow is out of the tab order while the pane has nothing to scroll to.
+const hasScrollableContent = () => screen.getByRole("button", { name: "Scroll up" }).tabIndex === 0; // An arrow is out of the tab order while the pane content fits without scrolling.
 const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
 
 // `usePointerDrag` reports a move on the frame that follows it, so the outline
@@ -141,63 +141,63 @@ function switchAwayAndBack(rerender: (ui: ReactNode) => void, contentKey: string
 }
 
 test("the scrollbar describes the current content rendered by the window", () => {
-  const { rerender } = render(windowShowing("/tall", tallPane));
+  const { rerender } = render(windowShowing("tall", tallPane));
 
   expect(hasScrollableContent()).toBe(true);
 
-  rerender(windowShowing("/short", shortPane));
+  rerender(windowShowing("short", shortPane));
 
   expect(hasScrollableContent()).toBe(false);
 });
 
 test("the scroll position resets when the content changes", () => {
-  const { rerender } = render(windowShowing("/tall", tallPane));
+  const { rerender } = render(windowShowing("tall", tallPane));
 
   pane().scrollTop = 240;
-  rerender(windowShowing("/other", tallPane));
+  rerender(windowShowing("other", tallPane));
 
   expect(pane().scrollTop).toBe(0);
 });
 
 test("the scroll position is maintained when the content does not change", () => {
-  const { rerender } = render(windowShowing("/tall", tallPane));
+  const { rerender } = render(windowShowing("tall", tallPane));
 
   pane().scrollTop = 240;
-  rerender(windowShowing("/tall", tallPane));
+  rerender(windowShowing("tall", tallPane));
 
   expect(pane().scrollTop).toBe(240);
 });
 
 test("the window restores the focus it last held when it is activated again", () => {
-  const { rerender } = render(windowShowing("/tall", button));
+  const { rerender } = render(windowShowing("tall", button));
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
-  switchAwayAndBack(rerender, "/tall", button);
+  switchAwayAndBack(rerender, "tall", button);
 
   expect(document.activeElement).toBe(focusableElement);
 });
 
 test("the window does not restore focus to its resize control", () => {
-  const { rerender } = render(windowShowing("/tall", button));
+  const { rerender } = render(windowShowing("tall", button));
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
   screen.getByRole("button", { name: "Resize" }).focus();
-  switchAwayAndBack(rerender, "/tall", button);
+  switchAwayAndBack(rerender, "tall", button);
 
   expect(document.activeElement).toBe(focusableElement);
 });
 
 test("a press on an inactive window leaves the focus to the restore that follows it", () => {
-  const { rerender } = render(windowShowing("/tall", button, false));
+  const { rerender } = render(windowShowing("tall", button, false));
   const windowElement = screen.getByRole("region", { name: "Window" });
 
   fireEvent.pointerDown(windowElement);
 
   expect(fireEvent.mouseDown(windowElement)).toBe(false);
 
-  rerender(windowShowing("/tall", button));
+  rerender(windowShowing("tall", button));
   fireEvent.pointerDown(windowElement);
 
   expect(fireEvent.mouseDown(windowElement)).toBe(true);
@@ -207,7 +207,7 @@ test("a press on an inactive window is not passed on to what it lands over", () 
   const onClick = vi.fn();
   const { rerender } = render(
     windowShowing(
-      "/tall",
+      "tall",
       <button type="button" onClick={onClick}>
         Button
       </button>,
@@ -222,7 +222,7 @@ test("a press on an inactive window is not passed on to what it lands over", () 
   fireEvent.pointerDown(screen.getByRole("region", { name: "Window" }));
   rerender(
     windowShowing(
-      "/tall",
+      "tall",
       <button type="button" onClick={onClick}>
         Button
       </button>,
@@ -236,7 +236,7 @@ test("a press on an inactive window is not passed on to what it lands over", () 
 });
 
 test("a press on the chrome of a window leaves the focus within it unchanged", () => {
-  const { rerender } = render(windowShowing("/tall", button));
+  const { rerender } = render(windowShowing("tall", button));
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
@@ -245,7 +245,7 @@ test("a press on the chrome of a window leaves the focus within it unchanged", (
   expect(fireEvent.mouseDown(screen.getByRole("button", { name: "Resize" }))).toBe(false);
   expect(document.activeElement).toBe(focusableElement);
 
-  switchAwayAndBack(rerender, "/tall", button);
+  switchAwayAndBack(rerender, "tall", button);
 
   expect(document.activeElement).toBe(focusableElement);
 });
@@ -254,46 +254,46 @@ test("a touch device is not returned to a field, which would reopen its software
   vi.mocked(isTouchOnly).mockReturnValue(true);
 
   const field = <input aria-label="Message" />;
-  const { rerender } = render(windowShowing("/tall", field));
+  const { rerender } = render(windowShowing("tall", field));
 
   screen.getByRole("textbox", { name: "Message" }).focus();
-  switchAwayAndBack(rerender, "/tall", field);
+  switchAwayAndBack(rerender, "tall", field);
 
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
 });
 
 test("the window restores focus to itself when its content is replaced", () => {
-  const { rerender } = render(windowShowing("/tall", <button type="button">Button</button>));
+  const { rerender } = render(windowShowing("tall", <button type="button">Button</button>));
 
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
   expect(document.activeElement).toBe(focusableElement);
 
-  rerender(windowShowing("/other", tallPane));
+  rerender(windowShowing("other", tallPane));
 
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
 });
 
 test("a fixed-size window has neither a zoom control nor a resize control", () => {
-  render(fixedSizeWindow("/short", shortPane));
+  render(fixedSizeWindow("short", shortPane));
 
   expect(screen.queryByRole("button", { name: "Zoom" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Resize" })).toBeNull();
 });
 
 test("the scrollbar of a fixed-size window collapses when its content does not overflow", () => {
-  const { rerender } = render(fixedSizeWindow("/short", shortPane));
+  const { rerender } = render(fixedSizeWindow("short", shortPane));
 
   expect(isScrollbarCollapsed()).toBe(true);
 
-  rerender(fixedSizeWindow("/tall", tallPane));
+  rerender(fixedSizeWindow("tall", tallPane));
 
   expect(isScrollbarCollapsed()).toBe(false);
 });
 
 test("the scrollbar of a window that can be resized stays open to carry the resize control", () => {
-  render(windowShowing("/short", shortPane));
+  render(windowShowing("short", shortPane));
 
   expect(screen.queryByRole("button", { name: "Resize" })).not.toBeNull();
   expect(isScrollbarCollapsed()).toBe(false);
@@ -303,7 +303,7 @@ test("dragging the title bar reports where the window is headed and moves it onc
   const onMove = vi.fn();
   const onDrag = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onMove, onDrag }));
+  render(windowShowing("tall", tallPane, true, { onMove, onDrag }));
 
   const titleBar = titleBarOf();
 
@@ -323,7 +323,7 @@ test("dragging the title bar reports where the window is headed and moves it onc
 test("a secondary press on the title bar does not start a drag, as the browser opens its own menu", async () => {
   const onMove = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onMove }));
+  render(windowShowing("tall", tallPane, true, { onMove }));
 
   const titleBar = titleBarOf();
 
@@ -339,7 +339,7 @@ test("a press on the title bar that stays within the jitter of a click leaves th
   const onMove = vi.fn();
   const onDrag = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onMove, onDrag }));
+  render(windowShowing("tall", tallPane, true, { onMove, onDrag }));
 
   await dragBy(titleBarOf(), [2, 2]);
 
@@ -350,7 +350,7 @@ test("a press on the title bar that stays within the jitter of a click leaves th
 test("a drag that comes back within the jitter of a click keeps reporting, so the outline stays with the pointer", async () => {
   const onMove = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onMove }));
+  render(windowShowing("tall", tallPane, true, { onMove }));
 
   await dragBy(titleBarOf(), [40, 0], [1, 0]);
 
@@ -361,7 +361,7 @@ test("dragging the resize control reports the size being chosen and applies it o
   const onResize = vi.fn();
   const onDrag = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+  render(windowShowing("tall", tallPane, true, { onResize, onDrag }));
 
   const control = screen.getByRole("button", { name: "Resize" });
 
@@ -379,7 +379,7 @@ test("dragging the resize control reports the size being chosen and applies it o
 });
 
 test("the resize control clears its pressed state when the pointer leaves it", async () => {
-  render(windowShowing("/tall", tallPane));
+  render(windowShowing("tall", tallPane));
 
   const control = screen.getByRole("button", { name: "Resize" });
 
@@ -412,7 +412,7 @@ test("a resize drag commits and clears its preview when pointerup is dispatched 
   const onResize = vi.fn();
   const onDrag = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+  render(windowShowing("tall", tallPane, true, { onResize, onDrag }));
 
   const control = screen.getByRole("button", { name: "Resize" });
 
@@ -432,7 +432,7 @@ test("an active resize drag commits on a pointermove with no pressed buttons aft
   const onResize = vi.fn();
   const onDrag = vi.fn();
 
-  render(windowShowing("/tall", tallPane, true, { onResize, onDrag }));
+  render(windowShowing("tall", tallPane, true, { onResize, onDrag }));
 
   const control = screen.getByRole("button", { name: "Resize" });
 
@@ -447,9 +447,9 @@ test("an active resize drag commits on a pointermove with no pressed buttons aft
 });
 
 // iOS can retarget a tap near a control to the control, but only the click event follows.
-// The touch pointer events stay with the element under the finger, which sounds the press.
-test("a tap retargeted from the title bar to a control sounds the press once", () => {
-  render(windowShowing("sounded-press", button));
+// The touch pointer events stay with the element under the finger, which plays the press sound.
+test("a tap retargeted from the title bar to a control plays the press sound once", () => {
+  render(windowShowing("press-sound", button));
 
   vi.mocked(playClick).mockClear();
 
@@ -460,8 +460,8 @@ test("a tap retargeted from the title bar to a control sounds the press once", (
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press on a title bar control sounds once without triggering the title bar's press sound", () => {
-  render(windowShowing("sounded-control", button));
+test("a press on a title bar control plays a sound once without triggering the title bar's press sound", () => {
+  render(windowShowing("control-sound", button));
 
   const close = screen.getByRole("button", { name: "Close" });
 

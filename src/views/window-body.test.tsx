@@ -55,7 +55,7 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
   await rerendered;
 });
 
-test("a route that matches no content renders nothing", () => {
+test("a route that does not match any content renders an empty window body", () => {
   const { container } = render(<WindowBody route="/no-such-page" />);
   expect(container.innerHTML).toBe("");
 });

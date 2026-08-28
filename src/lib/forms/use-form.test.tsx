@@ -150,7 +150,7 @@ test("a change handler writes to its own field", () => {
   expect(harness.form.values).toEqual({ name: "Ada", email: "" });
 });
 
-test("an untouched form shows no errors but is still invalid", () => {
+test("an unedited form does not show errors but is still invalid", () => {
   const harness = renderForm();
 
   expect(harness.form.visibleErrors).toEqual({});

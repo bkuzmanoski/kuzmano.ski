@@ -140,7 +140,7 @@ test("the Escape key runs the primary action when there is no secondary action",
   expect(onPrimary).toHaveBeenCalledOnce();
 });
 
-test("pressing outside a modal alert sounds the error tone", () => {
+test("pressing outside a modal alert plays the error tone", () => {
   render(
     <Alert
       {...CONTENT}
@@ -156,7 +156,7 @@ test("pressing outside a modal alert sounds the error tone", () => {
   expect(playError).toHaveBeenCalledOnce();
 });
 
-test("pressing within the alert, including its padding, does not sound the error tone", () => {
+test("pressing within the alert, including its padding, does not play the error tone", () => {
   render(
     <Alert
       {...CONTENT}

@@ -18,9 +18,8 @@ function fitsInContainer(position: Position, container: Size, cellSize: number):
 }
 
 /**
- * The first slot on the default grid that nothing already placed covers, or null when the
- * container has none free. Slots run down from the layout's origin and then leftwards, so
- * icons that overflow start a new column beside the ones that stayed.
+ * The first slot on the default grid that none of the `placed` positions cover, or null
+ * when the container has no free slot.
  */
 function freeSlot(placed: ReadonlyArray<Position>, container: Size, layout: IconLayout): Position | null {
   for (let x = container.width - layout.position.right - layout.cellSize; x >= 0; x -= layout.spacing) {
@@ -37,8 +36,8 @@ function freeSlot(placed: ReadonlyArray<Position>, container: Size, layout: Icon
 }
 
 /**
- * Where each icon is placed for a container of this size, in `ids` order. Stored positions are
- * never touched, so growing the container puts every icon back where it was left.
+ * Where each icon is placed for a container of this size, in `ids` order. This function does not
+ * modify the stored positions, so growing the container places icons back in their original positions.
  *
  * A position is anchored to the container's right edge, which means a resize slides every icon
  * by the same amount and cannot change how they sit relative to each other. Icons only ever

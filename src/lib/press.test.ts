@@ -66,7 +66,7 @@ test("only one click is swallowed", () => {
   expect(target.onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press that produces no click clears the swallow, so the next press is unaffected", () => {
+test("a press that does not produce a click clears the swallow, so the next press is unaffected", () => {
   const target = pressTarget();
 
   swallowNextPress();

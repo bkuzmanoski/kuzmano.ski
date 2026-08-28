@@ -74,7 +74,6 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
   };
 
-  // Nothing is placed until `positions` has been read on the client which keeps the icons out of the server render.
   const placements: Array<IconPlacement & { iconDefinition: Icon }> = positions
     ? resolveIconPlacements(ICON_IDS, positions, container, ICON_LAYOUT).flatMap((placement) => {
         const iconDefinition = ICONS_BY_ID.get(placement.id);

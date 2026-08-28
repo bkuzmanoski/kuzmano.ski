@@ -232,7 +232,7 @@ export function Menu({
     isStickyRef.current = true;
 
     if (!flash.isRunning()) {
-      focusItem(-1); // The pointer is gone, so nothing is under it to keep highlighted.
+      focusItem(-1);
     }
   });
 

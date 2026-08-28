@@ -11,7 +11,7 @@ import { Tooltip } from "#/components/tooltip";
 import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
 import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
-import { playClick } from "#/lib/audio/sounds";
+import { playClick, playHover } from "#/lib/audio/sounds";
 import { usePressSound } from "#/lib/audio/use-press-sound";
 import { restart } from "#/lib/boot-sequence/lifecycle";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
@@ -249,6 +249,7 @@ export function MenuBar() {
     }
 
     if (openMenu) {
+      playHover();
       openMenuAt(label, anchor);
     } else {
       anchor.focus();
@@ -325,6 +326,7 @@ export function MenuBar() {
               onPointerDown={(event) => onTitlePointerDown(event, label)}
               onPointerEnter={(event) => {
                 if (openMenu !== null && openMenu.label !== label) {
+                  playHover();
                   openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
               }}

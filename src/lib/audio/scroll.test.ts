@@ -69,9 +69,9 @@ describe("playScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("sounds one detent per notch of travel, not one per event", () => {
+  test("plays one detent per notch of travel, not one per event", () => {
     const element = fakeScrollViewport();
-    const move = DETENT_PIXELS / 4; // Four events to the notch, so one per event would sound eight.
+    const move = DETENT_PIXELS / 4; // Four events to the notch, so one per event would play eight.
 
     playScroll(element);
 
@@ -273,7 +273,7 @@ describe("scrollIntoViewSilently", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
   });
 
-  test("records the scroll it causes so the viewport does not sound it as travel", () => {
+  test("records the scroll it causes so the viewport does not play a detent for it", () => {
     const viewport = fakeScrollViewport();
     const { item, scrollIntoView } = fakeItem(viewport);
 

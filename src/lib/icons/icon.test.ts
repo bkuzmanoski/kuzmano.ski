@@ -13,7 +13,7 @@ function everyPositionIsValid(positions: IconPositions): boolean {
 }
 
 describe("loadPositions", () => {
-  test("stacks icons vertically when nothing is saved", () => {
+  test("stacks icons vertically when no positions are saved", () => {
     const positions = loadPositions(IDS, LAYOUT, STORAGE_KEY);
 
     expect(Object.keys(positions)).toEqual(IDS);

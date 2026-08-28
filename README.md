@@ -26,8 +26,8 @@ app components by `src/content/mdx-components.tsx`.
 
 Content is located in:
 
-- `src/content/_pages/*.mdx` — standalone pages
-- `src/content/<collection>/*.mdx` — collection entries
+- `src/content/_pages/*.mdx`: standalone pages
+- `src/content/<collection>/*.mdx`: collection entries
 
 File and folder names become URL segments and must be URL-safe.
 `build/content.ts` validates this and generates the prerender list and sitemap

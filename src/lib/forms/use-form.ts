@@ -34,7 +34,7 @@ export interface Form<TValues extends FieldValues<TValues>> {
  * A field is bound from two places: `handlers[name]`, which is fixed for the life
  * of the form, and `values[name]`, which changes only when that field changes. A
  * caller that spreads both onto a control gives the React Compiler two narrow
- * dependencies to watch, so typing in one field leaves the other fields untouched.
+ * dependencies to watch, so typing in one field does not rerender the others.
  *
  * `initialValues` and `schema` must be module constants, not call-site literals.
  * Both are compared by identity by `reset`, by `handlers`, and by the memo scopes

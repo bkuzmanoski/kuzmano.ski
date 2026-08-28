@@ -11,6 +11,7 @@ import { MenuBar } from "./menu-bar";
 let focusedWindow: WindowId | null = null;
 
 const open = vi.hoisted(() => vi.fn());
+const playHover = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({
@@ -19,9 +20,14 @@ vi.mock("#/lib/window-manager", async () =>
   }),
 );
 
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover }),
+);
+
 beforeEach(() => {
   focusedWindow = null;
   open.mockClear();
+  playHover.mockClear();
   resetTooltipState();
 });
 
@@ -63,6 +69,32 @@ describe("navigating the menu bar", () => {
 
     expect(document.activeElement).toBe(menuTitle("Go"));
     expect(menu()).toBeNull();
+  });
+
+  test("hovering across menu titles plays a hover sound when a menu is open", () => {
+    render(<MenuBar />);
+    fireEvent.pointerOver(menuTitle("Go"));
+
+    expect(playHover).not.toHaveBeenCalled();
+
+    openWithPointer("File");
+    fireEvent.pointerOver(menuTitle("Go"), { buttons: 1 });
+
+    expect(playHover).toHaveBeenCalledTimes(1);
+  });
+
+  test("navigating to menu title using the arrow keys plays hover sound when a menu is open", () => {
+    render(<MenuBar />);
+    menuTitle("File").focus();
+    fireEvent.keyDown(menuTitle("File"), { key: "ArrowRight" });
+
+    expect(playHover).not.toHaveBeenCalled();
+
+    openWithKeyboard("Go");
+    fireEvent.keyDown(menu()!, { key: "ArrowRight" });
+
+    expect(isExpanded("Special")).toBe(true);
+    expect(playHover).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -288,7 +320,7 @@ describe("items that open a destination", () => {
     expect(about.getAttribute("tabindex")).toBe("-1");
   });
 
-  test("an item with no destination stays is not an anchor", () => {
+  test("an item without a destination is not an anchor", () => {
     render(<MenuBar />);
     openWithPointer("Special");
 
@@ -330,7 +362,7 @@ describe("items that open a destination", () => {
     expect(menu()).not.toBeNull();
   });
 
-  test("a secondary release chooses nothing, as the browser opens its own menu over this one", () => {
+  test("a secondary pointer up event does not activate the menu item", () => {
     vi.useFakeTimers();
     focusedWindow = "entry";
     render(<MenuBar />);

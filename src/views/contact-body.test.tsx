@@ -161,7 +161,7 @@ test("a key that can move the caret out of view prevents the scroll sound", () =
   expect(playFieldScroll).not.toHaveBeenCalled();
 });
 
-test("a scroll that follows no caret-moving key plays the scroll sound", () => {
+test("a scroll that does not follow a caret-moving key plays the scroll sound", () => {
   render(<ContactBody />);
   const field = input("Message:");
 

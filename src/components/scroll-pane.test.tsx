@@ -46,7 +46,7 @@ function focusJump(viewport: HTMLElement, item: HTMLElement, to: number, afterMs
 
 const detents = () => playScrollDetent.mock.calls.length;
 
-test("tabbing into content below the fold does not sound the scroll that reaches it", () => {
+test("a tab key press into content below the fold does not play a sound for the scroll that reaches it", () => {
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 
@@ -101,7 +101,7 @@ test("user scrolling plays a sound again after an animated scroll into view sett
   expect(detents()).toBe(1);
 });
 
-test("a held tab key does not sound the scrolls its repeats cause", () => {
+test("a held tab key does not play a sound for the scrolls its repeats cause", () => {
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 
@@ -111,7 +111,7 @@ test("a held tab key does not sound the scrolls its repeats cause", () => {
   expect(detents()).toBe(0);
 });
 
-test("the user's own scrolling still sounds", () => {
+test("the user's own scrolling still plays a sound", () => {
   const viewport = renderPane();
 
   now += 16;

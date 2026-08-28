@@ -60,7 +60,7 @@ test("a key press that cannot move the caret out of view does not mark the next 
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test("a key press only silences the first scroll, so the next plays its sound", () => {
+test("a key press only silences the first scroll, not subsequent ones", () => {
   const field = renderField();
 
   fireEvent.keyDown(field, { key: "ArrowDown" });

@@ -112,7 +112,7 @@ test("a failed copy leaves the button in its original state and alerts the user"
   expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
 });
 
-test("a button with nothing to copy yet is disabled and copies nothing", async () => {
+test("a button with a null value is disabled", async () => {
   renderButton(null);
 
   expect(screen.getByRole("button").hasAttribute("disabled")).toBe(true);
@@ -154,7 +154,7 @@ test("the confirmation clears as soon as the tooltip carrying it leaves the scre
 
 test("a tap shows the confirmation, then clears it after a delay", async () => {
   renderButton();
-  await clickCopy(); // A tap leaves no pointer on the control to show a tooltip.
+  await clickCopy();
 
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
   expect(screen.getByRole("status").textContent).toBe("Copied");

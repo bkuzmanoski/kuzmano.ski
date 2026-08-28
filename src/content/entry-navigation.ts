@@ -16,8 +16,6 @@ export function entrySiblings(collection: Collection, slug: string): EntrySiblin
     return NO_SIBLINGS;
   }
 
-  // A position either side of the listing reads as undefined, which is
-  // the same "nothing to step to" the ends of the collection report.
   const routeAt = (position: number) => {
     const entry = entries[position];
     return entry ? collection.routeOf(entry.slug) : null;

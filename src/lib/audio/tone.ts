@@ -22,7 +22,7 @@ export interface Tone {
 
 const toneSeconds = (tone: Tone) => tone.notes.reduce((total, note) => total + note.seconds, 0);
 
-// The note sounding at `seconds`, with the time elapsed within it. The last note absorbs
+// The note playing at `seconds`, with the time elapsed within it. The last note absorbs
 // any rounding past the end of the run so the final samples still have a pitch to render.
 function noteAt(tone: Tone, seconds: number): { note: Note; elapsed: number } {
   let start = 0;
