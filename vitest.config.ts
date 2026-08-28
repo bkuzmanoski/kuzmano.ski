@@ -3,6 +3,7 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
+import { contentAssetsPlugin } from "./build/content-assets.ts";
 import { frontmatterPlugin } from "./build/frontmatter.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { mdxPlugin } from "./build/mdx.ts";
@@ -17,6 +18,7 @@ export default defineConfig({
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     mdxPlugin({ syntaxHighlight: false }),
+    contentAssetsPlugin(),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),
   ],

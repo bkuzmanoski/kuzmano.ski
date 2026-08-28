@@ -5,6 +5,7 @@ import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
+import { contentAssetsPlugin } from "./build/content-assets.ts";
 import { frontmatterPlugin } from "./build/frontmatter.ts";
 import { iconDriftPlugin } from "./build/icons/drift.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
@@ -40,6 +41,7 @@ export default defineConfig(({ command }) => {
       svgr({ svgrOptions }),
       frontmatterPlugin(),
       mdxPlugin(),
+      contentAssetsPlugin(),
       tanstackStart({
         router: { routeFileIgnorePattern: "\\.test\\." },
         pages: command === "build" ? prerenderRoutes() : [],

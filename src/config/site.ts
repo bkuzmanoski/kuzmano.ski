@@ -11,6 +11,7 @@ export interface DocumentMetadata {
   description: string;
   path: string; // The route's path, from "/" down. Becomes the canonical URL.
   kind?: "website" | "article"; // Open Graph type. Dated, authored pages are "article"; everything else is "website".
+  contentAsset?: string | null; // URL of the chunk holding the page's compiled content, preloaded so it is available to hydration (see `/build/content-assets.ts`).
 }
 
 export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
@@ -22,7 +23,7 @@ export const canonicalUrl = (path: string) => `${SITE_URL}${path}`;
  * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a
  * route overrides a tag from the root by re-declaring it under the same key.
  */
-export function documentHead({ title, description, path, kind = "website" }: DocumentMetadata) {
+export function documentHead({ title, description, path, kind = "website", contentAsset }: DocumentMetadata) {
   const url = canonicalUrl(path);
   const fullTitle = path === "/" ? SITE_NAME : documentTitle(title);
 
@@ -38,6 +39,6 @@ export function documentHead({ title, description, path, kind = "website" }: Doc
       { property: "og:image", content: canonicalUrl(SOCIAL_IMAGE) },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: url }],
+    links: [{ rel: "canonical", href: url }, ...(contentAsset ? [{ rel: "modulepreload", href: contentAsset }] : [])],
   };
 }

@@ -1,4 +1,7 @@
+import { CONTENT_ASSETS } from "virtual:content-assets";
+
 import { COLLECTIONS, PAGES_DIRECTORY } from "#/config/content";
+import { trackPromise } from "#/lib/tracked-promise";
 
 import { parseFrontmatter } from "./schema";
 
@@ -16,6 +19,7 @@ export interface ContentIndex {
   has: (slug: string) => boolean;
   frontmatterOf: (slug: string) => Frontmatter | null;
   load: (slug: string) => Promise<MDXModule>; // The compiled body, in a chunk of its own.
+  assetOf: (slug: string) => string | null; // The URL of the compiled body chunk, for a document to preload before hydration.
 }
 
 /** A content index that enumerates what it holds, most recent first. */
@@ -55,10 +59,11 @@ function loadContent(path: string): Promise<MDXModule> {
         className: styles.default.page,
       }))
     : importer();
+  const trackedPromise = trackPromise(promise); // Tracked so a page whose module has already loaded can render without suspending. This keeps hydration from discarding the article the server sent (see `/src/client.tsx`).
 
-  loadedModules.set(path, promise);
+  loadedModules.set(path, trackedPromise);
 
-  return promise;
+  return trackedPromise;
 }
 
 function contentIndex(directory: string): { index: ContentIndex; paths: Map<string, string> } {
@@ -87,6 +92,10 @@ function contentIndex(directory: string): { index: ContentIndex; paths: Map<stri
         }
 
         return loadContent(path);
+      },
+      assetOf(slug) {
+        const path = paths.get(slug);
+        return (path && CONTENT_ASSETS[path]) ?? null;
       },
     },
   };
