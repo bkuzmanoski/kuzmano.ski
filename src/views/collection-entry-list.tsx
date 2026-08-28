@@ -19,7 +19,7 @@ import styles from "./collection-entry-list.module.css";
 
 import type { MouseEvent } from "react";
 
-export const EMPTY_COLLECTION_MESSAGE = "Nothing to see here.";
+export const EMPTY_COLLECTION_MESSAGE = "There are no entries in this collection.";
 
 export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const { open } = useWindowActions();
