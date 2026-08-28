@@ -13,9 +13,9 @@
   --content-heading-4-flow: var(--content-flow);
 
   /* Typography */
-  --font-heading-1: bold 24.5px/32px var(--font-family-ui);
-  --font-heading-2: bold 20px/28px var(--font-family-ui);
-  --font-heading-3: bold 17px/24px var(--font-family-ui);
+  --font-heading-1: 24.5px/32px var(--font-family-chrome);
+  --font-heading-2: 20px/28px var(--font-family-chrome);
+  --font-heading-3: 17px/24px var(--font-family-chrome);
   --font-body: 15px/22px var(--font-family-ui);
   --font-family-code: JetBrainsMono, ui-monospace, monospace;
   --font-size-code: 13px;
