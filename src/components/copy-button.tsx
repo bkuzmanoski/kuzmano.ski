@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
 import CopyIcon from "#/assets/images/copy.svg?react";
+import LinkIcon from "#/assets/images/link.svg?react";
 import { playError } from "#/lib/audio/sounds";
 import { useTimer } from "#/lib/hooks/use-timer";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip";
@@ -13,24 +14,30 @@ import { Tooltip } from "./tooltip";
 
 type State = "idle" | "copying" | "copied" | "failed";
 
+const icons = { copy: CopyIcon, link: LinkIcon };
+
 const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. Check your browser permissions.`;
 
 /** The button is disabled until the value is available. */
 export function CopyButton({
   value,
   entity,
+  variant = "copy",
   label = "Copy to clipboard",
   confirmation = "Copied",
   className,
 }: {
   value: string | null;
   entity: string;
+  variant?: keyof typeof icons;
   label?: string;
   confirmation?: string;
   className?: string;
 }) {
   const [state, setState] = useState<State>("idle");
   const timer = useTimer();
+
+  const Icon = icons[variant];
   const isCopied = state === "copied";
 
   // The confirmation stands until it is read, so it clears on its own delay, or as soon as the
@@ -78,7 +85,7 @@ export function CopyButton({
           holdPressed={state === "copying" || isCopied}
           onClick={() => void copy()}
         >
-          {isCopied ? <CheckmarkIcon /> : <CopyIcon />}
+          {isCopied ? <CheckmarkIcon /> : <Icon />}
         </Button>
       </Tooltip>
       <span className={styles.announcement} role="status">

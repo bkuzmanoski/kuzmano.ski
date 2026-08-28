@@ -1,11 +1,10 @@
 .toolbar {
   user-select: none;
 
-  display: flex;
-  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   gap: 16px;
   align-items: center;
-  justify-content: space-between;
 
   height: 36px; /* 32px +1px per border line, +2px for the gap between them. */
   padding-block-end: 3px;
@@ -23,8 +22,19 @@
   background-size: 100% 1px;
 }
 
+.navigation {
+  display: flex;
+  gap: 4px;
+}
+
 .date {
   overflow: hidden;
+  grid-column: 2;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.copyButton {
+  grid-column: 3; /* Placed manually, so an entry without a date cannot pull the button into the centre track. */
+  justify-self: end;
 }

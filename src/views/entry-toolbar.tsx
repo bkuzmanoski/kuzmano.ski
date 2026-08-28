@@ -1,5 +1,7 @@
+import { CopyButton } from "#/components/copy-button";
 import { NavigationButton } from "#/components/navigation-button";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
+import { canonicalUrl } from "#/config/site";
 import { entrySiblings } from "#/content/entry-navigation";
 import type { EntryTarget } from "#/content/window-registry";
 import { formatDate } from "#/lib/date";
@@ -20,13 +22,22 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
 
   return (
     <div className={styles.toolbar}>
-      <NavigationButton variant="previous" label="Previous entry" route={previous} />
+      <div className={styles.navigation}>
+        <NavigationButton variant="previous" label="Previous entry" route={previous} />
+        <NavigationButton variant="next" label="Next entry" route={next} />
+      </div>
       {frontmatter && (
         <time className={styles.date} dateTime={frontmatter.date}>
           {formatDate(frontmatter.date, dateFormat)}
         </time>
       )}
-      <NavigationButton variant="next" label="Next entry" route={next} />
+      <CopyButton
+        value={canonicalUrl(contentIndex.routeOf(slug))}
+        entity="link"
+        variant="link"
+        label="Copy link"
+        className={styles.copyButton}
+      />
     </div>
   );
 }

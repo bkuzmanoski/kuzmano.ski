@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content";
+import { canonicalUrl } from "#/config/site";
 import { formatDate } from "#/lib/date";
 import { testCollection } from "#/test-utils/content";
 
@@ -9,6 +10,11 @@ import { WindowToolbar } from "./window-toolbar";
 
 const open = vi.hoisted(() => vi.fn());
 const playClick = vi.hoisted(() => vi.fn());
+const writeText = vi.fn<(value: string) => Promise<void>>();
+
+// jsdom has no clipboard. It is defined on `navigator` in place rather than stubbed over the whole
+// object, which would drop the `language` the toolbar reads to format the entry's date.
+Object.defineProperty(navigator, "clipboard", { value: { writeText } });
 
 vi.mock("#/lib/window-manager", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
@@ -20,6 +26,8 @@ vi.mock("#/lib/audio/sounds", async (importOriginal) =>
 beforeEach(() => {
   open.mockClear();
   playClick.mockClear();
+  writeText.mockReset();
+  writeText.mockResolvedValue(undefined);
 });
 
 const { entries, routeOf } = testCollection("tech-notes", 3);
@@ -66,4 +74,15 @@ test("stepping to a sibling entry opens it in the entry window rather than follo
 
   expect(playClick).toHaveBeenCalled();
   expect(open).toHaveBeenCalledWith(routeOf(2));
+});
+
+test("the toolbar copies the entry's canonical URL rather than the address the window was opened from", async () => {
+  render(<WindowToolbar route={routeOf(1)} />);
+  fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(writeText).toHaveBeenCalledWith(canonicalUrl(routeOf(1)));
 });
