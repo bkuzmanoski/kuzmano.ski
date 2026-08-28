@@ -40,12 +40,12 @@ describe("verifyPrerenderedPage", () => {
   });
 
   test("the loading indicator carries the prerender marker", () => {
-    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { variant: "fill" }));
+    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(loadingIndicator).toContain("data-loading-indicator");
   });
 
   test("fails when a loading indicator remains in the window", () => {
-    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { variant: "fill" }));
+    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);
   });
 
