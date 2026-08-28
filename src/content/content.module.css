@@ -11,16 +11,22 @@
   --content-heading-2-flow: 32px;
   --content-heading-3-flow: 24px;
   --content-heading-4-flow: var(--content-flow);
+  --content-scrollbar-offset: clamp(
+    0px,
+    100% - var(--reserved-scrollbar-width, 0px) - var(--content-measure),
+    var(--scrollbar-gutter-width, 0px)
+  );
 
   /* Typography */
-  --font-heading-1: 24.5px/32px var(--font-family-chrome);
-  --font-heading-2: 20px/28px var(--font-family-chrome);
-  --font-heading-3: 17px/24px var(--font-family-chrome);
-  --font-body: 15px/22px var(--font-family-ui);
+  --font-family-content: InterVariable, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+  --font-heading-1: 700 24.5px/32px var(--font-family-content);
+  --font-heading-2: 700 20px/28px var(--font-family-content);
+  --font-heading-3: 700 17px/24px var(--font-family-content);
+  --font-body: 15px/22px var(--font-family-content);
   --font-family-code: JetBrainsMono, ui-monospace, monospace;
   --font-size-code: 13px;
   --font-code: var(--font-size-code)/18px var(--font-family-code);
-  --font-blockquote: bold 15px/22px var(--font-family-ui);
+  --font-blockquote: bold 15px/22px var(--font-family-content);
 
   /* Colors */
   --color-border-content: var(--color-border-inactive);
@@ -37,11 +43,11 @@
   --color-punctuation-syntax: var(--color-foreground-secondary);
   --color-invalid-syntax: var(--color-error);
 
-  max-width: var(--content-measure);
+  max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
   margin-inline: auto;
   padding-block: var(--content-heading-1-flow);
-  padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
-    calc(var(--gutter) + var(--reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px));
+  padding-inline: calc(var(--content-scrollbar-offset) + var(--gutter))
+    calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
 
   font: var(--font-body);
   text-wrap: pretty;
@@ -140,7 +146,7 @@
 
   & :where(blockquote) {
     padding-inline-start: 12px;
-    border-inline-start: 2px solid var(--color-border-content);
+    border-inline-start: 3px solid var(--color-border-content);
     font: var(--font-blockquote);
 
     text-box-trim: trim-both; /* Unsupported in Firefox (as at 2024-08), but nicer everywhere else. */

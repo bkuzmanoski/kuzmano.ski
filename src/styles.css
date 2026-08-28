@@ -8,6 +8,15 @@
 }
 
 @font-face {
+  font-family: InterVariable;
+  font-weight: 100 900;
+  font-style: normal;
+
+  font-display: swap;
+  src: url("./assets/fonts/InterVariable.woff2") format("woff2");
+}
+
+@font-face {
   font-family: JetBrainsMono;
   font-weight: 400;
   font-style: normal;
@@ -43,7 +52,7 @@
   /* Typography */
   --font-family-chrome: ChicagoFLF, sans-serif;
   --font-chrome: 16px/24px var(--font-family-chrome);
-  --font-family-ui: Helvetica, "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-family-ui: Helvetica, "Helvetica Neue", InterVariable, system-ui, sans-serif;
   --font-ui: 15px/20px var(--font-family-ui);
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: 16.5px/24px var(--font-family-ui);
