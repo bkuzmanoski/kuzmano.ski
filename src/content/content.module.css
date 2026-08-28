@@ -39,7 +39,7 @@
 
   max-width: var(--content-measure);
   margin-inline: auto;
-  padding-block: var(--gutter);
+  padding-block: var(--content-heading-1-flow);
   padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px));
 
