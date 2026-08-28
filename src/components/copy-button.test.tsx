@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 const renderButton = (value: string | null = "test@example.com") =>
-  render(<CopyButton value={value} entity="email address" label="Copy email address" confirmation="Copied" />);
+  render(<CopyButton value={value} entity="email address" confirmation="Copied" />);
 
 const advance = (ms: number) =>
   act(() => {
@@ -59,16 +59,16 @@ test("clicking the button copies the value", async () => {
 test("the button confirms a successful copy, then returns to its original state", async () => {
   renderButton();
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
 
   await clickCopy();
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
   advance(STATE_DISPLAY_DURATION_MS);
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy email address");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
@@ -102,7 +102,7 @@ test("a failed copy leaves the button in its original state and alerts the user"
 
   await clickCopy();
 
-  expect(screen.getByRole("button", { name: "Copy email address" }).className).not.toContain("pressed");
+  expect(screen.getByRole("button", { name: "Copy to clipboard" }).className).not.toContain("pressed");
   expect(screen.getByRole("status").textContent).toBe("");
   expect(screen.getByRole("dialog").textContent).toContain("The email address couldn’t be copied.");
   expect(playError).toHaveBeenCalledOnce();
@@ -137,7 +137,7 @@ test("the confirmation clears on its own delay while the pointer stays on the bu
   advance(1);
 
   expect(screen.getByRole("status").textContent).toBe("");
-  expect(screen.getByRole("tooltip").textContent).toBe("Copy email address"); // Still hovered.
+  expect(screen.getByRole("tooltip").textContent).toBe("Copy to clipboard"); // Still hovered.
 });
 
 test("the confirmation clears as soon as the tooltip carrying it leaves the screen", async () => {

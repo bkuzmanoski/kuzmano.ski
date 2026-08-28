@@ -29,7 +29,7 @@ test("the control copies the source of the block it belongs to", async () => {
     </CodeBlock>,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+  fireEvent.click(screen.getByRole("button", { name: "Copy to clipboard" }));
 
   await act(async () => {
     await Promise.resolve();
