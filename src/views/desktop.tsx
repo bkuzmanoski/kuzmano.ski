@@ -20,8 +20,8 @@ import { WindowManagerProvider } from "./window-manager-provider";
  * outlet so it does not remount on navigation.
  */
 export function Desktop() {
-  useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `lib/audio/context.ts`).
-  useKeyboardInset(); // Keeps the desktop within the space left by the software keyboard (see `lib/hooks/use-keyboard-inset.ts`).
+  useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `/src/lib/audio/context.ts`).
+  useKeyboardInset(); // Keeps the desktop within the space left by the software keyboard (see `/src/lib/hooks/use-keyboard-inset.ts`).
 
   return (
     <WindowManagerProvider layout={LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>

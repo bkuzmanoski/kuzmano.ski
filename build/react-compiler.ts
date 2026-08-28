@@ -53,7 +53,7 @@ export const formatBailouts = (bailouts: Array<CompilerBailout>) =>
  * build on anything it collected.
  *
  * The `react-hooks` lint rules catch the bailouts they know how to describe (see
- * `eslint.config.ts`); this catches the rest, against the code the build ships.
+ * `/eslint.config.ts`); this catches the rest, against the code the build ships.
  */
 export function reactCompilerBailouts(): { logger: Logger; plugin: Plugin } {
   const bailouts: Array<CompilerBailout> = [];

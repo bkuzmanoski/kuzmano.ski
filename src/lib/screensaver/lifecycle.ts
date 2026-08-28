@@ -22,7 +22,7 @@ const serverState = (): SleepState => "awake";
 function enter(next: SleepState) {
   state = next;
 
-  // The browser chrome follows the screensaver up and back down with it (see `theme-color.ts`).
+  // The browser chrome follows the screensaver up and back down with it (see `/src/lib/screensaver/theme-color.ts`).
   if (next === "awake") {
     clearScreensaverThemeColor();
   } else {

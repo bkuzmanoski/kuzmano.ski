@@ -22,7 +22,7 @@
   }
 
   /* The property is inherited rather than a class so that content deep in the window can
-   * read the state through a style query (see `scrollbar.module.css`). */
+   * read the state through a style query (see `/src/components/scrollbar.module.css`). */
   &:not(.focused) {
     --window-focused: 0;
 
@@ -41,7 +41,7 @@
 
   /* A window the server rendered has no position as the window layer has not yet been
    * measured. These values mirror the default position and size for the initial window
-   * placed by the window manager (see `window-manager.ts`). */
+   * placed by the window manager (see `/src/lib/window-manager.ts`). */
   &.unplaced {
     top: 50%;
     left: 50%;
@@ -171,8 +171,8 @@
   height: calc(var(--scrollbar-width) + 1px); /* +1px for the border. */
   border-top: 1px solid var(--color-border);
 
-  /* An unfocused window empties its scrollbar (see `scrollbar.module.css`). The control
-   * keeps its space and top border, but drops its icon along with the rest. */
+  /* An unfocused window empties its scrollbar (see `/src/components/scrollbar.module.css`).
+   * The control keeps its space and top border, but drops its icon along with the rest. */
   @container style(--window-focused: 0) {
     & svg {
       visibility: hidden;

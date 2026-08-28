@@ -274,7 +274,7 @@ describe("measure", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
     const measured = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
 
-    // What CSS rendered before the desktop was measured (see `.unplaced` in `window.module.css`).
+    // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/components/window.module.css`).
     expect(measured.geometry.entry).toMatchObject({
       x: LAYOUT.padding,
       y: LAYOUT.padding,

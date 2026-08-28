@@ -44,7 +44,7 @@
   --font-family-chrome: ChicagoFLF, sans-serif;
   --font-chrome-line-height: 26px;
   --font-chrome: 16px/var(--font-chrome-line-height) var(--font-family-chrome);
-  --font-family-ui: "Helvetica", "Helvetica Neue", system-ui, sans-serif;
+  --font-family-ui: Helvetica, "Helvetica Neue", Arial, system-ui, sans-serif;
   --font-ui-line-height: 22px;
   --font-ui: 15px/var(--font-ui-line-height) var(--font-family-ui);
   --font-ui-bold: bold 15px/var(--font-ui-line-height) var(--font-family-ui);
@@ -72,8 +72,8 @@
   --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
   --color-error: light-dark(#b03645, #de6e7c);
-  --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `build/svgr.ts`). */
-  --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `build/svgr.ts`). */
+  --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
+  --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
   --color-screensaver-backdrop: #161a1d;
@@ -141,8 +141,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-p {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+li,
+pre,
+blockquote,
+hr {
   margin: 0;
+}
+
+hr {
+  border: none;
 }
 
 :where(a, button) {

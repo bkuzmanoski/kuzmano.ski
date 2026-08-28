@@ -1,6 +1,6 @@
 // This module has no imports, so the pre-hydration scripts can share it (see
-// `build/inline-script.ts`). Storage can be blocked entirely (cookies disabled),
-// so every access is wrapped in a try/catch.
+// `/build/inline-script.ts`). Storage can be blocked entirely (e.g., if cookies
+// are disabled), so every access is wrapped in a try/catch.
 
 /** The stored value, or null when it is absent or storage is unavailable. */
 export function readStored(key: string): string | null {

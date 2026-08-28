@@ -100,7 +100,7 @@ export function Window({
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
-  unplaced: boolean; // The desktop has not been measured so CSS places the window (see `window.module.css`).
+  unplaced: boolean; // The desktop has not been measured so CSS places the window (see `/src/components/window.module.css`).
   onClose: () => void;
   onZoom: (() => void) | null;
   onFocus: () => void;

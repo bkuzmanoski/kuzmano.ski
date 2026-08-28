@@ -1,5 +1,4 @@
-// This module has no imports, so the pre-hydration overlay script can use it (see
-// `build/inline-script.ts`).
+// This module has no imports, so the pre-hydration overlay script can use it (see `/build/inline-script.ts`).
 
 /**
  * Set on `<html>` to hide the server-rendered desktop until the boot sequence has

@@ -4,6 +4,8 @@ import { CodeBlock } from "#/components/code-block";
 import { scrollIntoViewSilently } from "#/lib/audio/scroll";
 import { isBrowserHandledClick } from "#/lib/link";
 
+import styles from "./content.module.css";
+
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
@@ -65,5 +67,5 @@ export const mdxComponents: MDXComponents = {
       </a>
     );
   },
-  pre: CodeBlock,
+  pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} containerClassName={styles.codeBlock} />,
 };

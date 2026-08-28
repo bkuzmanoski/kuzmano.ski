@@ -31,9 +31,9 @@ export interface Form<TValues extends FieldValues<TValues>> {
  *
  * A field reports its error once visited, or once a submission has been attempted.
  *
- * A field is bound from two places rather than one: `handlers[name]`, which is fixed for
- * the life of the form, and `values[name]`, which changes only when that field changes.
- * A caller that spreads both onto a control gives the React Compiler two narrow
+ * A field is bound from two places: `handlers[name]`, which is fixed for the life
+ * of the form, and `values[name]`, which changes only when that field changes. A
+ * caller that spreads both onto a control gives the React Compiler two narrow
  * dependencies to watch, so typing in one field leaves the other fields untouched.
  *
  * `initialValues` and `schema` must be module constants, not call-site literals.
@@ -44,8 +44,8 @@ export interface Form<TValues extends FieldValues<TValues>> {
  * reinitialization is not supported.
  *
  * Values are validated as typed, while the server validates them trimmed (see
- * `parseSubmission` in `lib/contact/message.ts`). Every rule either trims first or
- * measures length, so the client is stricter than the server.
+ * `parseSubmission` in `/src/lib/contact/message.ts`). Every rule either trims first
+ * or measures length, so the client is stricter than the server.
  */
 export function useForm<TValues extends FieldValues<TValues>>({
   initialValues,

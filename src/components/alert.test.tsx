@@ -47,9 +47,9 @@ test("renders the message", () => {
 
 test("renders the supplied actions", () => {
   render(
-    <Alert message="There was a problem." open primaryAction={{ label: "Try Again", onAction: vi.fn<() => void>() }} />,
+    <Alert message="There was a problem." open primaryAction={{ label: "Reload", onAction: vi.fn<() => void>() }} />,
   );
-  expect(screen.getByRole("button", { name: "Try Again" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Reload" })).toBeDefined();
 });
 
 test("the primary action receives focus when the alert opens", () => {

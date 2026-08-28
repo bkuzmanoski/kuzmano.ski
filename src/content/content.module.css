@@ -4,11 +4,27 @@
  * plain selector of its own, without depending on the order the two modules are bundled in. */
 
 .content {
-  /* Tokens only content uses: chrome renders no body copy, and no code. */
-  --content-measure: 72ch;
-  --content-flow: 16px;
-  --content-section-flow: 24px;
-  --font-mono: 14px JetBrainsMono, ui-monospace, monospace;
+  /* Metrics */
+  --content-heading-1-flow: 40px;
+  --content-heading-2-flow: 32px;
+  --content-heading-3-flow: 24px;
+  --content-heading-4-flow: var(--content-section-flow);
+  --content-flow: 8px;
+  --content-section-flow: 16px;
+  --content-measure: 74ch;
+
+  /* Typography */
+  --font-heading-1: bold 24.5px/30px var(--font-family-ui);
+  --font-heading-2: bold 20px/26px var(--font-family-ui);
+  --font-heading-3: bold 17px/24px var(--font-family-ui);
+  --font-heading-4: var(--font-ui-bold);
+  --font-body: var(--font-ui);
+  --font-family-code: JetBrainsMono, ui-monospace, monospace;
+  --font-code-size: 13px;
+  --font-code: var(--font-code-size) / 18px var(--font-family-code);
+  --font-blockquote: bold var(--font-ui-large);
+
+  /* Colors */
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-background: var(--color-background);
   --color-syntax-comment: light-dark(#839099, #637079);
@@ -27,40 +43,62 @@
   padding-inline: calc(var(--gutter) + var(--window-safe-area-inline-start, 0px))
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px));
 
-  font: var(--font-ui);
+  font: var(--font-body);
   text-wrap: pretty;
 
-  /* MDX emits a flat run of blocks, so the vertical rhythm lives on the top level.
-   * Nested blocks (a list, a quote) set their own below. */
-  & > :where(* + *) {
-    margin-block-start: var(--content-flow);
+  /* MDX emits a flat sequence of top-level blocks, so their vertical rhythm is set by
+   * a single start margin. Each block declares its gap in `--content-block-flow`; the
+   * first block leaves it unset. Nested blocks define their own rhythm. The container's
+   * `padding-block` provides the space at both ends. */
+
+  & > * + * {
+    margin-block-start: var(--content-block-flow, var(--content-flow));
   }
 
-  & > :where(* + h1, * + h2, * + h3, * + h4, * + h5, * + h6) {
-    margin-block-start: var(--content-section-flow);
+  /* A block that stands apart from the copy is spaced on both sides of itself. */
+  & > :where(blockquote, hr, img, video, .codeBlock),
+  & > :where(:is(blockquote, hr, img, video, .codeBlock) + *) {
+    --content-block-flow: var(--content-section-flow);
   }
 
-  /* TODO */
-  & :where(h1, h2, h3, h4, h5, h6) {
-    margin-block: 0;
-    margin-inline: auto;
-    font: var(--font-ui-bold);
+  /* Declared after the standalone-block rule above so a heading following a code block
+   * or quote gets its own, wider gap. The base flow below the heading is unchanged. */
+  & :where(h1) {
+    --content-block-flow: var(--content-heading-1-flow);
 
-    &:focus {
-      outline: none;
-    }
+    font: var(--font-heading-1);
   }
 
-  & :where(a:not([data-heading-link])) {
-    text-decoration: underline;
+  & :where(h2) {
+    --content-block-flow: var(--content-heading-2-flow);
 
-    -webkit-touch-callout: default;
+    font: var(--font-heading-2);
+  }
+
+  & :where(h3) {
+    --content-block-flow: var(--content-heading-3-flow);
+
+    font: var(--font-heading-3);
+  }
+
+  & :where(h4, h5, h6) {
+    --content-block-flow: var(--content-heading-4-flow);
+
+    font: var(--font-heading-4);
+  }
+
+  & :where(h1, h2, h3, h4, h5, h6):focus {
+    outline: none;
   }
 
   & :where([data-heading-link]) {
     user-select: none;
-    margin-inline-start: 6px;
+
+    padding-inline: 6px;
+
+    font-weight: normal;
     color: var(--color-foreground-secondary);
+
     opacity: 0;
   }
 
@@ -69,14 +107,14 @@
     opacity: 1;
   }
 
-  & :where(p) {
-    /* TODO */
+  & :where(a:not([data-heading-link])) {
+    color: var(--color-accent);
+    text-decoration: underline;
 
-    /* margin-block: 12px; */
+    -webkit-touch-callout: default;
   }
 
   & :where(ul, ol) {
-    margin-block: 0;
     padding-inline-start: 24px;
   }
 
@@ -84,37 +122,44 @@
     margin-block-start: 4px;
   }
 
-  & :where(code) {
-    font: var(--font-mono);
+  & :where(:not(pre) > code) {
+    padding-inline: 3px;
+
+    font-family: var(--font-family-code);
+    font-size: var(--font-code-size);
+
+    background: var(--color-active-background);
+    box-decoration-break: clone;
   }
 
   & :where(pre) {
     overflow-x: auto;
-    margin-block: 0;
+    display: block;
     padding: 12px var(--gutter);
-    border: 1px solid var(--color-border);
+    font: var(--font-code);
 
     &:focus-visible {
-      outline: none;
+      outline: none; /* `CodeBlock` draws the outline for the block (see `/src/components/code-block.module.css`). */
     }
   }
 
   & :where(blockquote) {
-    margin: 0;
-    padding-inline-start: var(--gutter);
-    border-inline-start: 2px solid var(--color-border);
-    color: var(--color-foreground-secondary);
+    padding-inline-start: 12px;
+    border-inline-start: 2px solid var(--color-border-inactive);
+    font: var(--font-blockquote);
+
+    text-box-trim: trim-both;
   }
 
   & :where(hr) {
-    margin-block: var(--content-section-flow);
-    border: 0;
     border-top: 1px solid var(--color-border);
   }
 
   & :where(img, video) {
-    max-width: 100%;
+    display: block;
+    width: 100%;
     height: auto;
+    border: 1px solid var(--color-border);
   }
 
   @media (hover: none) {
@@ -122,4 +167,8 @@
       opacity: 1;
     }
   }
+}
+
+.codeBlock {
+  border: 1px solid var(--color-border);
 }

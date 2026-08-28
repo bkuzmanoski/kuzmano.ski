@@ -27,13 +27,7 @@ export interface Collection extends ContentIndex {
   list: () => Array<Entry>;
 }
 
-/**
- * Frontmatter without the compiled bodies (see the `?frontmatter` plugin in
- * build/). A listing synchronously reads titles, categories and dates without
- * pulling in page bodies.
- */
-const frontmatterModules = import.meta.glob<{ default: unknown }>("./*/*.mdx", { query: "?frontmatter", eager: true });
-
+const frontmatterModules = import.meta.glob<{ default: unknown }>("./*/*.mdx", { query: "?frontmatter", eager: true }); // Frontmatter without the compiled bodies (see the `/build/frontmatter.ts`).
 const contentModules = import.meta.glob<{ default: MDXContent }>("./*/*.mdx");
 const styleModules = import.meta.glob<{ default: { page?: string } }>("./*/*.module.css");
 const loadedModules = new Map<string, Promise<MDXModule>>();

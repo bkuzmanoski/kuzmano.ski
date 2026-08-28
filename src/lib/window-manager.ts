@@ -103,7 +103,7 @@ function updateGeometry(
  * leaving the window centered on that axis alone.
  *
  * The result is left unrounded so that it matches, to the pixel, where CSS centers a
- * pre-rendered window (see `.unplaced` in `window.module.css`).
+ * pre-rendered window (see `.unplaced` in `/src/components/window.module.css`).
  */
 function cascadeAxis(
   padding: number,
