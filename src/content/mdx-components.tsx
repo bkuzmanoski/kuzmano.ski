@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 
 import { CodeBlock } from "#/components/code-block";
-import { scrollIntoViewSilently } from "#/lib/audio/scroll";
 import { isBrowserHandledClick } from "#/lib/link";
 
 import styles from "./content.module.css";
+import { revealFragment } from "./fragment";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
@@ -31,17 +31,10 @@ export const mdxComponents: MDXComponents = {
               return;
             }
 
-            // The document itself never scrolls, so the browser cannot resolve the
-            // fragment. The lookup is scoped to the article because another window may
-            // render the same content, and with it the same heading ids.
-            const target = event.currentTarget
-              .closest("article")
-              ?.querySelector<HTMLElement>(`[id="${CSS.escape(href.slice(1))}"]`);
+            const article = event.currentTarget.closest("article");
 
-            if (target) {
+            if (article && revealFragment(article, href)) {
               event.preventDefault();
-              target.focus({ preventScroll: true }); // The scroll below places it.
-              scrollIntoViewSilently(target, { block: "start" });
             }
           }}
         >
