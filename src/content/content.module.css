@@ -5,37 +5,37 @@
 
 .content {
   /* Metrics */
+  --content-measure: 74ch;
+  --content-flow: 16px;
   --content-heading-1-flow: 40px;
   --content-heading-2-flow: 32px;
   --content-heading-3-flow: 24px;
-  --content-heading-4-flow: var(--content-section-flow);
-  --content-flow: 8px;
-  --content-section-flow: 16px;
-  --content-measure: 74ch;
+  --content-heading-4-flow: var(--content-flow);
 
   /* Typography */
-  --font-heading-1: bold 24.5px/30px var(--font-family-ui);
-  --font-heading-2: bold 20px/26px var(--font-family-ui);
+  --font-heading-1: bold 24.5px/32px var(--font-family-ui);
+  --font-heading-2: bold 20px/28px var(--font-family-ui);
   --font-heading-3: bold 17px/24px var(--font-family-ui);
-  --font-heading-4: var(--font-ui-bold);
-  --font-body: var(--font-ui);
+  --font-body: 15px/22px var(--font-family-ui);
   --font-family-code: JetBrainsMono, ui-monospace, monospace;
-  --font-code-size: 13px;
-  --font-code: var(--font-code-size) / 18px var(--font-family-code);
-  --font-blockquote: bold var(--font-ui-large);
+  --font-size-code: 13px;
+  --font-code: var(--font-size-code)/18px var(--font-family-code);
+  --font-blockquote: bold 15px/22px var(--font-family-ui);
 
   /* Colors */
-  --color-syntax-foreground: var(--color-foreground);
-  --color-syntax-background: var(--color-background);
-  --color-syntax-comment: light-dark(#839099, #637079);
-  --color-syntax-keyword: light-dark(#9f5090, #cf86c1);
-  --color-syntax-function: var(--color-accent);
-  --color-syntax-property: light-dark(#6a519e, #9d86ce);
-  --color-syntax-type: light-dark(#417b81, #65b8c1);
-  --color-syntax-constant: light-dark(#9f5a38, #d68c67);
-  --color-syntax-string: light-dark(#446f53, #64b280);
-  --color-syntax-punctuation: var(--color-foreground-secondary);
-  --color-syntax-invalid: var(--color-error);
+  --color-border-content: var(--color-border-inactive);
+  --color-background-inline-code: color-mix(in srgb, var(--color-wallpaper) 70%, transparent); /* TODO */
+  --color-foreground-syntax: var(--color-foreground);
+  --color-background-syntax: color-mix(in srgb, var(--color-wallpaper) 30%, transparent); /* TODO */
+  --color-comment-syntax: light-dark(#839099, #637079);
+  --color-keyword-syntax: light-dark(#9f5090, #cf86c1);
+  --color-function-syntax: var(--color-accent);
+  --color-property-syntax: light-dark(#6a519e, #9d86ce);
+  --color-type-syntax: light-dark(#417b81, #65b8c1);
+  --color-constant-syntax: light-dark(#9f5a38, #d68c67);
+  --color-string-syntax: light-dark(#446f53, #64b280);
+  --color-punctuation-syntax: var(--color-foreground-secondary);
+  --color-invalid-syntax: var(--color-error);
 
   max-width: var(--content-measure);
   margin-inline: auto;
@@ -58,7 +58,7 @@
   /* A block that stands apart from the copy is spaced on both sides of itself. */
   & > :where(blockquote, hr, img, video, .codeBlock),
   & > :where(:is(blockquote, hr, img, video, .codeBlock) + *) {
-    --content-block-flow: var(--content-section-flow);
+    --content-block-flow: var(--content-flow);
   }
 
   /* Declared after the standalone-block rule above so a heading following a code block
@@ -81,13 +81,7 @@
     font: var(--font-heading-3);
   }
 
-  & :where(h4, h5, h6) {
-    --content-block-flow: var(--content-heading-4-flow);
-
-    font: var(--font-heading-4);
-  }
-
-  & :where(h1, h2, h3, h4, h5, h6):focus {
+  & :where(h1, h2, h3):focus {
     outline: none;
   }
 
@@ -123,12 +117,13 @@
   }
 
   & :where(:not(pre) > code) {
+    padding-block: 1px;
     padding-inline: 3px;
 
     font-family: var(--font-family-code);
-    font-size: var(--font-code-size);
+    font-size: var(--font-size-code);
 
-    background: var(--color-active-background);
+    background: var(--color-background-inline-code);
     box-decoration-break: clone;
   }
 
@@ -145,21 +140,21 @@
 
   & :where(blockquote) {
     padding-inline-start: 12px;
-    border-inline-start: 2px solid var(--color-border-inactive);
+    border-inline-start: 2px solid var(--color-border-content);
     font: var(--font-blockquote);
 
-    text-box-trim: trim-both;
+    text-box-trim: trim-both; /* Unsupported in Firefox (as at 2024-08), but nicer everywhere else. */
   }
 
   & :where(hr) {
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-content);
   }
 
   & :where(img, video) {
     display: block;
     width: 100%;
     height: auto;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-content);
   }
 
   @media (hover: none) {
@@ -170,5 +165,5 @@
 }
 
 .codeBlock {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-content);
 }

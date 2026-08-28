@@ -2,7 +2,7 @@ import type { RehypeShikiOptions } from "@shikijs/rehype";
 
 type ThemeRegistration = Exclude<Extract<RehypeShikiOptions, { theme?: unknown }>["theme"], string>;
 
-const syntax = (role: string) => `var(--color-syntax-${role})`;
+const syntax = (role: string) => `var(--color-${role}-syntax)`;
 
 export const shikiTheme: ThemeRegistration = {
   name: "kuzmano-ski",

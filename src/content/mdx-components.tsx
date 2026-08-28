@@ -9,7 +9,7 @@ import styles from "./content.module.css";
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+type HeadingTag = "h1" | "h2" | "h3";
 
 const heading = (Tag: HeadingTag) =>
   function Heading(props: ComponentProps<"h1">) {
@@ -20,9 +20,6 @@ export const mdxComponents: MDXComponents = {
   h1: heading("h1"),
   h2: heading("h2"),
   h3: heading("h3"),
-  h4: heading("h4"),
-  h5: heading("h5"),
-  h6: heading("h6"),
   a: ({ href, children, ...props }: ComponentProps<"a">) => {
     if (href?.startsWith("#")) {
       return (

@@ -30,8 +30,8 @@ export function CodeBlock({
 
   return (
     <div className={cx(containerClassName, styles.codeBlock)}>
-      <CopyButton value={source} entity="code" label="Copy code" confirmation="Copied" className={styles.copyButton} />
       <pre {...props} ref={blockRef} />
+      <CopyButton value={source} entity="code" className={styles.copyButton} />
     </div>
   );
 }

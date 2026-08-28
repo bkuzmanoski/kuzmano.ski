@@ -29,7 +29,8 @@
     gap: 4px;
     align-items: center;
 
-    padding: 0 4px;
+    height: 22px;
+    padding-inline: 4px;
 
     font: var(--font-ui);
     white-space: nowrap;

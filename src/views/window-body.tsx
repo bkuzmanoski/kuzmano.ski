@@ -17,7 +17,7 @@ export function WindowBody({ route }: { route: string }) {
   switch (target.id) {
     case "entry":
       return (
-        <Suspense fallback={<Spinner variant="fill" />}>
+        <Suspense fallback={<Spinner layout="fill" />}>
           <ContentBody content={target.contentIndex.load(target.slug)} />
         </Suspense>
       );

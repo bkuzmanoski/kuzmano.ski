@@ -19,14 +19,14 @@ const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. 
 export function CopyButton({
   value,
   entity,
-  label,
-  confirmation,
+  label = "Copy to clipboard",
+  confirmation = "Copied",
   className,
 }: {
   value: string | null;
   entity: string;
-  label: string;
-  confirmation: string;
+  label?: string;
+  confirmation?: string;
   className?: string;
 }) {
   const [state, setState] = useState<State>("idle");

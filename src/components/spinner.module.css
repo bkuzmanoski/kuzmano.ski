@@ -36,6 +36,11 @@
       --hand-index: 7;
     }
   }
+
+  & svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .inline {
@@ -44,11 +49,6 @@
 
 .fill {
   composes: placeholder from global;
-
-  & svg {
-    width: 24px;
-    height: 24px;
-  }
 }
 
 @keyframes tick-watch-hand {

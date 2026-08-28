@@ -17,7 +17,7 @@
 
     & > * {
       align-items: center;
-      padding: 8px var(--gutter);
+      padding: 10px var(--gutter);
     }
 
     & > * + * {

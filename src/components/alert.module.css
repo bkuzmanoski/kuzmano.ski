@@ -45,11 +45,11 @@
     line-height: 48px;
 
     &.information {
-      transform: translateY(-2px); /* Optical alignment to account for ChicagoFLF. */
+      transform: translateY(-3px); /* Optical alignment to account for ChicagoFLF. */
     }
 
     &.error {
-      transform: translateY(-3px); /* Optical alignment to account for ChicagoFLF. */
+      transform: translateY(-4px); /* Optical alignment to account for ChicagoFLF. */
     }
   }
 
