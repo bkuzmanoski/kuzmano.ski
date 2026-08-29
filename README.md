@@ -58,6 +58,29 @@ All content shares `src/content/content.module.css`. To give a page or entry
 styles of its own, add a CSS module that exports a `page` class beside its MDX
 file under the same name (e.g., `about.mdx` and `about.module.css`).
 
+### Alternate formats
+
+**Markdown**
+
+Markdown is generated for every collection and published page:
+
+- `/<collection>.md`: an index of the collection's published pages
+- `/<page>.md` or `/<collection>/<entry>.md`: a published page as Markdown,
+  including its frontmatter
+
+MDX components are normally replaced by their children. If a component carries
+content in its attributes rather than its children, add it to
+`COMPONENT_MARKDOWN`.
+
+**Atom feeds**
+
+A feed is generated for the entire site as well as for each collection.
+Standalone pages are not included. This is configurable via `FEEDS` in
+`src/config/site.ts`.
+
+React components that should not appear in a feed can mark their rendered output
+with `data-feed-omit`.
+
 ## Contact form
 
 Messages are sent through Cloudflare's `send_email` binding.

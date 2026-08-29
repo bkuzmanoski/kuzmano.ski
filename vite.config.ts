@@ -6,9 +6,11 @@ import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
 import { contentAssetsPlugin } from "./build/content-assets.ts";
+import { capturePage, feedsPlugin } from "./build/feeds/plugin.ts";
 import { frontmatterPlugin } from "./build/frontmatter.ts";
 import { iconDriftPlugin } from "./build/icons/drift.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
+import { markdownPlugin } from "./build/markdown.ts";
 import { mdxPlugin } from "./build/mdx.ts";
 import { prerenderRoutes } from "./build/prerender/routes.ts";
 import { verifyPrerenderedPage } from "./build/prerender/verify.ts";
@@ -40,6 +42,7 @@ export default defineConfig(({ command }) => {
       inlineScriptsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
+      markdownPlugin(),
       mdxPlugin(),
       contentAssetsPlugin(),
       tanstackStart({
@@ -50,10 +53,14 @@ export default defineConfig(({ command }) => {
           enabled: true,
           crawlLinks: false,
           autoStaticPathsDiscovery: false,
-          onSuccess: verifyPrerenderedPage,
+          onSuccess: (result) => {
+            verifyPrerenderedPage(result);
+            capturePage(result); // Held for the feeds which are written once every page has been prerendered.
+          },
         },
       }),
       sitemapNamespacePlugin(),
+      feedsPlugin(),
       viteReact({ include: /\.(tsx?|mdx)$/ }),
       babel({ presets: [reactCompilerPreset({ logger: compilerBailouts.logger })] }),
       compilerBailouts.plugin,

@@ -8,20 +8,17 @@ import { isRecord } from "#/lib/guards.ts";
 import { frontmatterOf } from "../frontmatter.ts";
 import { CONTENT_DIRECTORY, fromRoot } from "../paths.ts";
 
-interface ScannedEntry {
+export interface ScannedEntry {
   slug: string;
+  path: string;
+  frontmatter: unknown;
   draft: boolean;
   date: string | undefined;
 }
 
-interface ScannedDirectory {
+export interface ScannedDirectory {
   entries: Array<ScannedEntry>;
   subdirectories: Array<string>;
-}
-
-interface PrerenderRoute {
-  path: string;
-  sitemap?: { lastmod: string };
 }
 
 export interface ScannedContent {
@@ -29,29 +26,38 @@ export interface ScannedContent {
   pages: ScannedDirectory;
 }
 
+interface PrerenderRoute {
+  path: string;
+  sitemap?: { lastmod: string };
+}
+
 const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RESERVED_ROUTES: Array<string> = [CONTACT_PAGE_ROUTE]; // Routes served by a window rather than by a content file. Content that resolves to one would shadow it.
+
+export const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter(({ draft }) => !draft);
+export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => (b.date ?? "").localeCompare(a.date ?? "");
+export const newestDate = (entries: Array<ScannedEntry>): string | undefined =>
+  entries.reduce<string | undefined>(
+    (newest, { date }) => (date !== undefined && (newest === undefined || date > newest) ? date : newest),
+    undefined,
+  );
 
 const entryOf = (path: string, slug: string): ScannedEntry => {
   const frontmatter = frontmatterOf(readFileSync(path, "utf8"));
 
   if (!isRecord(frontmatter)) {
-    return { slug, draft: false, date: undefined };
+    return { slug, path, frontmatter, draft: false, date: undefined };
   }
 
   return {
     slug,
+    path,
+    frontmatter,
     draft: frontmatter.draft === true,
     date: typeof frontmatter.date === "string" ? frontmatter.date : undefined,
   };
 };
 
-const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter(({ draft }) => !draft);
-const newestDate = (entries: Array<ScannedEntry>): string | undefined =>
-  entries.reduce<string | undefined>(
-    (newest, { date }) => (date !== undefined && (newest === undefined || date > newest) ? date : newest),
-    undefined,
-  );
 const route = (path: string, lastmod: string | undefined): PrerenderRoute =>
   lastmod ? { path, sitemap: { lastmod } } : { path };
 const readContentDirectory = (directory: string): ScannedDirectory => {

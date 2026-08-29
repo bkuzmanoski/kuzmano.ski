@@ -1,0 +1,5 @@
+# Atom is served from a .xml path, which would otherwise be typed as generic XML.
+/feed.xml
+  Content-Type: application/atom+xml; charset=utf-8
+/*/feed.xml
+  Content-Type: application/atom+xml; charset=utf-8

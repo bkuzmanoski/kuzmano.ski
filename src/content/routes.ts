@@ -27,16 +27,23 @@ export const contentRoute = {
         path: `/${params.segment}/${params.slug}`,
         kind: "article",
         contentAsset: collection?.assetOf(params.slug) ?? null,
+        markdown: true,
       });
     }
 
     if (collection) {
-      return { title: collection.title, description: collection.description, path: `/${params.segment}` };
+      return {
+        title: collection.title,
+        description: collection.description,
+        path: `/${params.segment}`,
+        markdown: true,
+      };
     }
 
     return documentData(pages.frontmatterOf(params.segment), {
       path: `/${params.segment}`,
       contentAsset: pages.assetOf(params.segment),
+      markdown: true,
     });
   },
   head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),

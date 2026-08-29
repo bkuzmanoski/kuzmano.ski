@@ -4,18 +4,25 @@ import { routesFor } from "./routes.ts";
 
 import type { ScannedContent } from "./routes.ts";
 
-const entry = (slug: string, date?: string) => ({ slug, draft: false, date });
-const draft = (slug: string, date?: string) => ({ slug, draft: true, date });
+const scannedEntry = (slug: string, draft: boolean, date?: string) => ({
+  slug,
+  path: `${slug}.mdx`,
+  draft,
+  date,
+  frontmatter: { title: slug, description: slug, date },
+});
+const publishedEntry = (slug: string, date?: string) => scannedEntry(slug, false, date);
+const draftEntry = (slug: string, date?: string) => scannedEntry(slug, true, date);
 
 // A valid tree that each test can modify to exercise one condition.
 const content = (overrides: Partial<ScannedContent> = {}): ScannedContent => ({
   collections: [
-    { name: "work", entries: [entry("work-entry", "2026-01-02")], subdirectories: [] },
-    { name: "tech-notes", entries: [entry("tech-notes-entry", "2026-03-04")], subdirectories: [] },
+    { name: "work", entries: [publishedEntry("work-entry", "2026-01-02")], subdirectories: [] },
+    { name: "tech-notes", entries: [publishedEntry("tech-notes-entry", "2026-03-04")], subdirectories: [] },
     { name: "design-notes", entries: [], subdirectories: [] },
   ],
   pages: {
-    entries: [entry("about", "2026-02-03"), entry("experience")],
+    entries: [publishedEntry("about", "2026-02-03"), publishedEntry("experience")],
     subdirectories: [],
   },
   ...overrides,
@@ -72,12 +79,12 @@ describe("routes", () => {
     const withDrafts = routesFor(
       content({
         collections: [
-          { name: "work", entries: [draft("unpublished", "2026-09-09")], subdirectories: [] },
+          { name: "work", entries: [draftEntry("unpublished", "2026-09-09")], subdirectories: [] },
           { name: "tech-notes", entries: [], subdirectories: [] },
           { name: "design-notes", entries: [], subdirectories: [] },
         ],
         pages: {
-          entries: [entry("about"), entry("experience"), draft("secret")],
+          entries: [publishedEntry("about"), publishedEntry("experience"), draftEntry("secret")],
           subdirectories: [],
         },
       }),
@@ -107,7 +114,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          { name: "work", entries: [entry("Not A Slug")], subdirectories: [] },
+          { name: "work", entries: [publishedEntry("Not A Slug")], subdirectories: [] },
           { name: "tech-notes", entries: [], subdirectories: [] },
           { name: "design-notes", entries: [], subdirectories: [] },
         ],
@@ -119,7 +126,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: {
-          entries: [entry("about"), entry("experience"), entry("Read Me")],
+          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("Read Me")],
           subdirectories: [],
         },
       }),
@@ -130,7 +137,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: {
-          entries: [entry("about")],
+          entries: [publishedEntry("about")],
           subdirectories: [],
         },
       }),
@@ -141,7 +148,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: {
-          entries: [entry("about"), entry("experience"), entry("work")],
+          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("work")],
           subdirectories: [],
         },
       }),
@@ -152,7 +159,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: {
-          entries: [entry("about"), entry("experience"), entry("contact")],
+          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("contact")],
           subdirectories: [],
         },
       }),
@@ -194,7 +201,7 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: {
-          entries: [entry("about"), entry("experience")],
+          entries: [publishedEntry("about"), publishedEntry("experience")],
           subdirectories: ["drafts"],
         },
       }),

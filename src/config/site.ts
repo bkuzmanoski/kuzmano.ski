@@ -1,8 +1,13 @@
+import { COLLECTIONS } from "#/config/content";
+import type { CollectionSegment } from "#/config/content";
+
 export const SITE_NAME = "Brian Kuzmanoski";
 export const SITE_URL = "https://kuzmano.ski";
 export const SITE_DESCRIPTION = "The personal site of Brian Kuzmanoski: work, notes and experience.";
 export const SITE_SOURCE_URL = "https://github.com/bkuzmanoski/kuzmano.ski";
 export const NOT_FOUND_PAGE_TITLE = "Page not found (404)";
+export const FEED_ICON = "/logo192.png";
+export const FEED_LOGO = "/logo512.png";
 
 const SOCIAL_IMAGE = "/logo512.png";
 
@@ -12,6 +17,7 @@ export interface DocumentMetadata {
   path: string; // The route's path, from "/" down. Becomes the canonical URL.
   kind?: "website" | "article"; // Open Graph type. Dated, authored pages are "article"; everything else is "website".
   contentAsset?: string | null; // URL of the chunk holding the page's compiled content, preloaded so it is available to hydration (see `/build/content-assets.ts`).
+  markdown?: boolean; // Whether the page has a markdown alternate to advertise (see `/build/markdown.ts`).
 }
 
 export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
@@ -23,7 +29,7 @@ export const canonicalUrl = (path: string) => `${SITE_URL}${path}`;
  * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a
  * route overrides a tag from the root by re-declaring it under the same key.
  */
-export function documentHead({ title, description, path, kind = "website", contentAsset }: DocumentMetadata) {
+export function documentHead({ title, description, path, kind = "website", contentAsset, markdown }: DocumentMetadata) {
   const url = canonicalUrl(path);
   const fullTitle = path === "/" ? SITE_NAME : documentTitle(title);
 
@@ -39,6 +45,36 @@ export function documentHead({ title, description, path, kind = "website", conte
       { property: "og:image", content: canonicalUrl(SOCIAL_IMAGE) },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: url }, ...(contentAsset ? [{ rel: "modulepreload", href: contentAsset }] : [])],
+    links: [
+      { rel: "canonical", href: url },
+      ...(contentAsset ? [{ rel: "modulepreload", href: contentAsset }] : []),
+      ...(markdown ? [{ rel: "alternate", type: "text/markdown", href: `${url}.md`, title: "Markdown" }] : []),
+    ],
   };
 }
+
+export interface FeedMetadata {
+  title: string;
+  description: string;
+  path: string;
+  route: string; // The page the feed syndicates.
+  collections: Array<CollectionSegment>; // The collections whose entries the feed carries.
+}
+
+/** The feeds the site publishes: one for the site as a whole and one per collection. */
+export const FEEDS: Array<FeedMetadata> = [
+  {
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    path: "/feed.xml",
+    route: "/",
+    collections: Object.keys(COLLECTIONS) as Array<CollectionSegment>,
+  },
+  ...Object.entries(COLLECTIONS).map(([segment, { title, description }]) => ({
+    title: `${SITE_NAME}: ${title}`,
+    description,
+    path: `/${segment}/feed.xml`,
+    route: `/${segment}`,
+    collections: [segment as CollectionSegment],
+  })),
+];
