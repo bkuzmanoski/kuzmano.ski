@@ -1,21 +1,34 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { Suspense } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { canonicalUrl } from "#/config/site";
 import type { MDXModule } from "#/content";
 import styles from "#/content/content.module.css";
+import { resetTooltipState } from "#/lib/tooltip";
 import * as headingAnchorFixture from "#/test-utils/heading-anchor.mdx";
 
 import { ContentBody } from "./content-body";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
+const writeText = vi.fn<(value: string) => Promise<void>>();
+
+Object.defineProperty(navigator, "clipboard", { value: { writeText } });
 
 vi.mock("#/lib/audio/scroll", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
+vi.mock("#/lib/audio/sounds", async (importOriginal) =>
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+);
+
+const ROUTE = "/tech-notes/fixture";
 
 beforeEach(() => {
+  resetTooltipState();
   scrollIntoViewSilently.mockClear();
+  writeText.mockReset();
+  writeText.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -26,7 +39,7 @@ const renderContent = async (module: MDXModule) => {
   const { container } = await act(() =>
     render(
       <Suspense>
-        <ContentBody content={Promise.resolve(module)} />
+        <ContentBody route={ROUTE} content={Promise.resolve(module)} />
       </Suspense>,
     ),
   );
@@ -79,4 +92,49 @@ test("a page opened at a fragment that does not name a section does not scroll",
 test("a page opened without a fragment does not scroll", async () => {
   await renderContent(headingAnchorFixture);
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
+});
+
+test("clicking a heading link copies the section's address and shows the confirmation", async () => {
+  await renderContent(headingAnchorFixture);
+
+  const link = screen.getByRole("link", { name: "Link to Fixture section" });
+
+  await act(async () => {
+    fireEvent.click(link);
+    await Promise.resolve();
+  });
+
+  const section = screen.getByRole("heading", { name: /Fixture section/ });
+
+  expect(writeText).toHaveBeenCalledWith(canonicalUrl(`${ROUTE}#fixture-section`));
+  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(within(section).getByRole("status").textContent).toBe("Copied"); // Announced by the pressed link, not by every heading.
+});
+
+test("clicking a heading link does not scroll the section into view", async () => {
+  await renderContent(headingAnchorFixture);
+
+  fireEvent.click(screen.getByRole("link", { name: "Link to Fixture section" }));
+
+  expect(scrollIntoViewSilently).not.toHaveBeenCalled();
+});
+
+test("a copy failure displays an alert and no confirmation", async () => {
+  writeText.mockRejectedValue(new Error("Denied"));
+
+  await renderContent(headingAnchorFixture);
+
+  const link = screen.getByRole("link", { name: "Link to Fixture section" });
+
+  await act(async () => {
+    fireEvent.click(link);
+    await Promise.resolve();
+  });
+
+  expect(screen.getByRole("dialog").textContent).toContain("The link couldn’t be copied."); // One alert shared by the article, not one per heading.
+  expect(screen.queryByRole("tooltip")).toBeNull(); // The tooltip only displays the successful-copy confirmation.
+
+  fireEvent.click(screen.getByRole("button", { name: "OK" }));
+
+  expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
 });

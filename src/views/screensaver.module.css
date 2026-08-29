@@ -9,7 +9,7 @@
   z-index: var(--layer-screensaver);
   inset: 0;
 
-  overflow: hidden;
+  overflow: clip;
 
   visibility: hidden; /* Prevent the backdrop from tinting browser chrome in Safari 26+. */
   opacity: 0;

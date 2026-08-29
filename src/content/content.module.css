@@ -108,7 +108,7 @@
     opacity: 0;
   }
 
-  & :where(:hover, :focus-within) > :where([data-heading-link]),
+  & :where(h1, h2, h3):where(:hover, :focus-within) :where([data-heading-link]),
   & :where([data-heading-link]):focus-visible {
     opacity: 1;
   }

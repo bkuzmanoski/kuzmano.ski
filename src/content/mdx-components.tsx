@@ -5,6 +5,7 @@ import { isBrowserHandledClick } from "#/lib/link";
 
 import styles from "./content.module.css";
 import { revealFragment } from "./fragment";
+import { HeadingLink } from "./heading-link";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
@@ -22,7 +23,11 @@ export const mdxComponents: MDXComponents = {
   h3: heading("h3"),
   a: ({ href, children, ...props }: ComponentProps<"a">) => {
     if (href?.startsWith("#")) {
-      return (
+      return "data-heading-link" in props ? (
+        <HeadingLink href={href} {...props}>
+          {children}
+        </HeadingLink>
+      ) : (
         <a
           href={href}
           {...props}

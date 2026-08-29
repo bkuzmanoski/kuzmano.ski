@@ -3,8 +3,6 @@ import { scrollIntoViewSilently } from "#/lib/audio/scroll";
 /**
  * Scrolls the element a URL fragment names into view and focuses it.
  *
- * The document itself does scroll, so the browser cannot resolve a fragment on its own.
- *
  * Returns whether the fragment named an element within the article was found.
  */
 export function revealFragment(article: Element, fragment: string): boolean {

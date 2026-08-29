@@ -15,7 +15,7 @@ const writeText = vi.fn<(value: string) => Promise<void>>();
 
 beforeEach(() => {
   vi.useFakeTimers();
-  resetTooltipState(); // Shared across tooltips, so it outlives the one that set it.
+  resetTooltipState();
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
