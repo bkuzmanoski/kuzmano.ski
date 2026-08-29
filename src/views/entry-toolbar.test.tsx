@@ -30,7 +30,7 @@ beforeEach(() => {
   writeText.mockResolvedValue(undefined);
 });
 
-const { entries, routeOf } = testCollection("tech-notes", 3);
+const { entries, routeOf } = testCollection("blog", 3);
 const lastEntryIndex = entries.length - 1;
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 

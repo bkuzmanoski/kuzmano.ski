@@ -1,5 +1,5 @@
 // Import only types: importing a value would read from the real content directory.
-import type { ScannedContent, ScannedDirectory, ScannedEntry } from "../../build/prerender/routes.ts";
+import type { ScannedContent, ScannedDirectory, ScannedEntry } from "../prerender/routes.ts";
 
 const DATE = "2026-07-19";
 

@@ -1,16 +1,25 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
+import type * as contentConfig from "#/config/content.ts";
+
+import { markdownFilesFor, markdownOf } from "./markdown.ts";
 import {
   draftEntry,
   scannedCollection,
   scannedContent,
   scannedDirectory,
   scannedEntry,
-} from "#/test-utils/scanned-content.ts";
-
-import { markdownFilesFor, markdownOf } from "./markdown.ts";
+} from "./test-utils/scanned-content.ts";
 
 import type { ScannedContent } from "./prerender/routes.ts";
+
+// A collection index is titled from the declared collections, so the suite declares one of its
+// own. Reading the site's would tie these tests to whichever collections the site happens to
+// publish, and to the wording of their descriptions.
+vi.mock("#/config/content.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof contentConfig>()),
+  COLLECTIONS: { collection: { title: "Collection", description: "A description." } },
+}));
 
 const FRONTMATTER = `---
 title: An Entry
@@ -87,32 +96,32 @@ describe("markdownOf", () => {
 
 describe("markdownFilesFor", () => {
   const content = scannedContent({
-    collections: [scannedCollection("work", [scannedEntry("published"), draftEntry("hidden")])],
-    pages: scannedDirectory([scannedEntry("about"), draftEntry("unfinished")]),
+    collections: [scannedCollection("collection", [scannedEntry("published"), draftEntry("hidden")])],
+    pages: scannedDirectory([scannedEntry("page"), draftEntry("unfinished")]),
   });
 
   const pathsOf = (options?: { drafts?: boolean }) => markdownFilesFor(content, options).map(({ path }) => path);
   const indexOf = async (tree: ScannedContent, options?: { drafts?: boolean }) => {
-    const index = markdownFilesFor(tree, options).find(({ path }) => path === "/work.md");
+    const index = markdownFilesFor(tree, options).find(({ path }) => path === "/collection.md");
     return index ? index.render() : "";
   };
 
   test("serves a file for every standalone page, collection, and entry", () => {
-    expect(pathsOf()).toStrictEqual(["/about.md", "/work.md", "/work/published.md"]);
+    expect(pathsOf()).toStrictEqual(["/page.md", "/collection.md", "/collection/published.md"]);
   });
 
   test("omits drafts unless they are included", async () => {
     expect(pathsOf()).not.toContain("/unfinished.md");
-    expect(pathsOf()).not.toContain("/work/hidden.md");
+    expect(pathsOf()).not.toContain("/collection/hidden.md");
     expect(pathsOf({ drafts: true })).toContain("/unfinished.md");
-    expect(pathsOf({ drafts: true })).toContain("/work/hidden.md");
+    expect(pathsOf({ drafts: true })).toContain("/collection/hidden.md");
     await expect(indexOf(content)).resolves.not.toContain("hidden");
     await expect(indexOf(content, { drafts: true })).resolves.toContain("hidden");
   });
 
   test("writes the collection index as a list linking each entry's markdown", async () => {
     await expect(indexOf(content)).resolves.toBe(
-      "# Work\n\nSelected projects.\n\n- [published](/work/published.md) (2026-07-19)\n  About published.\n",
+      "# Collection\n\nA description.\n\n- [published](/collection/published.md) (2026-07-19)\n  About published.\n",
     );
   });
 
@@ -120,7 +129,7 @@ describe("markdownFilesFor", () => {
     const index = await indexOf({
       ...content,
       collections: [
-        scannedCollection("work", [
+        scannedCollection("collection", [
           scannedEntry("older", { date: "2026-01-01" }),
           scannedEntry("newer", { date: "2026-09-09" }),
         ]),
@@ -134,23 +143,23 @@ describe("markdownFilesFor", () => {
     const index = await indexOf({
       ...content,
       collections: [
-        scannedCollection("work", [
+        scannedCollection("collection", [
           scannedEntry("brackets", {
             frontmatter: { title: "Notes on [X]", description: "Two\nlines.", date: "2026-07-19" },
           }),
         ]),
       ],
     });
-    expect(index).toContain("- [Notes on \\[X\\]](/work/brackets.md) (2026-07-19)\n  Two lines.\n");
+    expect(index).toContain("- [Notes on \\[X\\]](/collection/brackets.md) (2026-07-19)\n  Two lines.\n");
   });
 
   test("rejects an entry whose frontmatter is incomplete", async () => {
     const index = markdownFilesFor({
       ...content,
       collections: [
-        scannedCollection("work", [scannedEntry("untitled", { frontmatter: { description: "A description." } })]),
+        scannedCollection("collection", [scannedEntry("untitled", { frontmatter: { description: "A description." } })]),
       ],
-    }).find(({ path }) => path === "/work.md");
+    }).find(({ path }) => path === "/collection.md");
     await expect(index?.render()).rejects.toThrow("is missing a title");
   });
 });

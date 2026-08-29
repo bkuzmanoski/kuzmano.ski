@@ -24,8 +24,7 @@ export const DESTINATIONS = {
   about: entry("about"),
   experience: entry("experience"),
   work: collection("work"),
-  "tech-notes": collection("tech-notes"),
-  "design-notes": collection("design-notes"),
+  blog: collection("blog"),
   contact: {
     type: "contact",
     title: CONTACT_PAGE_TITLE,
@@ -41,7 +40,7 @@ export type DestinationId = keyof typeof DESTINATIONS;
  */
 export const DESTINATION_GROUPS = [
   ["about", "experience", "work"],
-  ["tech-notes", "design-notes"],
+  ["blog"],
   ["contact"],
 ] as const satisfies ReadonlyArray<ReadonlyArray<DestinationId>>;
 

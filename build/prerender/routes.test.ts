@@ -1,4 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+
+import type * as contentConfig from "#/config/content.ts";
 
 import {
   draftEntry,
@@ -6,11 +8,21 @@ import {
   scannedContent,
   scannedDirectory,
   scannedEntry,
-} from "#/test-utils/scanned-content.ts";
+} from "../test-utils/scanned-content.ts";
 
 import { routesFor } from "./routes.ts";
 
 import type { ScannedContent } from "./routes.ts";
+
+vi.mock("#/config/content.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof contentConfig>()),
+  COLLECTIONS: {
+    "collection-1": { title: "Collection 1", description: "" },
+    "collection-2": { title: "Collection 2", description: "" },
+    "collection-3": { title: "Collection 3", description: "" },
+  },
+  PAGE_SLUGS: ["page-1", "page-2"],
+}));
 
 const undated = { date: undefined };
 
@@ -18,11 +30,11 @@ const undated = { date: undefined };
 const content = (overrides: Partial<ScannedContent> = {}): ScannedContent =>
   scannedContent({
     collections: [
-      scannedCollection("work", [scannedEntry("work-entry", { date: "2026-01-02" })]),
-      scannedCollection("tech-notes", [scannedEntry("tech-notes-entry", { date: "2026-03-04" })]),
-      scannedCollection("design-notes"),
+      scannedCollection("collection-1", [scannedEntry("entry-1", { date: "2026-01-02" })]),
+      scannedCollection("collection-2", [scannedEntry("entry-2", { date: "2026-03-04" })]),
+      scannedCollection("collection-3"),
     ],
-    pages: scannedDirectory([scannedEntry("about", { date: "2026-02-03" }), scannedEntry("experience", undated)]),
+    pages: scannedDirectory([scannedEntry("page-1", { date: "2026-02-03" }), scannedEntry("page-2", undated)]),
     ...overrides,
   });
 
@@ -34,26 +46,26 @@ describe("routes", () => {
     expect(paths()).toEqual([
       "/",
       "/contact",
-      "/work",
-      "/work/work-entry",
-      "/tech-notes",
-      "/tech-notes/tech-notes-entry",
-      "/design-notes",
-      "/about",
-      "/experience",
+      "/collection-1",
+      "/collection-1/entry-1",
+      "/collection-2",
+      "/collection-2/entry-2",
+      "/collection-3",
+      "/page-1",
+      "/page-2",
     ]);
   });
 
   test("uses an entry's date as its sitemap lastmod", () => {
     expect(routes()).toContainEqual({
-      path: "/work/work-entry",
+      path: "/collection-1/entry-1",
       sitemap: { lastmod: "2026-01-02" },
     });
   });
 
   test("uses the newest entry date as a collection's sitemap lastmod", () => {
     expect(routes()).toContainEqual({
-      path: "/work",
+      path: "/collection-1",
       sitemap: { lastmod: "2026-01-02" },
     });
   });
@@ -64,34 +76,34 @@ describe("routes", () => {
       sitemap: { lastmod: "2026-03-04" },
     });
     expect(routes()).toContainEqual({
-      path: "/design-notes",
+      path: "/collection-3",
       sitemap: { lastmod: "2026-03-04" },
     });
   });
 
   test("omits lastmod when an entry has no date", () => {
-    expect(routes()).toContainEqual({ path: "/experience" });
+    expect(routes()).toContainEqual({ path: "/page-2" });
   });
 
   test("omits draft entries", () => {
     const withDrafts = routesFor(
       content({
         collections: [
-          scannedCollection("work", [draftEntry("unpublished", { date: "2026-09-09" })]),
-          scannedCollection("tech-notes"),
-          scannedCollection("design-notes"),
+          scannedCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
+          scannedCollection("collection-2"),
+          scannedCollection("collection-3"),
         ],
         pages: scannedDirectory([
-          scannedEntry("about", undated),
-          scannedEntry("experience", undated),
+          scannedEntry("page-1", undated),
+          scannedEntry("page-2", undated),
           draftEntry("secret", undated),
         ]),
       }),
     ).map(({ path }) => path);
 
-    expect(withDrafts).not.toContain("/work/unpublished");
+    expect(withDrafts).not.toContain("/collection-1/unpublished");
     expect(withDrafts).not.toContain("/secret");
-    expect(withDrafts).toContain("/work");
+    expect(withDrafts).toContain("/collection-1");
   });
 });
 
@@ -100,22 +112,22 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("Tech Notes"),
-          scannedCollection("work"),
-          scannedCollection("tech-notes"),
-          scannedCollection("design-notes"),
+          scannedCollection("Collection Four"),
+          scannedCollection("collection-1"),
+          scannedCollection("collection-2"),
+          scannedCollection("collection-3"),
         ],
       }),
-    ).toThrow(/not URL-safe.*Tech Notes/s);
+    ).toThrow(/not URL-safe.*Collection Four/s);
   });
 
   test("fails for an entry slug that is not URL-safe", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("work", [scannedEntry("Not A Slug", undated)]),
-          scannedCollection("tech-notes"),
-          scannedCollection("design-notes"),
+          scannedCollection("collection-1", [scannedEntry("Not A Slug", undated)]),
+          scannedCollection("collection-2"),
+          scannedCollection("collection-3"),
         ],
       }),
     ).toThrow(/not URL-safe.*Not A Slug/s);
@@ -125,8 +137,8 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: scannedDirectory([
-          scannedEntry("about", undated),
-          scannedEntry("experience", undated),
+          scannedEntry("page-1", undated),
+          scannedEntry("page-2", undated),
           scannedEntry("Read Me", undated),
         ]),
       }),
@@ -134,8 +146,8 @@ describe("invalid content", () => {
   });
 
   test("fails when a declared page has no corresponding file", () => {
-    expect(() => paths({ pages: scannedDirectory([scannedEntry("about", undated)]) })).toThrow(
-      /declared with no corresponding file.*experience/s,
+    expect(() => paths({ pages: scannedDirectory([scannedEntry("page-1", undated)]) })).toThrow(
+      /declared with no corresponding file.*page-2/s,
     );
   });
 
@@ -143,20 +155,20 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         pages: scannedDirectory([
-          scannedEntry("about", undated),
-          scannedEntry("experience", undated),
-          scannedEntry("work", undated),
+          scannedEntry("page-1", undated),
+          scannedEntry("page-2", undated),
+          scannedEntry("collection-1", undated),
         ]),
       }),
-    ).toThrow(/shadowed by a collection.*work/s);
+    ).toThrow(/shadowed by a collection.*collection-1/s);
   });
 
   test("fails when content shadows a reserved route", () => {
     expect(() =>
       paths({
         pages: scannedDirectory([
-          scannedEntry("about", undated),
-          scannedEntry("experience", undated),
+          scannedEntry("page-1", undated),
+          scannedEntry("page-2", undated),
           scannedEntry("contact", undated),
         ]),
       }),
@@ -164,9 +176,9 @@ describe("invalid content", () => {
   });
 
   test("fails when a declared collection has no corresponding directory", () => {
-    expect(() => paths({ collections: [scannedCollection("work"), scannedCollection("tech-notes")] })).toThrow(
-      /no corresponding content directory.*design-notes/s,
-    );
+    expect(() =>
+      paths({ collections: [scannedCollection("collection-1"), scannedCollection("collection-2")] }),
+    ).toThrow(/no corresponding content directory.*collection-3/s);
   });
 
   test("fails when a content directory has no declared collection", () => {
@@ -179,9 +191,9 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("work", [], ["archive"]),
-          scannedCollection("tech-notes"),
-          scannedCollection("design-notes"),
+          scannedCollection("collection-1", [], ["archive"]),
+          scannedCollection("collection-2"),
+          scannedCollection("collection-3"),
         ],
       }),
     ).toThrow(/Nested content director.*archive/s);
@@ -190,7 +202,7 @@ describe("invalid content", () => {
   test("fails for a nested directory inside the pages directory", () => {
     expect(() =>
       paths({
-        pages: scannedDirectory([scannedEntry("about", undated), scannedEntry("experience", undated)], ["drafts"]),
+        pages: scannedDirectory([scannedEntry("page-1", undated), scannedEntry("page-2", undated)], ["drafts"]),
       }),
     ).toThrow(/Nested content director.*drafts/s);
   });

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { feedDocument, feedEntry } from "#/test-utils/feeds.ts";
+import { feedDocument, feedEntry } from "../test-utils/feeds.ts";
 
 import { atomFeed } from "./atom.ts";
 

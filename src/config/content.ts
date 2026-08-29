@@ -35,9 +35,8 @@ interface CollectionMetadata {
  * to carry frontmatter, so the title and description are declared here.
  */
 export const COLLECTIONS = {
-  work: { title: "Work", description: "Selected projects." },
-  "tech-notes": { title: "Tech Notes", description: "Notes on software development." },
-  "design-notes": { title: "Design Notes", description: "Notes on interface and visual design." },
+  work: { title: "Work", description: "" },
+  blog: { title: "Blog", description: "" },
 } as const satisfies Record<string, CollectionMetadata>;
 
 export type CollectionSegment = keyof typeof COLLECTIONS;

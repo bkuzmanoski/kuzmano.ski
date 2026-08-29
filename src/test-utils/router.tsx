@@ -11,7 +11,14 @@ import type { RootRouteOptions } from "@tanstack/react-router";
 // because `options` uses the type shared by all routes rather than the root route's type.
 (rootRoute.options as RootRouteOptions).shellComponent = undefined;
 
-/** Renders the real route tree at `route`. A load error is left to surface in the render.*/
+/**
+ * Renders the real route tree at `route`. A load error is left to surface in the render.
+ *
+ * Mounting the tree pulls in every route module, and with them the desktop, so a suite that mocks
+ * a module the desktop reads has to mock all of it. A suite that renders one component and needs
+ * nothing more than a router for its links to read should use `RouterContext` from
+ * `./router-context`, which holds no routes.
+ */
 export function renderRoute(route: string) {
   const history = createMemoryHistory({ initialEntries: [route] });
   const router = getRouter(history);

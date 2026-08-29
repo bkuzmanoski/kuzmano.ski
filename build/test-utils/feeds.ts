@@ -1,7 +1,8 @@
-import type { FeedMetadata } from "#/config/site";
+import type { CollectionSegment } from "#/config/content.ts";
+import type { FeedMetadata } from "#/config/site.ts";
 
-import type { Feed, FeedEntry } from "../../build/feeds/atom.ts";
-import type { PageSource } from "../../build/feeds/plugin.ts";
+import type { Feed, FeedEntry } from "../feeds/atom.ts";
+import type { PageSource } from "../feeds/plugin.ts";
 
 export const ENTRY_URL = "https://kuzmano.ski/collection/entry";
 
@@ -41,12 +42,21 @@ export const feedDocument = (overrides: Partial<Feed> = {}): Feed => ({
   ...overrides,
 });
 
-/** A feed's declaration, for suites covering which entries a feed gathers. */
-export const feedMetadata = (overrides: Partial<FeedMetadata> = {}): FeedMetadata => ({
+/**
+ * A feed's declaration, for suites covering which entries a feed gathers.
+ *
+ * `collections` widens to plain strings so a suite can name collections of its own rather than the
+ * segments the site happens to declare. A feed matches a segment against the scanned tree by name
+ * and never looks it up, so a name outside the declared set behaves the same as one inside it.
+ */
+export const feedMetadata = ({
+  collections = ["collection-1", "collection-2"],
+  ...overrides
+}: Partial<Omit<FeedMetadata, "collections">> & { collections?: Array<string> } = {}): FeedMetadata => ({
   title: "Feed title",
   description: "Feed subtitle.",
   path: "/feed.xml",
   route: "/",
-  collections: ["work", "tech-notes"],
+  collections: collections as Array<CollectionSegment>,
   ...overrides,
 });

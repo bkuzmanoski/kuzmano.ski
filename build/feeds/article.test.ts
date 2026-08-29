@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { ENTRY_URL, articlePage } from "#/test-utils/feeds.ts";
+import { ENTRY_URL, articlePage } from "../test-utils/feeds.ts";
 
 import { articleContentOf } from "./article.ts";
 

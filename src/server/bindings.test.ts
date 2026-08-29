@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { expect, test } from "vitest";
-
-import { fromRoot } from "../../build/paths.ts";
 
 import {
   CONTACT_EMAIL_ADDRESS_BINDING,
@@ -11,7 +10,7 @@ import {
   SEND_EMAIL_RATELIMIT_BINDING,
 } from "./bindings";
 
-const source = readFileSync(fromRoot("wrangler.jsonc"), "utf8");
+const source = readFileSync(join(process.cwd(), "wrangler.jsonc"), "utf8");
 const config = source.replaceAll(/^\s*\/\/.*$/gm, "");
 
 const declares = (key: string) => config.includes(`"${key}"`);

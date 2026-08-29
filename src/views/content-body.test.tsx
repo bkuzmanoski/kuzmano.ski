@@ -6,7 +6,7 @@ import { canonicalUrl } from "#/config/site";
 import type { MDXModule } from "#/content";
 import styles from "#/content/content.module.css";
 import { resetTooltipState } from "#/lib/tooltip";
-import * as headingAnchorFixture from "#/test-utils/heading-anchor.mdx";
+import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 
 import { ContentBody } from "./content-body";
 
@@ -22,7 +22,7 @@ vi.mock("#/lib/audio/sounds", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
 );
 
-const ROUTE = "/tech-notes/fixture";
+const ROUTE = "/collection/fixture";
 
 beforeEach(() => {
   resetTooltipState();

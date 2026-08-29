@@ -35,6 +35,7 @@ export default defineConfig(
         "error",
         {
           zones: [
+            { target: "./src", from: ["./build"] },
             {
               target: "./src/lib",
               from: ["./src/components", "./src/config", "./src/content", "./src/routes", "./src/views"],

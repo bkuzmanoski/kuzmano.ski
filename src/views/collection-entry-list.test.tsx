@@ -20,7 +20,7 @@ const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 
-const { collection, entries, routeOf } = testCollection("tech-notes", 2);
+const { collection, entries, routeOf } = testCollection("blog", 2);
 const lastIndex = entries.length - 1;
 
 beforeEach(() => {

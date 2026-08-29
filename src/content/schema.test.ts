@@ -68,6 +68,6 @@ describe("parseFrontmatter", () => {
   });
 
   test("names the entry in the message", () => {
-    expect(() => parseFrontmatter(null, "./tech-notes/test.mdx")).toThrow(/\.\/tech-notes\/test\.mdx/);
+    expect(() => parseFrontmatter(null, "./collection/test.mdx")).toThrow(/\.\/collection\/test\.mdx/);
   });
 });

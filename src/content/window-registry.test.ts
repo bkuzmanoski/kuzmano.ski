@@ -5,7 +5,7 @@ import { testCollection } from "#/test-utils/content";
 
 import { destinationRouteOf, resolveRoute, resolveWindow } from "./window-registry";
 
-const { collection, entries } = testCollection("tech-notes");
+const { collection, entries } = testCollection("blog");
 const entry = entries[0]!;
 
 describe("resolveRoute", () => {
@@ -20,11 +20,11 @@ describe("resolveRoute", () => {
   });
 
   test("resolves a collection entry", () => {
-    expect(resolveRoute(`/tech-notes/${entry.slug}`)).toMatchObject({
+    expect(resolveRoute(`/blog/${entry.slug}`)).toMatchObject({
       id: "entry",
       title: entry.title,
       slug: entry.slug,
-      collectionRoute: "/tech-notes",
+      collectionRoute: "/blog",
       contentIndex: collection,
     });
   });
@@ -38,15 +38,15 @@ describe("resolveRoute", () => {
   });
 
   test("resolves a collection index", () => {
-    expect(resolveRoute("/tech-notes")).toMatchObject({
+    expect(resolveRoute("/blog")).toMatchObject({
       id: "collection",
-      title: "Tech Notes",
-      route: "/tech-notes",
+      title: "Blog",
+      route: "/blog",
     });
   });
 
   test("an unknown collection entry slug resolves to the not-found window", () => {
-    expect(resolveRoute("/tech-notes/does-not-exist")).toMatchObject({ id: "notFound" });
+    expect(resolveRoute("/blog/does-not-exist")).toMatchObject({ id: "notFound" });
   });
 
   test("an unknown collection resolves to the not-found window", () => {
@@ -60,19 +60,19 @@ describe("resolveRoute", () => {
   });
 
   test("ignores leading and trailing slashes", () => {
-    expect(resolveRoute("/tech-notes/")).toMatchObject({ id: "collection" });
+    expect(resolveRoute("/blog/")).toMatchObject({ id: "collection" });
     expect(resolveRoute("//about//")).toMatchObject({ id: "entry" });
-    expect(resolveRoute(`/tech-notes/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
+    expect(resolveRoute(`/blog/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
   });
 
   test("a route deeper than a collection entry resolves to the not-found window", () => {
-    expect(resolveRoute(`/tech-notes/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
+    expect(resolveRoute(`/blog/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
   });
 });
 
 describe("resolveWindow", () => {
   test("returns the window a route opens", () => {
-    expect(resolveWindow("/tech-notes")).toMatchObject({ id: "collection" });
+    expect(resolveWindow("/blog")).toMatchObject({ id: "collection" });
   });
 
   test("returns null for the routes that do not open a window", () => {
@@ -84,11 +84,11 @@ describe("resolveWindow", () => {
 describe("destinationRouteOf", () => {
   test("returns the route for a top-level page or collection", () => {
     expect(destinationRouteOf("/about")).toBe("/about");
-    expect(destinationRouteOf("/tech-notes")).toBe("/tech-notes");
+    expect(destinationRouteOf("/blog")).toBe("/blog");
   });
 
   test("returns its own route for a collection entry, not the route of its collection", () => {
-    expect(destinationRouteOf(`/tech-notes/${entry.slug}`)).toBe(`/tech-notes/${entry.slug}`);
+    expect(destinationRouteOf(`/blog/${entry.slug}`)).toBe(`/blog/${entry.slug}`);
   });
 
   test("returns the route for the contact window", () => {
@@ -97,7 +97,7 @@ describe("destinationRouteOf", () => {
 
   test("returns null for routes without a window", () => {
     expect(destinationRouteOf("/no-such-page")).toBeNull();
-    expect(destinationRouteOf("/tech-notes/does-not-exist")).toBeNull();
+    expect(destinationRouteOf("/blog/does-not-exist")).toBeNull();
     expect(destinationRouteOf("/")).toBeNull();
   });
 });

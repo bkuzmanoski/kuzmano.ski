@@ -10,13 +10,13 @@ import { verifyPrerenderedPage } from "./verify.ts";
 // The parts of a prerendered page that the verifier checks, with `body` as the window content.
 const pageHtml = (body: string) =>
   [
-    `<title>${documentTitle("Tech Notes")}</title>`,
+    `<title>${documentTitle("Collection")}</title>`,
     '<nav aria-label="Main menu"></nav>',
-    `<section aria-label="Tech Notes"><div id="window-content">${body}</div></section>`,
+    `<section aria-label="Collection"><div id="window-content">${body}</div></section>`,
   ].join("");
 
 const verify =
-  (html: string, path = "/tech-notes") =>
+  (html: string, path = "/collection") =>
   () =>
     verifyPrerenderedPage({ page: { path }, html });
 
@@ -31,7 +31,7 @@ describe("verifyPrerenderedPage", () => {
   });
 
   test("fails when the window title does not match the page", () => {
-    const html = pageHtml("<p>Content</p>").replace('aria-label="Tech Notes"', 'aria-label="Something else"');
+    const html = pageHtml("<p>Content</p>").replace('aria-label="Collection"', 'aria-label="Something else"');
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 

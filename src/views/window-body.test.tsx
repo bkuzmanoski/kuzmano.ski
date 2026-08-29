@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import { testCollection } from "#/test-utils/content";
+import { RouterContext } from "#/test-utils/router-context";
 
 import { WindowBody } from "./window-body";
 
@@ -17,30 +18,32 @@ vi.mock("#/lib/audio/scroll", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
 );
 
-const { entries } = testCollection("tech-notes");
+const { entries } = testCollection("blog");
 const entry = entries[0]!;
 
+const renderBody = (route: string) => render(<WindowBody route={route} />, { wrapper: RouterContext });
+
 test("a collection route renders a link for every entry in the collection", () => {
-  render(<WindowBody route="/tech-notes" />);
+  renderBody("/blog");
 
   expect(screen.getAllByRole("link")).toHaveLength(entries.length);
   expect(screen.getByRole("link", { name: entry.title })).toBeDefined();
 });
 
 test("the entry list marks the entry the entry window is showing, and only in the collection it belongs to", () => {
-  openWindows.mockReturnValue({ entry: { route: `/tech-notes/${entry.slug}`, title: entry.title } });
+  openWindows.mockReturnValue({ entry: { route: `/blog/${entry.slug}`, title: entry.title } });
 
-  const { container, rerender } = render(<WindowBody route="/tech-notes" />);
+  const { container, rerender } = renderBody("/blog");
 
   expect(screen.getByRole("link", { name: entry.title }).getAttribute("aria-current")).toBe("true");
 
-  rerender(<WindowBody route="/design-notes" />);
+  rerender(<WindowBody route="/work" />);
 
   expect(container.querySelector("[aria-current]")).toBeNull();
 });
 
 test("an entry route suspends on its body chunk, from a collection or the top-level pages", async () => {
-  const mounted = act(() => render(<WindowBody route={`/tech-notes/${entry.slug}`} />));
+  const mounted = act(() => renderBody(`/blog/${entry.slug}`));
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined(); // The body arrives in a chunk of its own.
 
@@ -56,6 +59,6 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
 });
 
 test("a route that does not match any content renders an empty window body", () => {
-  const { container } = render(<WindowBody route="/no-such-page" />);
+  const { container } = renderBody("/no-such-page");
   expect(container.innerHTML).toBe("");
 });
