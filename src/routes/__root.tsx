@@ -1,7 +1,7 @@
 import { createRootRoute } from "@tanstack/react-router";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
-import { FEEDS } from "#/config/site";
+import { FEED_TYPE, SITE_FEED } from "#/config/site";
 import stylesheet from "#/styles.css?url";
 import { Desktop } from "#/views/desktop";
 import { ErrorPage } from "#/views/error-page";
@@ -24,7 +24,7 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "any" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.json" },
-      ...FEEDS.map(({ title, path }) => ({ rel: "alternate", type: "application/atom+xml", href: path, title })),
+      { rel: "alternate", type: FEED_TYPE, href: SITE_FEED.path, title: SITE_FEED.title },
     ],
   }),
   shellComponent: RootDocument,

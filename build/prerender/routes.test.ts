@@ -1,32 +1,30 @@
 import { describe, expect, test } from "vitest";
 
+import {
+  draftEntry,
+  scannedCollection,
+  scannedContent,
+  scannedDirectory,
+  scannedEntry,
+} from "#/test-utils/scanned-content.ts";
+
 import { routesFor } from "./routes.ts";
 
 import type { ScannedContent } from "./routes.ts";
 
-const scannedEntry = (slug: string, draft: boolean, date?: string) => ({
-  slug,
-  path: `${slug}.mdx`,
-  draft,
-  date,
-  frontmatter: { title: slug, description: slug, date },
-});
-const publishedEntry = (slug: string, date?: string) => scannedEntry(slug, false, date);
-const draftEntry = (slug: string, date?: string) => scannedEntry(slug, true, date);
+const undated = { date: undefined };
 
 // A valid tree that each test can modify to exercise one condition.
-const content = (overrides: Partial<ScannedContent> = {}): ScannedContent => ({
-  collections: [
-    { name: "work", entries: [publishedEntry("work-entry", "2026-01-02")], subdirectories: [] },
-    { name: "tech-notes", entries: [publishedEntry("tech-notes-entry", "2026-03-04")], subdirectories: [] },
-    { name: "design-notes", entries: [], subdirectories: [] },
-  ],
-  pages: {
-    entries: [publishedEntry("about", "2026-02-03"), publishedEntry("experience")],
-    subdirectories: [],
-  },
-  ...overrides,
-});
+const content = (overrides: Partial<ScannedContent> = {}): ScannedContent =>
+  scannedContent({
+    collections: [
+      scannedCollection("work", [scannedEntry("work-entry", { date: "2026-01-02" })]),
+      scannedCollection("tech-notes", [scannedEntry("tech-notes-entry", { date: "2026-03-04" })]),
+      scannedCollection("design-notes"),
+    ],
+    pages: scannedDirectory([scannedEntry("about", { date: "2026-02-03" }), scannedEntry("experience", undated)]),
+    ...overrides,
+  });
 
 const routes = (overrides?: Partial<ScannedContent>) => routesFor(content(overrides));
 const paths = (overrides?: Partial<ScannedContent>) => routes(overrides).map(({ path }) => path);
@@ -79,14 +77,15 @@ describe("routes", () => {
     const withDrafts = routesFor(
       content({
         collections: [
-          { name: "work", entries: [draftEntry("unpublished", "2026-09-09")], subdirectories: [] },
-          { name: "tech-notes", entries: [], subdirectories: [] },
-          { name: "design-notes", entries: [], subdirectories: [] },
+          scannedCollection("work", [draftEntry("unpublished", { date: "2026-09-09" })]),
+          scannedCollection("tech-notes"),
+          scannedCollection("design-notes"),
         ],
-        pages: {
-          entries: [publishedEntry("about"), publishedEntry("experience"), draftEntry("secret")],
-          subdirectories: [],
-        },
+        pages: scannedDirectory([
+          scannedEntry("about", undated),
+          scannedEntry("experience", undated),
+          draftEntry("secret", undated),
+        ]),
       }),
     ).map(({ path }) => path);
 
@@ -101,10 +100,10 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          { name: "Tech Notes", entries: [], subdirectories: [] },
-          { name: "work", entries: [], subdirectories: [] },
-          { name: "tech-notes", entries: [], subdirectories: [] },
-          { name: "design-notes", entries: [], subdirectories: [] },
+          scannedCollection("Tech Notes"),
+          scannedCollection("work"),
+          scannedCollection("tech-notes"),
+          scannedCollection("design-notes"),
         ],
       }),
     ).toThrow(/not URL-safe.*Tech Notes/s);
@@ -114,9 +113,9 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          { name: "work", entries: [publishedEntry("Not A Slug")], subdirectories: [] },
-          { name: "tech-notes", entries: [], subdirectories: [] },
-          { name: "design-notes", entries: [], subdirectories: [] },
+          scannedCollection("work", [scannedEntry("Not A Slug", undated)]),
+          scannedCollection("tech-notes"),
+          scannedCollection("design-notes"),
         ],
       }),
     ).toThrow(/not URL-safe.*Not A Slug/s);
@@ -125,32 +124,29 @@ describe("invalid content", () => {
   test("fails for a page slug that is not URL-safe", () => {
     expect(() =>
       paths({
-        pages: {
-          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("Read Me")],
-          subdirectories: [],
-        },
+        pages: scannedDirectory([
+          scannedEntry("about", undated),
+          scannedEntry("experience", undated),
+          scannedEntry("Read Me", undated),
+        ]),
       }),
     ).toThrow(/not URL-safe.*Read Me/s);
   });
 
   test("fails when a declared page has no corresponding file", () => {
-    expect(() =>
-      paths({
-        pages: {
-          entries: [publishedEntry("about")],
-          subdirectories: [],
-        },
-      }),
-    ).toThrow(/declared with no corresponding file.*experience/s);
+    expect(() => paths({ pages: scannedDirectory([scannedEntry("about", undated)]) })).toThrow(
+      /declared with no corresponding file.*experience/s,
+    );
   });
 
   test("fails when a page has the same slug as a collection", () => {
     expect(() =>
       paths({
-        pages: {
-          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("work")],
-          subdirectories: [],
-        },
+        pages: scannedDirectory([
+          scannedEntry("about", undated),
+          scannedEntry("experience", undated),
+          scannedEntry("work", undated),
+        ]),
       }),
     ).toThrow(/shadowed by a collection.*work/s);
   });
@@ -158,40 +154,34 @@ describe("invalid content", () => {
   test("fails when content shadows a reserved route", () => {
     expect(() =>
       paths({
-        pages: {
-          entries: [publishedEntry("about"), publishedEntry("experience"), publishedEntry("contact")],
-          subdirectories: [],
-        },
+        pages: scannedDirectory([
+          scannedEntry("about", undated),
+          scannedEntry("experience", undated),
+          scannedEntry("contact", undated),
+        ]),
       }),
     ).toThrow(/shadowing reserved route/);
   });
 
   test("fails when a declared collection has no corresponding directory", () => {
-    expect(() =>
-      paths({
-        collections: [
-          { name: "work", entries: [], subdirectories: [] },
-          { name: "tech-notes", entries: [], subdirectories: [] },
-        ],
-      }),
-    ).toThrow(/no corresponding content directory.*design-notes/s);
+    expect(() => paths({ collections: [scannedCollection("work"), scannedCollection("tech-notes")] })).toThrow(
+      /no corresponding content directory.*design-notes/s,
+    );
   });
 
   test("fails when a content directory has no declared collection", () => {
-    expect(() =>
-      paths({
-        collections: [...content().collections, { name: "unregistered", entries: [], subdirectories: [] }],
-      }),
-    ).toThrow(/missing titles.*unregistered/s);
+    expect(() => paths({ collections: [...content().collections, scannedCollection("unregistered")] })).toThrow(
+      /missing titles.*unregistered/s,
+    );
   });
 
   test("fails for a nested directory inside a collection", () => {
     expect(() =>
       paths({
         collections: [
-          { name: "work", entries: [], subdirectories: ["archive"] },
-          { name: "tech-notes", entries: [], subdirectories: [] },
-          { name: "design-notes", entries: [], subdirectories: [] },
+          scannedCollection("work", [], ["archive"]),
+          scannedCollection("tech-notes"),
+          scannedCollection("design-notes"),
         ],
       }),
     ).toThrow(/Nested content director.*archive/s);
@@ -200,10 +190,7 @@ describe("invalid content", () => {
   test("fails for a nested directory inside the pages directory", () => {
     expect(() =>
       paths({
-        pages: {
-          entries: [publishedEntry("about"), publishedEntry("experience")],
-          subdirectories: ["drafts"],
-        },
+        pages: scannedDirectory([scannedEntry("about", undated), scannedEntry("experience", undated)], ["drafts"]),
       }),
     ).toThrow(/Nested content director.*drafts/s);
   });

@@ -15,17 +15,26 @@ const FEED_SCHEMA: Schema = {
     "caption",
     "abbr",
     "cite",
-    "time",
     "mark",
+    "time",
+    "audio",
+    "video",
+    "track",
   ],
-  // A disallowed element is otherwise unwrapped, which would leave a control's label as loose text.
   strip: ["script", "style", "svg", "button", "form", "input", "select", "textarea", "object", "iframe", "template"],
   attributes: {
     ...defaultSchema.attributes,
     "*": (defaultSchema.attributes?.["*"] ?? []).filter((attribute) => attribute !== "tabIndex"),
+    source: [...(defaultSchema.attributes?.source ?? []), "src", "type"],
+    video: ["controls", "loop", "muted", "playsInline", "poster", "preload", "src"],
+    audio: ["controls", "loop", "muted", "preload", "src"],
+    track: ["default", "kind", "src", "srcLang"],
   },
-  clobber: [], // Feed markup does not need ids renamed because it is not inserted into the site's document.
+  clobber: [],
 };
+const WRAPPER_TAGS = new Set(["span", "div"]);
+const URL_ATTRIBUTES = ["href", "src", "poster"];
+const URL_LIST_ATTRIBUTES = ["srcSet"];
 
 const isElement = (node: Nodes): node is Element => node.type === "element";
 const childrenOf = (node: Nodes): Array<RootContent> => ("children" in node ? node.children : []);
@@ -58,18 +67,38 @@ function removeUIMarkup(node: Parents) {
   });
 }
 
-// Sanitizing removes the attributes from spans used for syntax highlighting and page UI, leaving empty wrappers.
-function unwrapPlainSpans(children: Array<ElementContent>): Array<ElementContent> {
+// Sanitizing removes the attributes from the wrappers used for syntax highlighting
+// and page UI, leaving elements that hold nothing but their children.
+function unwrapPlainWrappers(children: Array<ElementContent>): Array<ElementContent> {
   return children.flatMap((child) => {
     if (child.type !== "element") {
       return [child];
     }
 
-    child.children = unwrapPlainSpans(child.children);
+    child.children = unwrapPlainWrappers(child.children);
 
-    return child.tagName === "span" && Object.keys(child.properties).length === 0 ? child.children : [child];
+    return WRAPPER_TAGS.has(child.tagName) && Object.keys(child.properties).length === 0 ? child.children : [child];
   });
 }
+
+const absolute = (value: string, url: string) => {
+  try {
+    return new URL(value, url).href;
+  } catch {
+    return value; // Left as written.
+  }
+};
+
+// A `srcset` is a comma-separated list of candidates, each a URL followed by an optional descriptor.
+const absoluteCandidates = (value: string, url: string) =>
+  value
+    .split(",")
+    .map((candidate) => {
+      const [source, ...descriptor] = candidate.trim().split(/\s+/);
+      return source ? [absolute(source, url), ...descriptor].join(" ") : "";
+    })
+    .filter(Boolean)
+    .join(", ");
 
 function resolveRelativeUrls(node: Nodes, url: string) {
   walk(node, (candidate) => {
@@ -77,17 +106,21 @@ function resolveRelativeUrls(node: Nodes, url: string) {
       return;
     }
 
-    for (const property of ["href", "src"]) {
+    for (const property of URL_ATTRIBUTES) {
       const value = candidate.properties[property];
 
-      if (typeof value !== "string") {
-        continue;
+      if (typeof value === "string") {
+        candidate.properties[property] = absolute(value, url);
       }
+    }
 
-      try {
-        candidate.properties[property] = new URL(value, url).href;
-      } catch {
-        // Ignored.
+    for (const property of URL_LIST_ATTRIBUTES) {
+      const value = candidate.properties[property];
+
+      if (typeof value === "string") {
+        candidate.properties[property] = absoluteCandidates(value, url);
+      } else if (Array.isArray(value)) {
+        candidate.properties[property] = value.map((entry) => absoluteCandidates(String(entry), url));
       }
     }
   });
@@ -113,5 +146,5 @@ export function articleContentOf(html: string, url: string): string {
 
   const sanitized = sanitize(article, FEED_SCHEMA) as Element;
 
-  return toHtml({ type: "root", children: unwrapPlainSpans(sanitized.children) });
+  return toHtml({ type: "root", children: unwrapPlainWrappers(sanitized.children) });
 }

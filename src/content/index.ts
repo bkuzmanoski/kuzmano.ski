@@ -1,6 +1,7 @@
 import { CONTENT_ASSETS } from "virtual:content-assets";
 
 import { COLLECTIONS, PAGES_DIRECTORY } from "#/config/content";
+import { byNewestDate } from "#/lib/date";
 import { trackPromise } from "#/lib/tracked-promise";
 
 import { parseFrontmatter } from "./schema";
@@ -117,7 +118,7 @@ function collection(directory: string, title: string, description: string): Coll
       entries ??= [...paths]
         .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))
         .filter((entry) => !entry.draft || import.meta.env.DEV)
-        .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+        .sort((a, b) => byNewestDate(a.date, b.date));
 
       return entries;
     },

@@ -28,7 +28,15 @@ const HTML_ESCAPE_VALUES: Record<string, string> = {
   "'": "&apos;",
 };
 
-const escapeXml = (value: string) => value.replace(/[&<>"']/g, (character) => HTML_ESCAPE_VALUES[character]!);
+// eslint-disable-next-line no-control-regex -- The pattern intentionally matches control characters.
+const FORBIDDEN_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g;
+const LONE_SURROGATES = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+const escapeXml = (value: string) =>
+  value
+    .replace(FORBIDDEN_CHARACTERS, "")
+    .replace(LONE_SURROGATES, "")
+    .replace(/[&<>"']/g, (character) => HTML_ESCAPE_VALUES[character]!);
 const element = (name: string, value: string, attributes = "") => `<${name}${attributes}>${escapeXml(value)}</${name}>`;
 const link = (rel: string, type: string, href: string) =>
   `<link rel="${rel}" type="${type}" href="${escapeXml(href)}"/>`;

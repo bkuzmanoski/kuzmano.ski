@@ -7,6 +7,7 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
 import { COLLECTIONS } from "#/config/content.ts";
+import { markdownPath } from "#/config/site.ts";
 import { parseFrontmatter } from "#/content/schema.ts";
 
 import { byNewestFirst, publishedEntries, scanContent } from "./prerender/routes.ts";
@@ -35,6 +36,7 @@ const COMPONENT_MARKDOWN: Record<string, (node: MarkdownNode) => Array<MarkdownN
 // Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}`.
 const DISCARDED_NODES = new Set(["mdxjsEsm", "mdxFlowExpression", "mdxTextExpression"]);
 const JSX_NODES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
+const MDX_NODES = new Set([...DISCARDED_NODES, ...JSX_NODES]);
 
 // Returns the replacement nodes for a node. A plain node is returned unchanged.
 function replacementsFor(node: MarkdownNode): Array<MarkdownNode> {
@@ -57,24 +59,59 @@ function stripMdx() {
       return;
     }
 
-    tree.children = tree.children.flatMap(replacementsFor);
+    // Children are stripped before the node holding them, so a component promoted in place of its
+    // parent has already been replaced. Stripping downwards would leave nested MDX behind.
     tree.children.forEach(transform);
+    tree.children = tree.children.flatMap(replacementsFor);
+  };
+}
+
+function mdxNodesIn(node: MarkdownNode, found = new Set<string>()): Set<string> {
+  if (MDX_NODES.has(node.type)) {
+    found.add(node.name ?? node.type);
+  }
+
+  node.children?.forEach((child) => mdxNodesIn(child, found));
+
+  return found;
+}
+
+// Ensures the Markdown tree contains no MDX nodes. Any MDX that survives `stripMdx`
+// would be serialized as JSX and appear verbatim in the Markdown.
+function assertMarkdownOnly() {
+  return function assert(tree: MarkdownNode, file: { path?: string | undefined }) {
+    const remaining = mdxNodesIn(tree);
+
+    if (remaining.size > 0) {
+      throw new Error(
+        `"${file.path ?? "Markdown"}" still holds MDX that cannot be written as Markdown: ${[...remaining].join(", ")}.`,
+      );
+    }
   };
 }
 
 const processor = unified()
   .use(remarkParse)
-  .use(remarkFrontmatter) // Keeps the block, which already carries the title, description and date.
+  .use(remarkFrontmatter) // Keeps the frontmatter block which carries the title, description, and date.
   .use(remarkMdx)
   .use(stripMdx)
+  .use(assertMarkdownOnly)
   .use(remarkStringify, { bullet: "-", listItemIndent: "one", rule: "-", fences: true, strong: "*", emphasis: "_" });
 
 /** Converts MDX source to the Markdown representation of a page. */
-export async function markdownOf(source: string): Promise<string> {
-  return String(await processor.process(source));
+export async function markdownOf(source: string, path?: string): Promise<string> {
+  return String(await processor.process({ value: source, path }));
 }
 
-const entryMarkdown = async (path: string) => markdownOf(await readFile(path, "utf8"));
+async function entryMarkdown(entry: ScannedEntry): Promise<string> {
+  // Validate the frontmatter even though it is emitted unchanged. A malformed block
+  // should fail the build here rather than be included in the Markdown file.
+  parseFrontmatter(entry.frontmatter, entry.path);
+  return markdownOf(await readFile(entry.path, "utf8"), entry.path);
+}
+
+const asLinkText = (value: string) => value.replace(/[\\[\]]/g, (character) => `\\${character}`); // Escapes the characters that would otherwise end a link's text or its destination early.
+const asOneLine = (value: string) => value.replace(/\s+/g, " ").trim(); // Collapses a description onto the single line its list item occupies.
 
 // A collection's entries as a Markdown index, linking each entry's Markdown.
 // A collection has no document of its own, so the index is its alternate representation.
@@ -88,27 +125,41 @@ function collectionMarkdown(name: string, entries: Array<ScannedEntry>): string 
 
   const items = [...entries].sort(byNewestFirst).map((entry) => {
     const { title, description, date } = parseFrontmatter(entry.frontmatter, entry.path);
-    return `- [${title}](/${name}/${entry.slug}.md) (${date})\n  ${description}`;
+    return `- [${asLinkText(title)}](${markdownPath(`/${name}/${entry.slug}`)}) (${date})\n  ${asOneLine(description)}`;
   });
   const sections = [`# ${metadata.title}`, metadata.description, ...(items.length > 0 ? [items.join("\n")] : [])];
 
   return `${sections.join("\n\n")}\n`;
 }
 
-/** Markdown files for published entries and collection indexes. */
-export function markdownFilesFor({ collections, pages }: ScannedContent): Array<MarkdownFile> {
+/**
+ * Returns Markdown files for entries and collection indexes.
+ *
+ * When `drafts` is true, draft entries are included (for development purposes).
+ * A production build excludes both draft pages and their Markdown.
+ */
+export function markdownFilesFor(
+  { collections, pages }: ScannedContent,
+  { drafts = false }: { drafts?: boolean } = {},
+): Array<MarkdownFile> {
+  const served = (entries: Array<ScannedEntry>) => (drafts ? entries : publishedEntries(entries));
+
   return [
-    ...publishedEntries(pages.entries).map(({ slug, path }) => ({
-      path: `/${slug}.md`,
-      render: () => entryMarkdown(path),
+    ...served(pages.entries).map((entry) => ({
+      path: markdownPath(`/${entry.slug}`),
+      render: () => entryMarkdown(entry),
     })),
     ...collections.flatMap(({ name, entries }) => {
-      const published = publishedEntries(entries);
+      const listed = served(entries);
       return [
-        { path: `/${name}.md`, render: () => Promise.resolve(collectionMarkdown(name, published)) },
-        ...published.map(({ slug, path }) => ({
-          path: `/${name}/${slug}.md`,
-          render: () => entryMarkdown(path),
+        {
+          path: markdownPath(`/${name}`),
+          // eslint-disable-next-line @typescript-eslint/require-await -- Asynchronous so an invalid entry rejects the render rather than throwing at the caller.
+          render: async () => collectionMarkdown(name, listed),
+        },
+        ...listed.map((entry) => ({
+          path: markdownPath(`/${name}/${entry.slug}`),
+          render: () => entryMarkdown(entry),
         })),
       ];
     }),
@@ -135,7 +186,7 @@ export function markdownPlugin(): Plugin {
           return;
         }
 
-        const file = markdownFilesFor(scanContent()).find((candidate) => candidate.path === path);
+        const file = markdownFilesFor(scanContent(), { drafts: true }).find((candidate) => candidate.path === path);
 
         if (!file) {
           next();

@@ -58,9 +58,7 @@ All content shares `src/content/content.module.css`. To give a page or entry
 styles of its own, add a CSS module that exports a `page` class beside its MDX
 file under the same name (e.g., `about.mdx` and `about.module.css`).
 
-### Alternate formats
-
-**Markdown**
+### Markdown alternates
 
 Markdown is generated for every collection and published page:
 
@@ -72,7 +70,7 @@ MDX components are normally replaced by their children. If a component carries
 content in its attributes rather than its children, add it to
 `COMPONENT_MARKDOWN`.
 
-**Atom feeds**
+### Atom feeds
 
 A feed is generated for the entire site as well as for each collection.
 Standalone pages are not included. This is configurable via `FEEDS` in

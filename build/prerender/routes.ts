@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { CONTACT_PAGE_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGES_DIRECTORY, PAGE_SLUGS } from "#/config/content.ts";
+import { byNewestDate } from "#/lib/date.ts";
 import { isRecord } from "#/lib/guards.ts";
 
 import { frontmatterOf } from "../frontmatter.ts";
@@ -35,7 +36,7 @@ const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RESERVED_ROUTES: Array<string> = [CONTACT_PAGE_ROUTE]; // Routes served by a window rather than by a content file. Content that resolves to one would shadow it.
 
 export const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter(({ draft }) => !draft);
-export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => (b.date ?? "").localeCompare(a.date ?? "");
+export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => byNewestDate(a.date, b.date);
 export const newestDate = (entries: Array<ScannedEntry>): string | undefined =>
   entries.reduce<string | undefined>(
     (newest, { date }) => (date !== undefined && (newest === undefined || date > newest) ? date : newest),

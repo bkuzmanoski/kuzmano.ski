@@ -15,3 +15,5 @@ export function formatDate(isoString: string, format: Intl.DateTimeFormat): stri
   const time = Date.parse(isoString);
   return Number.isNaN(time) ? isoString : format.format(time);
 }
+
+export const byNewestDate = (a: string | undefined, b: string | undefined) => (b ?? "").localeCompare(a ?? "");

@@ -1,6 +1,6 @@
 import { notFound } from "@tanstack/react-router";
 
-import { documentHead } from "#/config/site";
+import { collectionFeed, documentHead } from "#/config/site";
 import type { DocumentMetadata } from "#/config/site";
 
 import { collections, pages } from "./index";
@@ -21,6 +21,7 @@ function documentData(
 export const contentRoute = {
   loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
     const collection = collections[params.segment];
+    const feed = collectionFeed(params.segment);
 
     if (params.slug !== undefined) {
       return documentData(collection?.frontmatterOf(params.slug), {
@@ -28,6 +29,7 @@ export const contentRoute = {
         kind: "article",
         contentAsset: collection?.assetOf(params.slug) ?? null,
         markdown: true,
+        feed,
       });
     }
 
@@ -37,6 +39,7 @@ export const contentRoute = {
         description: collection.description,
         path: `/${params.segment}`,
         markdown: true,
+        feed,
       };
     }
 
