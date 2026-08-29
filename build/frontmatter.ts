@@ -51,7 +51,7 @@ export function frontmatterPlugin(): Plugin {
 
       return code;
     },
-    async hotUpdate({ file, modules, read }) {
+    async hotUpdate({ file, modules, read, type }) {
       if (!file.endsWith(".mdx")) {
         return;
       }
@@ -60,6 +60,13 @@ export function frontmatterPlugin(): Plugin {
 
       if (!module) {
         return;
+      }
+
+      if (type === "delete") {
+        lastLoadedCode.delete(key(this.environment.name, file));
+        this.environment.moduleGraph.invalidateModule(module);
+
+        return [...modules, module];
       }
 
       const nextCode = moduleFor(await read());
