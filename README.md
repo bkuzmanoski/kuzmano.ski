@@ -30,9 +30,9 @@ Content is located in:
 - `src/content/<collection>/*.mdx`: collection entries
 
 File and folder names become URL segments and must be URL-safe.
-`build/content.ts` validates this and generates the prerender list and sitemap
-data. A page uses its frontmatter date as `lastmod`; a collection uses the
-newest date among its entries.
+`build/prerender/routes.ts` validates this and generates the prerender list and
+sitemap data. A page uses its frontmatter date as `lastmod`; a collection uses
+the newest date among its entries.
 
 Routes are dynamic (`src/routes/$segment/`), so pages and collections do not
 need route files.
@@ -64,9 +64,9 @@ Messages are sent through Cloudflare's `send_email` binding.
 
 ### Cloudflare Worker types
 
-`src/cloudflare.d.ts` contains the minimal type declarations for the Worker APIs
-used by the application. They are maintained manually because `wrangler types`
-does not provide a usable declaration for `cloudflare:workers`.
+`src/server/cloudflare.d.ts` contains the minimal type declarations for the
+Worker APIs used by the application. They are maintained manually because
+`wrangler types` does not provide a usable declaration for `cloudflare:workers`.
 
 If the Workers runtime or Wrangler version changes, check these declarations
 against the generated types:
