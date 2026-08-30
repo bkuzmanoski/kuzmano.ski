@@ -20,10 +20,11 @@
 
   /* Typography */
   --font-family-content: InterVariable, "Helvetica Neue", Helvetica, system-ui, sans-serif;
-  --font-heading-1: 700 24.5px/34px var(--font-family-content);
+  --font-heading-1: 750 28px/40px var(--font-family-content);
   --font-heading-2: 700 20px/28px var(--font-family-content);
   --font-heading-3: 700 17px/24px var(--font-family-content);
   --font-body: 400 15px/22px var(--font-family-content);
+  --font-body-bold: 600 15px/22px var(--font-family-content);
   --font-family-code: JetBrainsMono, ui-monospace, monospace;
   --font-size-code: 13px;
   --font-code: var(--font-size-code)/18px var(--font-family-code);
@@ -118,6 +119,10 @@
     text-decoration: underline;
 
     -webkit-touch-callout: default;
+  }
+
+  & :where(p) strong {
+    font: var(--font-body-bold);
   }
 
   & :where(ul, ol) {
