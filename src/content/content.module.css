@@ -98,22 +98,6 @@
     outline: none;
   }
 
-  & :where([data-heading-link]) {
-    user-select: none;
-
-    padding-inline: 6px;
-
-    font-weight: normal;
-    color: var(--color-foreground-secondary);
-
-    opacity: 0;
-  }
-
-  & :where(h1, h2, h3):where(:hover, :focus-within) :where([data-heading-link]),
-  & :where([data-heading-link]):focus-visible {
-    opacity: 1;
-  }
-
   & :where(a:not([data-heading-link])) {
     color: var(--color-accent);
     text-decoration: underline;
@@ -172,12 +156,6 @@
     width: 100%;
     height: auto;
     border: 1px solid var(--color-border-content);
-  }
-
-  @media (hover: none) {
-    & :where([data-heading-link]) {
-      opacity: 1;
-    }
   }
 }
 

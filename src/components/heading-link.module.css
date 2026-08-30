@@ -1,3 +1,29 @@
 .headingLink {
+  --focus-frame-inset: 4px;
+
   composes: focusFrame from global;
+
+  user-select: none;
+
+  display: inline-flex;
+  justify-content: center;
+
+  aspect-ratio: 1;
+  height: 1lh;
+
+  font-weight: normal;
+  color: var(--color-foreground-secondary);
+
+  opacity: 0;
+}
+
+:where(:hover, :focus-within) > .headingLink,
+.headingLink:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .headingLink {
+    opacity: 1;
+  }
 }

@@ -39,10 +39,7 @@ function contentLanguages(): Array<string> {
 
 const autolinkOptions: AutolinkOptions = {
   behavior: "append",
-  properties: (heading) => ({
-    "data-heading-link": "", // Styled in `content/content.module.css`. A class here would be a global name, out of reach of the module.
-    ariaLabel: `Link to ${toString(heading)}`,
-  }),
+  properties: (heading) => ({ "data-heading-link": "", ariaLabel: `Link to ${toString(heading)}` }),
   content: {
     type: "element",
     tagName: "span",
