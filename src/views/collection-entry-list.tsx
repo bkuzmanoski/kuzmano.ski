@@ -78,7 +78,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
             <a
               aria-current={isActive || undefined}
               aria-label={entry.title}
-              className={cx(styles.card, isActive && styles.active)}
+              className={cx(styles.listItem, isActive && styles.active)}
               href={collection.routeOf(entry.slug)}
               {...mergeHandlers(entryEventHandlers, itemProps(index))}
             >
