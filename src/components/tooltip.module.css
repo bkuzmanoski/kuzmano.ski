@@ -1,4 +1,6 @@
 .wrapper {
+  --tooltip-margin: 0; /* Set from JS. */
+
   position: relative;
   anchor-name: --tooltip;
   anchor-scope: --tooltip;

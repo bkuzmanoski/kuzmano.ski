@@ -3,7 +3,9 @@ import { canonicalUrl } from "#/config/site";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
 import { isBrowserHandledClick } from "#/lib/link";
 
-import { useArticle } from "./article-context";
+import { useArticle } from "../content/article-context";
+
+import styles from "./heading-link.module.css";
 
 import type { ComponentProps } from "react";
 
@@ -29,12 +31,14 @@ export function HeadingLink({ href, children, ...props }: ComponentProps<"a"> & 
     <CopyTooltip
       label={LABEL}
       confirmation={CONFIRMATION}
+      margin={2}
       isCopied={isCopied}
       suppressed={article === null} // Nothing to copy without a route to build the link from.
       onDidHide={clearConfirmation}
     >
       <a
         href={href}
+        className={styles.headingLink}
         {...props}
         onClick={(event) => {
           if (isBrowserHandledClick(event) || article === null) {

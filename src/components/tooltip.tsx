@@ -2,6 +2,7 @@ import { cloneElement, isValidElement, useEffect, useEffectEvent, useId, useRef,
 
 import { cx } from "#/lib/class-names";
 import { useTimer } from "#/lib/hooks/use-timer";
+import type { StyleWithVars } from "#/lib/style";
 import {
   hideAfterDelay,
   isGroupInGracePeriod,
@@ -20,6 +21,7 @@ export const HOVER_DELAY_MS = 400;
 
 export function Tooltip({
   label,
+  margin = 4,
   persistOnPress = false,
   showsState = false,
   suppressed = false,
@@ -28,6 +30,7 @@ export function Tooltip({
   children,
 }: {
   label: string;
+  margin?: number;
   persistOnPress?: boolean;
   showsState?: boolean;
   suppressed?: boolean;
@@ -99,10 +102,13 @@ export function Tooltip({
     setIsOpen(false);
   }
 
+  const wrapperStyle: StyleWithVars = { "--tooltip-margin": `${margin}px` };
+
   return (
     <span
       ref={wrapperRef}
       className={cx(styles.wrapper, className)}
+      style={wrapperStyle}
       onFocusCapture={(event) => {
         if (event.target.matches(":focus-visible")) {
           show(0);

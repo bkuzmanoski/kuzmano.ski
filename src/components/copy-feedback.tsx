@@ -10,6 +10,7 @@ const failureMessage = (entity: string) => `The ${entity} couldn’t be copied. 
 export function CopyTooltip({
   label,
   confirmation,
+  margin,
   isCopied,
   suppressed = false,
   onDidHide,
@@ -18,6 +19,7 @@ export function CopyTooltip({
 }: {
   label: string;
   confirmation: string;
+  margin?: number;
   isCopied: boolean;
   suppressed?: boolean;
   onDidHide: () => void;
@@ -28,6 +30,7 @@ export function CopyTooltip({
     <>
       <Tooltip
         label={isCopied ? confirmation : label}
+        margin={margin}
         persistOnPress
         showsState={isCopied}
         suppressed={suppressed}

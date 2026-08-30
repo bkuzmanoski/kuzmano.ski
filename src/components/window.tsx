@@ -45,7 +45,7 @@ function TitleBarButton({
   const pressSoundHandlers = usePressSound({ standInForMissedPress: false });
 
   return (
-    <Tooltip label={label} className={cx(styles.control, className)}>
+    <Tooltip label={label} margin={6} className={cx(styles.control, className)}>
       <button
         type="button"
         aria-label={label}

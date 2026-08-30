@@ -3,9 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { CodeBlock } from "#/components/code-block";
 import { isBrowserHandledClick } from "#/lib/link";
 
+import { HeadingLink } from "../components/heading-link";
+
 import styles from "./content.module.css";
 import { revealFragment } from "./fragment";
-import { HeadingLink } from "./heading-link";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
