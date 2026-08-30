@@ -19,7 +19,9 @@
   cursor: default;
   user-select: none;
 
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
   padding-block: 12px;
 
@@ -61,24 +63,22 @@
 }
 
 .title {
-  display: inline;
+  --padding-block-title: 1px;
 
-  padding-block: 2px;
+  width: fit-content;
+  margin-block: calc(-1 * var(--padding-block-title));
+  padding-block: var(--padding-block-title);
   padding-inline: var(--padding-inline-title);
 
   font: var(--font-ui-bold);
 
-  box-decoration-break: clone;
-
   .listItem:focus & {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight-background);
+    background: var(--dotted-frame);
   }
 }
 
 .date {
   display: block;
-  margin-block-start: 4px;
   padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
   color: var(--color-foreground-secondary);
 }
