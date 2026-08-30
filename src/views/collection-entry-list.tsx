@@ -83,9 +83,9 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
               {...mergeHandlers(entryEventHandlers, itemProps(index))}
             >
               <span className={styles.title}>{entry.title}</span>
-              <span className={styles.meta}>
-                <time dateTime={entry.date}>{formatDate(entry.date, dateFormat)}</time>
-              </span>
+              <time className={styles.date} dateTime={entry.date}>
+                {formatDate(entry.date, dateFormat)}
+              </time>
             </a>
           </li>
         );
