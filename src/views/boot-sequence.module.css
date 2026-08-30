@@ -30,7 +30,7 @@
 
   &::before {
     --initial-transform: translate3d(0, -3%, 0) scale3d(0.86, 0.94, 1);
-    --initial-opacity: 0.22;
+    --initial-opacity: 0.3;
 
     content: "";
 
@@ -38,7 +38,7 @@
     inset: 0;
     transform-origin: calc(var(--glow-origin-x) + var(--spill)) var(--glow-origin-y);
 
-    opacity: 0.44;
+    opacity: 0.6;
     background: radial-gradient(
       200vw 50% at calc(70vw + var(--spill)) 50%,
       var(--color-accent) 0%,
