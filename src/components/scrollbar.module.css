@@ -70,7 +70,7 @@
     opacity: var(--window-focused, 1);
     background: var(--color-border);
 
-    mask: url("../assets/images/scrollbar-track-background-pattern.svg") 0 0 / 4px 4px repeat;
+    mask: url("../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
   }
 }
 
