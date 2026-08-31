@@ -9,11 +9,11 @@
 
 @font-face {
   font-family: Lora;
-  font-weight: 600;
+  font-weight: 400 700;
   font-style: normal;
 
   font-display: block;
-  src: url("./assets/fonts/Lora-SemiBold.woff2") format("woff2");
+  src: url("./assets/fonts/Lora-Variable.woff2") format("woff2");
 }
 
 @font-face {
@@ -22,7 +22,7 @@
   font-style: normal;
 
   font-display: swap;
-  src: url("./assets/fonts/InterVariable.woff2") format("woff2");
+  src: url("./assets/fonts/Inter-Variable.woff2") format("woff2");
 }
 
 @font-face {
@@ -163,7 +163,6 @@ ul,
 ol,
 li,
 pre,
-blockquote,
 hr {
   margin: 0;
 }

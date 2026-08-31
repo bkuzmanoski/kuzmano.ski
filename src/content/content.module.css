@@ -5,13 +5,12 @@
 
 .content {
   /* Metrics */
-  --content-measure: 74ch;
+  --content-measure: 64ch;
   --content-space: 20px;
   --content-space-loose: 40px;
   --content-space-x-loose: 64px;
   --content-space-heading-1: var(--content-space-x-loose) var(--content-space-loose);
   --content-space-heading-2: var(--content-space-loose) var(--content-space);
-  --content-space-blockquote: var(--content-space-loose);
   --content-space-rule: var(--content-space-loose);
   --content-scrollbar-offset: clamp(
     0px,
@@ -21,11 +20,10 @@
 
   /* Typography */
   --font-family-heading: "Lora", ui-serif, serif;
-  --font-heading-1: 600 40px/48px var(--font-family-heading);
-  --font-heading-2: 600 24px/32px var(--font-family-heading);
+  --font-heading-1: 525 40px/54px var(--font-family-heading);
+  --font-heading-2: 600 24px/34px var(--font-family-heading);
   --font-body: 500 16px/24px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
-  --font-blockquote: 600 28px/40px var(--font-family-heading);
 
   /* Colors */
   --color-border-content: var(--color-border-inactive);
@@ -69,10 +67,6 @@
 
   & > :where(h2) {
     margin-block: var(--content-space-heading-2);
-  }
-
-  & > :where(blockquote) {
-    margin-block: var(--content-space-blockquote);
   }
 
   & > :where(hr) {
@@ -122,7 +116,7 @@
     padding-block: 1px;
     padding-inline: 4px;
 
-    font-size: 0.875em; /* Matches the 14px of `--font-code` in body copy; holds the same ratio in headings, blockquotes, etc. */
+    font-size: 0.925em;
 
     background: var(--color-background-inline-code);
     box-decoration-break: clone;
@@ -134,28 +128,6 @@
 
     &:focus-visible {
       outline: none; /* `CodeBlock` draws the outline for the block (see `/src/components/code-block.module.css`). */
-    }
-  }
-
-  & :where(blockquote) {
-    position: relative;
-    padding-inline-start: 20px;
-    font: var(--font-blockquote);
-
-    text-box-trim: trim-both; /* Unsupported in Firefox (as at 2024-08), but nicer everywhere else. */
-
-    &::before {
-      content: "";
-
-      position: absolute;
-      inset: 0;
-
-      width: 8px;
-
-      opacity: var(--window-focused, 1);
-      background: var(--color-border);
-
-      mask: url("../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
     }
   }
 
