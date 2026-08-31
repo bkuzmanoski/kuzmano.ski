@@ -47,6 +47,10 @@
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
 
   font: var(--font-body);
+  font-feature-settings:
+    "liga" 1,
+    "calt" 1;
+  font-optical-sizing: auto;
   text-wrap: pretty;
 
   & > * {
