@@ -2,14 +2,10 @@
   "config": {
     "MD013": false,
     "MD024": false,
-    "MD025": { "front_matter_title": "" },
     "MD026": false,
-    "MD033": false,
     "MD040": false,
-    "MD041": { "front_matter_title": "" },
     "max-heading-level": { "level": 3 }
   },
-  "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
   "customRules": ["./markdownlint.rules.ts"],
   "globs": ["**/*.{md,mdx}"],
   "gitignore": true

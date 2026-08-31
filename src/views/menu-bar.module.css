@@ -26,11 +26,8 @@
 }
 
 .logo {
-  composes: focusFrame from global;
-
   display: inline-flex;
   align-items: center;
-
   height: 100%;
   padding: 0 var(--gutter);
 
@@ -54,6 +51,8 @@
 }
 
 .title {
+  --focus-frame-inset: 2px;
+
   composes: focusFrame from global;
 
   user-select: none;
@@ -89,6 +88,8 @@
 }
 
 .control {
+  --focus-frame-inset: 2px;
+
   composes: focusFrame from global;
 
   user-select: none;

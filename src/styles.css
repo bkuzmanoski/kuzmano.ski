@@ -8,7 +8,16 @@
 }
 
 @font-face {
-  font-family: InterVariable;
+  font-family: Lora;
+  font-weight: 600;
+  font-style: normal;
+
+  font-display: block;
+  src: url("./assets/fonts/Lora-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Variable";
   font-weight: 100 900;
   font-style: normal;
 
@@ -17,7 +26,7 @@
 }
 
 @font-face {
-  font-family: JetBrainsMono;
+  font-family: "JetBrains Mono";
   font-weight: 400;
   font-style: normal;
 
@@ -49,12 +58,12 @@
   --shadow-length: 3px;
 
   /* Typography */
-  --font-family-chrome: ChicagoFLF, sans-serif;
-  --font-chrome: 16px/24px var(--font-family-chrome);
-  --font-family-ui: Helvetica, "Helvetica Neue", InterVariable, system-ui, sans-serif;
-  --font-ui: 15px/20px var(--font-family-ui);
+  --font-family-chrome: ChicagoFLF, ui-sans-serif, sans-serif;
+  --font-chrome: 400 16px/24px var(--font-family-chrome);
+  --font-family-ui: Helvetica, "Helvetica Neue", "Inter Variable", ui-sans-serif, sans-serif;
+  --font-ui: normal 15px/20px var(--font-family-ui);
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
-  --font-ui-large: 16.5px/24px var(--font-family-ui);
+  --font-ui-large: normal 16.5px/24px var(--font-family-ui);
 
   /* Colors */
   --color-accent: light-dark(#3378a3, #61abda);
@@ -149,7 +158,6 @@ body {
 
 h1,
 h2,
-h3,
 p,
 ul,
 ol,
@@ -201,7 +209,7 @@ hr {
     content: "";
 
     position: absolute;
-    inset: var(--focus-frame-inset, 2px);
+    inset: var(--focus-frame-inset, 0);
 
     color: var(--color-border);
 

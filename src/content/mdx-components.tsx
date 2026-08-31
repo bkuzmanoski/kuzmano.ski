@@ -11,7 +11,7 @@ import { revealFragment } from "./fragment";
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-type HeadingTag = "h1" | "h2" | "h3";
+type HeadingTag = "h1" | "h2";
 
 const heading = (Tag: HeadingTag) =>
   function Heading(props: ComponentProps<"h1">) {
@@ -21,7 +21,6 @@ const heading = (Tag: HeadingTag) =>
 export const mdxComponents: MDXComponents = {
   h1: heading("h1"),
   h2: heading("h2"),
-  h3: heading("h3"),
   a: ({ href, children, ...props }: ComponentProps<"a">) => {
     if (href?.startsWith("#")) {
       return "data-heading-link" in props ? (

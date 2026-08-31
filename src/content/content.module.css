@@ -6,12 +6,13 @@
 .content {
   /* Metrics */
   --content-measure: 74ch;
-  --content-flow: 16px;
-  --content-heading-1-flow: 40px;
-  --content-heading-2-flow: 32px;
-  --content-heading-3-flow: 24px;
-  --content-heading-4-flow: var(--content-flow);
-  --content-blockquote-flow: 32px;
+  --content-space: 16px;
+  --content-space-loose: 40px;
+  --content-space-x-loose: 64px;
+  --content-space-heading-1: var(--content-space-x-loose) 32px;
+  --content-space-heading-2: var(--content-space-loose) 20px;
+  --content-space-blockquote: var(--content-space-loose);
+  --content-space-rule: var(--content-space-loose);
   --content-scrollbar-offset: clamp(
     0px,
     100% - var(--reserved-scrollbar-width, 0px) - var(--content-measure),
@@ -19,22 +20,18 @@
   );
 
   /* Typography */
-  --font-family-content: InterVariable, "Helvetica Neue", Helvetica, system-ui, sans-serif;
-  --font-heading-1: 750 28px/40px var(--font-family-content);
-  --font-heading-2: 700 20px/28px var(--font-family-content);
-  --font-heading-3: 700 17px/24px var(--font-family-content);
-  --font-body: 400 15px/22px var(--font-family-content);
-  --font-body-bold: 600 15px/22px var(--font-family-content);
-  --font-family-code: JetBrainsMono, ui-monospace, monospace;
-  --font-size-code: 13px;
-  --font-code: var(--font-size-code)/18px var(--font-family-code);
-  --font-blockquote: 450 24.5px/34px var(--font-family-content);
+  --font-family-heading: "Lora", ui-serif, serif;
+  --font-heading-1: 600 40px/48px var(--font-family-heading);
+  --font-heading-2: 600 24px/32px var(--font-family-heading);
+  --font-body: 500 16px/24px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
+  --font-code: 400 14px/22px "JetBrains Mono", ui-monospace, monospace;
+  --font-blockquote: 600 28px/40px var(--font-family-heading);
 
   /* Colors */
   --color-border-content: var(--color-border-inactive);
-  --color-background-inline-code: color-mix(in srgb, var(--color-wallpaper) 70%, transparent); /* TODO */
+  --color-background-inline-code: color-mix(in srgb, var(--color-wallpaper) 70%, transparent);
   --color-foreground-syntax: var(--color-foreground);
-  --color-background-syntax: color-mix(in srgb, var(--color-wallpaper) 30%, transparent); /* TODO */
+  --color-background-syntax: color-mix(in srgb, var(--color-wallpaper) 30%, transparent);
   --color-comment-syntax: light-dark(#839099, #637079);
   --color-keyword-syntax: light-dark(#9f5090, #cf86c1);
   --color-function-syntax: var(--color-accent);
@@ -47,55 +44,51 @@
 
   max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
   margin-inline: auto;
-  padding-block: var(--content-heading-1-flow);
+  padding-block: var(--content-space-x-loose);
   padding-inline: calc(var(--content-scrollbar-offset) + var(--gutter))
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
 
   font: var(--font-body);
   text-wrap: pretty;
 
-  /* MDX emits a flat sequence of top-level blocks, so their vertical rhythm is set by
-   * a single start margin. Each block declares its gap in `--content-block-flow`; the
-   * first block leaves it unset. Nested blocks define their own rhythm. The container's
-   * `padding-block` provides the space at both ends. */
-
-  & > * + * {
-    margin-block-start: var(--content-block-flow, var(--content-flow));
+  & > * {
+    margin-block: var(--content-space);
   }
 
-  /* A block that stands apart from the copy is spaced on both sides of itself. */
-  & > :where(hr, img, video, .codeBlock),
-  & > :where(:is(hr, img, video, .codeBlock) + *) {
-    --content-block-flow: var(--content-flow);
+  & > :first-child {
+    margin-block-start: 0;
   }
 
-  & > :where(blockquote),
-  & > :where(blockquote + *) {
-    --content-block-flow: var(--content-blockquote-flow);
+  & > :last-child {
+    margin-block-end: 0;
   }
 
-  /* Declared after the standalone-block rules above so a heading following a code block
-   * or quote gets its own, wider gap. The base flow below the heading is unchanged. */
+  & > :where(h1) {
+    margin-block: var(--content-space-heading-1);
+  }
+
+  & > :where(h2) {
+    margin-block: var(--content-space-heading-2);
+  }
+
+  & > :where(blockquote) {
+    margin-block: var(--content-space-blockquote);
+  }
+
+  & > :where(hr) {
+    margin-block: var(--content-space-rule);
+  }
+
+  & :where(h1, h2):focus {
+    outline: none;
+  }
+
   & :where(h1) {
-    --content-block-flow: var(--content-heading-1-flow);
-
     font: var(--font-heading-1);
   }
 
   & :where(h2) {
-    --content-block-flow: var(--content-heading-2-flow);
-
     font: var(--font-heading-2);
-  }
-
-  & :where(h3) {
-    --content-block-flow: var(--content-heading-3-flow);
-
-    font: var(--font-heading-3);
-  }
-
-  & :where(h1, h2, h3):focus {
-    outline: none;
   }
 
   & :where(a:not([data-heading-link])) {
@@ -105,8 +98,8 @@
     -webkit-touch-callout: default;
   }
 
-  & :where(p) strong {
-    font: var(--font-body-bold);
+  & :where(strong) {
+    font-weight: 700;
   }
 
   & :where(ul, ol) {
@@ -117,12 +110,15 @@
     margin-block-start: 4px;
   }
 
+  & :where(pre, code) {
+    font: var(--font-code);
+  }
+
   & :where(:not(pre) > code) {
     padding-block: 1px;
     padding-inline: 3px;
 
-    font-family: var(--font-family-code);
-    font-size: var(--font-size-code);
+    font-size: 0.875em; /* Matches the 14px of `--font-code` in body copy; holds the same ratio in headings, blockquotes, etc. */
 
     background: var(--color-background-inline-code);
     box-decoration-break: clone;
@@ -130,9 +126,7 @@
 
   & :where(pre) {
     overflow-x: auto;
-    display: block;
     padding: 12px var(--gutter);
-    font: var(--font-code);
 
     &:focus-visible {
       outline: none; /* `CodeBlock` draws the outline for the block (see `/src/components/code-block.module.css`). */

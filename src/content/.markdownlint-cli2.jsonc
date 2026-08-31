@@ -1,0 +1,9 @@
+{
+  "config": {
+    "MD025": { "front_matter_title": "" },
+    "MD033": false,
+    "MD041": { "front_matter_title": "" },
+    "max-heading-level": { "level": 2 }
+  },
+  "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)"
+}
