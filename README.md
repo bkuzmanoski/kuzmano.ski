@@ -41,7 +41,7 @@ need route files.
 
 1. Add an MDX file to `src/content/_pages`.
 2. Add its file name, without `.mdx`, to PAGE_SLUGS in `src/config/content.ts`.
-3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
+3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/content/navigation.ts`.
 
 Page titles come from frontmatter; the configuration only needs the file name.
 
@@ -50,7 +50,7 @@ Page titles come from frontmatter; the configuration only needs the file name.
 1. Create a subfolder in `src/content`.
 2. Add its title and description to COLLECTIONS in `src/config/content.ts`,
    keyed by the folder name.
-3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/config/navigation.ts`.
+3. Add it to DESTINATIONS and DESTINATION_GROUPS in `src/content/navigation.ts`.
 
 ### Styling
 
@@ -74,7 +74,7 @@ content in its attributes rather than its children, add it to
 
 A feed is generated for the entire site as well as for each collection.
 Standalone pages are not included. This is configurable via `FEEDS` in
-`src/config/site.ts`.
+`src/feeds.ts`.
 
 React components that should not appear in a feed can mark their rendered output
 with `data-feed-omit`.

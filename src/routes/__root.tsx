@@ -1,7 +1,8 @@
 import { createRootRoute } from "@tanstack/react-router";
 
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
-import { FEED_TYPE, SITE_FEED } from "#/config/site";
+import { FEED_TYPE } from "#/config/site";
+import { SITE_FEED } from "#/feeds";
 import stylesheet from "#/styles.css?url";
 import { Desktop } from "#/views/desktop";
 import { ErrorPage } from "#/views/error-page";

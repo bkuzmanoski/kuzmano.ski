@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { IDLE_DELAY_MS } from "#/config/screensaver";
+import { SCREENSAVER_IDLE_DELAY_MS } from "#/config/desktop";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
 import { useIdleTimeout } from "#/lib/hooks/use-idle-timeout";
@@ -30,7 +30,7 @@ export function Screensaver() {
   const isUp = state !== "awake";
   const isDismissible = state === "asleep";
 
-  useIdleTimeout(IDLE_DELAY_MS, isIdleSleepEnabled, sleepOnIdle);
+  useIdleTimeout(SCREENSAVER_IDLE_DELAY_MS, isIdleSleepEnabled, sleepOnIdle);
 
   useEffect(() => {
     if (!isDismissible) {

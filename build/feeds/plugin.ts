@@ -1,9 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { FEEDS, FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME, canonicalUrl, markdownUrl } from "#/config/site.ts";
-import type { FeedMetadata } from "#/config/site.ts";
+import { FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME } from "#/config/site.ts";
 import { parseFrontmatter } from "#/content/schema.ts";
+import { FEEDS } from "#/feeds.ts";
+import type { FeedMetadata } from "#/feeds.ts";
+import { canonicalUrl, markdownUrl } from "#/metadata.ts";
 
 import { byNewestFirst, newestDate, publishedEntries, scanContent } from "../prerender/routes.ts";
 

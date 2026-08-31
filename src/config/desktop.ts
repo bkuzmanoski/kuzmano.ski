@@ -1,4 +1,5 @@
 import type { Size } from "#/lib/geometry";
+import type { IconLayout } from "#/lib/icons/icon";
 import type { WindowLayout } from "#/lib/window-manager";
 
 const MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (will be clamped by `padding` below).
@@ -16,3 +17,9 @@ export const LAYOUT: WindowLayout = {
   },
   padding: 12, // Mirrored by `--window-layer-padding` in `styles.css`.
 };
+export const ICON_LAYOUT: IconLayout = {
+  cellSize: 72,
+  position: { top: 24, right: 32 },
+  spacing: 96,
+};
+export const SCREENSAVER_IDLE_DELAY_MS = 3 * 60 * 1000;

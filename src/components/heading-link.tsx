@@ -1,7 +1,7 @@
 import { CopyTooltip } from "#/components/copy-feedback";
-import { canonicalUrl } from "#/config/site";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
 import { isBrowserHandledClick } from "#/lib/link";
+import { canonicalUrl } from "#/metadata";
 
 import { useArticle } from "../content/article-context";
 

@@ -2,7 +2,7 @@ import { memo, useMemo, useRef, useState } from "react";
 
 import { Window } from "#/components/window";
 import type { WindowDrag } from "#/components/window";
-import { LAYOUT } from "#/config/windows";
+import { LAYOUT } from "#/config/desktop";
 import type { Rect, Size } from "#/lib/geometry";
 import { WindowCloseContext } from "#/lib/hooks/use-close-window";
 import type { WindowClose } from "#/lib/hooks/use-close-window";

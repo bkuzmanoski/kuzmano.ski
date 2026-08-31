@@ -1,7 +1,8 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
-import { ICONS, ICON_IDS, ICON_LAYOUT, commitIconPositions, moveIcon, useIconPositions } from "#/config/desktop-icons";
+import { ICON_LAYOUT } from "#/config/desktop";
+import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
 import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
@@ -12,6 +13,7 @@ import { useElementSize } from "#/lib/hooks/use-element-size";
 import type { Icon, IconPlacement } from "#/lib/icons/icon";
 import { positionFromDrop, resolveIconPlacements } from "#/lib/icons/layout";
 import { adjacentIconId } from "#/lib/icons/navigation";
+import { createIconPositionsStore } from "#/lib/icons/positions";
 import { isArrowKey } from "#/lib/keys";
 import type { ArrowKey } from "#/lib/keys";
 import { followLink } from "#/lib/link";
@@ -22,7 +24,16 @@ import styles from "./desktop-icons.module.css";
 
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
+const ICONS: Array<Icon> = DESTINATION_ORDER.map((id) => ({
+  id,
+  kind: DESTINATIONS[id].type,
+  label: DESTINATIONS[id].title,
+  route: DESTINATIONS[id].route,
+}));
+const ICON_IDS = ICONS.map((iconDefinition) => iconDefinition.id);
 const ICONS_BY_ID = new Map(ICONS.map((iconDefinition) => [iconDefinition.id, iconDefinition]));
+
+const { useIconPositions, moveIcon, commitIconPositions } = createIconPositionsStore(ICON_IDS, ICON_LAYOUT);
 
 export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: WindowId; from: Rect }) => void }) {
   const content = useWindowContent();

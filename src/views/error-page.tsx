@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
 import { Alert } from "#/components/alert";
-import { documentTitle } from "#/config/site";
 import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
+import { documentTitle } from "#/metadata";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 

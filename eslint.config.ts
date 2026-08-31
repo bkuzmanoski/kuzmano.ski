@@ -9,14 +9,26 @@ const BUILD_IGNORE_PATTERN = "**/build/**";
 
 // TanStack's shared config ignores every `build` directory; in this
 // project build/` contains first-party Vite plugins and scripts.
-const baseConfig = tanstackConfig.map((config) =>
+const BASE_CONFIG = tanstackConfig.map((config) =>
   config.name === "tanstack/ignores"
     ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== BUILD_IGNORE_PATTERN) }
     : config,
 );
 
+const CONFIG_LAYER_IMPORT = {
+  regex: String.raw`^(#/|\.\./)`,
+  allowTypeImports: true,
+  message: "`src/config` may import types from other layers, but must not import their code.",
+};
+
+// `src/server` runs only on the Worker. `./server/` covers the modules that sit directly in `src/`.
+const SERVER_IMPORT = {
+  regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
+  message: "`src/server` may only be imported by a server handler in `src/routes/api/`.",
+};
+
 export default defineConfig(
-  ...baseConfig,
+  ...BASE_CONFIG,
   { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts"] },
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -38,7 +50,15 @@ export default defineConfig(
             { target: "./src", from: ["./build"] },
             {
               target: "./src/lib",
-              from: ["./src/components", "./src/config", "./src/content", "./src/routes", "./src/views"],
+              from: [
+                "./src/components",
+                "./src/config",
+                "./src/content",
+                "./src/routes",
+                "./src/views",
+                "./src/feeds.ts",
+                "./src/metadata.ts",
+              ],
             },
             { target: "./src/components", from: ["./src/routes", "./src/views"] },
           ],
@@ -102,17 +122,15 @@ export default defineConfig(
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/routes/api/**", "src/server/**"],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              regex: String.raw`^(#/server/|(\.\./)+server/)`,
-              message: "`src/server` may only be imported from a server handler in `src/routes/api/`.",
-            },
-          ],
-        },
-      ],
+      "@typescript-eslint/no-restricted-imports": ["error", { patterns: [SERVER_IMPORT] }],
+    },
+  },
+  // Must stay after the block above: flat config replaces a rule's options rather than merging
+  // them, so the last block matching a file decides what that file is checked against.
+  {
+    files: ["src/config/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": ["error", { patterns: [SERVER_IMPORT, CONFIG_LAYER_IMPORT] }],
     },
   },
 );

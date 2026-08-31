@@ -2,10 +2,10 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { Suspense } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { canonicalUrl } from "#/config/site";
 import type { MDXModule } from "#/content";
 import styles from "#/content/content.module.css";
 import { resetTooltipState } from "#/lib/tooltip";
+import { canonicalUrl } from "#/metadata";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 
 import { ContentBody } from "./content-body";

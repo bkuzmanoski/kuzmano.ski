@@ -4,13 +4,15 @@ import { loadPositions, savePositions } from "./icon";
 
 import type { IconLayout, IconPosition, IconPositions } from "./icon";
 
-export function createIconPositionsStore(ids: ReadonlyArray<string>, layout: IconLayout, storageKey: string) {
+export const ICON_POSITIONS_STORAGE_KEY = "icon-positions";
+
+export function createIconPositionsStore(ids: ReadonlyArray<string>, layout: IconLayout) {
   const { useValue, getValue, setValue } = createClientStore<IconPositions | null>(null, () =>
-    loadPositions(ids, layout, storageKey),
+    loadPositions(ids, layout, ICON_POSITIONS_STORAGE_KEY),
   );
   return {
     useIconPositions: useValue, // Null before the client has read them.
     moveIcon: (id: string, position: IconPosition) => setValue({ ...getValue(), [id]: position }), // Moves an icon. Call `commitIconPositions` when the drag ends to persist the layout.
-    commitIconPositions: () => savePositions(getValue() ?? {}, storageKey),
+    commitIconPositions: () => savePositions(getValue() ?? {}, ICON_POSITIONS_STORAGE_KEY),
   };
 }

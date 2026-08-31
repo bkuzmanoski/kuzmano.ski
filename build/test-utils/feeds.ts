@@ -1,5 +1,5 @@
 import type { CollectionSegment } from "#/config/content.ts";
-import type { FeedMetadata } from "#/config/site.ts";
+import type { FeedMetadata } from "#/feeds.ts";
 
 import type { Feed, FeedEntry } from "../feeds/atom.ts";
 import type { PageSource } from "../feeds/plugin.ts";

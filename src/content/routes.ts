@@ -1,7 +1,8 @@
 import { notFound } from "@tanstack/react-router";
 
-import { collectionFeed, documentHead } from "#/config/site";
-import type { DocumentMetadata } from "#/config/site";
+import { collectionFeed } from "#/feeds";
+import { documentHead } from "#/metadata";
+import type { DocumentMetadata } from "#/metadata";
 
 import { collections, pages } from "./index";
 

@@ -7,8 +7,8 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
 import { COLLECTIONS } from "#/config/content.ts";
-import { markdownPath } from "#/config/site.ts";
 import { parseFrontmatter } from "#/content/schema.ts";
+import { markdownPath } from "#/metadata.ts";
 
 import { byNewestFirst, publishedEntries, scanContent } from "./prerender/routes.ts";
 

@@ -1,10 +1,9 @@
-import { pages } from "#/content/index";
+import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
+import { COLLECTIONS } from "#/config/content";
+import type { CollectionSegment, PageSlug } from "#/config/content";
 import type { Destination } from "#/lib/window-manager";
 
-import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "./contact";
-import { COLLECTIONS } from "./content";
-
-import type { CollectionSegment, PageSlug } from "./content";
+import { pages } from "./index";
 
 const titleOf = (slug: PageSlug) => {
   try {

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { CONTACT_PAGE_DESCRIPTION, CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
-import { documentHead } from "#/config/site";
+import { documentHead } from "#/metadata";
 
 /**
  * Declared statically so it outranks `/$segment/`, which resolves pages from MDX frontmatter.

@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { DESTINATIONS } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
+import { DESTINATIONS } from "#/content/navigation";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip";
 import type { WindowId } from "#/lib/window-manager";
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { ICONS } from "#/config/desktop-icons";
+import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
 import type { WindowId } from "#/lib/window-manager";
 
 import { DesktopIcons } from "./desktop-icons";
@@ -26,7 +26,9 @@ beforeEach(() => {
   open.mockClear();
 });
 
-const icon = (index: number) => screen.getByLabelText(ICONS[index]!.label);
+const ICON_LABELS = DESTINATION_ORDER.map((id) => DESTINATIONS[id].title);
+
+const icon = (index: number) => screen.getByLabelText(ICON_LABELS[index]!);
 
 function renderIcons() {
   const { rerender } = render(<DesktopIcons onZoomRect={vi.fn()} />);
