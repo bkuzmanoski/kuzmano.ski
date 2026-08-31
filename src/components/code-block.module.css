@@ -1,9 +1,10 @@
 .codeBlockContainer {
-  --focus-frame-inset: -2px;
+  --focus-frame-inset: -3px;
   --copy-button-opacity: 0;
 
   composes: focusFrameWithin from global;
   position: relative;
+  border: 1px solid var(--color-border-content);
 
   &:hover,
   &:focus-within {

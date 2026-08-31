@@ -71,26 +71,26 @@
   --color-foreground-secondary: light-dark(#637079, #839099);
   --color-foreground-disabled: light-dark(#818c93, #7a8790);
   --color-background: light-dark(#fcfcfd, #242a2e);
-  --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
-  --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
   --color-highlight-foreground: var(--color-background);
   --color-highlight-background: light-dark(var(--color-foreground), #b4bbc2);
+  --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
+  --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
+  --color-error: light-dark(#b03645, #de6e7c);
+  --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
+  --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
   --color-border: #637079;
   --color-border-inactive: color-mix(in srgb, var(--color-background) var(--color-dim-strength), var(--color-border));
-  --color-wallpaper: light-dark(#e2e7ea, #161a1d);
   --color-shadow: light-dark(
     /* In light mode 13% opacity over `--color-wallpaper` equals `--color-border-inactive` given `--color-dim-strength`.  */
     rgb(0 0 0 / 13%),
     rgb(0 0 0 / 25%)
   );
-  --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
-  --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
-  --color-error: light-dark(#b03645, #de6e7c);
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
+  --color-wallpaper: light-dark(#e2e7ea, #161a1d);
+  --color-screensaver-backdrop: #161a1d;
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
-  --color-screensaver-backdrop: #161a1d;
 
   /* Shadows */
   --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
@@ -197,9 +197,6 @@ hr {
   box-shadow: var(--shadow);
 }
 
-/* The frame a focused element wears: `focusFrame` on the element that takes the focus,
- * `focusFrameWithin` on a wrapper around it, for a control whose focus lands on a child.
- * `--focus-frame-inset` moves the frame off the edge it is drawn against. */
 .focusFrame:focus-visible,
 .focusFrameWithin:has(> :focus-visible) {
   position: relative;

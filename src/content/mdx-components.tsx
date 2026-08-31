@@ -30,6 +30,7 @@ export const mdxComponents: MDXComponents = {
       ) : (
         <a
           href={href}
+          className={styles.link}
           {...props}
           onClick={(event) => {
             if (isBrowserHandledClick(event)) {
@@ -50,14 +51,14 @@ export const mdxComponents: MDXComponents = {
 
     if (href?.startsWith("/")) {
       return (
-        <Link to={href} {...props}>
+        <Link to={href} className={styles.link} {...props}>
           {children}
         </Link>
       );
     }
 
     return (
-      <a href={href} target="_blank" {...props}>
+      <a href={href} target="_blank" className={styles.link} {...props}>
         {children}
       </a>
     );
