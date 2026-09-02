@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
+import { DESTINATION_ORDER } from "#/config/navigation";
 import type { WindowId } from "#/lib/window-manager";
+import { DESTINATIONS } from "#/site/navigation";
 
 import { DesktopIcons } from "./desktop-icons";
 

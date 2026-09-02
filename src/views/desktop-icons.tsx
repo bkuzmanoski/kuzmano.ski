@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DesktopIcon } from "#/components/desktop-icon";
 import { ICON_LAYOUT } from "#/config/desktop";
-import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
+import { DESTINATION_ORDER } from "#/config/navigation";
 import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
@@ -18,6 +18,7 @@ import type { ArrowKey } from "#/lib/keys";
 import { followLink } from "#/lib/link";
 import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager";
 import type { WindowId } from "#/lib/window-manager";
+import { DESTINATIONS } from "#/site/navigation";
 import { isDestinationOpen, resolveWindow } from "#/site/windows";
 
 import styles from "./desktop-icons.module.css";

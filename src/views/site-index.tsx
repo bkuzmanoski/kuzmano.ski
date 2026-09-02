@@ -1,5 +1,6 @@
-import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
-import type { DestinationId } from "#/content/navigation";
+import { DESTINATION_ORDER } from "#/config/navigation";
+import type { DestinationId } from "#/config/navigation";
+import { DESTINATIONS } from "#/site/navigation";
 
 import styles from "./site-index.module.css";
 

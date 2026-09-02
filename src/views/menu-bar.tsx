@@ -8,9 +8,9 @@ import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
 import { Menu } from "#/components/menu";
 import type { MenuItem } from "#/components/menu";
 import { Tooltip } from "#/components/tooltip";
+import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation";
+import type { DestinationId } from "#/config/navigation";
 import { SITE_SOURCE_URL } from "#/config/site";
-import { DESTINATIONS, DESTINATION_GROUPS, DESTINATION_ORDER } from "#/content/navigation";
-import type { DestinationId } from "#/content/navigation";
 import { playClick, playHover } from "#/lib/audio/sounds";
 import { usePressSound } from "#/lib/audio/use-press-sound";
 import { restart } from "#/lib/boot-sequence/lifecycle";
@@ -26,6 +26,7 @@ import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
+import { DESTINATIONS } from "#/site/navigation";
 
 import styles from "./menu-bar.module.css";
 

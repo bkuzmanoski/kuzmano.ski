@@ -1,7 +1,7 @@
 import { Outlet } from "@tanstack/react-router";
 
 import { LAYOUT } from "#/config/desktop";
-import { INITIAL_WINDOW_ROUTE } from "#/content/navigation";
+import { INITIAL_WINDOW_ROUTE } from "#/config/navigation";
 import { useAudioUnlock } from "#/lib/audio/context";
 import { useKeyboardInset } from "#/lib/hooks/use-keyboard-inset";
 

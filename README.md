@@ -40,19 +40,24 @@ need route files.
 ### Pages
 
 1. Add an MDX file to `/src/content/_pages`.
-2. Add its file name, without `.mdx`, to PAGE_SLUGS in `/src/config/content.ts`.
-3. Add it to DESTINATIONS and DESTINATION_GROUPS in
-   `/src/content/navigation.ts`.
+2. Add its file name, without `.mdx`, to `PAGE_SLUGS` in
+   `/src/config/content.ts`.
+3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in
+   `/src/config/navigation.ts`.
 
-Page titles come from frontmatter; the configuration only needs the file name.
+Page titles come from frontmatter, so the configuration only needs the file name
+and the route.
 
 ### Collections
 
 1. Create a subfolder in `/src/content`.
-2. Add its title and description to COLLECTIONS in `/src/config/content.ts`,
+2. Add its title and description to `COLLECTIONS` in `/src/config/content.ts`,
    keyed by the folder name.
-3. Add it to DESTINATIONS and DESTINATION_GROUPS in
-   `/src/content/navigation.ts`.
+3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in
+   `/src/config/navigation.ts`.
+
+A collection has no document of its own to carry frontmatter, so its title comes
+from `COLLECTIONS`.
 
 ### Styling
 
