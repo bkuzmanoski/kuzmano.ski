@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content";
 import { formatDate } from "#/lib/date";
-import { canonicalUrl } from "#/metadata";
+import { canonicalUrl } from "#/site/metadata";
 import { testCollection } from "#/test-utils/content";
 
 import { WindowToolbar } from "./window-toolbar";

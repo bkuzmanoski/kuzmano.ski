@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { Spinner } from "#/components/spinner.tsx";
-import { documentTitle } from "#/metadata.ts";
+import { documentTitle } from "#/site/metadata.ts";
 
 import { verifyPrerenderedPage } from "./verify.ts";
 

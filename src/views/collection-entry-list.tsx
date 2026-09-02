@@ -2,8 +2,6 @@ import { useRef } from "react";
 
 import { EmptyState } from "#/components/empty-state";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
-import { resolveWindow } from "#/content/window-registry";
-import type { CollectionTarget } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/sounds";
 import { usePressSound } from "#/lib/audio/use-press-sound";
 import { cx } from "#/lib/class-names";
@@ -14,6 +12,8 @@ import { isBrowserHandledClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager";
 import type { Collection } from "#/site/catalog";
+import type { CollectionTarget } from "#/site/windows";
+import { resolveWindow } from "#/site/windows";
 
 import styles from "./collection-entry-list.module.css";
 

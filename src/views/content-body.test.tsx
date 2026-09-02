@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { resetTooltipState } from "#/lib/tooltip";
-import { canonicalUrl } from "#/metadata";
 import type { MDXModule } from "#/site/catalog";
+import { canonicalUrl } from "#/site/metadata";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 
 import { ContentBody } from "./content-body";

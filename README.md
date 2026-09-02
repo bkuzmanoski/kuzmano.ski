@@ -76,7 +76,7 @@ needs a different representation.
 
 A feed is generated for the entire site as well as for each collection.
 Standalone pages are not included. This is configurable via `FEEDS` in
-`/src/feeds.ts`.
+`/src/site/feeds.ts`.
 
 React components that should not appear in a feed can mark their rendered output
 with `data-feed-omit`. Components that need a representation in a feed can use

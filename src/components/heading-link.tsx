@@ -2,7 +2,7 @@ import { CopyTooltip } from "#/components/copy-feedback";
 import { useArticle } from "#/lib/article-context";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
 import { isBrowserHandledClick } from "#/lib/link";
-import { canonicalUrl } from "#/metadata";
+import { canonicalUrl } from "#/site/metadata";
 
 import styles from "./heading-link.module.css";
 

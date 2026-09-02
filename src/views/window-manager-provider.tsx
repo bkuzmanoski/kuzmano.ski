@@ -1,7 +1,6 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 
-import { resolveRoute } from "#/content/window-registry";
 import {
   ActionsContext,
   ContentContext,
@@ -22,6 +21,7 @@ import type {
   WindowLayout,
   WindowReducer,
 } from "#/lib/window-manager";
+import { resolveRoute } from "#/site/windows";
 
 import type { ReactNode } from "react";
 

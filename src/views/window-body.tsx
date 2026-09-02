@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { Spinner } from "#/components/spinner";
-import { resolveWindow } from "#/content/window-registry";
+import { resolveWindow } from "#/site/windows";
 
 import { CollectionBody } from "./collection-entry-list";
 import { ContactBody } from "./contact-body";

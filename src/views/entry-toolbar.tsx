@@ -1,11 +1,11 @@
 import { CopyButton } from "#/components/copy-button";
 import { NavigationButton } from "#/components/navigation-button";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
-import type { EntryTarget } from "#/content/window-registry";
 import { entrySiblings } from "#/lib/content/siblings";
 import { formatDate } from "#/lib/date";
 import { useDateFormat } from "#/lib/hooks/use-date-format";
-import { canonicalUrl } from "#/metadata";
+import { canonicalUrl } from "#/site/metadata";
+import type { EntryTarget } from "#/site/windows";
 
 import styles from "./entry-toolbar.module.css";
 

@@ -1,10 +1,11 @@
 import { notFound } from "@tanstack/react-router";
 
-import { collectionFeed } from "#/feeds";
-import { documentHead } from "#/metadata";
-import type { DocumentMetadata } from "#/metadata";
-import { collections, pages } from "#/site/catalog";
-import type { Frontmatter } from "#/site/catalog";
+import { collections, pages } from "./catalog";
+import { collectionFeed } from "./feeds";
+import { documentHead } from "./metadata";
+
+import type { Frontmatter } from "./catalog";
+import type { DocumentMetadata } from "./metadata";
 
 function documentData(
   frontmatter: Frontmatter | null | undefined,

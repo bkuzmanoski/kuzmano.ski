@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Alert } from "#/components/alert";
 import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
 import { reportClientError } from "#/lib/client-errors/server";
-import { documentTitle } from "#/metadata";
+import { documentTitle } from "#/site/metadata";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 

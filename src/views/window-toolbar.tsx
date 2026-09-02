@@ -1,4 +1,4 @@
-import { resolveWindow } from "#/content/window-registry";
+import { resolveWindow } from "#/site/windows";
 
 import { EntryToolbar } from "./entry-toolbar";
 

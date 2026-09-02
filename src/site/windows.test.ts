@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { pages } from "#/site/catalog";
 import { testCollection } from "#/test-utils/content";
 
-import { isDestinationOpen, resolveRoute, resolveWindow } from "./window-registry";
+import { pages } from "./catalog";
+import { isDestinationOpen, resolveRoute, resolveWindow } from "./windows";
 
 const { collection, entries } = testCollection("blog");
 const entry = entries[0]!;

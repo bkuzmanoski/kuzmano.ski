@@ -9,7 +9,7 @@ import { unified } from "unified";
 import { COLLECTIONS } from "#/config/content.ts";
 import { parseFrontmatter } from "#/lib/content/schema.ts";
 import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
-import { canonicalUrl, markdownPath } from "#/metadata.ts";
+import { canonicalUrl, markdownPath } from "#/site/metadata.ts";
 
 import { byNewestFirst, publishedEntries, scanContent } from "./prerender/routes.ts";
 

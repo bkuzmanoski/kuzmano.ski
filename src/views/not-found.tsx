@@ -1,7 +1,7 @@
 import { Alert } from "#/components/alert";
 import { NOT_FOUND_PAGE_TITLE } from "#/config/site";
 import { useNotFoundRoute, useWindowActions } from "#/lib/window-manager";
-import { documentTitle } from "#/metadata";
+import { documentTitle } from "#/site/metadata";
 
 export function NotFoundAlert() {
   const notFoundRoute = useNotFoundRoute();

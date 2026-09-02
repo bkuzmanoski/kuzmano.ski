@@ -2,7 +2,7 @@ import { StartClient } from "@tanstack/react-start/client";
 import { StrictMode, startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 
-import { resolveWindow } from "#/content/window-registry";
+import { resolveWindow } from "#/site/windows";
 
 // Loads the article before hydration to prevent a Suspense boundary from replacing
 // server-rendered content with its fallback while the compiled MDX loads.
