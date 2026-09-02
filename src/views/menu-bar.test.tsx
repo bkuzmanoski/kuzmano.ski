@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SITE_SOURCE_URL } from "#/config/site";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip";
-import type { WindowId } from "#/lib/window-manager";
+import type { WindowId } from "#/lib/window-manager/window";
 import { DESTINATIONS } from "#/site/navigation";
 
 import { MenuBar } from "./menu-bar";
@@ -13,7 +13,7 @@ let focusedWindow: WindowId | null = null;
 const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 
-vi.mock("#/lib/window-manager", async () =>
+vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({
     actions: { open, close: vi.fn() },
     focusedWindow: () => focusedWindow,
@@ -33,7 +33,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  Reflect.deleteProperty(document, "elementFromPoint"); // Restores the default stub from the test setup.
+  Reflect.deleteProperty(document, "elementFromPoint");
 });
 
 const menuTitle = (label: string) => screen.getByText(label);

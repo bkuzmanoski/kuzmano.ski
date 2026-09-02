@@ -3,7 +3,6 @@ import { clampToContainer } from "../geometry";
 import type { Position, Size } from "../geometry";
 import type { IconLayout, IconPlacement, IconPosition, IconPositions } from "./icon";
 
-/** Whether two cells of `cellSize` positioned at these origins share any area. */
 function overlaps(a: Position, b: Position, cellSize: number): boolean {
   return Math.abs(a.x - b.x) < cellSize && Math.abs(a.y - b.y) < cellSize;
 }
@@ -17,10 +16,6 @@ function fitsInContainer(position: Position, container: Size, cellSize: number):
   );
 }
 
-/**
- * The first slot on the default grid that none of the `placed` positions cover, or null
- * when the container has no free slot.
- */
 function freeSlot(placed: ReadonlyArray<Position>, container: Size, layout: IconLayout): Position | null {
   for (let x = container.width - layout.position.right - layout.cellSize; x >= 0; x -= layout.spacing) {
     for (let y = layout.position.top; y + layout.cellSize <= container.height; y += layout.spacing) {
@@ -35,15 +30,7 @@ function freeSlot(placed: ReadonlyArray<Position>, container: Size, layout: Icon
   return null;
 }
 
-/**
- * Where each icon is placed for a container of this size, in `ids` order. This function does not
- * modify the stored positions, so growing the container places icons back in their original positions.
- *
- * A position is anchored to the container's right edge, which means a resize slides every icon
- * by the same amount and cannot change how they sit relative to each other. Icons only ever
- * collide once one of them leaves the container, so the ones that still fit stay exactly where
- * they are. Only the icons that are pushed out are given a new home.
- */
+/** Icon placements for a given container size, in `ids` order. Does not modify stored positions. */
 export function resolveIconPlacements(
   ids: ReadonlyArray<string>,
   positions: IconPositions,
@@ -56,7 +43,6 @@ export function resolveIconPlacements(
     return position ? [{ id, x: container.width - position.right - layout.cellSize, y: position.top }] : [];
   });
 
-  // A container that has not been measured yet has no room to reason about.
   if (container.width === 0 || container.height === 0) {
     return projected;
   }
@@ -69,8 +55,6 @@ export function resolveIconPlacements(
       return placement;
     }
 
-    // Falling back to the clamp keeps an icon on screen when the container is too small to hold
-    // the whole set. That is the one case where icons can still land on top of each other.
     const slot = freeSlot(placed, container, layout) ?? {
       x: clampToContainer(placement.x, container.width, layout.cellSize),
       y: clampToContainer(placement.y, container.height, layout.cellSize),
@@ -82,13 +66,7 @@ export function resolveIconPlacements(
   });
 }
 
-/**
- * The position stored for an icon dropped at `point`, the inverse of the projection above.
- *
- * The drop is held inside the container so that a drag past an edge sticks to it. Storing a
- * position that lies outside would read as an icon pushed out by a resize, and the icon would
- * be moved to a free slot part way through the drag.
- */
+/** Returns the stored icon position for `point`, clamped to the container bounds. */
 export function positionFromDrop(point: Position, container: Size, layout: IconLayout): IconPosition {
   const x = clampToContainer(point.x, container.width, layout.cellSize);
   return {

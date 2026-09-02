@@ -8,7 +8,7 @@ import { WindowBody } from "./window-body";
 
 const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; title: string } }>(() => ({})));
 
-vi.mock("#/lib/window-manager", async () =>
+vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ content: openWindows }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>

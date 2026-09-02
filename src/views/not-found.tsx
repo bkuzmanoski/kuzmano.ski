@@ -1,6 +1,6 @@
 import { Alert } from "#/components/alert";
 import { NOT_FOUND_PAGE_TITLE } from "#/config/site";
-import { useNotFoundRoute, useWindowActions } from "#/lib/window-manager";
+import { useNotFoundRoute, useWindowActions } from "#/lib/window-manager/context";
 import { documentTitle } from "#/site/metadata";
 
 export function NotFoundAlert() {
@@ -21,9 +21,6 @@ export function NotFoundAlert() {
 /**
  * The route-level not-found boundary for every route including the root. The window manager
  * reports an unmatched route from the URL, so this supplies only the document title.
- *
- * It renders into the root route's outlet, which sits on the desktop beside the windows, so it
- * must not render anything visible of its own.
  */
 export function NotFound() {
   return <title>{documentTitle(NOT_FOUND_PAGE_TITLE)}</title>;

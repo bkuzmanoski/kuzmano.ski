@@ -1,6 +1,6 @@
 import { FOCUSED_WINDOW_CONTENT_ID } from "#/components/window";
 import { isBrowserHandledClick } from "#/lib/link";
-import { useFocusedWindow } from "#/lib/window-manager";
+import { useFocusedWindow } from "#/lib/window-manager/context";
 
 import styles from "./skip-link.module.css";
 

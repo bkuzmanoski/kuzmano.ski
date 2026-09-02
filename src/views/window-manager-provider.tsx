@@ -1,31 +1,26 @@
 import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 
+import { createCloseGuards } from "#/lib/window-manager/close-guards";
+import type { CloseGuards } from "#/lib/window-manager/close-guards";
 import {
   ActionsContext,
   ContentContext,
-  EMPTY_STATE,
   FocusContext,
   GeometryContext,
   NotFoundContext,
   OrderContext,
   SurfaceContext,
-  createCloseGuards,
-  createWindowReducer,
-} from "#/lib/window-manager";
-import type {
-  Action,
-  CloseGuards,
-  ManagerState,
-  WindowActions,
-  WindowLayout,
-  WindowReducer,
-} from "#/lib/window-manager";
+} from "#/lib/window-manager/context";
+import type { WindowActions } from "#/lib/window-manager/context";
+import { createWindowReducer } from "#/lib/window-manager/state";
+import type { WindowReducer } from "#/lib/window-manager/state";
+import { EMPTY_STATE } from "#/lib/window-manager/window";
+import type { Action, ManagerState, WindowLayout } from "#/lib/window-manager/window";
 import { resolveRoute } from "#/site/windows";
 
 import type { ReactNode } from "react";
 
-// The action that opens a route, or `null` for routes that do not open a window.
 function openAction(route: string): Action | null {
   const resolvedRoute = resolveRoute(route);
 
@@ -142,9 +137,6 @@ export function WindowManagerProvider({
         actions.showNotFound(route);
         break;
 
-      // "/" is the one route with no window behind it, so it activates the desktop
-      // instead of opening something. Without this a step onto "/" would leave the
-      // window that was focused before it appearing active.
       case "desktop":
         actions.focusDesktop();
         break;
@@ -158,8 +150,6 @@ export function WindowManagerProvider({
     syncFocusToUrl(pathname);
   }, [pathname]);
 
-  // A first visit to the bare desktop opens the default window. A later
-  // return to "/" (e.g., via a click on the desktop) does not reopen it.
   const openInitialWindow = useEffectEvent(() => {
     if (initialRoute && pathname === "/") {
       actions.open(initialRoute, { replaceUrl: true });

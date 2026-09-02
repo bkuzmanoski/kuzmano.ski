@@ -1,7 +1,7 @@
 import { readStoredJson, writeStored } from "../storage";
 
 import type { Position } from "../geometry";
-import type { WindowId } from "../window-manager";
+import type { WindowId } from "../window-manager/window";
 
 export type IconKind = WindowId | "download";
 

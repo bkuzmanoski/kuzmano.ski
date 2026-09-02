@@ -8,7 +8,6 @@ import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
 import { Button } from "./button";
 import { CopyFailureAlert, CopyTooltip } from "./copy-feedback";
 
-/** The resting icon for each variant, which names what a press copies. */
 const icons = { copy: CopyIcon, link: LinkIcon };
 
 /** The button is disabled until the value is available. */

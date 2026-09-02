@@ -13,7 +13,7 @@ const SERVER_ENVIRONMENT = "ssr";
 
 const contentRoot = fromRoot(CONTENT_DIRECTORY);
 
-/** The `import.meta.glob` key for a content file, or null for a non-content module. */
+/** The `import.meta.glob` key for a content file, or `null` for a non-content module. */
 export function contentKeyOf(moduleId: string | null | undefined): string | null {
   if (!moduleId?.endsWith(".mdx")) {
     return null;

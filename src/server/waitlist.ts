@@ -9,9 +9,7 @@ const NOTION_API_URL = "https://api.notion.com/v1";
 const NOTION_VERSION = "2026-03-11"; // Pinned: Notion changes the shape of a request between versions.
 const REQUEST_TIMEOUT_MS = 5_000;
 
-/**
- * The properties the waitlist data source must define (see `/README.md`).
- */
+// The properties the waitlist data source must define (see `/README.md`).
 const PROPERTY = { emailAddress: "Email", list: "List", source: "Source" };
 
 /**

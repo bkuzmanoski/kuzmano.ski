@@ -1,5 +1,5 @@
 import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
-import type { WindowId } from "#/lib/window-manager";
+import type { WindowId } from "#/lib/window-manager/window";
 
 import { collections, pages } from "./catalog";
 
@@ -21,7 +21,6 @@ export type EntryTarget = Extract<WindowTarget, { id: "entry" }>;
 /** A window that lists collection entries. */
 export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
 
-/** The result of resolving a route: a window, the desktop, or a not-found page. */
 export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" };
 
 const CONTACT_PAGE_SEGMENT = CONTACT_PAGE_ROUTE.slice(1);

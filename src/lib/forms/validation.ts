@@ -17,20 +17,18 @@ export const maxLength =
   (value) =>
     isWithinLengthLimit(value, limit) ? null : message;
 
-/**
- * The shape of accepted email addresses: a dot-atom local part and a dotted domain of
- * letter-digit-hyphen labels and a strict subset of RFC 5322. Quoted local parts
- * comments and address literals are legal but rejected.
- *
- * This catches a typo before the message is sent. Whether an email address can
- * receive mail is left for the mail server to determine.
- */
+// The shape of accepted email addresses: a dot-atom local part and a dotted domain of
+// letter-digit-hyphen labels and a strict subset of RFC 5322. Quoted local parts
+// comments and address literals are legal but rejected.
+//
+// This catches a typo before the message is sent. Whether an email address can
+// receive mail is left for the mail server to determine.
 const ATOM = String.raw`[A-Za-z0-9!#$%&'*+/=?^_\`{|}~-]+`;
 const LABEL = String.raw`[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?`;
 const EMAIL = new RegExp(String.raw`^${ATOM}(?:\.${ATOM})*@(?:${LABEL}\.)+[A-Za-z]{2,63}$`);
 const MAX_LOCAL_LENGTH = 64;
 
-/** The longest address RFC 5321 allows. */
+/** The longest email address allowed by RFC 5321. */
 export const MAX_ADDRESS_LENGTH = 254;
 
 export function isEmailAddress(value: string): boolean {

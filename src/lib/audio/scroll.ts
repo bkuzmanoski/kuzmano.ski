@@ -133,13 +133,11 @@ export function playScroll(element: Element) {
   playScrollDetent(gesture.speed);
 }
 
-/**
- * Plays a scroll sound unless the element's height changed since its previous scroll.
- *
- * A height change identifies a scroll caused by layout rather than user input. Such scrolls
- * are recorded without a sound. The caller supplies the height because the relevant
- * measurement differs by context.
- */
+// Plays a scroll sound unless the element's height changed since its previous scroll.
+//
+// A height change identifies a scroll caused by layout rather than user input. Such scrolls
+// are recorded without a sound. The caller supplies the height because the relevant
+// measurement differs by context.
 function playScrollUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
 

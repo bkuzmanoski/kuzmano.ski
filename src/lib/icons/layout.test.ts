@@ -8,7 +8,6 @@ const LAYOUT: IconLayout = { cellSize: 72, spacing: 96, position: { top: 24, rig
 
 const IDS = ["about", "experience", "work", "contact"];
 
-/** The default column: one icon under the next, `spacing` apart. */
 const COLUMN: IconPositions = {
   about: { top: 24, right: 32 },
   experience: { top: 120, right: 32 },
@@ -16,7 +15,6 @@ const COLUMN: IconPositions = {
   contact: { top: 312, right: 32 },
 };
 
-/** The x of the nth default column, counting leftwards from the right edge of the container. */
 function columnX(containerWidth: number, column: number): number {
   return containerWidth - LAYOUT.position.right - LAYOUT.cellSize - column * LAYOUT.spacing;
 }
@@ -110,7 +108,7 @@ describe("resolveIconPlacements", () => {
     }
   });
 
-  test("drops ids that have no position", () => {
+  test("omits ids that have no position", () => {
     expect(resolveIconPlacements(IDS, { about: { top: 24, right: 32 } }, { width: 1000, height: 800 }, LAYOUT)).toEqual(
       [{ id: "about", x: columnX(1000, 0), y: 24 }],
     );

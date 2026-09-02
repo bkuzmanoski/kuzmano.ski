@@ -25,7 +25,7 @@ import { sleep } from "#/lib/screensaver/lifecycle";
 import { setSound, setTheme, useSettings } from "#/lib/settings";
 import type { Theme } from "#/lib/settings";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip";
-import { useFocusedWindow, useWindowActions } from "#/lib/window-manager";
+import { useFocusedWindow, useWindowActions } from "#/lib/window-manager/context";
 import { DESTINATIONS } from "#/site/navigation";
 
 import styles from "./menu-bar.module.css";

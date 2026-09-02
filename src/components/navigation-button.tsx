@@ -3,7 +3,7 @@ import { Button } from "#/components/button";
 import { Tooltip } from "#/components/tooltip";
 import { cx } from "#/lib/class-names";
 import { isBrowserHandledClick } from "#/lib/link";
-import { useWindowActions } from "#/lib/window-manager";
+import { useWindowActions } from "#/lib/window-manager/context";
 
 import styles from "./navigation-button.module.css";
 

@@ -20,7 +20,7 @@ describe("articleContentOf", () => {
     expect(body).toContain(`href="${ENTRY_URL}#section"`);
   });
 
-  test("drops the classes and inline styles the page renders with", () => {
+  test("omits the classes and inline styles the page renders with", () => {
     const body = articleContentOf(articlePage('<p class="_p_1a2b" style="color:var(--x)">A body.</p>'), ENTRY_URL);
     expect(body).toBe("<p>A body.</p>");
   });

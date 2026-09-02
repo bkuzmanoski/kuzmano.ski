@@ -2,7 +2,7 @@
 // `/build/inline-script.ts`). Storage can be blocked entirely (e.g., if cookies
 // are disabled), so every access is wrapped in a try/catch.
 
-/** The stored value, or null when it is absent or storage is unavailable. */
+/** The stored value, or `null` when it is absent or storage is unavailable. */
 export function readStored(key: string): string | null {
   try {
     return localStorage.getItem(key);
@@ -11,7 +11,7 @@ export function readStored(key: string): string | null {
   }
 }
 
-/** The stored JSON, parsed, or null when absent, invalid, or storage is unavailable. */
+/** The stored JSON, parsed, or `null` when absent, invalid, or storage is unavailable. */
 export function readStoredJson(key: string): unknown {
   try {
     const rawValue = localStorage.getItem(key);

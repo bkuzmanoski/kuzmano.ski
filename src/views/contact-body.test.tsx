@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
-import type { CloseGuard } from "#/lib/window-manager";
+import type { CloseGuard } from "#/lib/window-manager/close-guards";
 
 import { ContactBody, SENDING_MESSAGE } from "./contact-body";
 
@@ -36,8 +36,6 @@ const CONTACT_EMAIL_ADDRESS = "inbox@example.com";
 
 const fetchMock = vi.fn<typeof fetch>();
 
-// The window makes two kinds of request: it reads the contact email address on mount and posts
-// the message on send. The mock routes by method so each can be resolved independently.
 let publishEmailAddress: (response: Response) => void;
 let respondToSendMessage: (response: Response) => void;
 let sendResponse: Promise<Response>;

@@ -6,7 +6,7 @@ import { testCollection } from "#/test-utils/content";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
 
-vi.mock("#/lib/window-manager", async () =>
+vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>

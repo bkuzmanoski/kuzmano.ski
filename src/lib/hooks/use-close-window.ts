@@ -1,6 +1,6 @@
 import { createContext, use, useEffect, useRef } from "react";
 
-import type { CloseGuard } from "#/lib/window-manager";
+import type { CloseGuard } from "#/lib/window-manager/close-guards";
 
 export interface WindowClose {
   registerGuard: (guard: CloseGuard) => () => void;
@@ -10,7 +10,7 @@ export interface WindowClose {
 
 export const WindowCloseContext = createContext<WindowClose | null>(null);
 
-/** Closes the containing window, or null if there is no window around the current subtree. */
+/** Closes the containing window, or `null` if there is no window around the current subtree. */
 export function useCloseWindow(): (() => void) | null {
   return use(WindowCloseContext)?.close ?? null;
 }

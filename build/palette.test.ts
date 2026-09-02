@@ -31,7 +31,7 @@ describe("normalizeHex", () => {
     expect(normalizeHex("#abc")).toBe("#aabbcc");
   });
 
-  test("drops the alpha channel", () => {
+  test("omits the alpha channel", () => {
     expect(normalizeHex("#aabbccdd")).toBe("#aabbcc");
     expect(normalizeHex("#abcd")).toBe("#aabbcc");
   });

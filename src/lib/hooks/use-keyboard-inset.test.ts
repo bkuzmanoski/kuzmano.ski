@@ -20,7 +20,7 @@ function stubViewport({ height = LAYOUT_HEIGHT, scale = 1 } = {}) {
   const scrollTo = vi.fn();
 
   vi.stubGlobal("innerHeight", LAYOUT_HEIGHT);
-  vi.stubGlobal("scrollTo", scrollTo); // Re-stubbed here because `unstubAllGlobals` below drops the one the test setup installs.
+  vi.stubGlobal("scrollTo", scrollTo);
   vi.stubGlobal("visualViewport", viewport);
 
   return {

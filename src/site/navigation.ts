@@ -1,6 +1,6 @@
 import { DESTINATION_ORDER, DESTINATION_SPECS } from "#/config/navigation";
 import type { DestinationId, DestinationSpec } from "#/config/navigation";
-import type { Destination } from "#/lib/window-manager";
+import type { Destination } from "#/lib/window-manager/window";
 
 import { pages } from "./catalog";
 

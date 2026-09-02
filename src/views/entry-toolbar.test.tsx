@@ -12,11 +12,9 @@ const open = vi.hoisted(() => vi.fn());
 const playClick = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
 
-// jsdom has no clipboard. It is defined on `navigator` in place rather than stubbed over the whole
-// object, which would drop the `language` the toolbar reads to format the entry's date.
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
 
-vi.mock("#/lib/window-manager", async () =>
+vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>

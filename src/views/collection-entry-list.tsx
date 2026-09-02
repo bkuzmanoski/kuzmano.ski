@@ -10,7 +10,7 @@ import { useDateFormat } from "#/lib/hooks/use-date-format";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { isBrowserHandledClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
-import { useWindowActions, useWindowContent } from "#/lib/window-manager";
+import { useWindowActions, useWindowContent } from "#/lib/window-manager/context";
 import type { Collection } from "#/site/catalog";
 import type { CollectionTarget } from "#/site/windows";
 import { resolveWindow } from "#/site/windows";
@@ -24,14 +24,11 @@ export const EMPTY_COLLECTION_MESSAGE = "There are no entries in this collection
 export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const { open } = useWindowActions();
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
+  const pressSoundHandlers = usePressSound({ scrollSafe: true });
   const listRef = useRef<HTMLUListElement>(null);
 
   const entries = collection.list();
   const openEntry = (slug: string) => open(collection.routeOf(slug));
-
-  // One instance serves every card: the list is scrolled by touch, so a press that becomes a
-  // scroll must not sound, and only one press runs at a time (see `usePressSound`).
-  const pressSoundHandlers = usePressSound({ scrollSafe: true });
 
   const itemProps = useListNavigation(listRef, {
     count: entries.length,
@@ -94,8 +91,6 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
   );
 }
 
-// The entry window is a sibling of the collection window, so the list reads the
-// open entry from window state rather than receiving it as a prop.
 function useOpenEntrySlug(collectionRoute: string): string | null {
   const entryWindow = useWindowContent().entry;
   const target = entryWindow ? resolveWindow(entryWindow.route) : null;

@@ -69,12 +69,8 @@ function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
   );
 }
 
-/**
- * Memoized because the menu rebuilds every row whenever the highlight moves: the row
- * elements are built inside a `map`, which the React Compiler caches as one array
- * rather than per item. Without this, moving the pointer down the menu re-renders
- * every row in it to change the appearance of two.
- */
+// Memoized because the menu rebuilds every row whenever the highlight moves (the row
+// elements are built inside a `map`, which the React Compiler caches as one array).
 const MenuItemRow = memo(function MenuRow({
   item,
   index,

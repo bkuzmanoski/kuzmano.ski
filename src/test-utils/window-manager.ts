@@ -1,7 +1,8 @@
 // Import only types: importing a value would load the module being mocked.
-import type { WindowActions, WindowContent, WindowId, WindowRecord } from "#/lib/window-manager";
+import type { WindowActions } from "#/lib/window-manager/context";
+import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window";
 
-/** A `vi.mock` factory for `#/lib/window-manager`, so component suites stub one hook surface. */
+/** A `vi.mock` factory for `#/lib/window-manager/context`, so component suites stub one hook surface. */
 export function windowManagerMock({
   actions = {},
   content = () => ({}),

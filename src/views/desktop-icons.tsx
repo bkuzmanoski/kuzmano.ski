@@ -16,8 +16,8 @@ import { createIconPositionsStore } from "#/lib/icons/positions";
 import { isArrowKey } from "#/lib/keys";
 import type { ArrowKey } from "#/lib/keys";
 import { followLink } from "#/lib/link";
-import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager";
-import type { WindowId } from "#/lib/window-manager";
+import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager/context";
+import type { WindowId } from "#/lib/window-manager/window";
 import { DESTINATIONS } from "#/site/navigation";
 import { isDestinationOpen, resolveWindow } from "#/site/windows";
 

@@ -40,7 +40,7 @@ describe("markdownFor", () => {
     expect(markdown).toContain("```ts\nconst a = 1;\n```");
   });
 
-  test("drops imports, exports, and expressions", async () => {
+  test("omits imports, exports, and expressions", async () => {
     const markdown = await markdownFor(
       `${FRONTMATTER}\nimport { Note } from "./note";\nexport const value = 1;\n\n{/* A comment */}\n\nBody.\n`,
     );
@@ -62,7 +62,7 @@ describe("markdownFor", () => {
     expect(markdown).toContain("A wrapped phrase.");
   });
 
-  test("drops a component that has no children", async () => {
+  test("omits a component that has no children", async () => {
     await expect(markdownFor(`${FRONTMATTER}\n<Figure src="/a.png" />\n\nBody.\n`)).resolves.not.toContain("Figure");
   });
 

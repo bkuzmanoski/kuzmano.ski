@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { DESTINATION_ORDER } from "#/config/navigation";
-import type { WindowId } from "#/lib/window-manager";
+import type { WindowId } from "#/lib/window-manager/window";
 import { DESTINATIONS } from "#/site/navigation";
 
 import { DesktopIcons } from "./desktop-icons";
@@ -11,7 +11,7 @@ let focusedWindow: WindowId | null = null;
 
 const open = vi.hoisted(() => vi.fn());
 
-vi.mock("#/lib/window-manager", async () =>
+vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({
     actions: { open, focusDesktop: vi.fn() },
     focusedWindow: () => focusedWindow,
@@ -39,10 +39,9 @@ function renderIcons() {
   };
 }
 
-/** The window a selected icon opened, which takes the focus and resigns when it closes. */
 function openWindow(setFocusedWindow: (id: WindowId | null) => void, id: WindowId) {
   setFocusedWindow(id);
-  (document.activeElement as HTMLElement | null)?.blur(); // The window's own focus goes with it when it unmounts.
+  (document.activeElement as HTMLElement | null)?.blur();
 }
 
 test("the selected icon regains focus when the last window closes and remains keyboard-accessible", () => {

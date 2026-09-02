@@ -8,18 +8,16 @@ import { WindowCloseContext } from "#/lib/hooks/use-close-window";
 import type { WindowClose } from "#/lib/hooks/use-close-window";
 import { useElementResize } from "#/lib/hooks/use-element-size";
 import {
-  WINDOW_DOM_ORDER,
-  createWindowPlacer,
-  createWindowResizer,
-  isUnmeasured,
   useFocusedWindow,
   useSurface,
   useWindowActions,
   useWindowContent,
   useWindowGeometry,
   useWindowOrder,
-} from "#/lib/window-manager";
-import type { WindowGeometry, WindowId } from "#/lib/window-manager";
+} from "#/lib/window-manager/context";
+import { createWindowPlacer, createWindowResizer } from "#/lib/window-manager/layout";
+import { WINDOW_DOM_ORDER, isUnmeasured } from "#/lib/window-manager/window";
+import type { WindowGeometry, WindowId } from "#/lib/window-manager/window";
 
 import { DesktopIcons } from "./desktop-icons";
 import { DragOutline } from "./drag-outline";
@@ -33,16 +31,11 @@ import type { ReactNode } from "react";
 const placeWindow = createWindowPlacer(LAYOUT);
 const resizeWindow = createWindowResizer(LAYOUT);
 
-/** A drag reported by one of the open windows, which the outline standing in for it is built from. */
 interface WindowDragState {
   id: WindowId;
   drag: WindowDrag;
 }
 
-/**
- * The outline for a drag. The proposed window geometry is fitted to the desktop
- * by the same rules the window manager will apply when the gesture ends.
- */
 function outlineRect(geometry: WindowGeometry, surface: Size, drag: WindowDrag): Rect {
   return drag.kind === "move"
     ? placeWindow({ ...geometry, x: drag.x, y: drag.y }, surface)
@@ -82,8 +75,7 @@ const DesktopWindow = memo(function OpenWindow({
 }) {
   const { close, registerCloseGuard, focus, move, resize, toggleZoom } = useWindowActions();
 
-  // The close API for this window, passed to its body. Memoized because the body registers
-  // its close guard against this object, so changing its identity would re-register the guard.
+  // Memoized bbecause the body registers its close guard against this object, so changing its identity would re-register the guard.t.eging a close guard on every render.
   const windowClose = useMemo<WindowClose>(
     () => ({
       forceClose: () => close(id, { force: true }),
