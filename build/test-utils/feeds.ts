@@ -4,7 +4,7 @@ import type { FeedMetadata } from "#/site/feeds.ts";
 import type { Feed, FeedEntry } from "../feeds/atom.ts";
 import type { PageSource } from "../feeds/plugin.ts";
 
-export const ENTRY_URL = "https://example.com/collection/entry";
+export const ENTRY_URL = "https://kuzmano.ski/collection/entry";
 
 export const articlePage = (article: string) =>
   `<html><body><main><article class="articleClass">${article}</article></main></body></html>`;
@@ -29,10 +29,10 @@ export const feedDocument = (overrides: Partial<Feed> = {}): Feed => ({
   title: "Feed title",
   subtitle: "Feed subtitle.",
   author: "Author Name",
-  icon: "https://example.com/logo192.png",
-  logo: "https://example.com/logo512.png",
-  url: "https://example.com/collection",
-  selfUrl: "https://example.com/collection/feed.xml",
+  icon: "https://kuzmano.ski/logo192.png",
+  logo: "https://kuzmano.ski/logo512.png",
+  url: "https://kuzmano.ski/collection",
+  selfUrl: "https://kuzmano.ski/collection/feed.xml",
   updated: "2026-07-19",
   entries: [],
   ...overrides,

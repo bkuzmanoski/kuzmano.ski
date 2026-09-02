@@ -1,4 +1,4 @@
-// This module has no imports, so the pre-hydration overlay script can use it (see `/build/inline-script.ts`).
+// This module has no imports, so the pre-hydration boot sequence script can use it (see `/build/inline-scripts.ts`).
 
 /**
  * Set on `<html>` to hide the server-rendered desktop until the boot sequence has
@@ -7,8 +7,8 @@
 export const BOOT_SEQUENCE_OVERLAY_ATTRIBUTE = "data-boot-sequence-overlay";
 
 /**
- * Marks the `theme-color` pair matching the boot screen's backdrop, which
- * `root-document.tsx` renders ahead of the desktop's until the boot sequence has run.
+ * Marks the `theme-color` pair matching the boot screen's backdrop, which `root-document.tsx`
+ * renders ahead of the desktop's until the boot sequence has run.
  */
 export const BOOT_SEQUENCE_THEME_COLOR_SELECTOR = "meta[data-boot-sequence-theme-color]";
 

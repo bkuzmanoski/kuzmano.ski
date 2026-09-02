@@ -55,7 +55,7 @@ export default defineConfig(({ command }) => {
           autoStaticPathsDiscovery: false,
           onSuccess: (result) => {
             verifyPrerenderedPage(result);
-            capturePage(result); // Held for the feeds which are written once every page has been prerendered.
+            capturePage(result);
           },
         },
       }),

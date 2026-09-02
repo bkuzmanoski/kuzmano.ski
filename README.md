@@ -21,8 +21,8 @@ date: 2026-07-19
 draft: false # Optional. The dev server renders a draft. The build omits it.
 ```
 
-Frontmatter is validated by `/src/content/schema.ts`. MDX elements are mapped to
-app components by `/src/views/mdx-components.tsx`.
+Frontmatter is validated by `/src/lib/content/schema.ts`. MDX elements are
+mapped to React components by `/src/views/mdx-components.tsx`.
 
 Content is located in:
 

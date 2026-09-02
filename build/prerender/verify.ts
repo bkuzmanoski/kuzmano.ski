@@ -1,7 +1,7 @@
 import { documentTitle } from "#/site/metadata.ts";
 
 const TITLE_SUFFIX = documentTitle(""); // The suffix on every page title. It comes from `documentTitle` so the two agree.
-const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/components/menu-bar.tsx`
+const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/views/menu-bar.tsx`
 const WINDOW_BODY = /id="window-content"[^>]*>(?:<!--.*?-->)*<(?!\/)/; // Content inside `FOCUSED_WINDOW_CONTENT_ID`, past the comments React writes around a Suspense boundary.
 const LOADING_INDICATOR = "data-loading-indicator"; // The marker on `/src/components/spinner.tsx`.
 

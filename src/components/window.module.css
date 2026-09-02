@@ -41,7 +41,7 @@
 
   /* A window the server rendered has no position as the window layer has not yet been
    * measured. These values mirror the default position and size for the initial window
-   * placed by the window manager (see `/src/lib/window-manager.ts`). */
+   * placed by the window manager (see `/src/lib/window-manager/layout.ts`). */
   &.unplaced {
     top: 50%;
     left: 50%;

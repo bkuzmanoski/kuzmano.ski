@@ -1,6 +1,4 @@
-// This module has no imports, so the pre-hydration overlay script can use it (see
-// `/build/inline-script.ts`). Session storage can be blocked entirely (cookies
-// disabled), so every access is wrapped in a try/catch.
+// This module has no imports, so the pre-hydration boot sequence script can use it (see `/build/inline-scripts.ts`).
 
 export const BOOT_SEQUENCE_STORAGE_KEY = "boot-sequence-run";
 

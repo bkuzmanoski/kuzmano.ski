@@ -1,8 +1,5 @@
-// This module has no imports, so the pre-hydration scripts can share it (see
-// `/build/inline-script.ts`). Storage can be blocked entirely (e.g., if cookies
-// are disabled), so every access is wrapped in a try/catch.
+// This module has no imports, so pre-hydration scripts can use it (see `/build/inline-scripts.ts`).
 
-/** The stored value, or `null` when it is absent or storage is unavailable. */
 export function readStored(key: string): string | null {
   try {
     return localStorage.getItem(key);
@@ -11,7 +8,6 @@ export function readStored(key: string): string | null {
   }
 }
 
-/** The stored JSON, parsed, or `null` when absent, invalid, or storage is unavailable. */
 export function readStoredJson(key: string): unknown {
   try {
     const rawValue = localStorage.getItem(key);
