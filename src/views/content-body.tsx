@@ -2,10 +2,10 @@ import { MDXProvider } from "@mdx-js/react";
 import { use, useMemo, useState } from "react";
 
 import { CopyFailureAlert } from "#/components/copy-feedback";
-import type { MDXModule } from "#/content";
 import { ArticleContext } from "#/lib/article-context";
 import { cx } from "#/lib/class-names";
 import { revealFragment } from "#/lib/reveal-fragment";
+import type { MDXModule } from "#/site/catalog";
 
 import styles from "./content-body.module.css";
 import { mdxComponents } from "./mdx-components";

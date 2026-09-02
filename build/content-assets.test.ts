@@ -6,8 +6,8 @@ import { CONTENT_DIRECTORY, fromRoot } from "./paths.ts";
 const contentPath = (path: string) => fromRoot(`${CONTENT_DIRECTORY}/${path}`);
 
 test("a content file gets the same key `import.meta.glob` uses for it", () => {
-  expect(contentKeyOf(contentPath("collection/entry.mdx"))).toBe("./collection/entry.mdx");
-  expect(contentKeyOf(contentPath("_pages/about.mdx"))).toBe("./_pages/about.mdx");
+  expect(contentKeyOf(contentPath("collection/entry.mdx"))).toBe(`/${CONTENT_DIRECTORY}/collection/entry.mdx`);
+  expect(contentKeyOf(contentPath("_pages/about.mdx"))).toBe(`/${CONTENT_DIRECTORY}/_pages/about.mdx`);
 });
 
 test("a non-content module has no content key", () => {

@@ -1,5 +1,5 @@
-import { collections } from "#/content";
-import type { Collection, Entry } from "#/content";
+import { collections } from "#/site/catalog";
+import type { Collection, Entry } from "#/site/catalog";
 
 interface TestCollection {
   collection: Collection;

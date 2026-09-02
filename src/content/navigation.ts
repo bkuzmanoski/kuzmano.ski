@@ -2,8 +2,7 @@ import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
 import { COLLECTIONS } from "#/config/content";
 import type { CollectionSegment, PageSlug } from "#/config/content";
 import type { Destination } from "#/lib/window-manager";
-
-import { pages } from "./index";
+import { pages } from "#/site/catalog";
 
 const titleOf = (slug: PageSlug) => {
   try {

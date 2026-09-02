@@ -1,7 +1,7 @@
 import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
-import { collections, pages } from "#/content";
-import type { Collection, ContentIndex } from "#/content";
 import type { WindowId } from "#/lib/window-manager";
+import { collections, pages } from "#/site/catalog";
+import type { Collection, ContentIndex } from "#/site/catalog";
 
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {

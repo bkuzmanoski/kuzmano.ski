@@ -2,7 +2,6 @@ import { useRef } from "react";
 
 import { EmptyState } from "#/components/empty-state";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
-import type { Collection } from "#/content";
 import { resolveWindow } from "#/content/window-registry";
 import type { CollectionTarget } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/sounds";
@@ -14,6 +13,7 @@ import { useListNavigation } from "#/lib/hooks/use-list-navigation";
 import { isBrowserHandledClick } from "#/lib/link";
 import { mergeHandlers } from "#/lib/merge-handlers";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager";
+import type { Collection } from "#/site/catalog";
 
 import styles from "./collection-entry-list.module.css";
 

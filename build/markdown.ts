@@ -7,7 +7,7 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
 import { COLLECTIONS } from "#/config/content.ts";
-import { parseFrontmatter } from "#/content/schema.ts";
+import { parseFrontmatter } from "#/lib/content/schema.ts";
 import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
 import { canonicalUrl, markdownPath } from "#/metadata.ts";
 

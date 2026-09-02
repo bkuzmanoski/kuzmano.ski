@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { pages } from "#/content";
+import { pages } from "#/site/catalog";
 import { testCollection } from "#/test-utils/content";
 
 import { isDestinationOpen, resolveRoute, resolveWindow } from "./window-registry";

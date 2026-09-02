@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { testCollection } from "#/test-utils/content";
 
-import { entrySiblings } from "./entry-navigation";
+import { entrySiblings } from "./siblings";
 
 const { collection, entries, routeOf } = testCollection("blog", 3);
 const lastEntryIndex = entries.length - 1;

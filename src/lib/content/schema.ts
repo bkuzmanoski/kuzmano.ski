@@ -1,5 +1,5 @@
-import { isIsoDate } from "#/lib/date";
-import { isRecord } from "#/lib/guards";
+import { isIsoDate } from "../date";
+import { isRecord } from "../guards";
 
 export interface Frontmatter {
   title: string;

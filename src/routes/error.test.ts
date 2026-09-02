@@ -2,15 +2,15 @@ import { screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { API } from "#/api";
-import type * as Content from "#/content";
+import type * as Catalog from "#/site/catalog";
 import { renderRoute } from "#/test-utils/router";
 
 // Content that cannot be read fails when the route loads, and again when the desktop
 // resolves the window for it. The desktop cannot recover from this. These tests use
 // the real route tree to cover that path.
 
-vi.mock("#/content", async (importOriginal) => {
-  const actual = await importOriginal<typeof Content>();
+vi.mock("#/site/catalog", async (importOriginal) => {
+  const actual = await importOriginal<typeof Catalog>();
   return {
     ...actual,
     pages: {

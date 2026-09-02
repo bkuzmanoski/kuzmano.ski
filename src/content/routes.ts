@@ -3,10 +3,8 @@ import { notFound } from "@tanstack/react-router";
 import { collectionFeed } from "#/feeds";
 import { documentHead } from "#/metadata";
 import type { DocumentMetadata } from "#/metadata";
-
-import { collections, pages } from "./index";
-
-import type { Frontmatter } from "./index";
+import { collections, pages } from "#/site/catalog";
+import type { Frontmatter } from "#/site/catalog";
 
 function documentData(
   frontmatter: Frontmatter | null | undefined,

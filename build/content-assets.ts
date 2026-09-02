@@ -21,13 +21,13 @@ export function contentKeyOf(moduleId: string | null | undefined): string | null
 
   const path = relative(contentRoot, moduleId);
 
-  return path.startsWith("..") ? null : `./${path}`;
+  return path.startsWith("..") ? null : `/${CONTENT_DIRECTORY}/${path}`;
 }
 
 /**
  * Provides `virtual:content-assets` as a map from each content file to the URL of the client chunk
  * that contains its compiled MDX. The keys use the same paths as `import.meta.glob` (see
- * `/src/content/index.ts`).
+ * `/src/site/catalog.ts`).
  *
  * The client normally loads a page's compiled MDX on demand, after the page has started running.
  * The server can put the chunk URL in the page instead, allowing the browser to fetch it while

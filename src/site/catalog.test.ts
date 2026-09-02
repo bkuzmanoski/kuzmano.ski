@@ -1,8 +1,9 @@
 import { expect, test } from "vitest";
 
-import type { MDXModule } from "#/content";
 import type { TrackedPromise } from "#/lib/tracked-promise";
 import { newestEntry, testCollection } from "#/test-utils/content";
+
+import type { MDXModule } from "./catalog";
 
 test("a loaded entry returns a fulfilled promise with its module", async () => {
   const { collection } = testCollection("blog");

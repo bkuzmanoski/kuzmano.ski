@@ -1,4 +1,4 @@
-import type { Collection } from "./index";
+import type { Collection } from "./catalog";
 
 /** The routes of the entries either side of one in the collection that holds it, in listing order (newest first). */
 export interface EntrySiblings {
