@@ -3,10 +3,8 @@
     "MD013": false,
     "MD024": false,
     "MD026": false,
-    "MD040": false,
-    "max-heading-level": { "level": 3 }
+    "MD040": false
   },
-  "customRules": ["./markdownlint.rules.ts"],
   "globs": ["**/*.{md,mdx}"],
   "gitignore": true
 }

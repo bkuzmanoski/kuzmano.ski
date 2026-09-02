@@ -15,7 +15,7 @@ function revealInitialFragment(article: HTMLElement | null) {
   }
 }
 
-export function ContentBody({ route, content }: { route: string; content: Promise<MDXModule> }) {
+export function ContentBody({ route, title, content }: { route: string; title: string; content: Promise<MDXModule> }) {
   const [hasFailedCopy, setHasFailedCopy] = useState(false);
   const article = useMemo(() => ({ route, reportCopyFailure: () => setHasFailedCopy(true) }), [route]);
   const { default: MDXContent, className } = use(content); // Read the module with `use()` rather than the route loader as loader data must be serializable.
@@ -25,6 +25,7 @@ export function ContentBody({ route, content }: { route: string; content: Promis
       <MDXProvider components={mdxComponents}>
         {/* `className` is the class a page exports to apply a stylesheet of its own on top of the shared one. */}
         <article ref={revealInitialFragment} className={cx(styles.content, className)}>
+          <h1 data-feed-omit>{title}</h1>
           <MDXContent />
         </article>
       </MDXProvider>

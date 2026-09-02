@@ -43,8 +43,8 @@ describe("articleContentOf", () => {
 
   test("removes heading links and the elements left empty by their removal", () => {
     const heading =
-      '<h1 id="section">A Heading<span class="wrapper"><a data-heading-link href="#section"><span>#</span></a></span></h1>';
-    expect(articleContentOf(articlePage(heading), ENTRY_URL)).toBe('<h1 id="section">A Heading</h1>');
+      '<h2 id="section">A Heading<span class="wrapper"><a data-heading-link href="#section"><span>#</span></a></span></h2>';
+    expect(articleContentOf(articlePage(heading), ENTRY_URL)).toBe('<h2 id="section">A Heading</h2>');
   });
 
   test("removes anything a component has marked as UI", () => {

@@ -18,7 +18,7 @@ export function WindowBody({ route }: { route: string }) {
     case "entry":
       return (
         <Suspense fallback={<Spinner layout="fill" />}>
-          <ContentBody route={route} content={target.contentIndex.load(target.slug)} />
+          <ContentBody route={route} title={target.title} content={target.contentIndex.load(target.slug)} />
         </Suspense>
       );
 

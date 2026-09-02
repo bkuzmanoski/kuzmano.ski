@@ -1,9 +1,8 @@
 {
   "config": {
-    "MD025": { "front_matter_title": "" },
     "MD033": false,
-    "MD041": { "front_matter_title": "" },
-    "max-heading-level": { "level": 2 }
+    "max-heading-level": { "level": 3 }
   },
-  "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)"
+  "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
+  "customRules": ["./markdownlint.rules.ts"]
 }

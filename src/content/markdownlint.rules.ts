@@ -1,6 +1,6 @@
 import type { Rule, RuleParams } from "markdownlint";
 
-// A markdownlint rule capping how deep a heading may nest. Used by `.markdownlint-cli2.jsonc`.
+// A markdownlint rule capping how deep a heading may nest.
 
 type Token = RuleParams["parsers"]["micromark"]["tokens"][number];
 
@@ -21,8 +21,8 @@ function* headings(tokens: Array<Token>): Generator<Token> {
   }
 }
 
-// Mirrors markdownlint's own reading of a heading token: `###` gives 3, a setext `---`
-// underline gives 2, and a `===` underline gives 1.
+// Matches markdownlint's reading of a heading token: setext `===` is level 1, setext `---`
+// is level 2, and ATX `###` is level 3.
 function levelOf(heading: Token): number {
   const sequence = heading.children.find((child) => SEQUENCE_TYPES.has(child.type));
 

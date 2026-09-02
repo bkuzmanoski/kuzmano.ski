@@ -23,6 +23,7 @@ vi.mock("#/lib/audio/sounds", async (importOriginal) =>
 );
 
 const ROUTE = "/collection/fixture";
+const TITLE = "Fixture Title";
 
 beforeEach(() => {
   resetTooltipState();
@@ -39,7 +40,7 @@ const renderContent = async (module: MDXModule) => {
   const { container } = await act(() =>
     render(
       <Suspense>
-        <ContentBody route={ROUTE} content={Promise.resolve(module)} />
+        <ContentBody route={ROUTE} title={TITLE} content={Promise.resolve(module)} />
       </Suspense>,
     ),
   );
@@ -59,30 +60,39 @@ test("a page's own class is applied alongside the shared one", async () => {
   expect(article.className.split(" ")).toEqual([styles.content, "aboutPage"]);
 });
 
+test("the title heads the article, from the frontmatter rather than the body", async () => {
+  const article = await renderContent({ default: () => <p>Body</p> });
+  const heading = screen.getByRole("heading", { level: 1 });
+
+  expect(heading.textContent).toBe(TITLE);
+  expect(article.firstElementChild).toBe(heading);
+  expect(heading.hasAttribute("data-feed-omit")).toBe(true); // A feed reader renders the entry's title itself, so the body must not repeat it.
+});
+
 test("every heading is followed by a named link to itself that is accessible to assistive technology", async () => {
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture heading" });
+  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
 
   expect(link.getAttribute("href")).toBe("#fixture-heading");
   expect(link.closest("[aria-hidden]")).toBeNull(); // An `aria-hidden` link is invalid the moment a click focuses it.
-  expect(link.closest("h1")).not.toBeNull();
-  expect(screen.getByRole("link", { name: "Link to Fixture section" })).toBeDefined();
+  expect(link.closest("h2")).not.toBeNull();
+  expect(screen.getByRole("link", { name: "Link to Fixture Heading" })).toBeDefined();
 });
 
-test("a page opened at a fragment scrolls to the section it names", async () => {
-  window.location.hash = "#fixture-section";
+test("a page opened at a fragment scrolls to the heading it names", async () => {
+  window.location.hash = "#fixture-heading";
 
   await renderContent(headingAnchorFixture);
 
-  const section = screen.getByRole("heading", { name: /Fixture section/ });
+  const heading = screen.getByRole("heading", { name: /Fixture Heading/ });
 
-  expect(scrollIntoViewSilently).toHaveBeenCalledWith(section, { block: "start" });
-  expect(document.activeElement).toBe(section);
+  expect(scrollIntoViewSilently).toHaveBeenCalledWith(heading, { block: "start" });
+  expect(document.activeElement).toBe(heading);
 });
 
-test("a page opened at a fragment that does not name a section does not scroll", async () => {
-  window.location.hash = "#absent-section";
+test("a page opened at a fragment that does not name a heading does not scroll", async () => {
+  window.location.hash = "#absent-heading";
 
   await renderContent(headingAnchorFixture);
 
@@ -94,27 +104,27 @@ test("a page opened without a fragment does not scroll", async () => {
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("clicking a heading link copies the section's address and shows the confirmation", async () => {
+test("clicking a heading link copies the heading's address and shows the confirmation", async () => {
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture section" });
+  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
 
   await act(async () => {
     fireEvent.click(link);
     await Promise.resolve();
   });
 
-  const section = screen.getByRole("heading", { name: /Fixture section/ });
+  const heading = screen.getByRole("heading", { name: /Fixture Heading/ });
 
-  expect(writeText).toHaveBeenCalledWith(canonicalUrl(`${ROUTE}#fixture-section`));
+  expect(writeText).toHaveBeenCalledWith(canonicalUrl(`${ROUTE}#fixture-heading`));
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
-  expect(within(section).getByRole("status").textContent).toBe("Copied"); // Announced by the pressed link, not by every heading.
+  expect(within(heading).getByRole("status").textContent).toBe("Copied"); // Announced by the pressed link, not by every heading.
 });
 
-test("clicking a heading link does not scroll the section into view", async () => {
+test("clicking a heading link does not scroll the heading into view", async () => {
   await renderContent(headingAnchorFixture);
 
-  fireEvent.click(screen.getByRole("link", { name: "Link to Fixture section" }));
+  fireEvent.click(screen.getByRole("link", { name: "Link to Fixture Heading" }));
 
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
@@ -124,7 +134,7 @@ test("a copy failure displays an alert and no confirmation", async () => {
 
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture section" });
+  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
 
   await act(async () => {
     fireEvent.click(link);
