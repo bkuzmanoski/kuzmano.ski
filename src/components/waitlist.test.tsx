@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { SITE_URL } from "#/config/site";
-import { ArticleContext } from "#/content/article-context";
+import { ArticleContext } from "#/lib/article-context";
 import { fallbackText } from "#/lib/waitlist/render-fallback";
 
 import { JOINING_MESSAGE, Waitlist } from "./waitlist";

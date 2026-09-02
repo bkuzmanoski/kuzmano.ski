@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 
 import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
 import { SITE_URL } from "#/config/site";
-import { useArticle } from "#/content/article-context";
+import { useArticle } from "#/lib/article-context";
 import { cx } from "#/lib/class-names";
 import { useForm } from "#/lib/forms/use-form";
 import { useInputField } from "#/lib/forms/use-input-field";

@@ -4,9 +4,9 @@ import { CodeBlock } from "#/components/code-block";
 import { HeadingLink } from "#/components/heading-link";
 import { Waitlist } from "#/components/waitlist";
 import { isBrowserHandledClick } from "#/lib/link";
+import { revealFragment } from "#/lib/reveal-fragment";
 
-import styles from "./content.module.css";
-import { revealFragment } from "./fragment";
+import styles from "./content-body.module.css";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";

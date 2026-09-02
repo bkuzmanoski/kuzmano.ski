@@ -22,7 +22,7 @@ draft: false # Optional. The dev server renders a draft. The build omits it.
 ```
 
 Frontmatter is validated by `/src/content/schema.ts`. MDX elements are mapped to
-app components by `/src/content/mdx-components.tsx`.
+app components by `/src/views/mdx-components.tsx`.
 
 Content is located in:
 
@@ -56,7 +56,7 @@ Page titles come from frontmatter; the configuration only needs the file name.
 
 ### Styling
 
-All content shares `/src/content/content.module.css`. To give a page or entry
+All content shares `/src/views/content-body.module.css`. To give a page or entry
 styles of its own, add a CSS module that exports a `page` class beside its MDX
 file under the same name (e.g., `about.mdx` and `about.module.css`).
 

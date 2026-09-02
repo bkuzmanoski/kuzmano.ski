@@ -1,9 +1,8 @@
 import { CopyTooltip } from "#/components/copy-feedback";
+import { useArticle } from "#/lib/article-context";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
 import { isBrowserHandledClick } from "#/lib/link";
 import { canonicalUrl } from "#/metadata";
-
-import { useArticle } from "../content/article-context";
 
 import styles from "./heading-link.module.css";
 

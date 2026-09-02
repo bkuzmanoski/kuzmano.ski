@@ -15,7 +15,7 @@ export default {
     "csstools/value-no-unknown-custom-properties": [
       true,
       {
-        importFrom: ["./src/styles.css", "./src/content/content.module.css"],
+        importFrom: ["./src/styles.css", "./src/views/content-body.module.css"],
       },
     ],
   },

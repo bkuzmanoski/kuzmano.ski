@@ -3,11 +3,12 @@ import { use, useMemo, useState } from "react";
 
 import { CopyFailureAlert } from "#/components/copy-feedback";
 import type { MDXModule } from "#/content";
-import { ArticleContext } from "#/content/article-context";
-import styles from "#/content/content.module.css";
-import { revealFragment } from "#/content/fragment";
-import { mdxComponents } from "#/content/mdx-components";
+import { ArticleContext } from "#/lib/article-context";
 import { cx } from "#/lib/class-names";
+import { revealFragment } from "#/lib/reveal-fragment";
+
+import styles from "./content-body.module.css";
+import { mdxComponents } from "./mdx-components";
 
 function revealInitialFragment(article: HTMLElement | null) {
   if (article) {

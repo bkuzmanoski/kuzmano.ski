@@ -3,12 +3,12 @@ import { Suspense } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import type { MDXModule } from "#/content";
-import styles from "#/content/content.module.css";
 import { resetTooltipState } from "#/lib/tooltip";
 import { canonicalUrl } from "#/metadata";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 
 import { ContentBody } from "./content-body";
+import styles from "./content-body.module.css";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
