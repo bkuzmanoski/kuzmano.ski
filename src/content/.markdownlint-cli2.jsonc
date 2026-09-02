@@ -4,5 +4,5 @@
     "max-heading-level": { "level": 3 }
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
-  "customRules": ["../../build/markdownlint-rule.ts"]
+  "customRules": ["../../markdownlint.rules.ts"]
 }

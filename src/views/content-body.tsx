@@ -1,14 +1,69 @@
 import { MDXProvider } from "@mdx-js/react";
+import { Link } from "@tanstack/react-router";
 import { use, useMemo, useState } from "react";
 
+import { CodeBlock } from "#/components/code-block";
 import { CopyFailureAlert } from "#/components/copy-feedback";
+import { HeadingLink } from "#/components/heading-link";
+import { Waitlist } from "#/components/waitlist";
 import { ArticleContext } from "#/lib/article-context";
 import { cx } from "#/lib/class-names";
+import { isBrowserHandledClick } from "#/lib/link";
 import { revealFragment } from "#/lib/reveal-fragment";
 import type { MDXModule } from "#/site/catalog";
 
 import styles from "./content-body.module.css";
-import { mdxComponents } from "./mdx-components";
+
+import type { MDXComponents } from "mdx/types";
+import type { ComponentProps } from "react";
+
+const mdxComponents: MDXComponents = {
+  h2: (props: ComponentProps<"h2">) => <h2 {...props} tabIndex={-1} />,
+  a: ({ href, children, ...props }: ComponentProps<"a">) => {
+    if (href?.startsWith("#")) {
+      return "data-heading-link" in props ? (
+        <HeadingLink href={href} {...props}>
+          {children}
+        </HeadingLink>
+      ) : (
+        <a
+          href={href}
+          className={styles.link}
+          {...props}
+          onClick={(event) => {
+            if (isBrowserHandledClick(event)) {
+              return;
+            }
+
+            const article = event.currentTarget.closest("article");
+
+            if (article && revealFragment(article, href)) {
+              event.preventDefault();
+            }
+          }}
+        >
+          {children}
+        </a>
+      );
+    }
+
+    if (href?.startsWith("/")) {
+      return (
+        <Link to={href} className={styles.link} {...props}>
+          {children}
+        </Link>
+      );
+    }
+
+    return (
+      <a href={href} target="_blank" className={styles.link} {...props}>
+        {children}
+      </a>
+    );
+  },
+  pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} />,
+  Waitlist,
+};
 
 function revealInitialFragment(article: HTMLElement | null) {
   if (article) {

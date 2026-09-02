@@ -21,32 +21,20 @@ date: 2026-07-19
 draft: false # Optional. The dev server renders a draft. The build omits it.
 ```
 
-Frontmatter is validated by `/src/lib/content/schema.ts`. MDX elements are
-mapped to React components by `/src/views/mdx-components.tsx`.
-
 Content is located in:
 
 - `/src/content/_pages/*.mdx`: standalone pages
 - `/src/content/<collection>/*.mdx`: collection entries
 
 File and folder names become URL segments and must be URL-safe.
-`/build/prerender/routes.ts` validates this and generates the prerender list and
-sitemap data. A page uses its frontmatter date as `lastmod`; a collection uses
-the newest date among its entries.
 
-Routes are dynamic (`/src/routes/$segment/`), so pages and collections do not
-need route files.
-
-### Pages
+### Standalone pages
 
 1. Add an MDX file to `/src/content/_pages`.
 2. Add its file name, without `.mdx`, to `PAGE_SLUGS` in
    `/src/config/content.ts`.
 3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in
    `/src/config/navigation.ts`.
-
-Page titles come from frontmatter, so the configuration only needs the file name
-and the route.
 
 ### Collections
 

@@ -61,6 +61,12 @@ export interface CatalogOptions {
 }
 
 export function createCatalog(source: ContentSource, options: CatalogOptions): Catalog {
+  const assetPaths = Object.keys(source.assets);
+
+  if (assetPaths.length > 0 && !assetPaths.some((path) => path in source.content)) {
+    throw new Error(`Content assets are keyed by paths not included in the content glob: ${assetPaths[0]}`);
+  }
+
   const loadedModules = new Map<string, Promise<MDXModule>>();
 
   const frontmatterFromPath = (path: string) => parseFrontmatter(source.frontmatter[path]?.default, path);
