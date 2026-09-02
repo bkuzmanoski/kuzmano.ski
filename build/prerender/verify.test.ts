@@ -12,7 +12,7 @@ const pageHtml = (body: string) =>
   [
     `<title>${documentTitle("Collection")}</title>`,
     '<nav aria-label="Main menu"></nav>',
-    `<section aria-label="Collection"><div id="window-content">${body}</div></section>`,
+    `<section aria-labelledby="window-title"><header><span id="window-title">Collection</span></header><div id="window-content">${body}</div></section>`,
   ].join("");
 
 const verify =
@@ -31,7 +31,12 @@ describe("verifyPrerenderedPage", () => {
   });
 
   test("fails when the window title does not match the page", () => {
-    const html = pageHtml("<p>Content</p>").replace('aria-label="Collection"', 'aria-label="Something else"');
+    const html = pageHtml("<p>Content</p>").replace(">Collection<", ">Something else<");
+    expect(verify(html)).toThrow(/there is no window titled/);
+  });
+
+  test("fails when the element labelling the window is missing", () => {
+    const html = pageHtml("<p>Content</p>").replace('<header><span id="window-title">Collection</span></header>', "");
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 

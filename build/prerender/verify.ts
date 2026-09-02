@@ -16,9 +16,17 @@ function documentTitleOf(html: string): string | null {
   return match?.[1] ? decode(match[1]) : null;
 }
 
-// Every window is a `<section>` with its title as the label.
+// Every window is a `<section>` labelled by the element that holds its title. The ids come
+// from `useId`, so they are resolved by lookup rather than by matching a known value.
 function windowTitlesOf(html: string): Array<string> {
-  return [...html.matchAll(/<section[^>]*aria-label="([^"]*)"/g)].map(([, title]) => decode(title!));
+  const textById = new Map(
+    [...html.matchAll(/<\w+[^>]*\sid="([^"]*)"[^>]*>([^<]*)</g)].map(([, id, text]): [string, string] => [
+      id!,
+      decode(text!),
+    ]),
+  );
+
+  return [...html.matchAll(/<section[^>]*aria-labelledby="([^"]*)"/g)].flatMap(([, id]) => textById.get(id!) ?? []);
 }
 
 /** Checks prerendered HTML for the presence of required elements and fails the build if any are missing. */
