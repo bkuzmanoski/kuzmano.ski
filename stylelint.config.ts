@@ -12,11 +12,6 @@ export default {
     "selector-pseudo-class-no-unknown": [true, { ignorePseudoClasses: ["global"] }],
     "property-no-unknown": [true, { ignoreProperties: ["composes"] }], // `composes` is CSS modules syntax (see the shared classes in `/src/styles.css`).
     "value-keyword-case": ["lower", { ignoreProperties: ["composes", "/font/"], ignoreKeywords: ["currentColor"] }],
-    "csstools/value-no-unknown-custom-properties": [
-      true,
-      {
-        importFrom: ["./src/styles.css", "./src/views/content-body.module.css"],
-      },
-    ],
+    "csstools/value-no-unknown-custom-properties": [true, { importFrom: ["./src/styles.css"] }],
   },
 } satisfies Config;
