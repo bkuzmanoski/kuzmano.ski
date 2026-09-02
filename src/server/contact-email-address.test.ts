@@ -30,7 +30,7 @@ test.each([
   ["the secret is missing", () => (env.current = {})],
   ["the secret is empty", () => (env.current = { [CONTACT_EMAIL_ADDRESS_BINDING]: "" })],
   ["the environment is unreachable", () => (env.fails = true)],
-])("does not publish an email address and logs the missing binding when %s", async (_label, arrange) => {
+])("an email address is not published, and the missing binding is logged, when %s", async (_label, arrange) => {
   arrange();
 
   await expect(contactEmailAddress()).resolves.toBeNull();

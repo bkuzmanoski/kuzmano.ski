@@ -45,7 +45,7 @@ test("a begin gesture primes audio while the sequence waits for input", async ()
   expect(primeAudio).toHaveBeenCalledOnce();
 });
 
-test("stops listening for the begin gesture once unmounted", async () => {
+test("unmounting stops listening for the begin gesture", async () => {
   const { unmount } = await renderWaitingForInput();
 
   unmount();

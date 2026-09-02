@@ -75,6 +75,7 @@
   --color-highlight-background: light-dark(var(--color-foreground), #b4bbc2);
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
   --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
+  --color-success: light-dark(#446f53, #64b280);
   --color-error: light-dark(#b03645, #de6e7c);
   --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
   --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { CopyButton } from "#/components/copy-button";
-import { cx } from "#/lib/class-names";
 
 import styles from "./code-block.module.css";
 
@@ -15,22 +14,17 @@ import type { ComponentProps } from "react";
  * as a prop would render every block's text in the document twice. It is read after mount
  * so the copy control is disabled until hydration.
  */
-export function CodeBlock({
-  containerClassName,
-  ...props
-}: ComponentProps<"pre"> & {
-  containerClassName?: string; // Styles the wrapper. `className` stays with the `pre`, which is styled by the highlighter.
-}) {
-  const blockRef = useRef<HTMLPreElement>(null);
+export function CodeBlock(props: ComponentProps<"pre">) {
+  const preRef = useRef<HTMLPreElement>(null);
   const [source, setSource] = useState<string | null>(null);
 
   useEffect(() => {
-    setSource(blockRef.current?.textContent ?? null);
+    setSource(preRef.current?.textContent ?? null);
   }, []);
 
   return (
-    <div className={cx(containerClassName, styles.codeBlockContainer)}>
-      <pre {...props} ref={blockRef} />
+    <div className={styles.codeBlock}>
+      <pre ref={preRef} {...props} />
       <CopyButton value={source} entity="code" className={styles.copyButton} />
     </div>
   );

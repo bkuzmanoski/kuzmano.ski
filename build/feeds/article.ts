@@ -2,7 +2,7 @@ import { fromHtml } from "hast-util-from-html";
 import { defaultSchema, sanitize } from "hast-util-sanitize";
 import { toHtml } from "hast-util-to-html";
 
-import type { Element, ElementContent, Nodes, Parents, RootContent } from "hast";
+import type { Element, ElementContent, Nodes, RootContent } from "hast";
 import type { Schema } from "hast-util-sanitize";
 
 const FEED_SCHEMA: Schema = {
@@ -56,14 +56,38 @@ function articlesIn(tree: Nodes): Array<Element> {
   return found;
 }
 
-function removeUIMarkup(node: Parents) {
-  node.children = node.children.filter(
-    (child) => !(isElement(child) && ("dataHeadingLink" in child.properties || "dataFeedOmit" in child.properties)),
-  );
-  node.children.forEach((child) => {
-    if ("children" in child) {
-      removeUIMarkup(child);
+const paragraph = (value: string): Element => ({
+  type: "element",
+  tagName: "p",
+  properties: {},
+  children: [{ type: "text", value }],
+});
+
+// Rewrites markup for output in a feed.
+//
+// Components can use the following attributes to control how their markup is rendered:
+//
+// - `data-feed-omit` removes the element entirely
+// - `data-feed-text` replaces the element with a paragraph containing text supplied by the component
+function replaceUIMarkup(element: Element) {
+  element.children = element.children.flatMap((child): Array<ElementContent> => {
+    if (!isElement(child)) {
+      return [child];
     }
+
+    if ("dataHeadingLink" in child.properties || "dataFeedOmit" in child.properties) {
+      return [];
+    }
+
+    const fallback = child.properties.dataFeedText;
+
+    if (typeof fallback === "string") {
+      return [paragraph(fallback)];
+    }
+
+    replaceUIMarkup(child);
+
+    return [child];
   });
 }
 
@@ -141,7 +165,7 @@ export function articleContentOf(html: string, url: string): string {
 
   const article = articles[0]!;
 
-  removeUIMarkup(article);
+  replaceUIMarkup(article);
   resolveRelativeUrls(article, url);
 
   const sanitized = sanitize(article, FEED_SCHEMA) as Element;

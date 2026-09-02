@@ -16,7 +16,7 @@ beforeEach(() => vi.mocked(playClick).mockClear());
 const MOUSE = { pointerType: "mouse" };
 const CLICK = { detail: 1 };
 
-test("forwards native disabled, autofocus, and accessibility props", () => {
+test("a button forwards native disabled, autofocus, and accessibility props", () => {
   render(
     <>
       <Button disabled aria-describedby="disabled-description">
@@ -40,6 +40,24 @@ test("forwards native disabled, autofocus, and accessibility props", () => {
   expect(focusedButton.hasAttribute("disabled")).toBe(false);
   expect(focusedButton.getAttribute("aria-describedby")).toBe("focused-description");
   expect(document.activeElement).toBe(focusedButton);
+});
+
+test("a button keeps a caller's class alongside its own", () => {
+  render(
+    <>
+      <Button className="caller">Button</Button>
+      <Button className="caller" href="/somewhere">
+        Link
+      </Button>
+    </>,
+  );
+
+  for (const name of ["Button", "Link"]) {
+    const control = screen.getByRole(name === "Link" ? "link" : "button", { name });
+
+    expect(control.className).toContain("caller");
+    expect(control.className.split(" ").length).toBeGreaterThan(1); // The component's own class is a CSS module hash.
+  }
 });
 
 test("an href renders an anchor, which still applies autoFocus", () => {

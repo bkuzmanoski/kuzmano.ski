@@ -40,9 +40,8 @@ interface WindowDragState {
 }
 
 /**
- * Where the outline for a drag stands. The proposal the window reports is fitted to the desktop
- * by the same rules the manager will apply when the gesture ends, so the window lands exactly
- * where the outline was left rather than jumping on release.
+ * The outline for a drag. The proposed window geometry is fitted to the desktop
+ * by the same rules the window manager will apply when the gesture ends.
  */
 function outlineRect(geometry: WindowGeometry, surface: Size, drag: WindowDrag): Rect {
   return drag.kind === "move"
@@ -147,9 +146,8 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
   const zoomTarget = zoomRect ? geometry[zoomRect.windowId] : undefined;
 
-  // The window being moved or resized, which stands still while an outline shows where it is
-  // headed. Holding the drag here rather than in the window keeps every window out of the
-  // re-render it causes: the layer rebuilds each frame, but the windows compare equal.
+  // The window being moved or resized, which remains stationary while an outline shows its proposed
+  // position. The drag is stored to prevent re-rendering every window on each pointer frame
   const [windowDrag, setWindowDrag] = useState<WindowDragState | null>(null);
   const draggedGeometry = windowDrag ? geometry[windowDrag.id] : undefined;
 

@@ -21,7 +21,7 @@ function compare(file: string, key: string, declared: string | undefined, expect
 
   const normalizedValue = normalizeHex(declared);
 
-  if (normalizedValue === undefined) {
+  if (!normalizedValue) {
     return [`${file} ${key} is \`${declared}\`, which is not a hex color`];
   }
 
@@ -57,7 +57,7 @@ async function findDocumentDrift(palette: Palette): Promise<Array<string>> {
     const scheme = MEDIA_QUERY.exec(tag)?.[1];
     const content = CONTENT.exec(tag)?.[1];
 
-    if (scheme === undefined || content === undefined) {
+    if (!scheme || !content) {
       return [`${DOCUMENT} has a \`theme-color\` without a \`prefers-color-scheme\` media query or a value`];
     }
 
@@ -80,7 +80,7 @@ async function findDocumentDrift(palette: Palette): Promise<Array<string>> {
   ];
 }
 
-/** Fails the build when a hand-written theme color differs from the definition in `src/styles.css`. */
+/** Fails the build when a hand-written theme color differs from the definition in `/src/styles.css`. */
 export function themeColorPlugin(): Plugin {
   return {
     name: "kuzmano.ski:theme-color",

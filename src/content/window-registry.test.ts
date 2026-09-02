@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { pages } from "#/content";
 import { testCollection } from "#/test-utils/content";
 
-import { destinationRouteOf, resolveRoute, resolveWindow } from "./window-registry";
+import { isDestinationOpen, resolveRoute, resolveWindow } from "./window-registry";
 
 const { collection, entries } = testCollection("blog");
 const entry = entries[0]!;
@@ -41,7 +41,7 @@ describe("resolveRoute", () => {
     expect(resolveRoute("/blog")).toMatchObject({
       id: "collection",
       title: "Blog",
-      route: "/blog",
+      collectionRoute: "/blog",
     });
   });
 
@@ -81,23 +81,31 @@ describe("resolveWindow", () => {
   });
 });
 
-describe("destinationRouteOf", () => {
-  test("returns the route for a top-level page or collection", () => {
-    expect(destinationRouteOf("/about")).toBe("/about");
-    expect(destinationRouteOf("/blog")).toBe("/blog");
+describe("isDestinationOpen", () => {
+  test("a window open at a destination reports it open", () => {
+    expect(isDestinationOpen("/about", ["/about"])).toBe(true);
+    expect(isDestinationOpen("/blog", ["/blog"])).toBe(true);
+    expect(isDestinationOpen("/contact", ["/contact"])).toBe(true);
   });
 
-  test("returns its own route for a collection entry, not the route of its collection", () => {
-    expect(destinationRouteOf(`/blog/${entry.slug}`)).toBe(`/blog/${entry.slug}`);
+  test("a collection window reports its collection open however the route spells it", () => {
+    expect(isDestinationOpen("/blog", ["/blog/"])).toBe(true);
   });
 
-  test("returns the route for the contact window", () => {
-    expect(destinationRouteOf("/contact")).toBe("/contact");
+  test("an open collection entry leaves its parent collection closed", () => {
+    expect(isDestinationOpen("/blog", [`/blog/${entry.slug}`])).toBe(false);
   });
 
-  test("returns null for routes without a window", () => {
-    expect(destinationRouteOf("/no-such-page")).toBeNull();
-    expect(destinationRouteOf("/blog/does-not-exist")).toBeNull();
-    expect(destinationRouteOf("/")).toBeNull();
+  test("checks every open window", () => {
+    expect(isDestinationOpen("/blog", ["/about", `/blog/${entry.slug}`, "/blog"])).toBe(true);
+  });
+
+  test("a route that opens no window leaves its destination closed", () => {
+    expect(isDestinationOpen("/no-such-page", ["/no-such-page"])).toBe(false);
+    expect(isDestinationOpen("/blog", ["/", "/blog/does-not-exist"])).toBe(false);
+  });
+
+  test("a desktop with no open windows leaves every destination closed", () => {
+    expect(isDestinationOpen("/blog", [])).toBe(false);
   });
 });

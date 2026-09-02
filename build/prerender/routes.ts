@@ -39,7 +39,7 @@ export const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter
 export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => byNewestDate(a.date, b.date);
 export const newestDate = (entries: Array<ScannedEntry>): string | undefined =>
   entries.reduce<string | undefined>(
-    (newest, { date }) => (date !== undefined && (newest === undefined || date > newest) ? date : newest),
+    (newest, { date }) => (date && (!newest || date > newest) ? date : newest),
     undefined,
   );
 
@@ -73,7 +73,7 @@ const readContentDirectory = (directory: string): ScannedDirectory => {
   };
 };
 
-/** Walks `src/content`, reading the frontmatter of every entry it finds. */
+/** Walks `/src/content`, reading the frontmatter of every entry it finds. */
 export function scanContent(): ScannedContent {
   const directoryNames = readdirSync(fromRoot(CONTENT_DIRECTORY), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())

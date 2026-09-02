@@ -1,4 +1,4 @@
-/* Styles for content authored in MDX. Chrome styles live in `src/styles.css`.
+/* Styles for content authored in MDX. Chrome styles live in `/src/styles.css`.
  *
  * Element rules are wrapped in `:where()` so a page's own stylesheet overrides them with a
  * plain selector of its own, without depending on the order the two modules are bundled in. */
@@ -22,23 +22,23 @@
   --font-family-heading: "Lora", ui-serif, serif;
   --font-heading-1: 525 40px/54px var(--font-family-heading);
   --font-heading-2: 600 24px/34px var(--font-family-heading);
-  --font-body: 500 16px/24px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
+  --font-body: 500 16px/26px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
 
   /* Colors */
   --color-border-content: var(--color-border-inactive);
   --color-background-inline-code: color-mix(in srgb, var(--color-wallpaper) 70%, transparent);
-  --color-foreground-syntax: var(--color-foreground);
+  --color-foreground-syntax: light-dark(#2e363c, #e3e8eb);
   --color-background-syntax: color-mix(in srgb, var(--color-wallpaper) 30%, transparent);
   --color-comment-syntax: light-dark(#839099, #637079);
   --color-keyword-syntax: light-dark(#9f5090, #cf86c1);
-  --color-function-syntax: var(--color-accent);
+  --color-function-syntax: light-dark(#3378a3, #61abda);
   --color-property-syntax: light-dark(#6a519e, #9d86ce);
   --color-type-syntax: light-dark(#417b81, #65b8c1);
   --color-constant-syntax: light-dark(#9f5a38, #d68c67);
   --color-string-syntax: light-dark(#446f53, #64b280);
-  --color-punctuation-syntax: var(--color-foreground-secondary);
-  --color-invalid-syntax: var(--color-error);
+  --color-punctuation-syntax: light-dark(#637079, #839099);
+  --color-invalid-syntax: light-dark(#b03645, #de6e7c);
 
   max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
   margin-inline: auto;
@@ -75,6 +75,10 @@
 
   & > :where(hr) {
     margin-block: var(--content-space-rule);
+  }
+
+  & > :where([data-content-space="loose"]) {
+    margin-block: var(--content-space-loose);
   }
 
   & :where(h1, h2) {
@@ -124,15 +128,6 @@
 
     background: var(--color-background-inline-code);
     box-decoration-break: clone;
-  }
-
-  & :where(pre) {
-    overflow-x: auto;
-    padding: 12px var(--gutter);
-
-    &:focus-visible {
-      outline: none; /* `CodeBlock` draws the outline for the block (see `/src/components/code-block.module.css`). */
-    }
   }
 
   & :where(hr) {

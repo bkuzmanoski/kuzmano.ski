@@ -9,10 +9,13 @@ export const required =
   (message: string): Rule<string> =>
   (value) =>
     value.trim().length > 0 ? null : message;
+
+export const isWithinLengthLimit = (value: string, limit: number) => value.length <= limit;
+
 export const maxLength =
   (limit: number, message: string): Rule<string> =>
   (value) =>
-    value.length <= limit ? null : message;
+    isWithinLengthLimit(value, limit) ? null : message;
 
 /**
  * The shape of accepted email addresses: a dot-atom local part and a dotted domain of
@@ -25,8 +28,10 @@ export const maxLength =
 const ATOM = String.raw`[A-Za-z0-9!#$%&'*+/=?^_\`{|}~-]+`;
 const LABEL = String.raw`[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?`;
 const EMAIL = new RegExp(String.raw`^${ATOM}(?:\.${ATOM})*@(?:${LABEL}\.)+[A-Za-z]{2,63}$`);
-const MAX_ADDRESS_LENGTH = 254;
 const MAX_LOCAL_LENGTH = 64;
+
+/** The longest address RFC 5321 allows. */
+export const MAX_ADDRESS_LENGTH = 254;
 
 export function isEmailAddress(value: string): boolean {
   const emailAddress = value.trim();

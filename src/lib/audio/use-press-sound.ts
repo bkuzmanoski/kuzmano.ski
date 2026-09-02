@@ -12,7 +12,7 @@ import type { MouseEvent, PointerEvent } from "react";
  * The sound normally plays on `pointerdown`, so it coincides with the press. On iOS, a tap
  * near a small control can be retargeted to that control for the compatibility mouse events
  * and `click`, while the touch pointer events remain on the element under the finger. The
- * `click` therefore stands in for the missed `pointerdown`.
+ * `click` must therefore play the sound when no `pointerdown` reached the control.
  *
  * The press remains recorded until `click`, rather than `pointerup`, so leaving and re-entering
  * the control does not play it twice.
@@ -21,15 +21,15 @@ import type { MouseEvent, PointerEvent } from "react";
  * region may become a scroll and end with `pointercancel`. Mouse and pen presses play on
  * `pointerdown`.
  *
- * Disable `standInForMissedPress` for controls inside UI that already handles the retargeted
+ * Disable `playOnClickWithoutPress` for controls inside UI that already handles the retargeted
  * tap. Otherwise the original target and this control can both play a sound for the same tap.
  *
  * A single instance can be shared by multiple controls; only one press is tracked at a time.
  */
 export function usePressSound({
   scrollSafe = false,
-  standInForMissedPress = true,
-}: { scrollSafe?: boolean; standInForMissedPress?: boolean } = {}) {
+  playOnClickWithoutPress = true,
+}: { scrollSafe?: boolean; playOnClickWithoutPress?: boolean } = {}) {
   const pressPendingRef = useRef(false);
 
   return {
@@ -53,7 +53,7 @@ export function usePressSound({
       pressPendingRef.current = false;
     },
     onClick: (event: MouseEvent) => {
-      if (standInForMissedPress && !pressPendingRef.current && isPointerClick(event)) {
+      if (playOnClickWithoutPress && !pressPendingRef.current && isPointerClick(event)) {
         playClick();
       }
 

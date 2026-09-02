@@ -292,7 +292,7 @@ test("the scrollbar of a fixed-size window collapses when its content does not o
   expect(isScrollbarCollapsed()).toBe(false);
 });
 
-test("the scrollbar of a window that can be resized stays open to carry the resize control", () => {
+test("the scrollbar of a window that can be resized stays open to contain the resize control", () => {
   render(windowShowing("short", shortPane));
 
   expect(screen.queryByRole("button", { name: "Resize" })).not.toBeNull();

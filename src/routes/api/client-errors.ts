@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { isRecord } from "#/lib/guards";
-import { isOversized, isSameOrigin } from "#/server/request";
+import { readSubmission } from "#/server/endpoint";
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_ROUTE_LENGTH = 500;
@@ -17,32 +16,13 @@ export const Route = createFileRoute("/api/client-errors")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!isSameOrigin(request)) {
-          return new Response(null, { status: 403 });
+        const receivedSubmission = await readSubmission(request); // A Cloudflare rule rate limits this route (see `/README.md`).
+
+        if (!receivedSubmission.ok) {
+          return receivedSubmission.response;
         }
 
-        if (isOversized(request)) {
-          return new Response(null, { status: 413 });
-        }
-
-        const body = await request.text();
-
-        if (isOversized(body)) {
-          return new Response(null, { status: 413 });
-        }
-
-        let report: unknown;
-
-        try {
-          report = JSON.parse(body);
-        } catch {
-          return new Response(null, { status: 400 });
-        }
-
-        if (!isRecord(report)) {
-          return new Response(null, { status: 400 });
-        }
-
+        const report = receivedSubmission.fields;
         const message = stringField(report, "message", MAX_MESSAGE_LENGTH);
         const route = stringField(report, "route", MAX_ROUTE_LENGTH);
 

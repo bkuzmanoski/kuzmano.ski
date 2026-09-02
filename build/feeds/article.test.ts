@@ -52,6 +52,17 @@ describe("articleContentOf", () => {
     expect(body).toBe("<p>A body.</p>");
   });
 
+  test("replaces an element with a paragraph containing text supplied by the component", () => {
+    const body = articleContentOf(
+      articlePage(
+        `<p>A body.</p><aside data-feed-text="Join the waitlist at ${ENTRY_URL}"><form><input></form></aside>`,
+      ),
+      ENTRY_URL,
+    );
+
+    expect(body).toBe(`<p>A body.</p><p>Join the waitlist at ${ENTRY_URL}</p>`);
+  });
+
   test("unwraps the spans left bare by sanitizing, keeping a code block's shape", () => {
     const code =
       '<pre><code><span class="line"><span style="color:red">token</span></span>\n<span class="line"></span>\ntoken</code></pre>';

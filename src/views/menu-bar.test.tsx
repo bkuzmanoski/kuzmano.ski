@@ -269,7 +269,7 @@ describe("navigating an open menu", () => {
     expect(document.activeElement).toBe(menuTitle("Go"));
   });
 
-  test("reports the highlighted item to assistive technology", () => {
+  test("the highlighted item is reported to assistive technology", () => {
     render(<MenuBar />);
     openWithKeyboard("Go");
 

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { Alert } from "#/components/alert";
 import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence";
+import { reportClientError } from "#/lib/client-errors/server";
 import { documentTitle } from "#/metadata";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
@@ -14,34 +15,12 @@ export function ErrorPage({ error }: ErrorComponentProps) {
       return;
     }
 
-    const message = error instanceof Error ? error.message : String(error);
-    const route = location.pathname;
-    const report = {
+    reportClientError({
       kind: "router-error-boundary",
-      message,
+      message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      route,
-    };
-
-    try {
-      const jsonBody = JSON.stringify(report);
-      const blob = new Blob([jsonBody], { type: "application/json" });
-      const queued = navigator.sendBeacon("/api/client-errors", blob);
-
-      if (!queued) {
-        // Fallback to fetch if sendBeacon fails (e.g., due to size limits).
-        fetch("/api/client-errors", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: jsonBody,
-          keepalive: true,
-        }).catch(() => {
-          // Ignored.
-        });
-      }
-    } catch {
-      // Suppressed.
-    }
+      route: location.pathname,
+    });
   }, [error]);
 
   return (

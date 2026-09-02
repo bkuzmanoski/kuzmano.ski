@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { playFieldScroll, silenceScrollAt } from "./scroll";
+import { playInputScroll, silenceScrollAt } from "./scroll";
 
 import type { KeyboardEvent, UIEvent } from "react";
 
@@ -13,19 +13,21 @@ const CARET_SCROLL_KEYS = new Set([
   "End",
   "PageUp",
   "PageDown",
-]); // Keys whose default action can move the caret out of view, scrolling the field.
+]); // Keys whose default action can move the caret out of view, scrolling the input.
 
 /**
- * Produces a sound for a field's own scrolling without playing a sound for caret movement.
+ * Plays a sound for user scrolling in an input without playing one for scrolling caused
+ * by caret movement.
  *
- * A key moves the caret before the browser scrolls the field, so the handler marks keys that
- * may cause scrolling. The next scroll event consumes that mark and silences the field until
- * scrolling settles. If no scroll occurs, the mark is cleared on the next frame.
+ * A key moves the caret before the browser scrolls the input, so the handler marks keys
+ * that may cause scrolling. The next scroll event consumes that mark and silences the
+ * scroll sound until scrolling settles. If no scroll occurs, the mark is cleared on the
+ * next frame.
  *
- * This is separate from `playFieldScroll` because it carries state between the key and scroll
- * events; `playFieldScroll` can handle each scroll event independently.
+ * This is separate from `playInputScroll` because it correlates key and scroll events;
+ * `playInputScroll` handles each scroll event independently.
  */
-export function useFieldScrollSound<T extends HTMLElement>() {
+export function useInputScrollSound<T extends HTMLElement>() {
   const caretScrollRef = useRef(false);
   const frameRef = useRef<number | null>(null);
 
@@ -63,7 +65,7 @@ export function useFieldScrollSound<T extends HTMLElement>() {
         return;
       }
 
-      playFieldScroll(event.currentTarget);
+      playInputScroll(event.currentTarget);
     },
   };
 }

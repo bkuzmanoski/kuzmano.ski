@@ -1,4 +1,4 @@
-.codeBlockContainer {
+.codeBlock {
   --focus-frame-inset: -3px;
   --copy-button-opacity: 0;
 
@@ -9,6 +9,15 @@
   &:hover,
   &:focus-within {
     --copy-button-opacity: 1;
+  }
+
+  & pre {
+    overflow-x: auto;
+    padding: var(--gutter);
+
+    &:focus-visible {
+      outline: none;
+    }
   }
 
   @media (hover: none) {

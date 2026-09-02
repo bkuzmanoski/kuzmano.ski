@@ -33,7 +33,7 @@ const bufferFor = (played: Strike) => {
 const samplesOf = (played: Strike) => Array.from(bufferFor(played).getChannelData(0));
 
 describe("playStrike", () => {
-  test("renders a buffer for the full duration of the strike", () => {
+  test("a strike renders a buffer for its full duration", () => {
     const buffer = bufferFor(strike({ durationSeconds: 0.02 }));
     expect(buffer.length / buffer.sampleRate).toBeCloseTo(0.02, 3);
   });
@@ -46,7 +46,7 @@ describe("playStrike", () => {
     expect(samplesOf(strike({ seed: 1 }))).not.toEqual(samplesOf(strike({ seed: 2 })));
   });
 
-  test("renders a strike once and plays that same buffer again", () => {
+  test("a repeated strike renders once and plays the same buffer again", () => {
     const shared = strike();
     expect(bufferFor(shared)).toBe(bufferFor(shared));
   });
@@ -55,7 +55,7 @@ describe("playStrike", () => {
     expect(bufferFor(strike())).not.toBe(bufferFor(strike()));
   });
 
-  test("passes the schedule to playback unchanged", () => {
+  test("the schedule reaches playback unchanged", () => {
     playStrike(fakeAudioContext(), strike(), { at: 1.25, level: 0.4, rate: 0.92 });
     expect(vi.mocked(playBuffer).mock.lastCall![2]).toEqual({ at: 1.25, level: 0.4, rate: 0.92 });
   });

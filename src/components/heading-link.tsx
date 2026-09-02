@@ -12,16 +12,7 @@ import type { ComponentProps } from "react";
 const LABEL = "Copy link";
 const CONFIRMATION = "Copied";
 
-/**
- * The link appended to each heading, which copies the section's address instead of navigating to it.
- *
- * A reader who clicks a heading is already at that section, so the click is handled by copying the
- * address. The `href` remains so the browser can still open the section in a new tab.
- *
- * The tooltip describes the copy action to both sighted and assistive-technology users while
- * leaving the link's accessible name to describe where it leads. A failed copy is reported to the
- * article's alert rather than to a separate alert on each heading.
- */
+/** The link appended to each heading, which copies the section's address instead of navigating to it. */
 export function HeadingLink({ href, children, ...props }: ComponentProps<"a"> & { href: string }) {
   const article = useArticle();
   const { state, copy, clearConfirmation } = useCopyToClipboard({ onFailure: () => article?.reportCopyFailure() });

@@ -3,15 +3,12 @@ import { collections, pages } from "#/content";
 import type { Collection, ContentIndex } from "#/content";
 import type { WindowId } from "#/lib/window-manager";
 
-// The type of window a route opens. An entry that belongs to a collection carries that
-// collection rather than the bare index, so a window showing it can also read the
-// entries either side of it; a page belongs to no collection and offers only its lookup.
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
     entry: { slug: string } & (
       { collectionRoute: null; contentIndex: ContentIndex } | { collectionRoute: string; contentIndex: Collection }
     );
-    collection: { collection: Collection; route: string };
+    collection: { collection: Collection; collectionRoute: string };
     contact: Record<never, never>;
   }[K];
 }[WindowId];
@@ -27,8 +24,8 @@ export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" 
 
 const CONTACT_PAGE_SEGMENT = CONTACT_PAGE_ROUTE.slice(1);
 
-export function resolveRoute(pathname: string): ResolvedRoute {
-  const segments = pathname.split("/").filter(Boolean);
+export function resolveRoute(route: string): ResolvedRoute {
+  const segments = route.split("/").filter(Boolean);
 
   if (segments.length === 0) {
     return { id: "desktop" };
@@ -43,7 +40,7 @@ export function resolveRoute(pathname: string): ResolvedRoute {
     }
 
     if (collection) {
-      return { id: "collection", title: collection.title, collection, route: collection.route };
+      return { id: "collection", title: collection.title, collection, collectionRoute: collection.route };
     }
 
     if (pages.has(segment)) {
@@ -75,18 +72,17 @@ export function resolveRoute(pathname: string): ResolvedRoute {
 }
 
 /** The window a route opens, or `null` if it does not open a window. */
-export function resolveWindow(pathname: string): WindowTarget | null {
-  const resolvedRoute = resolveRoute(pathname);
+export function resolveWindow(route: string): WindowTarget | null {
+  const resolvedRoute = resolveRoute(route);
   return resolvedRoute.id === "desktop" || resolvedRoute.id === "notFound" ? null : resolvedRoute;
 }
 
-/* Returns the desktop destination route an open window stands  for, or `null` for routes that do not open a window. */
-export function destinationRouteOf(windowRoute: string): string | null {
+function destinationShownBy(windowRoute: string): string | null {
   const target = resolveWindow(windowRoute);
 
   switch (target?.id) {
     case "collection":
-      return target.route;
+      return target.collectionRoute;
 
     case "entry":
     case "contact":
@@ -95,4 +91,14 @@ export function destinationRouteOf(windowRoute: string): string | null {
     default:
       return null;
   }
+}
+
+export function isDestinationOpen(destinationRoute: string, openWindowRoutes: Iterable<string>): boolean {
+  for (const windowRoute of openWindowRoutes) {
+    if (destinationShownBy(windowRoute) === destinationRoute) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -4,11 +4,11 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
 import type { CloseGuard } from "#/lib/window-manager";
 
-import { ContactBody } from "./contact-body";
+import { ContactBody, SENDING_MESSAGE } from "./contact-body";
 
 const playError = vi.hoisted(() => vi.fn());
 const playSuccess = vi.hoisted(() => vi.fn());
-const playFieldScroll = vi.hoisted(() => vi.fn());
+const playInputScroll = vi.hoisted(() => vi.fn());
 const silenceScrollAt = vi.hoisted(() => vi.fn());
 const closeWindow = vi.hoisted(() => vi.fn());
 const forceCloseWindow = vi.hoisted(() => vi.fn());
@@ -23,7 +23,10 @@ vi.mock("#/lib/hooks/use-close-window", () => ({
 }));
 
 vi.mock("#/lib/audio/scroll", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playFieldScroll, silenceScrollAt }),
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {
+    playInputScroll,
+    silenceScrollAt,
+  }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playError, playSuccess }),
@@ -68,7 +71,7 @@ beforeEach(() => {
 
   playError.mockClear();
   playSuccess.mockClear();
-  playFieldScroll.mockClear();
+  playInputScroll.mockClear();
   silenceScrollAt.mockClear();
 
   closeWindow.mockReset();
@@ -99,8 +102,8 @@ function compose() {
   fill("Message:", "Hello.");
 }
 
-const status = () => screen.getByRole("status", { name: "Message status" });
-const sendingSpinner = () => within(status()).queryByRole("img", { name: "Sending message" });
+const sendingSpinner = () => screen.queryByRole("img", { name: SENDING_MESSAGE });
+const liveRegionsWithText = () => screen.getAllByRole("status").filter((region) => region.textContent !== "");
 
 function describedBy(label: string) {
   const id = input(label).getAttribute("aria-describedby");
@@ -158,7 +161,7 @@ test("a key that can move the caret out of view prevents the scroll sound", () =
   fireEvent.scroll(field);
 
   expect(silenceScrollAt).toHaveBeenCalledWith(field);
-  expect(playFieldScroll).not.toHaveBeenCalled();
+  expect(playInputScroll).not.toHaveBeenCalled();
 });
 
 test("a scroll that does not follow a caret-moving key plays the scroll sound", () => {
@@ -167,7 +170,7 @@ test("a scroll that does not follow a caret-moving key plays the scroll sound", 
 
   fireEvent.scroll(field);
 
-  expect(playFieldScroll).toHaveBeenCalledWith(field);
+  expect(playInputScroll).toHaveBeenCalledWith(field);
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
@@ -258,7 +261,7 @@ test("the message character count is not announced as a status update", () => {
   render(<ContactBody />);
   fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH - 10));
 
-  expect(status().textContent).toBe("");
+  expect(liveRegionsWithText()).toEqual([]);
 });
 
 test("a successful submission shows a confirmation, plays the message sent sound, and clears the form", async () => {
@@ -272,7 +275,6 @@ test("a successful submission shows a confirmation, plays the message sent sound
   expect(JSON.parse(body)).toMatchObject({
     from: "test@example.com",
     message: "Hello.",
-    website: "",
   });
 
   expect(await screen.findByRole("dialog")).toBeDefined();
@@ -337,6 +339,7 @@ test("a pending submission covers the form and announces its progress", async ()
 
   await waitFor(() => expect(sendingSpinner()).not.toBeNull());
 
+  expect(sendingSpinner()?.closest('[role="status"]')).not.toBeNull();
   expect(input("Message:").closest("[inert]")).not.toBeNull();
   expect((input("Message:") as HTMLTextAreaElement).disabled).toBe(false);
   expect(button("Send").hasAttribute("disabled")).toBe(true);

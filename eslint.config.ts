@@ -7,8 +7,7 @@ import tseslint from "typescript-eslint";
 
 const BUILD_IGNORE_PATTERN = "**/build/**";
 
-// TanStack's shared config ignores every `build` directory; in this
-// project build/` contains first-party Vite plugins and scripts.
+// TanStack's shared config ignores every `build` directory; in this project build/` contains first-party Vite plugins and scripts.
 const BASE_CONFIG = tanstackConfig.map((config) =>
   config.name === "tanstack/ignores"
     ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== BUILD_IGNORE_PATTERN) }
@@ -18,13 +17,12 @@ const BASE_CONFIG = tanstackConfig.map((config) =>
 const CONFIG_LAYER_IMPORT = {
   regex: String.raw`^(#/|\.\./)`,
   allowTypeImports: true,
-  message: "`src/config` may import types from other layers, but must not import their code.",
+  message: "`/src/config` may import types from other layers, but must not import their code.",
 };
 
-// `src/server` runs only on the Worker. `./server/` covers the modules that sit directly in `src/`.
 const SERVER_IMPORT = {
   regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
-  message: "`src/server` may only be imported by a server handler in `src/routes/api/`.",
+  message: "`/src/server` may only be imported by a server handler in `/src/routes/api/`.",
 };
 
 export default defineConfig(

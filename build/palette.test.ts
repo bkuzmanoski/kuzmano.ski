@@ -82,6 +82,10 @@ describe("paletteFrom", () => {
     expect(() => paletteFrom(":root { --color-foreground: #ffffff; }")).toThrow("--color-background");
   });
 
+  test("throws when a property the palette needs is declared empty", () => {
+    expect(() => light("")).toThrow("`--color-foreground` is not declared");
+  });
+
   test("ignores declarations that are not custom properties", () => {
     expect(light("#ffffff", { color: "red" })).toBe("#ffffff");
   });
@@ -122,6 +126,11 @@ describe("var()", () => {
 
   test("throws when the property is not declared and there is no fallback", () => {
     expect(() => light("var(--missing)")).toThrow("`--missing` is not declared");
+  });
+
+  test("treats an empty declaration as undeclared", () => {
+    expect(light("var(--empty, #0000ff)", { "--empty": "" })).toBe("#0000ff");
+    expect(() => light("var(--empty)", { "--empty": "" })).toThrow("`--empty` is not declared");
   });
 
   test("throws on a cycle, naming the trail", () => {
@@ -218,8 +227,7 @@ describe("oklch(from …)", () => {
     expect(light("oklch(from #1e90ff l 0 h)")).toMatch(/^#([0-9a-f]{2})\1\1$/);
   });
 
-  // A browser gamut-maps this to black, holding the chroma the origin carries.
-  // Only reachable by authoring a color outside sRGB.
+  // A browser gamut-maps this to black, holding the chroma constant. Only reachable by authoring a color outside sRGB.
   test("throws when the chroma carried over puts a lightness of zero outside sRGB", () => {
     expect(() => light("oklch(from #ff0000 0 c h)")).toThrow("outside sRGB");
   });

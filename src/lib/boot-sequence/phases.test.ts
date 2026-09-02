@@ -54,17 +54,17 @@ describe("phaseFlags", () => {
 });
 
 describe("hasStageZoom", () => {
-  test("returns true when stage zoom phase has a duration", () => {
+  test("stage zoom is reported when the phase has a duration", () => {
     expect(hasStageZoom(MOTION_DURATION_MS)).toBe(true);
   });
 
-  test("returns false when reduced motion disables stage zoom phase", () => {
+  test("stage zoom is not reported when reduced motion disables the phase", () => {
     expect(hasStageZoom(REDUCED_MOTION_DURATION_MS)).toBe(false);
   });
 });
 
 describe("sequence", () => {
-  test("steps through the phases in order, ending before complete", () => {
+  test("the phases step in order, ending before complete", () => {
     expect(sequence(MOTION_DURATION_MS).map(({ phase }) => phase)).toEqual([
       "macintosh-reveal",
       "stage-zoom",

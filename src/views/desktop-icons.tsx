@@ -3,7 +3,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { DesktopIcon } from "#/components/desktop-icon";
 import { ICON_LAYOUT } from "#/config/desktop";
 import { DESTINATIONS, DESTINATION_ORDER } from "#/content/navigation";
-import { destinationRouteOf, resolveWindow } from "#/content/window-registry";
+import { isDestinationOpen, resolveWindow } from "#/content/window-registry";
 import { playClick } from "#/lib/audio/sounds";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/use-is-boot-sequence-complete";
 import { cx } from "#/lib/class-names";
@@ -79,7 +79,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   }
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
-  const openDestinationRoutes = new Set(Object.values(content).map(({ route }) => destinationRouteOf(route)));
+  const openWindowRoutes = Object.values(content).map(({ route }) => route);
   const container = {
     width: containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth),
     height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
@@ -208,9 +208,9 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           x={x}
           y={y}
           cellSize={ICON_LAYOUT.cellSize}
-          tabIndex={tabStop === id ? 0 : -1}
-          open={iconDefinition.kind === "collection" && openDestinationRoutes.has(iconDefinition.route)}
+          open={iconDefinition.kind === "collection" && isDestinationOpen(iconDefinition.route, openWindowRoutes)}
           selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
+          tabIndex={tabStop === id ? 0 : -1}
           onSelect={selectIcon}
           onOpen={openIcon}
           onMoveStart={moveIconTo}

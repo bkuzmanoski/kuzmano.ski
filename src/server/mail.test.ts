@@ -5,7 +5,7 @@ import { SITE_NAME } from "#/config/site";
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings";
 import { deliver } from "./mail";
 
-import type { WorkerEnv } from "cloudflare:workers";
+import type { EmailAddress, WorkerEnv } from "cloudflare:workers";
 
 const env = vi.hoisted(() => ({ current: {}, fails: false }));
 
@@ -13,13 +13,13 @@ vi.mock("./env", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 
+const SENDER: EmailAddress = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
+const DESTINATION = "inbox@example.com";
 const MESSAGE = {
   replyTo: "sender@example.com",
   subject: "Message from sender@example.com",
   text: "Hello.",
 };
-const DESTINATION = "inbox@example.com";
-const SENDER = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
 
 const send = vi.fn<NonNullable<WorkerEnv["SEND_EMAIL"]>["send"]>();
 

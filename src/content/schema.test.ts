@@ -61,7 +61,7 @@ describe("parseFrontmatter", () => {
     }
   });
 
-  test("rejects a date carrying a time component", () => {
+  test("rejects a date with a time component", () => {
     expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, date: "2026-08-19T10:00:00Z" }, "test-path")).toThrow(
       /ISO date/,
     );

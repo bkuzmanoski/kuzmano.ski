@@ -71,8 +71,8 @@ function StatusButton({
     >
       <button
         type="button"
-        aria-label={label}
         className={cx(styles.control, className)}
+        aria-label={label}
         {...mergeHandlers(pressSoundHandlers, {
           onClick: () => {
             showState();

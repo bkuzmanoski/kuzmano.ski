@@ -78,8 +78,8 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
 
   return (
     <div
-      className={cx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       style={displayMaskStyle}
+      className={cx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       aria-hidden
     >
       <DisplayBackdrop className={styles.displayBackdrop} />
@@ -264,13 +264,13 @@ function Sequence() {
             <img ref={bodyImageRef} alt="Illustration of a classic Mac 128K." src={macintoshBodyWebpUrl} />
           </picture>
           <DiskActivityIndicator
-            className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
             style={{
               left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
               top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
               width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.width * 100}%`,
               height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
             }}
+            className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
             aria-hidden
           />
           <picture className={styles.keyboardLayer}>

@@ -19,7 +19,7 @@ export function watchFaviconColorScheme(): () => void {
   const icon = document.querySelector<HTMLLinkElement>(ICON_SELECTOR);
   const source = icon?.getAttribute("href")?.split("?")[0];
 
-  if (!media || !icon || source === undefined) {
+  if (!media || !icon || !source) {
     return () => undefined;
   }
 

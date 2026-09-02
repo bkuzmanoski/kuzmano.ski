@@ -1,6 +1,6 @@
 import { bufferCache, playBuffer, renderBuffer } from "./buffer";
 
-/* A struck object: a burst of noise shaped by its resonance and the damping that suppresses it. */
+/** A struck object: a burst of noise shaped by its resonance and the damping that suppresses it. */
 export interface Strike {
   durationSeconds: number;
   attackSeconds: number;

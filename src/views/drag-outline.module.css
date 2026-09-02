@@ -5,9 +5,6 @@
   background: var(--dotted-frame);
 }
 
-/* Each line stands where the border it represents falls within the window, measured from the
- * outline's edges: the window's own 1px border sits just inside them, and the title bar and
- * the scrollbar are both sized in `styles.css` without the border that closes them. */
 .line {
   position: absolute;
 }

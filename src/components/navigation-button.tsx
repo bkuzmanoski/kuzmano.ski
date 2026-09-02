@@ -34,8 +34,8 @@ export function NavigationButton({
       ) : (
         <Button
           variant="icon"
-          aria-label={label}
           href={route}
+          aria-label={label}
           onClick={(event) => {
             if (isBrowserHandledClick(event)) {
               return;

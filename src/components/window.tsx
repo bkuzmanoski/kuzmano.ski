@@ -41,15 +41,15 @@ function TitleBarButton({
   const [isPressed, setIsPressed] = useState(false);
 
   // iOS sends the touch press to the title bar when it retargets the tap to this button.
-  // The title bar already plays that press sound, so standing in for it would play it twice.
-  const pressSoundHandlers = usePressSound({ standInForMissedPress: false });
+  // The title bar already plays the press sound, so playing one here would play it twice.
+  const pressSoundHandlers = usePressSound({ playOnClickWithoutPress: false });
 
   return (
     <Tooltip label={label} margin={6} className={cx(styles.control, className)}>
       <button
         type="button"
-        aria-label={label}
         className={styles.controlButton}
+        aria-label={label}
         {...mergeHandlers(pressSoundHandlers, {
           onClick,
           onPointerDown: (event: PointerEvent) => {
@@ -105,11 +105,12 @@ export function Window({
   onZoom: (() => void) | null;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
-  onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which drops the resize control from its scrollbar.
-  onDrag: (drag: WindowDrag | null) => void; // Where the gesture stands, or `null` once it has ended.
-  toolbar?: ReactNode; // Sits between the title bar and the scroll pane, so it stays put while the content scrolls under it.
+  onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which also hides the resize control from its scrollbar.
+  onDrag: (drag: WindowDrag | null) => void; // The current drag state, or `null` once it has ended.
+  toolbar?: ReactNode;
   children: ReactNode;
 }) {
+  const titleId = useId();
   const fallbackContentId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [isResizing, setIsResizing] = useState(false);
@@ -208,9 +209,9 @@ export function Window({
       <Tooltip label="Resize" suppressed={isResizing}>
         <button
           type="button"
-          aria-label="Resize"
           tabIndex={-1} // Drag handle is not keyboard accessible.
           className={cx(styles.controlResize, isResizePressed && styles.pressed)}
+          aria-label="Resize"
           {...PRESERVE_FOCUS_PROPS}
           {...resizeHandlers}
         >
@@ -222,7 +223,8 @@ export function Window({
   return (
     <section
       ref={windowRef}
-      aria-label={title}
+      tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
+      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }} // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
       className={cx(
         styles.window,
         focused && styles.focused,
@@ -231,8 +233,7 @@ export function Window({
         unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
       )}
-      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }} // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
-      tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
+      aria-labelledby={titleId}
       data-maximized={maximized || undefined}
       onFocus={onFocus}
       onPointerDownCapture={() => {
@@ -245,7 +246,9 @@ export function Window({
     >
       <header className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
         {focused && <div className={styles.bars} aria-hidden />}
-        <span className={styles.title}>{title}</span>
+        <span className={styles.title} id={titleId}>
+          {title}
+        </span>
         {focused && (
           <>
             <TitleBarButton className={styles.controlClose} icon={<CloseIcon />} label="Close" onClick={onClose} />

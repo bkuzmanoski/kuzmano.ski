@@ -7,7 +7,7 @@ test("a promise is marked pending until it settles", () => {
   expect(trackPromise(neverSettles).status).toBe("pending");
 });
 
-test("a fulfilled promise carries its value, which is how `use()` reads it without suspending", async () => {
+test("a fulfilled promise contains its value, which is how `use()` reads it without suspending", async () => {
   const tracked = trackPromise(Promise.resolve("content"));
 
   await tracked;
@@ -16,7 +16,7 @@ test("a fulfilled promise carries its value, which is how `use()` reads it witho
   expect(tracked.value).toBe("content");
 });
 
-test("a rejected promise carries its reason", async () => {
+test("a rejected promise contains its reason", async () => {
   const failure = new Error("Content not found");
   const tracked = trackPromise(Promise.reject(failure));
 

@@ -1,8 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 
 import type * as contentConfig from "#/config/content.ts";
+import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
 
-import { markdownFilesFor, markdownOf } from "./markdown.ts";
+import { markdownFilesFor, markdownFor } from "./markdown.ts";
 import {
   draftEntry,
   scannedCollection,
@@ -13,14 +14,12 @@ import {
 
 import type { ScannedContent } from "./prerender/routes.ts";
 
-// A collection index is titled from the declared collections, so the suite declares one of its
-// own. Reading the site's would tie these tests to whichever collections the site happens to
-// publish, and to the wording of their descriptions.
 vi.mock("#/config/content.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof contentConfig>()),
   COLLECTIONS: { collection: { title: "Collection", description: "A description." } },
 }));
 
+const ENTRY_URL = "https://example.com/collection/entry";
 const FRONTMATTER = `---
 title: An Entry
 description: A description.
@@ -28,13 +27,13 @@ date: 2026-07-19
 ---
 `;
 
-describe("markdownOf", () => {
+describe("markdownFor", () => {
   test("keeps the frontmatter block", async () => {
-    await expect(markdownOf(`${FRONTMATTER}\nBody.\n`)).resolves.toContain(FRONTMATTER.trim());
+    await expect(markdownFor(`${FRONTMATTER}\nBody.\n`)).resolves.toContain(FRONTMATTER.trim());
   });
 
   test("keeps prose, headings, and code fences", async () => {
-    const markdown = await markdownOf(`${FRONTMATTER}\n# Heading\n\nSome _text_.\n\n\`\`\`ts\nconst a = 1;\n\`\`\`\n`);
+    const markdown = await markdownFor(`${FRONTMATTER}\n# Heading\n\nSome _text_.\n\n\`\`\`ts\nconst a = 1;\n\`\`\`\n`);
 
     expect(markdown).toContain("# Heading");
     expect(markdown).toContain("Some _text_.");
@@ -42,7 +41,7 @@ describe("markdownOf", () => {
   });
 
   test("drops imports, exports, and expressions", async () => {
-    const markdown = await markdownOf(
+    const markdown = await markdownFor(
       `${FRONTMATTER}\nimport { Note } from "./note";\nexport const value = 1;\n\n{/* A comment */}\n\nBody.\n`,
     );
 
@@ -53,7 +52,7 @@ describe("markdownOf", () => {
   });
 
   test("replaces a component with its children", async () => {
-    const markdown = await markdownOf(
+    const markdown = await markdownFor(
       `${FRONTMATTER}\n<Note>\n  A wrapped paragraph.\n</Note>\n\nA <Emphasis>wrapped phrase</Emphasis>.\n`,
     );
 
@@ -64,11 +63,11 @@ describe("markdownOf", () => {
   });
 
   test("drops a component that has no children", async () => {
-    await expect(markdownOf(`${FRONTMATTER}\n<Figure src="/a.png" />\n\nBody.\n`)).resolves.not.toContain("Figure");
+    await expect(markdownFor(`${FRONTMATTER}\n<Figure src="/a.png" />\n\nBody.\n`)).resolves.not.toContain("Figure");
   });
 
   test("replaces a component nested inside another", async () => {
-    const markdown = await markdownOf(
+    const markdown = await markdownFor(
       `${FRONTMATTER}\n<Note>\n  <Callout>\n    A nested paragraph.\n  </Callout>\n</Note>\n`,
     );
 
@@ -77,20 +76,49 @@ describe("markdownOf", () => {
   });
 
   test("replaces a component nested inside a phrase", async () => {
-    const markdown = await markdownOf(
+    const markdown = await markdownFor(
       `${FRONTMATTER}\nA <Emphasis>phrase <Strong>within</Strong> a phrase</Emphasis>.\n`,
     );
     expect(markdown).toContain("A phrase within a phrase.");
   });
 
   test("omits an expression and a childless component nested inside a component", async () => {
-    const markdown = await markdownOf(
+    const markdown = await markdownFor(
       `${FRONTMATTER}\n<Note>\n  <Figure src="/image.png" />\n\n  {/* A comment */}\n\n  Body.\n</Note>\n`,
     );
 
     expect(markdown).not.toContain("Figure");
     expect(markdown).not.toContain("comment");
     expect(markdown).toContain("Body.");
+  });
+
+  test("replaces a waitlist component with fallback Markdown", async () => {
+    const markdown = await markdownFor(
+      `${FRONTMATTER}\n<Waitlist list="List">\n  Description.\n</Waitlist>\n\nBody.\n`,
+      {
+        url: ENTRY_URL,
+      },
+    );
+
+    expect(markdown).toContain("Description.");
+    expect(markdown).toContain(fallbackText(ENTRY_URL));
+    expect(markdown).toContain("Body.");
+  });
+
+  test("rejects a component whose fallback Markdown is a block written inside a sentence", async () => {
+    await expect(
+      markdownFor(`${FRONTMATTER}\nA sentence with <Waitlist list="List">a phrase</Waitlist> inside it.\n`, {
+        path: "entry.mdx",
+        url: ENTRY_URL,
+      }),
+    ).rejects.toThrow(/entry\.mdx.*Waitlist/);
+  });
+
+  test("omits a waitlist component when there is no entry URL to link back to", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}\n<Waitlist list="List">\n  Description.\n</Waitlist>\n`);
+
+    expect(markdown).not.toContain("waitlist");
+    expect(markdown).not.toContain("Description.");
   });
 });
 

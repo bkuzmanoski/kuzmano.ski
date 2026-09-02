@@ -83,13 +83,13 @@ function ScrollArrow({
     <button
       ref={arrowRef}
       type="button"
-      aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
       tabIndex={hidden ? -1 : undefined}
       className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
-      // Keyboard activation produces a click without a preceding pointer press, so it steps
-      // here. A pointer click belongs to the press that already stepped on pointerdown and
-      // only needs to clear that press. iOS can deliver a tap's click without its touch
-      // pointer events reaching the arrow, so such a click must step here too.
+      aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
+      // Keyboard activation has no preceding `pointerdown`, so the click steps here. A pointer
+      // click normally follows a `pointerdown` that already stepped and only clears that press.
+      // iOS can retarget a tap's click to the arrow without retargeting its pointer events, in
+      // which case the click has no corresponding press and must step here as well.
       onClick={(event) => {
         if (!isPointerClick(event) || !hasUnconsumedPressRef.current) {
           step();
@@ -170,8 +170,8 @@ export function Scrollbar({
     onDragMove: dragScroll,
   });
 
-  // A press on the track jumps to the pressed point, placing the thumb's centre under the pointer
-  // so the point pressed becomes the position scrolled to, and carries forward as a drag from there.
+  // A press on the track jumps to the pressed point, placing the thumb's centre under the pointer.
+  // The point pressed becomes the scrolled position and continues from there as a drag.
   const trackHandlers = usePointerDrag({
     preventDefault: true,
     threshold: DRAG_THRESHOLD_PX,
@@ -208,15 +208,15 @@ export function Scrollbar({
       <ScrollArrow direction="up" hidden={!overflow} onStep={() => step(-ARROW_STEP_PX)} />
       <div
         ref={trackRef}
-        aria-controls={viewportId}
+        className={cx(styles.track, overflow && styles.filled)}
+        role="scrollbar"
         aria-label="Vertical scrollbar"
         aria-orientation="vertical"
+        aria-controls={viewportId}
         aria-valuemax={100}
         aria-valuemin={0}
         aria-valuenow={scrolledPercent}
         aria-valuetext={`${scrolledPercent}% scrolled`}
-        className={cx(styles.track, overflow && styles.filled)}
-        role="scrollbar"
         {...trackHandlers}
       >
         {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}

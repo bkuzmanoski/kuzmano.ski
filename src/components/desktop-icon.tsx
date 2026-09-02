@@ -123,14 +123,14 @@ export const DesktopIcon = memo(function Icon({
 
   return (
     <a
-      aria-label={iconDefinition.label}
-      className={styles.icon}
-      data-icon={iconDefinition.id}
+      href={iconHref(iconDefinition)}
       download={iconDefinition.kind === "download" || undefined}
       draggable={false}
-      href={iconHref(iconDefinition)}
-      style={{ left: x, top: y, width: cellSize }}
       tabIndex={tabIndex}
+      style={{ left: x, top: y, width: cellSize }}
+      className={styles.icon}
+      aria-label={iconDefinition.label}
+      data-icon={iconDefinition.id}
       onClick={onClick}
       onDragStart={(event) => event.preventDefault()}
       onMouseDown={(event) => {

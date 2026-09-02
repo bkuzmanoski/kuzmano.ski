@@ -7,7 +7,7 @@ export interface FeedMetadata {
   description: string;
   path: string;
   route: string; // The page the feed syndicates.
-  collections: Array<CollectionSegment>; // The collections whose entries the feed carries.
+  collections: Array<CollectionSegment>;
 }
 
 /** The feed for the site as a whole. */

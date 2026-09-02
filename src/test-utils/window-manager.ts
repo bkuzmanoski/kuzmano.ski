@@ -1,4 +1,4 @@
-// Import only types: importing a value would load the module this stands in for.
+// Import only types: importing a value would load the module being mocked.
 import type { WindowActions, WindowContent, WindowId, WindowRecord } from "#/lib/window-manager";
 
 /** A `vi.mock` factory for `#/lib/window-manager`, so component suites stub one hook surface. */

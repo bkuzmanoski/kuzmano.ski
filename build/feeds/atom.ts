@@ -40,7 +40,7 @@ const escapeXml = (value: string) =>
 const element = (name: string, value: string, attributes = "") => `<${name}${attributes}>${escapeXml(value)}</${name}>`;
 const link = (rel: string, type: string, href: string) =>
   `<link rel="${rel}" type="${type}" href="${escapeXml(href)}"/>`;
-const timestamp = (date: string) => `${date}T00:00:00Z`; // Widens a calendar date to the RFC 3339 timestamp Atom requires. Content is dated by day, so the time of day is not known; midnight UTC stands in for it.
+const timestamp = (date: string) => `${date}T00:00:00Z`; // Converts a day-only date to the RFC 3339 timestamp Atom requires; midnight UTC is used because no time of day is known.
 const entryXml = ({ title, description, url, markdownUrl, date, category, content }: FeedEntry) =>
   [
     "  <entry>",

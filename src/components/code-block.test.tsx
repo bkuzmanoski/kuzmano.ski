@@ -19,7 +19,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("the control copies the source of the block it belongs to", async () => {
+test("the control copies the source of the code block it belongs to", async () => {
   render(
     <CodeBlock>
       <code>
@@ -38,18 +38,10 @@ test("the control copies the source of the block it belongs to", async () => {
   expect(writeText).toHaveBeenCalledWith("const answer = 42;");
 });
 
-test("the block keeps the attributes the set by the syntax highlighter", () => {
+test("the code block keeps the attributes set by the syntax highlighter", () => {
   const { container } = render(<CodeBlock className="shiki" style={{ color: "red" }} tabIndex={0} />);
   const block = container.querySelector("pre")!;
 
   expect(block.className).toBe("shiki");
   expect(block.getAttribute("tabindex")).toBe("0");
-});
-
-test("the wrapper uses its class while the block keeps the syntax highlighter's class", () => {
-  const { container } = render(<CodeBlock className="shiki" containerClassName="content-code-block" />);
-  const wrapper = container.firstElementChild!;
-
-  expect(wrapper.className).toContain("content-code-block");
-  expect(container.querySelector("pre")!.className).toBe("shiki");
 });

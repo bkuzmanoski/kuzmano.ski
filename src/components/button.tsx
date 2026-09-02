@@ -56,7 +56,15 @@ export function Button(
   });
 
   if (props.href !== undefined) {
-    const { children, autoFocus, ref, variant: _variant, holdPressed: _holdPressed, ...linkProps } = props;
+    const {
+      children,
+      autoFocus,
+      ref,
+      variant: _variant,
+      holdPressed: _holdPressed,
+      className: _className, // `className` is merged into the class list above, so it is held back from the props spread.
+      ...linkProps
+    } = props;
 
     return (
       <a
@@ -73,7 +81,14 @@ export function Button(
     );
   }
 
-  const { children, type = "button", variant: _variant, holdPressed: _holdPressed, ...buttonProps } = props;
+  const {
+    children,
+    type = "button",
+    variant: _variant,
+    holdPressed: _holdPressed,
+    className: _className,
+    ...buttonProps
+  } = props;
 
   return (
     <button type={type} className={className} {...mergeHandlers(pressHandlers, buttonProps)}>

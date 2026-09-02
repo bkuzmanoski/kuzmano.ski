@@ -27,7 +27,7 @@ describe("mergeHandlers", () => {
     expect(calls).toEqual(["first", "second"]);
   });
 
-  test("keeps the handlers only one bag names", () => {
+  test("keeps the handlers that only one bag provides", () => {
     const onPointerDown = vi.fn();
     const onDoubleClick = vi.fn();
     const merged = mergeHandlers({ onPointerDown }, { onDoubleClick });

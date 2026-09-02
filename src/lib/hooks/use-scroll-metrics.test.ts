@@ -52,7 +52,7 @@ function renderWithElement() {
   return renderHook(() => useScrollMetrics(ref));
 }
 
-test("disconnects both observers once unmounted", () => {
+test("unmounting disconnects both observers", () => {
   const { unmount } = renderWithElement();
 
   expect(resizeObservers).toHaveLength(1);
@@ -64,7 +64,7 @@ test("disconnects both observers once unmounted", () => {
   expect(mutationObservers[0]!.disconnect).toHaveBeenCalledOnce();
 });
 
-test("cancels a measurement frame that is still pending on unmount", () => {
+test("unmounting cancels a measurement frame that is still pending", () => {
   const cancelAnimationFrame = vi.spyOn(globalThis, "cancelAnimationFrame");
   const { unmount } = renderWithElement();
 

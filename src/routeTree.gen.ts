@@ -16,6 +16,7 @@ import { Route as SegmentIndexRouteImport } from './routes/$segment/index'
 import { Route as SegmentSlugRouteImport } from './routes/$segment/$slug'
 import { Route as ApiClientErrorsRouteImport } from './routes/api/client-errors'
 import { Route as ApiContactRouteImport } from './routes/api/contact'
+import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const ApiContactRoute = ApiContactRouteImport.update({
   path: '/api/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
+  id: '/api/waitlist',
+  path: '/api/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
   '/$segment': typeof SegmentIndexRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
   '/$segment/': typeof SegmentIndexRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
+    | '/api/waitlist'
     | '/$segment/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
+    | '/api/waitlist'
     | '/$segment'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
+    | '/api/waitlist'
     | '/$segment/'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   SegmentSlugRoute: typeof SegmentSlugRoute
   ApiClientErrorsRoute: typeof ApiClientErrorsRoute
   ApiContactRoute: typeof ApiContactRoute
+  ApiWaitlistRoute: typeof ApiWaitlistRoute
   SegmentIndexRoute: typeof SegmentIndexRoute
 }
 
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/waitlist': {
+      id: '/api/waitlist'
+      path: '/api/waitlist'
+      fullPath: '/api/waitlist'
+      preLoaderRoute: typeof ApiWaitlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   SegmentSlugRoute: SegmentSlugRoute,
   ApiClientErrorsRoute: ApiClientErrorsRoute,
   ApiContactRoute: ApiContactRoute,
+  ApiWaitlistRoute: ApiWaitlistRoute,
   SegmentIndexRoute: SegmentIndexRoute,
 }
 export const routeTree = rootRouteImport

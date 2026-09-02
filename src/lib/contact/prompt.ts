@@ -6,7 +6,6 @@ const CHARACTER_COUNT_VISIBILITY_RATIO = 0.75;
 export const CHARACTER_COUNT_VISIBLE_FROM =
   MESSAGE_MAX_LENGTH - Math.floor(MESSAGE_MAX_LENGTH * CHARACTER_COUNT_VISIBILITY_RATIO);
 
-/** What the compose window is currently asking the user about, if anything. */
 export type Prompt =
   | { kind: "discard" }
   | { kind: "incomplete"; message: string; field: keyof ContactFields }
@@ -15,6 +14,7 @@ export type Prompt =
 
 export interface PromptAlert {
   variant: "information" | "error";
+  sound?: "success";
   message: string;
   primaryLabel: string;
   secondaryLabel?: string;
@@ -24,8 +24,8 @@ export interface PromptAlert {
 export const NO_ALERT: PromptAlert = { variant: "information", message: "", primaryLabel: "OK" };
 
 /**
- * `directEmailAddress` is offered as a fallback when a send fails outright. It is `null` until
- * the window has read it, so an alert raised before it arrives omits the email address.
+ * `directEmailAddress` is offered as a fallback when a send fails outright. It is `null`
+ * until the window has read it, so an alert raised before it arrives omits it.
  */
 export function alertFor(prompt: Prompt, directEmailAddress: string | null): PromptAlert {
   switch (prompt.kind) {
@@ -43,6 +43,7 @@ export function alertFor(prompt: Prompt, directEmailAddress: string | null): Pro
     case "sent":
       return {
         variant: "information",
+        sound: "success",
         message: "Message sent!",
         primaryLabel: "OK",
       };

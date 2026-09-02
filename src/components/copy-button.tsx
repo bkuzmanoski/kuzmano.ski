@@ -44,9 +44,9 @@ export function CopyButton({
       >
         <Button
           variant="icon"
-          aria-label={label}
           disabled={value === null}
           holdPressed={state === "copying" || isCopied}
+          aria-label={label}
           onClick={() => {
             if (value !== null) {
               void copy(value);

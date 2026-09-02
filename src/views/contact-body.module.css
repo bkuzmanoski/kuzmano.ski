@@ -78,7 +78,3 @@
     white-space: nowrap;
   }
 }
-
-.decoy {
-  composes: visuallyHidden from global;
-}

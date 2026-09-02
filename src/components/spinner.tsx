@@ -12,7 +12,7 @@ import styles from "./spinner.module.css";
  * itself in its container and uses a live region for content that arrives after the
  * surrounding page.
  *
- * `data-loading-indicator` marks the indicator for `build/prerender.ts`, which fails
+ * `data-loading-indicator` marks the indicator for `/build/prerender.ts`, which fails
  * the build if a page is prerendered while a Suspense boundary is still pending.
  */
 export function Spinner({
@@ -26,10 +26,10 @@ export function Spinner({
 }) {
   return (
     <span
-      className={cx(styles.spinner, styles[layout], className)}
-      data-loading-indicator=""
       role={layout === "fill" ? "status" : "img"}
+      className={cx(styles.spinner, styles[layout], className)}
       aria-label={label}
+      data-loading-indicator=""
     >
       <SpinnerIcon aria-hidden />
     </span>

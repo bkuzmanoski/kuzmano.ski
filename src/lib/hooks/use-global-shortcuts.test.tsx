@@ -40,8 +40,8 @@ describe("matching a shortcut", () => {
   });
 });
 
-describe("a text field holding the focus", () => {
-  test("does not run a shortcut, leaving the keystroke to the field", () => {
+describe("an input holding the focus", () => {
+  test("does not run a shortcut, leaving the keystroke to the input", () => {
     render(<Target shortcuts={[{ code: "KeyW", run }]} />);
 
     expect(press(screen.getByTestId("field"))).toBe(true); // The default was not prevented.

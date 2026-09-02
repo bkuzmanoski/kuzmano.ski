@@ -15,10 +15,7 @@ export default {
     "csstools/value-no-unknown-custom-properties": [
       true,
       {
-        importFrom: [
-          "./src/styles.css",
-          "./src/content/content.module.css", // `src/content/content.module.css` defines the tokens a page stylesheet inherits from the shared content class.
-        ],
+        importFrom: ["./src/styles.css", "./src/content/content.module.css"],
       },
     ],
   },

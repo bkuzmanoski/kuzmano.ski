@@ -24,7 +24,7 @@ export const contentRoute = {
     const collection = collections[params.segment];
     const feed = collectionFeed(params.segment);
 
-    if (params.slug !== undefined) {
+    if (params.slug) {
       return documentData(collection?.frontmatterOf(params.slug), {
         path: `/${params.segment}/${params.slug}`,
         kind: "article",

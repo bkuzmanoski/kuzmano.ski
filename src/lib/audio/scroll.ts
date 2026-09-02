@@ -134,11 +134,11 @@ export function playScroll(element: Element) {
 }
 
 /**
- * Plays a scroll sound unless the scroll was caused by the element resizing.
+ * Plays a scroll sound unless the element's height changed since its previous scroll.
  *
- * A height change since the last scroll indicates a layout-driven scroll, which is recorded
- * without playing a sound. The caller supplies the height to watch because the relevant
- * element varies by context.
+ * A height change identifies a scroll caused by layout rather than user input. Such scrolls
+ * are recorded without a sound. The caller supplies the height because the relevant
+ * measurement differs by context.
  */
 function playScrollUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
@@ -154,24 +154,23 @@ function playScrollUnlessResized(element: Element, heights: WeakMap<Element, num
 }
 
 /**
- * Plays a sound for scrolling a viewport that is also resized, such as the pane of a window
- * being made larger or smaller.
+ * Plays a sound for user scrolling in a viewport that can also be resized.
  *
- * Shortening a viewport clamps its scroll position, which arrives as an ordinary scroll event a
- * frame after the resize. A scroll that comes in with a viewport height that has changed since
- * the last one was therefore taken to be the layout moving the content rather than the user.
+ * Resizing a viewport can change its scroll position, particularly when it becomes shorter.
+ * The resulting scroll event occurs after the resize, with a different `clientHeight`, allowing
+ * it to be identified as layout-driven and recorded without a sound.
  */
 export function playPaneScroll(element: Element) {
   playScrollUnlessResized(element, viewportHeights, element.clientHeight);
 }
 
 /**
- * Plays a sound for scrolling a field whose content grows or shrinks as it is edited.
+ * Plays a sound for user scrolling in an input whose content can also change size.
  *
- * Editing can change the wrapped content height and cause the browser to scroll the caret
- * back into view. That scroll happens after the edit, so it cannot be identified beforehand.
- * A change in content height identifies the layout-driven scroll, which is recorded silently.
+ * Editing can change the content height and cause the browser to scroll the caret into view.
+ * The resulting scroll event occurs after the edit, with a different `scrollHeight`, allowing
+ * it to be identified as layout-driven and recorded without a sound.
  */
-export function playFieldScroll(element: Element) {
+export function playInputScroll(element: Element) {
   playScrollUnlessResized(element, contentHeights, element.scrollHeight);
 }

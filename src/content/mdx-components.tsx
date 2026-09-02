@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
 import { CodeBlock } from "#/components/code-block";
+import { HeadingLink } from "#/components/heading-link";
+import { Waitlist } from "#/components/waitlist";
 import { isBrowserHandledClick } from "#/lib/link";
-
-import { HeadingLink } from "../components/heading-link";
 
 import styles from "./content.module.css";
 import { revealFragment } from "./fragment";
@@ -63,5 +63,6 @@ export const mdxComponents: MDXComponents = {
       </a>
     );
   },
-  pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} containerClassName={styles.codeBlock} />,
+  pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} />,
+  Waitlist,
 };

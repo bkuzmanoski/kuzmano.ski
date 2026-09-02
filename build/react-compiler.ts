@@ -44,20 +44,13 @@ export function bailoutFrom(filename: string | null, event: LoggerEvent): Compil
   }
 }
 
-/** One line per bailout, in the order the compiler met them. */
+/** Outputs one diagnostic line per bailout, preserving their order and including line numbers when available. */
 export const formatBailouts = (bailouts: Array<CompilerBailout>) =>
   bailouts.map(({ file, line, reason }) => `  ${file}${line === null ? "" : `:${line}`} — ${reason}`).join("\n");
 
-/**
- * A logger to hand to `reactCompilerPreset`, paired with a plugin that fails the
- * build on anything it collected.
- *
- * The `react-hooks` lint rules catch the bailouts they know how to describe (see
- * `/eslint.config.ts`); this catches the rest, against the code the build ships.
- */
+/** A logger for `reactCompilerPreset` that collects bailouts and a Vite plugin that reports them at the end of the build. */
 export function reactCompilerBailouts(): { logger: Logger; plugin: Plugin } {
   const bailouts: Array<CompilerBailout> = [];
-
   return {
     logger: {
       logEvent(filename, event) {

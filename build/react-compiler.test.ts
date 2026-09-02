@@ -14,32 +14,32 @@ const compileError = (reason: string, description: string | null, line: number |
     detail: { reason, description, primaryLocation: () => (line === null ? null : at(line)) },
   }) as unknown as LoggerEvent;
 
-test("reports a compile error against the source that caused it", () => {
+test("a compile error is reported against the source that caused it", () => {
   expect(
     bailoutFrom(fromRoot("src/lib/hooks/use-pointer-drag.ts"), compileError("Handle ??= operators", null, 78)),
   ).toEqual({ file: "src/lib/hooks/use-pointer-drag.ts", line: 78, reason: "Handle ??= operators" });
 });
 
-test("joins a description onto the reason", () => {
+test("a description is appended to the reason", () => {
   expect(bailoutFrom(fromRoot("src/a.ts"), compileError("Todo", "Rewrite hoisted references", 4))?.reason).toBe(
     "Todo: Rewrite hoisted references",
   );
 });
 
-test("falls back to the function when the error carries no location", () => {
+test("an error with no location falls back to the function", () => {
   expect(bailoutFrom(fromRoot("src/a.ts"), compileError("Todo", null, null))?.line).toBe(1);
 });
 
-test("reports a pipeline error", () => {
+test("a pipeline error is reported", () => {
   const event = { kind: "PipelineError", fnLoc: at(9), data: "Bad assumption" } as unknown as LoggerEvent;
   expect(bailoutFrom(fromRoot("src/a.ts"), event)).toEqual({ file: "src/a.ts", line: 9, reason: "Bad assumption" });
 });
 
-test("names a file the compiler could not attribute", () => {
+test("a file the compiler could not attribute is named", () => {
   expect(bailoutFrom(null, compileError("Todo", null, 1))?.file).toBe("unknown file");
 });
 
-test("passes over events that report no bailout", () => {
+test("an event that reports no bailout is passed over", () => {
   const success = { kind: "CompileSuccess", fnLoc: at(1), fnName: "Window" } as unknown as LoggerEvent;
   const optedOut = { kind: "CompileSkip", fnLoc: at(1), reason: "'use no memo'", loc: null } as unknown as LoggerEvent;
 
@@ -47,7 +47,7 @@ test("passes over events that report no bailout", () => {
   expect(bailoutFrom(fromRoot("src/a.ts"), optedOut)).toBeNull();
 });
 
-test("formats one line per bailout", () => {
+test("outputs one diagnostic line per bailout", () => {
   expect(
     formatBailouts([
       { file: "src/a.ts", line: 7, reason: "Handle ??=" },

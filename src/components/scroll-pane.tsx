@@ -33,10 +33,10 @@ export function ScrollPane({
     <div className={styles.scrollPane}>
       <div
         ref={contentContainerRef}
-        className={styles.contentContainer}
-        data-overscrolled={overscrolledEnd}
         id={id}
         tabIndex={-1}
+        className={styles.contentContainer}
+        data-overscrolled={overscrolledEnd}
         onFocus={(event) => silenceScrollIntoView(event.target)}
         onScroll={(event) => {
           measure();

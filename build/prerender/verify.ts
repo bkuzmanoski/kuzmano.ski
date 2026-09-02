@@ -1,9 +1,9 @@
 import { documentTitle } from "#/metadata.ts";
 
 const TITLE_SUFFIX = documentTitle(""); // The suffix on every page title. It comes from `documentTitle` so the two agree.
-const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `src/components/menu-bar.tsx`
+const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/components/menu-bar.tsx`
 const WINDOW_BODY = /id="window-content"[^>]*>(?:<!--.*?-->)*<(?!\/)/; // Content inside `FOCUSED_WINDOW_CONTENT_ID`, past the comments React writes around a Suspense boundary.
-const LOADING_INDICATOR = "data-loading-indicator"; // The marker on `src/components/spinner.tsx`.
+const LOADING_INDICATOR = "data-loading-indicator"; // The marker on `/src/components/spinner.tsx`.
 
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#x27": "'", "#39": "'" };
 
@@ -21,13 +21,7 @@ function windowTitlesOf(html: string): Array<string> {
   return [...html.matchAll(/<section[^>]*aria-label="([^"]*)"/g)].map(([, title]) => decode(title!));
 }
 
-/**
- * Checks prerendered HTML for the presence of required elements.
- *
- * A component that throws during the server render does not fail the render (the
- * prerenderer receives a 200 and writes the partial page). This check reads the
- * written markup and fails the build fail if any required elements are missing.
- */
+/** Checks prerendered HTML for the presence of required elements and fails the build if any are missing. */
 export function verifyPrerenderedPage({ page, html }: { page: { path: string }; html: string }) {
   const problems: Array<string> = [];
   const segments = page.path.split("/").filter(Boolean);

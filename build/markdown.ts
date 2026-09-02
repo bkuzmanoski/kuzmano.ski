@@ -8,17 +8,25 @@ import { unified } from "unified";
 
 import { COLLECTIONS } from "#/config/content.ts";
 import { parseFrontmatter } from "#/content/schema.ts";
-import { markdownPath } from "#/metadata.ts";
+import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
+import { canonicalUrl, markdownPath } from "#/metadata.ts";
 
 import { byNewestFirst, publishedEntries, scanContent } from "./prerender/routes.ts";
 
 import type { ScannedContent, ScannedEntry } from "./prerender/routes.ts";
 import type { Plugin } from "vite";
 
+// A subset of mdast, loose enough to walk any node. `value` and `children` are never both present.
 interface MarkdownNode {
   type: string;
   name?: string | null;
+  value?: string;
   children?: Array<MarkdownNode>;
+}
+
+// Context available to a component when its content is rewritten as Markdown.
+interface MarkdownContext {
+  url?: string; // The page's URL, for a component that needs to link back to it.
 }
 
 /** A markdown file to serve, keyed by the path it is served from. */
@@ -27,42 +35,72 @@ export interface MarkdownFile {
   render: () => Promise<string>;
 }
 
-// Replacements for components embedded in the content, keyed by element name.
-//
-// A component with no entry is replaced by its children. That preserves wrapper components but
-// drops self-closing components whose meaning is carried by their attributes.
-const COMPONENT_MARKDOWN: Record<string, (node: MarkdownNode) => Array<MarkdownNode>> = {};
+const paragraph = (value: string): MarkdownNode => ({ type: "paragraph", children: [{ type: "text", value }] });
+
+// Fallback Markdown for React components embedded in the content, keyed by element name.
+// A component with no entry is replaced by its children.
+const COMPONENT_MARKDOWN: Record<string, (node: MarkdownNode, context: MarkdownContext) => Array<MarkdownNode>> = {
+  Waitlist: (node, { url }) => (url ? [...(node.children ?? []), paragraph(fallbackText(url))] : []),
+};
 
 // Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}`.
 const DISCARDED_NODES = new Set(["mdxjsEsm", "mdxFlowExpression", "mdxTextExpression"]);
 const JSX_NODES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
 const MDX_NODES = new Set([...DISCARDED_NODES, ...JSX_NODES]);
 
+function inlineFallbacksIn(node: MarkdownNode, found = new Set<string>()): Set<string> {
+  if (node.type === "mdxJsxTextElement" && node.name && COMPONENT_MARKDOWN[node.name]) {
+    found.add(node.name);
+  }
+
+  node.children?.forEach((child) => inlineFallbacksIn(child, found));
+
+  return found;
+}
+
+// Ensures no component standing in for a block was written inside a sentence, where its
+// replacement would be serialized into the prose around it rather than as a block of its own.
+function assertBlockFallbacks() {
+  return function assert(tree: MarkdownNode, file: { path?: string | undefined }) {
+    const inline = inlineFallbacksIn(tree);
+
+    if (inline.size > 0) {
+      throw new Error(
+        `"${file.path ?? "Markdown"}" writes components inline whose fallback Markdown is a block: ${[...inline].join(", ")}.`,
+      );
+    }
+  };
+}
+
 // Returns the replacement nodes for a node. A plain node is returned unchanged.
-function replacementsFor(node: MarkdownNode): Array<MarkdownNode> {
+function replacementsFor(node: MarkdownNode, context: MarkdownContext): Array<MarkdownNode> {
   if (DISCARDED_NODES.has(node.type)) {
     return [];
   }
 
   if (JSX_NODES.has(node.type)) {
     const replace = node.name ? COMPONENT_MARKDOWN[node.name] : undefined;
-    return replace ? replace(node) : (node.children ?? []);
+    return replace ? replace(node, context) : (node.children ?? []);
   }
 
   return [node];
 }
 
-// Replaces MDX nodes with plain Markdown nodes that `remark-stringify` can serialize.
-function stripMdx() {
-  return function transform(tree: MarkdownNode) {
-    if (!tree.children) {
-      return;
-    }
+function strip(node: MarkdownNode, context: MarkdownContext) {
+  if (!node.children) {
+    return;
+  }
 
-    // Children are stripped before the node holding them, so a component promoted in place of its
-    // parent has already been replaced. Stripping downwards would leave nested MDX behind.
-    tree.children.forEach(transform);
-    tree.children = tree.children.flatMap(replacementsFor);
+  // Children are stripped before the node holding them, so a component promoted in place of its
+  // parent has already been replaced. Stripping downwards would leave nested MDX behind.
+  node.children.forEach((child) => strip(child, context));
+  node.children = node.children.flatMap((child) => replacementsFor(child, context));
+}
+
+// Replaces MDX nodes with plain Markdown nodes that `remark-stringify` can serialize.
+function stripMdx(context: MarkdownContext) {
+  return function transform(tree: MarkdownNode) {
+    strip(tree, context);
   };
 }
 
@@ -90,24 +128,29 @@ function assertMarkdownOnly() {
   };
 }
 
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkFrontmatter) // Keeps the frontmatter block which carries the title, description, and date.
-  .use(remarkMdx)
-  .use(stripMdx)
-  .use(assertMarkdownOnly)
-  .use(remarkStringify, { bullet: "-", listItemIndent: "one", rule: "-", fences: true, strong: "*", emphasis: "_" });
+const processorFor = (context: MarkdownContext) =>
+  unified()
+    .use(remarkParse)
+    .use(remarkFrontmatter) // Keeps the frontmatter block which contains the title, description, and date.
+    .use(remarkMdx)
+    .use(assertBlockFallbacks)
+    .use(stripMdx, context)
+    .use(assertMarkdownOnly)
+    .use(remarkStringify, { bullet: "-", listItemIndent: "one", rule: "-", fences: true, strong: "*", emphasis: "_" });
 
 /** Converts MDX source to the Markdown representation of a page. */
-export async function markdownOf(source: string, path?: string): Promise<string> {
-  return String(await processor.process({ value: source, path }));
+export async function markdownFor(
+  source: string,
+  { path, url }: { path?: string; url?: string } = {},
+): Promise<string> {
+  return String(await processorFor({ url }).process({ value: source, path }));
 }
 
-async function entryMarkdown(entry: ScannedEntry): Promise<string> {
+async function entryMarkdown(entry: ScannedEntry, route: string): Promise<string> {
   // Validate the frontmatter even though it is emitted unchanged. A malformed block
   // should fail the build here rather than be included in the Markdown file.
   parseFrontmatter(entry.frontmatter, entry.path);
-  return markdownOf(await readFile(entry.path, "utf8"), entry.path);
+  return markdownFor(await readFile(entry.path, "utf8"), { path: entry.path, url: canonicalUrl(route) });
 }
 
 const asLinkText = (value: string) => value.replace(/[\\[\]]/g, (character) => `\\${character}`); // Escapes the characters that would otherwise end a link's text or its destination early.
@@ -147,7 +190,7 @@ export function markdownFilesFor(
   return [
     ...served(pages.entries).map((entry) => ({
       path: markdownPath(`/${entry.slug}`),
-      render: () => entryMarkdown(entry),
+      render: () => entryMarkdown(entry, `/${entry.slug}`),
     })),
     ...collections.flatMap(({ name, entries }) => {
       const listed = served(entries);
@@ -159,7 +202,7 @@ export function markdownFilesFor(
         },
         ...listed.map((entry) => ({
           path: markdownPath(`/${name}/${entry.slug}`),
-          render: () => entryMarkdown(entry),
+          render: () => entryMarkdown(entry, `/${name}/${entry.slug}`),
         })),
       ];
     }),

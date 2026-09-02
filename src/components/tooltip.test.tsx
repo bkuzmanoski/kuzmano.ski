@@ -279,7 +279,7 @@ test("a suppressed tooltip does not appear when suppression is removed", () => {
   expect(tip()).toBeNull();
 });
 
-test("shows the tooltip while the control is showing transient state", () => {
+test("a control showing transient state shows its tooltip", () => {
   const { setShowsState } = renderTooltip();
 
   setShowsState(true);
@@ -287,7 +287,7 @@ test("shows the tooltip while the control is showing transient state", () => {
   expect(tip()?.textContent).toBe("Tip");
 });
 
-test("hides the tooltip when the control stops showing transient state", () => {
+test("a control that stops showing transient state hides its tooltip", () => {
   const { setShowsState } = renderTooltip();
 
   setShowsState(true);

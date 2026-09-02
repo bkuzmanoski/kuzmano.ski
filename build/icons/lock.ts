@@ -1,4 +1,4 @@
-// The icons in `public/` are generated binaries. `npm run generate:icons` records
+// The icons in `/public/` are generated binaries. `npm run generate:icons` records
 // the inputs it used and the build compares that record against the current values.
 
 import { createHash } from "node:crypto";
@@ -23,7 +23,7 @@ export interface IconInputs {
 }
 
 export interface IconLock extends IconInputs {
-  outputs: Array<string>; // File names, relative to `public/`.
+  outputs: Array<string>; // File names, relative to `/public/`.
 }
 
 const hash = (contents: Buffer) => createHash("sha256").update(contents).digest("hex");

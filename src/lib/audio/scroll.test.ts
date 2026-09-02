@@ -5,7 +5,7 @@ import { fakeScrollViewport } from "#/test-utils/audio";
 import {
   DETENT_PIXELS,
   IDLE_DURATION_MS,
-  playFieldScroll,
+  playInputScroll,
   playPaneScroll,
   playScroll,
   playScrollStep,
@@ -356,14 +356,14 @@ describe("playPaneScroll", () => {
   });
 });
 
-describe("playFieldScroll", () => {
+describe("playInputScroll", () => {
   test("plays a detent when the content height has not changed", () => {
     const element = fakeScrollViewport();
 
-    playFieldScroll(element);
+    playInputScroll(element);
     now += 16;
     element.scrollTop = DETENT_PIXELS;
-    playFieldScroll(element);
+    playInputScroll(element);
 
     expect(detents()).toBe(1);
   });
@@ -371,11 +371,11 @@ describe("playFieldScroll", () => {
   test("records the scroll an edit causes without playing a detent", () => {
     const element = fakeScrollViewport();
 
-    playFieldScroll(element);
+    playInputScroll(element);
     now += 16;
     element.scrollHeight += 20; // A line the edit added.
     element.scrollTop = 20;
-    playFieldScroll(element);
+    playInputScroll(element);
 
     expect(detents()).toBe(0);
   });
@@ -383,13 +383,13 @@ describe("playFieldScroll", () => {
   test("plays the next scroll using the field height after an edit", () => {
     const element = fakeScrollViewport();
 
-    playFieldScroll(element);
+    playInputScroll(element);
     element.scrollHeight += 20;
     element.scrollTop = 20;
-    playFieldScroll(element);
+    playInputScroll(element);
     now += 16;
     element.scrollTop = 20 + DETENT_PIXELS;
-    playFieldScroll(element);
+    playInputScroll(element);
 
     expect(detents()).toBe(1);
   });

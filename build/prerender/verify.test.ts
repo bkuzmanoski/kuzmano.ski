@@ -39,7 +39,7 @@ describe("verifyPrerenderedPage", () => {
     expect(verify(pageHtml(""))).toThrow(/window body is empty/);
   });
 
-  test("the loading indicator carries the prerender marker", () => {
+  test("the loading indicator has the prerender marker", () => {
     const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(loadingIndicator).toContain("data-loading-indicator");
   });

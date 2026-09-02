@@ -3,7 +3,7 @@
 
   min-width: 112px;
   height: 30px;
-  padding: 0.5px 12px 1.5px; /* Offset the vertical position to make ChicagoFLF text appear optically centered. */
+  padding: 0.5px 16px 1.5px; /* Offset the vertical position to make ChicagoFLF text appear optically centered. */
   border: 1px solid var(--color-border);
   border-radius: 6px;
 

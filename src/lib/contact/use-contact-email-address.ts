@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { readContactEmailAddress } from "./address";
+import { readContactEmailAddress } from "./server";
 
 /**
- * The published contact email address, or `null` until it arrives.
+ * The published contact email address, or `null` if it has not been read.
  *
  * The lookup runs after mount rather than during render, so the email address
  * is absent from the prerendered page. After the first read, it is served from

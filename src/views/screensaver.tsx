@@ -46,9 +46,9 @@ export function Screensaver() {
 
   return (
     <div
-      aria-hidden
-      className={cx(styles.screensaver, isUp && styles.up)}
       style={screensaverStyle}
+      className={cx(styles.screensaver, isUp && styles.up)}
+      aria-hidden
       onClick={isDismissible ? wake : undefined}
       onPointerMove={isDismissible ? wakeOnMovement : undefined}
     >

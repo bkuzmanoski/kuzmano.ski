@@ -1,4 +1,4 @@
-.field {
+.control {
   flex: 1;
 
   padding: 0;
@@ -30,7 +30,7 @@
 
   &.multiline {
     resize: none;
-    scrollbar-width: none; /* The field is paired with a `Scrollbar` of its own. */
+    scrollbar-width: none; /* The input is paired with a `Scrollbar` of its own. */
 
     align-self: stretch;
 
@@ -39,5 +39,28 @@
 
     /* Keep the line length stable when the scrollbar appears or disappears. */
     padding-inline-end: calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+  }
+}
+
+.frame {
+  display: flex;
+  flex: 1;
+  align-items: center;
+
+  min-width: 0;
+  min-height: 30px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+
+  background: var(--color-background);
+
+  &:focus-within {
+    outline: 2px solid var(--color-border);
+    outline-offset: 1px;
+  }
+
+  &:has(> :disabled) {
+    border-color: var(--color-border-inactive);
   }
 }

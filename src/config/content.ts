@@ -1,7 +1,7 @@
 import type { DateFormat } from "#/lib/hooks/use-date-format";
 
 /**
- * Directory under `src/content/` whose files are pages (`/<slug>`): entries that do  not
+ * Directory under `/src/content/` whose files are pages (`/<slug>`): entries that do  not
  * belong to a collection (`/<collection>/<slug>`).
  */
 export const PAGES_DIRECTORY = "_pages";
@@ -9,8 +9,7 @@ export const PAGES_DIRECTORY = "_pages";
 /**
  * How an entry dates are formatted throughout the site.
  *
- * The users's own locale orders and names the fields. `locale` is the one the
- * prerendered markup is written in, which stands in until the browser's is known.
+ * `locale` is is used to format the date in the prerendered markup.
  */
 export const ENTRY_DATE_FORMAT: DateFormat = {
   locale: "en-AU",

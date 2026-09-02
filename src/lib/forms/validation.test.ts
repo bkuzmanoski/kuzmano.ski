@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { emailAddress, firstError, isEmailAddress, maxLength, required, validate } from "./validation";
+import {
+  emailAddress,
+  firstError,
+  isEmailAddress,
+  isWithinLengthLimit,
+  maxLength,
+  required,
+  validate,
+} from "./validation";
 
 import type { Schema } from "./validation";
 
@@ -17,6 +25,15 @@ describe("required", () => {
   });
 });
 
+describe("isWithinLengthLimit", () => {
+  test("counts whitespace as part of the value", () => {
+    expect(isWithinLengthLimit("abc", 3)).toBe(true);
+    expect(isWithinLengthLimit("abcd", 3)).toBe(false);
+    expect(isWithinLengthLimit("  a", 3)).toBe(true);
+    expect(isWithinLengthLimit("  a ", 3)).toBe(false);
+  });
+});
+
 describe("maxLength", () => {
   const rule = maxLength(3, "Too long.");
 
@@ -30,7 +47,7 @@ describe("maxLength", () => {
 describe("isEmailAddress", () => {
   test.each([
     "a@b.co",
-    "test@kuzmano.ski",
+    "test@example.com",
     "first.last@example.com",
     "plus+addressing@example.co.nz",
     "tag_underscore-hyphen@sub.domain.example",

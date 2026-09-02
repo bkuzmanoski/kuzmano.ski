@@ -13,7 +13,7 @@ const wait = (ms: number) =>
     vi.advanceTimersByTime(ms);
   });
 
-test("fires once the delay passes with no input events", () => {
+test("the timeout fires once the delay passes with no input events", () => {
   const onIdle = vi.fn();
 
   renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
@@ -26,7 +26,7 @@ test("fires once the delay passes with no input events", () => {
   expect(onIdle).toHaveBeenCalledOnce();
 });
 
-test("starts the delay over when an input event is fired", () => {
+test("an input event restarts the delay", () => {
   const onIdle = vi.fn();
 
   renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
@@ -50,7 +50,7 @@ test("starts the delay over when an input event is fired", () => {
   expect(onIdle).toHaveBeenCalledOnce();
 });
 
-test("does not fire when disabled", () => {
+test("a disabled timeout does not fire", () => {
   const onIdle = vi.fn();
   const { rerender } = renderHook(({ isEnabled }) => useIdleTimeout(DELAY_MS, isEnabled, onIdle), {
     initialProps: { isEnabled: false },
@@ -66,7 +66,7 @@ test("does not fire when disabled", () => {
   expect(onIdle).toHaveBeenCalledOnce();
 });
 
-test("clears the pending timer and stops listening once unmounted", () => {
+test("unmounting clears the pending timer and stops listening", () => {
   const onIdle = vi.fn();
   const { unmount } = renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
 

@@ -2,44 +2,41 @@ import { useEffect, useRef, useState } from "react";
 
 import { Alert } from "#/components/alert";
 import { Button } from "#/components/button";
-import { ComposeField, ComposeValue } from "#/components/compose-field";
 import { CopyButton } from "#/components/copy-button";
+import { InputField, InputFieldValue } from "#/components/input-field";
 import { Scrollbar } from "#/components/scrollbar";
 import { Spinner } from "#/components/spinner";
 import { TextArea, TextInput } from "#/components/text-input";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact";
-import { playError, playSuccess } from "#/lib/audio/sounds";
-import { useFieldScrollSound } from "#/lib/audio/use-field-scroll-sound";
+import { useInputScrollSound } from "#/lib/audio/use-input-scroll-sound";
 import { cx } from "#/lib/class-names";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message";
 import { CHARACTER_COUNT_VISIBLE_FROM, NO_ALERT, alertFor } from "#/lib/contact/prompt";
 import type { Prompt } from "#/lib/contact/prompt";
-import { sendMessage } from "#/lib/contact/submit";
+import { SEND_FAILED_MESSAGE, sendMessage } from "#/lib/contact/server";
 import { useContactEmailAddress } from "#/lib/contact/use-contact-email-address";
-import { useField } from "#/lib/forms/use-field";
+import { firstMessage } from "#/lib/forms/server";
 import { useForm } from "#/lib/forms/use-form";
+import { useInputField } from "#/lib/forms/use-input-field";
 import { useCloseGuard, useCloseWindow } from "#/lib/hooks/use-close-window";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
 import { mergeHandlers } from "#/lib/merge-handlers";
 
 import styles from "./contact-body.module.css";
 
-const SEND_FAILED_MESSAGE = "The message couldn’t be sent.";
-const SENDING_MESSAGE = "Sending message";
+export const SENDING_MESSAGE = "Sending message…";
 
 export function ContactBody() {
   const form = useForm({ initialValues: EMPTY_MESSAGE, schema: CONTACT_SCHEMA });
   const contactEmailAddress = useContactEmailAddress();
-  const fromField = useField(form.visibleErrors.from);
-  const messageField = useField(form.visibleErrors.message);
+  const fromField = useInputField(form.visibleErrors.from);
+  const messageField = useInputField(form.visibleErrors.message);
   const [isSending, setIsSending] = useState(false);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
-  const [openedAt] = useState(() => Date.now());
   const fromFieldRef = useRef<HTMLInputElement>(null);
-  const decoyFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
   const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
-  const messageFieldScrollSound = useFieldScrollSound<HTMLTextAreaElement>();
+  const messageFieldScrollSound = useInputScrollSound<HTMLTextAreaElement>();
   const sendAttemptRef = useRef<AbortController | null>(null);
 
   const hasUnsavedInput = form.isDirty;
@@ -53,7 +50,6 @@ export function ContactBody() {
       return false;
     }
 
-    playError();
     setPrompt({ kind: "discard" });
 
     return true;
@@ -69,7 +65,6 @@ export function ContactBody() {
     if (invalidFields) {
       const field = invalidFields.from ? "from" : "message";
 
-      playError();
       setPrompt({ kind: "incomplete", message: invalidFields[field] ?? SEND_FAILED_MESSAGE, field });
 
       return;
@@ -80,10 +75,7 @@ export function ContactBody() {
     sendAttemptRef.current = controller;
     setIsSending(true);
 
-    const result = await sendMessage(
-      { ...form.values, website: decoyFieldRef.current?.value ?? "", elapsedTimeMs: Date.now() - openedAt },
-      controller.signal,
-    );
+    const result = await sendMessage(form.values, controller.signal);
 
     if (controller.signal.aborted) {
       return;
@@ -93,25 +85,16 @@ export function ContactBody() {
     setIsSending(false);
 
     if (result.status === "sent") {
-      playSuccess();
       form.reset();
       setPrompt({ kind: "sent" });
 
       return;
     }
 
-    playError();
     setPrompt(
       result.status === "invalid"
-        ? {
-            kind: "failed",
-            message: Object.values(result.errors)[0] ?? SEND_FAILED_MESSAGE,
-          }
-        : {
-            kind: "failed",
-            message: result.message,
-            suggestDirectEmail: true,
-          },
+        ? { kind: "failed", message: firstMessage(result.errors, SEND_FAILED_MESSAGE) }
+        : { kind: "failed", message: result.message, suggestDirectEmail: true },
     );
   }
 
@@ -167,10 +150,10 @@ export function ContactBody() {
       >
         <div className={styles.fields} inert={isSending}>
           <div className={styles.header}>
-            <ComposeValue label="To:" actions={<CopyButton value={contactEmailAddress} entity="email address" />}>
+            <InputFieldValue label="To:" actions={<CopyButton value={contactEmailAddress} entity="email address" />}>
               {contactEmailAddress ?? CONTACT_DISPLAY_NAME}
-            </ComposeValue>
-            <ComposeField label="From:" field={fromField}>
+            </InputFieldValue>
+            <InputField label="From:" binding={fromField}>
               <TextInput
                 {...fromField.control}
                 {...form.handlers.from}
@@ -183,9 +166,9 @@ export function ContactBody() {
                 required
                 value={form.values.from}
               />
-            </ComposeField>
+            </InputField>
           </div>
-          <ComposeField label="Message:" field={messageField} className={styles.message} labelHidden>
+          <InputField label="Message:" binding={messageField} className={styles.message} labelHidden>
             <TextArea
               ref={messageFieldRef}
               placeholder="Write a message…"
@@ -196,16 +179,7 @@ export function ContactBody() {
               {...mergeHandlers({ onScroll: measureMessage }, messageFieldScrollSound)}
             />
             <Scrollbar viewportRef={messageFieldRef} viewportId={messageField.control.id} metrics={messageMetrics} />
-          </ComposeField>
-          <input
-            ref={decoyFieldRef}
-            aria-hidden
-            autoComplete="off"
-            className={styles.decoy}
-            defaultValue=""
-            name="website"
-            tabIndex={-1}
-          />
+          </InputField>
         </div>
         <div className={styles.actions}>
           <span className={styles.characterCount}>{isCharacterCountVisible && characterCount.toLocaleString()}</span>
@@ -214,21 +188,20 @@ export function ContactBody() {
             Send
           </Button>
         </div>
-        <div aria-label="Message status" className={cx(styles.scrim, isSending && styles.sending)} role="status">
+        <div className={cx(styles.scrim, isSending && styles.sending)} role="status">
           {isSending && <Spinner label={SENDING_MESSAGE} />}
         </div>
       </form>
       <Alert
         variant={alert.variant}
+        sound={alert.sound}
         message={alert.message}
         open={prompt !== null}
         primaryAction={{
           label: alert.primaryLabel,
           onAction: confirmPrompt,
         }}
-        secondaryAction={
-          alert.secondaryLabel === undefined ? undefined : { label: alert.secondaryLabel, onAction: closePrompt }
-        }
+        secondaryAction={alert.secondaryLabel ? { label: alert.secondaryLabel, onAction: closePrompt } : undefined}
       />
     </>
   );

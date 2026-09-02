@@ -89,11 +89,11 @@ const MenuItemRow = memo(function MenuRow({
   isMacOS: boolean;
 }) {
   const itemProps = {
-    "aria-disabled": item.disabled || undefined,
-    className: cx(styles.item, item.disabled && styles.disabled, isActive && styles.active),
-    "data-index": index,
     id,
     role: "menuitem" as const,
+    className: cx(styles.item, item.disabled && styles.disabled, isActive && styles.active),
+    "aria-disabled": item.disabled || undefined,
+    "data-index": index,
   };
   const content = (
     <>
@@ -104,20 +104,20 @@ const MenuItemRow = memo(function MenuRow({
     </>
   );
 
-  return item.href === undefined ? (
-    <div {...itemProps}>{content}</div>
-  ) : (
+  return item.href ? (
     <a
       {...itemProps}
-      draggable={false}
       href={item.href}
       rel={item.target}
-      tabIndex={-1}
       target={item.target}
+      draggable={false}
+      tabIndex={-1}
       onClick={onItemClick}
     >
       {content}
     </a>
+  ) : (
+    <div {...itemProps}>{content}</div>
   );
 });
 
@@ -306,10 +306,10 @@ export function Menu({
   return (
     <div
       ref={menuRef}
-      aria-activedescendant={focusedItemId >= 0 ? `${itemIdPrefix}-${focusedItemId}` : undefined}
-      className={styles.menu}
       role="menu"
       tabIndex={-1}
+      className={styles.menu}
+      aria-activedescendant={focusedItemId >= 0 ? `${itemIdPrefix}-${focusedItemId}` : undefined}
       onKeyDown={onKeyDown}
     >
       {items.map((item, index) =>

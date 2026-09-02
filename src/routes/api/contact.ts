@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { parseSubmission } from "#/lib/contact/message";
-import { isRecord } from "#/lib/guards";
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings";
 import { contactEmailAddress } from "#/server/contact-email-address";
+import { json, readSubmission, refusalFor, senderKey } from "#/server/endpoint";
 import { deliver } from "#/server/mail";
 import type { Delivery } from "#/server/mail";
 import { isWithinRateLimit } from "#/server/rate-limit";
-import { isOversized, isSameOrigin, isSameSite } from "#/server/request";
+import { isSameSite } from "#/server/request";
 
-const RATE_LIMIT_FALLBACK_KEY = "unknown";
 const DELIVERY_STATUS: Record<Delivery, number> = {
   sent: 204,
   throttled: 429,
@@ -17,14 +16,6 @@ const DELIVERY_STATUS: Record<Delivery, number> = {
   exhausted: 503,
 };
 
-const json = (body: unknown, status: number) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
-  });
-const senderKey = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
-
-// The route id should match `CONTACT_ENDPOINT` in `src/lib/contact/endpoint.ts`.
 export const Route = createFileRoute("/api/contact")({
   server: {
     handlers: {
@@ -41,54 +32,20 @@ export const Route = createFileRoute("/api/contact")({
 
         return emailAddress === null ? new Response(null, { status: 502 }) : json({ emailAddress }, 200);
       },
-
       POST: async ({ request }) => {
-        if (!isSameOrigin(request)) {
-          return new Response(null, { status: 403 });
+        const receivedSubmission = await readSubmission(request, SEND_EMAIL_RATELIMIT_BINDING);
+
+        if (!receivedSubmission.ok) {
+          return receivedSubmission.response;
         }
 
-        if (isOversized(request)) {
-          return new Response(null, { status: 413 });
-        }
-
-        if (!(await isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, senderKey(request)))) {
-          return new Response(null, { status: 429 });
-        }
-
-        const body = await request.text();
-
-        if (isOversized(body)) {
-          return new Response(null, { status: 413 });
-        }
-
-        let submission: unknown;
-
-        try {
-          submission = JSON.parse(body);
-        } catch {
-          return new Response(null, { status: 400 });
-        }
-
-        if (!isRecord(submission)) {
-          return new Response(null, { status: 400 });
-        }
-
-        const parsedSubmission = parseSubmission(submission);
+        const parsedSubmission = parseSubmission(receivedSubmission.fields);
 
         if (!parsedSubmission.ok) {
-          switch (parsedSubmission.reason) {
-            case "rejected":
-              return new Response(null, { status: 204 }); // A bot trap; responds with success.
-
-            case "malformed":
-              return new Response(null, { status: 400 });
-
-            case "invalid":
-              return json({ errors: parsedSubmission.errors }, 400);
-          }
+          return refusalFor(parsedSubmission);
         }
 
-        const { from, message } = parsedSubmission.fields;
+        const { from, message } = parsedSubmission.value;
         const delivery = await deliver({
           replyTo: from,
           subject: `Message from ${from}`,

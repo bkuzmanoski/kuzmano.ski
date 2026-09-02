@@ -1,4 +1,4 @@
-// Resolves the site's foreground and background colors from `src/styles.css`.
+// Resolves the site's foreground and background colors from `/src/styles.css`.
 
 import { readFile } from "node:fs/promises";
 
@@ -7,7 +7,7 @@ import { clamp } from "#/lib/math.ts";
 import { STYLESHEET, fromRoot } from "./paths.ts";
 
 const MAX_CHROMA = 0.4; // CSS Color 4 defines 100% chroma in `oklch()` as 0.4.
-const GAMUT_TOLERANCE = 1e-4; // Three orders of magnitude above the float error an in-gamut conversion carries, two below the smallest excursion a color outside sRGB produces.
+const GAMUT_TOLERANCE = 1e-4; // Three orders of magnitude above in-gamut conversion error, two below the smallest out-of-gamut sRGB excursion.
 
 type Rgb = readonly [number, number, number]; // Channels in 0-255.
 type Oklch = readonly [number, number, number]; // Lightness 0-1, chroma, hue in degrees.
@@ -214,7 +214,7 @@ function resolveVar(
 ): { name: string; value: string } {
   const [name, ...fallback] = splitArguments(args);
 
-  if (name === undefined) {
+  if (!name) {
     throw new Error("Found a `var()` with no custom property name.");
   }
 
@@ -224,7 +224,8 @@ function resolveVar(
 
   const declaredValue = properties.get(name);
 
-  if (declaredValue !== undefined) {
+  // An empty declaration (`--x: ;`) resolves to nothing; treat it as undeclared instead of returning an unparsable value.
+  if (declaredValue) {
     return { name, value: declaredValue };
   }
 
@@ -321,7 +322,7 @@ function resolveColor(value: string, properties: Map<string, string>, scheme: Sc
     const arms = splitArguments(call.args);
     const arm = scheme === "light" ? arms[0] : arms[1];
 
-    if (arm === undefined) {
+    if (!arm) {
       throw new Error(`\`light-dark()\` needs two arguments: \`${input}\`.`);
     }
 
@@ -341,7 +342,7 @@ function resolveColor(value: string, properties: Map<string, string>, scheme: Sc
     if (hasOrigin) {
       const originToken = words[1];
 
-      if (originToken === undefined) {
+      if (!originToken) {
         throw new Error(`\`oklch(from …)\` is missing its origin color: \`${input}\`.`);
       }
 
@@ -350,7 +351,7 @@ function resolveColor(value: string, properties: Map<string, string>, scheme: Sc
 
     const [lightness, chroma, hue] = hasOrigin ? words.slice(2) : words;
 
-    if (lightness === undefined || chroma === undefined || hue === undefined) {
+    if (!lightness || !chroma || !hue) {
       throw new Error(`\`oklch()\` needs three components: \`${input}\`.`);
     }
 
@@ -388,7 +389,7 @@ export function paletteFrom(css: string): Palette {
   const read = (name: string, scheme: Scheme) => {
     const declared = properties.get(name);
 
-    if (declared === undefined) {
+    if (!declared) {
       throw new Error(`Custom property \`${name}\` is not declared in \`:root\`.`);
     }
 

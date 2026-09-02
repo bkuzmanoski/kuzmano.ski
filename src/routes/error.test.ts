@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { API } from "#/api";
 import type * as Content from "#/content";
 import { renderRoute } from "#/test-utils/router";
 
@@ -37,5 +38,5 @@ test("an error replaces the desktop with a standalone page", async () => {
   expect(await screen.findByText("There was a problem loading this page.")).toBeDefined();
   expect(screen.queryByRole("navigation", { name: "Main menu" })).toBeNull();
   expect(screen.queryByRole("region")).toBeNull();
-  expect(sendBeacon).toHaveBeenCalledWith("/api/client-errors", expect.any(Blob));
+  expect(sendBeacon).toHaveBeenCalledWith(API.clientErrors, expect.any(Blob));
 });

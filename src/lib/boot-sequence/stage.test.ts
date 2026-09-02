@@ -61,7 +61,7 @@ describe("stageMetricsFor", () => {
     }
   });
 
-  test("carries the viewport it was measured for", () => {
+  test("includes the viewport it was measured for", () => {
     expect(stageMetricsFor(WIDE_VIEWPORT).viewport).toEqual(WIDE_VIEWPORT);
   });
 

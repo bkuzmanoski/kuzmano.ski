@@ -47,7 +47,7 @@ const renderContent = async (module: MDXModule) => {
   return container.querySelector("article")!;
 };
 
-test("content is rendered into an article carrying the shared content class", async () => {
+test("content is rendered into an article with the shared content class", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
 
   expect(screen.getByText("Body")).toBeDefined();

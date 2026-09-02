@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { playError } from "#/lib/audio/sounds";
+import { playError, playSuccess } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { containsPoint } from "#/lib/geometry";
 
@@ -50,6 +50,7 @@ function ActionButton({ action, autoFocus, ref }: { action: AlertAction; autoFoc
 export function Alert(
   props: ({ modal?: true; open: boolean } | { modal: false; open?: never }) & {
     variant?: "information" | "error";
+    sound?: "error" | "success" | "none";
     label?: string;
     message: string;
     primaryAction: AlertAction;
@@ -59,7 +60,7 @@ export function Alert(
   const dialogRef = useRef<HTMLDialogElement>(null);
   const primaryActionRef = useRef<HTMLElement>(null);
 
-  const { variant, label, message, primaryAction, secondaryAction } = props;
+  const { variant, sound = "error", label, message, primaryAction, secondaryAction } = props;
   const modal = props.modal !== false;
   const open = props.modal === false || props.open;
 
@@ -73,17 +74,21 @@ export function Alert(
     if (open && !dialog.open) {
       dialog.showModal();
       primaryActionRef.current?.focus(); // `showModal()` may focus the dialog itself.
+
+      if (sound !== "none") {
+        (sound === "success" ? playSuccess : playError)();
+      }
     } else if (!open && dialog.open) {
       dialog.close();
     }
-  }, [modal, open]);
+  }, [modal, open, sound]);
 
   return (
     <dialog
       ref={dialogRef}
-      aria-label={label}
-      className={styles.alert}
       open={modal ? undefined : open}
+      className={styles.alert}
+      aria-label={label}
       onPointerDown={(event) => {
         if (isPressOutside(event)) {
           playError();

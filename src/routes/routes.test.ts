@@ -10,7 +10,7 @@ import { renderRoute } from "#/test-utils/router";
 const entry = newestEntry("blog");
 
 const openWindows = () => screen.queryAllByRole("region");
-const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // The focused window renders its title bar controls, so their presence stands in for focus.
+const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // Title bar controls are rendered only for the focused window.
 
 test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
   const { container } = renderRoute(`/blog/${entry.slug}`);

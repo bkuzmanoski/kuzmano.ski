@@ -24,6 +24,11 @@
       "name": "CONTACT_EMAIL_ADDRESS_RATELIMIT",
       "namespace_id": "1002",
       "simple": { "limit": 30, "period": 60 }
+    },
+    {
+      "name": "WAITLIST_RATELIMIT",
+      "namespace_id": "1003",
+      "simple": { "limit": 5, "period": 60 }
     }
   ],
   "observability": {

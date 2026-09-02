@@ -33,7 +33,7 @@ describe("scaleInset", () => {
     expect(scaleInset(inset, 1)).toEqual(inset);
   });
 
-  test("carries the sign of an edge that reaches past its container", () => {
+  test("preserves the sign of an edge that reaches past its container", () => {
     expect(scaleInset({ top: -100, right: -200, bottom: 0, left: 50 }, 2)).toEqual({
       top: -200,
       right: -400,

@@ -140,7 +140,7 @@ test("the confirmation clears on its own delay while the pointer stays on the bu
   expect(screen.getByRole("tooltip").textContent).toBe("Copy to clipboard"); // Still hovered.
 });
 
-test("the confirmation clears as soon as the tooltip carrying it leaves the screen", async () => {
+test("the confirmation clears as soon as the tooltip showing it leaves the screen", async () => {
   renderButton();
   hoverUntilTooltipShown();
   await clickCopy();

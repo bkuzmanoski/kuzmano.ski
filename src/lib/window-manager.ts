@@ -147,10 +147,6 @@ function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: nu
   };
 }
 
-/**
- * Where a window opens. A cascading window takes the first slot no open window stands on, so
- * it is never hidden behind one the same size; a centered window always opens in the middle.
- */
 function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect {
   const slotAt = (step: number) => cascadeSlot(layout, state.surface, id, step);
 
@@ -171,9 +167,6 @@ function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect
   return slotAt(0);
 }
 
-// Every open window cascaded from the center of the desktop, back to front, at its existing
-// size unless that size overflows the slot it lands in. Organizing is a deliberate tidy-up
-// of the whole desktop, so it cascades windows that would open in the center as well.
 function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 

@@ -26,9 +26,9 @@ function renderIcon() {
       x={0}
       y={0}
       cellSize={72}
-      tabIndex={0}
       selected={false}
       open={false}
+      tabIndex={0}
       onSelect={onSelect}
       onOpen={onOpen}
       onMoveStart={vi.fn()}

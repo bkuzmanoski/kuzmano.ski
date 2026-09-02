@@ -18,7 +18,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
         {/* The `theme-color` pairs are declared here because `HeadContent` de-duplicates meta tags
             by `name`. The boot sequence colors override the normal theme colors and are removed by
-            `scripts/boot-sequence.ts` when the boot sequence is skipped or completes. */}
+            `/scripts/boot-sequence.ts` when the boot sequence is skipped or completes. */}
         <meta
           data-boot-sequence-theme-color
           name="theme-color"

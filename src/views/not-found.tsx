@@ -10,6 +10,7 @@ export function NotFoundAlert() {
   return (
     <Alert
       label={NOT_FOUND_PAGE_TITLE}
+      sound="none"
       message={`This page doesn’t exist. Try finding the page you were looking for in the “Go” menu.`}
       open={notFoundRoute !== null}
       primaryAction={{ label: "OK", onAction: dismissNotFound }}

@@ -55,8 +55,8 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
       {entries.map((entry, index) => {
         const isActive = entry.slug === activeSlug;
 
-        // Merged ahead of `itemProps` so the opt-out below runs before the list's own press
-        // handling, which stands aside for a press whose default is already prevented.
+        // Merged ahead of `itemProps` so the opt-out below runs before the list's own
+        // press handling, which yields to a press whose default is already prevented.
         const entryEventHandlers = mergeHandlers(pressSoundHandlers, {
           onMouseDown: (event: MouseEvent<HTMLAnchorElement>) => {
             if (isBrowserHandledClick(event)) {
@@ -76,14 +76,14 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
         return (
           <li key={entry.slug}>
             <a
-              aria-current={isActive || undefined}
-              aria-label={entry.title}
-              className={cx(styles.listItem, isActive && styles.active)}
               href={collection.routeOf(entry.slug)}
+              className={cx(styles.listItem, isActive && styles.active)}
+              aria-label={entry.title}
+              aria-current={isActive || undefined}
               {...mergeHandlers(entryEventHandlers, itemProps(index))}
             >
               <span className={styles.title}>{entry.title}</span>
-              <time className={styles.date} dateTime={entry.date}>
+              <time dateTime={entry.date} className={styles.date}>
                 {formatDate(entry.date, dateFormat)}
               </time>
             </a>
@@ -104,6 +104,6 @@ function useOpenEntrySlug(collectionRoute: string): string | null {
 }
 
 export function CollectionBody({ target }: { target: CollectionTarget }) {
-  const activeSlug = useOpenEntrySlug(target.route);
+  const activeSlug = useOpenEntrySlug(target.collectionRoute);
   return <CollectionEntryList activeSlug={activeSlug} collection={target.collection} />;
 }
