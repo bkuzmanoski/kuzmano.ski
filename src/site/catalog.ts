@@ -13,7 +13,7 @@ const catalog = createCatalog(
     styles: import.meta.glob<{ default: { page?: string } }>("/src/content/*/*.module.css"),
     assets: CONTENT_ASSETS,
   },
-  { collections: COLLECTIONS, pagesDirectory: PAGES_DIRECTORY, includeDrafts: import.meta.env.DEV },
+  { pagesDirectory: PAGES_DIRECTORY, collections: COLLECTIONS, includeDrafts: import.meta.env.DEV },
 );
 
 export const { collections, pages } = catalog;

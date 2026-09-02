@@ -49,15 +49,15 @@ export interface ContentSource {
   assets: Record<string, string | undefined>;
 }
 
-export interface CatalogOptions {
-  collections: Record<string, CollectionMetadata>;
-  pagesDirectory: string; // The directory whose files are pages rather than collection entries.
-  includeDrafts: boolean;
+export interface Catalog {
+  pages: ContentIndex;
+  collections: Record<string, Collection>;
 }
 
-export interface Catalog {
-  collections: Record<string, Collection>;
-  pages: ContentIndex;
+export interface CatalogOptions {
+  pagesDirectory: string;
+  collections: Record<string, CollectionMetadata>;
+  includeDrafts: boolean;
 }
 
 export function createCatalog(source: ContentSource, options: CatalogOptions): Catalog {
@@ -151,10 +151,10 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
   }
 
   return {
+    pages: contentIndex(options.pagesDirectory).index,
     collections: Object.fromEntries(
       Object.entries(options.collections).map(([segment, metadata]) => [segment, collection(segment, metadata)]),
     ),
-    pages: contentIndex(options.pagesDirectory).index,
   };
 }
 

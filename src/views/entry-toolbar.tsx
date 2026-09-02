@@ -13,7 +13,7 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
 
   if (target.collectionRoute === null) {
-    return null; // Standalone entries have no collection to step through, so they do not render a toolbar.
+    return null; // Standalone pages have no collection to step through, so they do not render a toolbar.
   }
 
   const { contentIndex, slug } = target;
