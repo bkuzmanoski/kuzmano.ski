@@ -39,7 +39,7 @@ function contentLanguages(): Array<string> {
 
 const autolinkOptions: AutolinkOptions = {
   behavior: "append",
-  properties: (heading) => ({ "data-heading-link": "", ariaLabel: `Link to ${toString(heading)}` }),
+  properties: (heading) => ({ "data-heading-link": "", ariaLabel: `Link to "${toString(heading)}"` }),
   content: {
     type: "element",
     tagName: "span",

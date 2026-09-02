@@ -56,11 +56,11 @@
   background: var(--color-background);
 
   &:focus-within {
-    outline: 2px solid var(--color-border);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 1px;
   }
 
   &:has(> :disabled) {
-    border-color: var(--color-border-inactive);
+    border-color: var(--color-border-secondary);
   }
 }

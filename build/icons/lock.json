@@ -6,9 +6,9 @@
     "maskable": 0.6
   },
   "palette": {
-    "foregroundLight": "#2e363c",
-    "foregroundDark": "#e3e8eb",
-    "backgroundLight": "#fcfcfd"
+    "foregroundLight": "#2e373c",
+    "foregroundDark": "#e3e7ea",
+    "backgroundLight": "#fbfcfc"
   },
   "outputs": [
     "favicon.svg",

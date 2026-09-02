@@ -35,7 +35,7 @@
     font: var(--font-ui);
     white-space: nowrap;
 
-    background: var(--color-icon-background);
+    background: var(--color-background);
 
     &.selected {
       color: var(--color-highlight-foreground);

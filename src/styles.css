@@ -65,33 +65,83 @@
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
 
+  /* Color primitives */
+
+  /* Neutral colors
+   *
+   * - Lightness values are intentionally unevenly spaced; each step exists because a role below needs it.
+   * - Chroma follows `0.0215 * sin(pi * L^1.25)`, peaking mid-ramp and tapering to near zero at both ends. */
+  --neutral-190: oklch(19% 0.0083 238deg); /* #101417 */
+  --neutral-215: oklch(21.5% 0.0095 238deg); /* #151a1d */
+  --neutral-280: oklch(28% 0.0128 238deg); /* #232a2f */
+  --neutral-305: oklch(30.5% 0.014 238deg); /* #293035 */
+  --neutral-325: oklch(32.5% 0.015 238deg); /* #2d353b */
+  --neutral-330: oklch(33% 0.0152 238deg); /* #2e373c */
+  --neutral-345: oklch(34.5% 0.0159 238deg); /* #323b41 */
+  --neutral-390: oklch(39% 0.0177 238deg); /* #3c474e */
+  --neutral-540: oklch(54% 0.0214 238deg); /* #64717a */
+  --neutral-565: oklch(56.5% 0.0215 238deg); /* #6b7881 */
+  --neutral-645: oklch(64.5% 0.0209 238deg); /* #829099 */
+  --neutral-790: oklch(79% 0.0154 238deg); /* #b2bcc3 */
+  --neutral-820: oklch(82% 0.0137 238deg); /* #bcc6cc */
+  --neutral-925: oklch(92.5% 0.0062 238deg); /* #e3e7ea */
+  --neutral-945: oklch(94.5% 0.0046 238deg); /* #eaedef */
+  --neutral-965: oklch(96.5% 0.0029 238deg); /* #f2f4f5 */
+  --neutral-990: oklch(99% 0.0008 238deg); /* #fbfcfc */
+
+  /* Accent colors
+   *
+   * - Chroma is 0.105 by default, clamped to 85% of each hue's sRGB gamut (except for red which uses a higher chroma).
+   * - Blue is split into separate light and dark values, allowing the boot sequence to use them in the opposite order (see `--color-boot-sequence-accent`). */
+  --accent-blue-on-light: oklch(54% 0.102 238deg); /* #2776a3 */
+  --accent-blue-on-dark: oklch(71% 0.105 238deg); /* #5dabdb */
+  --accent-blue: light-dark(var(--accent-blue-on-light), var(--accent-blue-on-dark));
+  --accent-teal: light-dark(oklch(54% 0.078 205deg), oklch(71% 0.103 205deg)); /* #2a7c84 #40b4c0 */
+  --accent-green: light-dark(oklch(54% 0.105 155deg), oklch(71% 0.105 155deg)); /* #328053 #68b585 */
+  --accent-orange: light-dark(oklch(54% 0.105 46deg), oklch(71% 0.105 46deg)); /* #a05936 #d88c68 */
+  --accent-red: light-dark(oklch(54% 0.147 17deg), oklch(71% 0.147 17deg)); /* #b4434f #ef7780 */
+  --accent-magenta: light-dark(oklch(54% 0.105 335deg), oklch(71% 0.105 335deg)); /* #945687 #ca88bc */
+  --accent-violet: light-dark(oklch(54% 0.105 297deg), oklch(71% 0.105 297deg)); /* #7560a4 #a893db */
+
   /* Colors */
-  --color-accent: light-dark(#3378a3, #61abda);
-  --color-foreground: light-dark(#2e363c, #e3e8eb);
-  --color-foreground-secondary: light-dark(#637079, #839099);
-  --color-foreground-disabled: light-dark(#818c93, #7a8790);
-  --color-background: light-dark(#fcfcfd, #242a2e);
-  --color-highlight-foreground: var(--color-background);
-  --color-highlight-background: light-dark(var(--color-foreground), #b4bbc2);
+  --color-foreground: light-dark(var(--neutral-330), var(--neutral-925));
+  --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-645));
+  --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
+  --color-background: light-dark(var(--neutral-990), var(--neutral-280));
+  --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305)); /* Code blocks. */
+  --color-background-tertiary: light-dark(var(--neutral-945), var(--neutral-325)); /* Inline code. */
+  --color-background-active: light-dark(var(--neutral-925), var(--neutral-345));
+  --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent); /* Overlays. */
+  --color-border: var(--neutral-540);
+  --color-border-secondary: light-dark(var(--neutral-820), var(--neutral-390));
+  --color-shadow: light-dark(var(--neutral-820), /* The same step as `--color-border-secondary`. */ var(--neutral-190));
+  --color-focus-ring: var(--neutral-540);
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
-  --color-active-background: color-mix(in srgb, var(--color-border) 15%, var(--color-background));
-  --color-success: light-dark(#446f53, #64b280);
-  --color-error: light-dark(#b03645, #de6e7c);
-  --color-dim-strength: 60%; /* `--color-shadow` is tuned against this value. */
-  --color-scrim: color-mix(in srgb, var(--color-background) var(--color-dim-strength), transparent);
-  --color-border: #637079;
-  --color-border-inactive: color-mix(in srgb, var(--color-background) var(--color-dim-strength), var(--color-border));
-  --color-shadow: light-dark(
-    /* In light mode 13% opacity over `--color-wallpaper` equals `--color-border-inactive` given `--color-dim-strength`.  */
-    rgb(0 0 0 / 13%),
-    rgb(0 0 0 / 25%)
-  );
+  --color-highlight-foreground: var(--color-background);
+  --color-highlight-background: light-dark(var(--neutral-330), var(--neutral-790));
+  --color-pressed-foreground: var(--color-background);
+  --color-pressed-background: var(--neutral-540);
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
-  --color-wallpaper: light-dark(#e2e7ea, #161a1d);
-  --color-screensaver-backdrop: #161a1d;
+  --color-wallpaper: light-dark(var(--neutral-925), var(--neutral-215));
+  --color-boot-sequence-accent: light-dark(var(--accent-blue-on-dark), var(--accent-blue-on-light));
   --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
   --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
+  --color-screensaver-backdrop: var(--neutral-215);
+  --color-accent: var(--accent-blue);
+  --color-success: var(--accent-green);
+  --color-error: var(--accent-red);
+  --color-syntax-foreground: var(--color-foreground);
+  --color-syntax-background: var(--color-background-secondary);
+  --color-syntax-punctuation: var(--color-foreground-secondary);
+  --color-syntax-comment: light-dark(var(--neutral-645), var(--neutral-540));
+  --color-syntax-keyword: var(--accent-magenta);
+  --color-syntax-function: var(--accent-blue);
+  --color-syntax-property: var(--accent-violet);
+  --color-syntax-type: var(--accent-teal);
+  --color-syntax-constant: var(--accent-orange);
+  --color-syntax-string: var(--accent-green);
+  --color-syntax-invalid: var(--accent-red);
 
   /* Shadows */
   --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
@@ -208,7 +258,7 @@ hr {
     position: absolute;
     inset: var(--focus-frame-inset, 0);
 
-    color: var(--color-border);
+    color: var(--color-focus-ring);
 
     background: var(--dotted-frame);
   }

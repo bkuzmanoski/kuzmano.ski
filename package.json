@@ -37,7 +37,7 @@
       "stylelint --fix"
     ],
     "*.{md,mdx}": [
-      "markdownlint-cli2 --fix"
+      "markdownlint-cli2 --fix --no-globs"
     ]
   },
   "dependencies": {

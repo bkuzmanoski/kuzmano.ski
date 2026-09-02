@@ -4,7 +4,7 @@
 
   composes: focusFrameWithin from global;
   position: relative;
-  border: 1px solid var(--color-border-content);
+  border: 1px solid var(--color-border-secondary);
 
   &:hover,
   &:focus-within {

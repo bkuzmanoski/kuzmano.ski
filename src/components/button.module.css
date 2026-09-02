@@ -13,19 +13,19 @@
   background: var(--color-background);
 
   &:focus {
-    outline: 2px solid var(--color-border);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 1px;
   }
 
   &:disabled {
-    border-color: var(--color-border-inactive);
+    border-color: var(--color-border-secondary);
     color: var(--color-foreground-disabled);
   }
 
   &:active:not(:disabled),
   &.pressed:not(:disabled) {
-    color: var(--color-background);
-    background: var(--color-border);
+    color: var(--color-pressed-foreground);
+    background: var(--color-pressed-background);
   }
 
   &.icon {
@@ -50,17 +50,17 @@
     }
 
     &:focus-visible {
-      outline: 1px solid var(--color-border);
+      outline: 1px solid var(--color-focus-ring);
     }
 
     &:disabled {
-      --color-icon-foreground: var(--color-border-inactive);
+      --color-icon-foreground: var(--color-border-secondary);
     }
 
     &:active:not(:disabled),
     &.pressed:not(:disabled) {
-      --color-icon-foreground: var(--color-background);
-      --color-icon-background: var(--color-border);
+      --color-icon-foreground: var(--color-pressed-foreground);
+      --color-icon-background: var(--color-pressed-background);
     }
 
     & > svg {

@@ -37,7 +37,7 @@
   outline: none;
 
   &.active {
-    background: var(--color-active-background);
+    background: var(--color-background-active);
   }
 
   .list > li:not(:last-child) & {

@@ -10,7 +10,7 @@
 
     background: light-dark(
       color-mix(in srgb, var(--color-foreground) 40%, var(--color-background)),
-      color-mix(in srgb, var(--color-foreground) 60%, var(--color-background))
+      color-mix(in srgb, var(--color-foreground) 26%, var(--color-background))
     );
 
     mask: url("../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
@@ -107,7 +107,7 @@
     &::before {
       background: light-dark(
         color-mix(in srgb, var(--color-success) 60%, var(--color-background)),
-        color-mix(in srgb, var(--color-success) 40%, var(--color-background))
+        color-mix(in srgb, var(--color-success) 47%, var(--color-background))
       );
     }
 

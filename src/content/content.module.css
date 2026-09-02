@@ -1,6 +1,4 @@
-/* Styles for content authored in MDX. Chrome styles live in `/src/styles.css`.
- *
- * Element rules are wrapped in `:where()` so a page's own stylesheet overrides them with a
+/* Element rules are wrapped in `:where()` so a page's own stylesheet overrides them with a
  * plain selector of its own, without depending on the order the two modules are bundled in. */
 
 .content {
@@ -24,21 +22,6 @@
   --font-heading-2: 600 24px/34px var(--font-family-heading);
   --font-body: 500 16px/26px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
-
-  /* Colors */
-  --color-border-content: var(--color-border-inactive);
-  --color-background-inline-code: color-mix(in srgb, var(--color-wallpaper) 70%, transparent);
-  --color-foreground-syntax: light-dark(#2e363c, #e3e8eb);
-  --color-background-syntax: color-mix(in srgb, var(--color-wallpaper) 30%, transparent);
-  --color-comment-syntax: light-dark(#839099, #637079);
-  --color-keyword-syntax: light-dark(#9f5090, #cf86c1);
-  --color-function-syntax: light-dark(#3378a3, #61abda);
-  --color-property-syntax: light-dark(#6a519e, #9d86ce);
-  --color-type-syntax: light-dark(#417b81, #65b8c1);
-  --color-constant-syntax: light-dark(#9f5a38, #d68c67);
-  --color-string-syntax: light-dark(#446f53, #64b280);
-  --color-punctuation-syntax: light-dark(#637079, #839099);
-  --color-invalid-syntax: light-dark(#b03645, #de6e7c);
 
   max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
   margin-inline: auto;
@@ -126,12 +109,12 @@
 
     font-size: 0.925em;
 
-    background: var(--color-background-inline-code);
+    background: var(--color-background-tertiary);
     box-decoration-break: clone;
   }
 
   & :where(hr) {
-    border-top: 1px solid var(--color-border-content);
+    border-top: 1px solid var(--color-border-secondary);
   }
 
   & :where(img, video) {
@@ -141,7 +124,7 @@
   }
 
   & :where(video):focus-visible {
-    outline: 1px dotted var(--color-border);
+    outline: 1px dotted var(--color-focus-ring);
     outline-offset: 1px;
   }
 }

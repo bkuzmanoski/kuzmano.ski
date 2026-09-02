@@ -105,14 +105,14 @@ describe("screensaver lifecycle", () => {
   });
 
   test("applies the backdrop color to the theme-color meta tag while asleep", () => {
-    document.documentElement.style.setProperty("--color-screensaver-backdrop", "#161a1d");
+    document.documentElement.style.setProperty("--color-screensaver-backdrop", "#151a1d");
 
     expect(themeColors()).toHaveLength(0);
 
     act(sleep);
 
     expect(themeColors()).toHaveLength(1);
-    expect(themeColors()[0]?.getAttribute("content")).toBe("#161a1d");
+    expect(themeColors()[0]?.getAttribute("content")).toBe("#151a1d");
 
     completeFadeIn();
     act(wake);

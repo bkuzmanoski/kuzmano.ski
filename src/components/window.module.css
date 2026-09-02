@@ -26,7 +26,7 @@
   &:not(.focused) {
     --window-focused: 0;
 
-    border-color: var(--color-border-inactive);
+    border-color: var(--color-border-secondary);
   }
 
   &:not(.focused)::after {
@@ -181,9 +181,9 @@
 
   /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */
   &.pressed {
-    --color-icon-foreground: var(--color-background);
-    --color-icon-background: var(--color-border);
+    --color-icon-foreground: var(--color-pressed-foreground);
+    --color-icon-background: var(--color-pressed-background);
 
-    background: var(--color-border);
+    background: var(--color-pressed-background);
   }
 }

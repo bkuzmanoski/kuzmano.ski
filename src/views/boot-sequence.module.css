@@ -41,12 +41,12 @@
     opacity: 0.6;
     background: radial-gradient(
       200vw 50% at calc(70vw + var(--spill)) 50%,
-      var(--color-accent) 0%,
-      color-mix(in oklab, var(--color-accent) 93%, transparent) 13%,
-      color-mix(in oklab, var(--color-accent) 74%, transparent) 27%,
-      color-mix(in oklab, var(--color-accent) 50%, transparent) 40%,
-      color-mix(in oklab, var(--color-accent) 26%, transparent) 53%,
-      color-mix(in oklab, var(--color-accent) 7%, transparent) 67%,
+      var(--color-boot-sequence-accent) 0%,
+      color-mix(in oklab, var(--color-boot-sequence-accent) 93%, transparent) 13%,
+      color-mix(in oklab, var(--color-boot-sequence-accent) 74%, transparent) 27%,
+      color-mix(in oklab, var(--color-boot-sequence-accent) 50%, transparent) 40%,
+      color-mix(in oklab, var(--color-boot-sequence-accent) 26%, transparent) 53%,
+      color-mix(in oklab, var(--color-boot-sequence-accent) 7%, transparent) 67%,
       transparent 80%
     );
 

@@ -72,12 +72,12 @@ test("the title heads the article, from the frontmatter rather than the body", a
 test("every heading is followed by a named link to itself that is accessible to assistive technology", async () => {
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
+  const link = screen.getByRole("link", { name: 'Link to "Fixture Heading"' });
 
   expect(link.getAttribute("href")).toBe("#fixture-heading");
   expect(link.closest("[aria-hidden]")).toBeNull(); // An `aria-hidden` link is invalid the moment a click focuses it.
   expect(link.closest("h2")).not.toBeNull();
-  expect(screen.getByRole("link", { name: "Link to Fixture Heading" })).toBeDefined();
+  expect(screen.getByRole("link", { name: 'Link to "Fixture Heading"' })).toBeDefined();
 });
 
 test("a page opened at a fragment scrolls to the heading it names", async () => {
@@ -107,7 +107,7 @@ test("a page opened without a fragment does not scroll", async () => {
 test("clicking a heading link copies the heading's address and shows the confirmation", async () => {
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
+  const link = screen.getByRole("link", { name: 'Link to "Fixture Heading"' });
 
   await act(async () => {
     fireEvent.click(link);
@@ -124,7 +124,7 @@ test("clicking a heading link copies the heading's address and shows the confirm
 test("clicking a heading link does not scroll the heading into view", async () => {
   await renderContent(headingAnchorFixture);
 
-  fireEvent.click(screen.getByRole("link", { name: "Link to Fixture Heading" }));
+  fireEvent.click(screen.getByRole("link", { name: 'Link to "Fixture Heading"' }));
 
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
@@ -134,7 +134,7 @@ test("a copy failure displays an alert and no confirmation", async () => {
 
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: "Link to Fixture Heading" });
+  const link = screen.getByRole("link", { name: 'Link to "Fixture Heading"' });
 
   await act(async () => {
     fireEvent.click(link);
