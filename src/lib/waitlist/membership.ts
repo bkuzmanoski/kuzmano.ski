@@ -4,7 +4,8 @@ import { MAX_ADDRESS_LENGTH, isWithinLengthLimit, validate } from "#/lib/forms/v
 import type { Schema } from "#/lib/forms/validation";
 
 export const LIST_MAX_LENGTH = 64;
-export const SOURCE_MAX_LENGTH = 512;
+
+const SOURCE_MAX_LENGTH = 512;
 
 export interface WaitlistFields {
   emailAddress: string;

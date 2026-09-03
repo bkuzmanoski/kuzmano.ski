@@ -58,7 +58,7 @@ const WAVES: ReadonlyArray<Wave> = [
   { speed: "slow", delayS: 20, toasters: [8, 12, 15, 20] },
 ];
 
-export type SpriteImage = "toaster" | (typeof TOAST_IMAGES)[number];
+type SpriteImage = "toaster" | (typeof TOAST_IMAGES)[number];
 
 export interface Sprite {
   image: SpriteImage;

@@ -1,7 +1,7 @@
 import { bufferCache, playBuffer, renderBuffer } from "./buffer";
 import { DRIVER_SAMPLE_RATE, quantizeToDriver } from "./driver";
 
-export interface Note {
+interface Note {
   hz: number;
   seconds: number;
 }

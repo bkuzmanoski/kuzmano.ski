@@ -29,8 +29,7 @@ export interface Collection extends ContentIndex {
   list: () => Array<Entry>;
 }
 
-/** A collection has no document of its own to carry frontmatter, so it is described separately. */
-export interface CollectionMetadata {
+interface CollectionMetadata {
   title: string;
   description: string;
 }

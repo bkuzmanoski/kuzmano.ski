@@ -54,6 +54,7 @@ export default defineConfig(
                 "./src/config",
                 "./src/routes",
                 "./src/site",
+                "./src/test-utils/catalog.ts",
                 "./src/test-utils/content.ts",
                 "./src/views",
               ],

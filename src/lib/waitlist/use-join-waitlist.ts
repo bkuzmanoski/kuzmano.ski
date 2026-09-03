@@ -9,7 +9,7 @@ import type { WaitlistFields } from "./membership";
 
 export const JOIN_FAILED_MESSAGE = "The waitlist couldn’t be joined.";
 
-export type JoinState = "idle" | "joining" | "joined";
+type JoinState = "idle" | "joining" | "joined";
 
 export interface WaitlistJoin {
   state: JoinState;

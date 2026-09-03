@@ -11,7 +11,7 @@ interface SiteCollection {
   entries: Array<Entry>;
 }
 
-/** Returns the site's `segment` collection and its listing. Throws when the collection is missing or holds no entries. */
+/** Returns the site's `segment` collection and its listing. Throws when the collection does not exist. */
 export function siteCollection(segment: string): SiteCollection {
   const collection = collections[segment];
 
@@ -19,16 +19,10 @@ export function siteCollection(segment: string): SiteCollection {
     throw new Error(`This suite expects a \`${segment}\` collection.`);
   }
 
-  const entries = collection.list();
-
-  if (entries.length === 0) {
-    throw new Error(`This suite expects at least one \`${segment}\` entry.`);
-  }
-
-  return { collection, entries };
+  return { collection, entries: collection.list() };
 }
 
-/** Returns the newest entry in the site's `segment` collection. Throws when the collection is missing or holds no entries. */
-export function newestEntry(segment: string): Entry {
-  return siteCollection(segment).entries[0]!;
+/** Returns the newest entry in the site's `segment` collection, or `null` if there are no entries. Throws when the collection is missing. */
+export function newestEntry(segment: string): Entry | null {
+  return siteCollection(segment).entries[0] ?? null;
 }

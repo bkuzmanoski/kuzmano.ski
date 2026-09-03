@@ -7,8 +7,7 @@ import type { ChangeEvent } from "react";
 
 export type FieldValues<TValues> = Record<keyof TValues, string>;
 
-/** The handlers for one field. Held apart from its value so they never change. */
-export interface FieldHandlers {
+interface FieldHandlers {
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: () => void;
 }

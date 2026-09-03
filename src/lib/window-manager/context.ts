@@ -6,11 +6,11 @@ import type { Size } from "../geometry";
 import type { CloseGuard } from "./close-guards";
 import type { WindowContent, WindowGeometry, WindowId, WindowRecord } from "./window";
 
-export interface OpenOptions {
+interface OpenOptions {
   replaceUrl?: boolean;
 }
 
-export interface CloseOptions {
+interface CloseOptions {
   force?: boolean;
 }
 

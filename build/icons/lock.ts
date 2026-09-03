@@ -10,7 +10,7 @@ import { ICON_ARTWORK, ICON_LOCK, fromRoot } from "../paths.ts";
 /** The share of each icon's width the monogram fills. */
 export const FILLS = { favicon: 0.9, appIcon: 0.8, maskable: 0.6 };
 
-export interface IconPalette {
+interface IconPalette {
   foregroundLight: string;
   foregroundDark: string;
   backgroundLight: string;
@@ -22,7 +22,7 @@ export interface IconInputs {
   palette: IconPalette;
 }
 
-export interface IconLock extends IconInputs {
+interface IconLock extends IconInputs {
   outputs: Array<string>; // File names, relative to `/public/`.
 }
 

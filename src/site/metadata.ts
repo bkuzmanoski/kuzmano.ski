@@ -1,7 +1,6 @@
 import { FEED_TYPE, SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site";
 
-/** A feed advertised in a document's head. */
-export interface FeedLink {
+interface FeedLink {
   title: string;
   path: string;
 }
