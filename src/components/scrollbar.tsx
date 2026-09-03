@@ -121,8 +121,8 @@ export function Scrollbar({
   className,
   resizeControl,
 }: {
-  viewportRef: RefObject<HTMLElement | null>; // The viewport this scrolls.
-  viewportId: string; // The id of the viewport this scrolls.
+  viewportRef: RefObject<HTMLElement | null>;
+  viewportId: string;
   metrics: ScrollMetrics;
   className?: string;
   resizeControl?: ReactNode;

@@ -75,7 +75,8 @@ const DesktopWindow = memo(function OpenWindow({
 }) {
   const { close, registerCloseGuard, focus, move, resize, toggleZoom } = useWindowActions();
 
-  // Memoized bbecause the body registers its close guard against this object, so changing its identity would re-register the guard.t.eging a close guard on every render.
+  // Memoized because the body registers its close guard against this object, so changing its
+  // identity would re-register the guard on every render.
   const windowClose = useMemo<WindowClose>(
     () => ({
       forceClose: () => close(id, { force: true }),

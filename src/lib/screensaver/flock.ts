@@ -9,7 +9,6 @@ const FLAP_FRAMES = 4;
 
 // Start positions, as percentages of the viewport measured in from its top and right edges.
 const START_POSITIONS = [
-  // Batch 1
   [2, -17],
   [10, -19],
   [20, -18],
@@ -22,7 +21,6 @@ const START_POSITIONS = [
   [-21, 30],
   [-23, 50],
   [-25, 70],
-  // Batch 2
   [0, -26],
   [10, -20],
   [20, -36],
@@ -32,7 +30,6 @@ const START_POSITIONS = [
   [-26, 10],
   [-36, 30],
   [-29, 50],
-  // Batch 3
   [0, -46],
   [10, -56],
   [20, -49],
@@ -49,7 +46,6 @@ interface Wave {
   toast?: ReadonlyArray<number>;
 }
 
-// The flock, in waves.
 const WAVES: ReadonlyArray<Wave> = [
   { speed: "fast", delayS: 0, toasters: [0, 5, 11, 16, 22, 26], toast: [2, 18] },
   { speed: "medium", delayS: 0, toasters: [7, 15, 25], toast: [10, 13, 20, 24] },

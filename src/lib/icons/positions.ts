@@ -12,7 +12,7 @@ export function createIconPositionsStore(ids: ReadonlyArray<string>, layout: Ico
   );
   return {
     useIconPositions: useValue, // Null before the client has read them.
-    moveIcon: (id: string, position: IconPosition) => setValue({ ...getValue(), [id]: position }), // Moves an icon. Call `commitIconPositions` when the drag ends to persist the layout.
+    moveIcon: (id: string, position: IconPosition) => setValue({ ...getValue(), [id]: position }), // Call `commitIconPositions` when the drag ends to persist the layout.
     commitIconPositions: () => savePositions(getValue() ?? {}, ICON_POSITIONS_STORAGE_KEY),
   };
 }

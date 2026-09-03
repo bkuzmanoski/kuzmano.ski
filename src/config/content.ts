@@ -6,11 +6,7 @@ import type { DateFormat } from "#/lib/hooks/use-date-format";
  */
 export const PAGES_DIRECTORY = "_pages";
 
-/**
- * How an entry dates are formatted throughout the site.
- *
- * `locale` is is used to format the date in the prerendered markup.
- */
+/** How an entry dates are formatted throughout the site. */
 export const ENTRY_DATE_FORMAT: DateFormat = {
   locale: "en-AU",
   options: { year: "numeric", month: "short", day: "numeric" },

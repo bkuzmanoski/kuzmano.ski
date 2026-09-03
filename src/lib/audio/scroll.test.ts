@@ -33,7 +33,6 @@ afterEach(() => {
 
 const detents = () => vi.mocked(playScrollDetent).mock.calls.length;
 
-// Scroll to `top` after `elapsedTimeMs`.
 function scrollTo(element: Element & { scrollTop: number }, top: number, elapsedTimeMs = 16) {
   now += elapsedTimeMs;
   element.scrollTop = top;

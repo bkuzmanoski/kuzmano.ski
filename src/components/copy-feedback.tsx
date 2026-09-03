@@ -46,7 +46,6 @@ export function CopyTooltip({
   );
 }
 
-/** The alert raised when a copy fails. */
 export function CopyFailureAlert({
   entity,
   open,

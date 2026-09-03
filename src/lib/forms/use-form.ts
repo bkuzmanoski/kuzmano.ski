@@ -40,9 +40,6 @@ export interface Form<TValues extends FieldValues<TValues>> {
  * Both are compared by identity by `reset`, by `handlers`, and by the memo scopes
  * the React Compiler builds around this hook.
  *
- * The initial values and schema must remain fixed for the lifetime of the form;
- * reinitialization is not supported.
- *
  * Values are validated as typed, while the server validates them trimmed (see
  * `parseSubmission` in `/src/lib/contact/message.ts`). Every rule either trims first
  * or measures length, so the client is stricter than the server.
