@@ -76,7 +76,7 @@ const readContentDirectory = (directory: string): ScannedDirectory => {
   };
 };
 
-/** Walks `/src/content`, reading the frontmatter of every entry it finds. */
+/** Walks `/content`, reading the frontmatter of every entry it finds. */
 export function scanContent(): ScannedContent {
   const directoryNames = readdirSync(fromRoot(CONTENT_DIRECTORY), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())

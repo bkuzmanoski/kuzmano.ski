@@ -49,9 +49,9 @@ export default defineConfig(
             {
               target: "./src/lib",
               from: [
+                "./content",
                 "./src/components",
                 "./src/config",
-                "./src/content",
                 "./src/routes",
                 "./src/site",
                 "./src/test-utils/content.ts",

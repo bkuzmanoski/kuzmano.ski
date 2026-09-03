@@ -1,7 +1,7 @@
 import type { DateFormat } from "#/lib/hooks/use-date-format";
 
 /**
- * Directory under `/src/content/` whose files are pages (`/<slug>`): entries that do  not
+ * Directory under `/content/` whose files are pages (`/<slug>`): entries that do  not
  * belong to a collection (`/<collection>/<slug>`).
  */
 export const PAGES_DIRECTORY = "_pages";

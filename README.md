@@ -23,14 +23,14 @@ draft: false # Optional. The dev server renders a draft. The build omits it.
 
 Content is located in:
 
-- `/src/content/_pages/*.mdx`: standalone pages
-- `/src/content/<collection>/*.mdx`: collection entries
+- `/content/_pages/*.mdx`: standalone pages
+- `/content/<collection>/*.mdx`: collection entries
 
 File and folder names become URL segments and must be URL-safe.
 
 ### Standalone pages
 
-1. Add an MDX file to `/src/content/_pages`.
+1. Add an MDX file to `/content/_pages`.
 2. Add its file name, without `.mdx`, to `PAGE_SLUGS` in
    `/src/config/content.ts`.
 3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in
@@ -38,7 +38,7 @@ File and folder names become URL segments and must be URL-safe.
 
 ### Collections
 
-1. Create a subfolder in `/src/content`.
+1. Create a subfolder in `/content`.
 2. Add its title and description to `COLLECTIONS` in `/src/config/content.ts`,
    keyed by the folder name.
 3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in

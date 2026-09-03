@@ -7,10 +7,10 @@ import type { MDXContent } from "mdx/types";
 
 const catalog = createCatalog(
   {
-    root: "/src/content",
-    frontmatter: import.meta.glob<{ default: unknown }>("/src/content/*/*.mdx", { query: "?frontmatter", eager: true }), // Frontmatter without the compiled bodies (see `/build/frontmatter.ts`).
-    content: import.meta.glob<{ default: MDXContent }>("/src/content/*/*.mdx"),
-    styles: import.meta.glob<{ default: { page?: string } }>("/src/content/*/*.module.css"),
+    root: "/content",
+    frontmatter: import.meta.glob<{ default: unknown }>("/content/*/*.mdx", { query: "?frontmatter", eager: true }), // Frontmatter without the compiled bodies (see `/build/frontmatter.ts`).
+    content: import.meta.glob<{ default: MDXContent }>("/content/*/*.mdx"),
+    styles: import.meta.glob<{ default: { page?: string } }>("/content/*/*.module.css"),
     assets: CONTENT_ASSETS,
   },
   { pagesDirectory: PAGES_DIRECTORY, collections: COLLECTIONS, includeDrafts: import.meta.env.DEV },
