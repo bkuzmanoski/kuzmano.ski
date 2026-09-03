@@ -124,7 +124,7 @@ test("a cross-origin request is refused before anything is read", async () => {
   expect(deliver).not.toHaveBeenCalled();
 });
 
-test("a malformed submission is refused, and nothing is delivered", async () => {
+test("a malformed submission is refused, and a message is not delivered", async () => {
   expect((await post({ ...VALID_SUBMISSION, from: undefined })).status).toBe(400);
   expect(deliver).not.toHaveBeenCalled();
 });

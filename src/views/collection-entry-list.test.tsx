@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClick } from "#/lib/audio/sounds";
-import { testCollection } from "#/test-utils/content";
+import { fakeCollection, fakeEntries } from "#/test-utils/collection";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list";
 
@@ -20,8 +20,10 @@ const open = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 
-const { collection, entries, routeOf } = testCollection("blog", 2);
+const entries = fakeEntries("newest", "middle", "oldest");
+const collection = fakeCollection(entries);
 const lastIndex = entries.length - 1;
+const routeOf = (index: number) => collection.routeOf(entries[index]!.slug);
 
 beforeEach(() => {
   open.mockClear();
@@ -151,8 +153,8 @@ test("a tap holds the pressed state until release, but clears it when scrolling 
 
   expect(playClick).toHaveBeenCalledTimes(1);
 
-  fireEvent.pointerDown(links[2 % links.length]!, { pointerType: "touch" });
-  fireEvent.pointerCancel(links[2 % links.length]!, { pointerType: "touch" });
+  fireEvent.pointerDown(links[2]!, { pointerType: "touch" });
+  fireEvent.pointerCancel(links[2]!, { pointerType: "touch" });
 
   expect(playClick).toHaveBeenCalledTimes(1);
 });

@@ -52,7 +52,7 @@ test("the selected icon regains focus when the last window closes and remains ke
 
   expect(open).toHaveBeenCalledTimes(1);
 
-  openWindow(setFocusedWindow, "about" as WindowId);
+  openWindow(setFocusedWindow, "entry");
   setFocusedWindow(null);
 
   expect(document.activeElement).toBe(icon(0));
@@ -62,21 +62,21 @@ test("the selected icon regains focus when the last window closes and remains ke
   expect(open).toHaveBeenCalledTimes(2);
 });
 
-test("closing the last window does not focus an icon if none is selected", () => {
+test("closing the last window does not focus an icon when none is selected", () => {
   const setFocusedWindow = renderIcons();
 
-  openWindow(setFocusedWindow, "about" as WindowId);
+  openWindow(setFocusedWindow, "entry");
   setFocusedWindow(null);
 
   expect(document.activeElement).toBe(document.body);
 });
 
-test("closing the last window does not focus an icon if another element is focused", () => {
+test("closing the last window does not focus an icon when another element holds the focus", () => {
   const setFocusedWindow = renderIcons();
   const buttonElement = document.body.appendChild(document.createElement("button"));
 
   icon(0).focus();
-  openWindow(setFocusedWindow, "about" as WindowId);
+  openWindow(setFocusedWindow, "entry");
   buttonElement.focus();
   setFocusedWindow(null);
 

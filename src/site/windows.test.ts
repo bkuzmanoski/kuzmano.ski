@@ -1,52 +1,53 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import { testCollection } from "#/test-utils/content";
+import { collection, collectionEntries } from "#/test-utils/catalog";
 
 import { pages } from "./catalog";
 import { isDestinationOpen, resolveRoute, resolveWindow } from "./windows";
 
-const { collection, entries } = testCollection("blog");
-const entry = entries[0]!;
+vi.mock("#/site/catalog", async () => (await import("#/test-utils/catalog")).siteCatalogMock());
+
+const entry = collectionEntries[0]!;
 
 describe("resolveRoute", () => {
-  test("resolves a top-level entry", () => {
-    expect(resolveRoute("/about")).toMatchObject({
+  test("a top-level entry route resolves to an entry window backed by the pages index", () => {
+    expect(resolveRoute("/page")).toMatchObject({
       id: "entry",
-      title: "About",
-      slug: "about",
+      title: "Page",
+      slug: "page",
       collectionRoute: null,
       contentIndex: pages,
     });
   });
 
-  test("resolves a collection entry", () => {
-    expect(resolveRoute(`/blog/${entry.slug}`)).toMatchObject({
+  test("a collection entry route resolves to an entry window backed by its collection", () => {
+    expect(resolveRoute(`/collection/${entry.slug}`)).toMatchObject({
       id: "entry",
       title: entry.title,
       slug: entry.slug,
-      collectionRoute: "/blog",
+      collectionRoute: "/collection",
       contentIndex: collection,
     });
   });
 
-  test("resolves the contact window", () => {
+  test("the contact route resolves to the contact window", () => {
     expect(resolveRoute("/contact")).toEqual({ id: "contact", title: "Contact" });
   });
 
-  test("does not resolve paths nested under contact", () => {
+  test("a path nested under contact resolves to the not-found window", () => {
     expect(resolveRoute("/contact/anything")).toMatchObject({ id: "notFound" });
   });
 
-  test("resolves a collection index", () => {
-    expect(resolveRoute("/blog")).toMatchObject({
+  test("a collection route resolves to the collection window", () => {
+    expect(resolveRoute("/collection")).toMatchObject({
       id: "collection",
-      title: "Blog",
-      collectionRoute: "/blog",
+      title: "Collection",
+      collectionRoute: "/collection",
     });
   });
 
   test("an unknown collection entry slug resolves to the not-found window", () => {
-    expect(resolveRoute("/blog/does-not-exist")).toMatchObject({ id: "notFound" });
+    expect(resolveRoute("/collection/does-not-exist")).toMatchObject({ id: "notFound" });
   });
 
   test("an unknown collection resolves to the not-found window", () => {
@@ -54,28 +55,28 @@ describe("resolveRoute", () => {
     expect(resolveRoute("/unknown-collection/unknown-entry")).toMatchObject({ id: "notFound" });
   });
 
-  test("resolves the root path to the desktop", () => {
+  test("the root path resolves to the desktop", () => {
     expect(resolveRoute("/")).toEqual({ id: "desktop" });
     expect(resolveRoute("")).toEqual({ id: "desktop" });
   });
 
-  test("ignores leading and trailing slashes", () => {
-    expect(resolveRoute("/blog/")).toMatchObject({ id: "collection" });
-    expect(resolveRoute("//about//")).toMatchObject({ id: "entry" });
-    expect(resolveRoute(`/blog/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
+  test("leading and trailing slashes are ignored", () => {
+    expect(resolveRoute("/collection/")).toMatchObject({ id: "collection" });
+    expect(resolveRoute("//page//")).toMatchObject({ id: "entry" });
+    expect(resolveRoute(`/collection/${entry.slug}/`)).toMatchObject({ id: "entry", slug: entry.slug });
   });
 
   test("a route deeper than a collection entry resolves to the not-found window", () => {
-    expect(resolveRoute(`/blog/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
+    expect(resolveRoute(`/collection/${entry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
   });
 });
 
 describe("resolveWindow", () => {
-  test("returns the window a route opens", () => {
-    expect(resolveWindow("/blog")).toMatchObject({ id: "collection" });
+  test("a route resolves to the window it opens", () => {
+    expect(resolveWindow("/collection")).toMatchObject({ id: "collection" });
   });
 
-  test("returns null for the routes that do not open a window", () => {
+  test("a route that opens no window resolves to null", () => {
     expect(resolveWindow("/")).toBeNull();
     expect(resolveWindow("/no-such-page")).toBeNull();
   });
@@ -83,29 +84,29 @@ describe("resolveWindow", () => {
 
 describe("isDestinationOpen", () => {
   test("a window open at a destination reports it open", () => {
-    expect(isDestinationOpen("/about", ["/about"])).toBe(true);
-    expect(isDestinationOpen("/blog", ["/blog"])).toBe(true);
+    expect(isDestinationOpen("/page", ["/page"])).toBe(true);
+    expect(isDestinationOpen("/collection", ["/collection"])).toBe(true);
     expect(isDestinationOpen("/contact", ["/contact"])).toBe(true);
   });
 
   test("a collection window reports its collection open however the route spells it", () => {
-    expect(isDestinationOpen("/blog", ["/blog/"])).toBe(true);
+    expect(isDestinationOpen("/collection", ["/collection/"])).toBe(true);
   });
 
   test("an open collection entry leaves its parent collection closed", () => {
-    expect(isDestinationOpen("/blog", [`/blog/${entry.slug}`])).toBe(false);
+    expect(isDestinationOpen("/collection", [`/collection/${entry.slug}`])).toBe(false);
   });
 
-  test("checks every open window", () => {
-    expect(isDestinationOpen("/blog", ["/about", `/blog/${entry.slug}`, "/blog"])).toBe(true);
+  test("every open window is checked for the destination", () => {
+    expect(isDestinationOpen("/collection", ["/page", `/collection/${entry.slug}`, "/collection"])).toBe(true);
   });
 
   test("a route that opens no window leaves its destination closed", () => {
     expect(isDestinationOpen("/no-such-page", ["/no-such-page"])).toBe(false);
-    expect(isDestinationOpen("/blog", ["/", "/blog/does-not-exist"])).toBe(false);
+    expect(isDestinationOpen("/collection", ["/", "/collection/does-not-exist"])).toBe(false);
   });
 
   test("a desktop with no open windows leaves every destination closed", () => {
-    expect(isDestinationOpen("/blog", [])).toBe(false);
+    expect(isDestinationOpen("/collection", [])).toBe(false);
   });
 });

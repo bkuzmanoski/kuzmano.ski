@@ -29,7 +29,7 @@ export interface ScannedContent {
 
 interface PrerenderRoute {
   path: string;
-  sitemap?: { lastmod: string };
+  sitemap?: { lastmod?: string; exclude?: boolean };
 }
 
 const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -61,6 +61,9 @@ const entryOf = (path: string, slug: string): ScannedEntry => {
 
 const route = (path: string, lastmod: string | undefined): PrerenderRoute =>
   lastmod ? { path, sitemap: { lastmod } } : { path };
+
+const isRegisteredPage = (slug: string) => (PAGE_SLUGS as ReadonlyArray<string>).includes(slug);
+const unlistedRoute = (path: string): PrerenderRoute => ({ path, sitemap: { exclude: true } });
 const readContentDirectory = (directory: string): ScannedDirectory => {
   const path = fromRoot(join(CONTENT_DIRECTORY, directory));
   const entries = readdirSync(path, { withFileTypes: true });
@@ -124,18 +127,6 @@ export function routesFor({ collections, pages }: ScannedContent): Array<Prerend
         .join(", ")}`,
     );
   }
-
-  // Unregistered pages are allowed (they can be viewed via a direct link).
-
-  // const unregisteredPages = pages.entries.filter(({ slug }) => !PAGE_SLUGS.some((declared) => declared === slug));
-
-  // if (unregisteredPages.length > 0) {
-  //   throw new Error(
-  //     `Page(s) missing from PAGE_SLUGS: ${unregisteredPages
-  //       .map(({ slug }) => join(CONTENT_DIRECTORY, PAGES_DIRECTORY, `${slug}.mdx`))
-  //       .join(", ")}`,
-  //   );
-  // }
 
   const shadowedPages = pages.entries.filter(({ slug }) => collections.some((collection) => collection.name === slug));
 
@@ -212,7 +203,9 @@ export function routesFor({ collections, pages }: ScannedContent): Array<Prerend
       route(`/${name}`, newestDate(entries) ?? siteLastModifiedDate),
       ...entries.map(({ slug, date }) => route(`/${name}/${slug}`, date)),
     ]),
-    ...publishedPages.map(({ slug, date }) => route(`/${slug}`, date)),
+    ...publishedPages.map(({ slug, date }) =>
+      isRegisteredPage(slug) ? route(`/${slug}`, date) : unlistedRoute(`/${slug}`),
+    ),
   ];
 }
 

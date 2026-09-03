@@ -48,7 +48,15 @@ export default defineConfig(
             { target: "./src", from: ["./build"] },
             {
               target: "./src/lib",
-              from: ["./src/components", "./src/config", "./src/content", "./src/routes", "./src/site", "./src/views"],
+              from: [
+                "./src/components",
+                "./src/config",
+                "./src/content",
+                "./src/routes",
+                "./src/site",
+                "./src/test-utils/content.ts",
+                "./src/views",
+              ],
             },
             { target: "./src/components", from: ["./src/routes", "./src/views"] },
           ],

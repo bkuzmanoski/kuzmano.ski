@@ -66,7 +66,7 @@ describe("feedXmlFor", () => {
     );
   });
 
-  test("falls back to the site's newest date for a collection with nothing in it", async () => {
+  test("falls back to the site's newest date for an empty collection", async () => {
     const empty = content({
       collections: [
         scannedCollection("collection-1"),

@@ -81,7 +81,7 @@ describe("routes", () => {
     });
   });
 
-  test("omits lastmod when an entry has no date", () => {
+  test("omits the sitemap metadata for an entry with no date", () => {
     expect(routes()).toContainEqual({ path: "/page-2" });
   });
 
@@ -104,6 +104,19 @@ describe("routes", () => {
     expect(withDrafts).not.toContain("/collection-1/unpublished");
     expect(withDrafts).not.toContain("/secret");
     expect(withDrafts).toContain("/collection-1");
+  });
+
+  test("prerenders a page the site does not link to, but omits it from the sitemap", () => {
+    const withUnregisteredPage = routes({
+      pages: scannedDirectory([
+        scannedEntry("page-1", { date: "2026-02-03" }),
+        scannedEntry("page-2", undated),
+        scannedEntry("unlisted", { date: "2026-01-01" }),
+      ]),
+    });
+
+    expect(withUnregisteredPage).toContainEqual({ path: "/unlisted", sitemap: { exclude: true } });
+    expect(withUnregisteredPage).toContainEqual({ path: "/page-1", sitemap: { lastmod: "2026-02-03" } });
   });
 });
 

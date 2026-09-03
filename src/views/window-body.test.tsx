@@ -1,13 +1,14 @@
 import { act, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { testCollection } from "#/test-utils/content";
+import { collectionEntries } from "#/test-utils/catalog";
 import { RouterContext } from "#/test-utils/router-context";
 
 import { WindowBody } from "./window-body";
 
 const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; title: string } }>(() => ({})));
 
+vi.mock("#/site/catalog", async () => (await import("#/test-utils/catalog")).siteCatalogMock());
 vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ content: openWindows }),
 );
@@ -18,38 +19,37 @@ vi.mock("#/lib/audio/scroll", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
 );
 
-const { entries } = testCollection("blog");
-const entry = entries[0]!;
+const entry = collectionEntries[0]!;
 
 const renderBody = (route: string) => render(<WindowBody route={route} />, { wrapper: RouterContext });
 
 test("a collection route renders a link for every entry in the collection", () => {
-  renderBody("/blog");
+  renderBody("/collection");
 
-  expect(screen.getAllByRole("link")).toHaveLength(entries.length);
+  expect(screen.getAllByRole("link")).toHaveLength(collectionEntries.length);
   expect(screen.getByRole("link", { name: entry.title })).toBeDefined();
 });
 
-test("the entry list marks the entry the entry window is showing, and only in the collection it belongs to", () => {
-  openWindows.mockReturnValue({ entry: { route: `/blog/${entry.slug}`, title: entry.title } });
+test("the entry list marks the entry the window is showing, and only in the collection it belongs to", () => {
+  openWindows.mockReturnValue({ entry: { route: `/collection/${entry.slug}`, title: entry.title } });
 
-  const { container, rerender } = renderBody("/blog");
+  const { container, rerender } = renderBody("/collection");
 
   expect(screen.getByRole("link", { name: entry.title }).getAttribute("aria-current")).toBe("true");
 
-  rerender(<WindowBody route="/work" />);
+  rerender(<WindowBody route="/other-collection" />);
 
   expect(container.querySelector("[aria-current]")).toBeNull();
 });
 
 test("an entry route suspends on its body chunk, from a collection or the top-level pages", async () => {
-  const mounted = act(() => renderBody(`/blog/${entry.slug}`));
+  const mounted = act(() => renderBody(`/collection/${entry.slug}`));
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined(); // The body arrives in a chunk of its own.
 
   const { rerender } = await mounted;
   const rerendered = act(() => {
-    rerender(<WindowBody route="/about" />);
+    rerender(<WindowBody route="/page" />);
     return null;
   });
 

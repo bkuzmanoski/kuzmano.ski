@@ -66,7 +66,7 @@ test("submissions are counted against the waitlist's own rate limit", async () =
   expect(isWithinRateLimit).toHaveBeenCalledWith(WAITLIST_RATELIMIT_BINDING, "203.0.113.1");
 });
 
-test("a malformed submission is refused, and nothing is recorded", async () => {
+test("a malformed submission is refused, and a membership is not recorded", async () => {
   expect((await post({ ...VALID_SUBMISSION, source: "https://elsewhere.example" })).status).toBe(400);
   expect(recordMembership).not.toHaveBeenCalled();
 });

@@ -38,7 +38,7 @@ const read = (
 
 const refusalStatus = (result: Awaited<ReturnType<typeof read>>) => (result.ok ? undefined : result.response.status);
 
-test("a well-formed body is read as the submission it contains", async () => {
+test("a well-formed body can be parsed as a submission", async () => {
   await expect(read(VALID_SUBMISSION)).resolves.toEqual({ ok: true, fields: VALID_SUBMISSION });
 });
 

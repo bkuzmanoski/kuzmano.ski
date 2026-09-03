@@ -4,7 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { ENTRY_DATE_FORMAT } from "#/config/content";
 import { formatDate } from "#/lib/date";
 import { canonicalUrl } from "#/site/metadata";
-import { testCollection } from "#/test-utils/content";
+import { collection, collectionEntries } from "#/test-utils/catalog";
 
 import { WindowToolbar } from "./window-toolbar";
 
@@ -14,6 +14,7 @@ const writeText = vi.fn<(value: string) => Promise<void>>();
 
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
 
+vi.mock("#/site/catalog", async () => (await import("#/test-utils/catalog")).siteCatalogMock());
 vi.mock("#/lib/window-manager/context", async () =>
   (await import("#/test-utils/window-manager")).windowManagerMock({ actions: { open } }),
 );
@@ -28,12 +29,12 @@ beforeEach(() => {
   writeText.mockResolvedValue(undefined);
 });
 
-const { entries, routeOf } = testCollection("blog", 3);
-const lastEntryIndex = entries.length - 1;
+const lastEntryIndex = collectionEntries.length - 1;
+const routeOf = (index: number) => collection.routeOf(collectionEntries[index]!.slug);
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 
 test("the toolbar reports the entry's date", () => {
-  const entry = entries[1]!;
+  const entry = collectionEntries[1]!;
 
   render(<WindowToolbar route={routeOf(1)} />);
 
@@ -42,7 +43,7 @@ test("the toolbar reports the entry's date", () => {
   expect(date.getAttribute("datetime")).toBe(entry.date);
 });
 
-test("an entry in the middle of a collection can step either way", () => {
+test("the step controls link to the entries either side of the one being shown", () => {
   render(<WindowToolbar route={routeOf(1)} />);
 
   expect(screen.getByRole("link", { name: "Previous entry" }).getAttribute("href")).toBe(routeOf(0));

@@ -1,13 +1,18 @@
 import { collections } from "#/site/catalog";
 import type { Collection, Entry } from "#/site/catalog";
 
-interface TestCollection {
+// Real site content, for tests that verify the site's actual content or publication state.
+//
+// Tests that only need entries should use `./collection` instead. Tests of catalog consumers should
+// mock `./catalog`. Unlike this file, both are unaffected by content additions or publication.
+
+interface SiteCollection {
   collection: Collection;
   entries: Array<Entry>;
-  routeOf: (index: number) => string; // The route of the entry at `index` in the listing, newest first.
 }
 
-export function testCollection(segment: string, minimumEntries = 1): TestCollection {
+/** Returns the site's `segment` collection and its listing. Throws when the collection is missing or holds no entries. */
+export function siteCollection(segment: string): SiteCollection {
   const collection = collections[segment];
 
   if (!collection) {
@@ -16,16 +21,14 @@ export function testCollection(segment: string, minimumEntries = 1): TestCollect
 
   const entries = collection.list();
 
-  if (entries.length < minimumEntries) {
-    throw new Error(
-      `This suite expects at least ${minimumEntries} \`${segment}\` ${minimumEntries === 1 ? "entry" : "entries"}.`,
-    );
+  if (entries.length === 0) {
+    throw new Error(`This suite expects at least one \`${segment}\` entry.`);
   }
 
-  return { collection, entries, routeOf: (index) => collection.routeOf(entries[index]!.slug) };
+  return { collection, entries };
 }
 
-/** Returns the newest entry in a collection. Throws if the collection is empty. */
+/** Returns the newest entry in the site's `segment` collection. Throws when the collection is missing or holds no entries. */
 export function newestEntry(segment: string): Entry {
-  return testCollection(segment).entries[0]!;
+  return siteCollection(segment).entries[0]!;
 }

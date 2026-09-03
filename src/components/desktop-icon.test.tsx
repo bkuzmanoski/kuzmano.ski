@@ -9,7 +9,7 @@ vi.mock("#/lib/audio/sounds", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
 );
 
-const ICON: Icon = { id: "about", kind: "entry", label: "About", route: "/about" };
+const ICON: Icon = { id: "icon", kind: "entry", label: "Icon", route: "/page" };
 
 const onOpen = vi.fn();
 const onSelect = vi.fn();

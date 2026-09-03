@@ -218,16 +218,3 @@ The build produces:
 - `dist/server/server.js` as the TanStack Start SSR handler
 
 Cloudflare serves a matching static asset; otherwise, it invokes the Worker.
-
-## Testing
-
-```bash
-npm test
-```
-
-Tests render real routes through the router. This catches issues that isolated
-MDX rendering can miss, such as routes that depend on a loader to resolve an MDX
-module.
-
-vitest.config.ts uses the same MDX pipeline as the build via build/mdx.ts, with
-syntax highlighting disabled for speed.
