@@ -19,6 +19,7 @@ import type { ComponentProps } from "react";
 
 const mdxComponents: MDXComponents = {
   h2: (props: ComponentProps<"h2">) => <h2 {...props} tabIndex={-1} />,
+  h3: (props: ComponentProps<"h3">) => <h3 {...props} tabIndex={-1} />,
   a: ({ href, children, ...props }: ComponentProps<"a">) => {
     if (href?.startsWith("#")) {
       return "data-heading-link" in props ? (

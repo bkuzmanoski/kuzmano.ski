@@ -9,6 +9,7 @@
   --content-space-x-loose: 64px;
   --content-space-heading-1: var(--content-space-x-loose) var(--content-space-loose);
   --content-space-heading-2: var(--content-space-loose) var(--content-space);
+  --content-space-heading-3: var(--content-space);
   --content-space-rule: var(--content-space-loose);
   --content-scrollbar-offset: clamp(
     0px,
@@ -20,6 +21,7 @@
   --font-family-heading: "Lora", ui-serif, serif;
   --font-heading-1: 525 40px/54px var(--font-family-heading);
   --font-heading-2: 600 24px/34px var(--font-family-heading);
+  --font-heading-3: 600 19px/28px var(--font-family-heading);
   --font-body: 500 16px/26px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
 
@@ -56,6 +58,10 @@
     margin-block: var(--content-space-heading-2);
   }
 
+  & > :where(h3) {
+    margin-block: var(--content-space-heading-3);
+  }
+
   & > :where(hr) {
     margin-block: var(--content-space-rule);
   }
@@ -64,7 +70,7 @@
     margin-block: var(--content-space-loose);
   }
 
-  & :where(h1, h2) {
+  & :where(h1, h2, h3) {
     letter-spacing: -0.005em;
 
     &:focus {
@@ -78,6 +84,10 @@
 
   & :where(h2) {
     font: var(--font-heading-2);
+  }
+
+  & :where(h3) {
+    font: var(--font-heading-3);
   }
 
   & :where(a:not([data-heading-link])) {

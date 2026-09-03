@@ -24,6 +24,10 @@ vi.mock("#/lib/audio/sounds", async (importOriginal) =>
 
 const ROUTE = "/collection/fixture";
 const TITLE = "Fixture Title";
+const HEADINGS = [
+  { tagName: "h2", title: "Fixture Heading", id: "fixture-heading" },
+  { tagName: "h3", title: "Fixture Subheading", id: "fixture-subheading" },
+];
 
 beforeEach(() => {
   resetTooltipState();
@@ -72,20 +76,21 @@ test("the title heads the article, from the frontmatter rather than the body", a
 test("every heading is followed by a named link to itself that is accessible to assistive technology", async () => {
   await renderContent(headingAnchorFixture);
 
-  const link = screen.getByRole("link", { name: 'Link to "Fixture Heading"' });
+  for (const { tagName, title, id } of HEADINGS) {
+    const link = screen.getByRole("link", { name: `Link to "${title}"` });
 
-  expect(link.getAttribute("href")).toBe("#fixture-heading");
-  expect(link.closest("[aria-hidden]")).toBeNull(); // An `aria-hidden` link is invalid the moment a click focuses it.
-  expect(link.closest("h2")).not.toBeNull();
-  expect(screen.getByRole("link", { name: 'Link to "Fixture Heading"' })).toBeDefined();
+    expect(link.getAttribute("href")).toBe(`#${id}`);
+    expect(link.closest("[aria-hidden]")).toBeNull(); // An `aria-hidden` link is invalid the moment a click focuses it.
+    expect(link.closest(tagName)).not.toBeNull();
+  }
 });
 
-test("a page opened at a fragment scrolls to the heading it names", async () => {
-  window.location.hash = "#fixture-heading";
+test.each(HEADINGS)("a page opened at a fragment scrolls to the $tagName it names", async ({ title, id }) => {
+  window.location.hash = `#${id}`;
 
   await renderContent(headingAnchorFixture);
 
-  const heading = screen.getByRole("heading", { name: /Fixture Heading/ });
+  const heading = screen.getByRole("heading", { name: new RegExp(title) });
 
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(heading, { block: "start" });
   expect(document.activeElement).toBe(heading);
