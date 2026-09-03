@@ -7,6 +7,7 @@ import { CopyFailureAlert } from "#/components/copy-feedback";
 import { HeadingLink } from "#/components/heading-link";
 import { Waitlist } from "#/components/waitlist";
 import { ArticleContext } from "#/lib/article-context";
+import { playClick } from "#/lib/audio/sounds";
 import { cx } from "#/lib/class-names";
 import { isBrowserHandledClick } from "#/lib/link";
 import { revealFragment } from "#/lib/reveal-fragment";
@@ -15,7 +16,13 @@ import type { MDXModule } from "#/site/catalog";
 import styles from "./content-body.module.css";
 
 import type { MDXComponents } from "mdx/types";
-import type { ComponentProps } from "react";
+import type { ComponentProps, MouseEvent } from "react";
+
+function onLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+  if (!isBrowserHandledClick(event)) {
+    playClick();
+  }
+}
 
 const mdxComponents: MDXComponents = {
   h2: (props: ComponentProps<"h2">) => <h2 {...props} tabIndex={-1} />,
@@ -36,6 +43,8 @@ const mdxComponents: MDXComponents = {
               return;
             }
 
+            playClick();
+
             const article = event.currentTarget.closest("article");
 
             if (article && revealFragment(article, href)) {
@@ -50,14 +59,14 @@ const mdxComponents: MDXComponents = {
 
     if (href?.startsWith("/")) {
       return (
-        <Link to={href} className={styles.link} {...props}>
+        <Link to={href} className={styles.link} {...props} onClick={onLinkClick}>
           {children}
         </Link>
       );
     }
 
     return (
-      <a href={href} target="_blank" className={styles.link} {...props}>
+      <a href={href} target="_blank" className={styles.link} {...props} onClick={onLinkClick}>
         {children}
       </a>
     );

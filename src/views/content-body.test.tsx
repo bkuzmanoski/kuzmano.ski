@@ -6,11 +6,16 @@ import { resetTooltipState } from "#/lib/tooltip";
 import type { MDXModule } from "#/site/catalog";
 import { canonicalUrl } from "#/site/metadata";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
+import * as linksFixture from "#/test-utils/fixtures/links.mdx";
+import { RouterContext } from "#/test-utils/router-context";
 
 import { ContentBody } from "./content-body";
 import styles from "./content-body.module.css";
 
+import type { RenderOptions } from "@testing-library/react";
+
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
+const playClick = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
 
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
@@ -19,7 +24,7 @@ vi.mock("#/lib/audio/scroll", async (importOriginal) =>
   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
 vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playClick }),
 );
 
 const ROUTE = "/collection/fixture";
@@ -28,10 +33,12 @@ const HEADINGS = [
   { tagName: "h2", title: "Fixture Heading", id: "fixture-heading" },
   { tagName: "h3", title: "Fixture Subheading", id: "fixture-subheading" },
 ];
+const LINKS = ["fragment link", "internal link", "external link"];
 
 beforeEach(() => {
   resetTooltipState();
   scrollIntoViewSilently.mockClear();
+  playClick.mockClear();
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
 });
@@ -40,12 +47,15 @@ afterEach(() => {
   window.location.hash = "";
 });
 
+const RENDER_OPTIONS: RenderOptions = { wrapper: RouterContext };
+
 const renderContent = async (module: MDXModule) => {
   const { container } = await act(() =>
     render(
       <Suspense>
         <ContentBody route={ROUTE} title={TITLE} content={Promise.resolve(module)} />
       </Suspense>,
+      RENDER_OPTIONS,
     ),
   );
 
@@ -152,4 +162,20 @@ test("a copy failure displays an alert and no confirmation", async () => {
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
   expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
+});
+
+test.each(LINKS)("pressing on the %s plays a click sound", async (name) => {
+  await renderContent(linksFixture);
+
+  fireEvent.click(screen.getByRole("link", { name }));
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+});
+
+test.each(LINKS)("a press on the %s that is handled by the browser does not play a click sound", async (name) => {
+  await renderContent(linksFixture);
+
+  fireEvent.click(screen.getByRole("link", { name }), { metaKey: true });
+
+  expect(playClick).not.toHaveBeenCalled();
 });
