@@ -220,8 +220,8 @@ export function MenuBar() {
     },
   ];
 
-  // Derived from the menu items so the key an item shows and the key that runs it cannot differ.
   useGlobalShortcuts([
+    // Derived from the menu items so the key an item shows and the key that runs it cannot differ.
     ...menus.flatMap(({ items }) =>
       items.flatMap((item): Array<KeyboardShortcut> =>
         item.kind === "action" && item.shortcut
