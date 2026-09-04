@@ -112,14 +112,11 @@
     -webkit-touch-callout: default;
   }
 
-  & :where(pre, code) {
-    font: var(--font-code);
-  }
-
   & :where(:not(pre) > code) {
     padding-block: 1px;
     padding-inline: 4px;
 
+    font: var(--font-code);
     font-size: 0.925em;
 
     background: var(--color-background-tertiary);
