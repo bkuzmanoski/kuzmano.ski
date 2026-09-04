@@ -4,7 +4,7 @@ import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
 const MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (will be clamped by `padding` below).
 
-export const LAYOUT: WindowLayout = {
+export const WINDOW_LAYOUT: WindowLayout = {
   windows: {
     entry: { defaultSize: { width: 1024, height: 1024 }, openAt: "cascade", fixedSize: false },
     collection: { defaultSize: { width: 1024, height: 1024 }, openAt: "cascade", fixedSize: false },

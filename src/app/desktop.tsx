@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 
-import { LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation.ts";
 import { BootSequence } from "#/features/boot-sequence/boot-sequence.tsx";
 import { MenuBar } from "#/features/menu-bar/menu-bar.tsx";
@@ -21,7 +21,7 @@ export function Desktop() {
   useKeyboardInset(); // Keeps the desktop within the space left by the software keyboard (see `/src/lib/hooks/use-keyboard-inset.ts`).
 
   return (
-    <WindowManagerProvider layout={LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
+    <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
       <div className={styles.desktop}>
         <SkipLink />
         <SiteIndex />

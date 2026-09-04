@@ -9,7 +9,7 @@ import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from ".
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };
-const LAYOUT: WindowLayout = {
+const WINDOW_LAYOUT: WindowLayout = {
   windows: { entry: SPEC, collection: SPEC, contact: SPEC },
   minSize: { width: 480, height: 320 },
   cascadeOffset: { x: 16, y: 32 },
@@ -22,7 +22,7 @@ const CENTER_POSITION = {
   y: (SURFACE.height - DEFAULT_SIZE.height) / 2,
 };
 
-const reducer = createWindowReducer(LAYOUT);
+const reducer = createWindowReducer(WINDOW_LAYOUT);
 
 const openAction = (id: WindowId, route: string): Action => ({ type: "open", id, route, title: route });
 
@@ -51,8 +51,8 @@ describe("open", () => {
 
     expect(state.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
-      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: CENTER_POSITION.y + LAYOUT.cascadeOffset.y,
+      x: CENTER_POSITION.x + WINDOW_LAYOUT.cascadeOffset.x,
+      y: CENTER_POSITION.y + WINDOW_LAYOUT.cascadeOffset.y,
       ...DEFAULT_SIZE, // A desktop with room to spare places both windows at the default size.
     });
   });
@@ -61,10 +61,10 @@ describe("open", () => {
     const state = openedOn({ width: 600, height: 400 }, "entry");
 
     expect(state.geometry.entry).toMatchObject({
-      x: LAYOUT.padding,
-      y: LAYOUT.padding,
-      width: 600 - 2 * LAYOUT.padding,
-      height: 400 - 2 * LAYOUT.padding,
+      x: WINDOW_LAYOUT.padding,
+      y: WINDOW_LAYOUT.padding,
+      width: 600 - 2 * WINDOW_LAYOUT.padding,
+      height: 400 - 2 * WINDOW_LAYOUT.padding,
     });
   });
 
@@ -75,44 +75,44 @@ describe("open", () => {
       y: (surface.height - DEFAULT_SIZE.height) / 2,
     };
     const cascaded = {
-      x: center.x + LAYOUT.cascadeOffset.x,
-      y: center.y + LAYOUT.cascadeOffset.y,
+      x: center.x + WINDOW_LAYOUT.cascadeOffset.x,
+      y: center.y + WINDOW_LAYOUT.cascadeOffset.y,
     };
     const state = openedOn(surface, "entry", "collection");
 
     expect(state.geometry.entry).toMatchObject({ ...center, ...DEFAULT_SIZE });
     expect(state.geometry.collection).toMatchObject({
       ...cascaded,
-      width: surface.width - LAYOUT.padding - cascaded.x,
-      height: surface.height - LAYOUT.padding - cascaded.y,
+      width: surface.width - WINDOW_LAYOUT.padding - cascaded.x,
+      height: surface.height - WINDOW_LAYOUT.padding - cascaded.y,
     });
   });
 
   test("omits the cascade step on an axis where it would take the window below its minimum size", () => {
     const surface = { width: SURFACE.width, height: 340 }; // Room for a horizontal step, but not a vertical one.
     const state = openedOn(surface, "entry", "collection");
-    const height = surface.height - 2 * LAYOUT.padding; // Short of the default size, but above the minimum.
+    const height = surface.height - 2 * WINDOW_LAYOUT.padding; // Short of the default size, but above the minimum.
 
-    expect(height).toBeGreaterThanOrEqual(LAYOUT.minSize.height);
-    expect(state.geometry.entry).toMatchObject({ x: CENTER_POSITION.x, y: LAYOUT.padding, height });
+    expect(height).toBeGreaterThanOrEqual(WINDOW_LAYOUT.minSize.height);
+    expect(state.geometry.entry).toMatchObject({ x: CENTER_POSITION.x, y: WINDOW_LAYOUT.padding, height });
     expect(state.geometry.collection).toMatchObject({
-      x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x,
-      y: LAYOUT.padding,
+      x: CENTER_POSITION.x + WINDOW_LAYOUT.cascadeOffset.x,
+      y: WINDOW_LAYOUT.padding,
       height,
     });
   });
 
   test("omits the cascade step when the available space is less than the minimum size", () => {
     const state = openedOn({ width: SURFACE.width, height: 200 }, "entry");
-    const height = 200 - 2 * LAYOUT.padding;
+    const height = 200 - 2 * WINDOW_LAYOUT.padding;
 
-    expect(height).toBeLessThan(LAYOUT.minSize.height);
-    expect(state.geometry.entry).toMatchObject({ y: LAYOUT.padding, height });
+    expect(height).toBeLessThan(WINDOW_LAYOUT.minSize.height);
+    expect(state.geometry.entry).toMatchObject({ y: WINDOW_LAYOUT.padding, height });
   });
 
   test("opens every window at a position and size that fits within the desktop", () => {
     const state = opened(...WINDOW_DOM_ORDER);
-    const placeWindow = createWindowPlacer(LAYOUT);
+    const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
 
     for (const id of WINDOW_DOM_ORDER) {
       const { maximized: _maximized, ...geometry } = state.geometry[id]!;
@@ -194,8 +194,8 @@ describe("move", () => {
     const state = reducer(opened("entry"), { type: "move", id: "entry", x: 5000, y: 5000 });
 
     expect(state.geometry.entry).toMatchObject({
-      x: SURFACE.width - LAYOUT.padding - DEFAULT_SIZE.width,
-      y: SURFACE.height - LAYOUT.padding - DEFAULT_SIZE.height,
+      x: SURFACE.width - WINDOW_LAYOUT.padding - DEFAULT_SIZE.width,
+      y: SURFACE.height - WINDOW_LAYOUT.padding - DEFAULT_SIZE.height,
       ...DEFAULT_SIZE,
     });
   });
@@ -214,16 +214,16 @@ describe("resize", () => {
 
   test("clamps the size to the minimum size", () => {
     const state = reducer(opened("entry"), { type: "resize", id: "entry", width: 10, height: 10 });
-    expect(state.geometry.entry).toMatchObject(LAYOUT.minSize);
+    expect(state.geometry.entry).toMatchObject(WINDOW_LAYOUT.minSize);
   });
 
   test("stops at the edge of the desktop rather than banking size past it", () => {
     const state = reducer(opened("entry"), { type: "resize", id: "entry", width: 5000, height: 5000 });
     expect(state.geometry.entry).toMatchObject({
-      x: LAYOUT.padding,
-      y: LAYOUT.padding,
-      width: SURFACE.width - 2 * LAYOUT.padding,
-      height: SURFACE.height - 2 * LAYOUT.padding,
+      x: WINDOW_LAYOUT.padding,
+      y: WINDOW_LAYOUT.padding,
+      width: SURFACE.width - 2 * WINDOW_LAYOUT.padding,
+      height: SURFACE.height - 2 * WINDOW_LAYOUT.padding,
     });
   });
 
@@ -233,7 +233,7 @@ describe("resize", () => {
     const mutatedState = reducer(initialState, { type: "resize", id: "entry", width: 560, height: 400 });
 
     expect(initialState.geometry.entry).toMatchObject({ x: CENTER_POSITION.x, width: DEFAULT_SIZE.width });
-    expect(mutatedState.geometry.entry).toMatchObject({ x: LAYOUT.padding, width: 560 });
+    expect(mutatedState.geometry.entry).toMatchObject({ x: WINDOW_LAYOUT.padding, width: 560 });
   });
 });
 
@@ -268,10 +268,10 @@ describe("measure", () => {
 
     // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/windows/window.module.css`).
     expect(measured.geometry.entry).toMatchObject({
-      x: LAYOUT.padding,
-      y: LAYOUT.padding,
-      width: 600 - 2 * LAYOUT.padding,
-      height: 400 - 2 * LAYOUT.padding,
+      x: WINDOW_LAYOUT.padding,
+      y: WINDOW_LAYOUT.padding,
+      width: 600 - 2 * WINDOW_LAYOUT.padding,
+      height: 400 - 2 * WINDOW_LAYOUT.padding,
     });
   });
 
@@ -350,8 +350,8 @@ describe("per-window layout", () => {
   });
 
   const varyingReducer = createWindowReducer({
-    ...LAYOUT,
-    windows: { ...LAYOUT.windows, contact: { ...SPEC, defaultSize: SMALL_SIZE, openAt: "center" } },
+    ...WINDOW_LAYOUT,
+    windows: { ...WINDOW_LAYOUT.windows, contact: { ...SPEC, defaultSize: SMALL_SIZE, openAt: "center" } },
   });
 
   const openedOnDesktop = (...ids: Array<WindowId>) =>
@@ -368,13 +368,13 @@ describe("per-window layout", () => {
   test("a window that opens in the center is not affected by the cascade", () => {
     const state = openedOnDesktop("entry", "collection", "contact");
 
-    expect(state.geometry.collection).toMatchObject({ x: CENTER_POSITION.x + LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
+    expect(state.geometry.collection).toMatchObject({ x: CENTER_POSITION.x + WINDOW_LAYOUT.cascadeOffset.x }); // The cascade is unaffected.
     expect(state.geometry.contact).toMatchObject(centerOf(SMALL_SIZE));
   });
 });
 
 describe("createWindowResizer", () => {
-  const resizeWindow = createWindowResizer(LAYOUT);
+  const resizeWindow = createWindowResizer(WINDOW_LAYOUT);
 
   test.each([
     ["a size that fits", { width: 640, height: 480 }],

@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef, useState } from "react";
 
-import { LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
@@ -28,8 +28,8 @@ import { ZoomRect } from "./zoom-rect.tsx";
 import type { WindowDrag } from "./window.tsx";
 import type { ReactNode } from "react";
 
-const placeWindow = createWindowPlacer(LAYOUT);
-const resizeWindow = createWindowResizer(LAYOUT);
+const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
+const resizeWindow = createWindowResizer(WINDOW_LAYOUT);
 
 interface WindowDragState {
   id: WindowId;
@@ -85,7 +85,7 @@ const DesktopWindow = memo(function OpenWindow({
     [close, id, registerCloseGuard],
   );
 
-  const { fixedSize } = LAYOUT.windows[id];
+  const { fixedSize } = WINDOW_LAYOUT.windows[id];
 
   return (
     <Window

@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
 
-import { LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 
 import { findLayoutDrift, readLayoutDrift } from "./layout-drift.ts";
 
 const STYLESHEET: Record<string, string> = {
-  "--window-layer-padding": `${LAYOUT.padding}px`,
-  "--title-bar-height": `${LAYOUT.cascadeOffset.y - 1}px`,
+  "--window-layer-padding": `${WINDOW_LAYOUT.padding}px`,
+  "--title-bar-height": `${WINDOW_LAYOUT.cascadeOffset.y - 1}px`,
 };
 
 function stylesheet(declarations: Record<string, string>): string {
@@ -14,21 +14,21 @@ function stylesheet(declarations: Record<string, string>): string {
   return `:root {\n${lines.join("\n")}\n}`;
 }
 
-test("the site stylesheet mirrors every metric in `LAYOUT`", async () => {
+test("the site stylesheet mirrors every metric in `WINDOW_LAYOUT`", async () => {
   expect(await readLayoutDrift()).toEqual([]);
 });
 
-test("lengths that match `LAYOUT` are not detected as drift", () => {
+test("lengths that match `WINDOW_LAYOUT` are not detected as drift", () => {
   expect(findLayoutDrift(stylesheet(STYLESHEET))).toEqual([]);
 });
 
 test("a changed padding is detected as drift", () => {
-  const css = stylesheet({ ...STYLESHEET, "--window-layer-padding": `${LAYOUT.padding + 1}px` });
+  const css = stylesheet({ ...STYLESHEET, "--window-layer-padding": `${WINDOW_LAYOUT.padding + 1}px` });
   expect(findLayoutDrift(css)).toEqual([expect.stringContaining("`--window-layer-padding`") as unknown as string]);
 });
 
 test("a changed title bar height is detected as drift", () => {
-  const css = stylesheet({ ...STYLESHEET, "--title-bar-height": `${LAYOUT.cascadeOffset.y}px` });
+  const css = stylesheet({ ...STYLESHEET, "--title-bar-height": `${WINDOW_LAYOUT.cascadeOffset.y}px` });
   expect(findLayoutDrift(css)).toEqual([expect.stringContaining("`--title-bar-height`") as unknown as string]);
 });
 
@@ -37,11 +37,11 @@ test("a drift message names both values", () => {
   const [message] = findLayoutDrift(css);
 
   expect(message).toContain("99px");
-  expect(message).toContain(`${LAYOUT.padding}px`);
+  expect(message).toContain(`${WINDOW_LAYOUT.padding}px`);
 });
 
 test("a missing custom property is detected as drift", () => {
-  const css = stylesheet({ "--window-layer-padding": `${LAYOUT.padding}px` });
+  const css = stylesheet({ "--window-layer-padding": `${WINDOW_LAYOUT.padding}px` });
   expect(findLayoutDrift(css)).toEqual([expect.stringContaining("does not declare `--title-bar-height`")]);
 });
 

@@ -6,18 +6,18 @@ import { ICON_POSITIONS_STORAGE_KEY, createIconPositionsStore } from "./position
 import type { IconLayout } from "./icon.ts";
 
 const IDS = ["first", "second"];
-const LAYOUT: IconLayout = { cellSize: 72, position: { top: 24, right: 32 }, spacing: 96 };
+const ICON_LAYOUT: IconLayout = { cellSize: 72, position: { top: 24, right: 32 }, spacing: 96 };
 
 describe("useIconPositions", () => {
   test("gives every configured icon a position", () => {
-    const { useIconPositions } = createIconPositionsStore(IDS, LAYOUT);
+    const { useIconPositions } = createIconPositionsStore(IDS, ICON_LAYOUT);
     const { result } = renderHook(() => useIconPositions());
 
     expect(Object.keys(result.current!)).toEqual(IDS);
   });
 
   test("a move re-renders subscribers with the new position", () => {
-    const { useIconPositions, moveIcon } = createIconPositionsStore(IDS, LAYOUT);
+    const { useIconPositions, moveIcon } = createIconPositionsStore(IDS, ICON_LAYOUT);
     const { result } = renderHook(() => useIconPositions());
 
     act(() => moveIcon("first", { top: 200, right: 200 }));
@@ -28,7 +28,7 @@ describe("useIconPositions", () => {
 
 describe("commitIconPositions", () => {
   test("persists the whole layout under the storage key", () => {
-    const { useIconPositions, moveIcon, commitIconPositions } = createIconPositionsStore(IDS, LAYOUT);
+    const { useIconPositions, moveIcon, commitIconPositions } = createIconPositionsStore(IDS, ICON_LAYOUT);
     renderHook(() => useIconPositions());
 
     act(() => moveIcon("first", { top: 320, right: 320 }));

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 
 import { customPropertiesFrom } from "./palette.ts";
 import { STYLESHEET, fromRoot } from "./paths.ts";
@@ -9,18 +9,18 @@ import type { Plugin } from "vite";
 
 const CONFIG = "src/config/desktop.ts";
 const MIRRORED_LENGTHS = [
-  { property: "--window-layer-padding", expression: "LAYOUT.padding", pixels: LAYOUT.padding },
+  { property: "--window-layer-padding", expression: "WINDOW_LAYOUT.padding", pixels: WINDOW_LAYOUT.padding },
   {
     property: "--title-bar-height",
-    expression: "LAYOUT.cascadeOffset.y - 1",
-    pixels: LAYOUT.cascadeOffset.y - 1,
+    expression: "WINDOW_LAYOUT.cascadeOffset.y - 1",
+    pixels: WINDOW_LAYOUT.cascadeOffset.y - 1,
   },
 ];
 
 const PIXEL_LENGTH = /^(-?\d+(?:\.\d+)?)px$/;
 
 /**
- * Returns every difference between `LAYOUT` and the custom properties that mirror it.
+ * Returns every difference between `WINDOW_LAYOUT` and the custom properties that mirror it.
  *
  * Takes the CSS as a value so drift can be checked without a stylesheet on disk.
  */
@@ -45,11 +45,11 @@ export function findLayoutDrift(css: string): Array<string> {
   });
 }
 
-/** Returns every difference between `LAYOUT` and the stylesheet on disk. */
+/** Returns every difference between `WINDOW_LAYOUT` and the stylesheet on disk. */
 export const readLayoutDrift = async (): Promise<Array<string>> =>
   findLayoutDrift(await readFile(fromRoot(STYLESHEET), "utf8"));
 
-/** Fails the build when a layout metric in CSS differs from the `LAYOUT` value it mirrors. */
+/** Fails the build when a layout metric in CSS differs from the `WINDOW_LAYOUT` value it mirrors. */
 export function layoutDriftPlugin(): Plugin {
   return {
     name: "kuzmano.ski:layout-drift",

@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { CONTACT_ROUTE } from "#/config/contact.ts";
-import { LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import {
   useFocusedWindow,
   useNotFoundRoute,
@@ -73,7 +73,7 @@ async function renderProvider(route: string, initialRoute?: string) {
   const history = createMemoryHistory({ initialEntries: [route] });
   const rootRoute = createRootRoute({
     component: () => (
-      <WindowManagerProvider layout={LAYOUT} initialRoute={initialRoute}>
+      <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={initialRoute}>
         <Probe />
       </WindowManagerProvider>
     ),

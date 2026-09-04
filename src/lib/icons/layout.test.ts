@@ -4,7 +4,7 @@ import { positionFromDrop, resolveIconPlacements } from "./layout.ts";
 
 import type { IconLayout, IconPositions } from "./icon.ts";
 
-const LAYOUT: IconLayout = { cellSize: 72, spacing: 96, position: { top: 24, right: 32 } };
+const ICON_LAYOUT: IconLayout = { cellSize: 72, spacing: 96, position: { top: 24, right: 32 } };
 const ICON_IDS = ["first", "second", "third", "fourth"];
 const ICON_POSITIONS: IconPositions = {
   first: { top: 24, right: 32 },
@@ -14,12 +14,12 @@ const ICON_POSITIONS: IconPositions = {
 };
 
 function columnX(containerWidth: number, column: number): number {
-  return containerWidth - LAYOUT.position.right - LAYOUT.cellSize - column * LAYOUT.spacing;
+  return containerWidth - ICON_LAYOUT.position.right - ICON_LAYOUT.cellSize - column * ICON_LAYOUT.spacing;
 }
 
 describe("resolveIconPlacements", () => {
   test("projects positions off the right edge when they all fit", () => {
-    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 1000, height: 800 }, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 1000, height: 800 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(1000, 0), y: 24 },
       { id: "second", x: columnX(1000, 0), y: 120 },
       { id: "third", x: columnX(1000, 0), y: 216 },
@@ -29,7 +29,7 @@ describe("resolveIconPlacements", () => {
 
   test("starts a new column for icons the container is too short to hold", () => {
     // Only the first two icons fit: the third would end at 216 + 72 = 288.
-    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 1000, height: 280 }, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 1000, height: 280 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(1000, 0), y: 24 },
       { id: "second", x: columnX(1000, 0), y: 120 },
       { id: "third", x: columnX(1000, 1), y: 24 },
@@ -47,7 +47,7 @@ describe("resolveIconPlacements", () => {
 
     // A container 300 wide leaves room for the first column only, so the two icons
     // anchored far from the right edge fall in below the two that still fit.
-    expect(resolveIconPlacements(ICON_IDS, iconPositions, { width: 300, height: 800 }, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(ICON_IDS, iconPositions, { width: 300, height: 800 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(300, 0), y: 24 },
       { id: "second", x: columnX(300, 0), y: 216 },
       { id: "third", x: columnX(300, 0), y: 312 },
@@ -63,7 +63,7 @@ describe("resolveIconPlacements", () => {
       fourth: { top: 312, right: 32 },
     };
 
-    expect(resolveIconPlacements(ICON_IDS, iconPositions, { width: 1000, height: 280 }, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(ICON_IDS, iconPositions, { width: 1000, height: 280 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(1000, 0), y: 24 },
       { id: "second", x: columnX(1000, 1), y: 60 },
       { id: "third", x: columnX(1000, 0), y: 120 },
@@ -78,14 +78,14 @@ describe("resolveIconPlacements", () => {
       third: { top: 216, right: 32 },
       fourth: { top: 312, right: 32 },
     };
-    const iconPlacements = resolveIconPlacements(ICON_IDS, iconPositions, { width: 1000, height: 800 }, LAYOUT);
+    const iconPlacements = resolveIconPlacements(ICON_IDS, iconPositions, { width: 1000, height: 800 }, ICON_LAYOUT);
 
     expect(iconPlacements[0]).toEqual({ id: "first", x: columnX(1000, 0), y: 24 });
     expect(iconPlacements[1]).toEqual({ id: "second", x: 880, y: 40 }); // 1000 - 48 - cellSize: its own anchor, not a column.
   });
 
   test("skips slot placement and returns raw projected positions when the container is unmeasured (zero size)", () => {
-    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 0, height: 0 }, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 0, height: 0 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(0, 0), y: 24 },
       { id: "second", x: columnX(0, 0), y: 120 },
       { id: "third", x: columnX(0, 0), y: 216 },
@@ -94,19 +94,19 @@ describe("resolveIconPlacements", () => {
   });
 
   test("keeps icons on screen when the container has no free slot left", () => {
-    const placements = resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 120, height: 120 }, LAYOUT);
+    const placements = resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 120, height: 120 }, ICON_LAYOUT);
 
     for (const placement of placements) {
       expect(placement.x).toBeGreaterThanOrEqual(0);
-      expect(placement.x).toBeLessThanOrEqual(120 - LAYOUT.cellSize);
+      expect(placement.x).toBeLessThanOrEqual(120 - ICON_LAYOUT.cellSize);
       expect(placement.y).toBeGreaterThanOrEqual(0);
-      expect(placement.y).toBeLessThanOrEqual(120 - LAYOUT.cellSize);
+      expect(placement.y).toBeLessThanOrEqual(120 - ICON_LAYOUT.cellSize);
     }
   });
 
   test("omits ids that have no position", () => {
     expect(
-      resolveIconPlacements(ICON_IDS, { first: { top: 24, right: 32 } }, { width: 1000, height: 800 }, LAYOUT),
+      resolveIconPlacements(ICON_IDS, { first: { top: 24, right: 32 } }, { width: 1000, height: 800 }, ICON_LAYOUT),
     ).toEqual([{ id: "first", x: columnX(1000, 0), y: 24 }]);
   });
 });
@@ -115,26 +115,26 @@ describe("positionFromDrop", () => {
   const CONTAINER = { width: 1000, height: 800 };
 
   test("anchors a dropped point to the right edge", () => {
-    expect(positionFromDrop({ x: 800, y: 120 }, CONTAINER, LAYOUT)).toEqual({ top: 120, right: 128 });
+    expect(positionFromDrop({ x: 800, y: 120 }, CONTAINER, ICON_LAYOUT)).toEqual({ top: 120, right: 128 });
   });
 
   test("round trips with the projection", () => {
-    const droppedPosition = positionFromDrop({ x: columnX(1000, 1), y: 120 }, CONTAINER, LAYOUT);
-    expect(resolveIconPlacements(["first"], { first: droppedPosition }, CONTAINER, LAYOUT)).toEqual([
+    const droppedPosition = positionFromDrop({ x: columnX(1000, 1), y: 120 }, CONTAINER, ICON_LAYOUT);
+    expect(resolveIconPlacements(["first"], { first: droppedPosition }, CONTAINER, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(1000, 1), y: 120 },
     ]);
   });
 
   test("clamps a point dropped past the top-left edges to the container bounds, where it still fits without being reassigned to a slot", () => {
-    const droppedPosition = positionFromDrop({ x: -40, y: -20 }, CONTAINER, LAYOUT);
+    const droppedPosition = positionFromDrop({ x: -40, y: -20 }, CONTAINER, ICON_LAYOUT);
 
     expect(droppedPosition).toEqual({ top: 0, right: 928 });
-    expect(resolveIconPlacements(["first"], { first: droppedPosition }, CONTAINER, LAYOUT)).toEqual([
+    expect(resolveIconPlacements(["first"], { first: droppedPosition }, CONTAINER, ICON_LAYOUT)).toEqual([
       { id: "first", x: 0, y: 0 },
     ]);
   });
 
   test("clamps a point dropped past the bottom-right edges to the container bounds", () => {
-    expect(positionFromDrop({ x: 1200, y: 900 }, CONTAINER, LAYOUT)).toEqual({ top: 728, right: 0 });
+    expect(positionFromDrop({ x: 1200, y: 900 }, CONTAINER, ICON_LAYOUT)).toEqual({ top: 728, right: 0 });
   });
 });
