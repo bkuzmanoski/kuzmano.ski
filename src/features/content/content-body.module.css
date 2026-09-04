@@ -36,6 +36,7 @@
     "liga" 1,
     "calt" 1;
   font-optical-sizing: auto;
+  text-underline-offset: 2px;
   text-wrap: pretty;
 
   & > * {
