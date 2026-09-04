@@ -13,7 +13,7 @@
 
   & pre {
     overflow-x: auto;
-    padding: var(--gutter);
+    padding: 20px;
 
     &:focus-visible {
       outline: none;

@@ -1,6 +1,6 @@
 .waitlist {
   position: relative;
-  padding: var(--gutter);
+  padding: 20px;
 
   &::before {
     content: "";
