@@ -31,13 +31,10 @@
   padding-inline: calc(var(--content-scrollbar-offset) + var(--gutter))
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
 
-  font: var(--font-body);
+  font: var(--font-body); /* Also the font `--content-measure` is resolved against. */
   font-feature-settings:
     "liga" 1,
     "calt" 1;
-  font-optical-sizing: auto;
-  text-underline-offset: 2px;
-  text-wrap: pretty;
 
   & > * {
     margin-block: var(--content-space);
@@ -63,12 +60,24 @@
     margin-block: var(--content-space-heading-3);
   }
 
+  & :where(ul, ol) {
+    padding-inline-start: 24px;
+  }
+
+  & :where(li + li) {
+    margin-block-start: 4px;
+  }
+
   & > :where(hr) {
     margin-block: var(--content-space-rule);
   }
 
   & > :where([data-content-space="loose"]) {
     margin-block: var(--content-space-loose);
+  }
+
+  & :where(h1, h2, h3, p, li) {
+    text-wrap: pretty;
   }
 
   & :where(h1, h2, h3) {
@@ -91,23 +100,16 @@
     font: var(--font-heading-3);
   }
 
-  & :where(a:not([data-heading-link])) {
-    color: var(--color-accent);
-    text-decoration: underline rgb(from var(--color-accent) r g b / 30%);
-
-    -webkit-touch-callout: default;
-  }
-
   & :where(strong) {
     font-weight: 700;
   }
 
-  & :where(ul, ol) {
-    padding-inline-start: 24px;
-  }
+  & :where(a:not([data-heading-link])) {
+    color: var(--color-accent);
+    text-decoration: underline rgb(from var(--color-accent) r g b / 30%);
+    text-underline-offset: 2px;
 
-  & :where(li + li) {
-    margin-block-start: 4px;
+    -webkit-touch-callout: default;
   }
 
   & :where(pre, code) {
