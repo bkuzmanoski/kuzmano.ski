@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { SITE_NAME } from "#/config/site";
+import { SITE_NAME } from "#/config/site.ts";
 
-import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings";
-import { deliver } from "./mail";
+import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
+import { deliver } from "./mail.ts";
 
 import type { EmailAddress, WorkerEnv } from "cloudflare:workers";
 
 const env = vi.hoisted(() => ({ current: {}, fails: false }));
 
-vi.mock("./env", () => ({
+vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 

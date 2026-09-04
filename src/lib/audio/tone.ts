@@ -1,5 +1,5 @@
-import { bufferCache, playBuffer, renderBuffer } from "./buffer";
-import { DRIVER_SAMPLE_RATE, quantizeToDriver } from "./driver";
+import { bufferCache, playBuffer, renderBuffer } from "./buffer.ts";
+import { DRIVER_SAMPLE_RATE, quantizeToDriver } from "./driver.ts";
 
 interface Note {
   hz: number;

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { positionFromDrop, resolveIconPlacements } from "./layout";
+import { positionFromDrop, resolveIconPlacements } from "./layout.ts";
 
-import type { IconLayout, IconPositions } from "./icon";
+import type { IconLayout, IconPositions } from "./icon.ts";
 
 const LAYOUT: IconLayout = { cellSize: 72, spacing: 96, position: { top: 24, right: 32 } };
 const ICON_IDS = ["first", "second", "third", "fourth"];

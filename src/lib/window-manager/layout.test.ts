@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { createWindowPlacer } from "./layout";
-import { EMPTY_STATE } from "./window";
+import { createWindowPlacer } from "./layout.ts";
+import { EMPTY_STATE } from "./window.ts";
 
-import type { Size } from "../geometry";
-import type { WindowLayout, WindowSpec } from "./window";
+import type { Size } from "../geometry.ts";
+import type { WindowLayout, WindowSpec } from "./window.ts";
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };

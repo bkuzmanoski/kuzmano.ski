@@ -1,4 +1,4 @@
-import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "./contact.ts";
+import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "./contact.ts";
 import { COLLECTIONS } from "./content.ts";
 
 import type { CollectionSegment, PageSlug } from "./content.ts";
@@ -15,7 +15,7 @@ export const DESTINATION_SPECS = {
   experience: { type: "entry", route: "/experience" },
   work: { type: "collection", route: "/work", title: COLLECTIONS.work.title },
   blog: { type: "collection", route: "/blog", title: COLLECTIONS.blog.title },
-  contact: { type: "contact", route: CONTACT_PAGE_ROUTE, title: CONTACT_PAGE_TITLE },
+  contact: { type: "contact", route: CONTACT_ROUTE, title: CONTACT_DOCUMENT_TITLE },
 } as const satisfies Record<DestinationId, DestinationSpec>;
 
 /**

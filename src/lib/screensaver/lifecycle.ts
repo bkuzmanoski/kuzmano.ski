@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 
-import { createEmitter } from "../emitter";
+import { createEmitter } from "../emitter.ts";
 
-import { clearScreensaverThemeColor, setScreensaverThemeColor } from "./theme-color";
+import { clearScreensaverThemeColor, setScreensaverThemeColor } from "./theme-color.ts";
 
 export const FADE_IN_DURATION_MS = 300;
 
@@ -14,8 +14,9 @@ export type SleepState = "awake" | "falling-asleep" | "asleep";
 
 let state: SleepState = "awake";
 
+// This store is hand-rolled instead of using `createClientStore` because it has no client-only
+// initial value: the desktop is awake on the server and first client paint, and only transitions change it.
 const { emit, subscribe } = createEmitter();
-
 const getState = () => state;
 const serverState = (): SleepState => "awake";
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { isPrimaryPress } from "../press";
+import { isPrimaryPress } from "../press.ts";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 
@@ -78,6 +78,8 @@ export function usePointerDrag<T>({
     handlersRef.current.onEnd?.(activeDrag.moved);
   }
 
+  // Unmounting drops a drag still in progress without flushing the pending move or calling `onEnd`, so a
+  // caller that commits in `onEnd` records nothing for it. This assumes the handle outlives the gesture.
   useEffect(
     () => () => {
       cancelFrame();

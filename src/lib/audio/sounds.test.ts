@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { playSound } from "./context";
-import { playError, playSuccess } from "./sounds";
+import { playSound } from "./context.ts";
+import { playError, playSuccess } from "./sounds.ts";
 
-vi.mock("./context", () => ({ LEAD_TIME: 0, playSound: vi.fn() }));
+vi.mock("./context.ts", () => ({ LEAD_TIME: 0, playSound: vi.fn() }));
 
 beforeEach(() => {
   vi.mocked(playSound).mockClear();

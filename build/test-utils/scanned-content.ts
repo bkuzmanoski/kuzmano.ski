@@ -29,7 +29,7 @@ export const scannedCollection = (
 ) => ({ name, ...scannedDirectory(entries, subdirectories) }) satisfies ScannedContent["collections"][number];
 
 export const scannedContent = (overrides: Partial<ScannedContent> = {}): ScannedContent => ({
-  collections: [],
   pages: scannedDirectory(),
+  collections: [],
   ...overrides,
 });

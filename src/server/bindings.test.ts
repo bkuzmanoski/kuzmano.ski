@@ -11,7 +11,7 @@ import {
   SEND_EMAIL_RATELIMIT_BINDING,
   WAITLIST_DATA_SOURCE_BINDING,
   WAITLIST_RATELIMIT_BINDING,
-} from "./bindings";
+} from "./bindings.ts";
 
 const source = readFileSync(join(process.cwd(), "wrangler.jsonc"), "utf8");
 const config = source.replaceAll(/^\s*\/\/.*$/gm, "");

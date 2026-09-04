@@ -1,7 +1,8 @@
-import { SITE_NAME } from "#/config/site";
+import { SITE_NAME } from "#/config/site.ts";
 
-import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings";
-import { workerEnv } from "./env";
+import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
+import { reportMissingBinding } from "./endpoint.ts";
+import { workerEnv } from "./env.ts";
 
 const SENDER = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
 
@@ -28,11 +29,7 @@ function failureCode(error: unknown): string {
 }
 
 function reportUnavailable(binding: string): "unavailable" {
-  console.error({
-    event: "contact_binding_missing",
-    binding,
-    message: `The worker could not access \`${binding}\``,
-  });
+  reportMissingBinding("contact_binding_missing", binding);
   return "unavailable";
 }
 

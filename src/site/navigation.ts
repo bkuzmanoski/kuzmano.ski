@@ -1,8 +1,8 @@
-import { DESTINATION_ORDER, DESTINATION_SPECS } from "#/config/navigation";
-import type { DestinationId, DestinationSpec } from "#/config/navigation";
-import type { Destination } from "#/lib/window-manager/window";
+import { DESTINATION_ORDER, DESTINATION_SPECS } from "#/config/navigation.ts";
+import type { DestinationId, DestinationSpec } from "#/config/navigation.ts";
+import type { Destination } from "#/lib/window-manager/window.ts";
 
-import { pages } from "./catalog";
+import { pages } from "./catalog.ts";
 
 function titleOf(id: DestinationId, spec: DestinationSpec): string {
   if (spec.type !== "entry") {

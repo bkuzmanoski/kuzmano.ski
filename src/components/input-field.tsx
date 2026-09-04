@@ -1,6 +1,6 @@
-import { usePressSound } from "#/lib/audio/use-press-sound";
-import { cx } from "#/lib/class-names";
-import type { InputFieldBinding } from "#/lib/forms/use-input-field";
+import { usePressSound } from "#/lib/audio/use-press-sound.ts";
+import { cx } from "#/lib/class-names.ts";
+import type { InputFieldBinding } from "#/lib/forms/use-input-field.ts";
 
 import styles from "./input-field.module.css";
 

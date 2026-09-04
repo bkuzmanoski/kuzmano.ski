@@ -1,8 +1,8 @@
-import { createClientStore } from "../client-store";
+import { createClientStore } from "../client-store.ts";
 
-import { loadPositions, savePositions } from "./icon";
+import { loadPositions, savePositions } from "./icon.ts";
 
-import type { IconLayout, IconPosition, IconPositions } from "./icon";
+import type { IconLayout, IconPosition, IconPositions } from "./icon.ts";
 
 export const ICON_POSITIONS_STORAGE_KEY = "icon-positions";
 

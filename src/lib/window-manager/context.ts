@@ -1,10 +1,10 @@
 import { createContext, use } from "react";
 
-import { EMPTY_STATE } from "./window";
+import { EMPTY_STATE } from "./window.ts";
 
-import type { Size } from "../geometry";
-import type { CloseGuard } from "./close-guards";
-import type { WindowContent, WindowGeometry, WindowId, WindowRecord } from "./window";
+import type { Size } from "../geometry.ts";
+import type { CloseGuard } from "./close-guards.ts";
+import type { WindowContent, WindowGeometry, WindowId, WindowRecord } from "./window.ts";
 
 interface OpenOptions {
   replaceUrl?: boolean;

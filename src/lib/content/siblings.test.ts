@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
 
-import { fakeCollection, fakeEntries } from "#/test-utils/collection";
+import { fakeCollection, fakeCollectionEntries } from "#/test-utils/collection.ts";
 
-import { entrySiblings } from "./siblings";
+import { entrySiblings } from "./siblings.ts";
 
-const entries = fakeEntries("newest", "middle", "oldest");
-const collection = fakeCollection(entries);
+const collectionEntries = fakeCollectionEntries("newest", "middle", "oldest");
+const collection = fakeCollection(collectionEntries);
 const routeOf = (slug: string) => collection.routeOf(slug);
 
 test("the newest entry does not have a previous entry", () => {
@@ -25,6 +25,6 @@ test("an entry the listing does not hold has no siblings", () => {
 });
 
 test("a collection of one entry has no siblings", () => {
-  const single = fakeCollection([entries[0]!]);
+  const single = fakeCollection([collectionEntries[0]!]);
   expect(entrySiblings(single, "newest")).toEqual({ previous: null, next: null });
 });

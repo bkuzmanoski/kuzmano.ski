@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-import { playSuccess } from "#/lib/audio/sounds";
-import { firstMessage } from "#/lib/forms/server";
+import { playSuccess } from "../audio/sounds.ts";
+import { firstMessage } from "../forms/client.ts";
 
-import { joinWaitlist } from "./server";
+import { joinWaitlist } from "./client.ts";
 
-import type { WaitlistFields } from "./membership";
+import type { WaitlistFields } from "./membership.ts";
 
 export const JOIN_FAILED_MESSAGE = "The waitlist couldn’t be joined.";
 

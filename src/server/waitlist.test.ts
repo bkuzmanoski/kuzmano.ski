@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { SITE_URL } from "#/config/site";
-import type { Membership } from "#/lib/waitlist/membership";
+import { SITE_URL } from "#/config/site.ts";
+import type { Membership } from "#/lib/waitlist/membership.ts";
 
-import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings";
-import { recordMembership } from "./waitlist";
+import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings.ts";
+import { recordMembership } from "./waitlist.ts";
 
 const env = vi.hoisted(() => ({ current: {}, fails: false }));
 
-vi.mock("./env", () => ({
+vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 
@@ -18,7 +18,7 @@ const MEMBERSHIP: Membership = { emailAddress: "user@example.com", list: "List",
 
 const fetchMock = vi.fn<typeof fetch>();
 
-// The module makes up to two requests: it looks the address up, then writes the row.
+// The module makes up to two requests: it looks the email address up, then writes the row.
 const lookupCall = () => fetchMock.mock.calls[0]!;
 const writeCall = () => fetchMock.mock.calls[1]!;
 const bodyOf = (call: Parameters<typeof fetch>) => JSON.parse(call[1]?.body as string) as Record<string, unknown>;

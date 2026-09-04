@@ -1,13 +1,13 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { useInputScrollSound } from "./use-input-scroll-sound";
+import { useInputScrollSound } from "./use-input-scroll-sound.ts";
 
 const playInputScroll = vi.hoisted(() => vi.fn());
 const silenceScrollAt = vi.hoisted(() => vi.fn());
 
-vi.mock("./scroll", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playInputScroll, silenceScrollAt }),
+vi.mock("./scroll.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playInputScroll, silenceScrollAt }),
 );
 
 // A real control, so the handlers see the actual events React delivers.
@@ -94,7 +94,7 @@ test("a held key press keeps its mark alive across repeats", async () => {
   expect(playInputScroll).not.toHaveBeenCalled();
 });
 
-test("an input that unmounts before its frame runs cancels its pending callback", () => {
+test("an input that unmounts before its scroll mark is cleared cancels the pending frame", () => {
   const cancelAnimationFrame = vi.spyOn(globalThis, "cancelAnimationFrame");
   const { unmount } = render(<Input />);
 

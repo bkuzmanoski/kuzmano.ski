@@ -1,6 +1,6 @@
-import { transformBetween } from "../geometry";
+import { transformBetween } from "../geometry.ts";
 
-import type { Inset, Position, Rect, Size, Transform } from "../geometry";
+import type { Inset, Position, Rect, Size, Transform } from "../geometry.ts";
 
 // Metrics derived from the illustration, in its own coordinates.
 const ILLUSTRATION_RECT: Rect = { x: 0, y: 0, width: 1214, height: 1067 };

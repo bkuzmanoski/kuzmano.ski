@@ -1,0 +1,125 @@
+.menuBar {
+  /* The drag captures the pointer, so the browser must not claim the gesture for
+   * panning and cancel it. Set on the menu bar so it covers the menus inside it. */
+  touch-action: none;
+
+  transform: translateY(-100%);
+
+  display: flex;
+  flex: none;
+  align-items: center;
+
+  height: calc(var(--safe-area-top) + var(--menu-bar-height));
+  padding: var(--safe-area-top) calc(var(--gutter) + var(--safe-area-right)) 0
+    calc(var(--safe-area-left) + var(--gutter));
+
+  font: var(--font-chrome);
+
+  &.ready {
+    transform: none;
+    transition: transform var(--duration-desktop-reveal-step) ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition-duration: 0s;
+    }
+  }
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--gutter);
+
+  & svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+.menus {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+
+.item {
+  position: relative; /* Only for the fallback in `menu.module.css` where anchor positioning is unsupported. */
+  anchor-name: --menu;
+  anchor-scope: --menu; /* Confines the name to this title so its menu cannot anchor to another one. */
+  display: flex;
+}
+
+.title {
+  --focus-frame-inset: 2px;
+
+  composes: focusFrame from global;
+
+  user-select: none;
+
+  position: relative;
+
+  height: 100%;
+  padding: 0 var(--gutter);
+
+  &.open {
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
+  }
+
+  /* An open title already reads as selected, so the focus frame stays off it. */
+  &.open:focus-visible::after {
+    content: none;
+  }
+}
+
+.spacer {
+  flex: 1;
+}
+
+.statusItems {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+
+.statusItemTooltipWrapper {
+  align-self: stretch;
+}
+
+.control {
+  --focus-frame-inset: 2px;
+
+  composes: focusFrame from global;
+
+  user-select: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 var(--gutter);
+
+  white-space: nowrap;
+
+  &:active:not(.time) {
+    color: var(--color-highlight-foreground);
+    background: var(--color-highlight-background);
+  }
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* A short viewport only means "no space" on a phone in landscape. `pointer` describes
+ * the primary input rather than any attached one, so this targets a tablet with a mouse
+ * but does not affect a touchscreen laptop.
+ *
+ * 744px is the horizontal resolution of an iPad mini in portrait. */
+@media (width < 744px), ((height < 744px) and (pointer: coarse)) {
+  .wideOnly {
+    display: none;
+  }
+}

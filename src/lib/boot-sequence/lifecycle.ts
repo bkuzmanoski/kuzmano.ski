@@ -1,12 +1,10 @@
-import { createEmitter } from "../emitter";
-import { clearStorage } from "../storage";
+import { createClientStore } from "../client-store.ts";
+import { clearStorage } from "../storage.ts";
 
-import { clearBootSequenceOverlay, clearBootSequenceThemeColor } from "./overlay";
-import { forgetBootSequenceRun, rememberBootSequenceRun, shouldRunBootSequence } from "./session";
+import { clearBootSequenceOverlay, clearBootSequenceThemeColor } from "./overlay.ts";
+import { forgetBootSequenceRun, rememberBootSequenceRun, shouldRunBootSequence } from "./session.ts";
 
-let isComplete = false;
-
-const { emit, subscribe } = createEmitter();
+const { useValue, setValue } = createClientStore(true, () => !shouldRunBootSequence());
 
 export function beginBootSequence() {
   rememberBootSequenceRun();
@@ -15,13 +13,10 @@ export function beginBootSequence() {
 
 export function completeBootSequence() {
   clearBootSequenceThemeColor();
-  isComplete = true;
-  emit();
+  setValue(true);
 }
 
-export const subscribeToIsBootSequenceComplete = subscribe;
-export const getIsBootSequenceComplete = () => isComplete || !shouldRunBootSequence();
-export const serverIsBootSequenceComplete = () => true;
+export const useIsBootSequenceComplete = useValue;
 
 export function restart() {
   clearStorage();

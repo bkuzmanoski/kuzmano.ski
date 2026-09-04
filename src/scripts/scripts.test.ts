@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay";
-import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session";
+import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay.ts";
+import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
-// These tests evaluate the bundled scripts exactly as the browser receives them,
-// covering the plugin, tree-shaking, minification, and runtime behaviour.
-// Attribute names are intentionally defined inline because they must match the
-// strings used by the stylesheet.
+// These tests evaluate the bundled scripts exactly as the browser receives them, covering the
+// plugin, tree-shaking, minification, and runtime behaviour. Attribute names are intentionally
+// defined inline because they must match the strings used by the stylesheet.
 
 function run(script: string) {
   // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/no-unsafe-call -- Tests the bundle as it would be evaluated in the browser.

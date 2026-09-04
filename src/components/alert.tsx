@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 
-import { playError, playSuccess } from "#/lib/audio/sounds";
-import { cx } from "#/lib/class-names";
-import { containsPoint } from "#/lib/geometry";
+import { playError, playSuccess } from "#/lib/audio/sounds.ts";
+import { cx } from "#/lib/class-names.ts";
+import { containsPoint } from "#/lib/geometry.ts";
 
 import styles from "./alert.module.css";
-import { Button } from "./button";
+import { Button } from "./button.tsx";
 
 import type { PointerEvent as ReactPointerEvent, Ref } from "react";
 

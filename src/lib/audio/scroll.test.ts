@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { fakeScrollViewport } from "#/test-utils/audio";
+import { fakeScrollViewport } from "#/test-utils/audio.ts";
 
 import {
   DETENT_PIXELS,
@@ -14,10 +14,12 @@ import {
   scrollIntoViewSilently,
   silenceScrollIntoView,
   stepScroll,
-} from "./scroll";
-import { playScrollDetent } from "./sounds";
+} from "./scroll.ts";
+import { playScrollDetent } from "./sounds.ts";
 
-vi.mock("./sounds", async (importOriginal) => (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}));
+vi.mock("./sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
+);
 
 let now = 0;
 

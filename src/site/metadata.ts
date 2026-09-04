@@ -1,4 +1,4 @@
-import { FEED_TYPE, SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site";
+import { FEED_TYPE, SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
 
 interface FeedLink {
   title: string;
@@ -6,12 +6,12 @@ interface FeedLink {
 }
 
 export interface DocumentMetadata {
-  title: string; // The page's own title, without the site suffix `documentTitle` adds.
+  title: string; // The document's own title, without the site suffix `documentTitle` adds.
   description: string;
   path: string;
-  kind?: "website" | "article"; // Open Graph type. Dated, authored pages are "article"; everything else is "website".
-  contentAsset?: string | null; // URL of the chunk holding the page's compiled content, preloaded so it is available to hydration (see `/build/content-assets.ts`).
-  markdown?: boolean; // Whether the page has a markdown alternate to advertise (see `/build/markdown.ts`).
+  kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
+  contentAsset?: string | null; // URL of the chunk holding the entry's compiled content, preloaded so it is available to hydration (see `/build/content-assets.ts`).
+  markdown?: boolean; // Whether the document has a Markdown alternate to advertise (see `/build/markdown.ts`).
   feed?: FeedLink;
   noindex?: boolean;
 }
@@ -22,7 +22,7 @@ export const markdownPath = (path: string) => `${path}.md`;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 
 /**
- * The head tags for a page.
+ * The head tags for a document.
  *
  * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a
  * route overrides a tag from the root by re-declaring it under the same key.

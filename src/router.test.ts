@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { getRouter } from "./router";
+import { getRouter } from "./router.tsx";
 
 test("the router is built from the generated route tree", () => {
   const router = getRouter();

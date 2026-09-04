@@ -1,9 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
-import { ICON_POSITIONS_STORAGE_KEY, createIconPositionsStore } from "./positions";
+import { ICON_POSITIONS_STORAGE_KEY, createIconPositionsStore } from "./positions.ts";
 
-import type { IconLayout } from "./icon";
+import type { IconLayout } from "./icon.ts";
 
 const IDS = ["first", "second"];
 const LAYOUT: IconLayout = { cellSize: 72, position: { top: 24, right: 32 }, spacing: 96 };

@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { GRACE_PERIOD_MS, HIDE_DELAY_MS, resetTooltipState } from "#/lib/tooltip";
+import { GRACE_PERIOD_MS, HIDE_DELAY_MS, resetTooltipState } from "#/lib/tooltip.ts";
 
-import { HOVER_DELAY_MS, Tooltip } from "./tooltip";
+import { HOVER_DELAY_MS, Tooltip } from "./tooltip.tsx";
 
 beforeEach(() => {
   vi.useFakeTimers();

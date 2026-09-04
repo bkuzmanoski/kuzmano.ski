@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useTimers } from "./use-timer";
+import { useTimers } from "./use-timer.ts";
 
 const DEFAULT_FLASH_COUNT = 2;
 const DEFAULT_FLASH_INTERVAL_MS = 80;

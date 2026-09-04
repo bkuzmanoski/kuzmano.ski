@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { isTouchOnly } from "../device";
-import { isEditableTarget } from "../keys";
+import { isTouchOnly } from "../device.ts";
+import { isEditableTarget } from "../keys.ts";
 
 import type { RefObject } from "react";
 

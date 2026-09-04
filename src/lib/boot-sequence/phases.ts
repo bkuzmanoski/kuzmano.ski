@@ -1,4 +1,4 @@
-import { NON_GESTURE_KEYS } from "../audio/context";
+import { NON_GESTURE_KEYS } from "../audio/context.ts";
 
 // Note: `phaseFlags` derives its flags from a phase's position. Phases must be defined in sequence order.
 const PHASES = [

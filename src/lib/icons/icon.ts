@@ -1,7 +1,7 @@
-import { readStoredJson, writeStored } from "../storage";
+import { readStoredJson, writeStored } from "../storage.ts";
 
-import type { Position } from "../geometry";
-import type { WindowId } from "../window-manager/window";
+import type { Position } from "../geometry.ts";
+import type { WindowId } from "../window-manager/window.ts";
 
 export type IconKind = WindowId | "download";
 

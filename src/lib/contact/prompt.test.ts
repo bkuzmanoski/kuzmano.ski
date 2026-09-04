@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { alertFor } from "./prompt";
+import { alertFor } from "./prompt.ts";
 
 const FAILURE = { kind: "failed", message: "The message couldn’t be sent.", suggestDirectEmail: true } as const;
 

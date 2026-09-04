@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { MAX_CLICK_DELAY_MS, swallowNextPress } from "./press";
+import { MAX_CLICK_DELAY_MS, swallowNextPress } from "./press.ts";
 
 beforeEach(() => vi.useFakeTimers());
 

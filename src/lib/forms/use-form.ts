@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { isValid, validate } from "./validation";
+import { isValid, validate } from "./validation.ts";
 
-import type { Errors, Schema } from "./validation";
+import type { Errors, Schema } from "./validation.ts";
 import type { ChangeEvent } from "react";
 
 export type FieldValues<TValues> = Record<keyof TValues, string>;

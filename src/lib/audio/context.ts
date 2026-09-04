@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { getSettings } from "../settings";
+import { getSettings } from "../settings/settings.ts";
 
 /** Keyboard keys that do not provide user activation for audio. */
 export const NON_GESTURE_KEYS = new Set([
@@ -97,7 +97,7 @@ export function getGainNode(context: AudioContext): GainNode {
 
 // Resumes the audio context when a backgrounded tab becomes visible again.
 function resumeAudioOnReturn(): void {
-  if (!audioContext || document.visibilityState !== "visible" || getSettings().sound !== "on") {
+  if (!audioContext || document.visibilityState !== "visible" || getSettings().soundEffects !== "on") {
     return;
   }
 
@@ -105,7 +105,7 @@ function resumeAudioOnReturn(): void {
 }
 
 export const needsAudioPriming = (): boolean =>
-  getSettings().sound === "on" && !(audioContext !== null && isRunning(audioContext));
+  getSettings().soundEffects === "on" && !(audioContext !== null && isRunning(audioContext));
 
 /**
  * Primes the audio context for later playback.
@@ -114,7 +114,7 @@ export const needsAudioPriming = (): boolean =>
  * restrict audio activation to the gesture that triggers it.
  */
 export function primeAudio(): void {
-  if (getSettings().sound !== "on") {
+  if (getSettings().soundEffects !== "on") {
     return;
   }
 
@@ -152,7 +152,7 @@ export function useAudioUnlock() {
  * context is resumed and playback waits for its `running` state.
  */
 export function playSound(play: (context: AudioContext) => void) {
-  if (getSettings().sound !== "on") {
+  if (getSettings().soundEffects !== "on") {
     return;
   }
 

@@ -1,5 +1,5 @@
-import { collections } from "#/site/catalog";
-import type { Collection, Entry } from "#/site/catalog";
+import { collections } from "#/site/catalog.ts";
+import type { Collection, Entry } from "#/site/catalog.ts";
 
 // Real site content, for tests that verify the site's actual content or publication state.
 //
@@ -23,6 +23,6 @@ export function siteCollection(segment: string): SiteCollection {
 }
 
 /** Returns the newest entry in the site's `segment` collection, or `null` if there are no entries. Throws when the collection is missing. */
-export function newestEntry(segment: string): Entry | null {
+export function newestCollectionEntry(segment: string): Entry | null {
   return siteCollection(segment).entries[0] ?? null;
 }

@@ -1,0 +1,363 @@
+import { useEffect, useRef, useState } from "react";
+
+import LogoIcon from "#/assets/images/logo.svg?react";
+import SoundOffIcon from "#/assets/images/sound-effects-off.svg?react";
+import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
+import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
+import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
+import { Tooltip } from "#/components/tooltip.tsx";
+import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
+import type { DestinationId } from "#/config/navigation.ts";
+import { SITE_SOURCE_URL } from "#/config/site.ts";
+import { playClick, playHover } from "#/lib/audio/sounds.ts";
+import { usePressSound } from "#/lib/audio/use-press-sound.ts";
+import { restart, useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
+import { cx } from "#/lib/class-names.ts";
+import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts.ts";
+import type { KeyboardShortcut } from "#/lib/hooks/use-global-shortcuts.ts";
+import { useTimer } from "#/lib/hooks/use-timer.ts";
+import { cycle } from "#/lib/math.ts";
+import { mergeHandlers } from "#/lib/merge-handlers.ts";
+import { isPrimaryPress } from "#/lib/press.ts";
+import { sleep } from "#/lib/screensaver/lifecycle.ts";
+import { setSoundEffects, setTheme, useSettings } from "#/lib/settings/settings.ts";
+import type { Theme } from "#/lib/settings/settings.ts";
+import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
+import { useFocusedWindow, useWindowActions } from "#/lib/window-manager/context.ts";
+import { DESTINATIONS } from "#/site/navigation.ts";
+
+import styles from "./menu-bar.module.css";
+import { Menu } from "./menu.tsx";
+
+import type { MenuItem } from "./menu.tsx";
+import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
+
+const destinationShortcut = (id: DestinationId) => {
+  const number = DESTINATION_ORDER.indexOf(id) + 1;
+  return { code: `Digit${number}`, label: String(number) };
+};
+
+function StatusButton({
+  label,
+  className,
+  onClick,
+  children,
+}: {
+  label: string;
+  className?: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  const [isShowingState, setIsShowingState] = useState(false);
+  const timer = useTimer();
+  const pressSoundHandlers = usePressSound();
+
+  function showState() {
+    setIsShowingState(true);
+    timer.start(() => setIsShowingState(false), STATE_DISPLAY_DURATION_MS);
+  }
+
+  function clearState() {
+    timer.cancel();
+    setIsShowingState(false);
+  }
+
+  return (
+    <Tooltip
+      label={label}
+      persistOnPress
+      showsState={isShowingState}
+      onDidHide={clearState}
+      className={styles.statusItemTooltipWrapper}
+    >
+      <button
+        type="button"
+        className={cx(styles.control, className)}
+        aria-label={label}
+        {...mergeHandlers(pressSoundHandlers, {
+          onClick: () => {
+            showState();
+            onClick();
+          },
+        })}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  );
+}
+
+const THEME_ORDER: Array<Theme> = ["system", "light", "dark"];
+const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", dark: "Dark" };
+
+function ThemeStatus() {
+  const { theme } = useSettings();
+  const next = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
+  const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
+
+  return (
+    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(next)}>
+      <Icon className={styles.icon} />
+    </StatusButton>
+  );
+}
+
+function SoundStatus() {
+  const { soundEffects: sound } = useSettings();
+  const Icon = sound === "on" ? SoundOnIcon : SoundOffIcon;
+
+  return (
+    <StatusButton
+      label={`Sound: ${sound === "on" ? "On" : "Off"}`}
+      onClick={() => {
+        setSoundEffects(sound === "on" ? "off" : "on");
+
+        // Switching on: the press itself was gated by the setting it just changed.
+        if (sound === "off") {
+          playClick();
+        }
+      }}
+    >
+      <Icon className={styles.icon} />
+    </StatusButton>
+  );
+}
+
+const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
+  timeZone: "Australia/Sydney",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZoneName: "short",
+});
+
+function sydneyTime(): string {
+  const parts = TIME_FORMAT.formatToParts(new Date());
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${value("hour")}:${value("minute")} ${value("dayPeriod")} (${value("timeZoneName")})`;
+}
+
+function TimeStatus() {
+  const [time, setTime] = useState("");
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      setTime(sydneyTime());
+
+      const now = new Date();
+      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+      timer = setTimeout(tick, msToNextMinute);
+    };
+
+    tick();
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!time) {
+    return null;
+  }
+
+  return (
+    <Tooltip label="Sydney, Australia">
+      <time className={cx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
+    </Tooltip>
+  );
+}
+
+export function MenuBar() {
+  const { open, close, cycleWindows } = useWindowActions();
+  const focusedWindow = useFocusedWindow();
+  const isBootSequenceComplete = useIsBootSequenceComplete();
+  const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
+  const [isPointerHeld, setIsPointerHeld] = useState(false);
+  const titles = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const hasWindow = focusedWindow !== null;
+
+  const closeWindow = () => focusedWindow && close(focusedWindow);
+
+  const menus: Array<{ label: string; items: Array<MenuItem> }> = [
+    {
+      label: "File",
+      items: [
+        {
+          kind: "action",
+          label: "Close",
+          shortcut: { code: "KeyW", label: "W" },
+          disabled: !hasWindow,
+          action: closeWindow,
+        },
+      ],
+    },
+    {
+      label: "Go",
+      items: [
+        ...DESTINATION_GROUPS.flatMap((group, index): Array<MenuItem> => [
+          ...(index > 0 ? [{ kind: "separator" } as const] : []),
+          ...group.map((id): MenuItem => ({
+            kind: "action",
+            label: DESTINATIONS[id].title,
+            shortcut: destinationShortcut(id),
+            href: DESTINATIONS[id].route,
+            action: () => open(DESTINATIONS[id].route),
+          })),
+        ]),
+      ],
+    },
+    {
+      label: "Special",
+      items: [
+        { kind: "action", label: "View Source", accessory: "external-link", href: SITE_SOURCE_URL, target: "_blank" },
+        { kind: "separator" },
+        { kind: "action", label: "Sleep", action: sleep },
+        { kind: "action", label: "Restart", action: restart },
+      ],
+    },
+  ];
+
+  // Derived from the menu items so the key an item shows and the key that runs it cannot differ.
+  useGlobalShortcuts([
+    ...menus.flatMap(({ items }) =>
+      items.flatMap((item): Array<KeyboardShortcut> =>
+        item.kind === "action" && item.shortcut
+          ? [{ code: item.shortcut.code, run: item.action, enabled: !item.disabled }]
+          : [],
+      ),
+    ),
+    { code: "Tab", run: cycleWindows, runsWhileEditing: true },
+  ]);
+
+  function openMenuAt(label: string, anchor: HTMLButtonElement, { pointerHeld = false } = {}) {
+    setIsPointerHeld(pointerHeld);
+    setOpenMenu({ label, anchor });
+  }
+
+  // On touch, the press that dismisses an open menu can also open the next menu.
+  // There is no hover to switch menus first, so the new menu replaces the old one
+  // before its outside-press handler runs. Closing by label leaves the replacement open.
+  function closeMenu(label: string) {
+    setOpenMenu((current) => (current?.label === label ? null : current));
+  }
+
+  // Arrow keys always move along the menu bar. With a menu open, the adjacent menu
+  // replaces it and receives focus; otherwise only the title receives focus.
+  function openAdjacentMenu(fromLabel: string, direction: 1 | -1) {
+    const index = menus.findIndex((menu) => menu.label === fromLabel);
+    const label = menus[cycle(menus.length, index, direction)]!.label;
+    const anchor = titles.current[label];
+
+    if (!anchor) {
+      return;
+    }
+
+    if (openMenu) {
+      playHover();
+      openMenuAt(label, anchor);
+    } else {
+      anchor.focus();
+    }
+  }
+
+  // The browser's mousedown focus is prevented by the markup below. The menu mounts and
+  // focuses itself, so the default focus action must be delayed until after that focus;
+  // otherwise it steals focus back from the menu and arrow-key navigation stops.
+  //
+  // Touch input is implicitly captured by the title it lands on, so other titles never
+  // receive `pointerenter` while the finger is held. Releasing the capture lets the
+  // pointer move between titles and change the open menu like a held mouse.
+  function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
+    if (!isPrimaryPress(event)) {
+      return;
+    }
+
+    const anchor = event.currentTarget;
+
+    if (anchor.hasPointerCapture(event.pointerId)) {
+      anchor.releasePointerCapture(event.pointerId);
+    }
+
+    playClick();
+    anchor.focus();
+    setIsPointerHeld(true);
+    setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
+  }
+
+  function onTitleKeyDown(event: KeyboardEvent<HTMLButtonElement>, label: string) {
+    switch (event.key) {
+      case "ArrowDown":
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        playClick();
+        openMenuAt(label, event.currentTarget);
+
+        break;
+
+      case "ArrowRight":
+        event.preventDefault();
+        openAdjacentMenu(label, 1);
+
+        break;
+
+      case "ArrowLeft":
+        event.preventDefault();
+        openAdjacentMenu(label, -1);
+
+        break;
+    }
+  }
+
+  return (
+    <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
+      <div className={styles.logo}>
+        <LogoIcon className={styles.logoIcon} aria-hidden />
+      </div>
+      <nav className={styles.menus} aria-label="Main menu">
+        {menus.map(({ label, items }) => (
+          <div key={label} className={styles.item}>
+            <button
+              ref={(node) => {
+                titles.current[label] = node;
+              }}
+              type="button"
+              className={cx(styles.title, openMenu?.label === label && styles.open)}
+              aria-expanded={openMenu?.label === label}
+              aria-haspopup="menu"
+              onKeyDown={(event) => onTitleKeyDown(event, label)}
+              onMouseDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => onTitlePointerDown(event, label)}
+              onPointerEnter={(event) => {
+                if (openMenu !== null && openMenu.label !== label) {
+                  playHover();
+                  openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
+                }
+              }}
+            >
+              {label}
+            </button>
+            {openMenu?.label === label && (
+              <Menu
+                anchor={openMenu.anchor}
+                items={items}
+                isPointerHeld={isPointerHeld}
+                onOpenAdjacentMenu={(direction) => openAdjacentMenu(label, direction)}
+                onClose={() => closeMenu(label)}
+              />
+            )}
+          </div>
+        ))}
+      </nav>
+      <div className={styles.spacer} />
+      <div className={styles.statusItems}>
+        <ThemeStatus />
+        <SoundStatus />
+        <TimeStatus />
+      </div>
+    </div>
+  );
+}

@@ -20,8 +20,8 @@ function stub(value: unknown): unknown {
  * hoisted above the file's own imports:
  *
  * ```ts
- * vi.mock("#/lib/audio/scroll", async (importOriginal) =>
- *   (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { skipScrollAbove }),
+ * vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
+ *   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { skipScrollAbove }),
  * );
  * ```
  */

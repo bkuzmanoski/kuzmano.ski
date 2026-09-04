@@ -5,9 +5,9 @@ import { describe, expect, test } from "vitest";
 import { Spinner } from "#/components/spinner.tsx";
 import { documentTitle } from "#/site/metadata.ts";
 
-import { verifyPrerenderedPage } from "./verify.ts";
+import { verifyPrerenderedDocument } from "./verify.ts";
 
-// The parts of a prerendered page that the verifier checks, with `body` as the window content.
+// The parts of a prerendered document that the verifier checks, with `body` as the window content.
 const pageHtml = (body: string) =>
   [
     `<title>${documentTitle("Collection")}</title>`,
@@ -18,19 +18,19 @@ const pageHtml = (body: string) =>
 const verify =
   (html: string, path = "/collection") =>
   () =>
-    verifyPrerenderedPage({ page: { path }, html });
+    verifyPrerenderedDocument({ page: { path }, html });
 
-describe("verifyPrerenderedPage", () => {
+describe("verifyPrerenderedDocument", () => {
   test("fails when the menu bar is missing", () => {
     const html = pageHtml("<p>Menu Bar</p>").replace('aria-label="Main menu"', "");
     expect(verify(html)).toThrow(/menu bar is missing/);
   });
 
-  test("passes when a page rendered its content", () => {
+  test("passes when a document rendered its content", () => {
     expect(verify(pageHtml("<p>Content</p>"))).not.toThrow();
   });
 
-  test("fails when the window title does not match the page", () => {
+  test("fails when the window title does not match the document", () => {
     const html = pageHtml("<p>Content</p>").replace(">Collection<", ">Something else<");
     expect(verify(html)).toThrow(/there is no window titled/);
   });
@@ -58,7 +58,7 @@ describe("verifyPrerenderedPage", () => {
     expect(verify(pageHtml('<p>test@example.com</p><span role="status">Copied</span>'))).not.toThrow();
   });
 
-  test("passes when the page has no open windows", () => {
+  test("passes when the document has no open windows", () => {
     expect(verify('<nav aria-label="Main menu"></nav>', "/")).not.toThrow();
   });
 });

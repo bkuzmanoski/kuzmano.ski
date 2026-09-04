@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { fakeAudioContext } from "#/test-utils/audio";
+import { fakeAudioContext } from "#/test-utils/audio.ts";
 
-import { bufferCache, renderBuffer } from "./buffer";
+import { bufferCache, renderBuffer } from "./buffer.ts";
 
 const read = (buffer: AudioBuffer) => Array.from(buffer.getChannelData(0));
 

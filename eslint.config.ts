@@ -14,16 +14,46 @@ const BASE_CONFIG = tanstackConfig.map((config) =>
     : config,
 );
 
-const CONFIG_LAYER_IMPORT = {
+const CONFIG_LAYER_IMPORT_PATTERN = {
   regex: String.raw`^(#/|\.\./)`,
   allowTypeImports: true,
   message: "`/src/config` may import types from other layers, but must not import their code.",
 };
-
-const SERVER_IMPORT = {
+const SERVER_IMPORT_PATTERN = {
   regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
   message: "`/src/server` may only be imported by a server handler in `/src/routes/api/`.",
 };
+
+// The convention is `#/` across layers and relative within one. `/src/lib` is a single layer spanning
+// subdirectories, so it reaches siblings through `../`. Every other layer is one directory deep, so `../`
+// leaves it. Each feature directory (`/src/features/<name>`) counts as its own layer.
+const LIB_LAYER_IMPORT_PATTERN = {
+  regex: String.raw`^#/lib/`,
+  message: "Import within `/src/lib` relatively.",
+};
+const PARENT_IMPORT_PATTERN = {
+  regex: String.raw`^\.\./`,
+  message: "A relative import must not escape its feature; use `#/` to reach another layer.",
+};
+
+// Vite's config loader resolves without a bundler under `configLoader: 'native'`, so every local
+// import needs its extension. The rule is repo-wide rather than scoped to the config's module
+// graph, because that graph is invisible from any one file. The lookahead reads the extension before
+// any `?`, so a query-suffixed specifier such as `#/scripts/theme.ts?inline-script` already satisfies it.
+const IMPORT_FILE_EXTENSION_PATTERN = {
+  regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`,
+  message: "Import with the file extension.",
+};
+
+// Flat config replaces a rule's options rather than merging them, so the last block matching a file decides
+// what that file is checked against. Every list below therefore repeats the patterns of the blocks it shadows.
+type ImportPattern = Record<string, unknown>;
+
+const restrictImports = (
+  ...patterns: Array<ImportPattern>
+): { "@typescript-eslint/no-restricted-imports": ["error", { patterns: Array<ImportPattern> }] } => ({
+  "@typescript-eslint/no-restricted-imports": ["error", { patterns }],
+});
 
 export default defineConfig(
   ...BASE_CONFIG,
@@ -41,6 +71,7 @@ export default defineConfig(
       "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".json"] })],
     },
     rules: {
+      ...restrictImports(IMPORT_FILE_EXTENSION_PATTERN),
       "import/no-restricted-paths": [
         "error",
         {
@@ -50,16 +81,25 @@ export default defineConfig(
               target: "./src/lib",
               from: [
                 "./content",
+                "./src/app",
                 "./src/components",
                 "./src/config",
+                "./src/features",
                 "./src/routes",
                 "./src/site",
                 "./src/test-utils/catalog.ts",
                 "./src/test-utils/content.ts",
-                "./src/views",
               ],
             },
-            { target: "./src/components", from: ["./src/routes", "./src/views"] },
+            {
+              target: "./src/components",
+              from: ["./src/app", "./src/config", "./src/features", "./src/routes", "./src/site"],
+            },
+            {
+              target: "./src/site",
+              from: ["./src/app", "./src/components", "./src/features", "./src/routes"],
+            },
+            { target: "./src/features", from: ["./src/app", "./src/routes"] },
           ],
         },
       ],
@@ -120,16 +160,38 @@ export default defineConfig(
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/routes/api/**", "src/server/**"],
-    rules: {
-      "@typescript-eslint/no-restricted-imports": ["error", { patterns: [SERVER_IMPORT] }],
-    },
+    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN),
   },
-  // Must stay after the block above: flat config replaces a rule's options rather than merging
-  // them, so the last block matching a file decides what that file is checked against.
+  // Each block from here down must stay after the ones it shadows; see the note beside `restrictImports`.
+  {
+    files: [
+      "src/app/**/*.{ts,tsx}",
+      "src/components/**/*.{ts,tsx}",
+      "src/config/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/routes/**/*.{ts,tsx}",
+      "src/site/**/*.{ts,tsx}",
+      "src/test-utils/**/*.{ts,tsx}",
+    ],
+    ignores: ["src/routes/api/**"],
+    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN, PARENT_IMPORT_PATTERN),
+  },
+  // `/src/server` and the API handlers are the two places that may reach into `/src/server`.
+  {
+    files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}"],
+    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, PARENT_IMPORT_PATTERN),
+  },
+  {
+    files: ["src/lib/**/*.{ts,tsx}"],
+    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN, LIB_LAYER_IMPORT_PATTERN),
+  },
   {
     files: ["src/config/**/*.ts"],
-    rules: {
-      "@typescript-eslint/no-restricted-imports": ["error", { patterns: [SERVER_IMPORT, CONFIG_LAYER_IMPORT] }],
-    },
+    rules: restrictImports(
+      IMPORT_FILE_EXTENSION_PATTERN,
+      SERVER_IMPORT_PATTERN,
+      PARENT_IMPORT_PATTERN,
+      CONFIG_LAYER_IMPORT_PATTERN,
+    ),
   },
 );

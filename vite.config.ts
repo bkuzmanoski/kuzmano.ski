@@ -6,14 +6,16 @@ import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
 import { contentAssetsPlugin } from "./build/content-assets.ts";
-import { capturePage, feedsPlugin } from "./build/feeds/plugin.ts";
+import { cssAssetsPlugin } from "./build/css-assets.ts";
+import { captureDocument, feedsPlugin } from "./build/feeds/plugin.ts";
 import { frontmatterPlugin } from "./build/frontmatter.ts";
 import { iconDriftPlugin } from "./build/icons/drift.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
+import { layoutDriftPlugin } from "./build/layout-drift.ts";
 import { markdownPlugin } from "./build/markdown.ts";
 import { mdxPlugin } from "./build/mdx.ts";
 import { prerenderRoutes } from "./build/prerender/routes.ts";
-import { verifyPrerenderedPage } from "./build/prerender/verify.ts";
+import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerBailouts } from "./build/react-compiler.ts";
 import { sitemapNamespacePlugin } from "./build/sitemap-namespace.ts";
 import { svgrOptions } from "./build/svgr.ts";
@@ -23,7 +25,6 @@ import { SITE_URL } from "./src/config/site.ts";
 
 export default defineConfig(({ command }) => {
   const compilerBailouts = reactCompilerBailouts();
-
   return {
     resolve: { tsconfigPaths: true },
     css: {
@@ -38,6 +39,8 @@ export default defineConfig(({ command }) => {
     plugins: [
       workersRuntimePlugin(),
       themeColorPlugin(),
+      layoutDriftPlugin(),
+      cssAssetsPlugin(),
       iconDriftPlugin(),
       inlineScriptsPlugin(),
       svgr({ svgrOptions }),
@@ -54,8 +57,8 @@ export default defineConfig(({ command }) => {
           crawlLinks: false,
           autoStaticPathsDiscovery: false,
           onSuccess: (result) => {
-            verifyPrerenderedPage(result);
-            capturePage(result);
+            verifyPrerenderedDocument(result);
+            captureDocument(result);
           },
         },
       }),

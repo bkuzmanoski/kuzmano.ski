@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
 
-import { createCloseGuards } from "./close-guards";
+import { createCloseGuards } from "./close-guards.ts";
 
-import type { CloseGuards } from "./close-guards";
+import type { CloseGuards } from "./close-guards.ts";
 
 describe("close guards", () => {
   let guards: CloseGuards;

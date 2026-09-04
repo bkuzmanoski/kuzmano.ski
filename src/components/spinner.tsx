@@ -1,5 +1,5 @@
 import SpinnerIcon from "#/assets/images/spinner.svg?react";
-import { cx } from "#/lib/class-names";
+import { cx } from "#/lib/class-names.ts";
 
 import styles from "./spinner.module.css";
 

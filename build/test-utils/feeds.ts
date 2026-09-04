@@ -2,16 +2,17 @@ import type { CollectionSegment } from "#/config/content.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 
 import type { Feed, FeedEntry } from "../feeds/atom.ts";
-import type { PageSource } from "../feeds/plugin.ts";
+import type { DocumentSource } from "../feeds/plugin.ts";
 
 export const ENTRY_URL = "https://kuzmano.ski/collection/entry";
 
-export const articlePage = (article: string) =>
+export const articleDocument = (article: string) =>
   `<html><body><main><article class="articleClass">${article}</article></main></body></html>`;
 
-export const pageSource: PageSource = (route) => Promise.resolve(articlePage(`<p>The body of ${route}.</p>`));
+export const documentSource: DocumentSource = (route) =>
+  Promise.resolve(articleDocument(`<p>The body of ${route}.</p>`));
 
-export const missingPageSource: PageSource = () => Promise.resolve(undefined);
+export const missingDocumentSource: DocumentSource = () => Promise.resolve(undefined);
 
 export const feedMetadata = ({
   collections = ["collection-1", "collection-2"],

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { watchFaviconColorScheme } from "./favicon";
+import { watchFaviconColorScheme } from "./favicon.ts";
 
 const HREF = "/favicon.svg";
 

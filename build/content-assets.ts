@@ -29,13 +29,13 @@ export function contentKeyOf(moduleId: string | null | undefined): string | null
  * that contains its compiled MDX. The keys use the same paths as `import.meta.glob` (see
  * `/src/site/catalog.ts`).
  *
- * The client normally loads a page's compiled MDX on demand, after the page has started running.
- * The server can put the chunk URL in the page instead, allowing the browser to fetch it while
- * the page is loading. This avoids making hydration wait for another request (see
+ * The client normally loads an entry's compiled MDX on demand, once the client bundle is running.
+ * The server can put the chunk URL in the document instead, so the browser fetches it while the
+ * document is still loading. This avoids making hydration wait for another request (see
  * `/src/client.tsx`).
  *
- * Only the server build needs this map. A window opened after the page loads imports its content
- * when it renders, so there is no earlier request to avoid. The map is also empty during
+ * Only the server build needs this map. A window opened after the document has loaded imports its
+ * content when it renders, so there is no earlier request to avoid. The map is also empty during
  * development, where Vite serves modules directly instead of bundling them.
  */
 export function contentAssetsPlugin(): Array<Plugin> {

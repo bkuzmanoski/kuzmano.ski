@@ -124,8 +124,8 @@ describe("markdownFor", () => {
 
 describe("markdownFilesFor", () => {
   const content = scannedContent({
-    collections: [scannedCollection("collection", [scannedEntry("published"), draftEntry("hidden")])],
     pages: scannedDirectory([scannedEntry("page"), draftEntry("unfinished")]),
+    collections: [scannedCollection("collection", [scannedEntry("published"), draftEntry("hidden")])],
   });
 
   const pathsOf = (options?: { drafts?: boolean }) => markdownFilesFor(content, options).map(({ path }) => path);
@@ -134,8 +134,8 @@ describe("markdownFilesFor", () => {
     return index ? index.render() : "";
   };
 
-  test("serves a file for every standalone page, collection, and entry", () => {
-    expect(pathsOf()).toStrictEqual(["/page.md", "/collection.md", "/collection/published.md"]);
+  test("serves a file for every page, collection entry, and collection", () => {
+    expect(pathsOf()).toStrictEqual(["/page.md", "/collection/published.md", "/collection.md"]);
   });
 
   test("omits drafts unless they are included", async () => {

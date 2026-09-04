@@ -1,20 +1,21 @@
 import { notFound } from "@tanstack/react-router";
 
-import { PAGE_SLUGS } from "#/config/content";
+import { PAGE_SLUGS } from "#/config/content.ts";
 
-import { collections, pages } from "./catalog";
-import { collectionFeed } from "./feeds";
-import { documentHead } from "./metadata";
+import { pages } from "./catalog.ts";
+import { collectionRoute, entryRoute, pageRoute } from "./content-routes.ts";
+import { collectionFeed } from "./feeds.ts";
+import { documentHead } from "./metadata.ts";
+import { resolveContent } from "./resolve-content.ts";
 
-import type { Frontmatter } from "./catalog";
-import type { DocumentMetadata } from "./metadata";
+import type { Frontmatter } from "./catalog.ts";
+import type { DocumentMetadata } from "./metadata.ts";
 
 const isRegisteredPage = (slug: string) => (PAGE_SLUGS as ReadonlyArray<string>).includes(slug);
-const hasMarkdownAlternate = (frontmatter: Frontmatter | null | undefined) =>
-  frontmatter?.draft !== true || import.meta.env.DEV;
+const hasMarkdownAlternate = (frontmatter: Frontmatter | null) => frontmatter?.draft !== true || import.meta.env.DEV;
 
 function documentData(
-  frontmatter: Frontmatter | null | undefined,
+  frontmatter: Frontmatter | null,
   data: Omit<DocumentMetadata, "title" | "description">,
 ): DocumentMetadata {
   if (!frontmatter) {
@@ -26,39 +27,40 @@ function documentData(
 
 export const contentRoute = {
   loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
-    const collection = collections[params.segment];
+    const content = resolveContent(params.segment, params.slug);
     const feed = collectionFeed(params.segment);
 
-    if (params.slug) {
-      const frontmatter = collection?.frontmatterOf(params.slug);
-      return documentData(frontmatter, {
-        path: `/${params.segment}/${params.slug}`,
-        kind: "article",
-        contentAsset: collection?.assetOf(params.slug) ?? null,
-        markdown: hasMarkdownAlternate(frontmatter),
-        feed,
-        noindex: frontmatter?.draft === true,
-      });
+    switch (content.kind) {
+      case "page":
+        return documentData(content.frontmatter, {
+          path: pageRoute(content.slug),
+          contentAsset: pages.assetOf(content.slug),
+          markdown: hasMarkdownAlternate(content.frontmatter),
+          noindex: content.frontmatter?.draft === true || !isRegisteredPage(content.slug),
+        });
+
+      case "collectionEntry":
+        return documentData(content.frontmatter, {
+          path: entryRoute(params.segment, content.slug),
+          kind: "article",
+          contentAsset: content.collection.assetOf(content.slug),
+          markdown: hasMarkdownAlternate(content.frontmatter),
+          feed,
+          noindex: content.frontmatter?.draft === true,
+        });
+
+      case "collection":
+        return {
+          title: content.collection.title,
+          description: content.collection.description,
+          path: collectionRoute(params.segment),
+          markdown: true,
+          feed,
+        };
+
+      default:
+        throw notFound(); // Not found, or a reserved route that renders its own head tags.
     }
-
-    if (collection) {
-      return {
-        title: collection.title,
-        description: collection.description,
-        path: `/${params.segment}`,
-        markdown: true,
-        feed,
-      };
-    }
-
-    const frontmatter = pages.frontmatterOf(params.segment);
-
-    return documentData(frontmatter, {
-      path: `/${params.segment}`,
-      contentAsset: pages.assetOf(params.segment),
-      markdown: hasMarkdownAlternate(frontmatter),
-      noindex: frontmatter?.draft === true || !isRegisteredPage(params.segment),
-    });
   },
   head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),
 };

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { stageMetricsFor } from "./stage";
+import { stageMetricsFor } from "./stage.ts";
 
-import type { Rect, Size, Transform } from "../geometry";
+import type { Rect, Size, Transform } from "../geometry.ts";
 
 const WIDE_VIEWPORT: Size = { width: 1440, height: 900 };
 const TALL_VIEWPORT: Size = { width: 430, height: 932 };

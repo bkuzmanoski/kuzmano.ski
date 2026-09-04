@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
 import ArrowIcon from "#/assets/images/scroll-arrow.svg?react";
-import { recordScrollAt, silenceScrollAt, stepScroll } from "#/lib/audio/scroll";
-import { playClick } from "#/lib/audio/sounds";
-import { cx } from "#/lib/class-names";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag";
-import type { DragDelta } from "#/lib/hooks/use-pointer-drag";
-import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics";
-import { useTimer } from "#/lib/hooks/use-timer";
-import { clamp } from "#/lib/math";
-import { isPointerClick, isPrimaryPress } from "#/lib/press";
-import type { StyleWithVars } from "#/lib/style";
+import { recordScrollAt, silenceScrollAt, stepScroll } from "#/lib/audio/scroll.ts";
+import { playClick } from "#/lib/audio/sounds.ts";
+import { cx } from "#/lib/class-names.ts";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
+import type { DragDelta } from "#/lib/hooks/use-pointer-drag.ts";
+import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
+import { useTimer } from "#/lib/hooks/use-timer.ts";
+import { clamp } from "#/lib/math.ts";
+import { isPointerClick, isPrimaryPress } from "#/lib/press.ts";
+import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./scrollbar.module.css";
 

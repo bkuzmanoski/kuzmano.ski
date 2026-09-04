@@ -1,4 +1,4 @@
-import { bufferCache, playBuffer, renderBuffer } from "./buffer";
+import { bufferCache, playBuffer, renderBuffer } from "./buffer.ts";
 
 /** A struck object: a burst of noise shaped by its resonance and the damping that suppresses it. */
 export interface Strike {

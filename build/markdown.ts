@@ -9,6 +9,7 @@ import { unified } from "unified";
 import { COLLECTIONS } from "#/config/content.ts";
 import { parseFrontmatter } from "#/lib/content/schema.ts";
 import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
+import { collectionRoute, entryRoute, pageRoute } from "#/site/content-routes.ts";
 import { canonicalUrl, markdownPath } from "#/site/metadata.ts";
 
 import { byNewestFirst, publishedEntries, scanContent } from "./prerender/routes.ts";
@@ -26,7 +27,7 @@ interface MarkdownNode {
 
 // Context available to a component when its content is rewritten as Markdown.
 interface MarkdownContext {
-  url?: string; // The page's URL, for a component that needs to link back to it.
+  url?: string; // The entry's URL, for a component that needs to link back to it.
 }
 
 /** A markdown file to serve, keyed by the path it is served from. */
@@ -138,7 +139,7 @@ const processorFor = (context: MarkdownContext) =>
     .use(assertMarkdownOnly)
     .use(remarkStringify, { bullet: "-", listItemIndent: "one", rule: "-", fences: true, strong: "*", emphasis: "_" });
 
-/** Converts MDX source to the Markdown representation of a page. */
+/** Converts MDX source to the Markdown representation of an entry. */
 export async function markdownFor(
   source: string,
   { path, url }: { path?: string; url?: string } = {},
@@ -168,7 +169,7 @@ function collectionMarkdown(name: string, entries: Array<ScannedEntry>): string 
 
   const items = [...entries].sort(byNewestFirst).map((entry) => {
     const { title, description, date } = parseFrontmatter(entry.frontmatter, entry.path);
-    return `- [${asLinkText(title)}](${markdownPath(`/${name}/${entry.slug}`)}) (${date})\n  ${asOneLine(description)}`;
+    return `- [${asLinkText(title)}](${markdownPath(entryRoute(name, entry.slug))}) (${date})\n  ${asOneLine(description)}`;
   });
   const sections = [`# ${metadata.title}`, metadata.description, ...(items.length > 0 ? [items.join("\n")] : [])];
 
@@ -179,37 +180,37 @@ function collectionMarkdown(name: string, entries: Array<ScannedEntry>): string 
  * Returns Markdown files for entries and collection indexes.
  *
  * When `drafts` is true, draft entries are included (for development purposes).
- * A production build excludes both draft pages and their Markdown.
+ * A production build excludes both draft entries and their Markdown.
  */
 export function markdownFilesFor(
-  { collections, pages }: ScannedContent,
+  { pages, collections }: ScannedContent,
   { drafts = false }: { drafts?: boolean } = {},
 ): Array<MarkdownFile> {
   const served = (entries: Array<ScannedEntry>) => (drafts ? entries : publishedEntries(entries));
 
   return [
     ...served(pages.entries).map((entry) => ({
-      path: markdownPath(`/${entry.slug}`),
-      render: () => entryMarkdown(entry, `/${entry.slug}`),
+      path: markdownPath(pageRoute(entry.slug)),
+      render: () => entryMarkdown(entry, pageRoute(entry.slug)),
     })),
     ...collections.flatMap(({ name, entries }) => {
       const listed = served(entries);
       return [
+        ...listed.map((entry) => ({
+          path: markdownPath(entryRoute(name, entry.slug)),
+          render: () => entryMarkdown(entry, entryRoute(name, entry.slug)),
+        })),
         {
-          path: markdownPath(`/${name}`),
+          path: markdownPath(collectionRoute(name)),
           // eslint-disable-next-line @typescript-eslint/require-await -- Asynchronous so an invalid entry rejects the render rather than throwing at the caller.
           render: async () => collectionMarkdown(name, listed),
         },
-        ...listed.map((entry) => ({
-          path: markdownPath(`/${name}/${entry.slug}`),
-          render: () => entryMarkdown(entry, `/${name}/${entry.slug}`),
-        })),
       ];
     }),
   ];
 }
 
-/** Emits a Markdown alternate file every route. */
+/** Emits a Markdown alternate file for every route. */
 export function markdownPlugin(): Plugin {
   return {
     name: "kuzmano.ski:markdown",

@@ -1,9 +1,10 @@
-import { SITE_URL } from "#/config/site";
-import { isRecord } from "#/lib/guards";
-import type { Membership } from "#/lib/waitlist/membership";
+import { SITE_URL } from "#/config/site.ts";
+import { isRecord } from "#/lib/guards.ts";
+import type { Membership } from "#/lib/waitlist/membership.ts";
 
-import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings";
-import { workerEnv } from "./env";
+import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings.ts";
+import { reportMissingBinding } from "./endpoint.ts";
+import { workerEnv } from "./env.ts";
 
 const NOTION_API_URL = "https://api.notion.com/v1";
 const NOTION_VERSION = "2026-03-11"; // Pinned: Notion changes the shape of a request between versions.
@@ -26,14 +27,7 @@ interface Credentials {
 
 const RETRYABLE_STATUSES = new Set([429, 529]); // Rate limited; overloaded.
 
-function reportUnavailable(binding: string): "unavailable" {
-  console.error({
-    event: "waitlist_binding_missing",
-    binding,
-    message: `The worker could not access \`${binding}\``,
-  });
-  return "unavailable";
-}
+const reportUnavailable = (binding: string) => reportMissingBinding("waitlist_binding_missing", binding);
 
 async function reportFailure(event: string, response: Response) {
   console.error({

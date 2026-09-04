@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import { useInputField } from "./use-input-field";
+import { useInputField } from "./use-input-field.ts";
 
-import type { InputFieldBinding } from "./use-input-field";
+import type { InputFieldBinding } from "./use-input-field.ts";
 
 function renderInputField() {
   let binding!: InputFieldBinding;

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
-import { isMacOS } from "../device";
-import { noSubscribe } from "../emitter";
+import { isMacOS } from "../device.ts";
+import { noSubscribe } from "../emitter.ts";
 
 const serverIsMacOS = () => true; // Note: Assume macOS for this audience.
 

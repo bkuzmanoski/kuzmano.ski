@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { useScrollMetrics } from "./use-scroll-metrics";
+import { useScrollMetrics } from "./use-scroll-metrics.ts";
 
 import type { RefObject } from "react";
 

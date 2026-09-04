@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { isBrowserHandledClick, isRepeatClick } from "./link";
+import { isBrowserHandledClick, isRepeatClick } from "./link.ts";
 
 import type { MouseEvent } from "react";
 

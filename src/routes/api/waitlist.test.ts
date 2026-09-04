@@ -1,16 +1,16 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api";
-import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings";
-import type { MembershipResult } from "#/server/waitlist";
+import { API } from "#/api.ts";
+import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
+import type { MembershipResult } from "#/server/waitlist.ts";
 
-import { Route } from "./waitlist";
+import { Route } from "./waitlist.ts";
 
 const recordMembership = vi.hoisted(() => vi.fn<() => Promise<MembershipResult>>());
 const isWithinRateLimit = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
 
-vi.mock("#/server/waitlist", () => ({ recordMembership }));
-vi.mock("#/server/rate-limit", () => ({ isWithinRateLimit }));
+vi.mock("#/server/waitlist.ts", () => ({ recordMembership }));
+vi.mock("#/server/rate-limit.ts", () => ({ isWithinRateLimit }));
 
 beforeEach(() => {
   recordMembership.mockReset();
@@ -42,7 +42,7 @@ const post = (body: unknown, { origin = ORIGIN, headers = {} }: { origin?: strin
     }),
   });
 
-test("a well-formed submission is recorded, with the list and the page it came from", async () => {
+test("a well-formed submission is recorded, with the list and the entry it came from", async () => {
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);

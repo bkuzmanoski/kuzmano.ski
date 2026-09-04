@@ -1,21 +1,25 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { DETENT_PIXELS } from "#/lib/audio/scroll";
-import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag";
-import { clamp } from "#/lib/math";
+import { DETENT_PIXELS, playPaneScroll } from "#/lib/audio/scroll.ts";
+import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
+import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
+import { clamp } from "#/lib/math.ts";
 
-import { ScrollPane } from "./scroll-pane";
-import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS } from "./scrollbar";
+import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS, Scrollbar } from "./scrollbar.tsx";
 
 const playClick = vi.hoisted(() => vi.fn());
 const playScrollDetent = vi.hoisted(() => vi.fn());
 
-vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playClick, playScrollDetent }),
+vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClick, playScrollDetent }),
 );
 
-const MAX_SCROLL_TOP = 900; // The 1000px of content less the 100px viewport defined in `renderPane` below.
+const VIEWPORT_ID = "viewport";
+const SCROLL_HEIGHT = 1_000;
+const CLIENT_HEIGHT = 100;
+const MAX_SCROLL_TOP = SCROLL_HEIGHT - CLIENT_HEIGHT;
 const TRACK_TOP = 50;
 const TRACK_HEIGHT = 200;
 const THUMB_HEIGHT = 20;
@@ -30,18 +34,36 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-function renderPane() {
-  render(
-    <ScrollPane id="pane">
-      <p>Content</p>
-    </ScrollPane>,
-  );
+// The wiring `ScrollPane` provides, repeated here because a component may not import a feature.
+function Harness() {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const { metrics, measure } = useScrollMetrics(viewportRef);
 
-  const viewport = document.getElementById("pane")!;
+  return (
+    <>
+      <div
+        ref={viewportRef}
+        id={VIEWPORT_ID}
+        onScroll={(event) => {
+          measure();
+          playPaneScroll(event.currentTarget);
+        }}
+      >
+        <p>Content</p>
+      </div>
+      <Scrollbar viewportRef={viewportRef} viewportId={VIEWPORT_ID} metrics={metrics} />
+    </>
+  );
+}
+
+function renderScrollbar() {
+  render(<Harness />);
+
+  const viewport = document.getElementById(VIEWPORT_ID)!;
   const track = screen.getByRole("scrollbar");
 
-  Object.defineProperty(viewport, "scrollHeight", { value: 1000, configurable: true });
-  Object.defineProperty(viewport, "clientHeight", { value: 100, configurable: true });
+  Object.defineProperty(viewport, "scrollHeight", { value: SCROLL_HEIGHT, configurable: true });
+  Object.defineProperty(viewport, "clientHeight", { value: CLIENT_HEIGHT, configurable: true });
 
   viewport.scrollBy = ((options: ScrollToOptions = {}) => {
     viewport.scrollTop = clamp(viewport.scrollTop + (options.top ?? 0), 0, MAX_SCROLL_TOP);
@@ -56,7 +78,7 @@ function renderPane() {
 
   track.getBoundingClientRect = () => new DOMRect(0, TRACK_TOP, 15, TRACK_HEIGHT);
 
-  return { viewport, track, thumb, down: screen.getByRole("button", { name: "Scroll down" }) };
+  return { viewport, track, thumb, scrollDownButton: screen.getByRole("button", { name: "Scroll down" }) };
 }
 
 const thumbCentreAt = (position: number) => TRACK_TOP + THUMB_HEIGHT / 2 + position * THUMB_TRAVEL;
@@ -76,9 +98,9 @@ const advance = (ms: number) =>
   });
 
 test("a press steps the viewport, then repeats while it is held", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
@@ -94,57 +116,57 @@ test("a press steps the viewport, then repeats while it is held", () => {
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 3);
 
-  fireEvent.pointerUp(down);
+  fireEvent.pointerUp(scrollDownButton);
   advance(ARROW_STEP_REPEAT_INTERVAL_MS * 4);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 3);
 });
 
 test("the click event that follows a press does not step a second time", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
-  fireEvent.pointerUp(down);
-  fireEvent.click(down, { detail: 1 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
+  fireEvent.pointerUp(scrollDownButton);
+  fireEvent.click(scrollDownButton, { detail: 1 });
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
 test("a tap whose touch pointer events do not reach the control still plays a click sound", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.click(down, { detail: 1 }); // The press landed outside, so only the click arrives.
+  fireEvent.click(scrollDownButton, { detail: 1 }); // The press landed outside, so only the click arrives.
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
 test("a browser-cancelled press scrolls once, and the following click scrolls again", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
-  fireEvent.pointerCancel(down);
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
+  fireEvent.pointerCancel(scrollDownButton);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
-  fireEvent.click(down, { detail: 1 });
+  fireEvent.click(scrollDownButton, { detail: 1 });
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
 test("a step at the scroll boundary still plays a click sound", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
   viewport.scrollTop = MAX_SCROLL_TOP;
-  fireEvent.pointerDown(down, { button: 0 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
 test("a keyboard activation steps the viewport", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.click(down);
+  fireEvent.click(scrollDownButton);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
@@ -152,37 +174,37 @@ test("a keyboard activation steps the viewport", () => {
 // A press released outside the arrow does not deliver a click to clear the press it
 // recorded, so a keyboard activation must not be mistaken for that press arriving late.
 test("a keyboard activation steps the viewport after a press is abandoned outside the arrow", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
-  fireEvent.pointerLeave(down, { buttons: 1 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
+  fireEvent.pointerLeave(scrollDownButton, { buttons: 1 });
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
-  fireEvent.click(down);
+  fireEvent.click(scrollDownButton);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
 test("a held press keeps scrolling when the pointer leaves the arrow", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
   advance(ARROW_STEP_REPEAT_DELAY_MS);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 
-  fireEvent.pointerLeave(down, { buttons: 1 });
+  fireEvent.pointerLeave(scrollDownButton, { buttons: 1 });
   advance(ARROW_STEP_REPEAT_INTERVAL_MS * 2);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 4);
 });
 
 test("a release away from the arrow ends the press", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
-  fireEvent.pointerLeave(down, { buttons: 1 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
+  fireEvent.pointerLeave(scrollDownButton, { buttons: 1 });
   fireEvent.pointerUp(document.body);
   advance(ARROW_STEP_REPEAT_DELAY_MS + ARROW_STEP_REPEAT_INTERVAL_MS * 4);
 
@@ -190,20 +212,20 @@ test("a release away from the arrow ends the press", () => {
 });
 
 test("a press released away from the arrow does not affect the next activation", () => {
-  const { viewport, down } = renderPane();
+  const { viewport, scrollDownButton } = renderScrollbar();
 
-  fireEvent.pointerDown(down, { button: 0 });
+  fireEvent.pointerDown(scrollDownButton, { button: 0 });
   fireEvent.pointerUp(document.body);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
-  fireEvent.click(down, { detail: 1 }); // A tap iOS redirected to the arrow.
+  fireEvent.click(scrollDownButton, { detail: 1 }); // A tap iOS redirected to the arrow.
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
 test("a press on the track scrolls to the pressed point and plays a click", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.5);
 
@@ -212,7 +234,7 @@ test("a press on the track scrolls to the pressed point and plays a click", () =
 });
 
 test("a press past either end of the thumb's travel scrolls to that end", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 2);
 
@@ -225,7 +247,7 @@ test("a press past either end of the thumb's travel scrolls to that end", () => 
 
 // The thumb sits inside the track and runs its own drag, whose press bubbles through the track.
 test("a press on the thumb does not scroll the viewport", () => {
-  const { viewport, thumb } = renderPane();
+  const { viewport, thumb } = renderScrollbar();
 
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
 
@@ -234,7 +256,7 @@ test("a press on the thumb does not scroll the viewport", () => {
 });
 
 test("a secondary press on the track is ignored", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   fireEvent.pointerDown(track, { button: 2, clientY: TRACK_TOP + TRACK_HEIGHT / 2 });
 
@@ -243,7 +265,7 @@ test("a secondary press on the track is ignored", () => {
 });
 
 test("the scroll a track press causes does not play a scroll sound", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   advance(1);
   viewport.scrollTop = DETENT_PIXELS * 2;
@@ -260,7 +282,7 @@ test("the scroll a track press causes does not play a scroll sound", () => {
 });
 
 test("a track press transitions into a thumb drag from the point it jumped to", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.25);
 
@@ -278,7 +300,7 @@ test("a track press transitions into a thumb drag from the point it jumped to", 
 
 // The press jumps on its own, so pointer jitter must not drag the jump off its mark.
 test("a pointer that moves within the drag threshold after a track press does begin a thumb drag", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.5);
   fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCentreAt(0.5) + DRAG_THRESHOLD_PX });
@@ -288,7 +310,7 @@ test("a pointer that moves within the drag threshold after a track press does be
 });
 
 test("the scrolling that follows the jump from a thumb press plays scroll sounds", () => {
-  const { viewport, track } = renderPane();
+  const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 1);
   advance(1);

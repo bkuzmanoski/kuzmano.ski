@@ -1,7 +1,7 @@
-import { clampToContainer } from "../geometry";
+import { clampToContainer } from "../geometry.ts";
 
-import type { Position, Size } from "../geometry";
-import type { IconLayout, IconPlacement, IconPosition, IconPositions } from "./icon";
+import type { Position, Size } from "../geometry.ts";
+import type { IconLayout, IconPlacement, IconPosition, IconPositions } from "./icon.ts";
 
 function overlaps(a: Position, b: Position, cellSize: number): boolean {
   return Math.abs(a.x - b.x) < cellSize && Math.abs(a.y - b.y) < cellSize;

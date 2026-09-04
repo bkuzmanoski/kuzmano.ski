@@ -1,14 +1,14 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { fakeAudioContext } from "#/test-utils/audio";
+import { fakeAudioContext } from "#/test-utils/audio.ts";
 
-import { playBuffer } from "./buffer";
-import { playStrike } from "./strike";
+import { playBuffer } from "./buffer.ts";
+import { playStrike } from "./strike.ts";
 
-import type * as BufferModule from "./buffer";
-import type { Strike } from "./strike";
+import type * as BufferModule from "./buffer.ts";
+import type { Strike } from "./strike.ts";
 
-vi.mock("./buffer", async (importOriginal) => ({
+vi.mock("./buffer.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof BufferModule>()),
   playBuffer: vi.fn(),
 }));

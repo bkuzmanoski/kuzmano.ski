@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { playInputScroll, silenceScrollAt } from "./scroll";
+import { playInputScroll, silenceScrollAt } from "./scroll.ts";
 
 import type { KeyboardEvent, UIEvent } from "react";
 

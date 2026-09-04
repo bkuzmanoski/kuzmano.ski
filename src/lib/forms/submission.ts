@@ -1,4 +1,4 @@
-import type { Errors } from "./validation";
+import type { Errors } from "./validation.ts";
 
 /**
  * The outcome of parsing a submitted body.

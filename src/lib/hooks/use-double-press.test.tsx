@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { DOUBLE_PRESS_INTERVAL, useDoublePress } from "./use-double-press";
+import { DOUBLE_PRESS_INTERVAL, useDoublePress } from "./use-double-press.ts";
 
 const onDoublePress = vi.fn();
 

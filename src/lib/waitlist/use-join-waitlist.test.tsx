@@ -1,15 +1,15 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { playSuccess } from "#/lib/audio/sounds";
+import { playSuccess } from "../audio/sounds.ts";
 
-import { useJoinWaitlist } from "./use-join-waitlist";
+import { useJoinWaitlist } from "./use-join-waitlist.ts";
 
-import type { WaitlistFields } from "./membership";
-import type { WaitlistJoin } from "./use-join-waitlist";
+import type { WaitlistFields } from "./membership.ts";
+import type { WaitlistJoin } from "./use-join-waitlist.ts";
 
-vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+vi.mock("../audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
 const EMAIL_ADDRESS = "user@example.com";

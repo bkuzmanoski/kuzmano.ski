@@ -1,7 +1,8 @@
-import { EMAIL_ADDRESS_RULES } from "#/lib/forms/rules";
-import type { ParsedSubmission } from "#/lib/forms/submission";
-import { MAX_ADDRESS_LENGTH, isWithinLengthLimit, maxLength, required, validate } from "#/lib/forms/validation";
-import type { Schema } from "#/lib/forms/validation";
+import { EMAIL_ADDRESS_RULES } from "../forms/rules.ts";
+import { MAX_EMAIL_ADDRESS_LENGTH, isWithinLengthLimit, maxLength, required, validate } from "../forms/validation.ts";
+
+import type { ParsedSubmission } from "../forms/submission.ts";
+import type { Schema } from "../forms/validation.ts";
 
 export const MESSAGE_MAX_LENGTH = 4_000;
 
@@ -27,7 +28,7 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
   // than shortened into an accepted one.
   if (
     typeof from !== "string" ||
-    !isWithinLengthLimit(from, MAX_ADDRESS_LENGTH) ||
+    !isWithinLengthLimit(from, MAX_EMAIL_ADDRESS_LENGTH) ||
     typeof message !== "string" ||
     !isWithinLengthLimit(message, MESSAGE_MAX_LENGTH)
   ) {

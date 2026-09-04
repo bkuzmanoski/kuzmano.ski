@@ -1,4 +1,4 @@
-import { cx } from "#/lib/class-names";
+import { cx } from "#/lib/class-names.ts";
 
 import styles from "./text-input.module.css";
 

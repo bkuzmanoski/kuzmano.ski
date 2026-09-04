@@ -9,6 +9,7 @@ export const fromRoot = (path: string) => join(ROOT_DIRECTORY, path);
 /** Reduces an absolute path to a repository-relative one, for display. */
 export const toRootRelative = (path: string) => relative(ROOT_DIRECTORY, path);
 
+export const SOURCE_DIRECTORY = "src";
 export const PUBLIC_DIRECTORY = "public";
 export const CONTENT_DIRECTORY = "content";
 export const STYLESHEET = "src/styles.css";

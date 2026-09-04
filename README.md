@@ -18,6 +18,7 @@ Content is written in MDX. Frontmatter uses:
 title: Post Title
 description: Collection entry lists and the meta description show this text.
 date: 2026-07-19
+category: Notes # Optional. Groups an entry within its collection.
 draft: false # Optional. The dev server renders a draft. The build omits it.
 ```
 
@@ -49,17 +50,18 @@ from `COLLECTIONS`.
 
 ### Styling
 
-All content shares `/src/views/content-body.module.css`. To give a page or entry
-styles of its own, add a CSS module that exports a `page` class beside its MDX
-file under the same name (e.g., `about.mdx` and `about.module.css`).
+Styles defined in `/src/features/content/content-body.module.css` apply to all
+content. To define custom styles for a single entry, add a CSS module that
+exports an `entry` class beside its MDX file under the same name (e.g.,
+`entry.mdx` and `entry.module.css`).
 
 ### Markdown alternates
 
-Markdown is generated for every collection and published page:
+Markdown is generated for every published entry and every collection:
 
-- `/<collection>.md`: an index of the collection's published pages
-- `/<page>.md` or `/<collection>/<entry>.md`: a published page as Markdown,
-  including its frontmatter
+- `/<page>.md` or `/<collection>/<entry>.md`: a published page or collection
+  entry as Markdown, including its frontmatter
+- `/<collection>.md`: an index of the collection's published entries
 
 React components in MDX are replaced by their children. Specify fallback
 Markdown for a component in `/build/markdown.ts` (`COMPONENT_MARKDOWN`) when it
@@ -198,6 +200,29 @@ with the expression:
 
 ```text
 (http.request.method eq "POST" and http.request.uri.path eq "/api/client-errors")
+```
+
+## Image assets
+
+### Favicon and app icons
+
+The favicon and app icons in `/public` are generated from
+`/src/assets/images/logo.svg` and the color palette defined in CSS (see
+`/build/palette.ts`). To regenerate them, run:
+
+```bash
+npm run generate:icons
+```
+
+The build fails if the generated icons no longer match their inputs.
+
+### Illustrations
+
+The illustrations in `/src/assets/images` ship as an AVIF and WebP pair.
+`scripts/compress-image.sh` encodes both from a source PNG:
+
+```bash
+scripts/compress-image.sh src/assets/images/macintosh-body.png
 ```
 
 ## Deployment

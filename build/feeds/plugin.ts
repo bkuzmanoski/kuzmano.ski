@@ -3,6 +3,7 @@ import { dirname, join, resolve } from "node:path";
 
 import { FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME } from "#/config/site.ts";
 import { parseFrontmatter } from "#/lib/content/schema.ts";
+import { entryRoute } from "#/site/content-routes.ts";
 import { FEEDS } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 import { canonicalUrl, markdownUrl } from "#/site/metadata.ts";
@@ -17,27 +18,28 @@ import type { FeedEntry } from "./atom.ts";
 import type { ScannedContent, ScannedEntry } from "../prerender/routes.ts";
 import type { Plugin } from "vite";
 
-export type PageSource = (route: string) => Promise<string | undefined>;
+export type DocumentSource = (route: string) => Promise<string | undefined>;
 
 const NO_CONTENT_DATE = "1970-01-01"; // Fallback for a feed with no entries.
 
-const prerenderedPages = new Map<string, string>(); // Prerendered page HTML, keyed by route path.
+const prerenderedDocuments = new Map<string, string>(); // Prerendered document HTML, keyed by route path.
 
 /**
- * Records a prerendered page so its body can be included in a feed.
+ * Records a prerendered document so its body can be included in a feed.
  *
  * Called from the prerenderer's `onSuccess` in `/vite.config.ts`, which runs before this plugin's
  * `buildApp` handler reads what it collected.
  */
-export function capturePage({ page, html }: { page: { path: string }; html: string }) {
-  prerenderedPages.set(page.path, html);
+export function captureDocument({ page, html }: { page: { path: string }; html: string }) {
+  // `page` is the prerender result's own field name for the route the document was rendered for.
+  prerenderedDocuments.set(page.path, html);
 }
 
-async function feedEntryOf(segment: string, entry: ScannedEntry, pageOf: PageSource): Promise<FeedEntry> {
+async function feedEntryOf(segment: string, entry: ScannedEntry, documentOf: DocumentSource): Promise<FeedEntry> {
   const { title, description, date, category } = parseFrontmatter(entry.frontmatter, entry.path);
-  const route = `/${segment}/${entry.slug}`;
+  const route = entryRoute(segment, entry.slug);
   const url = canonicalUrl(route);
-  const page = await pageOf(route);
+  const html = await documentOf(route);
 
   return {
     title,
@@ -46,22 +48,26 @@ async function feedEntryOf(segment: string, entry: ScannedEntry, pageOf: PageSou
     markdownUrl: markdownUrl(route),
     date,
     category,
-    content: page ? articleContentOf(page, url) : "",
+    content: html ? articleContentOf(html, url) : "",
   };
 }
 
-function entriesFor(feed: FeedMetadata, { collections }: ScannedContent, pageOf: PageSource) {
+function entriesFor(feed: FeedMetadata, { collections }: ScannedContent, documentOf: DocumentSource) {
   return collections
     .filter(({ name }) => feed.collections.some((collection) => collection === name))
     .flatMap(({ name, entries }) => publishedEntries(entries).map((entry) => ({ segment: name, entry })))
     .sort((a, b) => byNewestFirst(a.entry, b.entry))
     .slice(0, FEED_MAX_ENTRIES)
-    .map(({ segment, entry }) => feedEntryOf(segment, entry, pageOf));
+    .map(({ segment, entry }) => feedEntryOf(segment, entry, documentOf));
 }
 
-/** Builds one feed's Atom document from a content tree and a source of prerendered pages. */
-export async function feedXmlFor(feed: FeedMetadata, content: ScannedContent, pageOf: PageSource): Promise<string> {
-  const entries = await Promise.all(entriesFor(feed, content, pageOf));
+/** Builds one feed's Atom document from a content tree and a source of prerendered documents. */
+export async function feedXmlFor(
+  feed: FeedMetadata,
+  content: ScannedContent,
+  documentOf: DocumentSource,
+): Promise<string> {
+  const entries = await Promise.all(entriesFor(feed, content, documentOf));
   const updatedDate =
     entries[0]?.date ??
     newestDate(content.collections.flatMap(({ entries: all }) => publishedEntries(all))) ??
@@ -101,22 +107,22 @@ export function feedsPlugin(): Plugin {
         const outputDirectory = resolve(clientEnvironment.config.root, clientEnvironment.config.build.outDir);
         const content = scanContent();
 
-        // Every published entry was prerendered, so a route with no page means the build lost one.
-        // Writing the feed without it would publish an entry whose body is empty.
-        const pageOf: PageSource = (route) =>
-          prerenderedPages.has(route)
-            ? Promise.resolve(prerenderedPages.get(route))
-            : Promise.reject(new Error(`No prerendered page was captured for "${route}".`));
+        // Every published entry was prerendered, so a route with no document means the build
+        // lost one. Writing the feed without it would publish an entry whose body is empty.
+        const documentOf: DocumentSource = (route) =>
+          prerenderedDocuments.has(route)
+            ? Promise.resolve(prerenderedDocuments.get(route))
+            : Promise.reject(new Error(`No prerendered document was captured for "${route}".`));
 
         try {
           for (const feed of FEEDS) {
             const path = join(outputDirectory, feed.path);
 
             await mkdir(dirname(path), { recursive: true });
-            await writeFile(path, await feedXmlFor(feed, content, pageOf));
+            await writeFile(path, await feedXmlFor(feed, content, documentOf));
           }
         } finally {
-          prerenderedPages.clear(); // Released once written so a rebuild under `--watch` reads only the pages it just prerendered.
+          prerenderedDocuments.clear(); // Released once written so a rebuild under `--watch` reads only the documents it just prerendered.
         }
       },
     },
@@ -132,15 +138,15 @@ export function feedsPlugin(): Plugin {
 
         const origin = `http://${request.headers.host ?? "localhost"}`;
 
-        // The dev server does not prerender content, so the feed is built from the source files. A
-        // page that fails to render leaves its entry without content rather than failing the request.
-        const pageOf: PageSource = (route) =>
+        // The dev server does not prerender content, so the feed is built from the source files. A document
+        // that fails to render leaves its entry without content rather than failing the request.
+        const documentOf: DocumentSource = (route) =>
           fetch(`${origin}${route}`)
-            .then((page) => (page.ok ? page.text() : undefined))
+            .then((fetchedResponse) => (fetchedResponse.ok ? fetchedResponse.text() : undefined))
             .catch(() => undefined);
 
         // Rescanned per request so an edit to a content file shows up without a restart.
-        feedXmlFor(feed, scanContent(), pageOf)
+        feedXmlFor(feed, scanContent(), documentOf)
           .then((xml) => {
             response.setHeader("content-type", "application/atom+xml; charset=utf-8");
             response.end(xml);

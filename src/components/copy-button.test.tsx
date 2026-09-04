@@ -1,14 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { playError } from "#/lib/audio/sounds";
-import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip";
+import { playError } from "#/lib/audio/sounds.ts";
+import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 
-import { CopyButton } from "./copy-button";
-import { HOVER_DELAY_MS } from "./tooltip";
+import { CopyButton } from "./copy-button.tsx";
+import { HOVER_DELAY_MS } from "./tooltip.tsx";
 
-vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
 const writeText = vi.fn<(value: string) => Promise<void>>();

@@ -1,6 +1,6 @@
-import { MESSAGE_MAX_LENGTH } from "./message";
+import { MESSAGE_MAX_LENGTH } from "./message.ts";
 
-import type { ContactFields } from "./message";
+import type { ContactFields } from "./message.ts";
 
 const CHARACTER_COUNT_VISIBILITY_RATIO = 0.75;
 export const CHARACTER_COUNT_VISIBLE_FROM =

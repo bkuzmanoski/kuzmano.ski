@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { clamp, cycle } from "./math";
+import { clamp, cycle } from "./math.ts";
 
 describe("clamp", () => {
   test("returns a value already inside the range", () => {

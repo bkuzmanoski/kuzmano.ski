@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseFrontmatter } from "./schema";
+import { parseFrontmatter } from "./schema.ts";
 
 const VALID_FRONTMATTER = { title: "Title", description: "Description", date: "2026-07-30" };
 

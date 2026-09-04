@@ -1,13 +1,10 @@
 // This module has no imports, so the pre-hydration boot sequence script can use it (see `/build/inline-scripts.ts`).
 
-/**
- * Set on `<html>` to hide the server-rendered desktop until the boot sequence has
- * taken loaded. The stylesheet shows the cover while this attribute is set.
- */
+/** Set on `<html>` to hide the server-rendered desktop until the boot sequence has loaded. */
 export const BOOT_SEQUENCE_OVERLAY_ATTRIBUTE = "data-boot-sequence-overlay";
 
 /**
- * Marks the `theme-color` pair matching the boot screen's backdrop, which `root-document.tsx`
+ * Matches the `theme-color` pair for the boot screen's backdrop, which `/src/app/root-document.tsx`
  * renders ahead of the desktop's until the boot sequence has run.
  */
 export const BOOT_SEQUENCE_THEME_COLOR_SELECTOR = "meta[data-boot-sequence-theme-color]";

@@ -1,12 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { playError, playSuccess } from "#/lib/audio/sounds";
+import { playError, playSuccess } from "#/lib/audio/sounds.ts";
 
-import { Alert } from "./alert";
+import { Alert } from "./alert.tsx";
 
-vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
 const CONTENT = {

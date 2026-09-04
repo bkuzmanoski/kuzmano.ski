@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { useIdleTimeout } from "./use-idle-timeout";
+import { useIdleTimeout } from "./use-idle-timeout.ts";
 
 const DELAY_MS = 1000;
 

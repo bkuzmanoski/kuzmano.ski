@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from "react";
 
-import { isEditableTarget } from "../keys";
+import { isEditableTarget } from "../keys.ts";
 
 /**
  * A global keyboard shortcut. Modifier is Option/Alt. `code` is the

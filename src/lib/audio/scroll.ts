@@ -1,6 +1,6 @@
-import { clamp } from "#/lib/math";
+import { clamp } from "../math.ts";
 
-import { playScrollDetent } from "./sounds";
+import { playScrollDetent } from "./sounds.ts";
 
 export const IDLE_DURATION_MS = 250;
 export const DETENT_PIXELS = 40; // Content distance between detents.

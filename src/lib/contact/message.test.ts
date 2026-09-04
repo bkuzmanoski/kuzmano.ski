@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
-import { MAX_ADDRESS_LENGTH } from "#/lib/forms/validation";
+import { MAX_EMAIL_ADDRESS_LENGTH } from "../forms/validation.ts";
 
-import { MESSAGE_MAX_LENGTH, parseSubmission } from "./message";
+import { MESSAGE_MAX_LENGTH, parseSubmission } from "./message.ts";
 
 const VALID_SUBMISSION = {
   from: "test@example.com",
@@ -35,8 +35,8 @@ test.each([
   ["a missing email address", { from: undefined }],
   ["a missing message", { message: undefined }],
   ["a field of the wrong type", { message: 42 }],
-  ["an email address longer than the limit", { from: `${"a".repeat(MAX_ADDRESS_LENGTH)}@example.com` }],
-  ["a message longer than the limit", { message: "a".repeat(MESSAGE_MAX_LENGTH + 1) }],
+  ["an email address that exceeds the maximum length", { from: `${"a".repeat(MAX_EMAIL_ADDRESS_LENGTH)}@example.com` }],
+  ["a message that exceeds the maximum length", { message: "a".repeat(MESSAGE_MAX_LENGTH + 1) }],
 ])("%s is malformed", (_label, overrides) => {
   expect(parseSubmission({ ...VALID_SUBMISSION, ...overrides })).toEqual({ ok: false, reason: "malformed" });
 });

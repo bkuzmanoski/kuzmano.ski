@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 
-import { noSubscribe } from "#/lib/emitter";
+import { noSubscribe } from "../emitter.ts";
 
 export interface DateFormat {
   locale: string; // The locale the prerendered markup is written in.

@@ -9,7 +9,7 @@ import type { Palette } from "./palette.ts";
 import type { Plugin } from "vite";
 
 const MANIFEST = "public/manifest.json";
-const DOCUMENT = "src/views/root-document.tsx";
+const DOCUMENT = "src/app/root-document.tsx";
 const META_TAG = /<meta\b[^>]*\bname="theme-color"[^>]*?\/?>/g;
 const MEDIA_QUERY = /\bmedia="\(prefers-color-scheme:\s*(light|dark)\)"/;
 const CONTENT = /\bcontent="([^"]*)"/;

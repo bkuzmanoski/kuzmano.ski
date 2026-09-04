@@ -1,18 +1,18 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api";
-import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings";
-import type { Delivery } from "#/server/mail";
+import { API } from "#/api.ts";
+import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings.ts";
+import type { Delivery } from "#/server/mail.ts";
 
-import { Route } from "./contact";
+import { Route } from "./contact.ts";
 
 const deliver = vi.hoisted(() => vi.fn<() => Promise<Delivery>>());
 const isWithinRateLimit = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
 const contactEmailAddress = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 
-vi.mock("#/server/mail", () => ({ deliver }));
-vi.mock("#/server/rate-limit", () => ({ isWithinRateLimit }));
-vi.mock("#/server/contact-email-address", () => ({ contactEmailAddress }));
+vi.mock("#/server/mail.ts", () => ({ deliver }));
+vi.mock("#/server/rate-limit.ts", () => ({ isWithinRateLimit }));
+vi.mock("#/server/contact-email-address.ts", () => ({ contactEmailAddress }));
 
 const EMAIL_ADDRESS = "inbox@example.com";
 
@@ -98,7 +98,7 @@ test("requests to read and send are counted against separate rate limits", async
   expect(isWithinRateLimit).toHaveBeenCalledWith(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.7");
 });
 
-test("an unreachable address reports a failure instead of returning empty", async () => {
+test("an unreachable email address reports a failure instead of returning empty", async () => {
   contactEmailAddress.mockResolvedValue(null);
 
   const response = await get();

@@ -1,4 +1,4 @@
-import { getGainNode } from "./context";
+import { getGainNode } from "./context.ts";
 
 /**
  * Renders a mono buffer from `sample`, the kernel that produces the raw signal.

@@ -92,7 +92,7 @@ function replaceUIMarkup(element: Element) {
 }
 
 // Sanitizing removes the attributes from the wrappers used for syntax highlighting
-// and page UI, leaving elements that hold nothing but their children.
+// and UI, leaving elements that contain nothing but their children.
 function unwrapPlainWrappers(children: Array<ElementContent>): Array<ElementContent> {
   return children.flatMap((child) => {
     if (child.type !== "element") {
@@ -151,16 +151,16 @@ function resolveRelativeUrls(node: Nodes, url: string) {
 }
 
 /**
- * Reads an entry's body from its prerendered page as the HTML a feed reader can show.
+ * Reads an entry's body from its prerendered document as the HTML a feed reader can show.
  *
- * Reusing the prerendered markup keeps the feed's text identical to the page's and avoids a
+ * Reusing the prerendered markup keeps the feed's text identical to the document's and avoids a
  * second render. `FEED_SCHEMA` selects the elements and attributes that belong in the feed.
  */
 export function articleContentOf(html: string, url: string): string {
   const articles = articlesIn(fromHtml(html));
 
   if (articles.length !== 1) {
-    throw new Error(`Expected one <article> in the page for ${url}, found ${articles.length}.`);
+    throw new Error(`Expected one <article> in the document for ${url}, found ${articles.length}.`);
   }
 
   const article = articles[0]!;

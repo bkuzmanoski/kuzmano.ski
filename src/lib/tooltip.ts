@@ -9,6 +9,7 @@ export const GRACE_PERIOD_MS = 600;
 export const STATE_DISPLAY_DURATION_MS = 1_200;
 
 let groupInGracePeriod: Element | null = null;
+let gracePeriodOwnerId: string | null = null;
 let gracePeriodTimeout: ReturnType<typeof setTimeout> | undefined;
 let shownTooltip: { id: string; hideAction: () => void } | null = null;
 let pendingHideAction: (() => void) | null = null;
@@ -17,14 +18,31 @@ let hideTimeout: ReturnType<typeof setTimeout> | undefined;
 export const isGroupInGracePeriod = (wrapper: Element | null) =>
   wrapper !== null && wrapper.parentElement === groupInGracePeriod;
 
-export function resetGroupGracePeriod(wrapper: Element | null) {
+/** Puts `wrapper`'s group in the grace period, and records `id` as the tooltip that may end it. */
+export function resetGroupGracePeriod(id: string, wrapper: Element | null) {
   clearTimeout(gracePeriodTimeout);
+
   groupInGracePeriod = wrapper?.parentElement ?? null;
+  gracePeriodOwnerId = id;
 }
 
-export function startGroupGracePeriod() {
+/**
+ * Starts the expiry of the grace period `id` owns, ignoring a tooltip that no longer owns one.
+ *
+ * A tooltip that replaces another registers before the one it replaces hides, so without this the
+ * earlier tooltip would schedule an expiry against the replacement's grace period and end it while
+ * the replacement is still on screen.
+ */
+export function startGroupGracePeriod(id: string) {
+  if (gracePeriodOwnerId !== id) {
+    return;
+  }
+
   clearTimeout(gracePeriodTimeout);
-  gracePeriodTimeout = setTimeout(() => (groupInGracePeriod = null), GRACE_PERIOD_MS);
+  gracePeriodTimeout = setTimeout(() => {
+    groupInGracePeriod = null;
+    gracePeriodOwnerId = null;
+  }, GRACE_PERIOD_MS);
 }
 
 /**
@@ -74,7 +92,8 @@ export function resetTooltipState() {
   clearTimeout(gracePeriodTimeout);
   clearTimeout(hideTimeout);
 
-  shownTooltip = null;
   groupInGracePeriod = null;
+  gracePeriodOwnerId = null;
+  shownTooltip = null;
   pendingHideAction = null;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { mergeRefs } from "./merge-refs";
+import { mergeRefs } from "./merge-refs.ts";
 
 import type { RefObject } from "react";
 

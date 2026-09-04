@@ -6,6 +6,17 @@ import { clamp } from "#/lib/math.ts";
 
 import { STYLESHEET, fromRoot } from "./paths.ts";
 
+export interface Palette {
+  foregroundLight: string;
+  foregroundDark: string;
+  backgroundLight: string;
+  backgroundDark: string;
+  wallpaperLight: string;
+  wallpaperDark: string;
+  bootSequenceBackdropLight: string;
+  bootSequenceBackdropDark: string;
+}
+
 const MAX_CHROMA = 0.4; // CSS Color 4 defines 100% chroma in `oklch()` as 0.4.
 const GAMUT_TOLERANCE = 1e-4; // Three orders of magnitude above in-gamut conversion error, two below the smallest out-of-gamut sRGB excursion.
 
@@ -77,10 +88,7 @@ function parseHex(value: string): Rgb {
   ];
 }
 
-/**
- * A hex literal in the canonical form `readPalette` returns.
- * Returns undefined for anything that is not a hex color.
- */
+/** A hex literal in the canonical form `readPalette` returns. Returns undefined for anything that is not a hex color. */
 export function normalizeHex(value: string): string | undefined {
   const trimmedValue = value.trim();
 
@@ -367,24 +375,17 @@ function resolveColor(value: string, properties: Map<string, string>, scheme: Sc
   );
 }
 
-export interface Palette {
-  foregroundLight: string;
-  foregroundDark: string;
-  backgroundLight: string;
-  backgroundDark: string;
-  wallpaperLight: string;
-  wallpaperDark: string;
-  bootSequenceBackdropLight: string;
-  bootSequenceBackdropDark: string;
+export function customPropertiesFrom(css: string): Map<string, string> {
+  return parseCustomProperties(extractRootBlock(stripComments(css)));
 }
 
 /**
  * Resolves the palette from stylesheet source.
  *
- * Takes the CSS as a value so the color forms can be exercised without a stylesheet on disk.
+ * Takes the CSS as a value so a color can be resolved without a stylesheet on disk.
  */
 export function paletteFrom(css: string): Palette {
-  const properties = parseCustomProperties(extractRootBlock(stripComments(css)));
+  const properties = customPropertiesFrom(css);
 
   const read = (name: string, scheme: Scheme) => {
     const declared = properties.get(name);

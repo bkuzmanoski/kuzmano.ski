@@ -1,10 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "./sounds";
-import { usePressSound } from "./use-press-sound";
+import { playClick } from "./sounds.ts";
+import { usePressSound } from "./use-press-sound.ts";
 
-vi.mock("./sounds", async (importOriginal) => (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}));
+vi.mock("./sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
+);
 
 beforeEach(() => vi.mocked(playClick).mockClear());
 

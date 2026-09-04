@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { parseSubmission } from "#/lib/waitlist/membership";
-import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings";
-import { readSubmission, refusalFor } from "#/server/endpoint";
-import { recordMembership } from "#/server/waitlist";
-import type { MembershipResult } from "#/server/waitlist";
+import { parseSubmission } from "#/lib/waitlist/membership.ts";
+import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
+import { readSubmission, refusalFor } from "#/server/endpoint.ts";
+import { recordMembership } from "#/server/waitlist.ts";
+import type { MembershipResult } from "#/server/waitlist.ts";
 
 const MEMBERSHIP_STATUS: Record<MembershipResult, number> = {
   recorded: 204,

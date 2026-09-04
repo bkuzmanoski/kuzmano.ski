@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { containsPoint, insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry";
+import { containsPoint, insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry.ts";
 
-import type { Inset, Rect, Transform } from "./geometry";
+import type { Inset, Rect, Transform } from "./geometry.ts";
 
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
 const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };

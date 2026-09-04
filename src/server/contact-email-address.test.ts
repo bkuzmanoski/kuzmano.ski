@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { CONTACT_EMAIL_ADDRESS_BINDING } from "./bindings";
-import { contactEmailAddress } from "./contact-email-address";
+import { CONTACT_EMAIL_ADDRESS_BINDING } from "./bindings.ts";
+import { contactEmailAddress } from "./contact-email-address.ts";
 
 const env = vi.hoisted(() => ({ current: {}, fails: false }));
 
-vi.mock("./env", () => ({
+vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 

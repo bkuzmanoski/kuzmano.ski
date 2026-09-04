@@ -1,13 +1,13 @@
 import { createRootRoute } from "@tanstack/react-router";
 
+import { Desktop } from "#/app/desktop.tsx";
+import { ErrorPage } from "#/app/error-page.tsx";
+import { NotFound } from "#/app/not-found.tsx";
+import { RootDocument } from "#/app/root-document.tsx";
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
-import { FEED_TYPE } from "#/config/site";
-import { SITE_FEED } from "#/site/feeds";
+import { FEED_TYPE } from "#/config/site.ts";
+import { SITE_FEED } from "#/site/feeds.ts";
 import stylesheet from "#/styles.css?url";
-import { Desktop } from "#/views/desktop";
-import { ErrorPage } from "#/views/error-page";
-import { NotFound } from "#/views/not-found";
-import { RootDocument } from "#/views/root-document";
 
 export const Route = createRootRoute({
   head: () => ({

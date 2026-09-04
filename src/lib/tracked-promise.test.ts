@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { trackPromise } from "./tracked-promise";
+import { trackPromise } from "./tracked-promise.ts";
 
 test("a promise is marked pending until it settles", () => {
   const neverSettles = new Promise<string>(() => undefined);

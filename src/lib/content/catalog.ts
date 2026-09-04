@@ -1,12 +1,13 @@
-import { byNewestDate } from "../date";
-import { trackPromise } from "../tracked-promise";
+import { byNewestDate } from "../date.ts";
+import { trackPromise } from "../tracked-promise.ts";
 
-import { parseFrontmatter } from "./schema";
+import { collectionRoute, entryRoute } from "./paths.ts";
+import { parseFrontmatter } from "./schema.ts";
 
-import type { Entry, Frontmatter } from "./schema";
+import type { Entry, Frontmatter } from "./schema.ts";
 import type { MDXContent } from "mdx/types";
 
-/** A compiled MDX file and the optional class applied to its page. */
+/** A compiled MDX file and the optional class applied to the entry it renders. */
 export interface MDXModule {
   default: MDXContent;
   className?: string;
@@ -44,7 +45,7 @@ export interface ContentSource {
   root: string;
   frontmatter: Record<string, { default: unknown }>;
   content: Record<string, () => Promise<{ default: MDXContent }>>;
-  styles: Record<string, () => Promise<{ default: { page?: string } }>>;
+  styles: Record<string, () => Promise<{ default: { entry?: string } }>>;
   assets: Record<string, string | undefined>;
 }
 
@@ -87,10 +88,10 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
     const promise: Promise<MDXModule> = stylesheet
       ? Promise.all([importer(), stylesheet()]).then(([module, styles]) => ({
           ...module,
-          className: styles.default.page,
+          className: styles.default.entry,
         }))
       : importer();
-    const trackedPromise = trackPromise(promise); // Tracked so a page whose module has already loaded can render without suspending. This keeps hydration from discarding the article the server sent (see `/src/client.tsx`).
+    const trackedPromise = trackPromise(promise); // Tracked so an entry whose module has already loaded can render without suspending. This keeps hydration from discarding the server-rendered article (see `/src/client.tsx`).
 
     loadedModules.set(path, trackedPromise);
 
@@ -134,7 +135,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
 
   function collection(directory: string, { title, description }: CollectionMetadata): Collection {
     const { paths, index } = contentIndex(directory);
-    const route = `/${directory}`; // The directory a collection reads from is also the segment it is served under.
+    const route = collectionRoute(directory); // The directory a collection reads from is also the segment it is served under.
 
     let entries: Array<Entry> | null = null;
 
@@ -143,7 +144,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
       title,
       description,
       route,
-      routeOf: (slug) => `${route}/${slug}`,
+      routeOf: (slug) => entryRoute(directory, slug),
       list() {
         entries ??= [...paths]
           .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))

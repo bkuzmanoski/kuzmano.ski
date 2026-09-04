@@ -1,6 +1,6 @@
-import { insetRect, scaleInset } from "../geometry";
+import { insetRect, scaleInset } from "../geometry.ts";
 
-import type { Inset, Rect } from "../geometry";
+import type { Inset, Rect } from "../geometry.ts";
 
 const CORNER_RADIUS = 16;
 const EDGE_BOW = 8;

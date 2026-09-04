@@ -1,6 +1,6 @@
-import type { Size } from "#/lib/geometry";
-import type { IconLayout } from "#/lib/icons/icon";
-import type { WindowLayout } from "#/lib/window-manager/window";
+import type { Size } from "#/lib/geometry.ts";
+import type { IconLayout } from "#/lib/icons/icon.ts";
+import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
 const MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (will be clamped by `padding` below).
 

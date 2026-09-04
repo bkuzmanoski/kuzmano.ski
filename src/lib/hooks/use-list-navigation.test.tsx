@@ -2,20 +2,20 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { mergeHandlers } from "../merge-handlers";
+import { mergeHandlers } from "../merge-handlers.ts";
 
-import { useListNavigation } from "./use-list-navigation";
+import { useListNavigation } from "./use-list-navigation.ts";
 
 import type { MouseEvent, ReactNode } from "react";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const playHover = vi.hoisted(() => vi.fn());
 
-vi.mock("../audio/scroll", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
+vi.mock("../audio/scroll.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
-vi.mock("../audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, { playHover }),
+vi.mock("../audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHover }),
 );
 
 function List({

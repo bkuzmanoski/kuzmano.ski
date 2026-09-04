@@ -1,7 +1,7 @@
 import { createElement } from "react";
 
-import type { Collection, ContentIndex, Entry, MDXModule } from "#/lib/content/catalog";
-import { trackPromise } from "#/lib/tracked-promise";
+import type { Collection, ContentIndex, Entry, MDXModule } from "#/lib/content/catalog.ts";
+import { trackPromise } from "#/lib/tracked-promise.ts";
 
 import type { MDXContent } from "mdx/types";
 
@@ -15,7 +15,7 @@ export function fakeEntry(slug: string, overrides: Partial<Entry> = {}): Entry {
   return { slug, title: slug, description: `About ${slug}.`, date: NEWEST_DATE, ...overrides };
 }
 
-export const fakeEntries = (...slugs: Array<string>): Array<Entry> =>
+export const fakeCollectionEntries = (...slugs: Array<string>): Array<Entry> =>
   slugs.map((slug, index) => fakeEntry(slug, { date: dateAt(index) }));
 
 const fakeBody =
@@ -47,15 +47,15 @@ export function fakeContentIndex(entries: Array<Entry>): ContentIndex {
   };
 }
 
-export function fakeCollection(entries: Array<Entry>, overrides: Partial<Collection> = {}): Collection {
+export function fakeCollection(collectionEntries: Array<Entry>, overrides: Partial<Collection> = {}): Collection {
   const route = overrides.route ?? ROUTE;
   return {
-    ...fakeContentIndex(entries),
+    ...fakeContentIndex(collectionEntries),
     title: "Collection",
     description: "A collection of entries.",
     route,
     routeOf: (slug) => `${route}/${slug}`,
-    list: () => entries,
+    list: () => collectionEntries,
     ...overrides,
   };
 }

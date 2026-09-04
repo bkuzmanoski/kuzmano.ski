@@ -1,9 +1,12 @@
-import { CONTACT_PAGE_ROUTE, CONTACT_PAGE_TITLE } from "#/config/contact";
-import type { WindowId } from "#/lib/window-manager/window";
+import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
+import type { WindowId } from "#/lib/window-manager/window.ts";
 
-import { collections, pages } from "./catalog";
+import { pages } from "./catalog.ts";
+import { isRootPath, parseContentPath } from "./content-routes.ts";
+import { resolveContent } from "./resolve-content.ts";
 
-import type { Collection, ContentIndex } from "./catalog";
+import type { Collection, ContentIndex } from "./catalog.ts";
+import type { ResolvedContent } from "./resolve-content.ts";
 
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
@@ -23,53 +26,48 @@ export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
 
 export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" };
 
-const CONTACT_PAGE_SEGMENT = CONTACT_PAGE_ROUTE.slice(1);
-
 export function resolveRoute(route: string): ResolvedRoute {
-  const segments = route.split("/").filter(Boolean);
-
-  if (segments.length === 0) {
+  if (isRootPath(route)) {
     return { id: "desktop" };
   }
 
-  const segment = segments[0]!;
-  const collection = collections[segment];
+  const path = parseContentPath(route);
+  const content: ResolvedContent = path ? resolveContent(path.segment, path.slug) : { kind: "notFound" };
 
-  if (segments.length === 1) {
-    if (segment === CONTACT_PAGE_SEGMENT) {
-      return { id: "contact", title: CONTACT_PAGE_TITLE };
-    }
-
-    if (collection) {
-      return { id: "collection", title: collection.title, collection, collectionRoute: collection.route };
-    }
-
-    if (pages.has(segment)) {
+  switch (content.kind) {
+    case "page":
       return {
         id: "entry",
-        title: pages.frontmatterOf(segment)?.title ?? segment,
-        slug: segment,
+        title: content.frontmatter?.title ?? content.slug,
+        slug: content.slug,
         collectionRoute: null,
         contentIndex: pages,
       };
-    }
-  }
 
-  if (segments.length === 2) {
-    const slug = segments[1]!;
-
-    if (collection?.has(slug)) {
+    case "collectionEntry":
       return {
         id: "entry",
-        title: collection.frontmatterOf(slug)?.title ?? slug,
-        slug,
-        collectionRoute: collection.route,
-        contentIndex: collection,
+        title: content.frontmatter?.title ?? content.slug,
+        slug: content.slug,
+        collectionRoute: content.collection.route,
+        contentIndex: content.collection,
       };
-    }
-  }
 
-  return { id: "notFound" };
+    case "collection":
+      return {
+        id: "collection",
+        title: content.collection.title,
+        collection: content.collection,
+        collectionRoute: content.collection.route,
+      };
+
+    case "reserved":
+      // Contact is the only reserved route, and the only one with a window of its own.
+      return content.route === CONTACT_ROUTE ? { id: "contact", title: CONTACT_DOCUMENT_TITLE } : { id: "notFound" };
+
+    default:
+      return { id: "notFound" };
+  }
 }
 
 /** The window a route opens, or `null` if it does not open a window. */
@@ -82,12 +80,12 @@ function destinationShownBy(windowRoute: string): string | null {
   const target = resolveWindow(windowRoute);
 
   switch (target?.id) {
-    case "collection":
-      return target.collectionRoute;
-
     case "entry":
     case "contact":
       return windowRoute;
+
+    case "collection":
+      return target.collectionRoute;
 
     default:
       return null;

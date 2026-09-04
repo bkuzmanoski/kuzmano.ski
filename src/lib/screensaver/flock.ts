@@ -1,4 +1,4 @@
-import type { StyleWithVars } from "../style";
+import type { StyleWithVars } from "../style.ts";
 
 const FLIGHT_DURATION_S = { fast: 10, medium: 16, slow: 24 }; // How long a sprite takes to fly its whole course, in seconds.
 

@@ -1,17 +1,17 @@
-import { COLLECTIONS, PAGE_SLUGS } from "#/config/content";
-import type * as SiteCatalog from "#/site/catalog";
-import type { Collection, Entry } from "#/site/catalog";
+import { COLLECTIONS, PAGE_SLUGS } from "#/config/content.ts";
+import type * as SiteCatalog from "#/site/catalog.ts";
+import type { Collection, Entry } from "#/site/catalog.ts";
 
-import { fakeCollection, fakeContentIndex, fakeEntries, fakeEntry } from "./collection";
+import { fakeCollection, fakeCollectionEntries, fakeContentIndex, fakeEntry } from "./collection.ts";
 
 // A `vi.mock` factory for `#/site/catalog`.
 //
 // A suite covering content the fixtures below do not hold, such as a draft, passes its own
 // collections or pages as `overrides`.
 
-export const collectionEntries = fakeEntries("newest-entry", "middle-entry", "oldest-entry");
+export const collectionEntries = fakeCollectionEntries("newest-entry", "middle-entry", "oldest-entry");
 export const collection = fakeCollection(collectionEntries, { title: "Collection", route: "/collection" });
-export const otherCollection = fakeCollection(fakeEntries("other-entry"), {
+export const otherCollection = fakeCollection(fakeCollectionEntries("other-entry"), {
   title: "Other Collection",
   route: "/other-collection",
 });
@@ -31,7 +31,7 @@ export const configuredPages: Record<string, Entry> = Object.fromEntries(
 export const configuredCollections: Record<string, Collection> = Object.fromEntries(
   Object.entries(COLLECTIONS).map(([segment, { title, description }]) => [
     segment,
-    fakeCollection(fakeEntries(`${segment}-newest-entry`, `${segment}-oldest-entry`), {
+    fakeCollection(fakeCollectionEntries(`${segment}-newest-entry`, `${segment}-oldest-entry`), {
       title,
       description,
       route: `/${segment}`,

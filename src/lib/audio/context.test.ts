@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { FakeAudioContext } from "#/test-utils/audio";
+import { FakeAudioContext } from "#/test-utils/audio.ts";
 
-const settings = vi.hoisted(() => ({ sound: "on" }));
+const settings = vi.hoisted(() => ({ soundEffects: "on" }));
 
-vi.mock("../settings", () => ({ getSettings: () => settings }));
+vi.mock("../settings/settings.ts", () => ({ getSettings: () => settings }));
 
 const setUserActivation = (hasBeenActive: boolean) =>
   Object.defineProperty(navigator, "userActivation", {
@@ -13,12 +13,12 @@ const setUserActivation = (hasBeenActive: boolean) =>
   });
 
 // The module keeps its context for the session, so each test loads a fresh module instance.
-const loadContextModule = async () => await import("./context");
+const loadContextModule = async () => await import("./context.ts");
 
 beforeEach(() => {
   vi.resetModules();
 
-  settings.sound = "on";
+  settings.soundEffects = "on";
   FakeAudioContext.reset();
 
   vi.stubGlobal("AudioContext", FakeAudioContext);
@@ -31,7 +31,7 @@ afterEach(() => {
 
 describe("playSound", () => {
   test("does not play a sound or create an audio context if sound is turned off", async () => {
-    settings.sound = "off";
+    settings.soundEffects = "off";
 
     const { playSound } = await loadContextModule();
     const play = vi.fn();
@@ -111,7 +111,7 @@ describe("playSound", () => {
 
 describe("primeAudio", () => {
   test("does not create an audio context if sound is turned off", async () => {
-    settings.sound = "off";
+    settings.soundEffects = "off";
 
     const { primeAudio } = await loadContextModule();
 
@@ -184,7 +184,7 @@ describe("primeAudio", () => {
 
 describe("needsAudioPriming", () => {
   test("is false if sound is turned off", async () => {
-    settings.sound = "off";
+    settings.soundEffects = "off";
 
     const { needsAudioPriming } = await loadContextModule();
 

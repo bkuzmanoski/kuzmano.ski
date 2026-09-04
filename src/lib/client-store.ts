@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { createEmitter } from "./emitter";
+import { createEmitter } from "./emitter.ts";
 
 /**
  * A store over a value only the client can read, such as one held in local storage.

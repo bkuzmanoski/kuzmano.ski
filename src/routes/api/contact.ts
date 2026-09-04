@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { parseSubmission } from "#/lib/contact/message";
-import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings";
-import { contactEmailAddress } from "#/server/contact-email-address";
-import { json, readSubmission, refusalFor, senderKey } from "#/server/endpoint";
-import { deliver } from "#/server/mail";
-import type { Delivery } from "#/server/mail";
-import { isWithinRateLimit } from "#/server/rate-limit";
-import { isSameSite } from "#/server/request";
+import { parseSubmission } from "#/lib/contact/message.ts";
+import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings.ts";
+import { contactEmailAddress } from "#/server/contact-email-address.ts";
+import { json, readSubmission, refusalFor, senderKey } from "#/server/endpoint.ts";
+import { deliver } from "#/server/mail.ts";
+import type { Delivery } from "#/server/mail.ts";
+import { isWithinRateLimit } from "#/server/rate-limit.ts";
+import { isSameSite } from "#/server/request.ts";
 
 const DELIVERY_STATUS: Record<Delivery, number> = {
   sent: 204,

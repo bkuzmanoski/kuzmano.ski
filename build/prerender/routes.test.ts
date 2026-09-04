@@ -29,12 +29,12 @@ const undated = { date: undefined };
 // A valid tree that each test can modify to exercise one condition.
 const content = (overrides: Partial<ScannedContent> = {}): ScannedContent =>
   scannedContent({
+    pages: scannedDirectory([scannedEntry("page-1", { date: "2026-02-03" }), scannedEntry("page-2", undated)]),
     collections: [
       scannedCollection("collection-1", [scannedEntry("entry-1", { date: "2026-01-02" })]),
       scannedCollection("collection-2", [scannedEntry("entry-2", { date: "2026-03-04" })]),
       scannedCollection("collection-3"),
     ],
-    pages: scannedDirectory([scannedEntry("page-1", { date: "2026-02-03" }), scannedEntry("page-2", undated)]),
     ...overrides,
   });
 
@@ -42,7 +42,7 @@ const routes = (overrides?: Partial<ScannedContent>) => routesFor(content(overri
 const paths = (overrides?: Partial<ScannedContent>) => routes(overrides).map(({ path }) => path);
 
 describe("routes", () => {
-  test("includes the home page, contact page, collections, and entries", () => {
+  test("includes the home and contact routes, collections, collection entries, and pages", () => {
     expect(paths()).toEqual([
       "/",
       "/contact",
@@ -88,16 +88,16 @@ describe("routes", () => {
   test("omits draft entries", () => {
     const withDrafts = routesFor(
       content({
-        collections: [
-          scannedCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
-          scannedCollection("collection-2"),
-          scannedCollection("collection-3"),
-        ],
         pages: scannedDirectory([
           scannedEntry("page-1", undated),
           scannedEntry("page-2", undated),
           draftEntry("secret", undated),
         ]),
+        collections: [
+          scannedCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
+          scannedCollection("collection-2"),
+          scannedCollection("collection-3"),
+        ],
       }),
     ).map(({ path }) => path);
 

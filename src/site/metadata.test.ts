@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
-import { canonicalUrl, documentHead } from "./metadata";
+import { canonicalUrl, documentHead } from "./metadata.ts";
 
-import type { DocumentMetadata } from "./metadata";
+import type { DocumentMetadata } from "./metadata.ts";
 
 const DOCUMENT: DocumentMetadata = { title: "Title", description: "Description.", path: "/collection/entry" };
 

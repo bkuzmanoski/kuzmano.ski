@@ -1,4 +1,4 @@
-import type { WindowId } from "./window";
+import type { WindowId } from "./window.ts";
 
 /**
  * Guards a window close request.

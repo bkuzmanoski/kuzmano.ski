@@ -1,16 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "#/lib/audio/sounds";
-import { useInputField } from "#/lib/forms/use-input-field";
-import type { InputFieldControl } from "#/lib/forms/use-input-field";
+import { playClick } from "#/lib/audio/sounds.ts";
+import { useInputField } from "#/lib/forms/use-input-field.ts";
+import type { InputFieldControl } from "#/lib/forms/use-input-field.ts";
 
-import { InputField } from "./input-field";
+import { InputField } from "./input-field.tsx";
 
 import type { ReactNode } from "react";
 
-vi.mock("#/lib/audio/sounds", async (importOriginal) =>
-  (await import("#/test-utils/audio")).audioModuleMock(importOriginal, {}),
+vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
 beforeEach(() => vi.mocked(playClick).mockClear());

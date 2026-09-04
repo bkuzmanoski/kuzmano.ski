@@ -1,5 +1,5 @@
-import type { IconPlacement } from "./icon";
-import type { ArrowKey } from "../keys";
+import type { IconPlacement } from "./icon.ts";
+import type { ArrowKey } from "../keys.ts";
 
 const OFF_AXIS_DISTANCE_WEIGHT = 2; // How much further an icon off the arrow's axis has to be before it loses to one on that axis during keyboard navigation.
 

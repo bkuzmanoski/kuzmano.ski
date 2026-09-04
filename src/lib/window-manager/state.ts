@@ -1,8 +1,8 @@
-import { cascadeSlot, createWindowPlacer, createWindowResizer } from "./layout";
-import { WINDOW_DOM_ORDER, isUnmeasured } from "./window";
+import { cascadeSlot, createWindowPlacer, createWindowResizer } from "./layout.ts";
+import { WINDOW_DOM_ORDER, isUnmeasured } from "./window.ts";
 
-import type { Rect } from "../geometry";
-import type { Action, ManagerState, WindowGeometry, WindowId, WindowLayout, WindowRecord } from "./window";
+import type { Rect } from "../geometry.ts";
+import type { Action, ManagerState, WindowGeometry, WindowId, WindowLayout, WindowRecord } from "./window.ts";
 
 function updateGeometry(
   state: ManagerState,

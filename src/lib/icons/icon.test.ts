@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { isValidPosition, loadPositions, savePositions } from "./icon";
+import { isValidPosition, loadPositions, savePositions } from "./icon.ts";
 
-import type { IconLayout, IconPositions } from "./icon";
+import type { IconLayout, IconPositions } from "./icon.ts";
 
 const STORAGE_KEY = "test-icon-positions";
 const ICON_IDS = ["first", "second", "third", "fourth"];

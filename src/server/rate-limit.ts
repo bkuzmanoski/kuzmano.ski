@@ -1,6 +1,6 @@
-import { workerEnv } from "./env";
+import { workerEnv } from "./env.ts";
 
-import type { RateLimitBindingName } from "./bindings";
+import type { RateLimitBindingName } from "./bindings.ts";
 
 /**
  * Whether `bindingKey` is still within the budget of `bindingName`, per the Workers rate limit binding.

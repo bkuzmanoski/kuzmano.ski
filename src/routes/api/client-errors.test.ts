@@ -1,8 +1,8 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api";
+import { API } from "#/api.ts";
 
-import { Route } from "./client-errors";
+import { Route } from "./client-errors.ts";
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockReturnValue();

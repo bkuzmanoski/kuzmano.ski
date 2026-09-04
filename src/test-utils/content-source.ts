@@ -1,6 +1,6 @@
 import { createElement } from "react";
 
-import type { ContentSource } from "#/lib/content/catalog";
+import type { ContentSource } from "#/lib/content/catalog.ts";
 
 import type { MDXContent } from "mdx/types";
 
@@ -8,7 +8,7 @@ export const CONTENT_ROOT = "/content";
 
 export interface FakeDocument {
   frontmatter?: unknown;
-  styles?: { page?: string };
+  styles?: { entry?: string };
   asset?: string;
   body?: MDXContent;
 }

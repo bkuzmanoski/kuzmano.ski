@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import { TextArea, TextInput, TextInputFrame } from "./text-input";
+import { TextArea, TextInput, TextInputFrame } from "./text-input.tsx";
 
 test("a text input defaults to text unless given another type", () => {
   render(

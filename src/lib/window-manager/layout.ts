@@ -1,9 +1,9 @@
-import { clamp } from "../math";
+import { clamp } from "../math.ts";
 
-import { isUnmeasured } from "./window";
+import { isUnmeasured } from "./window.ts";
 
-import type { Rect, Size } from "../geometry";
-import type { WindowId, WindowLayout } from "./window";
+import type { Rect, Size } from "../geometry.ts";
+import type { WindowId, WindowLayout } from "./window.ts";
 
 function cascadeAxis(
   padding: number,
@@ -17,7 +17,7 @@ function cascadeAxis(
   const stepped = center + offset;
 
   // The result is left unrounded so that it matches, to the pixel, where CSS centers a
-  // pre-rendered window (see `.unplaced` in `/src/components/window.module.css`).
+  // pre-rendered window (see `.unplaced` in `/src/features/windows/window.module.css`).
   const position = extentAt(stepped) < minLength ? center : stepped;
 
   return { position, extent: extentAt(position) };

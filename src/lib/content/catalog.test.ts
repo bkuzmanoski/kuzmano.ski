@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { CONTENT_ROOT, fakeContentSource, frontmatterOf } from "#/test-utils/content-source";
-import type { FakeDocument } from "#/test-utils/content-source";
+import { CONTENT_ROOT, fakeContentSource, frontmatterOf } from "#/test-utils/content-source.ts";
+import type { FakeDocument } from "#/test-utils/content-source.ts";
 
-import { createCatalog } from "./catalog";
+import { createCatalog } from "./catalog.ts";
 
-import type { TrackedPromise } from "../tracked-promise";
-import type { Catalog, CatalogOptions, MDXModule } from "./catalog";
+import type { TrackedPromise } from "../tracked-promise.ts";
+import type { Catalog, CatalogOptions, MDXModule } from "./catalog.ts";
 
 const CATALOG_OPTIONS: CatalogOptions = {
   pagesDirectory: "pages",
@@ -120,11 +120,11 @@ describe("createCatalog", () => {
     expect(module.className).toBeUndefined(); // No stylesheet sits beside this entry.
   });
 
-  test("a stylesheet beside an entry applies its page class to the entry", async () => {
-    const catalog = catalogOf({ "collection/styled.mdx": { styles: { page: "styledPage" } } });
+  test("a stylesheet beside an entry applies its entry class to the entry", async () => {
+    const catalog = catalogOf({ "collection/styled.mdx": { styles: { entry: "styledEntry" } } });
     const module = await catalog.collections.collection!.load("styled");
 
-    expect(module.className).toBe("styledPage");
+    expect(module.className).toBe("styledEntry");
     expect(module).toHaveProperty("default");
   });
 

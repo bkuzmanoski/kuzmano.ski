@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { cx } from "./class-names";
+import { cx } from "./class-names.ts";
 
 describe("cx", () => {
   test("joins the values it is given", () => {

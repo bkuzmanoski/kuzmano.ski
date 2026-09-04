@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { mergeHandlers } from "./merge-handlers";
+import { mergeHandlers } from "./merge-handlers.ts";
 
 import type { SyntheticEvent } from "react";
 

@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import { createWindowPlacer, createWindowResizer } from "./layout";
-import { createWindowReducer } from "./state";
-import { EMPTY_STATE, WINDOW_DOM_ORDER } from "./window";
+import { createWindowPlacer, createWindowResizer } from "./layout.ts";
+import { createWindowReducer } from "./state.ts";
+import { EMPTY_STATE, WINDOW_DOM_ORDER } from "./window.ts";
 
-import type { Size } from "../geometry";
-import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window";
+import type { Size } from "../geometry.ts";
+import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window.ts";
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
 const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };
@@ -266,7 +266,7 @@ describe("measure", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
     const measured = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
 
-    // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/components/window.module.css`).
+    // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/windows/window.module.css`).
     expect(measured.geometry.entry).toMatchObject({
       x: LAYOUT.padding,
       y: LAYOUT.padding,

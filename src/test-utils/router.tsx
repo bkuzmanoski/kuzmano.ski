@@ -1,8 +1,8 @@
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import { render } from "@testing-library/react";
 
-import { getRouter } from "#/router";
-import { Route as rootRoute } from "#/routes/__root";
+import { getRouter } from "#/router.tsx";
+import { Route as rootRoute } from "#/routes/__root.tsx";
 
 import type { RootRouteOptions } from "@tanstack/react-router";
 

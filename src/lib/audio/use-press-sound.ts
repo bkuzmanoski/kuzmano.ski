@@ -1,8 +1,8 @@
 import { useRef } from "react";
 
-import { isPointerClick, isPrimaryPress } from "#/lib/press";
+import { isPointerClick, isPrimaryPress } from "../press.ts";
 
-import { playClick } from "./sounds";
+import { playClick } from "./sounds.ts";
 
 import type { MouseEvent, PointerEvent } from "react";
 

@@ -8,9 +8,9 @@ import {
   maxLength,
   required,
   validate,
-} from "./validation";
+} from "./validation.ts";
 
-import type { Schema } from "./validation";
+import type { Schema } from "./validation.ts";
 
 describe("required", () => {
   const rule = required("Required.");

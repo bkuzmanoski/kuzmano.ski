@@ -1,11 +1,11 @@
 import { act, render } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import { useForm } from "./use-form";
-import { emailAddress, required } from "./validation";
+import { useForm } from "./use-form.ts";
+import { emailAddress, required } from "./validation.ts";
 
-import type { Form } from "./use-form";
-import type { Schema } from "./validation";
+import type { Form } from "./use-form.ts";
+import type { Schema } from "./validation.ts";
 import type { ChangeEvent } from "react";
 
 interface Fields {

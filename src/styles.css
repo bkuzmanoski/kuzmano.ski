@@ -41,8 +41,7 @@
   --layer-tooltip: 300;
   --layer-skip-link: 400;
   --layer-screensaver: 500;
-  --layer-boot-sequence-overlay: 700;
-  --layer-boot-sequence: 700;
+  --layer-boot-sequence: 600;
 
   /* Metrics */
   --safe-area-top: env(safe-area-inset-top, 0px);
@@ -50,9 +49,9 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --menu-bar-height: 32px;
-  --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `LAYOUT.padding` in `config/windows.ts`. */
+  --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `LAYOUT.padding` in `config/desktop.ts`. */
   --gutter: 16px;
-  --title-bar-height: 28px; /* Excludes its bottom border. Read by the drag outline as well as the window itself. */
+  --title-bar-height: 28px; /* Excludes its bottom border. Read by the drag outline as well as the window itself. Mirrored by `LAYOUT.cascadeOffset.y` (+1 for that border) in `config/desktop.ts`. */
   --scrollbar-width: 20px; /* Excludes its leading border. Read by the drag outline as well as the scrollbar itself. */
   --tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
   --shadow-length: 3px;
@@ -188,7 +187,7 @@ html {
     content: "";
 
     position: fixed;
-    z-index: var(--layer-boot-sequence-overlay);
+    z-index: var(--layer-boot-sequence);
     inset: 0;
 
     background: var(--color-boot-sequence-backdrop);

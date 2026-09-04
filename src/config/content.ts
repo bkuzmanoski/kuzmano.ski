@@ -1,12 +1,12 @@
-import type { DateFormat } from "#/lib/hooks/use-date-format";
+import type { DateFormat } from "#/lib/hooks/use-date-format.ts";
 
 /**
- * Directory under `/content/` whose files are pages (`/<slug>`): entries that do  not
+ * Directory under `/content/` whose files are pages (`/<slug>`): entries that do not
  * belong to a collection (`/<collection>/<slug>`).
  */
 export const PAGES_DIRECTORY = "_pages";
 
-/** How an entry dates are formatted throughout the site. */
+/** How entry dates are formatted throughout the site. */
 export const ENTRY_DATE_FORMAT: DateFormat = {
   locale: "en-AU",
   options: { year: "numeric", month: "short", day: "numeric" },

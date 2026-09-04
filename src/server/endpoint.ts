@@ -1,20 +1,26 @@
-import type { ParsedSubmission } from "#/lib/forms/submission";
-import { isRecord } from "#/lib/guards";
+import type { ParsedSubmission } from "#/lib/forms/submission.ts";
+import { isRecord } from "#/lib/guards.ts";
 
-import { isWithinRateLimit } from "./rate-limit";
-import { isOversized, isSameOrigin } from "./request";
+import { isWithinRateLimit } from "./rate-limit.ts";
+import { exceedsMaxLength, isSameOrigin } from "./request.ts";
 
-import type { RateLimitBindingName } from "./bindings";
+import type { RateLimitBindingName } from "./bindings.ts";
 
 const RATE_LIMIT_FALLBACK_KEY = "unknown";
 
+export const senderKey = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
 export const json = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 
-export const senderKey = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
+type MissingBindingEvent = "contact_binding_missing" | "waitlist_binding_missing";
+
+/** Logs a binding or secret the Worker could not reach. */
+export function reportMissingBinding(event: MissingBindingEvent, binding: string) {
+  console.error({ event, binding, message: `The worker could not access \`${binding}\`` });
+}
 
 export type ReceivedSubmission = { ok: true; fields: Record<string, unknown> } | { ok: false; response: Response };
 
@@ -26,7 +32,7 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
     return refuse(403);
   }
 
-  if (isOversized(request)) {
+  if (exceedsMaxLength(request)) {
     return refuse(413);
   }
 
@@ -36,7 +42,7 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
 
   const body = await request.text();
 
-  if (isOversized(body)) {
+  if (exceedsMaxLength(body)) {
     return refuse(413);
   }
 

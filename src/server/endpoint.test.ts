@@ -1,14 +1,14 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { SEND_EMAIL_RATELIMIT_BINDING } from "./bindings";
-import { readSubmission, refusalFor } from "./endpoint";
-import { MAX_BODY_LENGTH } from "./request";
+import { SEND_EMAIL_RATELIMIT_BINDING } from "./bindings.ts";
+import { readSubmission, refusalFor } from "./endpoint.ts";
+import { MAX_BODY_LENGTH } from "./request.ts";
 
-import type { RateLimitBindingName } from "./bindings";
+import type { RateLimitBindingName } from "./bindings.ts";
 
 const isWithinRateLimit = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
 
-vi.mock("./rate-limit", () => ({ isWithinRateLimit }));
+vi.mock("./rate-limit.ts", () => ({ isWithinRateLimit }));
 
 beforeEach(() => {
   isWithinRateLimit.mockReset();
@@ -48,7 +48,11 @@ test("a cross-origin request is refused before anything is read", async () => {
 });
 
 test.each([
-  ["a declared content length that exceeds the limit", "{}", { "content-length": String(MAX_BODY_LENGTH + 1) }],
+  [
+    "a declared content length that exceeds the maximum length",
+    "{}",
+    { "content-length": String(MAX_BODY_LENGTH + 1) },
+  ],
   ["a body that exceeds the maximum length", `{"pad":"${"a".repeat(MAX_BODY_LENGTH)}"}`, {}],
 ])("%s is refused", async (_label, body, headers) => {
   expect(refusalStatus(await read(body, { headers }))).toBe(413);

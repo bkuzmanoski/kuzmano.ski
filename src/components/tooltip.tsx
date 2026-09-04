@@ -1,8 +1,8 @@
 import { cloneElement, isValidElement, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
-import { cx } from "#/lib/class-names";
-import { useTimer } from "#/lib/hooks/use-timer";
-import type { StyleWithVars } from "#/lib/style";
+import { cx } from "#/lib/class-names.ts";
+import { useTimer } from "#/lib/hooks/use-timer.ts";
+import type { StyleWithVars } from "#/lib/style.ts";
 import {
   hideAfterDelay,
   isGroupInGracePeriod,
@@ -11,7 +11,7 @@ import {
   runPendingHideAction,
   startGroupGracePeriod,
   unregisterShownTooltip,
-} from "#/lib/tooltip";
+} from "#/lib/tooltip.ts";
 
 import styles from "./tooltip.module.css";
 
@@ -69,11 +69,11 @@ export function Tooltip({
     }
 
     registerShownTooltip(id, () => setIsOpen(false));
-    resetGroupGracePeriod(wrapperRef.current);
+    resetGroupGracePeriod(id, wrapperRef.current);
 
     return () => {
       unregisterShownTooltip(id);
-      startGroupGracePeriod();
+      startGroupGracePeriod(id);
       reportHidden();
     };
   }, [isVisible, id]);

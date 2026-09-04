@@ -3,10 +3,11 @@ import { useState } from "react";
 import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
 import CopyIcon from "#/assets/images/copy.svg?react";
 import LinkIcon from "#/assets/images/link.svg?react";
-import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard";
+import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
-import { Button } from "./button";
-import { CopyFailureAlert, CopyTooltip } from "./copy-feedback";
+import { Button } from "./button.tsx";
+import { CopyFailureAlert } from "./copy-failure-alert.tsx";
+import { CopyTooltip } from "./copy-tooltip.tsx";
 
 const icons = { copy: CopyIcon, link: LinkIcon };
 

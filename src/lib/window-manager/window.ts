@@ -1,4 +1,4 @@
-import type { Position, Rect, Size } from "../geometry";
+import type { Position, Rect, Size } from "../geometry.ts";
 
 export const WINDOW_DOM_ORDER = ["collection", "entry", "contact"] as const;
 

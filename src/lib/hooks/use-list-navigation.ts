@@ -1,9 +1,9 @@
 import { useEffect, useId, useState } from "react";
 
-import { scrollIntoViewSilently } from "../audio/scroll";
-import { playHover } from "../audio/sounds";
-import { isActivationKey } from "../keys";
-import { clamp } from "../math";
+import { scrollIntoViewSilently } from "../audio/scroll.ts";
+import { playHover } from "../audio/sounds.ts";
+import { isActivationKey } from "../keys.ts";
+import { clamp } from "../math.ts";
 
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
 

@@ -8,7 +8,7 @@ import {
   phaseFlags,
   sequence,
   startOfPhaseMs,
-} from "./phases";
+} from "./phases.ts";
 
 describe("phaseFlags", () => {
   test("the loading cover stays up until the illustration is revealed", () => {

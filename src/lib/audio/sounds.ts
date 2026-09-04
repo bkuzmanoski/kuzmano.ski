@@ -1,9 +1,9 @@
-import { LEAD_TIME, playSound } from "./context";
-import { playStrike } from "./strike";
-import { playTone } from "./tone";
+import { LEAD_TIME, playSound } from "./context.ts";
+import { playStrike } from "./strike.ts";
+import { playTone } from "./tone.ts";
 
-import type { Strike } from "./strike";
-import type { Tone } from "./tone";
+import type { Strike } from "./strike.ts";
+import type { Tone } from "./tone.ts";
 
 const CLICK: Strike = {
   durationSeconds: 0.015,

@@ -1,7 +1,7 @@
 import { documentTitle } from "#/site/metadata.ts";
 
-const TITLE_SUFFIX = documentTitle(""); // The suffix on every page title. It comes from `documentTitle` so the two agree.
-const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/views/menu-bar.tsx`
+const TITLE_SUFFIX = documentTitle(""); // The suffix on every document title. It comes from `documentTitle` so the two agree.
+const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/features/menu-bar/menu-bar.tsx`
 const WINDOW_BODY = /id="window-content"[^>]*>(?:<!--.*?-->)*<(?!\/)/; // Content inside `FOCUSED_WINDOW_CONTENT_ID`, past the comments React writes around a Suspense boundary.
 const LOADING_INDICATOR = "data-loading-indicator"; // The marker on `/src/components/spinner.tsx`.
 
@@ -30,7 +30,8 @@ function windowTitlesOf(html: string): Array<string> {
 }
 
 /** Checks prerendered HTML for the presence of required elements and fails the build if any are missing. */
-export function verifyPrerenderedPage({ page, html }: { page: { path: string }; html: string }) {
+export function verifyPrerenderedDocument({ page, html }: { page: { path: string }; html: string }) {
+  // `page` is the prerender result's own field name for the route the document was rendered for.
   const problems: Array<string> = [];
   const segments = page.path.split("/").filter(Boolean);
 

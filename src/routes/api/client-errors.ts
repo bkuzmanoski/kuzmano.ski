@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { readSubmission } from "#/server/endpoint";
+import { readSubmission } from "#/server/endpoint.ts";
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_ROUTE_LENGTH = 500;

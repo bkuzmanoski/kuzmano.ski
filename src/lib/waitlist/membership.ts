@@ -1,11 +1,11 @@
-import { EMAIL_ADDRESS_RULES } from "#/lib/forms/rules";
-import type { ParsedSubmission } from "#/lib/forms/submission";
-import { MAX_ADDRESS_LENGTH, isWithinLengthLimit, validate } from "#/lib/forms/validation";
-import type { Schema } from "#/lib/forms/validation";
+import { EMAIL_ADDRESS_RULES } from "../forms/rules.ts";
+import { MAX_EMAIL_ADDRESS_LENGTH, isWithinLengthLimit, validate } from "../forms/validation.ts";
+
+import type { ParsedSubmission } from "../forms/submission.ts";
+import type { Schema } from "../forms/validation.ts";
 
 export const LIST_MAX_LENGTH = 64;
-
-const SOURCE_MAX_LENGTH = 512;
+export const SOURCE_MAX_LENGTH = 512;
 
 export interface WaitlistFields {
   emailAddress: string;
@@ -19,7 +19,7 @@ export const EMPTY_MEMBERSHIP: WaitlistFields = { emailAddress: "" };
 
 export interface Membership extends WaitlistFields {
   list: string;
-  source: string; // The path to the page where the waitlist was joined.
+  source: string; // The path to the entry where the waitlist was joined.
 }
 
 const isSitePath = (value: string) => value.startsWith("/") && !value.startsWith("//");
@@ -31,7 +31,7 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
   // than shortened into an accepted one.
   if (
     typeof emailAddress !== "string" ||
-    !isWithinLengthLimit(emailAddress, MAX_ADDRESS_LENGTH) ||
+    !isWithinLengthLimit(emailAddress, MAX_EMAIL_ADDRESS_LENGTH) ||
     typeof list !== "string" ||
     !isWithinLengthLimit(list, LIST_MAX_LENGTH) ||
     typeof source !== "string" ||

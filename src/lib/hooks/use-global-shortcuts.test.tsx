@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { useGlobalShortcuts } from "./use-global-shortcuts";
+import { useGlobalShortcuts } from "./use-global-shortcuts.ts";
 
-import type { KeyboardShortcut } from "./use-global-shortcuts";
+import type { KeyboardShortcut } from "./use-global-shortcuts.ts";
 
 const run = vi.fn();
 

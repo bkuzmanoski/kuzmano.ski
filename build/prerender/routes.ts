@@ -1,10 +1,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { CONTACT_PAGE_ROUTE } from "#/config/contact.ts";
+import { CONTACT_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGES_DIRECTORY, PAGE_SLUGS } from "#/config/content.ts";
 import { byNewestDate } from "#/lib/date.ts";
 import { isRecord } from "#/lib/guards.ts";
+import { RESERVED_ROUTES, collectionRoute, entryRoute, pageRoute } from "#/site/content-routes.ts";
 
 import { frontmatterOf } from "../frontmatter.ts";
 import { CONTENT_DIRECTORY, fromRoot } from "../paths.ts";
@@ -23,8 +24,8 @@ export interface ScannedDirectory {
 }
 
 export interface ScannedContent {
-  collections: Array<ScannedDirectory & { name: string }>;
   pages: ScannedDirectory;
+  collections: Array<ScannedDirectory & { name: string }>;
 }
 
 interface PrerenderRoute {
@@ -33,7 +34,6 @@ interface PrerenderRoute {
 }
 
 const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const RESERVED_ROUTES: Array<string> = [CONTACT_PAGE_ROUTE]; // Routes served by a window rather than by a content file. Content that resolves to one would shadow it.
 
 export const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter(({ draft }) => !draft);
 export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => byNewestDate(a.date, b.date);
@@ -66,28 +66,28 @@ const isRegisteredPage = (slug: string) => (PAGE_SLUGS as ReadonlyArray<string>)
 const unlistedRoute = (path: string): PrerenderRoute => ({ path, sitemap: { exclude: true } });
 const readContentDirectory = (directory: string): ScannedDirectory => {
   const path = fromRoot(join(CONTENT_DIRECTORY, directory));
-  const entries = readdirSync(path, { withFileTypes: true });
+  const dirents = readdirSync(path, { withFileTypes: true });
 
   return {
-    entries: entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".mdx"))
-      .map((entry) => entryOf(join(path, entry.name), entry.name.replace(/\.mdx$/, ""))),
-    subdirectories: entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name),
+    entries: dirents
+      .filter((dirent) => dirent.isFile() && dirent.name.endsWith(".mdx"))
+      .map((dirent) => entryOf(join(path, dirent.name), dirent.name.replace(/\.mdx$/, ""))),
+    subdirectories: dirents.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name),
   };
 };
 
 /** Walks `/content`, reading the frontmatter of every entry it finds. */
 export function scanContent(): ScannedContent {
   const directoryNames = readdirSync(fromRoot(CONTENT_DIRECTORY), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
   return {
-    collections: directoryNames
-      .filter((name) => name !== PAGES_DIRECTORY)
-      .map((name) => ({ name, ...readContentDirectory(name) })),
     pages: directoryNames.includes(PAGES_DIRECTORY)
       ? readContentDirectory(PAGES_DIRECTORY)
       : { entries: [], subdirectories: [] },
+    collections: directoryNames
+      .filter((name) => name !== PAGES_DIRECTORY)
+      .map((name) => ({ name, ...readContentDirectory(name) })),
   };
 }
 
@@ -100,15 +100,15 @@ export function scanContent(): ScannedContent {
  *
  * Takes the tree as a value so the validation messages can be exercised without content on disk.
  */
-export function routesFor({ collections, pages }: ScannedContent): Array<PrerenderRoute> {
+export function routesFor({ pages, collections }: ScannedContent): Array<PrerenderRoute> {
   const unsafeNames = [
-    ...collections.filter(({ name }) => !URL_SAFE_NAME.test(name)).map(({ name }) => `${name}/`),
-    ...collections.flatMap(({ name, entries }) =>
-      entries.filter(({ slug }) => !URL_SAFE_NAME.test(slug)).map(({ slug }) => `${name}/${slug}.mdx`),
-    ),
     ...pages.entries
       .filter(({ slug }) => !URL_SAFE_NAME.test(slug))
       .map(({ slug }) => `${PAGES_DIRECTORY}/${slug}.mdx`),
+    ...collections.flatMap(({ name, entries }) =>
+      entries.filter(({ slug }) => !URL_SAFE_NAME.test(slug)).map(({ slug }) => `${name}/${slug}.mdx`),
+    ),
+    ...collections.filter(({ name }) => !URL_SAFE_NAME.test(name)).map(({ name }) => `${name}/`),
   ];
 
   if (unsafeNames.length > 0) {
@@ -157,10 +157,10 @@ export function routesFor({ collections, pages }: ScannedContent): Array<Prerend
   }
 
   const nestedDirectories = [
+    ...pages.subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, PAGES_DIRECTORY, subdirectory)}/`),
     ...collections.flatMap(({ name, subdirectories }) =>
       subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, name, subdirectory)}/`),
     ),
-    ...pages.subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, PAGES_DIRECTORY, subdirectory)}/`),
   ];
 
   if (nestedDirectories.length > 0) {
@@ -172,13 +172,16 @@ export function routesFor({ collections, pages }: ScannedContent): Array<Prerend
 
   const reservedRouteConflicts = [
     ...pages.entries.map(({ slug }) => ({
-      path: `/${slug}`,
+      path: pageRoute(slug),
       source: join(CONTENT_DIRECTORY, PAGES_DIRECTORY, `${slug}.mdx`),
     })),
-    ...collections.map(({ name }) => ({ path: `/${name}`, source: `${join(CONTENT_DIRECTORY, name)}/` })),
     ...collections.flatMap(({ name, entries }) =>
-      entries.map(({ slug }) => ({ path: `/${name}/${slug}`, source: join(CONTENT_DIRECTORY, name, `${slug}.mdx`) })),
+      entries.map(({ slug }) => ({
+        path: entryRoute(name, slug),
+        source: join(CONTENT_DIRECTORY, name, `${slug}.mdx`),
+      })),
     ),
+    ...collections.map(({ name }) => ({ path: collectionRoute(name), source: `${join(CONTENT_DIRECTORY, name)}/` })),
   ].filter(({ path }) => RESERVED_ROUTES.includes(path));
 
   if (reservedRouteConflicts.length > 0) {
@@ -196,15 +199,17 @@ export function routesFor({ collections, pages }: ScannedContent): Array<Prerend
     ...publishedCollections.flatMap(({ entries }) => entries),
   ]);
 
+  // The sitemap lists its URLs in this order, so a collection precedes its entries and the pages
+  // come last, rather than following the page, collection entry, collection order used elsewhere.
   return [
     route("/", siteLastModifiedDate),
-    route(CONTACT_PAGE_ROUTE, siteLastModifiedDate), // Backed by a window rather than a document, so the content walk above misses it.
+    route(CONTACT_ROUTE, siteLastModifiedDate), // Backed by a window rather than a document, so the content walk above misses it.
     ...publishedCollections.flatMap(({ name, entries }) => [
-      route(`/${name}`, newestDate(entries) ?? siteLastModifiedDate),
-      ...entries.map(({ slug, date }) => route(`/${name}/${slug}`, date)),
+      route(collectionRoute(name), newestDate(entries) ?? siteLastModifiedDate),
+      ...entries.map(({ slug, date }) => route(entryRoute(name, slug), date)),
     ]),
     ...publishedPages.map(({ slug, date }) =>
-      isRegisteredPage(slug) ? route(`/${slug}`, date) : unlistedRoute(`/${slug}`),
+      isRegisteredPage(slug) ? route(pageRoute(slug), date) : unlistedRoute(pageRoute(slug)),
     ),
   ];
 }
