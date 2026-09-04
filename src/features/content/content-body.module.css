@@ -7,6 +7,7 @@
   --content-space: 20px;
   --content-space-loose: 40px;
   --content-space-x-loose: 64px;
+  --content-space-block: min((100% - var(--content-measure)) / 2 + var(--gutter), var(--content-space-x-loose));
   --content-space-heading-1: var(--content-space-x-loose) var(--content-space-loose);
   --content-space-heading-2: var(--content-space-loose) var(--content-space);
   --content-space-heading-3: var(--content-space);
@@ -22,12 +23,13 @@
   --font-heading-1: 525 40px/54px var(--font-family-heading);
   --font-heading-2: 600 24px/34px var(--font-family-heading);
   --font-heading-3: 600 19px/28px var(--font-family-heading);
-  --font-body: 500 16px/26px "Inter Variable", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif;
+  --font-body: 500 16px/26px "Inter Variable", ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
 
   max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
   margin-inline: auto;
-  padding-block: var(--content-space-x-loose);
+  padding-block: max(var(--content-space-loose), var(--content-space-block))
+    max(var(--gutter), var(--content-space-block));
   padding-inline: calc(var(--content-scrollbar-offset) + var(--gutter))
     calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
 
