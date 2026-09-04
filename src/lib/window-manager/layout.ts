@@ -5,43 +5,22 @@ import { isUnmeasured } from "./window.ts";
 import type { Rect, Size } from "../geometry.ts";
 import type { WindowId, WindowLayout } from "./window.ts";
 
-function cascadeAxis(
-  padding: number,
-  surfaceLength: number,
-  defaultLength: number,
-  minLength: number,
-  offset: number,
-): { position: number; extent: number } {
-  const center = Math.max(padding, (surfaceLength - defaultLength) / 2);
-  const extentAt = (position: number) => Math.min(defaultLength, surfaceLength - padding - position);
-  const stepped = center + offset;
+const fitToSurface = (defaultLength: number, surfaceLength: number, padding: number): number =>
+  Math.max(0, Math.min(defaultLength, surfaceLength - 2 * padding));
 
-  // The result is left unrounded so that it matches, to the pixel, where CSS centers a
-  // pre-rendered window (see `.unplaced` in `/src/features/windows/window.module.css`).
-  const position = extentAt(stepped) < minLength ? center : stepped;
-
-  return { position, extent: extentAt(position) };
-}
-
-export function cascadeSlot(layout: WindowLayout, surface: Size, id: WindowId, step: number): Rect {
+export function defaultRect(layout: WindowLayout, surface: Size, id: WindowId): Rect {
   const { defaultSize } = layout.windows[id];
-  const offsetX = step * layout.cascadeOffset.x;
-  const offsetY = step * layout.cascadeOffset.y;
 
   if (isUnmeasured(surface)) {
-    return { x: offsetX, y: offsetY, ...defaultSize };
+    return { x: 0, y: 0, ...defaultSize };
   }
 
-  const { padding, minSize } = layout;
-  const horizontal = cascadeAxis(padding, surface.width, defaultSize.width, minSize.width, offsetX);
-  const vertical = cascadeAxis(padding, surface.height, defaultSize.height, minSize.height, offsetY);
+  const width = fitToSurface(defaultSize.width, surface.width, layout.padding);
+  const height = fitToSurface(defaultSize.height, surface.height, layout.padding);
 
-  return {
-    x: horizontal.position,
-    y: vertical.position,
-    width: horizontal.extent,
-    height: vertical.extent,
-  };
+  // The position is left unrounded so that it matches, to the pixel, where CSS centers a
+  // pre-rendered window (see `.unplaced` in `/src/features/windows/window.module.css`).
+  return { x: (surface.width - width) / 2, y: (surface.height - height) / 2, width, height };
 }
 
 export type WindowPlacer = (geometry: Rect, surface: Size) => Rect;

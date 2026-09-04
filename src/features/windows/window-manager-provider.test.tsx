@@ -217,7 +217,7 @@ test("an unknown path is reported as not found, and its URL is left in place unt
   await waitFor(() => expect(notFoundRoute).toBe(UNKNOWN_ROUTE));
   expect(history.location.pathname).toBe(UNKNOWN_ROUTE); // Left in place, though the collection window is still the focused one.
 
-  act(() => actions().dismissNotFound());
+  act(() => actions().dismissNotFoundAlert());
   await settle(COLLECTION_ROUTE, history);
 
   expect(notFoundRoute).toBeNull();

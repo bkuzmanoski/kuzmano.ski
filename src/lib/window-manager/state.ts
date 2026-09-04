@@ -1,7 +1,6 @@
-import { cascadeSlot, createWindowPlacer, createWindowResizer } from "./layout.ts";
-import { WINDOW_DOM_ORDER, isUnmeasured } from "./window.ts";
+import { createWindowPlacer, createWindowResizer, defaultRect } from "./layout.ts";
+import { isUnmeasured } from "./window.ts";
 
-import type { Rect } from "../geometry.ts";
 import type { Action, ManagerState, WindowGeometry, WindowId, WindowLayout, WindowRecord } from "./window.ts";
 
 function updateGeometry(
@@ -18,48 +17,14 @@ function updateGeometry(
   return { ...state, geometry: { ...state.geometry, [id]: { ...target, ...patch(target) } } };
 }
 
-function openSlot(layout: WindowLayout, state: ManagerState, id: WindowId): Rect {
-  const slotAt = (step: number) => cascadeSlot(layout, state.surface, id, step);
-
-  if (layout.windows[id].openAt === "center") {
-    return slotAt(0);
-  }
-
-  const openWindows = Object.values(state.geometry);
-
-  for (let step = 0; step < WINDOW_DOM_ORDER.length; step++) {
-    const slot = slotAt(step);
-
-    if (!openWindows.some((window) => window.x === slot.x && window.y === slot.y)) {
-      return slot;
-    }
-  }
-
-  return slotAt(0);
-}
-
-function cascadeWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
+function layOutWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
   const geometry: WindowRecord<WindowGeometry> = {};
 
-  state.order.forEach((id, step) => {
-    const target = state.geometry[id];
-
-    if (target) {
-      const slot = cascadeSlot(layout, state.surface, id, step);
-      geometry[id] = {
-        ...slot,
-        width: Math.min(target.width, slot.width),
-        height: Math.min(target.height, slot.height),
-        maximized: false,
-      };
-    }
-  });
+  for (const windowId of state.order) {
+    geometry[windowId] = { ...defaultRect(layout, state.surface, windowId), maximized: false };
+  }
 
   return geometry;
-}
-
-function clearNotFound(state: ManagerState): ManagerState {
-  return state.notFoundRoute === null ? state : { ...state, notFoundRoute: null };
 }
 
 function focusWindow(state: ManagerState, id: WindowId): ManagerState {
@@ -72,6 +37,10 @@ function focusWindow(state: ManagerState, id: WindowId): ManagerState {
   }
 
   return { ...state, order: [...state.order.filter((open) => open !== id), id], focused: id };
+}
+
+function clearNotFoundAlert(state: ManagerState): ManagerState {
+  return state.notFoundRoute === null ? state : { ...state, notFoundRoute: null };
 }
 
 export type WindowReducer = (state: ManagerState, action: Action) => ManagerState;
@@ -89,7 +58,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
 
         if (current) {
           const raised = focusWindow(state, id);
-          return clearNotFound(content === state.content ? raised : { ...raised, content });
+          return clearNotFoundAlert(content === state.content ? raised : { ...raised, content });
         }
 
         return {
@@ -97,7 +66,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           content,
           geometry: {
             ...state.geometry,
-            [id]: { ...openSlot(layout, state, id), maximized: false },
+            [id]: { ...defaultRect(layout, state.surface, id), maximized: false },
           },
           order: [...state.order, id],
           focused: id,
@@ -151,7 +120,7 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         const measured = { ...state, surface };
         const isFirstMeasurement = isUnmeasured(state.surface);
 
-        return isFirstMeasurement ? { ...measured, geometry: cascadeWindows(layout, measured) } : measured;
+        return isFirstMeasurement ? { ...measured, geometry: layOutWindows(layout, measured) } : measured;
       }
 
       case "cycleWindows": {
@@ -160,15 +129,15 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
       }
 
       case "focusDesktop": {
-        return clearNotFound(state.focused === null ? state : { ...state, focused: null });
+        return clearNotFoundAlert(state.focused === null ? state : { ...state, focused: null });
       }
 
-      case "notFound": {
+      case "showNotFoundAlert": {
         return state.notFoundRoute === action.route ? state : { ...state, notFoundRoute: action.route };
       }
 
-      case "dismissNotFound": {
-        return clearNotFound(state);
+      case "dismissNotFoundAlert": {
+        return clearNotFoundAlert(state);
       }
     }
   };

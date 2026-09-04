@@ -51,8 +51,8 @@
   --menu-bar-height: 32px;
   --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `WINDOW_LAYOUT.padding` in `config/desktop.ts`. */
   --gutter: 16px;
-  --title-bar-height: 28px; /* Excludes its bottom border. Read by the drag outline as well as the window itself. Mirrored by `WINDOW_LAYOUT.cascadeOffset.y` (+1 for that border) in `config/desktop.ts`. */
-  --scrollbar-width: 20px; /* Excludes its leading border. Read by the drag outline as well as the scrollbar itself. */
+  --title-bar-height: 28px; /* Excludes its bottom border. */
+  --scrollbar-width: 20px; /* Excludes its leading border. */
   --tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
   --shadow-length: 3px;
 

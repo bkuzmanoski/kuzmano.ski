@@ -33,7 +33,7 @@ function openAction(route: string): Action | null {
 
 function initialState(reducer: WindowReducer, pathname: string): ManagerState {
   if (resolveRoute(pathname).id === "notFound") {
-    return reducer(EMPTY_STATE, { type: "notFound", route: pathname });
+    return reducer(EMPTY_STATE, { type: "showNotFoundAlert", route: pathname });
   }
 
   const action = openAction(pathname);
@@ -92,8 +92,8 @@ export function WindowManagerProvider({
       measure: (surface) => dispatch({ type: "measure", surface }),
       cycleWindows: () => dispatch({ type: "cycleWindows" }),
       focusDesktop: () => dispatch({ type: "focusDesktop" }),
-      showNotFound: (route) => dispatch({ type: "notFound", route }),
-      dismissNotFound: () => dispatch({ type: "dismissNotFound" }),
+      showNotFoundAlert: (route) => dispatch({ type: "showNotFoundAlert", route }),
+      dismissNotFoundAlert: () => dispatch({ type: "dismissNotFoundAlert" }),
     };
   }, [closeGuards, dispatch]);
 
@@ -134,7 +134,7 @@ export function WindowManagerProvider({
 
     switch (resolveRoute(route).id) {
       case "notFound":
-        actions.showNotFound(route);
+        actions.showNotFoundAlert(route);
         break;
 
       case "desktop":

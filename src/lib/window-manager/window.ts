@@ -1,4 +1,4 @@
-import type { Position, Rect, Size } from "../geometry.ts";
+import type { Rect, Size } from "../geometry.ts";
 
 export const WINDOW_DOM_ORDER = ["collection", "entry", "contact"] as const;
 
@@ -23,14 +23,12 @@ export interface WindowGeometry extends Rect {
 
 export interface WindowSpec {
   defaultSize: Size;
-  openAt: "cascade" | "center";
   fixedSize: boolean;
 }
 
 export interface WindowLayout {
   windows: Record<WindowId, WindowSpec>;
   minSize: Size;
-  cascadeOffset: Position;
   padding: number;
 }
 
@@ -53,8 +51,8 @@ export type Action =
   | { type: "measure"; surface: Size }
   | { type: "cycleWindows" }
   | { type: "focusDesktop" }
-  | { type: "notFound"; route: string }
-  | { type: "dismissNotFound" };
+  | { type: "showNotFoundAlert"; route: string }
+  | { type: "dismissNotFoundAlert" };
 
 export const EMPTY_STATE: ManagerState = {
   content: {},

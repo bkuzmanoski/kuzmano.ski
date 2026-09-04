@@ -4,7 +4,7 @@ import { useNotFoundRoute, useWindowActions } from "#/lib/window-manager/context
 
 export function NotFoundAlert() {
   const notFoundRoute = useNotFoundRoute();
-  const { dismissNotFound } = useWindowActions();
+  const { dismissNotFoundAlert } = useWindowActions();
 
   return (
     <Alert
@@ -12,7 +12,7 @@ export function NotFoundAlert() {
       sound="none"
       message={`This page doesn’t exist. Try finding the page you were looking for in the “Go” menu.`}
       open={notFoundRoute !== null}
-      primaryAction={{ label: "OK", onAction: dismissNotFound }}
+      primaryAction={{ label: "OK", onAction: dismissNotFoundAlert }}
     />
   );
 }

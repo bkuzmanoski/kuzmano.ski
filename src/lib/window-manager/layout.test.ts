@@ -7,11 +7,10 @@ import type { Size } from "../geometry.ts";
 import type { WindowLayout, WindowSpec } from "./window.ts";
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
-const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, openAt: "cascade", fixedSize: false };
+const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, fixedSize: false };
 const WINDOW_LAYOUT: WindowLayout = {
   windows: { entry: SPEC, collection: SPEC, contact: SPEC },
   minSize: { width: 480, height: 320 },
-  cascadeOffset: { x: 16, y: 32 },
   padding: 8,
 };
 

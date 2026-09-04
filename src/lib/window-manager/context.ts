@@ -25,8 +25,8 @@ export interface WindowActions {
   measure: (surface: Size) => void;
   cycleWindows: () => void;
   focusDesktop: () => void;
-  showNotFound: (route: string) => void;
-  dismissNotFound: () => void;
+  showNotFoundAlert: (route: string) => void;
+  dismissNotFoundAlert: () => void;
 }
 
 // The state is split across seven contexts so a change reaches only the parts that
