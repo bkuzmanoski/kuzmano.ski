@@ -59,7 +59,7 @@
   /* Typography */
   --font-family-chrome: ChicagoFLF, ui-sans-serif, sans-serif;
   --font-chrome: 400 16px/24px var(--font-family-chrome);
-  --font-family-ui: Helvetica, "Helvetica Neue", "Inter Variable", ui-sans-serif, sans-serif;
+  --font-family-ui: Helvetica, Arial, ui-sans-serif, sans-serif;
   --font-ui: normal 15px/20px var(--font-family-ui);
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
