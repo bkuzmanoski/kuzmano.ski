@@ -93,7 +93,7 @@
 
   & :where(a:not([data-heading-link])) {
     color: var(--color-accent);
-    text-decoration: underline;
+    text-decoration: underline rgb(from var(--color-accent) r g b / 30%);
 
     -webkit-touch-callout: default;
   }
