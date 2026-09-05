@@ -1,4 +1,4 @@
-export const SITE_NAME = "Brian Kuzmanoski";
+export const SITE_NAME = "kuzmano.ski";
 export const SITE_URL = "https://kuzmano.ski";
 export const SITE_DESCRIPTION = "Brian's personal website.";
 export const SITE_SOURCE_URL = "https://github.com/bkuzmanoski/kuzmano.ski";
