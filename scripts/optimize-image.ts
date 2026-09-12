@@ -7,9 +7,9 @@ import sharp from "sharp";
 import { fileSize } from "../build/content/media/problems.ts";
 import { writeFileAtomically } from "../build/files.ts";
 
-import { wholeNumberOption } from "./arguments.ts";
-import { requireCommands, runCommand } from "./external-commands.ts";
-import { inputFilePathsOf } from "./files.ts";
+import { wholeNumberOption } from "./helpers/arguments.ts";
+import { requireCommands, runCommand } from "./helpers/external-commands.ts";
+import { inputFilePathsOf } from "./helpers/files.ts";
 
 // Optimizes PNG and JPEG images in place (for images that are served as authored).
 

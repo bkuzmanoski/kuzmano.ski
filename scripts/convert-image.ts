@@ -11,7 +11,7 @@ import {
 import { isSourceImage, withoutExtension } from "../build/content/media/formats.ts";
 import { fileSize } from "../build/content/media/problems.ts";
 
-import { wholeNumberOption } from "./arguments.ts";
+import { wholeNumberOption } from "./helpers/arguments.ts";
 
 import type { ImageDerivative, ImageDerivativeFormat } from "../build/content/media/derivatives.ts";
 

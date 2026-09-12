@@ -6,9 +6,9 @@ import { isVideo, posterImageStemOf, withoutExtension } from "../build/content/m
 import { fileSize } from "../build/content/media/problems.ts";
 import { writeFileAtomically } from "../build/files.ts";
 
-import { wholeNumberOption } from "./arguments.ts";
-import { requireCommands, runCommand } from "./external-commands.ts";
-import { inputFilePathsOf } from "./files.ts";
+import { wholeNumberOption } from "./helpers/arguments.ts";
+import { requireCommands, runCommand } from "./helpers/external-commands.ts";
+import { inputFilePathsOf } from "./helpers/files.ts";
 
 // Encodes videos as fast-start H.264 MP4s and writes matching poster images.
 
