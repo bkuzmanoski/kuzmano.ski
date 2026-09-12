@@ -2,34 +2,36 @@
 
 ## Get started
 
-Requires the Node version in `.nvmrc`.
-
 ```bash
 npm install
 cp .env.example .env
 npm run dev
 ```
 
+The project requires the Node version specified in `.nvmrc`.
+
 ## Content
 
-Content is written in MDX. Frontmatter uses:
+Content is written in MDX and must contain the following frontmatter:
 
 ```yaml
-title: Post Title
-description: Collection entry lists and the meta description show this text.
+title: Entry Title
+description: Collection entry lists and meta descriptions use this text.
 date: 2026-07-19
-category: Notes # Optional. Groups an entry within its collection.
-draft: false # Optional. The dev server renders a draft. The build omits it.
+category: Category # Optional. Groups an entry within its collection.
+draft: false # Optional. Dev renders drafts; builds omit them.
 ```
 
-Content is located in:
+MDX files are located at:
 
 - `/content/_pages/*.mdx`: standalone pages
 - `/content/<collection>/*.mdx`: collection entries
 
-File and folder names become URL segments and must be URL-safe.
+File and folder names cannot begin with a period and must be URL-safe.
 
 ### Standalone pages
+
+To add a standalone page:
 
 1. Add an MDX file to `/content/_pages`.
 2. Add its file name, without `.mdx`, to `PAGE_SLUGS` in
@@ -39,128 +41,186 @@ File and folder names become URL segments and must be URL-safe.
 
 ### Collections
 
+To define a collection:
+
 1. Create a subfolder in `/content`.
 2. Add its title and description to `COLLECTIONS` in `/src/config/content.ts`,
    keyed by the folder name.
 3. Add it to `DESTINATION_SPECS` and `DESTINATION_GROUPS` in
    `/src/config/navigation.ts`.
 
-A collection has no document of its own to carry frontmatter, so its title comes
-from `COLLECTIONS`.
-
 ### Styling
 
-Styles defined in `/src/features/content/content-body.module.css` apply to all
-content. To define custom styles for a single entry, add a CSS module that
-exports an `entry` class beside its MDX file under the same name (e.g.,
-`entry.mdx` and `entry.module.css`).
+Styles in `/src/features/content/content-body.module.css` apply to all entries.
 
-### Markdown alternates
+To add styles for a single entry, add a CSS module beside its MDX file:
 
-Markdown is generated for every published entry and every collection:
+```text
+<entry>.mdx
+<entry>.module.css
+```
 
-- `/<page>.md` or `/<collection>/<entry>.md`: a published page or collection
-  entry as Markdown, including its frontmatter
-- `/<collection>.md`: an index of the collection's published entries
+The module's `.entry` class is applied to the entry's `<article>` element.
 
-React components in MDX are replaced by their children. Specify fallback
-Markdown for a component in `/build/markdown.ts` (`COMPONENT_MARKDOWN`) when it
-needs a different representation.
+### Media
 
-### Atom feeds
+An entry's media is stored beside its MDX file:
 
-A feed is generated for the entire site as well as for each collection.
-Standalone pages are not included. This is configurable via `FEEDS` in
-`/src/site/feeds.ts`.
+- `/content/<collection>/<entry>.cover.{png,jpg}`: the entry's cover image
+  (shown in collection entry lists and Open Graph previews)
+- `/content/<collection>/<entry>/`: images and videos used in the entry
 
-React components that should not appear in a feed can mark their rendered output
-with `data-feed-omit`. Components that need a representation in a feed can use
-`data-feed-text` to replace their rendered output with text.
+The entry references its media by file name (e.g., `./<image>.png`) and must
+reference every image and video in its media folder, apart from poster images.
 
-## Contact form
+Media is committed as authored. The build validates it and serves each file at a
+content-hashed URL.
 
-Messages are sent through Cloudflare's `send_email` binding.
+#### Images
 
-### Configuration
+PNG and JPEG images referenced with Markdown syntax are served with AVIF and
+WebP alternates (see [Generated media](#generated-media)). The authored file is
+still served as their fallback, and wherever alternates are not used (e.g.,
+other image formats, `<img>` elements, and Open Graph previews).
+
+To optimize PNG and JPEG images in place:
+
+```bash
+npm run optimize-image <image|directory> ... # Requires jpegoptim, jpegtran, and oxipng
+```
+
+#### Videos
+
+Videos must be H.264 MP4 files with a poster image stored alongside them:
+
+```text
+<video>.mp4
+<video>.poster.png
+```
+
+Embed a video with a `<video>` element:
+
+```mdx
+<video src="./<video>.mp4" controls aria-label="A video" />
+```
+
+The `aria-label` is used as the video's text representation when the entry is
+rendered as Markdown.
+
+Encode videos and generate poster images before committing them:
+
+```bash
+npm run encode-video <video|directory> ... # Requires ffmpeg
+```
+
+The poster image is taken from the first frame unless a time is given (e.g.,
+`npm run encode-video -- --poster-time 3`).
+
+#### Generated media
+
+The build serves derivatives generated from content images: AVIF and WebP
+alternates of PNG and JPEG images, thumbnails of cover images, and WebP versions
+of poster images. Derivatives are committed to `/media` (see
+`/media/README.md`).
+
+The dev server generates missing derivatives on demand, and a pre-commit hook
+updates `/media` when content is staged. To validate content media and update
+`/media` manually:
+
+```bash
+npm run prepare-media
+```
+
+#### Site assets
+
+Images in `/src/assets/images` are imported by components and stylesheets, and
+are not processed by the content media pipeline.
+
+To convert a PNG or JPEG image into an AVIF and WebP pair beside it:
+
+```bash
+npm run convert-image <image> ...
+```
+
+PNG and JPEG images served as authored can be optimized with `optimize-image`
+(see [Images](#images)).
+
+The favicon, app icons, and web app manifest are generated by the build from
+`/src/assets/images/logo.svg` and the palette in `/src/styles.css`.
+
+### Alternate formats
+
+#### Markdown
+
+Published entries and collections are also available as Markdown.
+
+```text
+/<page>.md
+/<collection>/<entry>.md
+/<collection>.md # An index of published entries.
+```
+
+React components in MDX are replaced by their children when rendered as
+Markdown. Components that need a different representation can define one in
+`/build/markdown/markdown.ts`.
+
+#### Atom feed
+
+Each collection and the site as a whole are syndicated via Atom feeds.
+
+Use `data-feed-omit` for rendered content that should not appear in feeds, and
+`data-feed-text` when a React component needs a text representation.
+
+## APIs
+
+### Contact
+
+Messages are sent through Cloudflare Email Sending.
+
+For production:
 
 1. Enable
    [Email Sending](https://dash.cloudflare.com/?to=/:account/email-service/sending)
    for the domain.
-2. Add and verify the inbox as a
+2. Add and verify a
    [destination address](https://dash.cloudflare.com/?to=/:account/email-service/routing/destination-addresses).
-3. Set the destination address as the `CONTACT_EMAIL_ADDRESS` Worker secret:
+3. Create a Worker secret with the destination address:
 
    ```bash
    npm exec -- wrangler secret put CONTACT_EMAIL_ADDRESS
    ```
 
-4. Put the same email address in `.env` as `CONTACT_EMAIL_ADDRESS` for local
-   development.
+For local development, set the contact email address in `.env`. The dev server
+does not send messages; local messages are written to `.wrangler/tmp/email/`.
 
-The dev server uses the same Worker code path through Miniflare, but does not
-send messages. Local messages are written to `.wrangler/tmp/email/`.
-
-### Delivery failures
-
-The browser only receives a status. Check the Worker logs for:
-
-- `contact_binding_missing`: the required binding or secret is missing.
-- `contact_delivery_failed`: Cloudflare rejected the message. The error code
-  identifies the cause, such as `E_SENDER_NOT_VERIFIED`,
-  `E_RECIPIENT_NOT_ALLOWED`, `E_DELIVERY_FAILED`, or a quota error.
-
-### Cloudflare Worker types
-
-`/src/server/cloudflare.d.ts` contains the minimal type declarations for the
-Worker APIs used by the application. They are maintained manually because
-`wrangler types` does not provide a usable declaration for `cloudflare:workers`.
-
-If the Workers runtime or Wrangler version changes, check these declarations
-against the generated types:
-
-```bash
-npx wrangler types /tmp/worker-configuration.d.ts
-```
-
-## Waitlist
+### Waitlist
 
 The `Waitlist` component can be added to an entry to register user interest.
-When a user joins, it adds their email address to a Notion database.
+Memberships are stored in a Notion database with these properties:
 
-### Configuration
+| Property                  | Type         |
+| ------------------------- | ------------ |
+| `List`                    | Text         |
+| `Email`                   | Title        |
+| `Source`                  | URL          |
+| `Created time` (optional) | Created time |
 
-1. Create a Notion database with these properties:
+Create a Notion [connection](https://app.notion.com/developers/connections) with
+`Read content` and `Insert content` capabilities and content access to the
+database.
 
-   | Property | Type  |
-   | -------- | ----- |
-   | `List`   | Text  |
-   | `Email`  | Title |
-   | `Source` | URL   |
+For production, create Worker secrets for the connection access token and
+production data source ID:
 
-   Optionally, add a `Created time` property of type `Created time` to record
-   when each membership was added. Other properties are ignored.
+```bash
+npm exec -- wrangler secret put NOTION_TOKEN
+npm exec -- wrangler secret put WAITLIST_DATA_SOURCE_ID
+```
 
-2. Create a [connection](https://app.notion.com/developers/connections) with the
-   `Read content` and `Insert content` capabilities and content access to the
-   database created above, then set its access token as the `NOTION_TOKEN`
-   Worker secret:
+For local development, set the connection access token and development data
+source ID in `.env`.
 
-   ```bash
-   npm exec -- wrangler secret put NOTION_TOKEN
-   ```
-
-3. Set the production data source ID (see below) as the
-   `WAITLIST_DATA_SOURCE_ID` Worker secret:
-
-   ```bash
-   npm exec -- wrangler secret put WAITLIST_DATA_SOURCE_ID
-   ```
-
-4. Put the connection access token and the development data source ID in `.env`
-   for local development.
-
-To find the data source IDs for databases the connection can reach, run the
-following command:
+To list accessible databases and their data source IDs:
 
 ```bash
 curl -s -X POST https://api.notion.com/v1/search \
@@ -171,63 +231,23 @@ curl -s -X POST https://api.notion.com/v1/search \
   | jq '.results[] | {id, name: .title[0].plain_text, database: .parent.database_id}'
 ```
 
-The property names above and Notion API version are pinned in
-`/src/server/waitlist.ts`.
+### Rate limits
 
-### Join failures
+Rate limits for the contact and waitlist APIs are configured in
+`wrangler.jsonc`.
 
-The browser only receives a status. Check the Worker logs for:
-
-- `waitlist_binding_missing`: the required secret is missing.
-- `waitlist_lookup_failed`: the check for an existing membership failed. The
-  membership is still written, at the risk of a duplicate row.
-- `waitlist_join_failed`: Notion rejected the row. The status identifies the
-  cause: `401` for a token that cannot reach the database, `400` for a property
-  that no longer matches the schema above.
-
-## Rate limits
-
-`wrangler.jsonc` defines rate limit bindings for:
-
-- reading the contact email address and sending messages (see `/api/contact`)
-- joining a waitlist (see `/api/waitlist`)
-
-These are deployed with the Worker and need no additional configuration.
-
-`/api/client-errors` uses a
-[Cloudflare rate limiting rule](https://dash.cloudflare.com/?to=/:account/:zone/security/security-rules)
-with the expression:
+Client error reports are rate-limited by a
+[Cloudflare security rule](https://dash.cloudflare.com/?to=/:account/:zone/security/security-rules)
+with the following expression:
 
 ```text
 (http.request.method eq "POST" and http.request.uri.path eq "/api/client-errors")
 ```
 
-## Image assets
-
-### Favicon and app icons
-
-The favicon and app icons in `/public` are generated from
-`/src/assets/images/logo.svg` and the color palette defined in CSS (see
-`/build/palette.ts`). To regenerate them, run:
-
-```bash
-npm run generate-icons
-```
-
-The build fails if the generated icons no longer match their inputs.
-
-### Illustrations
-
-The illustrations in `/src/assets/images` ship as an AVIF and WebP pair.
-`scripts/compress-image.sh` encodes both from a source PNG:
-
-```bash
-scripts/compress-image.sh src/assets/images/macintosh-body.png
-```
-
 ## Deployment
 
-`main` is deployed by `.github/workflows/ci.yml` after the verify job passes.
+A GitHub Actions workflow deploys the project whenever changes are pushed to the
+`main` branch.
 
 To deploy manually:
 
@@ -236,10 +256,3 @@ wrangler login
 npm run build
 npx wrangler deploy
 ```
-
-The build produces:
-
-- Prerendered pages as static assets
-- `dist/server/server.js` as the TanStack Start SSR handler
-
-Cloudflare serves a matching static asset; otherwise, it invokes the Worker.
