@@ -1,7 +1,7 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { writeFileAtomically } from "../../files.ts";
 import { fromContent } from "../../paths.ts";
 
 import { encodeImageDerivative } from "./derivatives.ts";
@@ -23,7 +23,6 @@ interface ImageDerivativeAudit {
 
 const GENERATED_FILE_NAME = /^[0-9a-f]+\.[0-9a-f]+\.[a-z0-9.]+$/;
 
-const temporaryFileName = (fileName: string) => `.${fileName}.${randomUUID()}.tmp`; // A leading `.` prevents interrupted writes from being treated as valid files.
 const isMissingFileError = (cause: unknown) => cause instanceof Error && "code" in cause && cause.code === "ENOENT";
 
 /** Compares indexed derivative renditions with files stored in the media directory. */
@@ -71,18 +70,6 @@ export function createImageDerivativeStore(directoryAbsolutePath: string): Image
     }
   }
 
-  async function writeAtomically(fileName: string, contents: Buffer) {
-    const temporaryAbsolutePath = join(directoryAbsolutePath, temporaryFileName(fileName));
-
-    try {
-      await writeFile(temporaryAbsolutePath, contents);
-      await rename(temporaryAbsolutePath, join(directoryAbsolutePath, fileName));
-    } catch (cause) {
-      await rm(temporaryAbsolutePath, { force: true });
-      throw cause;
-    }
-  }
-
   async function encodeAndStore({ derivativeFileName, resolvedMediaFile, derivative }: ImageDerivativeRendition) {
     if ((await byteLengthOf(derivativeFileName)) !== null) {
       return null;
@@ -91,7 +78,9 @@ export function createImageDerivativeStore(directoryAbsolutePath: string): Image
     const encodedBytes = await encodeImageDerivative(fromContent(resolvedMediaFile.path), derivative);
 
     await mkdir(directoryAbsolutePath, { recursive: true });
-    await writeAtomically(derivativeFileName, encodedBytes);
+    await writeFileAtomically(join(directoryAbsolutePath, derivativeFileName), (temporaryFilePath) =>
+      writeFile(temporaryFilePath, encodedBytes),
+    );
 
     return encodedBytes.byteLength;
   }

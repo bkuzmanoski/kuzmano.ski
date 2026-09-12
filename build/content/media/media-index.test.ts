@@ -156,6 +156,28 @@ describe("buildMediaIndex", () => {
     ]);
   });
 
+  test("lists a problem for metadata in a cover image and a body image, and ignores metadata in a poster image", async () => {
+    const index = await indexOf({
+      images: {
+        [COVER_IMAGE_FILE_PATH]: resolvedImage({
+          path: COVER_IMAGE_FILE_PATH,
+          dimensions: { width: 512, height: 512 },
+          embeddedMetadataNames: ["Exif"],
+        }),
+        [BODY_IMAGE_FILE_PATH]: resolvedImage({ embeddedMetadataNames: ["Exif"] }),
+        [POSTER_IMAGE_FILE_PATH]: resolvedImage({
+          path: POSTER_IMAGE_FILE_PATH,
+          dimensions: VIDEO_DIMENSIONS,
+          embeddedMetadataNames: ["Exif"],
+        }),
+      },
+    });
+    expect(index.problems()).toEqual([
+      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" contains embedded metadata`),
+      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/image.png" contains embedded metadata`),
+    ]);
+  });
+
   test("lists an unreadable image's problem once, and still resolves the entry's other media", async () => {
     const index = await indexOf({
       images: {

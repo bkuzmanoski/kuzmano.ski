@@ -2,6 +2,7 @@ import type { Dimensions } from "#/lib/content/media.ts";
 
 import { quotedContentPath } from "../../paths.ts";
 
+import { isSourceImage } from "./formats.ts";
 import { rootRelativePathOf } from "./renditions.ts";
 
 import type { MediaRendition } from "./renditions.ts";
@@ -19,7 +20,7 @@ const BYTES_PER_MEGABYTE = 1024 * 1024;
 const H264_SAMPLE_FORMAT = "avc1";
 const AAC_SAMPLE_FORMAT = "mp4a";
 const ASPECT_RATIO_TOLERANCE = 0.01; // Allowed poster/video aspect-ratio difference for rounding and non-square video pixels.
-const REENCODE_VIDEO_REMEDY = "Re-encode it with `npm run compress-video`.";
+const REENCODE_VIDEO_REMEDY = "Re-encode it with `npm run encode-video`.";
 
 const aspectRatioOf = ({ width, height }: Dimensions) => width / height;
 
@@ -108,6 +109,23 @@ export function posterImageProblems(
   return [
     `${quotedContentPath(posterImage.path)} (${ratio.toFixed(2)}) must match the aspect ratio of ${quotedContentPath(video.path)} (${videoRatio.toFixed(2)}).`,
   ];
+}
+
+export function imageMetadataProblems({
+  path,
+  embeddedMetadataNames,
+}: Pick<ResolvedImage, "path" | "embeddedMetadataNames">): Array<string> {
+  if (embeddedMetadataNames.length === 0) {
+    return [];
+  }
+
+  const metadataNameList =
+    embeddedMetadataNames.length === 1 ? embeddedMetadataNames.join("") : `${embeddedMetadataNames.join(", ")}`;
+  const remedy = isSourceImage(path)
+    ? "Strip it with `npm run optimize-image`."
+    : "Strip it before committing the image.";
+
+  return [`${quotedContentPath(path)} contains embedded metadata (${metadataNameList}). ${remedy}`];
 }
 
 export function renditionSizeProblems(rendition: MediaRendition, bytes: number): Array<string> {

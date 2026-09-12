@@ -97,6 +97,32 @@ describe("encodeImageDerivative", () => {
     await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 40, height: 20 });
   });
 
+  test("applies the image's orientation tag before resizing it", async () => {
+    await sharp({ create: { width: 40, height: 20, channels: 3, background: "#336699" } })
+      .withMetadata({ orientation: 6 })
+      .png()
+      .toFile(imageAbsolutePath);
+
+    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", width: 10 });
+
+    await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 10, height: 20 });
+  });
+
+  test.each(["avif", "webp"] as const)("encodes a %s derivative without the image's metadata", async (format) => {
+    const jpegAbsolutePath = join(directoryAbsolutePath, "image.jpg");
+
+    await sharp({ create: { width: 40, height: 20, channels: 3, background: "#336699" } })
+      .withExifMerge({ IFD0: { Artist: "An artist" } })
+      .withXmp('<x:xmpmeta xmlns:x="adobe:ns:meta/"></x:xmpmeta>')
+      .withIccProfile("p3")
+      .jpeg()
+      .toFile(jpegAbsolutePath);
+
+    const { exif, xmp, icc } = await metadataOf(await encodeImageDerivative(jpegAbsolutePath, { format }));
+
+    expect({ exif, xmp, icc }).toEqual({ exif: undefined, xmp: undefined, icc: undefined });
+  });
+
   test("encodes an image with the derivative's specified quality", async () => {
     const lowQualityBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", quality: 1 });
     const highQualityBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", quality: 100 });

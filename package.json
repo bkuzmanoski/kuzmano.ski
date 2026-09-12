@@ -21,9 +21,10 @@
     "test:watch": "vitest --config vitest.config.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "sync-media": "node scripts/sync-media.ts",
-    "compress-image": "node scripts/compress-image.ts",
-    "compress-video": "node scripts/compress-video.ts"
+    "prepare-media": "node scripts/prepare-media.ts",
+    "optimize-image": "node scripts/optimize-image.ts",
+    "encode-video": "node scripts/encode-video.ts",
+    "convert-image": "node scripts/convert-image.ts"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged --diff-filter=ACMRD"

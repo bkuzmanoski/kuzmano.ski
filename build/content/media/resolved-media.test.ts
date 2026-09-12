@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { crc32 } from "node:zlib";
 
 import sharp from "sharp";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -24,10 +25,21 @@ const VIDEO_FILE_PATH = "collection/entry/video.mp4";
 // its video track, and `hevc.mp4` is in a format the site does not serve.
 const fixture = (fileName: string) => readFileSync(join(fromRoot("build/test-utils/fixtures"), fileName));
 
-const pngBytes = (width: number, height: number) =>
-  sharp({ create: { width, height, channels: 3, background: "#000000" } })
-    .png()
-    .toBuffer();
+const solidImage = (width: number, height: number) =>
+  sharp({ create: { width, height, channels: 3, background: "#000000" } });
+const pngBytes = (width: number, height: number) => solidImage(width, height).png().toBuffer();
+
+// Inserts a `tEXt` chunk after a PNG's `IHDR` chunk.
+function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffer {
+  const typeAndData = Buffer.from(`tEXt${keyword}\0${text}`, "latin1");
+  const length = Buffer.alloc(4);
+  const checksum = Buffer.alloc(4);
+
+  length.writeUInt32BE(typeAndData.byteLength - 4);
+  checksum.writeUInt32BE(crc32(typeAndData));
+
+  return Buffer.concat([imageBytes.subarray(0, 33), length, typeAndData, checksum, imageBytes.subarray(33)]);
+}
 
 const fileStats = (size: number, mtimeNs: number) => ({ size: BigInt(size), mtimeNs: BigInt(mtimeNs) });
 
@@ -71,6 +83,40 @@ describe("createMediaFileReader", () => {
       dimensions: { width: 3, height: 2 },
     });
     expect(hashOf(resolvedImage)).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  test("reads an image's dimensions with its orientation tag applied", async () => {
+    readFile.mockResolvedValue(await solidImage(3, 2).withMetadata({ orientation: 6 }).png().toBuffer());
+    await expect(createMediaFileReader().readImage(IMAGE_FILE_PATH)).resolves.toMatchObject({
+      dimensions: { width: 2, height: 3 },
+    });
+  });
+
+  test("names the Exif and XMP metadata an image embeds, and omits its color profile", async () => {
+    readFile.mockResolvedValue(
+      await solidImage(3, 2)
+        .withExifMerge({ IFD0: { Artist: "An artist" } })
+        .withXmp('<x:xmpmeta xmlns:x="adobe:ns:meta/"></x:xmpmeta>')
+        .withIccProfile("p3")
+        .jpeg()
+        .toBuffer(),
+    );
+    await expect(createMediaFileReader().readImage(IMAGE_FILE_PATH)).resolves.toMatchObject({
+      embeddedMetadataNames: ["Exif", "XMP"],
+    });
+  });
+
+  test("names a PNG's text chunks as text metadata", async () => {
+    readFile.mockResolvedValue(withTextChunk(await pngBytes(3, 2), "Software", "An image editor"));
+    await expect(createMediaFileReader().readImage(IMAGE_FILE_PATH)).resolves.toMatchObject({
+      embeddedMetadataNames: ["text"],
+    });
+  });
+
+  test("returns an empty list of metadata names for an image without embedded metadata", async () => {
+    await expect(createMediaFileReader().readImage(IMAGE_FILE_PATH)).resolves.toMatchObject({
+      embeddedMetadataNames: [],
+    });
   });
 
   test("returns the same hash for identical bytes and a different hash for different bytes", async () => {

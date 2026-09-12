@@ -69,7 +69,7 @@ export const imageDerivativeFileName = (hash: string, derivative: ImageDerivativ
 
 /** Encodes one derivative of the image at `absolutePath` and returns its bytes. */
 export async function encodeImageDerivative(absolutePath: string, derivative: ImageDerivative): Promise<Buffer> {
-  const image = sharp(absolutePath);
+  const image = sharp(absolutePath, { autoOrient: true });
   const resized =
     derivative.width === undefined ? image : image.resize({ width: derivative.width, withoutEnlargement: true });
 

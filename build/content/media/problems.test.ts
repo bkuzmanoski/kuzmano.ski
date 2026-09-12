@@ -16,6 +16,7 @@ import {
   contentMediaProblemReport,
   coverImageProblems,
   fileSize,
+  imageMetadataProblems,
   posterImageProblems,
   renditionSizeProblems,
   videoProblems,
@@ -183,6 +184,18 @@ describe("posterImageProblems", () => {
   test("reports a poster image of a different aspect ratio, naming both aspect ratios", () => {
     expect(posterImageProblems(posterImage(640, 480), video)).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry/video.poster.png" (1.33) must match the aspect ratio of "${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" (1.78).`,
+    ]);
+  });
+});
+
+describe("imageMetadataProblems", () => {
+  test("accepts an image without embedded metadata", () => {
+    expect(imageMetadataProblems(RESOLVED_IMAGE)).toEqual([]);
+  });
+
+  test("reports the metadata an image embeds", () => {
+    expect(imageMetadataProblems(resolvedImage({ embeddedMetadataNames: ["Exif", "XMP", "text"] }))).toEqual([
+      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/image.png" contains embedded metadata`),
     ]);
   });
 });

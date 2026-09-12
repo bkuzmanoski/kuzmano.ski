@@ -6,7 +6,8 @@ import { contentMediaProblemReport, fileSize } from "../build/content/media/prob
 import { rootRelativePathOf } from "../build/content/media/renditions.ts";
 import { MEDIA_DIRECTORY_PATH, fromRoot } from "../build/paths.ts";
 
-// Syncs the media directory with the content directory; fails for derivatives exceeding Cloudflare's size limit.
+// Validates content media, encodes missing derivatives into the media directory,
+// and removes derivatives that are no longer required.
 
 const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));
 const { renditionsByUrl, problems } = await buildMediaIndex();
@@ -46,7 +47,7 @@ for (const fileName of staleDerivativeFileNames) {
   console.log(`- ${join(MEDIA_DIRECTORY_PATH, fileName)}`);
 }
 
-console.log(`${encodedCount} derivative(s) encoded, ${staleDerivativeFileNames.length} no longer required.`);
+console.log(`Encoded ${encodedCount} derivative(s). Removed ${staleDerivativeFileNames.length} stale derivative(s).`);
 
 if (sizeProblems.length > 0) {
   console.error(contentMediaProblemReport(sizeProblems));

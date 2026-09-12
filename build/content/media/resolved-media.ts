@@ -9,6 +9,7 @@ import type { Dimensions } from "#/lib/content/media.ts";
 import { fromContent, quotedContentPath } from "../../paths.ts";
 
 import type { Movie } from "mp4box";
+import type { Metadata } from "sharp";
 
 const HASH_LENGTH = 16;
 
@@ -19,9 +20,10 @@ export interface ResolvedMediaFile {
   bytes: number;
 }
 
-/** A resolved image with intrinsic dimensions read by sharp. */
+/** A resolved image with its displayed dimensions and the metadata it embeds. */
 export interface ResolvedImage extends ResolvedMediaFile {
   dimensions: Dimensions;
+  embeddedMetadataNames: Array<string>;
 }
 
 export interface Mp4Metadata {
@@ -82,6 +84,14 @@ async function readMediaFile(path: string): Promise<{ resolvedMediaFile: Resolve
   return { resolvedMediaFile: { path, hash, bytes: contents.byteLength }, contents };
 }
 
+const embeddedMetadataNamesOf = ({ exif, xmp, iptc, tifftagPhotoshop, comments }: Metadata) => [
+  ...(exif ? ["Exif"] : []),
+  ...(xmp ? ["XMP"] : []),
+  ...(iptc ? ["IPTC"] : []),
+  ...(tifftagPhotoshop ? ["Photoshop"] : []),
+  ...(comments?.length ? ["text"] : []), // PNG text chunks.
+];
+
 // Returns an `UnreadableImage` instead of throwing when sharp cannot decode the bytes, so a corrupt
 // or partially-saved file is reported alongside other problems rather than in place of them.
 async function readImage(path: string): Promise<ResolvedImage | UnreadableImage> {
@@ -91,10 +101,15 @@ async function readImage(path: string): Promise<ResolvedImage | UnreadableImage>
   });
 
   try {
-    const { width, height } = await sharp(contents).metadata();
+    const metadata = await sharp(contents).metadata();
+    const { width, height } = metadata.autoOrient;
 
     return width && height
-      ? { ...resolvedMediaFile, dimensions: { width, height } }
+      ? {
+          ...resolvedMediaFile,
+          dimensions: { width, height },
+          embeddedMetadataNames: embeddedMetadataNamesOf(metadata),
+        }
       : unreadableImage("The image does not declare its dimensions.");
   } catch (cause) {
     return unreadableImage(cause instanceof Error ? cause.message : String(cause));

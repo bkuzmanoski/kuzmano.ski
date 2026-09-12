@@ -15,9 +15,9 @@ import { wholeNumberOption } from "./arguments.ts";
 
 import type { ImageDerivative, ImageDerivativeFormat } from "../build/content/media/derivatives.ts";
 
-// Encodes a PNG or JPEG image into an AVIF and WebP pair, writing both beside the source file.
+// Converts a PNG or JPEG image into an AVIF and WebP pair, writing both beside the input image.
 
-const USAGE = `Usage: node scripts/compress-image.ts [OPTIONS] <image.{png,jpg}>...
+const USAGE = `Usage: node scripts/convert-image.ts [OPTIONS] <image.{png,jpg}>...
 
 Options:
   --avif-quality <n>    AVIF quality, 0-100 (default: ${IMAGE_ENCODING_OPTIONS.avif.quality})
@@ -61,7 +61,7 @@ function parseArguments(args: Array<string>): Arguments {
 const outputFilePathOf = (inputFilePath: string, derivative: ImageDerivative) =>
   `${withoutExtension(inputFilePath)}${imageDerivativeExtensionOf(derivative)}`;
 
-async function compress(inputFilePath: string, qualityByFormat: Arguments["qualityByFormat"]) {
+async function convert(inputFilePath: string, qualityByFormat: Arguments["qualityByFormat"]) {
   if (!isSourceImage(inputFilePath)) {
     throw new Error(`${inputFilePath} is not a PNG or a JPEG.`);
   }
@@ -85,7 +85,7 @@ try {
   const { inputFilePaths, qualityByFormat } = parseArguments(process.argv.slice(2));
 
   for (const inputFilePath of inputFilePaths) {
-    await compress(inputFilePath, qualityByFormat);
+    await convert(inputFilePath, qualityByFormat);
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));

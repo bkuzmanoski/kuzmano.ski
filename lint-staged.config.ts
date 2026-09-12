@@ -25,5 +25,5 @@ export default {
   "*.css": onPresentFiles("stylelint --fix", "prettier --write"),
   "*.{md,mdx}": onPresentFiles("markdownlint-cli2 --fix --no-globs", "prettier --write"),
   "*.{json,jsonc,yml,yaml}": onPresentFiles("prettier --write"),
-  [CONTENT_FILE_GLOB]: () => ["npm run sync-media", `git add ${MEDIA_DIRECTORY_PATH}`],
+  [CONTENT_FILE_GLOB]: () => ["npm run prepare-media", `git add ${MEDIA_DIRECTORY_PATH}`],
 };

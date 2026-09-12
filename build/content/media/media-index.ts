@@ -23,7 +23,13 @@ import {
   thumbnailImageDerivativesFor,
 } from "./derivatives.ts";
 import { isSourceImage } from "./formats.ts";
-import { coverImageProblems, posterImageProblems, renditionSizeProblems, videoProblems } from "./problems.ts";
+import {
+  coverImageProblems,
+  imageMetadataProblems,
+  posterImageProblems,
+  renditionSizeProblems,
+  videoProblems,
+} from "./problems.ts";
 import { authoredRendition, imageDerivativeRendition } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
 
@@ -104,7 +110,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     return {
       coverImage: { social: sizedMediaOf(socialImageRendition, coverImage.dimensions), thumbnail: thumbnail.picture },
       renditions: [socialImageRendition, ...thumbnail.renditions],
-      problems: coverImageProblems(coverImage),
+      problems: [...coverImageProblems(coverImage), ...imageMetadataProblems(coverImage)],
     };
   }
 
@@ -126,7 +132,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     return {
       mediaByFileName: [[fileName, picture]],
       renditions,
-      problems: renditionSizeProblems(bodyImageRendition, bodyImage.bytes),
+      problems: [...imageMetadataProblems(bodyImage), ...renditionSizeProblems(bodyImageRendition, bodyImage.bytes)],
     };
   }
 

@@ -72,8 +72,9 @@ export default defineConfig(
         "error",
         {
           zones: [
-            { target: "./src", from: ["./build"] },
+            { target: "./build", from: ["./scripts"] },
             { target: "./build/content/markup", from: ["./build/content/media"] }, // `/build/content/markup` only walks syntax trees. `vitest.config.ts` reaches it through the MDX plugin, so an import of the media pipeline from it would load sharp into every test run.
+            { target: "./src", from: ["./build"] },
             {
               target: "./src/lib",
               from: [

@@ -37,8 +37,13 @@ const resolvedMediaFile = (overrides: Partial<ResolvedMediaFile> = {}): Resolved
 
 export const resolvedImage = ({
   dimensions = IMAGE_DIMENSIONS,
+  embeddedMetadataNames = [],
   ...overrides
-}: Partial<ResolvedImage> = {}): ResolvedImage => ({ ...resolvedMediaFile(overrides), dimensions });
+}: Partial<ResolvedImage> = {}): ResolvedImage => ({
+  ...resolvedMediaFile(overrides),
+  dimensions,
+  embeddedMetadataNames,
+});
 
 export const resolvedVideo = ({
   mp4Metadata = H264_MP4_METADATA,

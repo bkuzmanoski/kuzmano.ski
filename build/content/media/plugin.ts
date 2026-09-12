@@ -24,7 +24,6 @@ import type { MediaForEntry } from "../markup/media-rewrite.ts";
 import type { Logger, Plugin } from "vite";
 
 const MEDIA_PATH_PREFIX = mediaRoute("");
-const SYNC_COMMAND = "npm run sync-media";
 
 // A media URL changes whenever the bytes served at it do, so a browser can cache a media file indefinitely.
 const MEDIA_HEADERS_RULE: HeadersRule = {
@@ -266,7 +265,7 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
         this.error(
           contentMediaProblemReport(problems) +
             (missingDerivativeRenditions.length > 0 || staleDerivativeFileNames.length > 0
-              ? `\nRun \`${SYNC_COMMAND}\` to bring \`${MEDIA_DIRECTORY_PATH}\` up to date.`
+              ? `\nRun \`npm run prepare-media\` to bring \`${MEDIA_DIRECTORY_PATH}\` up to date.`
               : ""),
         );
       }
