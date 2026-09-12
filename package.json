@@ -21,6 +21,7 @@
     "test:watch": "vitest --config vitest.config.ts",
     "build": "vite build",
     "preview": "vite preview",
+    "clean": "rm -rf dist .output .tanstack .wrangler/tmp node_modules/.vite node_modules/.cache/jiti && find . -name node_modules -prune -o -name .git -prune -o -type f -name '*.tmp' -exec rm -f {} +",
     "prepare-media": "node scripts/prepare-media.ts",
     "optimize-image": "node scripts/optimize-image.ts",
     "encode-video": "node scripts/encode-video.ts",
