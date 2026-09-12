@@ -63,6 +63,18 @@ export class FakeAudioContext {
     FakeAudioContext.instances.push(this);
   }
 
+  createBuffer(_channels: number, length: number, rate: number) {
+    const data = new Float32Array(length);
+    return { length, sampleRate: rate, getChannelData: () => data };
+  }
+
+  createGain() {
+    return {
+      gain: { value: 0 },
+      connect: (target: unknown) => FakeAudioContext.connections.push(target),
+    };
+  }
+
   addEventListener(_type: string, listener: () => void) {
     this.listeners.add(listener);
   }
@@ -74,18 +86,6 @@ export class FakeAudioContext {
   resume() {
     this.resumeCount++;
     return this.resumeResult;
-  }
-
-  createBuffer(_channels: number, length: number, rate: number) {
-    const data = new Float32Array(length);
-    return { length, sampleRate: rate, getChannelData: () => data };
-  }
-
-  createGainNode() {
-    return {
-      gain: { value: 0 },
-      connect: (target: unknown) => FakeAudioContext.connections.push(target),
-    };
   }
 
   transitionToRunning() {
