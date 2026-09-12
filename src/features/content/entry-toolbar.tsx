@@ -22,22 +22,16 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
 
   return (
     <div className={styles.toolbar}>
-      <div className={styles.navigation}>
-        <NavigationButton variant="previous" label="Previous entry" route={previous} />
-        <NavigationButton variant="next" label="Next entry" route={next} />
-      </div>
+      <CopyButton value={canonicalUrl(contentIndex.routeOf(slug))} entity="link" variant="link" label="Copy link" />
       {frontmatter && (
         <time className={styles.date} dateTime={frontmatter.date}>
           {formatDate(frontmatter.date, dateFormat)}
         </time>
       )}
-      <CopyButton
-        value={canonicalUrl(contentIndex.routeOf(slug))}
-        entity="link"
-        variant="link"
-        label="Copy link"
-        className={styles.copyButton}
-      />
+      <div className={styles.navigation}>
+        <NavigationButton variant="previous" label="Previous entry" route={previous} />
+        <NavigationButton variant="next" label="Next entry" route={next} />
+      </div>
     </div>
   );
 }

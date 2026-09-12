@@ -22,7 +22,7 @@ export const MOTION_DURATION_MS = {
   crtWarmUp: 500,
   logoDraw: 250,
   glassFade: 150,
-  desktopReveal: 350, // Matches `--duration-desktop-reveal-step` in `styles.css`.
+  desktopReveal: 350, // Set as `--duration-desktop-reveal-step` by `/src/app/desktop.tsx`.
 };
 
 export type Motion = typeof MOTION_DURATION_MS;
@@ -42,22 +42,22 @@ export const HOLD_DURATION_MS = {
   logo: 1400,
 };
 
-export const MINIMUM_LOADING_DURATION_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
+export const MIN_LOADING_DURATION_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
 
 export function phaseFlags(phase: Phase) {
-  const step = PHASES.indexOf(phase);
-  const from = (first: Phase) => step >= PHASES.indexOf(first);
-  const before = (first: Phase) => step < PHASES.indexOf(first);
+  const phaseIndex = PHASES.indexOf(phase);
+  const isAtOrAfter = (first: Phase) => phaseIndex >= PHASES.indexOf(first);
+  const isBefore = (first: Phase) => phaseIndex < PHASES.indexOf(first);
 
   return {
-    isLoadingCoverUp: before("macintosh-reveal"),
-    isZoomedOut: before("stage-zoom"),
-    isPreparingToZoom: before("display-on"), // Used to apply `will-change` hints.
+    isLoadingCoverUp: isBefore("macintosh-reveal"),
+    isZoomedOut: isBefore("stage-zoom"),
+    isPreparingToZoom: isBefore("display-on"), // Used to apply `will-change` hints.
     isWarmingUp: phase === "display-on",
-    isDisplayOn: from("display-on"),
-    isScreenContentVisible: from("logo") && before("desktop-reveal"),
-    isPreparingToLeave: from("logo"), // Used to apply `will-change` hints.
-    isGlassHidden: from("glass-fade"),
+    isDisplayOn: isAtOrAfter("display-on"),
+    isScreenContentVisible: isAtOrAfter("logo") && isBefore("desktop-reveal"),
+    isPreparingToLeave: isAtOrAfter("logo"), // Used to apply `will-change` hints.
+    isGlassHidden: isAtOrAfter("glass-fade"),
     isRevealingDesktop: phase === "desktop-reveal",
   };
 }

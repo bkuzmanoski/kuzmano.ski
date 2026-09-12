@@ -8,13 +8,13 @@ function updateGeometry(
   id: WindowId,
   patch: (target: WindowGeometry) => Partial<WindowGeometry>,
 ): ManagerState {
-  const target = state.geometry[id];
+  const targetGeometry = state.geometry[id];
 
-  if (!target) {
+  if (!targetGeometry) {
     return state;
   }
 
-  return { ...state, geometry: { ...state.geometry, [id]: { ...target, ...patch(target) } } };
+  return { ...state, geometry: { ...state.geometry, [id]: { ...targetGeometry, ...patch(targetGeometry) } } };
 }
 
 function layOutWindows(layout: WindowLayout, state: ManagerState): WindowRecord<WindowGeometry> {
@@ -53,12 +53,12 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
     switch (action.type) {
       case "open": {
         const { id, route, title } = action;
-        const current = state.content[id];
-        const content = current?.route === route ? state.content : { ...state.content, [id]: { route, title } };
+        const currentContent = state.content[id];
+        const content = currentContent?.route === route ? state.content : { ...state.content, [id]: { route, title } };
 
-        if (current) {
-          const raised = focusWindow(state, id);
-          return clearNotFoundAlert(content === state.content ? raised : { ...raised, content });
+        if (currentContent) {
+          const raisedState = focusWindow(state, id);
+          return clearNotFoundAlert(content === state.content ? raisedState : { ...raisedState, content });
         }
 
         return {
@@ -117,15 +117,17 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
           return state;
         }
 
-        const measured = { ...state, surface };
+        const measuredState = { ...state, surface };
         const isFirstMeasurement = isUnmeasured(state.surface);
 
-        return isFirstMeasurement ? { ...measured, geometry: layOutWindows(layout, measured) } : measured;
+        return isFirstMeasurement
+          ? { ...measuredState, geometry: layOutWindows(layout, measuredState) }
+          : measuredState;
       }
 
       case "cycleWindows": {
-        const next = state.focused === null ? state.order.at(-1) : state.order[0];
-        return next ? focusWindow(state, next) : state;
+        const nextFocusedId = state.focused === null ? state.order.at(-1) : state.order[0];
+        return nextFocusedId ? focusWindow(state, nextFocusedId) : state;
       }
 
       case "focusDesktop": {

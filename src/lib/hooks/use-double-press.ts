@@ -3,14 +3,14 @@ import { useRef } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
 /** The window within which a second press pairs with the first. */
-export const DOUBLE_PRESS_INTERVAL = 350;
+export const DOUBLE_PRESS_INTERVAL_MS = 350;
 
-const SLOP = 16; // How far a press may travel, and how far the second may land from the first.
+const TOLERANCE_PX = 16; // How far a press may travel, and how far the second may land from the first.
 
 type DoublePressEvent = ReactPointerEvent | ReactMouseEvent;
 
-const isBeyondSlop = (event: ReactPointerEvent, from: { x: number; y: number }) =>
-  Math.abs(event.clientX - from.x) > SLOP || Math.abs(event.clientY - from.y) > SLOP;
+const exceedsTolerance = (event: ReactPointerEvent, from: { x: number; y: number }) =>
+  Math.abs(event.clientX - from.x) > TOLERANCE_PX || Math.abs(event.clientY - from.y) > TOLERANCE_PX;
 
 /**
  * Detects a double press from mouse, touch, or pen input.
@@ -20,7 +20,7 @@ const isBeyondSlop = (event: ReactPointerEvent, from: { x: number; y: number }) 
  * synthesise `dblclick` for double taps.
  *
  * Two presses must occur within `DOUBLE_PRESS_INTERVAL` and within
- * `SLOP` pixels of each other. A press that travels beyond `SLOP`
+ * `TOLERANCE` pixels of each other. A press that travels beyond `TOLERANCE`
  * is treated as a drag and cannot participate in a double press.
  *
  * Drag handling beyond this gesture-level check remains the caller's
@@ -44,19 +44,23 @@ export function useDoublePress({ onDoublePress }: { onDoublePress: (event: Doubl
       return;
     }
 
-    const start = pressStartRef.current;
+    const pressStart = pressStartRef.current;
 
     pressStartRef.current = null;
 
-    if (start && isBeyondSlop(event, start)) {
+    if (pressStart && exceedsTolerance(event, pressStart)) {
       pendingRef.current = null;
       return;
     }
 
-    const pending = pendingRef.current;
+    const pendingPress = pendingRef.current;
     const currentTime = performance.now();
 
-    if (pending && currentTime - pending.time <= DOUBLE_PRESS_INTERVAL && !isBeyondSlop(event, pending)) {
+    if (
+      pendingPress &&
+      currentTime - pendingPress.time <= DOUBLE_PRESS_INTERVAL_MS &&
+      !exceedsTolerance(event, pendingPress)
+    ) {
       pendingRef.current = null;
       onDoublePress(event);
 

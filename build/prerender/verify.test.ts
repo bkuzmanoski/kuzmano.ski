@@ -49,13 +49,22 @@ describe("verifyPrerenderedDocument", () => {
     expect(loadingIndicator).toContain("data-loading-indicator");
   });
 
-  test("fails when a loading indicator remains in the window", () => {
+  test("fails when a loading indicator remains in the window body", () => {
     const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);
   });
 
   test("passes when other live regions are present", () => {
     expect(verify(pageHtml('<p>test@example.com</p><span role="status">Copied</span>'))).not.toThrow();
+  });
+
+  test("passes when the document and window titles write the same characters with different escape sequences", () => {
+    const html = [
+      `<title>${documentTitle("Q&amp;A&#x27;s")}</title>`,
+      '<nav aria-label="Main menu"></nav>',
+      '<section aria-labelledby="window-title"><header><span id="window-title">Q&#38;A\'s</span></header><div id="window-content"><p>Content</p></div></section>',
+    ].join("");
+    expect(verify(html, "/q-and-a")).not.toThrow();
   });
 
   test("passes when the document has no open windows", () => {

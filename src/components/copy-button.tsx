@@ -9,7 +9,7 @@ import { Button } from "./button.tsx";
 import { CopyFailureAlert } from "./copy-failure-alert.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
-const icons = { copy: CopyIcon, link: LinkIcon };
+const VARIANT_ICONS = { copy: CopyIcon, link: LinkIcon };
 
 /** The button is disabled until the value is available. */
 export function CopyButton({
@@ -22,7 +22,7 @@ export function CopyButton({
 }: {
   value: string | null;
   entity: string;
-  variant?: keyof typeof icons;
+  variant?: keyof typeof VARIANT_ICONS;
   label?: string;
   confirmation?: string;
   className?: string;
@@ -30,7 +30,7 @@ export function CopyButton({
   const [hasFailed, setHasFailed] = useState(false);
   const { state, copy, clearConfirmation } = useCopyToClipboard({ onFailure: () => setHasFailed(true) });
   const isCopied = state === "copied";
-  const Icon = icons[variant];
+  const Icon = VARIANT_ICONS[variant];
 
   return (
     <>

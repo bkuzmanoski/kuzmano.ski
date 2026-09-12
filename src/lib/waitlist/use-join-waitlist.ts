@@ -30,13 +30,13 @@ export function useJoinWaitlist({
   async function join({ emailAddress }: WaitlistFields) {
     setState("joining");
 
-    const result = await joinWaitlist({
+    const joinResult = await joinWaitlist({
       emailAddress,
       list: list.trim().length > 0 ? list : source,
       source,
     });
 
-    if (result.status === "joined") {
+    if (joinResult.status === "joined") {
       playSuccess();
       setState("joined");
 
@@ -44,7 +44,9 @@ export function useJoinWaitlist({
     }
 
     setState("idle");
-    onFailure(result.status === "invalid" ? firstMessage(result.errors, JOIN_FAILED_MESSAGE) : result.message);
+    onFailure(
+      joinResult.status === "invalid" ? firstMessage(joinResult.errors, JOIN_FAILED_MESSAGE) : joinResult.message,
+    );
   }
 
   return { state, join };

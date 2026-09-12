@@ -120,11 +120,11 @@ export function usePointerDrag<T>({
     // Capture lets these listeners observe pointer events even when a handler below stops them.
     // Install them before requesting pointer capture, which can throw if the pointer is no longer
     // active. Once the drag starts, these listeners must be in place to end it.
-    const options = { capture: true, signal: controller.signal };
+    const listenerOptions = { capture: true, signal: controller.signal };
 
-    window.addEventListener("pointermove", onWindowPointerMove, options);
-    window.addEventListener("pointerup", onWindowPointerEnd, options);
-    window.addEventListener("pointercancel", onWindowPointerEnd, options);
+    window.addEventListener("pointermove", onWindowPointerMove, listenerOptions);
+    window.addEventListener("pointerup", onWindowPointerEnd, listenerOptions);
+    window.addEventListener("pointercancel", onWindowPointerEnd, listenerOptions);
 
     handle.setPointerCapture(event.pointerId);
   }
@@ -165,10 +165,10 @@ export function usePointerDrag<T>({
   }
 
   function onWindowPointerEnd(event: PointerEvent) {
-    const active = activeDragRef.current;
+    const activeDrag = activeDragRef.current;
 
-    if (active?.pointerId === event.pointerId) {
-      finish(active);
+    if (activeDrag?.pointerId === event.pointerId) {
+      finish(activeDrag);
     }
   }
 

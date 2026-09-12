@@ -68,12 +68,12 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   /** The box of an element in the layer's own coordinates. */
   function relativeRect(element: Element): Rect {
-    const layer = layerRef.current?.getBoundingClientRect();
+    const layerRect = layerRef.current?.getBoundingClientRect();
     const rect = element.getBoundingClientRect();
 
     return {
-      x: rect.left - (layer?.left ?? 0),
-      y: rect.top - (layer?.top ?? 0),
+      x: rect.left - (layerRect?.left ?? 0),
+      y: rect.top - (layerRect?.top ?? 0),
       width: rect.width,
       height: rect.height,
     };
@@ -81,13 +81,13 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
   const openWindowRoutes = Object.values(content).map(({ route }) => route);
-  const container = {
+  const effectiveContainerSize = {
     width: containerSize.width || (typeof window === "undefined" ? 0 : window.innerWidth),
     height: containerSize.height || (typeof window === "undefined" ? 0 : window.innerHeight),
   };
 
   const placements: Array<IconPlacement & { iconDefinition: Icon }> = positions
-    ? resolveIconPlacements(ICON_IDS, positions, container, ICON_LAYOUT).flatMap((placement) => {
+    ? resolveIconPlacements(ICON_IDS, positions, effectiveContainerSize, ICON_LAYOUT).flatMap((placement) => {
         const iconDefinition = ICONS_BY_ID.get(placement.id);
         return iconDefinition ? [{ ...placement, iconDefinition }] : [];
       })
@@ -96,10 +96,10 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   // The handlers below read the layout through this ref rather than capturing it from render.
   // Both the placements and container are rebuilt on every frame of a drag, so capturing either
   // would recreate the handlers and re-render every icon they are passed to.
-  const layoutRef = useRef({ placements, container });
+  const layoutRef = useRef({ placements, container: effectiveContainerSize });
 
   useEffect(() => {
-    layoutRef.current = { placements, container };
+    layoutRef.current = { placements, container: effectiveContainerSize };
   });
 
   function selectIcon(iconDefinition: Icon) {
@@ -129,8 +129,9 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   }
 
   function moveSelection(fromId: string | null, key: ArrowKey) {
-    const current = layoutRef.current.placements;
-    const nextId = (fromId === null ? current[0]?.id : adjacentIconId(current, fromId, key)) ?? null;
+    const currentPlacements = layoutRef.current.placements;
+    const nextId =
+      (fromId === null ? currentPlacements[0]?.id : adjacentIconId(currentPlacements, fromId, key)) ?? null;
     const nextIcon = nextId === null ? undefined : ICONS_BY_ID.get(nextId);
 
     if (nextIcon) {

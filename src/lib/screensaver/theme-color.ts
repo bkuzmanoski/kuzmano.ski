@@ -13,19 +13,21 @@ export function setScreensaverThemeColor() {
     return;
   }
 
-  const backdrop = getComputedStyle(document.documentElement).getPropertyValue(SCREENSAVER_BACKDROP_PROPERTY).trim();
+  const backdropColor = getComputedStyle(document.documentElement)
+    .getPropertyValue(SCREENSAVER_BACKDROP_PROPERTY)
+    .trim();
 
-  if (!backdrop) {
+  if (!backdropColor) {
     return;
   }
 
-  const meta = document.createElement("meta");
+  const themeColorMeta = document.createElement("meta");
 
-  meta.setAttribute(SCREENSAVER_THEME_COLOR_ATTRIBUTE, "");
-  meta.name = "theme-color";
-  meta.content = backdrop;
+  themeColorMeta.setAttribute(SCREENSAVER_THEME_COLOR_ATTRIBUTE, "");
+  themeColorMeta.name = "theme-color";
+  themeColorMeta.content = backdropColor;
 
-  document.head.prepend(meta);
+  document.head.prepend(themeColorMeta);
 }
 
 export function clearScreensaverThemeColor() {

@@ -39,7 +39,6 @@ export function Button(
 
   const pressHandlers = mergeHandlers(pressSoundHandlers, {
     onPointerDown: (event: PointerEvent) => {
-      // Only controls that handle `holdPressed` need the pressed state.
       if (props.holdPressed !== undefined && isPrimaryPress(event)) {
         setIsPressing(true);
       }

@@ -1,3 +1,4 @@
+.githooks/
 .local/
 .output/
 .tanstack/
@@ -6,3 +7,4 @@ dist/
 node_modules/
 .DS_Store
 .env
+*.tmp

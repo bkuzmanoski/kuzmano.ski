@@ -16,7 +16,7 @@ const APPLE_LOGO_BOTTOM = 735 / 1067;
 const DISK_DRIVE_BOTTOM = 692 / 1067;
 
 // Applies a transform the way the compositor does, for an origin at the viewport's top-left corner.
-const transformed = ({ scale, x, y }: Transform, box: Rect): Rect => ({
+const transformedBox = ({ scale, x, y }: Transform, box: Rect): Rect => ({
   x: box.x * scale + x,
   y: box.y * scale + y,
   width: box.width * scale,
@@ -26,7 +26,7 @@ const transformed = ({ scale, x, y }: Transform, box: Rect): Rect => ({
 const zoomedInBoxFor = (viewport: Size) => stageMetricsFor(viewport).illustration;
 const zoomedOutBoxFor = (viewport: Size) => {
   const { illustration, zoomOut } = stageMetricsFor(viewport);
-  return transformed(zoomOut, illustration);
+  return transformedBox(zoomOut, illustration);
 };
 
 describe("stageMetricsFor", () => {

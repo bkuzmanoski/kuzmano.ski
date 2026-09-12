@@ -24,12 +24,12 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
 function itemAt(list: HTMLElement | null, listId: string, index: number) {
   const items = list?.querySelectorAll<HTMLElement>(`[${ITEM_ATTRIBUTE}]`) ?? [];
 
-  let found = -1;
+  let matchedIndex = -1;
 
   // The id is compared rather than selected on: `useId` values are
   // opaque so this lookup must not assume they are selector-safe.
   for (const item of items) {
-    if (item.getAttribute(ITEM_ATTRIBUTE) === listId && ++found === index) {
+    if (item.getAttribute(ITEM_ATTRIBUTE) === listId && ++matchedIndex === index) {
       return item;
     }
   }
@@ -75,12 +75,12 @@ export function useListNavigation(
     scrollIntoViewSilently(item);
   }, [listRef, listId, activeIndex]);
 
-  const tabStop = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
+  const tabStopIndex = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
 
   return function itemProps(index: number) {
     return {
       [ITEM_ATTRIBUTE]: listId,
-      tabIndex: index === tabStop ? 0 : -1,
+      tabIndex: index === tabStopIndex ? 0 : -1,
       onFocus: () => setFocusedIndex(index),
       onMouseDown: (event: MouseEvent<HTMLElement>) => {
         // A handler merged ahead of this one (see `mergeHandlers`) may prevent the default
@@ -101,18 +101,18 @@ export function useListNavigation(
           return;
         }
 
-        const target = KEY_TARGETS[event.key]?.(index, count - 1);
+        const targetIndex = KEY_TARGETS[event.key]?.(index, count - 1);
 
-        if (target === undefined) {
+        if (targetIndex === undefined) {
           return;
         }
 
         event.preventDefault();
 
-        const next = clamp(target, 0, count - 1);
-        const item = itemAt(listRef.current, listId, next);
+        const nextIndex = clamp(targetIndex, 0, count - 1);
+        const item = itemAt(listRef.current, listId, nextIndex);
 
-        if (next === index || !item) {
+        if (nextIndex === index || !item) {
           return; // The focus stays put at either end of the list, so there is no travel to report.
         }
 

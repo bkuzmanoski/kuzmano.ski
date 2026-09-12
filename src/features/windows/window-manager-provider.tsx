@@ -51,7 +51,7 @@ export function WindowManagerProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({ select: (routerState) => routerState.location.pathname });
   const navigate = useNavigate();
   const reducer = useMemo(() => createWindowReducer(layout), [layout]);
   const [closeGuards] = useState<CloseGuards>(createCloseGuards);

@@ -216,18 +216,18 @@ describe("zoom", () => {
 describe("measure", () => {
   test("the first measurement matches the pre-rendered geometry", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
-    const measured = reducer(preRendered, { type: "measure", surface: SURFACE });
+    const measuredState = reducer(preRendered, { type: "measure", surface: SURFACE });
 
     expect(preRendered.geometry.entry).toMatchObject({ x: 0, y: 0, ...DEFAULT_SIZE });
-    expect(measured.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
+    expect(measuredState.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
   });
 
   test("the first measurement fits a pre-rendered window into the padded area", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
-    const measured = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
+    const measuredState = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
 
     // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/windows/window.module.css`).
-    expect(measured.geometry.entry).toMatchObject({
+    expect(measuredState.geometry.entry).toMatchObject({
       x: WINDOW_LAYOUT.padding,
       y: WINDOW_LAYOUT.padding,
       width: 600 - 2 * WINDOW_LAYOUT.padding,
@@ -237,10 +237,10 @@ describe("measure", () => {
 
   test("a subsequent measurement leaves the windows where they are", () => {
     const movedState = reducer(opened("entry"), { type: "move", id: "entry", x: 10, y: 10 });
-    const measured = reducer(movedState, { type: "measure", surface: { width: 640, height: 480 } });
+    const measuredState = reducer(movedState, { type: "measure", surface: { width: 640, height: 480 } });
 
-    expect(measured.geometry).toBe(movedState.geometry);
-    expect(measured.surface).toEqual({ width: 640, height: 480 });
+    expect(measuredState.geometry).toBe(movedState.geometry);
+    expect(measuredState.surface).toEqual({ width: 640, height: 480 });
   });
 
   test("is a no-op when the size is unchanged", () => {
@@ -310,8 +310,8 @@ describe("per-window layout", () => {
   });
 
   test("each window opens at its default size, centered on the desktop surface", () => {
-    const measured = varyingReducer(EMPTY_STATE, { type: "measure", surface: SURFACE });
-    const withEntry = varyingReducer(measured, openAction("entry", "/entry"));
+    const measuredState = varyingReducer(EMPTY_STATE, { type: "measure", surface: SURFACE });
+    const withEntry = varyingReducer(measuredState, openAction("entry", "/entry"));
     const state = varyingReducer(withEntry, openAction("contact", "/contact"));
 
     expect(state.geometry.entry).toMatchObject({ ...centerOf(DEFAULT_SIZE), ...DEFAULT_SIZE });
@@ -328,13 +328,13 @@ describe("createWindowResizer", () => {
     ["a size larger than the desktop", { width: 5000, height: 5000 }],
   ])("lands a window on the rect the reducer gives it for %s", (_, size) => {
     const state = opened("entry");
-    const resized = reducer(state, { type: "resize", id: "entry", ...size });
+    const resizedState = reducer(state, { type: "resize", id: "entry", ...size });
 
     expect(resizeWindow(state.geometry.entry!, SURFACE, size)).toEqual({
-      x: resized.geometry.entry!.x,
-      y: resized.geometry.entry!.y,
-      width: resized.geometry.entry!.width,
-      height: resized.geometry.entry!.height,
+      x: resizedState.geometry.entry!.x,
+      y: resizedState.geometry.entry!.y,
+      width: resizedState.geometry.entry!.width,
+      height: resizedState.geometry.entry!.height,
     });
   });
 });
@@ -345,28 +345,28 @@ describe("the not-found alert", () => {
 
   test("records the route without changing the open windows or focus", () => {
     const initialState = opened("collection", "entry");
-    const state = showNotFoundAlert(initialState, "/no-such-page");
+    const state = showNotFoundAlert(initialState, "/nonexistent-page");
 
-    expect(state.notFoundRoute).toBe("/no-such-page");
+    expect(state.notFoundRoute).toBe("/nonexistent-page");
     expect(state.focused).toBe("entry");
     expect(state.content).toBe(initialState.content);
     expect(state.order).toBe(initialState.order);
   });
 
   test("is a no-op when the same route is reported twice, but updates for a different route", () => {
-    const state = showNotFoundAlert(opened("entry"), "/no-such-page");
+    const state = showNotFoundAlert(opened("entry"), "/nonexistent-page");
 
-    expect(showNotFoundAlert(state, "/no-such-page")).toBe(state);
-    expect(showNotFoundAlert(state, "/another-typo").notFoundRoute).toBe("/another-typo");
+    expect(showNotFoundAlert(state, "/nonexistent-page")).toBe(state);
+    expect(showNotFoundAlert(state, "/other-nonexistent-page").notFoundRoute).toBe("/other-nonexistent-page");
   });
 
   test("clears the route when dismissed", () => {
-    const state = showNotFoundAlert(opened("entry"), "/no-such-page");
+    const state = showNotFoundAlert(opened("entry"), "/nonexistent-page");
     expect(reducer(state, { type: "dismissNotFoundAlert" }).notFoundRoute).toBeNull();
   });
 
   test("returns focus to the window that was previously focused when dismissed", () => {
-    const state = showNotFoundAlert(opened("entry"), "/no-such-page");
+    const state = showNotFoundAlert(opened("entry"), "/nonexistent-page");
     expect(reducer(state, { type: "dismissNotFoundAlert" }).focused).toBe("entry");
   });
 
@@ -376,7 +376,7 @@ describe("the not-found alert", () => {
   });
 
   test("clears the route when navigation resolves to a real destination", () => {
-    const state = showNotFoundAlert(opened("entry"), "/no-such-page");
+    const state = showNotFoundAlert(opened("entry"), "/nonexistent-page");
 
     expect(reducer(state, openAction("collection", "/collection")).notFoundRoute).toBeNull();
     expect(reducer(state, openAction("entry", "/entry")).notFoundRoute).toBeNull();

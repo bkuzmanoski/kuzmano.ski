@@ -108,7 +108,7 @@ describe("the body limit admits every submission the forms accept", () => {
     expect(exceedsMaxLength(body)).toBe(false);
   });
 
-  test("a waitlist membership of the maximum email address, list and source length is accepted", () => {
+  test("a waitlist membership of the maximum email address, list, and source length is accepted", () => {
     const body = JSON.stringify({
       emailAddress: fieldOfMaximumLength(MAX_EMAIL_ADDRESS_LENGTH),
       list: fieldOfMaximumLength(LIST_MAX_LENGTH),

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { DETENT_PIXELS, IDLE_DURATION_MS } from "#/lib/audio/scroll.ts";
+import { DETENT_PX, IDLE_DURATION_MS } from "#/lib/audio/scroll.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
 
@@ -50,11 +50,11 @@ test("a tab key press into content below the fold does not play a sound for the 
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 
-  focusJump(viewport, first!, DETENT_PIXELS * 4, IDLE_DURATION_MS * 2);
+  focusJump(viewport, first!, DETENT_PX * 4, IDLE_DURATION_MS * 2);
 
   expect(detents()).toBe(0);
 
-  focusJump(viewport, second!, DETENT_PIXELS * 8, IDLE_DURATION_MS * 2);
+  focusJump(viewport, second!, DETENT_PX * 8, IDLE_DURATION_MS * 2);
 
   expect(detents()).toBe(0);
 });
@@ -70,7 +70,7 @@ test("an animated scroll into view stays silent for as long as it runs", () => {
 
   for (let frame = 1; frame <= 10; frame += 1) {
     now += 16;
-    viewport.scrollTop = DETENT_PIXELS * frame;
+    viewport.scrollTop = DETENT_PX * frame;
     fireEvent.scroll(viewport);
   }
 
@@ -85,17 +85,17 @@ test("user scrolling plays a sound again after an animated scroll into view sett
   fireEvent.focus(first!);
 
   now += 16;
-  viewport.scrollTop = DETENT_PIXELS * 4;
+  viewport.scrollTop = DETENT_PX * 4;
   fireEvent.scroll(viewport);
 
   now += IDLE_DURATION_MS * 2; // The animation has settled.
-  viewport.scrollTop = DETENT_PIXELS * 5;
+  viewport.scrollTop = DETENT_PX * 5;
   fireEvent.scroll(viewport);
 
   expect(detents()).toBe(0); // The scroll that reopens the gesture is not itself a detent.
 
   now += 16;
-  viewport.scrollTop = DETENT_PIXELS * 6;
+  viewport.scrollTop = DETENT_PX * 6;
   fireEvent.scroll(viewport);
 
   expect(detents()).toBe(1);
@@ -105,8 +105,8 @@ test("a held tab key does not play a sound for the scrolls its repeats cause", (
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 
-  focusJump(viewport, first!, DETENT_PIXELS * 4, IDLE_DURATION_MS * 2);
-  focusJump(viewport, second!, DETENT_PIXELS * 8, 30);
+  focusJump(viewport, first!, DETENT_PX * 4, IDLE_DURATION_MS * 2);
+  focusJump(viewport, second!, DETENT_PX * 8, 30);
 
   expect(detents()).toBe(0);
 });
@@ -115,7 +115,7 @@ test("the user's own scrolling still plays a sound", () => {
   const viewport = renderPane();
 
   now += 16;
-  viewport.scrollTop = DETENT_PIXELS;
+  viewport.scrollTop = DETENT_PX;
   fireEvent.scroll(viewport);
 
   expect(detents()).toBe(1);

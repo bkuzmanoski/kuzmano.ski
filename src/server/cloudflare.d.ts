@@ -34,20 +34,12 @@ declare module "cloudflare:workers" {
     limit: (options: { key: string }) => Promise<{ success: boolean }>;
   }
 
-  /**
-   * Optional Worker bindings used by the application.
-   *
-   * The names must match the bindings declared in `server/bindings.ts`.
-   */
-  export interface WorkerEnv {
-    SEND_EMAIL?: SendEmailBinding;
-    SEND_EMAIL_RATELIMIT?: RateLimitBinding;
-    CONTACT_EMAIL_ADDRESS?: string;
-    CONTACT_EMAIL_ADDRESS_RATELIMIT?: RateLimitBinding;
-    NOTION_TOKEN?: string;
-    WAITLIST_DATA_SOURCE_ID?: string;
-    WAITLIST_RATELIMIT?: RateLimitBinding;
-  }
+  /** Worker bindings, keyed by the names declared in `server/bindings.ts`. */
+  /* eslint-disable @typescript-eslint/consistent-type-imports -- A top-level import would make this an invalid module augmentation. */
+  export type WorkerEnv = Partial<Record<typeof import("./bindings.ts").SEND_EMAIL_BINDING, SendEmailBinding>> &
+    Partial<Record<import("./bindings.ts").RateLimitBindingName, RateLimitBinding>> &
+    Partial<Record<import("./bindings.ts").SecretName, string>>;
+  /* eslint-enable @typescript-eslint/consistent-type-imports */
 
   export const env: WorkerEnv;
 }

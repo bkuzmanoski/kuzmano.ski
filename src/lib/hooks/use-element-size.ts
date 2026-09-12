@@ -11,7 +11,7 @@ import type { RefObject } from "react";
 export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (size: Size) => void): void {
   // Always the latest callback, so a caller does not have to keep one stable
   // to avoid tearing the observer down and rebuilding it on every render.
-  const report = useEffectEvent(onResize);
+  const reportResize = useEffectEvent(onResize);
 
   useEffect(() => {
     const element = ref.current;
@@ -22,7 +22,7 @@ export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (
 
     const measure = () => {
       const { width, height } = element.getBoundingClientRect();
-      report({ width, height });
+      reportResize({ width, height });
     };
 
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);

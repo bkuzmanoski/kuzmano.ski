@@ -9,7 +9,7 @@
    * rows are explicitly packed, which leaves the alert full-height with oversized actions. */
   align-content: start;
 
-  width: min(512px, calc(100% - 2 * var(--window-layer-padding)));
+  width: min(512px, calc(100% - 2 * var(--layout-window-layer-padding)));
   padding: 24px;
   padding-inline-start: 36px;
   border: 1px solid var(--color-border);

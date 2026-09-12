@@ -3,7 +3,7 @@
 }
 
 @position-try --menu-align-viewport-end {
-  inset-inline: auto var(--safe-area-right);
+  inset-inline: auto var(--layout-safe-area-right);
 }
 
 .menu {
@@ -44,7 +44,7 @@
 
   width: 100%;
   height: 31px;
-  padding: 0 var(--gutter);
+  padding: 0 var(--layout-gutter);
   border: 0;
 
   text-align: left;

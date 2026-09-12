@@ -2,17 +2,12 @@ import type { Size } from "#/lib/geometry.ts";
 import type { IconLayout } from "#/lib/icons/icon.ts";
 import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
-const MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (will be clamped by `padding` below).
-
-export const WINDOW_LAYOUT: WindowLayout = {
-  windows: {
-    entry: { defaultSize: { width: 1024, height: 1024 }, fixedSize: false },
-    collection: { defaultSize: { width: 1024, height: 1024 }, fixedSize: false },
-    contact: { defaultSize: { width: 572, height: 480 }, fixedSize: true },
-  },
-  minSize: MIN_SIZE,
-  padding: 12, // Mirrored by `--window-layer-padding` in `styles.css`.
+export const WINDOW_SPECS: WindowLayout["windows"] = {
+  entry: { defaultSize: { width: 1024, height: 1024 }, fixedSize: false },
+  collection: { defaultSize: { width: 1024, height: 1024 }, fixedSize: false },
+  contact: { defaultSize: { width: 572, height: 480 }, fixedSize: true },
 };
+export const WINDOW_MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (clamped by the window layer padding).
 export const ICON_LAYOUT: IconLayout = {
   cellSize: 72,
   position: { top: 24, right: 32 },

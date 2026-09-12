@@ -21,14 +21,14 @@ function renderTooltip({
   suppressed = false,
   onDidHide,
 }: { label?: string; persistOnPress?: boolean; suppressed?: boolean; onDidHide?: () => void } = {}) {
-  let props = { label, showsState: false, suppressed };
+  let stateProps = { label, showsState: false, suppressed };
 
   const view = () => (
     <Tooltip
-      label={props.label}
+      label={stateProps.label}
       persistOnPress={persistOnPress}
-      showsState={props.showsState}
-      suppressed={props.suppressed}
+      showsState={stateProps.showsState}
+      suppressed={stateProps.suppressed}
       onDidHide={onDidHide}
     >
       <button type="button">Control</button>
@@ -37,9 +37,9 @@ function renderTooltip({
 
   const { container, rerender, unmount } = render(view());
 
-  const update = (next: Partial<typeof props>) =>
+  const update = (next: Partial<typeof stateProps>) =>
     act(() => {
-      props = { ...props, ...next };
+      stateProps = { ...stateProps, ...next };
       rerender(view());
     });
 
@@ -63,8 +63,8 @@ function renderTooltipGroup() {
           <button type="button">Second</button>
         </Tooltip>
       </span>
-      <Tooltip label="Elsewhere">
-        <button type="button">Elsewhere</button>
+      <Tooltip label="Outside the group">
+        <button type="button">Outside the group</button>
       </Tooltip>
     </>,
   );
@@ -75,17 +75,17 @@ function renderTooltipGroup() {
 }
 
 function renderStateControls() {
-  let props = { first: false, second: false, third: false };
+  let stateProps = { first: false, second: false, third: false };
 
   const view = () => (
     <span>
-      <Tooltip label="First" showsState={props.first}>
+      <Tooltip label="First" showsState={stateProps.first}>
         <button type="button">First</button>
       </Tooltip>
-      <Tooltip label="Second" showsState={props.second}>
+      <Tooltip label="Second" showsState={stateProps.second}>
         <button type="button">Second</button>
       </Tooltip>
-      <Tooltip label="Third" showsState={props.third}>
+      <Tooltip label="Third" showsState={stateProps.third}>
         <button type="button">Third</button>
       </Tooltip>
     </span>
@@ -93,9 +93,9 @@ function renderStateControls() {
 
   const { rerender } = render(view());
 
-  const update = (next: Partial<typeof props>) =>
+  const update = (next: Partial<typeof stateProps>) =>
     act(() => {
-      props = { ...props, ...next };
+      stateProps = { ...stateProps, ...next };
       rerender(view());
     });
 
@@ -408,7 +408,7 @@ test("a control outside the group does not skip the hover delay", () => {
 
   advance(1);
 
-  expect(tip()?.textContent).toBe("Elsewhere");
+  expect(tip()?.textContent).toBe("Outside the group");
 });
 
 test("a grace period is not started when the pointer leaves a control before a tooltip is shown", () => {
@@ -486,7 +486,7 @@ test("crossing to a control outside the group hides the held-over tooltip after 
 
   advance(HOVER_DELAY_MS - HIDE_DELAY_MS);
 
-  expect(tip()?.textContent).toBe("Elsewhere");
+  expect(tip()?.textContent).toBe("Outside the group");
 });
 
 test("a touch does not inherit a mouse hover's grace period", () => {

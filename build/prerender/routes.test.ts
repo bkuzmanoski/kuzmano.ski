@@ -1,18 +1,21 @@
 import { describe, expect, test, vi } from "vitest";
 
+import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
 import type * as contentConfig from "#/config/content.ts";
+import { MEDIA_SEGMENT } from "#/lib/content/paths.ts";
 
+import { CONTENT_DIRECTORY_PATH } from "../paths.ts";
 import {
+  authoredCollection,
+  authoredContent,
+  authoredContentDirectory,
+  authoredEntry,
   draftEntry,
-  scannedCollection,
-  scannedContent,
-  scannedDirectory,
-  scannedEntry,
-} from "../test-utils/scanned-content.ts";
+} from "../test-utils/authored-content.ts";
 
 import { routesFor } from "./routes.ts";
 
-import type { ScannedContent } from "./routes.ts";
+import type { AuthoredContent } from "../content/authored-content.ts";
 
 vi.mock("#/config/content.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof contentConfig>()),
@@ -24,35 +27,38 @@ vi.mock("#/config/content.ts", async (importOriginal) => ({
   PAGE_SLUGS: ["page-1", "page-2"],
 }));
 
-const undated = { date: undefined };
+const undatedEntry = { date: undefined };
 
 // A valid tree that each test can modify to exercise one condition.
-const content = (overrides: Partial<ScannedContent> = {}): ScannedContent =>
-  scannedContent({
-    pages: scannedDirectory([scannedEntry("page-1", { date: "2026-02-03" }), scannedEntry("page-2", undated)]),
+const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
+  authoredContent({
+    pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+      authoredEntry("page-1", { date: "2026-02-03" }),
+      authoredEntry("page-2", undatedEntry),
+    ]),
     collections: [
-      scannedCollection("collection-1", [scannedEntry("entry-1", { date: "2026-01-02" })]),
-      scannedCollection("collection-2", [scannedEntry("entry-2", { date: "2026-03-04" })]),
-      scannedCollection("collection-3"),
+      authoredCollection("collection-1", [authoredEntry("entry-1", { date: "2026-01-02" })]),
+      authoredCollection("collection-2", [authoredEntry("entry-2", { date: "2026-03-04" })]),
+      authoredCollection("collection-3"),
     ],
     ...overrides,
   });
 
-const routes = (overrides?: Partial<ScannedContent>) => routesFor(content(overrides));
-const paths = (overrides?: Partial<ScannedContent>) => routes(overrides).map(({ path }) => path);
+const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides));
+const paths = (overrides?: Partial<AuthoredContent>) => routes(overrides).map(({ path }) => path);
 
 describe("routes", () => {
-  test("includes the home and contact routes, collections, collection entries, and pages", () => {
+  test("includes the home pages, collections, collection entries, and contact routes in order", () => {
     expect(paths()).toEqual([
       "/",
-      "/contact",
+      "/page-1",
+      "/page-2",
       "/collection-1",
       "/collection-1/entry-1",
       "/collection-2",
       "/collection-2/entry-2",
       "/collection-3",
-      "/page-1",
-      "/page-2",
+      "/contact",
     ]);
   });
 
@@ -86,37 +92,49 @@ describe("routes", () => {
   });
 
   test("omits draft entries", () => {
-    const withDrafts = routesFor(
+    const pathsWithDrafts = routesFor(
       content({
-        pages: scannedDirectory([
-          scannedEntry("page-1", undated),
-          scannedEntry("page-2", undated),
-          draftEntry("secret", undated),
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          authoredEntry("page-1", undatedEntry),
+          authoredEntry("page-2", undatedEntry),
+          draftEntry("secret", undatedEntry),
         ]),
         collections: [
-          scannedCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
-          scannedCollection("collection-2"),
-          scannedCollection("collection-3"),
+          authoredCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
         ],
       }),
     ).map(({ path }) => path);
 
-    expect(withDrafts).not.toContain("/collection-1/unpublished");
-    expect(withDrafts).not.toContain("/secret");
-    expect(withDrafts).toContain("/collection-1");
+    expect(pathsWithDrafts).not.toContain("/collection-1/unpublished");
+    expect(pathsWithDrafts).not.toContain("/secret");
+    expect(pathsWithDrafts).toContain("/collection-1");
   });
 
   test("prerenders a page the site does not link to, but omits it from the sitemap", () => {
-    const withUnregisteredPage = routes({
-      pages: scannedDirectory([
-        scannedEntry("page-1", { date: "2026-02-03" }),
-        scannedEntry("page-2", undated),
-        scannedEntry("unlisted", { date: "2026-01-01" }),
+    const routesWithUnregisteredPage = routes({
+      pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+        authoredEntry("page-1", { date: "2026-02-03" }),
+        authoredEntry("page-2", undatedEntry),
+        authoredEntry("unlisted", { date: "2026-01-01" }),
       ]),
     });
 
-    expect(withUnregisteredPage).toContainEqual({ path: "/unlisted", sitemap: { exclude: true } });
-    expect(withUnregisteredPage).toContainEqual({ path: "/page-1", sitemap: { lastmod: "2026-02-03" } });
+    expect(routesWithUnregisteredPage).toContainEqual({ path: "/unlisted", sitemap: { exclude: true } });
+    expect(routesWithUnregisteredPage).toContainEqual({ path: "/page-1", sitemap: { lastmod: "2026-02-03" } });
+  });
+
+  test("includes an entry with an adjacent media directory", () => {
+    expect(
+      paths({
+        collections: [
+          authoredCollection("collection-1", [authoredEntry("entry-1", undatedEntry)], ["entry-1"]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
+        ],
+      }),
+    ).toContain("/collection-1/entry-1");
   });
 });
 
@@ -125,52 +143,52 @@ describe("invalid content", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("Collection Four"),
-          scannedCollection("collection-1"),
-          scannedCollection("collection-2"),
-          scannedCollection("collection-3"),
+          authoredCollection("Collection Four"),
+          authoredCollection("collection-1"),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/not URL-safe.*Collection Four/s);
+    ).toThrow(/URL-unsafe.*Collection Four/s);
   });
 
   test("fails for an entry slug that is not URL-safe", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("collection-1", [scannedEntry("Not A Slug", undated)]),
-          scannedCollection("collection-2"),
-          scannedCollection("collection-3"),
+          authoredCollection("collection-1", [authoredEntry("Not A Slug", undatedEntry)]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/not URL-safe.*Not A Slug/s);
+    ).toThrow(/URL-unsafe.*Not A Slug/s);
   });
 
   test("fails for a page slug that is not URL-safe", () => {
     expect(() =>
       paths({
-        pages: scannedDirectory([
-          scannedEntry("page-1", undated),
-          scannedEntry("page-2", undated),
-          scannedEntry("Read Me", undated),
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          authoredEntry("page-1", undatedEntry),
+          authoredEntry("page-2", undatedEntry),
+          authoredEntry("Read Me", undatedEntry),
         ]),
       }),
-    ).toThrow(/not URL-safe.*Read Me/s);
+    ).toThrow(/URL-unsafe.*Read Me/s);
   });
 
   test("fails when a declared page has no corresponding file", () => {
-    expect(() => paths({ pages: scannedDirectory([scannedEntry("page-1", undated)]) })).toThrow(
-      /declared with no corresponding file.*page-2/s,
-    );
+    expect(() =>
+      paths({ pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [authoredEntry("page-1", undatedEntry)]) }),
+    ).toThrow(/declared with no corresponding content file.*page-2/s);
   });
 
   test("fails when a page has the same slug as a collection", () => {
     expect(() =>
       paths({
-        pages: scannedDirectory([
-          scannedEntry("page-1", undated),
-          scannedEntry("page-2", undated),
-          scannedEntry("collection-1", undated),
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          authoredEntry("page-1", undatedEntry),
+          authoredEntry("page-2", undatedEntry),
+          authoredEntry("collection-1", undatedEntry),
         ]),
       }),
     ).toThrow(/shadowed by a collection.*collection-1/s);
@@ -179,10 +197,10 @@ describe("invalid content", () => {
   test("fails when content shadows a reserved route", () => {
     expect(() =>
       paths({
-        pages: scannedDirectory([
-          scannedEntry("page-1", undated),
-          scannedEntry("page-2", undated),
-          scannedEntry("contact", undated),
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          authoredEntry("page-1", undatedEntry),
+          authoredEntry("page-2", undatedEntry),
+          authoredEntry("contact", undatedEntry),
         ]),
       }),
     ).toThrow(/shadowing reserved route/);
@@ -190,33 +208,58 @@ describe("invalid content", () => {
 
   test("fails when a declared collection has no corresponding directory", () => {
     expect(() =>
-      paths({ collections: [scannedCollection("collection-1"), scannedCollection("collection-2")] }),
+      paths({ collections: [authoredCollection("collection-1"), authoredCollection("collection-2")] }),
     ).toThrow(/no corresponding content directory.*collection-3/s);
   });
 
   test("fails when a content directory has no declared collection", () => {
-    expect(() => paths({ collections: [...content().collections, scannedCollection("unregistered")] })).toThrow(
-      /missing titles.*unregistered/s,
+    expect(() => paths({ collections: [...content().collections, authoredCollection("unregistered")] })).toThrow(
+      /no declared collection.*unregistered/s,
     );
   });
 
-  test("fails for a nested directory inside a collection", () => {
+  test("fails for a directory inside a collection without an entry of the same name", () => {
     expect(() =>
       paths({
         collections: [
-          scannedCollection("collection-1", [], ["archive"]),
-          scannedCollection("collection-2"),
-          scannedCollection("collection-3"),
+          authoredCollection("collection-1", [authoredEntry("entry-1", undatedEntry)], ["archive"]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/Nested content director.*archive/s);
+    ).toThrow(/no matching entry.*archive/s);
   });
 
-  test("fails for a nested directory inside the pages directory", () => {
+  test("fails for a directory inside the pages directory without an entry of the same name", () => {
     expect(() =>
       paths({
-        pages: scannedDirectory([scannedEntry("page-1", undated), scannedEntry("page-2", undated)], ["drafts"]),
+        pages: authoredContentDirectory(
+          PAGES_DIRECTORY_NAME,
+          [authoredEntry("page-1", undatedEntry), authoredEntry("page-2", undatedEntry)],
+          ["drafts"],
+        ),
       }),
-    ).toThrow(/Nested content director.*drafts/s);
+    ).toThrow(/no matching entry.*drafts/s);
+  });
+
+  test("fails for a page whose name shadows the media segment", () => {
+    const pathsWithMediaPage = () =>
+      paths({
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          ...content().pages.entries,
+          authoredEntry(MEDIA_SEGMENT, undatedEntry),
+        ]),
+      });
+
+    expect(pathsWithMediaPage).toThrow("reserved route");
+    expect(pathsWithMediaPage).toThrow(`${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/${MEDIA_SEGMENT}.mdx`);
+  });
+
+  test("fails for a collection directory whose name shadows the media segment", () => {
+    const pathsWithMediaCollection = () =>
+      paths({ collections: [...content().collections, authoredCollection(MEDIA_SEGMENT)] });
+
+    expect(pathsWithMediaCollection).toThrow("reserved route");
+    expect(pathsWithMediaCollection).toThrow(`${CONTENT_DIRECTORY_PATH}/${MEDIA_SEGMENT}/`);
   });
 });

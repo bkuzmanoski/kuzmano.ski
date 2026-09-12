@@ -1,31 +1,22 @@
-// The URL shape content is served under:
-//
-// - pages at `/<slug>`
-// - collection entries at `/<segment>/<slug>`
-// - collections at `/<segment>`.
-//
-// Free of Node and Vite imports so the build plugins can read it, and free of configuration
-// so it belongs in `/src/lib`. `/src/site/content-routes.ts` layers the site's reserved routes
-// over it and is what everything outside `/src/lib` imports.
+// This module has no imports, so build plugins can use it.
 
 export interface ContentPath {
   segment: string;
   slug?: string;
 }
 
+/** The top-level URL segment content media is served under. */
+export const MEDIA_SEGMENT = "media";
+
 export const pageRoute = (slug: string) => `/${slug}`;
 export const entryRoute = (segment: string, slug: string) => `/${segment}/${slug}`;
 export const collectionRoute = (segment: string) => `/${segment}`;
+export const mediaRoute = (mediaPath: string) => `/${MEDIA_SEGMENT}/${mediaPath}`;
 
-const segmentsOf = (path: string) => path.split("/").filter(Boolean); // Dropping empty parts ignores leading, trailing and repeated slashes.
+const segmentsOf = (path: string) => path.split("/").filter(Boolean); // Dropping empty parts ignores leading, trailing, and repeated slashes.
 
-/** Whether a path addresses the site root, which has no content of its own. */
 export const isRootPath = (path: string) => segmentsOf(path).length === 0;
 
-/**
- * The content a path addresses, or `null` when it addresses none: the root, or a path
- * deeper than a collection entry.
- */
 export function parseContentPath(path: string): ContentPath | null {
   const segments = segmentsOf(path);
 

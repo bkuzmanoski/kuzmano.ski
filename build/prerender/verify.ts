@@ -1,48 +1,49 @@
+import { fromHtml } from "hast-util-from-html";
+import { select, selectAll } from "hast-util-select";
+import { toString } from "hast-util-to-string";
+
 import { documentTitle } from "#/site/metadata.ts";
 
-const TITLE_SUFFIX = documentTitle(""); // The suffix on every document title. It comes from `documentTitle` so the two agree.
-const MENU_BAR = 'aria-label="Main menu"'; // The label the menu bar renders in `/src/features/menu-bar/menu-bar.tsx`
-const WINDOW_BODY = /id="window-content"[^>]*>(?:<!--.*?-->)*<(?!\/)/; // Content inside `FOCUSED_WINDOW_CONTENT_ID`, past the comments React writes around a Suspense boundary.
-const LOADING_INDICATOR = "data-loading-indicator"; // The marker on `/src/components/spinner.tsx`.
+import type { Element, Nodes } from "hast";
 
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#x27": "'", "#39": "'" };
+const DOCUMENT_TITLE_SUFFIX = documentTitle("");
+const MENU_BAR_SELECTOR = '[aria-label="Main menu"]';
+const WINDOW_CONTENT_SELECTOR = "#window-content";
+const LOADING_INDICATOR_SELECTOR = "[data-loading-indicator]";
 
-// A title is compared across a text node and an attribute. The two use different escapes.
-const decode = (value: string) =>
-  value.replace(/&(amp|lt|gt|quot|#x27|#39);/g, (match, name: string) => ENTITIES[name] ?? match);
+function documentTitleOf(tree: Nodes): string | null {
+  const titleElement = select("title", tree);
+  return titleElement ? toString(titleElement) || null : null;
+}
 
-function documentTitleOf(html: string): string | null {
-  const match = /<title[^>]*>([^<]*)<\/title>/.exec(html);
-  return match?.[1] ? decode(match[1]) : null;
+function labelIdOf(section: Element): string {
+  const labelledBy = section.properties.ariaLabelledBy;
+  return String((Array.isArray(labelledBy) ? labelledBy[0] : labelledBy) ?? "");
 }
 
 // Every window is a `<section>` labelled by the element that holds its title. The ids come
 // from `useId`, so they are resolved by lookup rather than by matching a known value.
-function windowTitlesOf(html: string): Array<string> {
+function windowTitlesOf(tree: Nodes): Array<string> {
   const textById = new Map(
-    [...html.matchAll(/<\w+[^>]*\sid="([^"]*)"[^>]*>([^<]*)</g)].map(([, id, text]): [string, string] => [
-      id!,
-      decode(text!),
-    ]),
+    selectAll("[id]", tree).map((element) => [String(element.properties.id), toString(element)]),
   );
-
-  return [...html.matchAll(/<section[^>]*aria-labelledby="([^"]*)"/g)].flatMap(([, id]) => textById.get(id!) ?? []);
+  return selectAll("section[aria-labelledby]", tree).flatMap((section) => textById.get(labelIdOf(section)) ?? []);
 }
 
 /** Checks prerendered HTML for the presence of required elements and fails the build if any are missing. */
 export function verifyPrerenderedDocument({ page, html }: { page: { path: string }; html: string }) {
-  // `page` is the prerender result's own field name for the route the document was rendered for.
   const problems: Array<string> = [];
-  const segments = page.path.split("/").filter(Boolean);
+  const pathSegments = page.path.split("/").filter(Boolean);
+  const documentTree = fromHtml(html);
 
-  if (!html.includes(MENU_BAR)) {
+  if (!select(MENU_BAR_SELECTOR, documentTree)) {
     problems.push("the menu bar is missing");
   }
 
-  if (segments.length > 0) {
-    const title = documentTitleOf(html);
-    const pageTitle = title?.endsWith(TITLE_SUFFIX) ? title.slice(0, -TITLE_SUFFIX.length) : null;
-    const windowTitles = windowTitlesOf(html);
+  if (pathSegments.length > 0) {
+    const title = documentTitleOf(documentTree);
+    const pageTitle = title?.endsWith(DOCUMENT_TITLE_SUFFIX) ? title.slice(0, -DOCUMENT_TITLE_SUFFIX.length) : null;
+    const windowTitles = windowTitlesOf(documentTree);
 
     if (!pageTitle) {
       problems.push(title === null ? "the document title is missing" : `the document title is "${title}"`);
@@ -50,11 +51,13 @@ export function verifyPrerenderedDocument({ page, html }: { page: { path: string
       problems.push(`there is no window titled "${pageTitle}"`);
     }
 
-    if (!WINDOW_BODY.test(html)) {
+    const windowBody = select(WINDOW_CONTENT_SELECTOR, documentTree);
+
+    if (!windowBody?.children.some((child) => child.type === "element")) {
       problems.push("the window body is empty");
     }
 
-    if (html.includes(LOADING_INDICATOR)) {
+    if (windowBody && select(LOADING_INDICATOR_SELECTOR, windowBody)) {
       problems.push("the window body contains a loading indicator");
     }
   }

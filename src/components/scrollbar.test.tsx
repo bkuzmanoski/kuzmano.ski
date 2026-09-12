@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { DETENT_PIXELS, playPaneScroll } from "#/lib/audio/scroll.ts";
+import { DETENT_PX, playPaneScroll } from "#/lib/audio/scroll.ts";
 import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
@@ -268,7 +268,7 @@ test("the scroll a track press causes does not play a scroll sound", () => {
   const { viewport, track } = renderScrollbar();
 
   advance(1);
-  viewport.scrollTop = DETENT_PIXELS * 2;
+  viewport.scrollTop = DETENT_PX * 2;
   fireEvent.scroll(viewport);
 
   expect(playScrollDetent).toHaveBeenCalledTimes(1);

@@ -13,7 +13,7 @@
 
   & pre {
     overflow-x: auto;
-    padding: var(--gutter);
+    padding: var(--layout-gutter);
 
     & code {
       font: var(--font-code);

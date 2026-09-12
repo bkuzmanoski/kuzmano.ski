@@ -1,12 +1,13 @@
 import { notFound } from "@tanstack/react-router";
+import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 
 import { PAGE_SLUGS } from "#/config/content.ts";
 
 import { pages } from "./catalog.ts";
-import { collectionRoute, entryRoute, pageRoute } from "./content-routes.ts";
 import { collectionFeed } from "./feeds.ts";
 import { documentHead } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
+import { collectionRoute, entryRoute, pageRoute } from "./routes.ts";
 
 import type { Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
@@ -34,7 +35,8 @@ export const contentRoute = {
       case "page":
         return documentData(content.frontmatter, {
           path: pageRoute(content.slug),
-          contentAsset: pages.assetOf(content.slug),
+          bodyChunkUrl: pages.bodyChunkUrlOf(content.slug),
+          coverImage: ENTRY_COVER_IMAGES[pages.entryKeyOf(content.slug)] ?? null,
           markdown: hasMarkdownAlternate(content.frontmatter),
           noindex: content.frontmatter?.draft === true || !isRegisteredPage(content.slug),
         });
@@ -43,7 +45,8 @@ export const contentRoute = {
         return documentData(content.frontmatter, {
           path: entryRoute(params.segment, content.slug),
           kind: "article",
-          contentAsset: content.collection.assetOf(content.slug),
+          bodyChunkUrl: content.collection.bodyChunkUrlOf(content.slug),
+          coverImage: ENTRY_COVER_IMAGES[content.collection.entryKeyOf(content.slug)] ?? null,
           markdown: hasMarkdownAlternate(content.frontmatter),
           feed,
           noindex: content.frontmatter?.draft === true,
@@ -59,7 +62,7 @@ export const contentRoute = {
         };
 
       default:
-        throw notFound(); // Not found, or a reserved route that renders its own head tags.
+        throw notFound(); // Not found, or a feature route that renders its own head tags.
     }
   },
   head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),

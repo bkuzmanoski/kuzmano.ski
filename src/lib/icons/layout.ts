@@ -37,30 +37,32 @@ export function resolveIconPlacements(
   container: Size,
   layout: IconLayout,
 ): Array<IconPlacement> {
-  const projected = ids.flatMap((id) => {
+  const projectedPlacements = ids.flatMap((id) => {
     const position = positions[id];
 
     return position ? [{ id, x: container.width - position.right - layout.cellSize, y: position.top }] : [];
   });
 
   if (container.width === 0 || container.height === 0) {
-    return projected;
+    return projectedPlacements;
   }
 
-  const fits = projected.map((placement) => fitsInContainer(placement, container, layout.cellSize));
-  const placed: Array<Position> = projected.filter((_, index) => fits[index]).map(({ x, y }) => ({ x, y }));
+  const placementFits = projectedPlacements.map((placement) => fitsInContainer(placement, container, layout.cellSize));
+  const placedPositions: Array<Position> = projectedPlacements
+    .filter((_, index) => placementFits[index])
+    .map(({ x, y }) => ({ x, y }));
 
-  return projected.map((placement, index) => {
-    if (fits[index]) {
+  return projectedPlacements.map((placement, index) => {
+    if (placementFits[index]) {
       return placement;
     }
 
-    const slot = freeSlot(placed, container, layout) ?? {
+    const slot = freeSlot(placedPositions, container, layout) ?? {
       x: clampToContainer(placement.x, container.width, layout.cellSize),
       y: clampToContainer(placement.y, container.height, layout.cellSize),
     };
 
-    placed.push(slot);
+    placedPositions.push(slot);
 
     return { id: placement.id, ...slot };
   });

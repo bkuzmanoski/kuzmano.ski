@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { fakeScrollViewport } from "#/test-utils/audio.ts";
 
 import {
-  DETENT_PIXELS,
+  DETENT_PX,
   IDLE_DURATION_MS,
   playInputScroll,
   playPaneScroll,
@@ -54,7 +54,7 @@ describe("playScroll", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
-    scrollTo(element, DETENT_PIXELS);
+    scrollTo(element, DETENT_PX);
 
     expect(detents()).toBe(1);
   });
@@ -72,7 +72,7 @@ describe("playScroll", () => {
 
   test("plays one detent per notch of travel, not one per event", () => {
     const element = fakeScrollViewport();
-    const move = DETENT_PIXELS / 4; // Four events to the notch, so one per event would play eight.
+    const move = DETENT_PX / 4; // Four events to the notch, so one per event would play eight.
 
     playScroll(element);
 
@@ -103,17 +103,17 @@ describe("playScroll", () => {
   });
 
   test("reports faster travel at a higher speed", () => {
-    const slow = fakeScrollViewport();
-    const fast = fakeScrollViewport();
+    const slowViewport = fakeScrollViewport();
+    const fastViewport = fakeScrollViewport();
 
-    playScroll(slow);
-    scrollTo(slow, 40, 200);
-    playScroll(fast);
-    scrollTo(fast, 40, 4);
+    playScroll(slowViewport);
+    scrollTo(slowViewport, 40, 200);
+    playScroll(fastViewport);
+    scrollTo(fastViewport, 40, 4);
 
-    const [slow_, fast_] = vi.mocked(playScrollDetent).mock.calls;
+    const [slowDetent, fastDetent] = vi.mocked(playScrollDetent).mock.calls;
 
-    expect(fast_![0]).toBeGreaterThan(slow_![0]);
+    expect(fastDetent![0]).toBeGreaterThan(slowDetent![0]);
   });
 });
 
@@ -170,7 +170,7 @@ describe("recordScrollIntoView", () => {
     playScroll(parent);
     parent.scrollTop = 500;
     recordScrollIntoView(child);
-    scrollTo(parent, 500 + DETENT_PIXELS);
+    scrollTo(parent, 500 + DETENT_PX);
 
     expect(detents()).toBe(1);
   });
@@ -189,7 +189,7 @@ describe("silenceScrollIntoView", () => {
     silenceScrollIntoView(child); // The ancestor has not moved yet.
 
     for (let frame = 1; frame <= 6; frame += 1) {
-      scrollTo(parent, DETENT_PIXELS * frame);
+      scrollTo(parent, DETENT_PX * frame);
     }
 
     expect(detents()).toBe(0);
@@ -203,11 +203,11 @@ describe("silenceScrollIntoView", () => {
 
     playScroll(parent);
     silenceScrollIntoView(child);
-    scrollTo(parent, DETENT_PIXELS * 4);
+    scrollTo(parent, DETENT_PX * 4);
 
     now += IDLE_DURATION_MS * 2; // The scroll has settled.
-    scrollTo(parent, DETENT_PIXELS * 5);
-    scrollTo(parent, DETENT_PIXELS * 6);
+    scrollTo(parent, DETENT_PX * 5);
+    scrollTo(parent, DETENT_PX * 6);
 
     expect(detents()).toBe(1);
   });
@@ -324,7 +324,7 @@ describe("playPaneScroll", () => {
 
     playPaneScroll(element);
     now += 16;
-    element.scrollTop = DETENT_PIXELS;
+    element.scrollTop = DETENT_PX;
     playPaneScroll(element);
 
     expect(detents()).toBe(1);
@@ -350,7 +350,7 @@ describe("playPaneScroll", () => {
     element.scrollTop = 40;
     playPaneScroll(element);
     now += 16;
-    element.scrollTop = 40 + DETENT_PIXELS;
+    element.scrollTop = 40 + DETENT_PX;
     playPaneScroll(element);
 
     expect(detents()).toBe(1);
@@ -363,7 +363,7 @@ describe("playInputScroll", () => {
 
     playInputScroll(element);
     now += 16;
-    element.scrollTop = DETENT_PIXELS;
+    element.scrollTop = DETENT_PX;
     playInputScroll(element);
 
     expect(detents()).toBe(1);
@@ -389,7 +389,7 @@ describe("playInputScroll", () => {
     element.scrollTop = 20;
     playInputScroll(element);
     now += 16;
-    element.scrollTop = 20 + DETENT_PIXELS;
+    element.scrollTop = 20 + DETENT_PX;
     playInputScroll(element);
 
     expect(detents()).toBe(1);

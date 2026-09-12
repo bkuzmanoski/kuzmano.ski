@@ -1,4 +1,5 @@
 import { FEED_TYPE, SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
+import type { CoverImage } from "#/lib/content/media.ts";
 
 interface FeedLink {
   title: string;
@@ -10,8 +11,9 @@ export interface DocumentMetadata {
   description: string;
   path: string;
   kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
-  contentAsset?: string | null; // URL of the chunk holding the entry's compiled content, preloaded so it is available to hydration (see `/build/content-assets.ts`).
-  markdown?: boolean; // Whether the document has a Markdown alternate to advertise (see `/build/markdown.ts`).
+  bodyChunkUrl?: string | null; // URL of the chunk holding the entry's compiled content, preloaded so it is available to hydration.
+  coverImage?: CoverImage | null; // Used as `og:image` in place of the site image.
+  markdown?: boolean; // Whether the document has a Markdown alternate to advertise.
   feed?: FeedLink;
   noindex?: boolean;
 }
@@ -32,13 +34,15 @@ export function documentHead({
   description,
   path,
   kind = "website",
-  contentAsset,
+  bodyChunkUrl,
+  coverImage,
   markdown,
   feed,
   noindex,
 }: DocumentMetadata) {
   const url = canonicalUrl(path);
   const fullTitle = path === "/" ? SITE_NAME : documentTitle(title);
+  const socialImage = coverImage?.social ?? { src: SOCIAL_IMAGE, width: undefined, height: undefined };
 
   return {
     meta: [
@@ -50,12 +54,18 @@ export function documentHead({
       { property: "og:title", content: fullTitle },
       ...(description ? [{ property: "og:description", content: description }] : []),
       { property: "og:url", content: url },
-      { property: "og:image", content: canonicalUrl(SOCIAL_IMAGE) },
+      { property: "og:image", content: canonicalUrl(socialImage.src) },
+      ...(socialImage.width && socialImage.height
+        ? [
+            { property: "og:image:width", content: String(socialImage.width) },
+            { property: "og:image:height", content: String(socialImage.height) },
+          ]
+        : []),
       { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "canonical", href: url },
-      ...(contentAsset ? [{ rel: "modulepreload", href: contentAsset }] : []),
+      ...(bodyChunkUrl ? [{ rel: "modulepreload", href: bodyChunkUrl }] : []),
       ...(markdown ? [{ rel: "alternate", type: "text/markdown", href: markdownUrl(path), title: "Markdown" }] : []),
       ...(feed ? [{ rel: "alternate", type: FEED_TYPE, href: feed.path, title: feed.title }] : []),
     ],

@@ -40,16 +40,16 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
     return refuse(429);
   }
 
-  const body = await request.text();
+  const bodyText = await request.text();
 
-  if (exceedsMaxLength(body)) {
+  if (exceedsMaxLength(bodyText)) {
     return refuse(413);
   }
 
   let submission: unknown;
 
   try {
-    submission = JSON.parse(body);
+    submission = JSON.parse(bodyText);
   } catch {
     return refuse(400);
   }

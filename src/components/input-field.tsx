@@ -8,9 +8,9 @@ import type { ReactNode, SyntheticEvent } from "react";
 
 const INPUT_FIELD_SURFACES = "label, input, textarea";
 
-// Restricts a press handler to the field's own surfaces. A field can also hold a control that
-// plays its own press sound, such as the `Scrollbar` paired with a `TextArea`, which would
-// otherwise play a second sound for the same press.
+// Restricts a press handler to the field's own surfaces. A field can also contain a control
+// that plays its own press sound, such as the `Scrollbar` paired with a `TextArea`, which
+// would otherwise play a second sound for the same press.
 function onInputFieldSurface<T extends SyntheticEvent>(handler: (event: T) => void) {
   return (event: T) => {
     if ((event.target as Element).closest(INPUT_FIELD_SURFACES)) {

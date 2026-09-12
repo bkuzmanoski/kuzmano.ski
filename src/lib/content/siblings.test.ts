@@ -20,7 +20,7 @@ test("an entry in the middle has the entries either side of it in the listing", 
   expect(entrySiblings(collection, "middle")).toEqual({ previous: routeOf("newest"), next: routeOf("oldest") });
 });
 
-test("an entry the listing does not hold has no siblings", () => {
+test("an entry the listing does not contain has no siblings", () => {
   expect(entrySiblings(collection, "not-in-the-listing")).toEqual({ previous: null, next: null });
 });
 

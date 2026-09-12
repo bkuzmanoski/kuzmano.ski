@@ -29,10 +29,10 @@ function readCachedContactEmailAddress(): string | null {
  * server if the session does not have it. Returns `null` when it cannot be read.
  */
 export async function readContactEmailAddress(signal?: AbortSignal): Promise<string | null> {
-  const cachedAddress = readCachedContactEmailAddress();
+  const cachedEmailAddress = readCachedContactEmailAddress();
 
-  if (cachedAddress !== null) {
-    return cachedAddress;
+  if (cachedEmailAddress !== null) {
+    return cachedEmailAddress;
   }
 
   try {

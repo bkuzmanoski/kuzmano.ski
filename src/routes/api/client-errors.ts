@@ -8,8 +8,8 @@ const MAX_KIND_LENGTH = 100;
 const MAX_STACK_LENGTH = 4_000;
 
 function stringField(value: Record<string, unknown>, name: string, maximumLength: number): string | undefined {
-  const field = value[name];
-  return typeof field === "string" ? field.slice(0, maximumLength) : undefined;
+  const fieldValue = value[name];
+  return typeof fieldValue === "string" ? fieldValue.slice(0, maximumLength) : undefined;
 }
 
 export const Route = createFileRoute("/api/client-errors")({

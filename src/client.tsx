@@ -8,10 +8,10 @@ import { resolveWindow } from "#/site/windows.ts";
 // server-rendered content with its fallback while the compiled MDX loads.
 async function loadInitialContent() {
   try {
-    const target = resolveWindow(window.location.pathname);
+    const windowTarget = resolveWindow(window.location.pathname);
 
-    if (target?.id === "entry") {
-      await target.contentIndex.load(target.slug);
+    if (windowTarget?.id === "entry") {
+      await windowTarget.contentIndex.load(windowTarget.slug);
     }
   } catch {
     // Hydration proceeds regardless: the Suspense boundary handles the failed load.

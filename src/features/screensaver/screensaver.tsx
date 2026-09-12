@@ -13,7 +13,7 @@ import styles from "./screensaver.module.css";
 
 import type { PointerEvent } from "react";
 
-const screensaverStyle: StyleWithVars = { "--fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
+const SCREENSAVER_STYLE: StyleWithVars = { "--fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
 
 function wakeOnMovement(event: PointerEvent<HTMLDivElement>) {
   if (event.buttons === 0) {
@@ -22,13 +22,13 @@ function wakeOnMovement(event: PointerEvent<HTMLDivElement>) {
 }
 
 export function Screensaver() {
-  const state = useSleepState();
+  const sleepState = useSleepState();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const isIdleSleepEnabled = isBootSequenceComplete && !prefersReducedMotion && state === "awake";
-  const isUp = state !== "awake";
-  const isDismissible = state === "asleep";
+  const isIdleSleepEnabled = isBootSequenceComplete && !prefersReducedMotion && sleepState === "awake";
+  const isUp = sleepState !== "awake";
+  const isDismissible = sleepState === "asleep";
 
   useIdleTimeout(SCREENSAVER_IDLE_DELAY_MS, isIdleSleepEnabled, sleepOnIdle);
 
@@ -46,7 +46,7 @@ export function Screensaver() {
 
   return (
     <div
-      style={screensaverStyle}
+      style={SCREENSAVER_STYLE}
       className={cx(styles.screensaver, isUp && styles.up)}
       aria-hidden
       onClick={isDismissible ? wake : undefined}

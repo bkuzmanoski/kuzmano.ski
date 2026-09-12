@@ -66,7 +66,7 @@ describe("renderBuffer", () => {
 });
 
 describe("bufferCache", () => {
-  const cached = () => {
+  const cachingRenderer = () => {
     const render = vi.fn((context: AudioContext, spec: { hz: number }) =>
       renderBuffer(context, {
         sampleRate: 100,
@@ -80,7 +80,7 @@ describe("bufferCache", () => {
   };
 
   test("renders each spec once and returns the cached buffer", () => {
-    const { render, sampleFor } = cached();
+    const { render, sampleFor } = cachingRenderer();
     const spec = { hz: 440 };
     const context = fakeAudioContext();
 
@@ -89,7 +89,7 @@ describe("bufferCache", () => {
   });
 
   test("caches specs by identity rather than value", () => {
-    const { render, sampleFor } = cached();
+    const { render, sampleFor } = cachingRenderer();
     const context = fakeAudioContext();
 
     expect(sampleFor(context, { hz: 440 })).not.toBe(sampleFor(context, { hz: 440 }));

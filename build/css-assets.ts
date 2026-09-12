@@ -1,94 +1,121 @@
-// Vite emits a relative `url()` it cannot resolve as the literal it was written as, so a stylesheet
-// moved to a different depth still builds and the reference 404s at runtime. This resolves every
-// relative `url()` against the file system instead.
-
 import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { SOURCE_DIRECTORY, fromRoot, toRootRelative } from "./paths.ts";
+import { parse } from "postcss";
+import valueParser from "postcss-value-parser";
+
+import { CLIENT_ENVIRONMENT } from "./environments.ts";
+import { SOURCE_DIRECTORY_PATH, fromRoot, toRootRelative } from "./paths.ts";
 
 import type { Plugin } from "vite";
 
-// The quoted alternatives are tried first so a data URI containing `)` is read as one value rather
-// than truncated at the first bracket.
-const URL_VALUE = /\burl\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s]*))\s*\)/g;
+const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i; // References that do not resolve to local files: schemes, absolute paths, and fragments.
+const QUERY_OR_FRAGMENT = /(?<!\\)[?#]/; // Matches the first unescaped query or fragment delimiter. Escaped `\?` and `\#` remain part of the path. Escaped backslashes are not distinguished.
+const CSS_ESCAPE = /\\(?:([\da-f]{1,6})[ \t\n]?|([^\da-f]))/gi; // Matches a CSS escape: a one-to-six-digit code point or a literal character.
 
-// A reference the build does not resolve against a file: a scheme (`data:`, `https:`), a
-// protocol-relative or root-relative path, or a fragment.
-const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
-
-/**
- * Returns every relative `url()` in a stylesheet for which `exists` is false, as written and in source
- * order. The query and fragment are removed before `exists` is called, so `./icon.svg#glyph` is checked
- * as `./icon.svg`.
- *
- * Takes the CSS as a value and existence as a predicate so a reference can be checked without files on
- * disk.
- */
-export function findUnresolvedUrls(css: string, exists: (path: string) => boolean): Array<string> {
-  const unresolved: Array<string> = [];
-
-  for (const [, doubleQuoted, singleQuoted, unquoted] of css.matchAll(URL_VALUE)) {
-    const reference = doubleQuoted ?? singleQuoted ?? unquoted ?? "";
-
-    if (reference === "" || NON_FILE_REFERENCE.test(reference)) {
-      continue;
-    }
-
-    if (!exists(reference.split(/[?#]/)[0] ?? "")) {
-      unresolved.push(reference);
-    }
-  }
-
-  return unresolved;
+function filePathOf(reference: string): string {
+  return (reference.split(QUERY_OR_FRAGMENT)[0] ?? "").replace(
+    CSS_ESCAPE,
+    (_, codePoint: string | undefined, character: string | undefined) =>
+      codePoint === undefined ? (character ?? "") : String.fromCodePoint(Number.parseInt(codePoint, 16)),
+  ); // Decoding allows escaped paths to resolve correctly.
 }
 
-/** Returns the stylesheets under `/src` and every unresolved relative `url()` they contain. */
-export async function readUnresolvedUrls(): Promise<{ stylesheets: Array<string>; unresolved: Array<string> }> {
-  const entries = await readdir(fromRoot(SOURCE_DIRECTORY), { recursive: true, withFileTypes: true });
-  const stylesheets = entries
+/** Returns `url()` references from a declaration value or at-rule prelude in source order. */
+export function urlsIn(value: string): Array<string> {
+  const references: Array<string> = [];
+
+  valueParser(value).walk((node) => {
+    if (node.type !== "function" || node.value !== "url") {
+      return;
+    }
+
+    // `url()` holds an unquoted reference in a `word` node and a quoted one in a `string` node,
+    // so a quoted value keeps any bracket it contains rather than ending the reference.
+    const [argument] = node.nodes;
+    const reference = argument?.type === "word" || argument?.type === "string" ? argument.value : "";
+
+    if (reference !== "") {
+      references.push(reference);
+    }
+  });
+
+  return references;
+}
+
+/**
+ * Returns unresolved relative `url()` references in source order.
+ *
+ * Removes queries, fragments, and CSS escapes before calling `exists`.
+ */
+export function unresolvedUrlsIn(css: string, exists: (filePath: string) => boolean): Array<string> {
+  const unresolvedReferences: Array<string> = [];
+
+  const collectUnresolved = (value: string) => {
+    for (const reference of urlsIn(value)) {
+      if (!NON_FILE_REFERENCE.test(reference) && !exists(filePathOf(reference))) {
+        unresolvedReferences.push(reference);
+      }
+    }
+  };
+
+  // Check declarations and at-rule preludes because `@import` references appear in the prelude.
+  parse(css).walk((node) => {
+    if (node.type === "decl") {
+      collectUnresolved(node.value);
+    } else if (node.type === "atrule") {
+      collectUnresolved(node.params);
+    }
+  });
+
+  return unresolvedReferences;
+}
+
+/** Returns stylesheets under `/src` and unresolved relative `url()` references in each. */
+export async function readStylesheets(): Promise<{ stylesheetAbsolutePaths: Array<string>; problems: Array<string> }> {
+  const entries = await readdir(fromRoot(SOURCE_DIRECTORY_PATH), { recursive: true, withFileTypes: true });
+  const stylesheetAbsolutePaths = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".css"))
     .map((entry) => join(entry.parentPath, entry.name));
 
-  const unresolved = (
+  const problems = (
     await Promise.all(
-      stylesheets.map(async (file) => {
-        const css = await readFile(file, "utf8");
-
-        return findUnresolvedUrls(css, (path) => existsSync(resolve(dirname(file), path))).map(
-          (reference) => `${toRootRelative(file)} references \`${reference}\`, which is not a file`,
+      stylesheetAbsolutePaths.map(async (stylesheetAbsolutePath) => {
+        const css = await readFile(stylesheetAbsolutePath, "utf8");
+        return unresolvedUrlsIn(css, (filePath) => existsSync(resolve(dirname(stylesheetAbsolutePath), filePath))).map(
+          (reference) => `${toRootRelative(stylesheetAbsolutePath)} references \`${reference}\`, which is not a file.`,
         );
       }),
     )
   ).flat();
 
-  return { stylesheets, unresolved };
+  return { stylesheetAbsolutePaths, problems };
 }
 
-/** Fails the build when a relative `url()` in a stylesheet under `/src` names a path with no file at it. */
+/** Fails client builds when a relative `url()` in `/src` CSS does not resolve. */
 export function cssAssetsPlugin(): Plugin {
   return {
     name: "kuzmano.ski:css-assets",
     apply: "build",
-    applyToEnvironment: (environment) => environment.name === "client",
+    applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
     async buildStart() {
-      let stylesheets: Array<string>;
-      let unresolved: Array<string>;
+      let stylesheetAbsolutePaths: Array<string>;
+      let problems: Array<string>;
 
       try {
-        ({ stylesheets, unresolved } = await readUnresolvedUrls());
+        ({ stylesheetAbsolutePaths, problems } = await readStylesheets());
       } catch (cause) {
         const reason = cause instanceof Error ? cause.message : String(cause);
-        return this.error(`Could not read the stylesheets under ${SOURCE_DIRECTORY}/: ${reason}`);
+        return this.error(`Could not read the stylesheets under ${SOURCE_DIRECTORY_PATH}/: ${reason}`);
       }
 
-      for (const file of stylesheets) {
-        this.addWatchFile(file);
+      for (const stylesheetAbsolutePath of stylesheetAbsolutePaths) {
+        this.addWatchFile(stylesheetAbsolutePath);
       }
 
-      if (unresolved.length > 0) {
-        this.error(`Unresolved CSS asset: ${unresolved.join("; ")}.`);
+      if (problems.length > 0) {
+        this.error(problems.join(" "));
       }
     },
   };

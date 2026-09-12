@@ -27,17 +27,17 @@ function setThemeColorMetaTags() {
   bootDark.media = "(prefers-color-scheme: dark)";
   bootDark.content = "#232a2f";
 
-  const light = document.createElement("meta");
-  light.name = "theme-color";
-  light.media = "(prefers-color-scheme: light)";
-  light.content = "#e3e7ea";
+  const lightThemeColor = document.createElement("meta");
+  lightThemeColor.name = "theme-color";
+  lightThemeColor.media = "(prefers-color-scheme: light)";
+  lightThemeColor.content = "#e3e7ea";
 
-  const dark = document.createElement("meta");
-  dark.name = "theme-color";
-  dark.media = "(prefers-color-scheme: dark)";
-  dark.content = "#151a1d";
+  const darkThemeColor = document.createElement("meta");
+  darkThemeColor.name = "theme-color";
+  darkThemeColor.media = "(prefers-color-scheme: dark)";
+  darkThemeColor.content = "#151a1d";
 
-  document.head.append(bootLight, bootDark, light, dark);
+  document.head.append(bootLight, bootDark, lightThemeColor, darkThemeColor);
 }
 
 function bootThemeColors() {

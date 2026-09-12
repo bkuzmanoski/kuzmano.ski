@@ -1,5 +1,6 @@
-// The specifier that `/build/inline-scripts.ts` resolves.
+/** The bundled and minified source of the script. */
 declare module "*?inline-script" {
-  const script: string; // The bundled and minified source of the entry.
+  const script: string;
+
   export default script;
 }

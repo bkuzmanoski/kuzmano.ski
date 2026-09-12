@@ -96,7 +96,7 @@ const MenuItemRow = memo(function MenuRow({
     "aria-disabled": item.disabled || undefined,
     "data-index": index,
   };
-  const content = (
+  const itemContent = (
     <>
       <span>{item.label}</span>
       {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
@@ -107,10 +107,10 @@ const MenuItemRow = memo(function MenuRow({
 
   return item.href ? (
     <a {...itemProps} href={item.href} target={item.target} draggable={false} tabIndex={-1} onClick={onItemClick}>
-      {content}
+      {itemContent}
     </a>
   ) : (
-    <div {...itemProps}>{content}</div>
+    <div {...itemProps}>{itemContent}</div>
   );
 });
 
@@ -149,14 +149,14 @@ export function Menu({
   }
 
   function focusAdjacentMenuItem(direction: 1 | -1) {
-    let next = focusedItemRef.current;
+    let nextIndex = focusedItemRef.current;
     let remaining = items.length;
 
     while (remaining-- > 0) {
-      next = cycle(items.length, next, direction);
+      nextIndex = cycle(items.length, nextIndex, direction);
 
-      if (isEnabled(items[next])) {
-        focusItem(next);
+      if (isEnabled(items[nextIndex])) {
+        focusItem(nextIndex);
         return;
       }
     }

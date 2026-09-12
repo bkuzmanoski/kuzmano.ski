@@ -46,16 +46,16 @@ export function Waitlist({
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const emailAddressFieldRef = useRef<HTMLInputElement>(null);
 
-  const route = renderedEntry?.route ?? "";
+  const entryRoute = renderedEntry?.route ?? "";
 
-  const waitlist = useJoinWaitlist({
+  const waitlistJoin = useJoinWaitlist({
     list,
-    source: route,
+    source: entryRoute,
     onFailure: (message) => setPrompt({ kind: "failed", message }),
   });
 
-  const isJoining = waitlist.state === "joining";
-  const hasJoined = waitlist.state === "joined";
+  const isJoining = waitlistJoin.state === "joining";
+  const hasJoined = waitlistJoin.state === "joined";
 
   function join() {
     const invalidFields = form.revealErrors();
@@ -65,7 +65,7 @@ export function Waitlist({
       return;
     }
 
-    void waitlist.join({ emailAddress: form.values.emailAddress });
+    void waitlistJoin.join({ emailAddress: form.values.emailAddress });
   }
 
   function closePrompt() {
@@ -83,7 +83,7 @@ export function Waitlist({
       className={styles.waitlist}
       aria-labelledby={titleId}
       data-content-space="loose"
-      data-feed-text={fallbackText(`${SITE_URL}${route}`)}
+      data-feed-text={fallbackText(`${SITE_URL}${entryRoute}`)}
       data-joined={hasJoined || undefined}
     >
       <div className={styles.content} inert={isJoining}>

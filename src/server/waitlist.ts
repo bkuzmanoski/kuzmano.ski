@@ -11,7 +11,7 @@ const NOTION_VERSION = "2026-03-11"; // Pinned: Notion changes the shape of a re
 const REQUEST_TIMEOUT_MS = 5_000;
 
 // The properties the waitlist data source must define (see `/README.md`).
-const PROPERTY = { emailAddress: "Email", list: "List", source: "Source" };
+const PROPERTY_NAMES = { emailAddress: "Email", list: "List", source: "Source" };
 
 /**
  * `throttled` means Notion is rate limiting or overloaded, so the join may succeed on a retry.
@@ -41,7 +41,6 @@ function reportError(event: string, error: unknown) {
   console.error({ event, message: error instanceof Error ? error.message : String(error) });
 }
 
-/** The token and data source the Worker writes memberships to, or `null` when either is missing. */
 async function credentials(): Promise<Credentials | null> {
   let env;
 
@@ -86,8 +85,8 @@ async function isAlreadyRecorded({ token, dataSourceId }: Credentials, membershi
     const response = await post(`/data_sources/${dataSourceId}/query`, token, {
       filter: {
         and: [
-          { property: PROPERTY.emailAddress, title: { equals: membership.emailAddress } },
-          { property: PROPERTY.list, rich_text: { equals: membership.list } },
+          { property: PROPERTY_NAMES.emailAddress, title: { equals: membership.emailAddress } },
+          { property: PROPERTY_NAMES.list, rich_text: { equals: membership.list } },
         ],
       },
       page_size: 1,
@@ -98,9 +97,9 @@ async function isAlreadyRecorded({ token, dataSourceId }: Credentials, membershi
       return false;
     }
 
-    const body: unknown = await response.json();
+    const queryResult: unknown = await response.json();
 
-    return isRecord(body) && Array.isArray(body.results) && body.results.length > 0;
+    return isRecord(queryResult) && Array.isArray(queryResult.results) && queryResult.results.length > 0;
   } catch (error) {
     reportError("waitlist_lookup_failed", error);
     return false;
@@ -109,25 +108,25 @@ async function isAlreadyRecorded({ token, dataSourceId }: Credentials, membershi
 
 /** Records a membership in the waitlist database. */
 export async function recordMembership(membership: Membership): Promise<MembershipResult> {
-  const notion = await credentials();
+  const notionCredentials = await credentials();
 
-  if (!notion) {
+  if (!notionCredentials) {
     return "unavailable";
   }
 
-  if (await isAlreadyRecorded(notion, membership)) {
+  if (await isAlreadyRecorded(notionCredentials, membership)) {
     return "recorded";
   }
 
   let response: Response;
 
   try {
-    response = await post("/pages", notion.token, {
-      parent: { type: "data_source_id", data_source_id: notion.dataSourceId },
+    response = await post("/pages", notionCredentials.token, {
+      parent: { type: "data_source_id", data_source_id: notionCredentials.dataSourceId },
       properties: {
-        [PROPERTY.emailAddress]: { title: [{ text: { content: membership.emailAddress } }] },
-        [PROPERTY.list]: { rich_text: [{ text: { content: membership.list } }] },
-        [PROPERTY.source]: { url: new URL(membership.source, SITE_URL).href },
+        [PROPERTY_NAMES.emailAddress]: { title: [{ text: { content: membership.emailAddress } }] },
+        [PROPERTY_NAMES.list]: { rich_text: [{ text: { content: membership.list } }] },
+        [PROPERTY_NAMES.source]: { url: new URL(membership.source, SITE_URL).href },
       },
     });
   } catch (error) {

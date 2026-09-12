@@ -36,7 +36,7 @@ export function swallowNextPress(): void {
     standDown?.();
   }
 
-  const timer = setTimeout(abandon, MAX_CLICK_DELAY_MS);
+  const abandonTimer = setTimeout(abandon, MAX_CLICK_DELAY_MS);
 
   document.addEventListener("mousedown", swallowFocus, true);
   document.addEventListener("click", swallowClick, true);
@@ -45,7 +45,7 @@ export function swallowNextPress(): void {
   standDown = () => {
     standDown = null;
 
-    clearTimeout(timer);
+    clearTimeout(abandonTimer);
     document.removeEventListener("mousedown", swallowFocus, true);
     document.removeEventListener("click", swallowClick, true);
     document.removeEventListener("pointerdown", abandon, true);

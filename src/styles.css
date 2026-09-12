@@ -43,18 +43,24 @@
   --layer-screensaver: 500;
   --layer-boot-sequence: 600;
 
-  /* Metrics */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  --menu-bar-height: 32px;
-  --window-layer-padding: 12px; /* Kept clear around a window as it is placed. Mirrors `WINDOW_LAYOUT.padding` in `config/desktop.ts`. */
-  --gutter: 16px;
-  --title-bar-height: 28px; /* Excludes its bottom border. */
-  --scrollbar-width: 20px; /* Excludes its leading border. */
-  --tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
-  --shadow-length: 3px;
+  /* Layout metrics
+   *
+   * `--layout-*` pixel values are exposed to TypeScript via `virtual:layout-metrics`. */
+  --layout-safe-area-top: env(safe-area-inset-top, 0px);
+  --layout-safe-area-right: env(safe-area-inset-right, 0px);
+  --layout-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --layout-safe-area-left: env(safe-area-inset-left, 0px);
+  --layout-menu-bar-height: 32px;
+  --layout-window-layer-padding: 12px; /* Kept clear around a window as it is placed. */
+  --layout-cover-image-size: 64px;
+  --layout-gutter: 16px;
+  --layout-title-bar-height: 28px; /* Excludes its bottom border. */
+  --layout-scrollbar-width: 20px; /* Excludes its leading border. */
+  --layout-tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
+  --layout-shadow-length: 3px;
+
+  /* Transitions */
+  --duration-desktop-reveal-step: 0ms; /* Set from JS. */
 
   /* Typography */
   --font-family-chrome: ChicagoFLF, ui-sans-serif, sans-serif;
@@ -70,23 +76,23 @@
    *
    * - Lightness values are intentionally unevenly spaced; each step exists because a role below needs it.
    * - Chroma follows `0.0215 * sin(pi * L^1.25)`, peaking mid-ramp and tapering to near zero at both ends. */
-  --neutral-190: oklch(19% 0.0083 238deg); /* #101417 */
-  --neutral-215: oklch(21.5% 0.0095 238deg); /* #151a1d */
-  --neutral-280: oklch(28% 0.0128 238deg); /* #232a2f */
-  --neutral-305: oklch(30.5% 0.014 238deg); /* #293035 */
-  --neutral-325: oklch(32.5% 0.015 238deg); /* #2d353b */
-  --neutral-330: oklch(33% 0.0152 238deg); /* #2e373c */
-  --neutral-345: oklch(34.5% 0.0159 238deg); /* #323b41 */
-  --neutral-390: oklch(39% 0.0177 238deg); /* #3c474e */
-  --neutral-540: oklch(54% 0.0214 238deg); /* #64717a */
-  --neutral-565: oklch(56.5% 0.0215 238deg); /* #6b7881 */
-  --neutral-645: oklch(64.5% 0.0209 238deg); /* #829099 */
-  --neutral-790: oklch(79% 0.0154 238deg); /* #b2bcc3 */
-  --neutral-820: oklch(82% 0.0137 238deg); /* #bcc6cc */
-  --neutral-925: oklch(92.5% 0.0062 238deg); /* #e3e7ea */
-  --neutral-945: oklch(94.5% 0.0046 238deg); /* #eaedef */
-  --neutral-965: oklch(96.5% 0.0029 238deg); /* #f2f4f5 */
-  --neutral-990: oklch(99% 0.0008 238deg); /* #fbfcfc */
+  --neutral-190: oklch(19% 0.0083 238deg);
+  --neutral-215: oklch(21.5% 0.0095 238deg);
+  --neutral-280: oklch(28% 0.0128 238deg);
+  --neutral-305: oklch(30.5% 0.014 238deg);
+  --neutral-325: oklch(32.5% 0.015 238deg);
+  --neutral-330: oklch(33% 0.0152 238deg);
+  --neutral-345: oklch(34.5% 0.0159 238deg);
+  --neutral-390: oklch(39% 0.0177 238deg);
+  --neutral-540: oklch(54% 0.0214 238deg);
+  --neutral-565: oklch(56.5% 0.0215 238deg);
+  --neutral-645: oklch(64.5% 0.0209 238deg);
+  --neutral-790: oklch(79% 0.0154 238deg);
+  --neutral-820: oklch(82% 0.0137 238deg);
+  --neutral-925: oklch(92.5% 0.0062 238deg);
+  --neutral-945: oklch(94.5% 0.0046 238deg);
+  --neutral-965: oklch(96.5% 0.0029 238deg);
+  --neutral-990: oklch(99% 0.0008 238deg);
 
   /* Accent colors
    *
@@ -143,7 +149,7 @@
   --color-syntax-invalid: var(--accent-red);
 
   /* Shadows */
-  --shadow: var(--shadow-length) var(--shadow-length) 0 var(--color-shadow);
+  --shadow: var(--layout-shadow-length) var(--layout-shadow-length) 0 var(--color-shadow);
 
   /* Patterns */
   --grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -152,9 +158,6 @@
     linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
     linear-gradient(180deg, currentColor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
     linear-gradient(180deg, currentColor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
-
-  /* Transitions */
-  --duration-desktop-reveal-step: 350ms; /* One step of the hand-off from the boot sequence to the desktop. Matches `MOTION_DURATION_MS.desktopReveal` in `lib/boot-sequence.ts`. */
 
   color-scheme: light dark;
 
@@ -271,7 +274,7 @@ hr {
   justify-content: center;
 
   height: 100%;
-  padding: var(--gutter);
+  padding: var(--layout-gutter);
 
   color: var(--color-foreground-secondary);
 }

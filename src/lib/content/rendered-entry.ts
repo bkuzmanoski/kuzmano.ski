@@ -8,5 +8,4 @@ export interface RenderedEntry {
 
 export const RenderedEntryContext = createContext<RenderedEntry | null>(null);
 
-/** The entry the calling component is rendered inside, or `null` outside one. */
 export const useRenderedEntry = () => use(RenderedEntryContext);

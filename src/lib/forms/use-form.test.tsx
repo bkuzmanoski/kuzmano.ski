@@ -38,121 +38,121 @@ function renderForm() {
 }
 
 test("a field's error is withheld until the field has been visited", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
-  expect(harness.form.visibleErrors).toEqual({});
+  expect(formHarness.form.visibleErrors).toEqual({});
 
   act(() => {
-    harness.form.handlers.name.onBlur();
+    formHarness.form.handlers.name.onBlur();
   });
 
-  expect(harness.form.visibleErrors).toEqual({ name: "Enter a name." });
+  expect(formHarness.form.visibleErrors).toEqual({ name: "Enter a name." });
 });
 
 test("revealing errors shows all errors at once and reports them to the caller", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
-  let reported: unknown;
+  let reportedErrors: unknown;
 
   act(() => {
-    reported = harness.form.revealErrors();
+    reportedErrors = formHarness.form.revealErrors();
   });
 
-  expect(reported).toEqual({ name: "Enter a name.", emailAddress: "Enter an email address." });
-  expect(harness.form.visibleErrors).toEqual({ name: "Enter a name.", emailAddress: "Enter an email address." });
+  expect(reportedErrors).toEqual({ name: "Enter a name.", emailAddress: "Enter an email address." });
+  expect(formHarness.form.visibleErrors).toEqual({ name: "Enter a name.", emailAddress: "Enter an email address." });
 });
 
 test("a submission with no errors reports null", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
   act(() => {
-    harness.form.setValue("name", "Test");
-    harness.form.setValue("emailAddress", "test@example.com");
+    formHarness.form.setValue("name", "Test");
+    formHarness.form.setValue("emailAddress", "test@example.com");
   });
 
-  let reported: unknown = "unset";
+  let reportedErrors: unknown = "unset";
 
   act(() => {
-    reported = harness.form.revealErrors();
+    reportedErrors = formHarness.form.revealErrors();
   });
 
-  expect(reported).toBeNull();
-  expect(harness.form.isValid).toBe(true);
+  expect(reportedErrors).toBeNull();
+  expect(formHarness.form.isValid).toBe(true);
 });
 
 test("an error is cleared as soon as the value stops failing, with no second submission", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
   act(() => {
-    harness.form.revealErrors();
+    formHarness.form.revealErrors();
   });
 
-  expect(harness.form.visibleErrors.emailAddress).toBe("Enter an email address.");
+  expect(formHarness.form.visibleErrors.emailAddress).toBe("Enter an email address.");
 
   act(() => {
-    harness.form.setValue("emailAddress", "nope");
+    formHarness.form.setValue("emailAddress", "nope");
   });
-  expect(harness.form.visibleErrors.emailAddress).toBe("Not an email address.");
+  expect(formHarness.form.visibleErrors.emailAddress).toBe("Not an email address.");
 
   act(() => {
-    harness.form.setValue("emailAddress", "test@example.com");
+    formHarness.form.setValue("emailAddress", "test@example.com");
   });
 
-  expect(harness.form.visibleErrors.emailAddress).toBeUndefined();
+  expect(formHarness.form.visibleErrors.emailAddress).toBeUndefined();
 });
 
 test("`isDirty` tracks whether anything has been entered, and a reset clears the form", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
-  expect(harness.form.isDirty).toBe(false);
-
-  act(() => {
-    harness.form.setValue("name", "Ada");
-  });
-
-  expect(harness.form.isDirty).toBe(true);
+  expect(formHarness.form.isDirty).toBe(false);
 
   act(() => {
-    harness.form.revealErrors();
-  });
-  act(() => {
-    harness.form.reset();
+    formHarness.form.setValue("name", "A name");
   });
 
-  expect(harness.form.isDirty).toBe(false);
-  expect(harness.form.values).toEqual(INITIAL_VALUES);
-  expect(harness.form.visibleErrors).toEqual({});
+  expect(formHarness.form.isDirty).toBe(true);
+
+  act(() => {
+    formHarness.form.revealErrors();
+  });
+  act(() => {
+    formHarness.form.reset();
+  });
+
+  expect(formHarness.form.isDirty).toBe(false);
+  expect(formHarness.form.values).toEqual(INITIAL_VALUES);
+  expect(formHarness.form.visibleErrors).toEqual({});
 });
 
 test("a field's handlers are fixed while its value changes", () => {
-  const harness = renderForm();
-  const nameHandlers = harness.form.handlers.name;
-  const emailHandlers = harness.form.handlers.emailAddress;
+  const formHarness = renderForm();
+  const nameHandlers = formHarness.form.handlers.name;
+  const emailHandlers = formHarness.form.handlers.emailAddress;
 
   act(() => {
-    harness.form.setValue("emailAddress", "test@example.com");
+    formHarness.form.setValue("emailAddress", "test@example.com");
   });
 
-  expect(harness.form.handlers.name).toBe(nameHandlers);
-  expect(harness.form.handlers.emailAddress).toBe(emailHandlers);
-  expect(harness.form.values.emailAddress).toBe("test@example.com");
+  expect(formHarness.form.handlers.name).toBe(nameHandlers);
+  expect(formHarness.form.handlers.emailAddress).toBe(emailHandlers);
+  expect(formHarness.form.values.emailAddress).toBe("test@example.com");
 });
 
 test("a change handler writes to its own field", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
   act(() => {
-    harness.form.handlers.name.onChange({
-      currentTarget: { value: "Ada" },
+    formHarness.form.handlers.name.onChange({
+      currentTarget: { value: "A name" },
     } as ChangeEvent<HTMLInputElement>);
   });
 
-  expect(harness.form.values).toEqual({ name: "Ada", emailAddress: "" });
+  expect(formHarness.form.values).toEqual({ name: "A name", emailAddress: "" });
 });
 
 test("an unedited form does not show errors but is still invalid", () => {
-  const harness = renderForm();
+  const formHarness = renderForm();
 
-  expect(harness.form.visibleErrors).toEqual({});
-  expect(harness.form.isValid).toBe(false);
+  expect(formHarness.form.visibleErrors).toEqual({});
+  expect(formHarness.form.isValid).toBe(false);
 });

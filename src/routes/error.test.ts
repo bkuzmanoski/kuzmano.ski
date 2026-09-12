@@ -10,11 +10,11 @@ import { renderRoute } from "#/test-utils/router.tsx";
 // the real route tree to cover that path.
 
 vi.mock("#/site/catalog.ts", async (importOriginal) => {
-  const actual = await importOriginal<typeof Catalog>();
+  const actualCatalog = await importOriginal<typeof Catalog>();
   return {
-    ...actual,
+    ...actualCatalog,
     pages: {
-      ...actual.pages,
+      ...actualCatalog.pages,
       frontmatterOf: () => {
         throw new Error("Unreadable frontmatter.");
       },

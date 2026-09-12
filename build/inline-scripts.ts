@@ -1,14 +1,44 @@
-import { build } from "vite";
+import { VERSION as ROLLDOWN_VERSION, rolldown } from "rolldown";
+import { rolldownVersion as VITE_ROLLDOWN_VERSION } from "vite";
+
+import { fromRoot } from "./paths.ts";
 
 import type { Plugin, ResolvedConfig } from "vite";
 
-const QUERY = "inline-script";
-const PREFIX = "\0inline-script:";
+if (ROLLDOWN_VERSION !== VITE_ROLLDOWN_VERSION) {
+  throw new Error(
+    `The inline scripts plugin loaded rolldown ${ROLLDOWN_VERSION}, but Vite bundles with ${VITE_ROLLDOWN_VERSION}. Ensure that the versions of rolldown used by the plugin and Vite match.`,
+  );
+}
 
-const MAX_BYTES = 1024; // These scripts block the first paint, so they must stay small.
+const MAX_INLINE_SCRIPT_BYTES = 1024; // These scripts block the first paint, so they must stay small.
+
+const VIRTUAL_MODULE_PREFIX = "\0"; // Rolldown prefixes generated module IDs, such as its runtime, with a NUL byte instead of a filesystem path.
+const INLINE_SCRIPT_QUERY = "inline-script";
+const INLINE_SCRIPT_PREFIX = `${VIRTUAL_MODULE_PREFIX}${INLINE_SCRIPT_QUERY}:`;
+
+const ENV_KEY_IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+// Defines the environment for Rolldown, which does not replace `import.meta.env`.
+const environmentDefinitionsFrom = (env: ResolvedConfig["env"]) => ({
+  "import.meta.env": JSON.stringify(env),
+  ...Object.fromEntries(
+    Object.entries(env)
+      .filter(([key]) => ENV_KEY_IDENTIFIER.test(key))
+      .map(([key, value]) => [`import.meta.env.${key}`, JSON.stringify(value)]),
+  ),
+});
+
+const definitionsFrom = (define: Record<string, unknown> | undefined) =>
+  Object.fromEntries(
+    Object.entries(define ?? {}).map(([key, value]) => [
+      key,
+      typeof value === "string" ? value : JSON.stringify(value),
+    ]),
+  );
 
 /**
- * Serves `<name>.ts?inline-script` as a module. The default export is the bundled
+ * Exposes `<name>.ts?inline-script` as a module. The default export is the bundled
  * and minified source of that entry for inlining in a `<script>` tag.
  *
  * The plugin bundles the entry instead of reading it as written, so a pre-hydration
@@ -29,58 +59,64 @@ export function inlineScriptsPlugin(): Plugin {
     async resolveId(source, importer) {
       const [path, query] = source.split("?");
 
-      if (!path?.endsWith(".ts") || !query?.split("&").includes(QUERY)) {
+      if (!path?.endsWith(".ts") || !query?.split("&").includes(INLINE_SCRIPT_QUERY)) {
         return null;
       }
 
-      const resolved = await this.resolve(path, importer, { skipSelf: true });
+      const resolvedEntry = await this.resolve(path, importer, { skipSelf: true });
 
-      return resolved ? `${PREFIX}${resolved.id}` : null;
+      return resolvedEntry ? `${INLINE_SCRIPT_PREFIX}${resolvedEntry.id}` : null;
     },
     async load(id) {
-      if (!id.startsWith(PREFIX)) {
+      if (!id.startsWith(INLINE_SCRIPT_PREFIX)) {
         return null;
       }
 
-      const entry = id.slice(PREFIX.length);
-      const result = await build({
-        configFile: false,
-        root: parent.root,
-        mode: parent.mode,
-        define: parent.define,
-        envDir: parent.envDir,
-        envPrefix: parent.envPrefix,
-        logLevel: "error",
-        resolve: { tsconfigPaths: true },
-        build: {
-          write: false,
-          minify: true,
-          lib: { entry, formats: ["iife"], name: "inlineScript" },
+      const entry = id.slice(INLINE_SCRIPT_PREFIX.length);
+      const bundle = await rolldown({
+        input: entry,
+        cwd: parent.root,
+        platform: "browser",
+        tsconfig: fromRoot("tsconfig.json"),
+        transform: {
+          target: parent.build.target === false ? undefined : parent.build.target,
+          define: { ...environmentDefinitionsFrom(parent.env), ...definitionsFrom(parent.define) },
+        },
+        onLog: (level, log) => {
+          // Route Rolldown logs through this plugin instead of its own console. Leave `logLevel`
+          // at its default as setting it to "silent" prevents this handler from running.
+          if (level === "warn") {
+            this.warn(log);
+          }
         },
       });
 
-      const output = Array.isArray(result) ? result[0]?.output : "output" in result ? result.output : undefined;
-      const chunk = output?.find((item) => item.type === "chunk");
+      try {
+        const { output } = await bundle.generate({ format: "iife", minify: true, comments: false });
+        const bundledScript = output.find((file) => file.type === "chunk");
 
-      if (!chunk) {
-        this.error(`No chunk emitted for inline script: ${entry}`);
+        if (!bundledScript || output.length > 1) {
+          this.error(`Inline script "${entry}" emitted ${output.length} output files; expected exactly one.`);
+        }
+
+        for (const moduleId of Object.keys(bundledScript.modules)) {
+          if (!moduleId.startsWith(VIRTUAL_MODULE_PREFIX)) {
+            this.addWatchFile(moduleId);
+          }
+        }
+
+        const size = Buffer.byteLength(bundledScript.code);
+
+        if (size > MAX_INLINE_SCRIPT_BYTES) {
+          this.error(
+            `Inline script "${entry}" exceeds the ${MAX_INLINE_SCRIPT_BYTES}-byte limit (${size} bytes). It may import a module that cannot be tree-shaken.`,
+          );
+        }
+
+        return `export default ${JSON.stringify(bundledScript.code)};`;
+      } finally {
+        await bundle.close();
       }
-
-      for (const moduleId of chunk.moduleIds) {
-        this.addWatchFile(moduleId);
-      }
-
-      const size = Buffer.byteLength(chunk.code);
-
-      if (size > MAX_BYTES) {
-        this.error(
-          `Inline script "${entry}" is ${size} bytes, over the ${MAX_BYTES} byte limit. ` +
-            "It may import a module that tree-shaking cannot remove. Make sure that every " +
-            "module it reaches runs no code at initialization.",
-        );
-      }
-
-      return `export default ${JSON.stringify(chunk.code)};`;
     },
   };
 }

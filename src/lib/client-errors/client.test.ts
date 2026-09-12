@@ -9,7 +9,7 @@ import type { ClientErrorReport } from "./client.ts";
 const REPORT: ClientErrorReport = {
   kind: "router-error-boundary",
   message: "Unreadable frontmatter.",
-  route: "/about",
+  route: "/page",
   stack: "Error: Unreadable frontmatter.\n    at read",
 };
 

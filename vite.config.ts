@@ -5,26 +5,29 @@ import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
-import { contentAssetsPlugin } from "./build/content-assets.ts";
+import { entryBodyChunksPlugin } from "./build/content/entry-body-chunks.ts";
+import { frontmatterPlugin } from "./build/content/frontmatter.ts";
+import { mdxPlugin } from "./build/content/mdx.ts";
+import { contentMedia } from "./build/content/media/plugin.ts";
 import { cssAssetsPlugin } from "./build/css-assets.ts";
 import { captureDocument, feedsPlugin } from "./build/feeds/plugin.ts";
-import { frontmatterPlugin } from "./build/frontmatter.ts";
-import { iconDriftPlugin } from "./build/icons/drift.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
-import { layoutDriftPlugin } from "./build/layout-drift.ts";
-import { markdownPlugin } from "./build/markdown.ts";
-import { mdxPlugin } from "./build/mdx.ts";
+import { markdownPlugin } from "./build/markdown/plugin.ts";
 import { prerenderRoutes } from "./build/prerender/routes.ts";
+import { sitemapNamespacePlugin } from "./build/prerender/sitemap-namespace.ts";
 import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
-import { reactCompilerBailouts } from "./build/react-compiler.ts";
-import { sitemapNamespacePlugin } from "./build/sitemap-namespace.ts";
+import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
+import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
+import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
+import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
 import { svgrOptions } from "./build/svgr.ts";
-import { themeColorPlugin } from "./build/theme-color.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 import { SITE_URL } from "./src/config/site.ts";
 
 export default defineConfig(({ command }) => {
-  const compilerBailouts = reactCompilerBailouts();
+  const optimizationFailures = reactCompilerOptimizationFailures();
+  const { plugins: mediaPlugins, mediaForEntry } = contentMedia();
+
   return {
     resolve: { tsconfigPaths: true },
     css: {
@@ -38,16 +41,17 @@ export default defineConfig(({ command }) => {
     },
     plugins: [
       workersRuntimePlugin(),
-      themeColorPlugin(),
-      layoutDriftPlugin(),
+      themeColorsPlugin(),
       cssAssetsPlugin(),
-      iconDriftPlugin(),
+      siteIconsPlugin(),
       inlineScriptsPlugin(),
+      layoutMetricsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
-      markdownPlugin(),
-      mdxPlugin(),
-      contentAssetsPlugin(),
+      ...mediaPlugins,
+      markdownPlugin({ mediaForEntry }),
+      mdxPlugin({ mediaForEntry }),
+      entryBodyChunksPlugin(),
       tanstackStart({
         router: { routeFileIgnorePattern: "\\.test\\." },
         pages: command === "build" ? prerenderRoutes() : [],
@@ -65,8 +69,8 @@ export default defineConfig(({ command }) => {
       sitemapNamespacePlugin(),
       feedsPlugin(),
       viteReact({ include: /\.(tsx?|mdx)$/ }),
-      babel({ presets: [reactCompilerPreset({ logger: compilerBailouts.logger })] }),
-      compilerBailouts.plugin,
+      babel({ presets: [reactCompilerPreset({ logger: optimizationFailures.logger })] }),
+      optimizationFailures.plugin,
     ],
     server: { host: true },
   };

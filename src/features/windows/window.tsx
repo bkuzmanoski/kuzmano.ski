@@ -106,7 +106,7 @@ export function Window({
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which also hides the resize control from its scrollbar.
-  onDrag: (drag: WindowDrag | null) => void; // The current drag state, or `null` once it has ended.
+  onDrag: (drag: WindowDrag | null) => void;
   toolbar?: ReactNode;
   children: ReactNode;
 }) {
@@ -209,7 +209,7 @@ export function Window({
       <Tooltip label="Resize" suppressed={isResizing}>
         <button
           type="button"
-          tabIndex={-1} // Drag handle is not keyboard accessible.
+          tabIndex={-1}
           className={cx(styles.controlResize, isResizePressed && styles.pressed)}
           aria-label="Resize"
           {...PRESERVE_FOCUS_PROPS}

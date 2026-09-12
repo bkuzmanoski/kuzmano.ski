@@ -2,10 +2,10 @@
 
 export const BOOT_SEQUENCE_STORAGE_KEY = "boot-sequence-run";
 
-let shouldRun: boolean | null = null;
+let cachedShouldRun: boolean | null = null;
 
 export function shouldRunBootSequence(): boolean {
-  shouldRun ??= (() => {
+  cachedShouldRun ??= (() => {
     try {
       return window.location.pathname === "/" && !sessionStorage.getItem(BOOT_SEQUENCE_STORAGE_KEY);
     } catch {
@@ -13,7 +13,7 @@ export function shouldRunBootSequence(): boolean {
     }
   })();
 
-  return shouldRun;
+  return cachedShouldRun;
 }
 
 export function rememberBootSequenceRun() {

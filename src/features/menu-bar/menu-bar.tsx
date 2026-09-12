@@ -33,8 +33,8 @@ import type { MenuItem } from "./menu.tsx";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
-  const number = DESTINATION_ORDER.indexOf(id) + 1;
-  return { code: `Digit${number}`, label: String(number) };
+  const shortcutNumber = DESTINATION_ORDER.indexOf(id) + 1;
+  return { code: `Digit${shortcutNumber}`, label: String(shortcutNumber) };
 };
 
 function StatusButton({
@@ -92,11 +92,11 @@ const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", d
 
 function ThemeStatus() {
   const { theme } = useSettings();
-  const next = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
+  const nextTheme = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
   const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
 
   return (
-    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(next)}>
+    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(nextTheme)}>
       <Icon className={styles.icon} />
     </StatusButton>
   );
@@ -132,17 +132,17 @@ const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
 });
 
 function sydneyTime(): string {
-  const parts = TIME_FORMAT.formatToParts(new Date());
-  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  const timeParts = TIME_FORMAT.formatToParts(new Date());
+  const partValue = (type: string) => timeParts.find((part) => part.type === type)?.value ?? "";
 
-  return `${value("hour")}:${value("minute")} ${value("dayPeriod")} (${value("timeZoneName")})`;
+  return `${partValue("hour")}:${partValue("minute")} ${partValue("dayPeriod")} (${partValue("timeZoneName")})`;
 }
 
 function TimeStatus() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
+    let tickTimer: ReturnType<typeof setTimeout>;
 
     const tick = () => {
       setTime(sydneyTime());
@@ -150,12 +150,12 @@ function TimeStatus() {
       const now = new Date();
       const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
-      timer = setTimeout(tick, msToNextMinute);
+      tickTimer = setTimeout(tick, msToNextMinute);
     };
 
     tick();
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(tickTimer);
   }, []);
 
   if (!time) {
@@ -175,7 +175,7 @@ export function MenuBar() {
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
   const [isPointerHeld, setIsPointerHeld] = useState(false);
-  const titles = useRef<Record<string, HTMLButtonElement | null>>({});
+  const titleElements = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const hasWindow = focusedWindow !== null;
 
@@ -249,7 +249,7 @@ export function MenuBar() {
   function openAdjacentMenu(fromLabel: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === fromLabel);
     const label = menus[cycle(menus.length, index, direction)]!.label;
-    const anchor = titles.current[label];
+    const anchor = titleElements.current[label];
 
     if (!anchor) {
       return;
@@ -322,7 +322,7 @@ export function MenuBar() {
           <div key={label} className={styles.item}>
             <button
               ref={(node) => {
-                titles.current[label] = node;
+                titleElements.current[label] = node;
               }}
               type="button"
               className={cx(styles.title, openMenu?.label === label && styles.open)}

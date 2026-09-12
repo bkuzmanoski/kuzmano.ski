@@ -45,22 +45,22 @@ test("the entry list marks the entry the window is showing, and only in the coll
 });
 
 test("an entry route suspends on its body chunk, from a collection or the top-level pages", async () => {
-  const mounted = act(() => renderBody(`/collection/${collectionEntry.slug}`));
+  const mounting = act(() => renderBody(`/collection/${collectionEntry.slug}`));
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined(); // The body arrives in a chunk of its own.
 
-  const { rerender } = await mounted;
-  const rerendered = act(() => {
+  const { rerender } = await mounting;
+  const rerendering = act(() => {
     rerender(<WindowBody route="/page" />);
     return null;
   });
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined();
 
-  await rerendered;
+  await rerendering;
 });
 
 test("a route that does not match any content renders an empty window body", () => {
-  const { container } = renderBody("/no-such-page");
+  const { container } = renderBody("/nonexistent-page");
   expect(container.innerHTML).toBe("");
 });

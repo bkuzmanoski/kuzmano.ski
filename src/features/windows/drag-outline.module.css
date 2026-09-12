@@ -25,21 +25,21 @@
 
 .titleBarBorder {
   composes: horizontal;
-  top: calc(var(--title-bar-height) + 1px);
+  top: calc(var(--layout-title-bar-height) + 1px);
   right: 1px;
   left: 1px;
 }
 
 .scrollbarBorder {
   composes: vertical;
-  top: calc(var(--title-bar-height) + 2px);
-  right: calc(var(--scrollbar-width) + 1px);
+  top: calc(var(--layout-title-bar-height) + 2px);
+  right: calc(var(--layout-scrollbar-width) + 1px);
   bottom: 1px;
 }
 
 .resizeControlBorder {
   composes: horizontal;
   right: 1px;
-  bottom: calc(var(--scrollbar-width) + 1px);
-  width: var(--scrollbar-width);
+  bottom: calc(var(--layout-scrollbar-width) + 1px);
+  width: var(--layout-scrollbar-width);
 }

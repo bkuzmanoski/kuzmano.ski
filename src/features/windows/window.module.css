@@ -47,17 +47,18 @@
     left: 50%;
     translate: -50% -50%;
 
-    max-width: calc(100% - 2 * var(--window-layer-padding));
-    max-height: calc(100% - 2 * var(--window-layer-padding));
+    max-width: calc(100% - 2 * var(--layout-window-layer-padding));
+    max-height: calc(100% - 2 * var(--layout-window-layer-padding));
   }
 
   /* Extend into the safe-area insets when maximized. */
   &.maximized {
-    --window-safe-area-inline-start: var(--safe-area-left);
-    --window-safe-area-inline-end: var(--safe-area-right);
-    --window-safe-area-block-end: var(--safe-area-bottom);
+    --window-safe-area-inline-start: var(--layout-safe-area-left);
+    --window-safe-area-inline-end: var(--layout-safe-area-right);
+    --window-safe-area-block-end: var(--layout-safe-area-bottom);
 
-    inset: 0 calc(-1 * var(--safe-area-right)) calc(-1 * var(--safe-area-bottom)) calc(-1 * var(--safe-area-left));
+    inset: 0 calc(-1 * var(--layout-safe-area-right)) calc(-1 * var(--layout-safe-area-bottom))
+      calc(-1 * var(--layout-safe-area-left));
     border-width: 1px 0 0;
     box-shadow: none;
   }
@@ -79,7 +80,7 @@
   flex: none;
   align-items: center;
 
-  height: calc(var(--title-bar-height) + 1px); /* +1px for the border. */
+  height: calc(var(--layout-title-bar-height) + 1px); /* +1px for the border. */
   padding-inline: var(--window-safe-area-inline-start) var(--window-safe-area-inline-end);
   border-bottom: 1px solid var(--color-border);
 
@@ -88,20 +89,20 @@
   /* Control buttons are placed by the tooltip wrapper around them. */
   & .control {
     position: absolute;
-    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
+    top: calc((var(--layout-title-bar-height) - var(--control-size)) / 2);
 
     &.controlClose {
-      left: calc(var(--gutter) + var(--window-safe-area-inline-start));
+      left: calc(var(--layout-gutter) + var(--window-safe-area-inline-start));
     }
 
     &.controlZoom {
-      right: calc(var(--gutter) + var(--window-safe-area-inline-end));
+      right: calc(var(--layout-gutter) + var(--window-safe-area-inline-end));
     }
   }
 
   & .bars {
     position: absolute;
-    top: calc((var(--title-bar-height) - var(--control-size)) / 2);
+    top: calc((var(--layout-title-bar-height) - var(--control-size)) / 2);
     right: calc(4px + var(--window-safe-area-inline-end));
     left: calc(4px + var(--window-safe-area-inline-start));
 
@@ -115,7 +116,7 @@
 
     overflow: hidden;
 
-    max-width: calc(100% - 2 * (var(--gutter) + var(--control-size) + 40px));
+    max-width: calc(100% - 2 * (var(--layout-gutter) + var(--control-size) + 40px));
     margin: 0 auto;
     padding: 0 12px;
 
@@ -150,7 +151,7 @@
   &::before {
     content: "";
     position: absolute;
-    inset-block: calc((var(--control-size) - var(--title-bar-height)) / 2);
+    inset-block: calc((var(--control-size) - var(--layout-title-bar-height)) / 2);
     inset-inline: -6px;
   }
 
@@ -167,8 +168,8 @@
 
   touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
 
-  width: var(--scrollbar-width);
-  height: calc(var(--scrollbar-width) + 1px); /* +1px for the border. */
+  width: var(--layout-scrollbar-width);
+  height: calc(var(--layout-scrollbar-width) + 1px); /* +1px for the border. */
   border-top: 1px solid var(--color-border);
 
   @container style(--window-focused: 0) {

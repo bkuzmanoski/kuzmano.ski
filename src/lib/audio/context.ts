@@ -18,13 +18,13 @@ export const NON_GESTURE_KEYS = new Set([
  * Small lead time for scheduled audio. Web Audio renders ahead of `currentTime`,
  * so scheduling exactly at `currentTime` can already be late when rendered.
  */
-export const LEAD_TIME = 0.02;
+export const LEAD_TIME_S = 0.02;
 
 const OUTPUT_GAIN = 0.2;
 
 let audioContext: AudioContext | null = null;
-let output: GainNode | null = null;
-let whenRunning: Promise<void> | null = null;
+let outputGainNode: GainNode | null = null;
+let runningPromise: Promise<void> | null = null;
 
 const hasUserActivation = () => (navigator as Partial<Navigator>).userActivation?.hasBeenActive ?? true;
 
@@ -39,13 +39,13 @@ function openAudioContext(): AudioContext | null {
     return audioContext;
   }
 
-  const Constructor = typeof window === "undefined" ? undefined : window.AudioContext;
+  const AudioContextConstructor = typeof window === "undefined" ? undefined : window.AudioContext;
 
-  if (!Constructor || !hasUserActivation()) {
+  if (!AudioContextConstructor || !hasUserActivation()) {
     return null;
   }
 
-  audioContext = new Constructor({ latencyHint: "interactive" });
+  audioContext = new AudioContextConstructor({ latencyHint: "interactive" });
 
   return audioContext;
 }
@@ -69,11 +69,11 @@ function whenAudioRunning(context: AudioContext): Promise<void> {
     return Promise.resolve();
   }
 
-  whenRunning ??= new Promise<void>((resolve) => {
+  runningPromise ??= new Promise<void>((resolve) => {
     const onStateChange = () => {
       if (isRunning(context)) {
         context.removeEventListener("statechange", onStateChange);
-        whenRunning = null;
+        runningPromise = null;
         resolve();
       }
     };
@@ -81,18 +81,18 @@ function whenAudioRunning(context: AudioContext): Promise<void> {
     context.addEventListener("statechange", onStateChange);
   });
 
-  return whenRunning;
+  return runningPromise;
 }
 
 /** Returns the shared output gain node. */
 export function getGainNode(context: AudioContext): GainNode {
-  if (!output) {
-    output = context.createGain();
-    output.gain.value = OUTPUT_GAIN;
-    output.connect(context.destination);
+  if (!outputGainNode) {
+    outputGainNode = context.createGain();
+    outputGainNode.gain.value = OUTPUT_GAIN;
+    outputGainNode.connect(context.destination);
   }
 
-  return output;
+  return outputGainNode;
 }
 
 // Resumes the audio context when a backgrounded tab becomes visible again.
@@ -134,11 +134,11 @@ function primeAudioOnKeyDown(event: KeyboardEvent): void {
 export function useAudioUnlock() {
   useEffect(() => {
     const controller = new AbortController();
-    const options = { capture: true, passive: true, signal: controller.signal };
+    const listenerOptions = { capture: true, passive: true, signal: controller.signal };
 
-    document.addEventListener("pointerdown", primeAudio, options); // Mouse clicks.
-    document.addEventListener("pointerup", primeAudio, options); // Touch taps.
-    document.addEventListener("keydown", primeAudioOnKeyDown, options);
+    document.addEventListener("pointerdown", primeAudio, listenerOptions); // Mouse clicks.
+    document.addEventListener("pointerup", primeAudio, listenerOptions); // Touch taps.
+    document.addEventListener("keydown", primeAudioOnKeyDown, listenerOptions);
     document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: controller.signal });
 
     return () => controller.abort();

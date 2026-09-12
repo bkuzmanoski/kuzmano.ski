@@ -211,7 +211,7 @@ The favicon and app icons in `/public` are generated from
 `/build/palette.ts`). To regenerate them, run:
 
 ```bash
-npm run generate:icons
+npm run generate-icons
 ```
 
 The build fails if the generated icons no longer match their inputs.

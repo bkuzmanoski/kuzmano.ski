@@ -47,10 +47,10 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
     return { ok: false, reason: "malformed" };
   }
 
-  const fields: WaitlistFields = { emailAddress: emailAddress.trim() };
-  const errors = validate(WAITLIST_SCHEMA, fields);
+  const trimmedFields: WaitlistFields = { emailAddress: emailAddress.trim() };
+  const errors = validate(WAITLIST_SCHEMA, trimmedFields);
 
   return Object.keys(errors).length > 0
     ? { ok: false, reason: "invalid", errors }
-    : { ok: true, value: { ...fields, list: trimmedList, source: trimmedSource } };
+    : { ok: true, value: { ...trimmedFields, list: trimmedList, source: trimmedSource } };
 }

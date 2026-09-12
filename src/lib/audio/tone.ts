@@ -35,9 +35,9 @@ function noteAt(tone: Tone, seconds: number): { note: Note; elapsed: number } {
     start += note.seconds;
   }
 
-  const last = tone.notes.at(-1)!;
+  const lastNote = tone.notes.at(-1)!;
 
-  return { note: last, elapsed: last.seconds };
+  return { note: lastNote, elapsed: lastNote.seconds };
 }
 
 const sampleFor = bufferCache((context: AudioContext, tone: Tone) =>
@@ -48,19 +48,19 @@ const sampleFor = bufferCache((context: AudioContext, tone: Tone) =>
     fadeSeconds: tone.fadeSeconds,
     sample: (_, seconds) => {
       const { note, elapsed } = noteAt(tone, seconds);
-      const attack = Math.min(1, elapsed / tone.attackSeconds);
+      const attackGain = Math.min(1, elapsed / tone.attackSeconds);
 
-      let value = 0;
+      let sampleValue = 0;
 
       for (let partial = 0; partial < tone.partials; partial++) {
         const harmonic = 2 * partial + 1;
         const decaySeconds = tone.decaySeconds * Math.pow(tone.partialDecay, partial);
         const amplitude = Math.exp(-elapsed / decaySeconds) / harmonic;
 
-        value += amplitude * Math.sin(2 * Math.PI * note.hz * harmonic * elapsed);
+        sampleValue += amplitude * Math.sin(2 * Math.PI * note.hz * harmonic * elapsed);
       }
 
-      return value * attack;
+      return sampleValue * attackGain;
     },
     quantize: quantizeToDriver,
   }),

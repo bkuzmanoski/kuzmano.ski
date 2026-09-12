@@ -1,6 +1,5 @@
 import { memo, useMemo, useRef, useState } from "react";
 
-import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
@@ -17,6 +16,7 @@ import type { WindowClose } from "#/lib/window-manager/use-close-window.ts";
 import { WindowCloseContext } from "#/lib/window-manager/use-close-window.ts";
 import { WINDOW_DOM_ORDER, isUnmeasured } from "#/lib/window-manager/window.ts";
 import type { WindowGeometry, WindowId } from "#/lib/window-manager/window.ts";
+import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 
 import { DragOutline } from "./drag-outline.tsx";
 import { WindowBody } from "./window-body.tsx";

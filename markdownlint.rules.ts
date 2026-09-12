@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Provided by `markdownlint-cli2`
 import type { Rule, RuleParams } from "markdownlint";
 
 // A markdownlint rule capping how deep a heading may nest.
@@ -24,20 +25,20 @@ function* headings(tokens: Array<Token>): Generator<Token> {
 // Matches markdownlint's reading of a heading token: setext `===` is level 1, setext `---`
 // is level 2, and ATX `###` is level 3.
 function levelOf(heading: Token): number {
-  const sequence = heading.children.find((child) => SEQUENCE_TYPES.has(child.type));
+  const sequenceToken = heading.children.find((child) => SEQUENCE_TYPES.has(child.type));
 
-  if (!sequence || sequence.text.startsWith("=")) {
+  if (!sequenceToken || sequenceToken.text.startsWith("=")) {
     return 1;
   }
 
-  if (sequence.text.startsWith("-")) {
+  if (sequenceToken.text.startsWith("-")) {
     return 2;
   }
 
-  return Math.min(sequence.text.length, 6);
+  return Math.min(sequenceToken.text.length, 6);
 }
 
-const rule: Rule = {
+const maxHeadingLevelRule: Rule = {
   names: ["max-heading-level"],
   description: "Heading levels should not nest deeper than the content styles support",
   tags: ["headings"],
@@ -58,4 +59,4 @@ const rule: Rule = {
   },
 };
 
-export default rule;
+export default maxHeadingLevelRule;

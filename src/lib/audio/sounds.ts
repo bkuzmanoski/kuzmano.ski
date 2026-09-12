@@ -1,4 +1,4 @@
-import { LEAD_TIME, playSound } from "./context.ts";
+import { LEAD_TIME_S, playSound } from "./context.ts";
 import { playStrike } from "./strike.ts";
 import { playTone } from "./tone.ts";
 
@@ -62,7 +62,7 @@ const HOVER_INTERVAL_S = 0.03;
 const HOVER_LEVEL = 0.22;
 
 const SCROLL_DETENT_INTERVAL_S = 0.03;
-const SCROLL_DETENT_FULL_SPEED = 2000; // The speed, in pixels per second, at which a detent is at full strength.
+const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000; // The speed, in pixels per second, at which a detent is at full strength.
 const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.3 };
 const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
 
@@ -74,7 +74,7 @@ let lastClickAt = 0;
 
 export function playClick() {
   playSound((context) => {
-    const at = Math.max(context.currentTime + LEAD_TIME, lastClickAt + CLICK.durationSeconds);
+    const at = Math.max(context.currentTime + LEAD_TIME_S, lastClickAt + CLICK.durationSeconds);
 
     playStrike(context, CLICK, { at, level: 1, rate: 1 });
     lastClickAt = at;
@@ -85,7 +85,7 @@ let lastHoverAt = 0;
 
 export function playHover() {
   playSound((context) => {
-    const at = context.currentTime + LEAD_TIME;
+    const at = context.currentTime + LEAD_TIME_S;
 
     if (at < lastHoverAt + HOVER_INTERVAL_S) {
       return;
@@ -100,13 +100,13 @@ let lastDetentAt = 0;
 
 export function playScrollDetent(speed: number) {
   playSound((context) => {
-    const at = context.currentTime + LEAD_TIME;
+    const at = context.currentTime + LEAD_TIME_S;
 
     if (at < lastDetentAt + SCROLL_DETENT_INTERVAL_S) {
       return;
     }
 
-    const intensity = Math.sqrt(Math.min(1, speed / SCROLL_DETENT_FULL_SPEED));
+    const intensity = Math.sqrt(Math.min(1, speed / SCROLL_DETENT_FULL_SPEED_PX_PER_S));
 
     playStrike(context, DETENT, {
       at,
@@ -121,14 +121,14 @@ export function playScrollDetent(speed: number) {
 /** The startup chime, scheduled ahead to synchronize with the animation timing. */
 export function playBootChime({ delaySeconds }: { delaySeconds: number }) {
   playSound((context) =>
-    playTone(context, BOOT_CHIME, { at: context.currentTime + LEAD_TIME + delaySeconds, level: BOOT_CHIME_LEVEL }),
+    playTone(context, BOOT_CHIME, { at: context.currentTime + LEAD_TIME_S + delaySeconds, level: BOOT_CHIME_LEVEL }),
   );
 }
 
 export function playError() {
-  playSound((context) => playTone(context, ERROR, { at: context.currentTime + LEAD_TIME, level: ERROR_LEVEL }));
+  playSound((context) => playTone(context, ERROR, { at: context.currentTime + LEAD_TIME_S, level: ERROR_LEVEL }));
 }
 
 export function playSuccess() {
-  playSound((context) => playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME, level: SUCCESS_LEVEL }));
+  playSound((context) => playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME_S, level: SUCCESS_LEVEL }));
 }

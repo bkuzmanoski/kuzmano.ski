@@ -31,7 +31,7 @@ export interface WindowActions {
 
 // The state is split across seven contexts so a change reaches only the parts that
 // use it. A window drag rewrites `geometry` many times per second; keeping window
-// content, the order, and the focus state separate means the menu bar, status items
+// content, the order, and the focus state separate means the menu bar, status items,
 // and desktop icons do not re-render with it.
 export const ActionsContext = createContext<WindowActions | null>(null);
 export const ContentContext = createContext<WindowRecord<WindowContent>>({});

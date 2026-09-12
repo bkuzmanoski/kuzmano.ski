@@ -42,7 +42,7 @@ export function ContactBody() {
   const hasUnsavedInput = form.isDirty;
   const characterCount = MESSAGE_MAX_LENGTH - form.values.message.length;
   const isCharacterCountVisible = characterCount <= CHARACTER_COUNT_VISIBLE_FROM;
-  const alert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;
+  const promptAlert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;
 
   const closeWindow = useCloseWindow();
   const forceCloseWindow = useCloseGuard(() => {
@@ -55,7 +55,7 @@ export function ContactBody() {
     return true;
   });
 
-  // A textarea does not hold child boxes for the metrics' resize observer to watch,
+  // A textarea does not contain child boxes for the metrics' resize observer to watch,
   // so its scroll height is remeasured whenever the value it renders changes.
   useEffect(measureMessage, [form.values.message, measureMessage]);
 
@@ -63,28 +63,32 @@ export function ContactBody() {
     const invalidFields = form.revealErrors();
 
     if (invalidFields) {
-      const field = invalidFields.from ? "from" : "message";
+      const firstInvalidField = invalidFields.from ? "from" : "message";
 
-      setPrompt({ kind: "incomplete", message: invalidFields[field] ?? SEND_FAILED_MESSAGE, field });
+      setPrompt({
+        kind: "incomplete",
+        message: invalidFields[firstInvalidField] ?? SEND_FAILED_MESSAGE,
+        field: firstInvalidField,
+      });
 
       return;
     }
 
-    const controller = new AbortController();
+    const sendController = new AbortController();
 
-    sendAttemptRef.current = controller;
+    sendAttemptRef.current = sendController;
     setIsSending(true);
 
-    const result = await sendMessage(form.values, controller.signal);
+    const sendResult = await sendMessage(form.values, sendController.signal);
 
-    if (controller.signal.aborted) {
+    if (sendController.signal.aborted) {
       return;
     }
 
     sendAttemptRef.current = null;
     setIsSending(false);
 
-    if (result.status === "sent") {
+    if (sendResult.status === "sent") {
       form.reset();
       setPrompt({ kind: "sent" });
 
@@ -92,9 +96,9 @@ export function ContactBody() {
     }
 
     setPrompt(
-      result.status === "invalid"
-        ? { kind: "failed", message: firstMessage(result.errors, SEND_FAILED_MESSAGE) }
-        : { kind: "failed", message: result.message, suggestDirectEmail: true },
+      sendResult.status === "invalid"
+        ? { kind: "failed", message: firstMessage(sendResult.errors, SEND_FAILED_MESSAGE) }
+        : { kind: "failed", message: sendResult.message, suggestDirectEmail: true },
     );
   }
 
@@ -193,15 +197,17 @@ export function ContactBody() {
         </div>
       </form>
       <Alert
-        variant={alert.variant}
-        sound={alert.sound}
-        message={alert.message}
+        variant={promptAlert.variant}
+        sound={promptAlert.sound}
+        message={promptAlert.message}
         open={prompt !== null}
         primaryAction={{
-          label: alert.primaryLabel,
+          label: promptAlert.primaryLabel,
           onAction: confirmPrompt,
         }}
-        secondaryAction={alert.secondaryLabel ? { label: alert.secondaryLabel, onAction: closePrompt } : undefined}
+        secondaryAction={
+          promptAlert.secondaryLabel ? { label: promptAlert.secondaryLabel, onAction: closePrompt } : undefined
+        }
       />
     </>
   );

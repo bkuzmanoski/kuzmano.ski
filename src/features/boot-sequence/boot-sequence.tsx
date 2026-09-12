@@ -15,7 +15,7 @@ import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect.ts";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle.ts";
 import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay.ts";
 import {
-  MINIMUM_LOADING_DURATION_MS,
+  MIN_LOADING_DURATION_MS,
   MOTION_DURATION_MS,
   REDUCED_MOTION_DURATION_MS,
   hasStageZoom,
@@ -110,7 +110,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
   );
 }
 
-function Sequence() {
+function BootSequenceContent() {
   // Held for the whole run, so the durations the stylesheet animates over and the
   // timers for each phase do not disagree if the reduced motion preference changes.
   const [motion] = useState<Motion>(() =>
@@ -133,15 +133,15 @@ function Sequence() {
   }, []);
 
   const schedulePhaseExecution = useEffectEvent(() => {
-    const phases = sequence(motion);
+    const steps = sequence(motion);
 
-    setPhase(phases[0].phase);
-    playBootChime({ delaySeconds: startOfPhaseMs(phases, "display-on") / 1000 });
+    setPhase(steps[0].phase);
+    playBootChime({ delaySeconds: startOfPhaseMs(steps, "display-on") / 1000 });
 
     let elapsedTimeMs = 0;
 
-    return phases.map(({ durationMs }, index) => {
-      const nextPhase: Phase = phases[index + 1]?.phase ?? "complete";
+    return steps.map(({ durationMs }, index) => {
+      const nextPhase: Phase = steps[index + 1]?.phase ?? "complete";
 
       elapsedTimeMs += durationMs;
 
@@ -161,13 +161,13 @@ function Sequence() {
     const timers: Array<ReturnType<typeof setTimeout>> = [];
     const controller = new AbortController();
 
-    const loading = [
+    const readinessPromises = [
       whenFontReady(),
       whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
-      new Promise((resolve) => timers.push(setTimeout(resolve, MINIMUM_LOADING_DURATION_MS))),
+      new Promise((resolve) => timers.push(setTimeout(resolve, MIN_LOADING_DURATION_MS))),
     ];
 
-    void Promise.all(loading).then(() => {
+    void Promise.all(readinessPromises).then(() => {
       if (controller.signal.aborted) {
         return;
       }
@@ -297,5 +297,7 @@ function Sequence() {
 const serverShouldRunBootSequence = () => false;
 
 export function BootSequence() {
-  return useSyncExternalStore(noSubscribe, shouldRunBootSequence, serverShouldRunBootSequence) ? <Sequence /> : null;
+  return useSyncExternalStore(noSubscribe, shouldRunBootSequence, serverShouldRunBootSequence) ? (
+    <BootSequenceContent />
+  ) : null;
 }

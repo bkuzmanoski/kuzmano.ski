@@ -24,34 +24,34 @@ function renderInputField() {
 }
 
 test("an input control is described by the error and marked invalid only while there is one", () => {
-  const harness = renderInputField();
+  const fieldHarness = renderInputField();
 
-  expect(harness.inputFieldBinding.control["aria-invalid"]).toBeUndefined();
-  expect(harness.inputFieldBinding.control["aria-describedby"]).toBeUndefined();
+  expect(fieldHarness.inputFieldBinding.control["aria-invalid"]).toBeUndefined();
+  expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBeUndefined();
 
-  harness.show("Validation error.");
+  fieldHarness.show("Validation error.");
 
-  expect(harness.inputFieldBinding.control["aria-invalid"]).toBe(true);
-  expect(harness.inputFieldBinding.control["aria-describedby"]).toBe(harness.inputFieldBinding.errorId);
+  expect(fieldHarness.inputFieldBinding.control["aria-invalid"]).toBe(true);
+  expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBe(fieldHarness.inputFieldBinding.errorId);
 });
 
 test("the error is carried to the input field that reports it", () => {
-  const harness = renderInputField();
+  const fieldHarness = renderInputField();
 
-  harness.show("Validation error.");
+  fieldHarness.show("Validation error.");
 
-  expect(harness.inputFieldBinding.error).toBe("Validation error.");
+  expect(fieldHarness.inputFieldBinding.error).toBe("Validation error.");
 });
 
 test("a control keeps its attributes across renders that don't change the error", () => {
-  const harness = renderInputField();
-  const unchanged = harness.inputFieldBinding.control;
+  const fieldHarness = renderInputField();
+  const unchangedBinding = fieldHarness.inputFieldBinding.control;
 
-  harness.show();
+  fieldHarness.show();
 
-  expect(harness.inputFieldBinding.control).toBe(unchanged);
+  expect(fieldHarness.inputFieldBinding.control).toBe(unchangedBinding);
 
-  harness.show("Validation error.");
+  fieldHarness.show("Validation error.");
 
-  expect(harness.inputFieldBinding.control).not.toBe(unchanged);
+  expect(fieldHarness.inputFieldBinding.control).not.toBe(unchangedBinding);
 });

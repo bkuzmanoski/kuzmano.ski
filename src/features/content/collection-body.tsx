@@ -6,9 +6,9 @@ import { CollectionEntryList } from "./collection-entry-list.tsx";
 
 function useOpenEntrySlug(collectionRoute: string): string | null {
   const entryWindow = useWindowContent().entry;
-  const target = entryWindow ? resolveWindow(entryWindow.route) : null;
+  const entryTarget = entryWindow ? resolveWindow(entryWindow.route) : null;
 
-  return target?.id === "entry" && target.collectionRoute === collectionRoute ? target.slug : null;
+  return entryTarget?.id === "entry" && entryTarget.collectionRoute === collectionRoute ? entryTarget.slug : null;
 }
 
 export function CollectionBody({ target }: { target: CollectionTarget }) {

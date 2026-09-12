@@ -50,7 +50,7 @@ function framedOn(area: Rect, scaleExtent: Size, viewport: Size): Rect {
     (scaleExtent.height * viewport.height) / area.height,
   );
   const height = ILLUSTRATION_RECT.height * scale;
-  const minimumTop = ((1 - scaleExtent.height) * viewport.height) / 2 - area.y * scale; // Ensure top margin.
+  const minimumTop = ((1 - scaleExtent.height) * viewport.height) / 2 - area.y * scale;
   const centeredTop = (viewport.height - height) / 2;
 
   return {

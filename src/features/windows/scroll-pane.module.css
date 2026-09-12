@@ -3,7 +3,7 @@
    * the `--reserved-scrollbar-width` padding set below once it collapses. Centered content reads it
    * to offset itself by the same width at the inline start. */
   --scrollbar-gutter-width: calc(
-    var(--scrollbar-width) + 1px
+    var(--layout-scrollbar-width) + 1px
   ); /* +1px for the border defined in `scrollbar.module.css`. */
 
   display: flex;
@@ -35,7 +35,7 @@
 
 .contentContainer {
   scrollbar-width: none;
-  scroll-padding-block: var(--gutter);
+  scroll-padding-block: var(--layout-gutter);
 
   overflow-y: auto;
   overscroll-behavior: none;

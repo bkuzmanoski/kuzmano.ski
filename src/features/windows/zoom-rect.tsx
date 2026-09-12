@@ -34,13 +34,13 @@ export function ZoomRect({
   const [latchedTarget] = useState(target);
 
   const start = useEffectEvent(() => {
-    const frames: Array<number> = [];
+    const frameIds: Array<number> = [];
 
     if (latchedTarget) {
       // Two frames: the outline must paint at the icon before it starts to grow.
-      frames.push(
+      frameIds.push(
         requestAnimationFrame(() =>
-          frames.push(
+          frameIds.push(
             requestAnimationFrame(() => {
               setBox(latchedTarget);
               setAnimate(true);
@@ -50,18 +50,18 @@ export function ZoomRect({
       );
     }
 
-    return frames;
+    return frameIds;
   });
 
   const finish = useEffectEvent(onDone);
 
   useEffect(() => {
     const timer = setTimeout(finish, ZOOM_RECT_HOLD_INTERVAL_MS);
-    const frames = start();
+    const frameIds = start();
 
     return () => {
       clearTimeout(timer);
-      frames.forEach(cancelAnimationFrame);
+      frameIds.forEach(cancelAnimationFrame);
     };
   }, []);
 

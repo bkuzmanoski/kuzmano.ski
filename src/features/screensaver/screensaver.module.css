@@ -23,22 +23,22 @@
       linear-gradient(
         to bottom,
         var(--color-screensaver-backdrop),
-        transparent calc(var(--safe-area-top) + var(--sprite-size))
+        transparent calc(var(--layout-safe-area-top) + var(--sprite-size))
       ),
       linear-gradient(
         to top,
         var(--color-screensaver-backdrop),
-        transparent calc(var(--safe-area-bottom) + var(--sprite-size))
+        transparent calc(var(--layout-safe-area-bottom) + var(--sprite-size))
       ),
       linear-gradient(
         to left,
         var(--color-screensaver-backdrop),
-        transparent calc(var(--safe-area-right) + var(--sprite-size))
+        transparent calc(var(--layout-safe-area-right) + var(--sprite-size))
       ),
       linear-gradient(
         to right,
         var(--color-screensaver-backdrop),
-        transparent calc(var(--safe-area-left) + var(--sprite-size))
+        transparent calc(var(--layout-safe-area-left) + var(--sprite-size))
       );
   }
 

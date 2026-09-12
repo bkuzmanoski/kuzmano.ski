@@ -32,15 +32,15 @@ const MAX_LOCAL_LENGTH = 64;
 export const MAX_EMAIL_ADDRESS_LENGTH = 254;
 
 export function isEmailAddress(value: string): boolean {
-  const emailAddress = value.trim();
-  const at = emailAddress.lastIndexOf("@");
+  const trimmedEmailAddress = value.trim();
+  const separatorIndex = trimmedEmailAddress.lastIndexOf("@");
 
   return (
-    emailAddress.length <= MAX_EMAIL_ADDRESS_LENGTH &&
-    at > 0 &&
-    at <= MAX_LOCAL_LENGTH &&
-    !emailAddress.endsWith(".") &&
-    EMAIL.test(emailAddress)
+    trimmedEmailAddress.length <= MAX_EMAIL_ADDRESS_LENGTH &&
+    separatorIndex > 0 &&
+    separatorIndex <= MAX_LOCAL_LENGTH &&
+    !trimmedEmailAddress.endsWith(".") &&
+    EMAIL.test(trimmedEmailAddress)
   );
 }
 

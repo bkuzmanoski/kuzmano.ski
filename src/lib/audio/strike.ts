@@ -27,11 +27,11 @@ function mulberry32(seed: number): () => number {
 }
 
 const sampleFor = bufferCache((context: AudioContext, strike: Strike) => {
-  const rate = context.sampleRate;
+  const sampleRate = context.sampleRate;
   const random = mulberry32(strike.seed);
 
   // A bandpass biquad (RBJ cookbook, constant 0dB peak gain). `b1` is 0 here.
-  const w0 = (2 * Math.PI * strike.toneHz) / rate;
+  const w0 = (2 * Math.PI * strike.toneHz) / sampleRate;
   const alpha = Math.sin(w0) / (2 * strike.toneQ);
   const scale = 1 + alpha;
   const b0 = alpha / scale;
@@ -39,7 +39,7 @@ const sampleFor = bufferCache((context: AudioContext, strike: Strike) => {
   const a1 = (-2 * Math.cos(w0)) / scale;
   const a2 = (1 - alpha) / scale;
 
-  const damping = 1 - Math.exp((-2 * Math.PI * strike.dampingHz) / rate); // A one-pole lowpass.
+  const damping = 1 - Math.exp((-2 * Math.PI * strike.dampingHz) / sampleRate); // A one-pole lowpass.
 
   let x1 = 0;
   let x2 = 0;
@@ -48,7 +48,7 @@ const sampleFor = bufferCache((context: AudioContext, strike: Strike) => {
   let damped = 0;
 
   return renderBuffer(context, {
-    sampleRate: rate,
+    sampleRate: sampleRate,
     durationSeconds: strike.durationSeconds,
     attackSeconds: strike.attackSeconds,
     fadeSeconds: strike.fadeSeconds,

@@ -9,19 +9,15 @@
   flex: none;
   align-items: center;
 
-  height: calc(var(--safe-area-top) + var(--menu-bar-height));
-  padding: var(--safe-area-top) calc(var(--gutter) + var(--safe-area-right)) 0
-    calc(var(--safe-area-left) + var(--gutter));
+  height: calc(var(--layout-safe-area-top) + var(--layout-menu-bar-height));
+  padding: var(--layout-safe-area-top) calc(var(--layout-gutter) + var(--layout-safe-area-right)) 0
+    calc(var(--layout-safe-area-left) + var(--layout-gutter));
 
   font: var(--font-chrome);
 
   &.ready {
     transform: none;
-    transition: transform var(--duration-desktop-reveal-step) ease-out;
-
-    @media (prefers-reduced-motion: reduce) {
-      transition-duration: 0s;
-    }
+    transition: transform var(--duration-desktop-reveal-step) ease-out; /* 0ms under a reduced motion preference (see `/src/app/desktop.tsx`). */
   }
 }
 
@@ -29,7 +25,7 @@
   display: inline-flex;
   align-items: center;
   height: 100%;
-  padding: 0 var(--gutter);
+  padding: 0 var(--layout-gutter);
 
   & svg {
     width: 19px;
@@ -60,7 +56,7 @@
   position: relative;
 
   height: 100%;
-  padding: 0 var(--gutter);
+  padding: 0 var(--layout-gutter);
 
   &.open {
     color: var(--color-highlight-foreground);
@@ -98,7 +94,7 @@
   align-items: center;
   justify-content: center;
 
-  padding: 0 var(--gutter);
+  padding: 0 var(--layout-gutter);
 
   white-space: nowrap;
 

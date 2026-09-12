@@ -43,8 +43,8 @@ function Glyph({
   open: boolean;
   className?: string;
 }) {
-  const variants = GLYPHS[kind];
-  const [idle, active] = (open && variants.open) || variants.closed;
+  const glyphVariants = GLYPHS[kind];
+  const [idle, active] = (open && glyphVariants.open) || glyphVariants.closed;
   const GlyphComponent = selected ? active : idle;
 
   return <GlyphComponent className={className} />;

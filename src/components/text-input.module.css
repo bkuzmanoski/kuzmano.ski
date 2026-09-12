@@ -35,10 +35,10 @@
     align-self: stretch;
 
     height: 100%;
-    padding: var(--gutter);
+    padding: var(--layout-gutter);
 
     /* Keep the line length stable when the scrollbar appears or disappears. */
-    padding-inline-end: calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+    padding-inline-end: calc(var(--layout-gutter) + var(--reserved-scrollbar-width, 0px));
   }
 }
 

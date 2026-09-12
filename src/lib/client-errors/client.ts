@@ -17,17 +17,17 @@ export interface ClientErrorReport {
  */
 export function reportClientError(report: ClientErrorReport) {
   try {
-    const body = JSON.stringify(report);
-    const blob = new Blob([body], { type: "application/json" });
+    const serializedReport = JSON.stringify(report);
+    const reportBlob = new Blob([serializedReport], { type: "application/json" });
 
-    if (navigator.sendBeacon(API.clientErrors, blob)) {
+    if (navigator.sendBeacon(API.clientErrors, reportBlob)) {
       return;
     }
 
     fetch(API.clientErrors, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body,
+      body: serializedReport,
       keepalive: true,
     }).catch(() => {
       // Ignored.

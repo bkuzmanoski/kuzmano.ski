@@ -12,7 +12,7 @@ const ICON_PLACEMENTS: Array<IconPlacement> = [
 ];
 
 describe("adjacentIconId", () => {
-  test("returns the id of the icon in the given direction", () => {
+  test("returns the ID of the icon in the given direction", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "top-left", "ArrowRight")).toBe("top-right");
     expect(adjacentIconId(ICON_PLACEMENTS, "top-left", "ArrowDown")).toBe("bottom-left");
     expect(adjacentIconId(ICON_PLACEMENTS, "bottom-right", "ArrowLeft")).toBe("bottom-left");
@@ -45,7 +45,7 @@ describe("adjacentIconId", () => {
     expect(adjacentIconId(placements, "start", "ArrowDown")).toBe("farther-on-axis");
   });
 
-  test("returns null when the given id is not in the placements", () => {
+  test("returns null when the given ID is not in the placements", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "not-an-icon", "ArrowDown")).toBeNull();
   });
 });

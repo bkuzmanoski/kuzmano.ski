@@ -1,196 +1,124 @@
-import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { CONTACT_ROUTE } from "#/config/contact.ts";
-import { COLLECTIONS, PAGES_DIRECTORY, PAGE_SLUGS } from "#/config/content.ts";
-import { byNewestDate } from "#/lib/date.ts";
-import { isRecord } from "#/lib/guards.ts";
-import { RESERVED_ROUTES, collectionRoute, entryRoute, pageRoute } from "#/site/content-routes.ts";
+import { COLLECTIONS, PAGES_DIRECTORY_NAME, PAGE_SLUGS } from "#/config/content.ts";
+import { entryFileName } from "#/lib/content/entry-file.ts";
+import { MEDIA_SEGMENT } from "#/lib/content/paths.ts";
+import { FEATURE_ROUTES, collectionRoute, entryRoute, pageRoute } from "#/site/routes.ts";
 
-import { frontmatterOf } from "../frontmatter.ts";
-import { CONTENT_DIRECTORY, fromRoot } from "../paths.ts";
+import { newestDate, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
+import { URL_SAFE_NAME } from "../content/listing.ts";
+import { CONTENT_DIRECTORY_PATH } from "../paths.ts";
 
-export interface ScannedEntry {
-  slug: string;
-  path: string;
-  frontmatter: unknown;
-  draft: boolean;
-  date: string | undefined;
-}
-
-export interface ScannedDirectory {
-  entries: Array<ScannedEntry>;
-  subdirectories: Array<string>;
-}
-
-export interface ScannedContent {
-  pages: ScannedDirectory;
-  collections: Array<ScannedDirectory & { name: string }>;
-}
+import type { AuthoredContent } from "../content/authored-content.ts";
 
 interface PrerenderRoute {
   path: string;
   sitemap?: { lastmod?: string; exclude?: boolean };
 }
 
-const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// A route claimed by content.
+interface ContentRoute {
+  name: string; // The file or directory name, which becomes a URL segment as written.
+  path: string;
+  sourcePath: string; // Authored content file or directory, used in validation errors.
+}
 
-export const publishedEntries = (entries: Array<ScannedEntry>) => entries.filter(({ draft }) => !draft);
-export const byNewestFirst = (a: ScannedEntry, b: ScannedEntry) => byNewestDate(a.date, b.date);
-export const newestDate = (entries: Array<ScannedEntry>): string | undefined =>
-  entries.reduce<string | undefined>(
-    (newest, { date }) => (date && (!newest || date > newest) ? date : newest),
-    undefined,
-  );
+const RESERVED_ROUTES: Array<string> = [...FEATURE_ROUTES, collectionRoute(MEDIA_SEGMENT)];
 
-const entryOf = (path: string, slug: string): ScannedEntry => {
-  const frontmatter = frontmatterOf(readFileSync(path, "utf8"));
-
-  if (!isRecord(frontmatter)) {
-    return { slug, path, frontmatter, draft: false, date: undefined };
-  }
-
-  return {
-    slug,
-    path,
-    frontmatter,
-    draft: frontmatter.draft === true,
-    date: typeof frontmatter.date === "string" ? frontmatter.date : undefined,
-  };
-};
+const contentRoutes = ({ pages, collections }: AuthoredContent): Array<ContentRoute> => [
+  ...pages.entries.map(({ slug, entryFilePath }) => ({
+    name: slug,
+    path: pageRoute(slug),
+    sourcePath: join(CONTENT_DIRECTORY_PATH, entryFilePath),
+  })),
+  ...collections.flatMap(({ name, entries }) =>
+    entries.map(({ slug, entryFilePath }) => ({
+      name: slug,
+      path: entryRoute(name, slug),
+      sourcePath: join(CONTENT_DIRECTORY_PATH, entryFilePath),
+    })),
+  ),
+  ...collections.map(({ name }) => ({
+    name,
+    path: collectionRoute(name),
+    sourcePath: `${join(CONTENT_DIRECTORY_PATH, name)}/`,
+  })),
+];
 
 const route = (path: string, lastmod: string | undefined): PrerenderRoute =>
   lastmod ? { path, sitemap: { lastmod } } : { path };
-
-const isRegisteredPage = (slug: string) => (PAGE_SLUGS as ReadonlyArray<string>).includes(slug);
 const unlistedRoute = (path: string): PrerenderRoute => ({ path, sitemap: { exclude: true } });
-const readContentDirectory = (directory: string): ScannedDirectory => {
-  const path = fromRoot(join(CONTENT_DIRECTORY, directory));
-  const dirents = readdirSync(path, { withFileTypes: true });
 
-  return {
-    entries: dirents
-      .filter((dirent) => dirent.isFile() && dirent.name.endsWith(".mdx"))
-      .map((dirent) => entryOf(join(path, dirent.name), dirent.name.replace(/\.mdx$/, ""))),
-    subdirectories: dirents.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name),
-  };
-};
-
-/** Walks `/content`, reading the frontmatter of every entry it finds. */
-export function scanContent(): ScannedContent {
-  const directoryNames = readdirSync(fromRoot(CONTENT_DIRECTORY), { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => dirent.name);
-  return {
-    pages: directoryNames.includes(PAGES_DIRECTORY)
-      ? readContentDirectory(PAGES_DIRECTORY)
-      : { entries: [], subdirectories: [] },
-    collections: directoryNames
-      .filter((name) => name !== PAGES_DIRECTORY)
-      .map((name) => ({ name, ...readContentDirectory(name) })),
-  };
+function rejectAny(offendingPaths: Array<string>, message: (offendingPaths: string) => string): void {
+  if (offendingPaths.length > 0) {
+    throw new Error(message(offendingPaths.join(", ")));
+  }
 }
 
 /**
- * Validates a scanned content tree and returns the complete list of routes to prerender.
+ * Validates the authored content and returns the complete list of routes to prerender.
  *
  * The built-in discovery options cannot produce a complete, duplicate-free list:
  * `autoStaticPathsDiscovery` misses dynamic routes, while `crawlLinks` misses
  * unlinked routes. Using both emits index routes twice.
- *
- * Takes the tree as a value so the validation messages can be exercised without content on disk.
  */
-export function routesFor({ pages, collections }: ScannedContent): Array<PrerenderRoute> {
-  const unsafeNames = [
-    ...pages.entries
-      .filter(({ slug }) => !URL_SAFE_NAME.test(slug))
-      .map(({ slug }) => `${PAGES_DIRECTORY}/${slug}.mdx`),
-    ...collections.flatMap(({ name, entries }) =>
-      entries.filter(({ slug }) => !URL_SAFE_NAME.test(slug)).map(({ slug }) => `${name}/${slug}.mdx`),
-    ),
-    ...collections.filter(({ name }) => !URL_SAFE_NAME.test(name)).map(({ name }) => `${name}/`),
-  ];
+export function routesFor(content: AuthoredContent): Array<PrerenderRoute> {
+  const { pages, collections } = content;
+  const claimedRoutes = contentRoutes(content);
 
-  if (unsafeNames.length > 0) {
-    throw new Error(
-      `File and folder name(s) that are not URL-safe: ${unsafeNames.join(", ")}. ` +
-        `Use lowercase letters, digits and single hyphens, as the name becomes a URL segment as written.`,
-    );
-  }
-
-  const missingPages = PAGE_SLUGS.filter((slug) => !pages.entries.some((entry) => entry.slug === slug));
-
-  if (missingPages.length > 0) {
-    throw new Error(
-      `Page(s) declared with no corresponding file: ${missingPages
-        .map((slug) => join(CONTENT_DIRECTORY, PAGES_DIRECTORY, `${slug}.mdx`))
-        .join(", ")}`,
-    );
-  }
-
-  const shadowedPages = pages.entries.filter(({ slug }) => collections.some((collection) => collection.name === slug));
-
-  if (shadowedPages.length > 0) {
-    throw new Error(
-      `Page(s) shadowed by a collection: ${shadowedPages
-        .map(({ slug }) => `${PAGES_DIRECTORY}/${slug}.mdx vs ${slug}/`)
-        .join(", ")}. Rename the page or the collection to avoid a conflict.`,
-    );
-  }
-
-  const missingCollections = Object.keys(COLLECTIONS).filter(
-    (name) => !collections.some((collection) => collection.name === name),
+  rejectAny(
+    claimedRoutes.filter(({ name }) => !URL_SAFE_NAME.test(name)).map(({ sourcePath }) => sourcePath),
+    (offendingPaths) => `URL-unsafe content file or folder name(s): ${offendingPaths}.`,
   );
 
-  if (missingCollections.length > 0) {
-    throw new Error(`Collection(s) defined with no corresponding content directory: ${missingCollections.join(", ")}`);
-  }
+  // Checked before the `COLLECTIONS` lookups below so a collection taking a reserved route is
+  // reported for that conflict instead of for missing a title.
+  rejectAny(
+    claimedRoutes.filter(({ path }) => RESERVED_ROUTES.includes(path)).map(({ sourcePath }) => sourcePath),
+    (offendingPaths) => `Content shadowing reserved route(s): ${offendingPaths}.`,
+  );
 
-  const unregisteredCollections = collections.filter(({ name }) => !(name in COLLECTIONS));
-
-  if (unregisteredCollections.length > 0) {
-    throw new Error(
-      `Collection director(ies) missing titles: ${unregisteredCollections
-        .map(({ name }) => `${join(CONTENT_DIRECTORY, name)}/`)
-        .join(", ")}`,
-    );
-  }
-
-  const nestedDirectories = [
-    ...pages.subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, PAGES_DIRECTORY, subdirectory)}/`),
-    ...collections.flatMap(({ name, subdirectories }) =>
-      subdirectories.map((subdirectory) => `${join(CONTENT_DIRECTORY, name, subdirectory)}/`),
+  rejectAny(
+    PAGE_SLUGS.filter((slug) => !pages.entries.some((entry) => entry.slug === slug)).map((slug) =>
+      join(CONTENT_DIRECTORY_PATH, PAGES_DIRECTORY_NAME, entryFileName(slug)),
     ),
-  ];
+    (offendingPaths) => `Page(s) declared with no corresponding content file: ${offendingPaths}`,
+  );
 
-  if (nestedDirectories.length > 0) {
-    throw new Error(
-      `Nested content director(ies) are not supported: ${nestedDirectories.join(", ")}. ` +
-        `Use the "category" frontmatter field to organize entries.`,
-    );
-  }
+  rejectAny(
+    pages.entries
+      .filter(({ slug }) => collections.some((collection) => collection.name === slug))
+      .map(({ entryFilePath }) => join(CONTENT_DIRECTORY_PATH, entryFilePath)),
+    (offendingPaths) => `Page(s) shadowed by a collection: ${offendingPaths}.`,
+  );
 
-  const reservedRouteConflicts = [
-    ...pages.entries.map(({ slug }) => ({
-      path: pageRoute(slug),
-      source: join(CONTENT_DIRECTORY, PAGES_DIRECTORY, `${slug}.mdx`),
-    })),
-    ...collections.flatMap(({ name, entries }) =>
-      entries.map(({ slug }) => ({
-        path: entryRoute(name, slug),
-        source: join(CONTENT_DIRECTORY, name, `${slug}.mdx`),
-      })),
+  rejectAny(
+    Object.keys(COLLECTIONS)
+      .filter((name) => !collections.some((collection) => collection.name === name))
+      .map((name) => `${join(CONTENT_DIRECTORY_PATH, name)}/`),
+    (offendingPaths) => `Collection(s) declared with no corresponding content directory: ${offendingPaths}.`,
+  );
+
+  rejectAny(
+    collections
+      .filter(({ name }) => !(name in COLLECTIONS))
+      .map(({ name }) => `${join(CONTENT_DIRECTORY_PATH, name)}/`),
+    (offendingPaths) => `Content director(ies) with no declared collection: ${offendingPaths}.`,
+  );
+
+  const contentDirectories = [{ ...pages, name: PAGES_DIRECTORY_NAME }, ...collections];
+
+  // An entry-named subdirectory contains that entry's media; nested content directories
+  // are unsupported because they do not have a corresponding route.
+  rejectAny(
+    contentDirectories.flatMap(({ name, entries, subdirectoryNames }) =>
+      subdirectoryNames
+        .filter((subdirectoryName) => !entries.some(({ slug }) => slug === subdirectoryName))
+        .map((subdirectoryName) => `${join(CONTENT_DIRECTORY_PATH, name, subdirectoryName)}/`),
     ),
-    ...collections.map(({ name }) => ({ path: collectionRoute(name), source: `${join(CONTENT_DIRECTORY, name)}/` })),
-  ].filter(({ path }) => RESERVED_ROUTES.includes(path));
-
-  if (reservedRouteConflicts.length > 0) {
-    throw new Error(
-      `Content shadowing reserved route(s): ${reservedRouteConflicts
-        .map(({ path, source }) => `${source} vs ${path}`)
-        .join(", ")}.`,
-    );
-  }
+    (offendingPaths) => `Content director(ies) with no matching entry: ${offendingPaths}.`,
+  );
 
   const publishedPages = publishedEntries(pages.entries);
   const publishedCollections = collections.map(({ name, entries }) => ({ name, entries: publishedEntries(entries) }));
@@ -199,20 +127,21 @@ export function routesFor({ pages, collections }: ScannedContent): Array<Prerend
     ...publishedCollections.flatMap(({ entries }) => entries),
   ]);
 
-  // The sitemap lists its URLs in this order, so a collection precedes its entries and the pages
-  // come last, rather than following the page, collection entry, collection order used elsewhere.
+  // The sitemap lists its URLs in this order.
   return [
     route("/", siteLastModifiedDate),
-    route(CONTACT_ROUTE, siteLastModifiedDate), // Backed by a window rather than a document, so the content walk above misses it.
+    ...publishedPages.map(({ slug, date }) =>
+      (PAGE_SLUGS as ReadonlyArray<string>).includes(slug)
+        ? route(pageRoute(slug), date)
+        : unlistedRoute(pageRoute(slug)),
+    ),
     ...publishedCollections.flatMap(({ name, entries }) => [
       route(collectionRoute(name), newestDate(entries) ?? siteLastModifiedDate),
       ...entries.map(({ slug, date }) => route(entryRoute(name, slug), date)),
     ]),
-    ...publishedPages.map(({ slug, date }) =>
-      isRegisteredPage(slug) ? route(pageRoute(slug), date) : unlistedRoute(pageRoute(slug)),
-    ),
+    route(CONTACT_ROUTE, siteLastModifiedDate), // Backed by a window rather than a document, so the content walk above misses it.
   ];
 }
 
 /** The routes to prerender, read from the content on disk. */
-export const prerenderRoutes = (): Array<PrerenderRoute> => routesFor(scanContent());
+export const prerenderRoutes = (): Array<PrerenderRoute> => routesFor(readAuthoredContent());

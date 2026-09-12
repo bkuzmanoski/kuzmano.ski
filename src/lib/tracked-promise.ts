@@ -17,20 +17,20 @@ export type TrackedPromise<T> = Promise<T> & {
  * The promise is mutated rather than wrapped, so the caller must pass this same promise to `use()`.
  */
 export function trackPromise<T>(promise: Promise<T>): TrackedPromise<T> {
-  const tracked: TrackedPromise<T> = promise;
+  const trackedPromise: TrackedPromise<T> = promise;
 
-  tracked.status = "pending";
+  trackedPromise.status = "pending";
 
   void promise.then(
     (value) => {
-      tracked.status = "fulfilled";
-      tracked.value = value;
+      trackedPromise.status = "fulfilled";
+      trackedPromise.value = value;
     },
     (reason: unknown) => {
-      tracked.status = "rejected";
-      tracked.reason = reason;
+      trackedPromise.status = "rejected";
+      trackedPromise.reason = reason;
     },
   );
 
-  return tracked;
+  return trackedPromise;
 }

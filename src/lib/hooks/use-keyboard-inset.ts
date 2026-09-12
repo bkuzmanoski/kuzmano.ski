@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 // Below this the difference between the two viewports is rounding, or a browser toolbar
 // mid-collapse, rather than a keyboard. Treating it as zero keeps the desktop still.
-const KEYBOARD_THRESHOLD = 24;
+const KEYBOARD_THRESHOLD_PX = 24;
 
 /**
  * Publishes the height the software keyboard covers as `--keyboard-inset` on `<html>`,
@@ -24,8 +24,8 @@ export function useKeyboardInset(): void {
         return;
       }
 
-      const gap = window.innerHeight - viewport.height;
-      const inset = gap < KEYBOARD_THRESHOLD ? 0 : Math.round(gap);
+      const viewportGap = window.innerHeight - viewport.height;
+      const inset = viewportGap < KEYBOARD_THRESHOLD_PX ? 0 : Math.round(viewportGap);
 
       document.documentElement.style.setProperty("--keyboard-inset", `${inset}px`);
 

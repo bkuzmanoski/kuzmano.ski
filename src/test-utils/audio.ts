@@ -29,10 +29,10 @@ export async function audioModuleMock<T extends object>(
   importOriginal: () => Promise<T>,
   overrides: Partial<T> = {},
 ): Promise<T> {
-  const actual = await importOriginal();
-  const stubbed = Object.entries(actual).map(([name, value]) => [name, stub(value)]);
+  const actualModule = await importOriginal();
+  const stubbedEntries = Object.entries(actualModule).map(([name, value]) => [name, stub(value)]);
 
-  return { ...Object.fromEntries(stubbed), ...overrides } as T;
+  return { ...Object.fromEntries(stubbedEntries), ...overrides } as T;
 }
 
 export class FakeAudioContext {
@@ -63,6 +63,14 @@ export class FakeAudioContext {
     FakeAudioContext.instances.push(this);
   }
 
+  addEventListener(_type: string, listener: () => void) {
+    this.listeners.add(listener);
+  }
+
+  removeEventListener(_type: string, listener: () => void) {
+    this.listeners.delete(listener);
+  }
+
   resume() {
     this.resumeCount++;
     return this.resumeResult;
@@ -73,23 +81,14 @@ export class FakeAudioContext {
     return { length, sampleRate: rate, getChannelData: () => data };
   }
 
-  createGain() {
+  createGainNode() {
     return {
       gain: { value: 0 },
       connect: (target: unknown) => FakeAudioContext.connections.push(target),
     };
   }
 
-  addEventListener(_type: string, listener: () => void) {
-    this.listeners.add(listener);
-  }
-
-  removeEventListener(_type: string, listener: () => void) {
-    this.listeners.delete(listener);
-  }
-
-  // Simulates reaching "running" and notifies listeners waiting for the transition.
-  reachRunning() {
+  transitionToRunning() {
     this.state = "running";
     this.listeners.forEach((listener) => listener());
   }

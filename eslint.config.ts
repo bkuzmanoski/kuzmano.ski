@@ -5,59 +5,54 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-const BUILD_IGNORE_PATTERN = "**/build/**";
+import type { Linter } from "eslint";
 
-// TanStack's shared config ignores every `build` directory; in this project build/` contains first-party Vite plugins and scripts.
-const BASE_CONFIG = tanstackConfig.map((config) =>
+const BASE_CONFIG: Array<Linter.Config> = tanstackConfig.map((config) =>
   config.name === "tanstack/ignores"
-    ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== BUILD_IGNORE_PATTERN) }
+    ? { ...config, ignores: config.ignores?.filter((pattern) => pattern !== "**/build/**") } // `/build` contains first-party Vite plugins and scripts.
     : config,
 );
 
-const CONFIG_LAYER_IMPORT_PATTERN = {
-  regex: String.raw`^(#/|\.\./)`,
-  allowTypeImports: true,
-  message: "`/src/config` may import types from other layers, but must not import their code.",
-};
-const SERVER_IMPORT_PATTERN = {
-  regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
-  message: "`/src/server` may only be imported by a server handler in `/src/routes/api/`.",
-};
+interface ImportPattern {
+  regex: string;
+  message: string;
+  allowTypeImports?: boolean;
+}
 
-// The convention is `#/` across layers and relative within one. `/src/lib` is a single layer spanning
-// subdirectories, so it reaches siblings through `../`. Every other layer is one directory deep, so `../`
-// leaves it. Each feature directory (`/src/features/<name>`) counts as its own layer.
-const LIB_LAYER_IMPORT_PATTERN = {
-  regex: String.raw`^#/lib/`,
-  message: "Import within `/src/lib` relatively.",
-};
-const PARENT_IMPORT_PATTERN = {
+// Convention: use `#/` across layers and relative paths within a layer. Every layer except `/src/lib` is
+// one directory deep, so `../` escapes it. `/src/lib` is handled separately.
+const CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION: ImportPattern = {
   regex: String.raw`^\.\./`,
-  message: "A relative import must not escape its feature; use `#/` to reach another layer.",
+  message: "Relative imports must remain within their feature; use `#/` to access another layer.",
 };
 
-// Vite's config loader resolves without a bundler under `configLoader: 'native'`, so every local
-// import needs its extension. The rule is repo-wide rather than scoped to the config's module
-// graph, because that graph is invisible from any one file. The lookahead reads the extension before
-// any `?`, so a query-suffixed specifier such as `#/scripts/theme.ts?inline-script` already satisfies it.
-const IMPORT_FILE_EXTENSION_PATTERN = {
-  regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`,
-  message: "Import with the file extension.",
+const SERVER_MODULE_IMPORT_RESTRICTION: ImportPattern = {
+  regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
+  message: "`/src/server` may only be imported by a server handler in `/src/routes/api`.",
 };
 
-// Flat config replaces a rule's options rather than merging them, so the last block matching a file decides
-// what that file is checked against. Every list below therefore repeats the patterns of the blocks it shadows.
-type ImportPattern = Record<string, unknown>;
-
-const restrictImports = (
-  ...patterns: Array<ImportPattern>
-): { "@typescript-eslint/no-restricted-imports": ["error", { patterns: Array<ImportPattern> }] } => ({
-  "@typescript-eslint/no-restricted-imports": ["error", { patterns }],
+// Flat config replaces rule options instead of merging them, so the final matching block
+// controls a file's checks. Each call below repeats patterns from the blocks it overrides.
+const restrictImports = (...patterns: Array<ImportPattern>): Linter.RulesRecord => ({
+  "@typescript-eslint/no-restricted-imports": [
+    "error",
+    {
+      patterns: [
+        // Vite resolves its config without a bundler under `configLoader: 'native'`, so every
+        // local import must use a file extension. Applied repo-wide for simplicity.
+        {
+          regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`, // The lookahead skips a `?query` suffix.
+          message: "Include the file extension in imports.",
+        },
+        ...patterns,
+      ],
+    },
+  ],
 });
 
 export default defineConfig(
-  ...BASE_CONFIG,
   { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts"] },
+  ...BASE_CONFIG,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   reactHooks.configs.flat["recommended-latest"],
@@ -71,12 +66,14 @@ export default defineConfig(
       "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".json"] })],
     },
     rules: {
-      ...restrictImports(IMPORT_FILE_EXTENSION_PATTERN),
+      ...restrictImports(),
+      "import/no-extraneous-dependencies": ["error", { devDependencies: true, includeTypes: true }],
       "import/no-restricted-paths": [
         "error",
         {
           zones: [
             { target: "./src", from: ["./build"] },
+            { target: "./build/content/markup", from: ["./build/content/media"] }, // `/build/content/markup` only walks syntax trees. `vitest.config.ts` reaches it through the MDX plugin, so an import of the media pipeline from it would load sharp into every test run.
             {
               target: "./src/lib",
               from: [
@@ -87,8 +84,20 @@ export default defineConfig(
                 "./src/features",
                 "./src/routes",
                 "./src/site",
-                "./src/test-utils/catalog.ts",
-                "./src/test-utils/content.ts",
+              ],
+            },
+            // `/src/test-utils` is unlayered, so helpers can otherwise leak imports above `lib` into every `lib` test.
+            // Listing exemptions here keeps new helpers restricted until explicitly approved.
+            {
+              target: "./src/lib",
+              from: ["./src/test-utils"],
+              except: [
+                "./audio.ts",
+                "./collection.ts",
+                "./content-source.ts",
+                "./fixtures",
+                "./router-context.tsx",
+                "./window-manager.ts",
               ],
             },
             {
@@ -100,6 +109,24 @@ export default defineConfig(
               from: ["./src/app", "./src/components", "./src/features", "./src/routes"],
             },
             { target: "./src/features", from: ["./src/app", "./src/routes"] },
+            // Layers must not import the composition root, hydration entry, or route tree as that would
+            // pull in the entire app graph and load React in `/src/scripts`.
+            {
+              target: [
+                "./src/app",
+                "./src/components",
+                "./src/config",
+                "./src/features",
+                "./src/lib",
+                "./src/routes",
+                "./src/scripts",
+                "./src/server",
+                "./src/site",
+                // Exception: `/src/test-utils` intentionally mounts the real router
+                // Exception: `/src/api.ts` only enumerates route paths.
+              ],
+              from: ["./src/client.tsx", "./src/router.tsx", "./src/routeTree.gen.ts"],
+            },
           ],
         },
       ],
@@ -135,8 +162,8 @@ export default defineConfig(
         "error",
         { ignoreIfStatements: true, ignorePrimitives: { boolean: true } },
       ],
-      // Compiler diagnostics that `recommended-latest` leaves off. Each one is a React
-      // Compiler bailout (the function stays uncompiled and re-renders unmemoized).
+      // Compiler diagnostics that `recommended-latest` leaves off. Each one identifies a React Compiler
+      // optimization failure, so the function is not compiled and re-renders without memoization.
       "react-hooks/capitalized-calls": "error",
       "react-hooks/hooks": "error",
       "react-hooks/invariant": "error",
@@ -157,12 +184,24 @@ export default defineConfig(
       "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
     },
   },
+  // Each block below must come after the blocks it overrides because later matching flat-config entries take precedence.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          devDependencies: ["src/**/*.test.{ts,tsx}", "src/test-utils/**/*.{ts,tsx}", "src/server/env.ts"], // `src/server/env.ts` is a dev-only helper that reads `wrangler.toml` and `package.json` to populate `import.meta.env`.
+          includeTypes: true,
+        },
+      ],
+    },
+  },
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/routes/api/**", "src/server/**"],
-    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN),
+    rules: restrictImports(SERVER_MODULE_IMPORT_RESTRICTION),
   },
-  // Each block from here down must stay after the ones it shadows; see the note beside `restrictImports`.
   {
     files: [
       "src/app/**/*.{ts,tsx}",
@@ -174,24 +213,45 @@ export default defineConfig(
       "src/test-utils/**/*.{ts,tsx}",
     ],
     ignores: ["src/routes/api/**"],
-    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN, PARENT_IMPORT_PATTERN),
+    rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION, SERVER_MODULE_IMPORT_RESTRICTION),
   },
-  // `/src/server` and the API handlers are the two places that may reach into `/src/server`.
   {
     files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}"],
-    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, PARENT_IMPORT_PATTERN),
+    rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION),
   },
   {
     files: ["src/lib/**/*.{ts,tsx}"],
-    rules: restrictImports(IMPORT_FILE_EXTENSION_PATTERN, SERVER_IMPORT_PATTERN, LIB_LAYER_IMPORT_PATTERN),
+    rules: restrictImports(
+      {
+        regex: String.raw`^#/lib/`,
+        message: "Use relative imports within `/src/lib`.",
+      },
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ),
   },
   {
     files: ["src/config/**/*.ts"],
     rules: restrictImports(
-      IMPORT_FILE_EXTENSION_PATTERN,
-      SERVER_IMPORT_PATTERN,
-      PARENT_IMPORT_PATTERN,
-      CONFIG_LAYER_IMPORT_PATTERN,
+      {
+        regex: String.raw`^(#/|\.\./)`,
+        allowTypeImports: true,
+        message: "`/src/config` may import types from other layers, but must not import their code.",
+      },
+      CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION,
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ),
+  },
+  {
+    files: ["src/api.ts"],
+    rules: restrictImports(
+      // Every layer may read `/src/api.ts`, so importing the route tree's value would pull
+      // every route into each `lib/*/client.ts` caller.
+      {
+        regex: String.raw`^(#/|\./)routeTree\.gen\.ts$`,
+        allowTypeImports: true,
+        message: "`/src/api.ts` may import the route tree's types, but must not import its value.",
+      },
+      SERVER_MODULE_IMPORT_RESTRICTION,
     ),
   },
 );

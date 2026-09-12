@@ -1,11 +1,17 @@
 import { byNewestDate } from "../date.ts";
 import { trackPromise } from "../tracked-promise.ts";
 
+import { entryKey, entrySlugOf, stylesheetFilePathOf } from "./entry-file.ts";
+import { parseFrontmatter } from "./frontmatter.ts";
 import { collectionRoute, entryRoute } from "./paths.ts";
-import { parseFrontmatter } from "./schema.ts";
 
-import type { Entry, Frontmatter } from "./schema.ts";
+import type { EntryKey } from "./entry-file.ts";
+import type { Frontmatter } from "./frontmatter.ts";
 import type { MDXContent } from "mdx/types";
+
+export interface Entry extends Frontmatter {
+  slug: string;
+}
 
 /** A compiled MDX file and the optional class applied to the entry it renders. */
 export interface MDXModule {
@@ -16,9 +22,10 @@ export interface MDXModule {
 /** Slug-keyed lookup of the content in a directory. */
 export interface ContentIndex {
   has: (slug: string) => boolean;
+  entryKeyOf: (slug: string) => EntryKey;
   frontmatterOf: (slug: string) => Frontmatter | null;
+  bodyChunkUrlOf: (slug: string) => string | null; // For a document to preload the body before hydration.
   load: (slug: string) => Promise<MDXModule>; // The compiled body, in a chunk of its own.
-  assetOf: (slug: string) => string | null; // The URL of the compiled body chunk, for a document to preload before hydration.
 }
 
 /** A content index that enumerates what it holds, most recent first. */
@@ -35,18 +42,12 @@ interface CollectionMetadata {
   description: string;
 }
 
-/**
- * The compiled content a catalog reads, as `import.meta.glob` returns it.
- *
- * Every record is keyed by the path the glob used, and `root` is the directory those paths
- * share, without a trailing slash (see `/src/site/catalog.ts`).
- */
 export interface ContentSource {
-  root: string;
-  frontmatter: Record<string, { default: unknown }>;
-  content: Record<string, () => Promise<{ default: MDXContent }>>;
-  styles: Record<string, () => Promise<{ default: { entry?: string } }>>;
-  assets: Record<string, string | undefined>;
+  rootDirectoryPath: string; // The directory the content glob read from, without a trailing slash.
+  frontmatterModules: Record<string, { default: unknown }>;
+  bodyModules: Record<string, () => Promise<{ default: MDXContent }>>;
+  stylesheetModules: Record<string, () => Promise<{ default: { entry?: string } }>>;
+  bodyChunkUrls: Record<EntryKey, string | undefined>;
 }
 
 export interface Catalog {
@@ -55,87 +56,80 @@ export interface Catalog {
 }
 
 export interface CatalogOptions {
-  pagesDirectory: string;
+  pagesDirectoryName: string;
   collections: Record<string, CollectionMetadata>;
   includeDrafts: boolean;
 }
 
 export function createCatalog(source: ContentSource, options: CatalogOptions): Catalog {
-  const assetPaths = Object.keys(source.assets);
-
-  if (assetPaths.length > 0 && !assetPaths.some((path) => path in source.content)) {
-    throw new Error(`Content assets are keyed by paths not included in the content glob: ${assetPaths[0]}`);
-  }
-
   const loadedModules = new Map<string, Promise<MDXModule>>();
 
-  const frontmatterFromPath = (path: string) => parseFrontmatter(source.frontmatter[path]?.default, path);
+  const frontmatterFromFilePath = (filePath: string) =>
+    parseFrontmatter(source.frontmatterModules[filePath]?.default, filePath);
 
-  function loadContent(path: string): Promise<MDXModule> {
-    const loadedModule = loadedModules.get(path);
+  function loadContent(filePath: string): Promise<MDXModule> {
+    const loadedModule = loadedModules.get(filePath);
 
     if (loadedModule) {
       return loadedModule;
     }
 
-    const importer = source.content[path];
+    const importBody = source.bodyModules[filePath];
 
-    if (!importer) {
-      throw new Error(`Content not found for path: ${path}`);
+    if (!importBody) {
+      throw new Error(`Content not found for path: ${filePath}`);
     }
 
-    const stylesheet = source.styles[path.replace(/\.mdx$/, ".module.css")];
-    const promise: Promise<MDXModule> = stylesheet
-      ? Promise.all([importer(), stylesheet()]).then(([module, styles]) => ({
-          ...module,
-          className: styles.default.entry,
+    const stylesheetImporter = source.stylesheetModules[stylesheetFilePathOf(filePath)];
+    const modulePromise: Promise<MDXModule> = stylesheetImporter
+      ? Promise.all([importBody(), stylesheetImporter()]).then(([bodyModule, stylesheetModule]) => ({
+          ...bodyModule,
+          className: stylesheetModule.default.entry,
         }))
-      : importer();
-    const trackedPromise = trackPromise(promise); // Tracked so an entry whose module has already loaded can render without suspending. This keeps hydration from discarding the server-rendered article (see `/src/client.tsx`).
+      : importBody();
+    const trackedPromise = trackPromise(modulePromise); // Tracked so an entry whose module has already loaded can render without suspending. This keeps hydration from discarding the server-rendered article (see `/src/client.tsx`).
 
-    loadedModules.set(path, trackedPromise);
+    loadedModules.set(filePath, trackedPromise);
 
     return trackedPromise;
   }
 
-  function contentIndex(directory: string): { index: ContentIndex; paths: Map<string, string> } {
-    const prefix = `${source.root}/${directory}/`;
-    const paths = new Map<string, string>();
+  function contentIndex(directoryName: string): { index: ContentIndex; filePathsBySlug: Map<string, string> } {
+    const prefix = `${source.rootDirectoryPath}/${directoryName}/`;
+    const filePathsBySlug = new Map<string, string>();
 
-    for (const path of Object.keys(source.content)) {
-      if (path.startsWith(prefix)) {
-        paths.set(path.slice(prefix.length).replace(/\.mdx$/, ""), path);
+    for (const filePath of Object.keys(source.bodyModules)) {
+      if (filePath.startsWith(prefix)) {
+        filePathsBySlug.set(entrySlugOf(filePath.slice(prefix.length)), filePath);
       }
     }
 
     return {
-      paths,
+      filePathsBySlug,
       index: {
-        has: (slug) => paths.has(slug),
+        has: (slug) => filePathsBySlug.has(slug),
+        entryKeyOf: (slug) => entryKey(directoryName, slug),
         frontmatterOf(slug) {
-          const path = paths.get(slug);
-          return path ? frontmatterFromPath(path) : null;
+          const filePath = filePathsBySlug.get(slug);
+          return filePath ? frontmatterFromFilePath(filePath) : null;
         },
+        bodyChunkUrlOf: (slug) => source.bodyChunkUrls[entryKey(directoryName, slug)] ?? null,
         load(slug) {
-          const path = paths.get(slug);
+          const filePath = filePathsBySlug.get(slug);
 
-          if (!path) {
-            throw new Error(`Content not found: ${directory}/${slug}`);
+          if (!filePath) {
+            throw new Error(`Content not found: ${directoryName}/${slug}`);
           }
 
-          return loadContent(path);
-        },
-        assetOf(slug) {
-          const path = paths.get(slug);
-          return (path && source.assets[path]) ?? null;
+          return loadContent(filePath);
         },
       },
     };
   }
 
-  function collection(directory: string, { title, description }: CollectionMetadata): Collection {
-    const { paths, index } = contentIndex(directory);
-    const route = collectionRoute(directory); // The directory a collection reads from is also the segment it is served under.
+  function collection(directoryName: string, { title, description }: CollectionMetadata): Collection {
+    const { filePathsBySlug, index } = contentIndex(directoryName);
+    const route = collectionRoute(directoryName); // The directory a collection reads from is also the segment it is served under.
 
     let entries: Array<Entry> | null = null;
 
@@ -144,10 +138,10 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
       title,
       description,
       route,
-      routeOf: (slug) => entryRoute(directory, slug),
+      routeOf: (slug) => entryRoute(directoryName, slug),
       list() {
-        entries ??= [...paths]
-          .map(([slug, path]) => ({ ...frontmatterFromPath(path), slug }))
+        entries ??= [...filePathsBySlug]
+          .map(([slug, filePath]) => ({ ...frontmatterFromFilePath(filePath), slug }))
           .filter((entry) => !entry.draft || options.includeDrafts)
           .sort((a, b) => byNewestDate(a.date, b.date));
 
@@ -157,11 +151,12 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
   }
 
   return {
-    pages: contentIndex(options.pagesDirectory).index,
+    pages: contentIndex(options.pagesDirectoryName).index,
     collections: Object.fromEntries(
       Object.entries(options.collections).map(([segment, metadata]) => [segment, collection(segment, metadata)]),
     ),
   };
 }
 
-export type { Entry, Frontmatter };
+export type { Frontmatter };
+export type { ContentImage, CoverImage, PictureSource } from "./media.ts";

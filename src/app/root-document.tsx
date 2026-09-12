@@ -1,5 +1,6 @@
 import { HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { THEME_COLORS } from "virtual:theme-colors";
 
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
@@ -23,16 +24,16 @@ export function RootDocument({ children }: { children: ReactNode }) {
           data-boot-sequence-theme-color
           name="theme-color"
           media="(prefers-color-scheme: light)"
-          content="#2e373c"
+          content={THEME_COLORS.bootSequenceBackdrop.light}
         />
         <meta
           data-boot-sequence-theme-color
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="#232a2f"
+          content={THEME_COLORS.bootSequenceBackdrop.dark}
         />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e3e7ea" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151a1d" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content={THEME_COLORS.wallpaper.light} />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content={THEME_COLORS.wallpaper.dark} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: bootSequenceScript }} />
       </head>

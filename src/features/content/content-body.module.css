@@ -29,11 +29,11 @@
   margin-inline: auto;
   padding-block: clamp(
     var(--content-space-loose),
-    (100% - var(--content-measure)) / 2 + var(--gutter),
+    (100% - var(--content-measure)) / 2 + var(--layout-gutter),
     var(--content-space-x-loose)
   );
-  padding-inline: calc(var(--content-scrollbar-offset) + var(--gutter))
-    calc(var(--gutter) + var(--reserved-scrollbar-width, 0px));
+  padding-inline: calc(var(--content-scrollbar-offset) + var(--layout-gutter))
+    calc(var(--layout-gutter) + var(--reserved-scrollbar-width, 0px));
 
   font: var(--font-body); /* Also the font `--content-measure` is resolved against. */
   font-feature-settings:

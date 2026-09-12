@@ -1,18 +1,18 @@
 import { useSyncExternalStore } from "react";
 
-let query: MediaQueryList | null | undefined;
+let reducedMotionQuery: MediaQueryList | null | undefined;
 
 function getQuery() {
-  query ??= (window as Partial<Window>).matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
-  return query;
+  reducedMotionQuery ??= (window as Partial<Window>).matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
+  return reducedMotionQuery;
 }
 
 const subscribe = (onChange: () => void) => {
-  const media = getQuery();
+  const query = getQuery();
 
-  media?.addEventListener("change", onChange);
+  query?.addEventListener("change", onChange);
 
-  return () => media?.removeEventListener("change", onChange);
+  return () => query?.removeEventListener("change", onChange);
 };
 
 const serverPrefersReducedMotion = () => false;

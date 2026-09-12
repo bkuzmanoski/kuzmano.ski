@@ -7,24 +7,24 @@ const EDGE_BOW = 8;
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-function clipPath(width: number, height: number, radius: number, bow: number): string {
-  const w = round(width);
-  const h = round(height);
-  const r = round(radius);
-  const c = round(bow);
-  const midX = round(width / 2);
-  const midY = round(height / 2);
+function clipPath(rawWidth: number, rawHeight: number, rawRadius: number, rawBow: number): string {
+  const width = round(rawWidth);
+  const height = round(rawHeight);
+  const radius = round(rawRadius);
+  const bow = round(rawBow);
+  const midX = round(rawWidth / 2);
+  const midY = round(rawHeight / 2);
 
   return `path("${[
-    `M${c + r} ${c}`,
-    `Q${midX} 0 ${w - c - r} ${c}`,
-    `Q${w - c} ${c} ${w - c} ${c + r}`,
-    `Q${w} ${midY} ${w - c} ${h - c - r}`,
-    `Q${w - c} ${h - c} ${w - c - r} ${h - c}`,
-    `Q${midX} ${h} ${c + r} ${h - c}`,
-    `Q${c} ${h - c} ${c} ${h - c - r}`,
-    `Q0 ${midY} ${c} ${c + r}`,
-    `Q${c} ${c} ${c + r} ${c}`,
+    `M${bow + radius} ${bow}`,
+    `Q${midX} 0 ${width - bow - radius} ${bow}`,
+    `Q${width - bow} ${bow} ${width - bow} ${bow + radius}`,
+    `Q${width} ${midY} ${width - bow} ${height - bow - radius}`,
+    `Q${width - bow} ${height - bow} ${width - bow - radius} ${height - bow}`,
+    `Q${midX} ${height} ${bow + radius} ${height - bow}`,
+    `Q${bow} ${height - bow} ${bow} ${height - bow - radius}`,
+    `Q0 ${midY} ${bow} ${bow + radius}`,
+    `Q${bow} ${bow} ${bow + radius} ${bow}`,
     "Z",
   ].join("")}")`;
 }

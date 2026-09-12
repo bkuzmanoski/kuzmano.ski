@@ -17,16 +17,16 @@ export interface KeyboardShortcut {
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
   const runMatch = useEffectEvent((event: KeyboardEvent) => {
     const isEditing = isEditableTarget(event.target);
-    const match = shortcuts.find(
+    const matchedShortcut = shortcuts.find(
       (shortcut) =>
         shortcut.code === event.code &&
         shortcut.enabled !== false &&
         (!isEditing || shortcut.runsWhileEditing === true),
     );
 
-    if (match) {
+    if (matchedShortcut) {
       event.preventDefault();
-      match.run();
+      matchedShortcut.run();
     }
   });
 

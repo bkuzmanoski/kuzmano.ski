@@ -1,8 +1,11 @@
 import { fromHtml } from "hast-util-from-html";
 import { defaultSchema, sanitize } from "hast-util-sanitize";
+import { selectAll } from "hast-util-select";
 import { toHtml } from "hast-util-to-html";
+import { parseSrcset, stringifySrcset } from "srcset";
+import { CONTINUE, SKIP, visit } from "unist-util-visit";
 
-import type { Element, ElementContent, Nodes, RootContent } from "hast";
+import type { Element, ElementContent } from "hast";
 import type { Schema } from "hast-util-sanitize";
 
 const FEED_SCHEMA: Schema = {
@@ -26,35 +29,17 @@ const FEED_SCHEMA: Schema = {
     ...defaultSchema.attributes,
     "*": (defaultSchema.attributes?.["*"] ?? []).filter((attribute) => attribute !== "tabIndex"),
     source: [...(defaultSchema.attributes?.source ?? []), "src", "type"],
-    video: ["controls", "loop", "muted", "playsInline", "poster", "preload", "src"],
+    video: ["ariaLabel", "controls", "height", "loop", "muted", "playsInline", "poster", "preload", "src", "width"],
     audio: ["controls", "loop", "muted", "preload", "src"],
     track: ["default", "kind", "src", "srcLang"],
   },
   clobber: [],
 };
 const WRAPPER_TAGS = new Set(["span", "div"]);
-const URL_ATTRIBUTES = ["href", "src", "poster"];
-const URL_LIST_ATTRIBUTES = ["srcSet"];
 
-const isElement = (node: Nodes): node is Element => node.type === "element";
-const childrenOf = (node: Nodes): Array<RootContent> => ("children" in node ? node.children : []);
-
-function walk(node: Nodes, visit: (node: Nodes) => void) {
-  visit(node);
-  childrenOf(node).forEach((child) => walk(child, visit));
-}
-
-function articlesIn(tree: Nodes): Array<Element> {
-  const found: Array<Element> = [];
-
-  walk(tree, (node) => {
-    if (isElement(node) && node.tagName === "article") {
-      found.push(node);
-    }
-  });
-
-  return found;
-}
+// Properties containing URLs relative to the entry, by their hast names.
+const URL_PROPERTIES = ["src", "poster", "href"];
+const URL_LIST_PROPERTIES = ["srcSet"];
 
 const paragraph = (value: string): Element => ({
   type: "element",
@@ -69,30 +54,33 @@ const paragraph = (value: string): Element => ({
 //
 // - `data-feed-omit` removes the element entirely
 // - `data-feed-text` replaces the element with a paragraph containing text supplied by the component
-function replaceUIMarkup(element: Element) {
-  element.children = element.children.flatMap((child): Array<ElementContent> => {
-    if (!isElement(child)) {
-      return [child];
+function replaceUIMarkup(article: Element) {
+  visit(article, "element", (element, index, parent) => {
+    if (!parent || index === undefined) {
+      return CONTINUE; // The article itself, which is the tree being visited rather than a node in it.
     }
 
-    if ("dataHeadingLink" in child.properties || "dataFeedOmit" in child.properties) {
-      return [];
+    if ("dataHeadingLink" in element.properties || "dataFeedOmit" in element.properties) {
+      parent.children.splice(index, 1);
+      return index; // Continues at the sibling that took the removed element's place.
     }
 
-    const fallback = child.properties.dataFeedText;
+    const fallbackText = element.properties.dataFeedText;
 
-    if (typeof fallback === "string") {
-      return [paragraph(fallback)];
+    if (typeof fallbackText === "string") {
+      parent.children[index] = paragraph(fallbackText);
+      return SKIP; // The paragraph replaces the element's children as well as the element.
     }
 
-    replaceUIMarkup(child);
-
-    return [child];
+    return CONTINUE;
   });
 }
 
 // Sanitizing removes the attributes from the wrappers used for syntax highlighting
 // and UI, leaving elements that contain nothing but their children.
+//
+// A wrapper is replaced by its own children, so this returns a new list of nodes rather than
+// visiting the tree in place.
 function unwrapPlainWrappers(children: Array<ElementContent>): Array<ElementContent> {
   return children.flatMap((child) => {
     if (child.type !== "element") {
@@ -109,42 +97,28 @@ const absolute = (value: string, url: string) => {
   try {
     return new URL(value, url).href;
   } catch {
-    return value; // Left as written.
+    return value;
   }
 };
 
-// A `srcset` is a comma-separated list of candidates, each a URL followed by an optional descriptor.
 const absoluteCandidates = (value: string, url: string) =>
-  value
-    .split(",")
-    .map((candidate) => {
-      const [source, ...descriptor] = candidate.trim().split(/\s+/);
-      return source ? [absolute(source, url), ...descriptor].join(" ") : "";
-    })
-    .filter(Boolean)
-    .join(", ");
+  stringifySrcset(parseSrcset(value).map((candidate) => ({ ...candidate, url: absolute(candidate.url, url) })));
 
-function resolveRelativeUrls(node: Nodes, url: string) {
-  walk(node, (candidate) => {
-    if (!isElement(candidate)) {
-      return;
-    }
-
-    for (const property of URL_ATTRIBUTES) {
-      const value = candidate.properties[property];
+function resolveRelativeUrls(article: Element, url: string) {
+  visit(article, "element", (element) => {
+    for (const property of URL_PROPERTIES) {
+      const value = element.properties[property];
 
       if (typeof value === "string") {
-        candidate.properties[property] = absolute(value, url);
+        element.properties[property] = absolute(value, url);
       }
     }
 
-    for (const property of URL_LIST_ATTRIBUTES) {
-      const value = candidate.properties[property];
+    for (const property of URL_LIST_PROPERTIES) {
+      const value = element.properties[property];
 
       if (typeof value === "string") {
-        candidate.properties[property] = absoluteCandidates(value, url);
-      } else if (Array.isArray(value)) {
-        candidate.properties[property] = value.map((entry) => absoluteCandidates(String(entry), url));
+        element.properties[property] = absoluteCandidates(value, url);
       }
     }
   });
@@ -157,7 +131,7 @@ function resolveRelativeUrls(node: Nodes, url: string) {
  * second render. `FEED_SCHEMA` selects the elements and attributes that belong in the feed.
  */
 export function articleContentOf(html: string, url: string): string {
-  const articles = articlesIn(fromHtml(html));
+  const articles = selectAll("article", fromHtml(html));
 
   if (articles.length !== 1) {
     throw new Error(`Expected one <article> in the document for ${url}, found ${articles.length}.`);
@@ -168,7 +142,7 @@ export function articleContentOf(html: string, url: string): string {
   replaceUIMarkup(article);
   resolveRelativeUrls(article, url);
 
-  const sanitized = sanitize(article, FEED_SCHEMA) as Element;
+  const sanitizedArticle = sanitize(article, FEED_SCHEMA) as Element;
 
-  return toHtml({ type: "root", children: unwrapPlainWrappers(sanitized.children) });
+  return toHtml({ type: "root", children: unwrapPlainWrappers(sanitizedArticle.children) });
 }

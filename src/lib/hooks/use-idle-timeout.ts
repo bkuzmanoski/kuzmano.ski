@@ -7,29 +7,29 @@ const ACTIVITY_EVENTS = ["keydown", "pointerdown", "pointermove", "wheel"] as co
  * capture phase so activity counts even where a handler below stops the event.
  */
 export function useIdleTimeout(delayMs: number, isEnabled: boolean, onIdle: () => void) {
-  const idle = useEffectEvent(onIdle);
+  const reportIdle = useEffectEvent(onIdle);
 
   useEffect(() => {
     if (!isEnabled) {
       return;
     }
 
-    const listening = new AbortController();
+    const activityListeners = new AbortController();
 
-    let timer = setTimeout(idle, delayMs);
+    let timer = setTimeout(reportIdle, delayMs);
 
     function restart() {
       clearTimeout(timer);
-      timer = setTimeout(idle, delayMs);
+      timer = setTimeout(reportIdle, delayMs);
     }
 
     for (const type of ACTIVITY_EVENTS) {
-      document.addEventListener(type, restart, { capture: true, passive: true, signal: listening.signal });
+      document.addEventListener(type, restart, { capture: true, passive: true, signal: activityListeners.signal });
     }
 
     return () => {
       clearTimeout(timer);
-      listening.abort();
+      activityListeners.abort();
     };
   }, [delayMs, isEnabled]);
 }

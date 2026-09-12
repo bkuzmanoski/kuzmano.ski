@@ -1,26 +1,34 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME } from "#/config/site.ts";
-import { parseFrontmatter } from "#/lib/content/schema.ts";
-import { entryRoute } from "#/site/content-routes.ts";
+import { FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, FEED_TYPE, SITE_NAME } from "#/config/site.ts";
+import { parseFrontmatter } from "#/lib/content/frontmatter.ts";
 import { FEEDS } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 import { canonicalUrl, markdownUrl } from "#/site/metadata.ts";
+import { entryRoute } from "#/site/routes.ts";
 
-import { byNewestFirst, newestDate, publishedEntries, scanContent } from "../prerender/routes.ts";
+import { byNewestFirst, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
+import { CLIENT_ENVIRONMENT } from "../environments.ts";
+import { addHeadersRules } from "../headers.ts";
+import { requestPathOf } from "../paths.ts";
 
 import { articleContentOf } from "./article.ts";
 import { atomFeed } from "./atom.ts";
-import { assertWellFormedXml } from "./xml.ts";
 
 import type { FeedEntry } from "./atom.ts";
-import type { ScannedContent, ScannedEntry } from "../prerender/routes.ts";
+import type { AuthoredContent, AuthoredEntry } from "../content/authored-content.ts";
+import type { HeadersRule } from "../headers.ts";
 import type { Plugin } from "vite";
 
 export type DocumentSource = (route: string) => Promise<string | undefined>;
 
-const NO_CONTENT_DATE = "1970-01-01"; // Fallback for a feed with no entries.
+const FEED_CONTENT_TYPE = `${FEED_TYPE}; charset=utf-8`;
+const FEED_HEADERS_RULE: HeadersRule = {
+  description: "Atom is served from a .xml path, which would otherwise be typed as generic XML.",
+  pathPatterns: FEEDS.map(({ path }) => path),
+  headers: { "Content-Type": FEED_CONTENT_TYPE },
+};
 
 const prerenderedDocuments = new Map<string, string>(); // Prerendered document HTML, keyed by route path.
 
@@ -31,12 +39,11 @@ const prerenderedDocuments = new Map<string, string>(); // Prerendered document 
  * `buildApp` handler reads what it collected.
  */
 export function captureDocument({ page, html }: { page: { path: string }; html: string }) {
-  // `page` is the prerender result's own field name for the route the document was rendered for.
   prerenderedDocuments.set(page.path, html);
 }
 
-async function feedEntryOf(segment: string, entry: ScannedEntry, documentOf: DocumentSource): Promise<FeedEntry> {
-  const { title, description, date, category } = parseFrontmatter(entry.frontmatter, entry.path);
+async function feedEntryOf(segment: string, entry: AuthoredEntry, documentOf: DocumentSource): Promise<FeedEntry> {
+  const { title, description, date, category } = parseFrontmatter(entry.frontmatter, entry.entryFilePath);
   const route = entryRoute(segment, entry.slug);
   const url = canonicalUrl(route);
   const html = await documentOf(route);
@@ -52,7 +59,7 @@ async function feedEntryOf(segment: string, entry: ScannedEntry, documentOf: Doc
   };
 }
 
-function entriesFor(feed: FeedMetadata, { collections }: ScannedContent, documentOf: DocumentSource) {
+function entriesFor(feed: FeedMetadata, { collections }: AuthoredContent, documentOf: DocumentSource) {
   return collections
     .filter(({ name }) => feed.collections.some((collection) => collection === name))
     .flatMap(({ name, entries }) => publishedEntries(entries).map((entry) => ({ segment: name, entry })))
@@ -64,16 +71,13 @@ function entriesFor(feed: FeedMetadata, { collections }: ScannedContent, documen
 /** Builds one feed's Atom document from a content tree and a source of prerendered documents. */
 export async function feedXmlFor(
   feed: FeedMetadata,
-  content: ScannedContent,
+  content: AuthoredContent,
   documentOf: DocumentSource,
 ): Promise<string> {
   const entries = await Promise.all(entriesFor(feed, content, documentOf));
-  const updatedDate =
-    entries[0]?.date ??
-    newestDate(content.collections.flatMap(({ entries: all }) => publishedEntries(all))) ??
-    NO_CONTENT_DATE;
+  const updatedDate = entries[0]?.date ?? "1970-01-01"; // The entries are sorted newest first, so the first one is the feed's own newest date.
 
-  const xml = atomFeed({
+  return atomFeed({
     title: feed.title,
     subtitle: feed.description,
     author: SITE_NAME,
@@ -84,10 +88,6 @@ export async function feedXmlFor(
     updated: updatedDate,
     entries,
   });
-
-  await assertWellFormedXml(xml, feed.path);
-
-  return xml;
 }
 
 /** Writes an Atom feed for the site and for each collection from prerendered content. */
@@ -98,14 +98,17 @@ export function feedsPlugin(): Plugin {
     buildApp: {
       order: "post",
       async handler(builder) {
-        const clientEnvironment = builder.environments.client;
+        const clientEnvironment = builder.environments[CLIENT_ENVIRONMENT];
 
         if (!clientEnvironment) {
           return;
         }
 
-        const outputDirectory = resolve(clientEnvironment.config.root, clientEnvironment.config.build.outDir);
-        const content = scanContent();
+        const outputDirectoryAbsolutePath = resolve(
+          clientEnvironment.config.root,
+          clientEnvironment.config.build.outDir,
+        );
+        const authoredContent = readAuthoredContent();
 
         // Every published entry was prerendered, so a route with no document means the build
         // lost one. Writing the feed without it would publish an entry whose body is empty.
@@ -116,11 +119,13 @@ export function feedsPlugin(): Plugin {
 
         try {
           for (const feed of FEEDS) {
-            const path = join(outputDirectory, feed.path);
+            const feedAbsolutePath = join(outputDirectoryAbsolutePath, feed.path);
 
-            await mkdir(dirname(path), { recursive: true });
-            await writeFile(path, await feedXmlFor(feed, content, documentOf));
+            await mkdir(dirname(feedAbsolutePath), { recursive: true });
+            await writeFile(feedAbsolutePath, await feedXmlFor(feed, authoredContent, documentOf));
           }
+
+          await addHeadersRules(outputDirectoryAbsolutePath, [FEED_HEADERS_RULE]);
         } finally {
           prerenderedDocuments.clear(); // Released once written so a rebuild under `--watch` reads only the documents it just prerendered.
         }
@@ -128,8 +133,8 @@ export function feedsPlugin(): Plugin {
     },
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        const path = request.url?.split("?")[0];
-        const feed = FEEDS.find((candidate) => candidate.path === path);
+        const requestPath = requestPathOf(request);
+        const feed = FEEDS.find((candidate) => candidate.path === requestPath);
 
         if (!feed) {
           next();
@@ -138,17 +143,17 @@ export function feedsPlugin(): Plugin {
 
         const origin = `http://${request.headers.host ?? "localhost"}`;
 
-        // The dev server does not prerender content, so the feed is built from the source files. A document
-        // that fails to render leaves its entry without content rather than failing the request.
+        // The dev server renders feed entries from source instead of prerendered content. Unavailable routes
+        // produce empty entries; responses without exactly one `<article>` reject so the error is visible.
         const documentOf: DocumentSource = (route) =>
           fetch(`${origin}${route}`)
             .then((fetchedResponse) => (fetchedResponse.ok ? fetchedResponse.text() : undefined))
             .catch(() => undefined);
 
-        // Rescanned per request so an edit to a content file shows up without a restart.
-        feedXmlFor(feed, scanContent(), documentOf)
+        // Re-read per request so an edit to a content file shows up without a restart.
+        feedXmlFor(feed, readAuthoredContent(), documentOf)
           .then((xml) => {
-            response.setHeader("content-type", "application/atom+xml; charset=utf-8");
+            response.setHeader("content-type", FEED_CONTENT_TYPE);
             response.end(xml);
           })
           .catch(next);

@@ -30,9 +30,9 @@ function attach<T>(ref: Ref<T> | undefined, node: T | null): Detach | null {
  */
 export function mergeRefs<T>(first: Ref<T> | undefined, second: Ref<T> | undefined): (node: T | null) => Detach {
   return (node) => {
-    const detaches = [attach(first, node), attach(second, node)];
+    const detachFunctions = [attach(first, node), attach(second, node)];
     return () => {
-      for (const detach of detaches) {
+      for (const detach of detachFunctions) {
         detach?.();
       }
     };

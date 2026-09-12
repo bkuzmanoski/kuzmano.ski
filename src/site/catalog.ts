@@ -1,21 +1,33 @@
-import { CONTENT_ASSETS } from "virtual:content-assets";
+import { ENTRY_BODY_CHUNKS } from "virtual:entry-body-chunks";
 
-import { COLLECTIONS, PAGES_DIRECTORY } from "#/config/content.ts";
+import { COLLECTIONS, PAGES_DIRECTORY_NAME } from "#/config/content.ts";
 import { createCatalog } from "#/lib/content/catalog.ts";
 
 import type { MDXContent } from "mdx/types";
 
 const catalog = createCatalog(
   {
-    root: "/content",
-    frontmatter: import.meta.glob<{ default: unknown }>("/content/*/*.mdx", { query: "?frontmatter", eager: true }), // Frontmatter without the compiled bodies (see `/build/frontmatter.ts`).
-    content: import.meta.glob<{ default: MDXContent }>("/content/*/*.mdx"),
-    styles: import.meta.glob<{ default: { entry?: string } }>("/content/*/*.module.css"),
-    assets: CONTENT_ASSETS,
+    rootDirectoryPath: "/content",
+    frontmatterModules: import.meta.glob<{ default: unknown }>("/content/*/*.mdx", {
+      query: "?frontmatter",
+      eager: true,
+    }), // Frontmatter without the compiled bodies.
+    bodyModules: import.meta.glob<{ default: MDXContent }>("/content/*/*.mdx"),
+    stylesheetModules: import.meta.glob<{ default: { entry?: string } }>("/content/*/*.module.css"),
+    bodyChunkUrls: ENTRY_BODY_CHUNKS,
   },
-  { pagesDirectory: PAGES_DIRECTORY, collections: COLLECTIONS, includeDrafts: import.meta.env.DEV },
+  { pagesDirectoryName: PAGES_DIRECTORY_NAME, collections: COLLECTIONS, includeDrafts: import.meta.env.DEV },
 );
 
 export const { collections, pages } = catalog;
 
-export type { Collection, ContentIndex, Entry, Frontmatter, MDXModule } from "#/lib/content/catalog.ts";
+export type {
+  Collection,
+  ContentImage,
+  ContentIndex,
+  CoverImage,
+  Entry,
+  Frontmatter,
+  PictureSource,
+  MDXModule,
+} from "#/lib/content/catalog.ts";

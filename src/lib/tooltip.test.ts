@@ -44,7 +44,7 @@ describe("the tooltip on screen", () => {
     expect(hideFirst).toHaveBeenCalledOnce();
   });
 
-  test("a tooltip registering again under its own id stays on screen", () => {
+  test("a tooltip registering again under its own ID stays on screen", () => {
     const hideFirst = show("first");
 
     show("first");

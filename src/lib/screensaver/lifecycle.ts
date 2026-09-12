@@ -12,19 +12,19 @@ export const FADE_IN_DURATION_MS = 300;
  */
 export type SleepState = "awake" | "falling-asleep" | "asleep";
 
-let state: SleepState = "awake";
+let sleepState: SleepState = "awake";
 
 // This store is hand-rolled instead of using `createClientStore` because it has no client-only
 // initial value: the desktop is awake on the server and first client paint, and only transitions change it.
 const { emit, subscribe } = createEmitter();
-const getState = () => state;
+const getState = () => sleepState;
 const serverState = (): SleepState => "awake";
 
-function enter(next: SleepState) {
-  state = next;
+function enter(nextState: SleepState) {
+  sleepState = nextState;
 
   // The browser chrome follows the screensaver up and back down with it (see `/src/lib/screensaver/theme-color.ts`).
-  if (next === "awake") {
+  if (nextState === "awake") {
     clearScreensaverThemeColor();
   } else {
     setScreensaverThemeColor();
@@ -35,7 +35,7 @@ function enter(next: SleepState) {
 
 /** Puts the desktop to sleep, raising the screensaver over it. */
 export function sleep() {
-  if (state === "awake") {
+  if (sleepState === "awake") {
     enter("falling-asleep");
     setTimeout(() => enter("asleep"), FADE_IN_DURATION_MS); // Only this timer leaves the `falling-asleep` state, so it does not need a guard of its own.
   }
@@ -54,7 +54,7 @@ export function sleepOnIdle() {
 
 /** Wakes the desktop. Ignored while the screensaver is still on its way up. */
 export function wake() {
-  if (state === "asleep") {
+  if (sleepState === "asleep") {
     enter("awake");
   }
 }

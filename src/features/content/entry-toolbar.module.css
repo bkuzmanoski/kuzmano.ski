@@ -22,11 +22,6 @@
   background-size: 100% 1px;
 }
 
-.navigation {
-  display: flex;
-  gap: 4px;
-}
-
 .date {
   overflow: hidden;
   grid-column: 2;
@@ -34,7 +29,9 @@
   white-space: nowrap;
 }
 
-.copyButton {
+.navigation {
+  display: flex;
   grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the centre track. */
+  gap: 4px;
   justify-self: end;
 }

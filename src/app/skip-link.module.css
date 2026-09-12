@@ -5,7 +5,7 @@
   z-index: var(--layer-skip-link);
   top: 0;
   left: 0;
-  transform: translateY(calc(-100% - var(--shadow-length)));
+  transform: translateY(calc(-100% - var(--layout-shadow-length)));
 
   padding: 4px 8px;
 
@@ -15,8 +15,8 @@
 
   &:focus {
     transform: translate(
-      calc(var(--safe-area-left) + var(--gutter)),
-      calc(var(--safe-area-top) + var(--menu-bar-height) + var(--gutter))
+      calc(var(--layout-safe-area-left) + var(--layout-gutter)),
+      calc(var(--layout-safe-area-top) + var(--layout-menu-bar-height) + var(--layout-gutter))
     );
   }
 }

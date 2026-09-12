@@ -137,12 +137,12 @@ test("a list navigates its own items, not those of a list nested inside it", () 
     </List>,
   );
 
-  const outer = screen.getAllByRole("link", { name: /^Item/ });
-  const inner = screen.getAllByRole("link", { name: /^Inner/ });
+  const outerList = screen.getAllByRole("link", { name: /^Item/ });
+  const innerList = screen.getAllByRole("link", { name: /^Inner/ });
 
-  outer[0]!.focus();
-  fireEvent.keyDown(outer[0]!, { key: "End" }); // The outer list's own last item, not the sublist's first.
+  outerList[0]!.focus();
+  fireEvent.keyDown(outerList[0]!, { key: "End" }); // The outer list's own last item, not the sublist's first.
 
-  expect(document.activeElement).toBe(outer[1]);
-  expect(inner.map((item) => item.textContent)).toEqual(["Inner 0", "Inner 1", "Inner 2"]);
+  expect(document.activeElement).toBe(outerList[1]);
+  expect(innerList.map((item) => item.textContent)).toEqual(["Inner 0", "Inner 1", "Inner 2"]);
 });

@@ -1,79 +1,70 @@
+import { CLIENT_ENVIRONMENT } from "./environments.ts";
 import { toRootRelative } from "./paths.ts";
 
 import type { Logger, LoggerEvent, SourceLocation } from "babel-plugin-react-compiler";
 import type { Plugin } from "vite";
 
-/** A function the React Compiler met but could not optimize. */
-export interface CompilerBailout {
-  file: string;
+export interface CompilerOptimizationFailure {
+  filePath: string;
   line: number | null;
   reason: string;
 }
 
-// A location is `GeneratedSource` (a symbol) for a node the compiler synthesised itself.
 const lineOf = (location: SourceLocation | null | undefined) =>
-  typeof location === "object" && location !== null ? location.start.line : null;
-
+  typeof location === "object" && location !== null ? location.start.line : null; // A location is `GeneratedSource` (a symbol) for a node the compiler synthesised itself.
 const functionLine = (event: LoggerEvent) => ("fnLoc" in event ? lineOf(event.fnLoc) : null);
 
-/**
- * Reads a bailout out of a compiler event, or `null` for an event that reports no bailout.
- *
- * A bailout leaves the whole enclosing component or hook uncompiled: every value it
- * builds is rebuilt on every render, and every consumer downstream of those values
- * re-renders with it.
- *
- * `CompileSkip` is not a bailout. The compiler only logs it for an opt-out directive.
- */
-export function bailoutFrom(filename: string | null, event: LoggerEvent): CompilerBailout | null {
-  const file = filename === null ? "unknown file" : toRootRelative(filename);
+export function optimizationFailureFrom(
+  absolutePath: string | null,
+  event: LoggerEvent,
+): CompilerOptimizationFailure | null {
+  const filePath = absolutePath === null ? "unknown file" : toRootRelative(absolutePath);
 
   switch (event.kind) {
     case "CompileError":
       return {
-        file,
+        filePath,
         line: lineOf(event.detail.primaryLocation()) ?? functionLine(event),
         reason: [event.detail.reason, event.detail.description].filter(Boolean).join(": "),
       };
 
     case "PipelineError":
-      return { file, line: functionLine(event), reason: event.data };
+      return { filePath, line: functionLine(event), reason: event.data };
 
     default:
       return null;
   }
 }
 
-/** Outputs one diagnostic line per bailout, preserving their order and including line numbers when available. */
-export const formatBailouts = (bailouts: Array<CompilerBailout>) =>
-  bailouts.map(({ file, line, reason }) => `  ${file}${line === null ? "" : `:${line}`} — ${reason}`).join("\n");
+export const formatOptimizationFailures = (failures: Array<CompilerOptimizationFailure>) =>
+  failures
+    .map(({ filePath, line, reason }) => `  ${filePath}${line === null ? "" : `:${line}`} — ${reason}`)
+    .join("\n");
 
-/** A logger for `reactCompilerPreset` that collects bailouts and a Vite plugin that reports them at the end of the build. */
-export function reactCompilerBailouts(): { logger: Logger; plugin: Plugin } {
-  const bailouts: Array<CompilerBailout> = [];
+/** A logger for `reactCompilerPreset` that collects optimization failures and a Vite plugin that reports them at the end of the build. */
+export function reactCompilerOptimizationFailures(): { logger: Logger; plugin: Plugin } {
+  const failures: Array<CompilerOptimizationFailure> = [];
   return {
     logger: {
-      logEvent(filename, event) {
-        const bailout = bailoutFrom(filename, event);
+      logEvent(absolutePath, event) {
+        const failure = optimizationFailureFrom(absolutePath, event);
 
-        if (bailout) {
-          bailouts.push(bailout);
+        if (failure) {
+          failures.push(failure);
         }
       },
     },
     plugin: {
-      name: "kuzmano.ski:react-compiler-bailouts",
+      name: "kuzmano.ski:react-compiler-optimization-failures",
       apply: "build",
-      applyToEnvironment: (environment) => environment.name === "client",
+      applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
       buildEnd(error) {
-        if (error || bailouts.length === 0) {
-          return; // A failed build has already reported why, and its bailouts are incomplete.
+        if (error || failures.length === 0) {
+          return;
         }
 
         this.error(
-          `The React Compiler could not optimize ${bailouts.length} ` +
-            `function${bailouts.length === 1 ? "" : "s"}, leaving ${bailouts.length === 1 ? "it" : "them"} ` +
-            `to re-render unmemoized:\n${formatBailouts(bailouts)}`,
+          `The React Compiler could not optimize ${failures.length} function${failures.length === 1 ? "" : "s"}:\n${formatOptimizationFailures(failures)}`,
         );
       },
     },

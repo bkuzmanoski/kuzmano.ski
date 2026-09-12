@@ -49,11 +49,11 @@ export function createWindowResizer(layout: WindowLayout): WindowResizer {
   const placeWindow = createWindowPlacer(layout);
 
   return function resizeWindow(geometry, surface, size) {
-    const placed = placeWindow(geometry, surface);
+    const placedGeometry = placeWindow(geometry, surface);
 
     return placeWindow(
       {
-        ...placed,
+        ...placedGeometry,
         width: Math.max(layout.minSize.width, size.width),
         height: Math.max(layout.minSize.height, size.height),
       },

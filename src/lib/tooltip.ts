@@ -87,7 +87,7 @@ export function hideAfterDelay(hideAction: () => void) {
   hideTimeout = setTimeout(runPendingHideAction, HIDE_DELAY_MS);
 }
 
-/** Clears shared state between tests. */
+/** Clears shared state. Used between tests to ensure no tooltip state leaks. */
 export function resetTooltipState() {
   clearTimeout(gracePeriodTimeout);
   clearTimeout(hideTimeout);

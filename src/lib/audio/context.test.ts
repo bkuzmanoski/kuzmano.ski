@@ -76,24 +76,24 @@ describe("playSound", () => {
     expect(context.resumeCount).toBe(1);
     expect(play).not.toHaveBeenCalled();
 
-    context.reachRunning();
+    context.transitionToRunning();
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
   });
 
   test("plays every sound waiting for the same state change", async () => {
     const { playSound } = await loadContextModule();
-    const first = vi.fn();
-    const second = vi.fn();
+    const firstSound = vi.fn();
+    const secondSound = vi.fn();
 
-    playSound(first);
-    playSound(second);
+    playSound(firstSound);
+    playSound(secondSound);
 
-    FakeAudioContext.instances[0]!.reachRunning();
+    FakeAudioContext.instances[0]!.transitionToRunning();
 
     await vi.waitFor(() => {
-      expect(first).toHaveBeenCalledOnce();
-      expect(second).toHaveBeenCalledOnce();
+      expect(firstSound).toHaveBeenCalledOnce();
+      expect(secondSound).toHaveBeenCalledOnce();
     });
   });
 
@@ -129,8 +129,6 @@ describe("primeAudio", () => {
     expect(FakeAudioContext.instances[0]!.resumeCount).toBe(2);
   });
 
-  // The important behaviour is that a rejected resume does not prevent a later
-  // gesture from trying again. `ensureResumed` owns the rejection handling.
   test("ignores a rejected resume and recovers on a later gesture", async () => {
     const { playSound, primeAudio } = await loadContextModule();
     const play = vi.fn();
@@ -145,7 +143,7 @@ describe("primeAudio", () => {
     context.resumeResult = Promise.resolve();
 
     playSound(play);
-    context.reachRunning();
+    context.transitionToRunning();
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
   });
@@ -166,7 +164,7 @@ describe("primeAudio", () => {
 
     expect(play).not.toHaveBeenCalled();
 
-    context.reachRunning();
+    context.transitionToRunning();
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
   });

@@ -8,23 +8,23 @@ const event = { type: "pointerup" } as SyntheticEvent;
 
 describe("mergeHandlers", () => {
   test("runs a shared handler from both bags, in the order the bags are given", () => {
-    const calls: Array<string> = [];
+    const callOrder: Array<string> = [];
     const merged = mergeHandlers(
       {
         onPointerUp: (_event: SyntheticEvent) => {
-          calls.push("first");
+          callOrder.push("first");
         },
       },
       {
         onPointerUp: (_event: SyntheticEvent) => {
-          calls.push("second");
+          callOrder.push("second");
         },
       },
     );
 
     merged.onPointerUp(event);
 
-    expect(calls).toEqual(["first", "second"]);
+    expect(callOrder).toEqual(["first", "second"]);
   });
 
   test("keeps the handlers that only one bag provides", () => {

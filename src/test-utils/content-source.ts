@@ -1,27 +1,29 @@
 import { createElement } from "react";
 
 import type { ContentSource } from "#/lib/content/catalog.ts";
+import { entryKey, stylesheetFilePathOf } from "#/lib/content/entry-file.ts";
 
 import type { MDXContent } from "mdx/types";
 
-export const CONTENT_ROOT = "/content";
+export const CONTENT_DIRECTORY_PATH = "/content";
 
 export interface FakeDocument {
   frontmatter?: unknown;
-  styles?: { entry?: string };
-  asset?: string;
   body?: MDXContent;
+  styles?: { entry?: string };
+  bodyChunkUrl?: string;
 }
 
-const DATE = "2026-07-19";
+const ENTRY_FILE_PATH_PATTERN = /^([^/]+)\/([^/]+)\.mdx$/; // The shape a fake document is keyed by, matching the entries `import.meta.glob("/content/*/*.mdx")` resolves.
+const ENTRY_DATE = "2026-07-19";
 
 const fakeBody =
-  (path: string): MDXContent =>
+  (filePath: string): MDXContent =>
   () =>
-    createElement("p", null, `The body of ${path}.`);
+    createElement("p", null, `The body of ${filePath}.`);
 
 export function frontmatterOf(title: string, overrides: Record<string, unknown> = {}) {
-  return { title, description: `About ${title}.`, date: DATE, ...overrides };
+  return { title, description: `About ${title}.`, date: ENTRY_DATE, ...overrides };
 }
 
 export function fakeContentSource(
@@ -29,27 +31,34 @@ export function fakeContentSource(
   overrides: Partial<ContentSource> = {},
 ): ContentSource {
   const source: ContentSource = {
-    root: CONTENT_ROOT,
-    frontmatter: {},
-    content: {},
-    styles: {},
-    assets: {},
+    rootDirectoryPath: CONTENT_DIRECTORY_PATH,
+    frontmatterModules: {},
+    bodyModules: {},
+    stylesheetModules: {},
+    bodyChunkUrls: {},
   };
 
-  for (const [key, document] of Object.entries(documents)) {
-    const path = `${CONTENT_ROOT}/${key}`;
-    const body = document.body ?? fakeBody(path);
+  for (const [entryFilePath, document] of Object.entries(documents)) {
+    const [, directoryName, slug] = ENTRY_FILE_PATH_PATTERN.exec(entryFilePath) ?? [];
 
-    source.frontmatter[path] = { default: document.frontmatter ?? frontmatterOf(key.replace(/\.mdx$/, "")) };
-    source.content[path] = () => Promise.resolve({ default: body });
+    if (directoryName === undefined || slug === undefined) {
+      throw new Error(`Invalid fake document key "${entryFilePath}"; expected format "<directory>/<slug>.mdx".`);
+    }
+
+    const filePath = `${CONTENT_DIRECTORY_PATH}/${entryFilePath}`;
+    const key = entryKey(directoryName, slug);
+    const body = document.body ?? fakeBody(filePath);
+
+    source.frontmatterModules[filePath] = { default: document.frontmatter ?? frontmatterOf(key) };
+    source.bodyModules[filePath] = () => Promise.resolve({ default: body });
 
     if (document.styles) {
       const styles = document.styles;
-      source.styles[path.replace(/\.mdx$/, ".module.css")] = () => Promise.resolve({ default: styles });
+      source.stylesheetModules[stylesheetFilePathOf(filePath)] = () => Promise.resolve({ default: styles });
     }
 
-    if (document.asset) {
-      source.assets[path] = document.asset;
+    if (document.bodyChunkUrl) {
+      source.bodyChunkUrls[key] = document.bodyChunkUrl;
     }
   }
 

@@ -107,7 +107,7 @@ test.each(HEADINGS)("an entry opened at a fragment scrolls to the $tagName it na
 });
 
 test("an entry opened at a fragment that does not name a heading does not scroll", async () => {
-  window.location.hash = "#absent-heading";
+  window.location.hash = "#missing-heading";
 
   await renderContent(headingAnchorFixture);
 

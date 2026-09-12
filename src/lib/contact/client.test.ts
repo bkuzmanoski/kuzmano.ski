@@ -71,11 +71,11 @@ describe("readContactEmailAddress", () => {
   });
 
   test("a read succeeds even when session storage is unavailable", async () => {
-    const denied = () => {
+    const throwDenied = () => {
       throw new Error("Denied.");
     };
-    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(denied);
-    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(denied);
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(throwDenied);
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(throwDenied);
 
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
 

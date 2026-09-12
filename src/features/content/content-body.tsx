@@ -24,7 +24,7 @@ function onLinkClick(event: MouseEvent<HTMLAnchorElement>) {
   }
 }
 
-const mdxComponents: MDXComponents = {
+const MDX_COMPONENTS: MDXComponents = {
   h2: (props: ComponentProps<"h2">) => <h2 {...props} tabIndex={-1} />,
   h3: (props: ComponentProps<"h3">) => <h3 {...props} tabIndex={-1} />,
   a: ({ href, children, ...props }: ComponentProps<"a">) => {
@@ -88,7 +88,7 @@ export function ContentBody({ route, title, content }: { route: string; title: s
 
   return (
     <RenderedEntryContext value={renderedEntry}>
-      <MDXProvider components={mdxComponents}>
+      <MDXProvider components={MDX_COMPONENTS}>
         <article ref={revealInitialFragmentTarget} className={cx(styles.content, className)}>
           <h1 data-feed-omit>{title}</h1>
           <MDXContent />

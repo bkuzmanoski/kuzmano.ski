@@ -65,12 +65,12 @@ export interface Sprite {
   style: StyleWithVars;
 }
 
-const flights = WAVES.flatMap(({ speed, delayS, toasters = [], toast = [] }) => [
+const SPRITE_FLIGHTS = WAVES.flatMap(({ speed, delayS, toasters = [], toast = [] }) => [
   ...toasters.map((start) => ({ start, speed, delayS, isToaster: true })),
   ...toast.map((start) => ({ start, speed, delayS, isToaster: false })),
 ]);
 
-export const FLOCK: ReadonlyArray<Sprite> = flights.map(({ start, speed, delayS, isToaster }, index) => {
+export const FLOCK: ReadonlyArray<Sprite> = SPRITE_FLIGHTS.map(({ start, speed, delayS, isToaster }, index) => {
   const [right, top] = START_POSITIONS[start]!;
   return {
     image: isToaster ? "toaster" : TOAST_IMAGES[index % TOAST_IMAGES.length]!,

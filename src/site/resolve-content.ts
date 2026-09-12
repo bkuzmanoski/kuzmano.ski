@@ -1,5 +1,5 @@
 import { collections, pages } from "./catalog.ts";
-import { reservedRouteFor } from "./content-routes.ts";
+import { featureRouteFor } from "./routes.ts";
 
 import type { Collection, Frontmatter } from "./catalog.ts";
 
@@ -8,15 +8,14 @@ export type ResolvedContent =
   | { kind: "page"; slug: string; frontmatter: Frontmatter | null }
   | { kind: "collectionEntry"; collection: Collection; slug: string; frontmatter: Frontmatter | null }
   | { kind: "collection"; collection: Collection }
-  | { kind: "reserved"; route: string }
+  | { kind: "feature"; route: string }
   | { kind: "notFound" };
 
 /**
  * The content served at `/<segment>` or `/<segment>/<slug>`.
  *
  * The window resolver and the document loader both call this, so a route cannot open one
- * window and describe another. A reserved route wins over content of the same name. This
- * is also checked at build time (see `/build/prerender/routes.ts`).
+ * window and describe another. A feature route wins over content of the same name.
  */
 export function resolveContent(segment: string, slug?: string): ResolvedContent {
   const collection = collections[segment];
@@ -27,10 +26,10 @@ export function resolveContent(segment: string, slug?: string): ResolvedContent 
       : { kind: "notFound" };
   }
 
-  const reservedRoute = reservedRouteFor(segment);
+  const featureRoute = featureRouteFor(segment);
 
-  if (reservedRoute) {
-    return { kind: "reserved", route: reservedRoute };
+  if (featureRoute) {
+    return { kind: "feature", route: featureRoute };
   }
 
   if (collection) {

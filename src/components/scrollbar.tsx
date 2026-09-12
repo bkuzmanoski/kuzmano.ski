@@ -130,15 +130,15 @@ export function Scrollbar({
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
 
-  const overflow = metrics.scrollHeight > metrics.clientHeight + 1;
-  const range = metrics.scrollHeight - metrics.clientHeight;
-  const position = range > 0 ? clamp(metrics.top / range, 0, 1) : 0;
+  const hasOverflow = metrics.scrollHeight > metrics.clientHeight + 1;
+  const scrollRange = metrics.scrollHeight - metrics.clientHeight;
+  const scrollProgress = scrollRange > 0 ? clamp(metrics.top / scrollRange, 0, 1) : 0;
   const isAtTop = metrics.top <= 0.5;
-  const isAtBottom = metrics.top >= range - 0.5;
-  const scrolledPercent = Math.round(position * 100);
+  const isAtBottom = metrics.top >= scrollRange - 0.5;
+  const scrolledPercent = Math.round(scrollProgress * 100);
   const thumbStyle: StyleWithVars = {
-    "--thumb-proportion": overflow ? metrics.clientHeight / metrics.scrollHeight : 1,
-    "--thumb-position": position,
+    "--thumb-proportion": hasOverflow ? metrics.clientHeight / metrics.scrollHeight : 1,
+    "--thumb-position": scrollProgress,
     borderTopWidth: isAtTop ? 0 : undefined,
     borderBottomWidth: isAtBottom ? 0 : undefined,
   };
@@ -158,7 +158,7 @@ export function Scrollbar({
       recordScrollAt(viewport); // Resume scroll sounds after a jump.
     }
 
-    viewport.scrollTop = from.top + (delta.dy / from.travel) * range;
+    viewport.scrollTop = from.top + (delta.dy / from.travel) * scrollRange;
   }
 
   const thumbHandlers = usePointerDrag({
@@ -184,14 +184,14 @@ export function Scrollbar({
 
       playClick();
 
-      if (!track || !thumb || !viewport || travel <= 0 || range <= 0) {
+      if (!track || !thumb || !viewport || travel <= 0 || scrollRange <= 0) {
         return { top: metrics.top, travel };
       }
 
       const thumbTop = event.clientY - track.getBoundingClientRect().top - thumb.clientHeight / 2;
-      const top = clamp(thumbTop / travel, 0, 1) * range;
+      const top = clamp(thumbTop / travel, 0, 1) * scrollRange;
 
-      silenceScrollAt(viewport); // Suppress scroll sounds for a jump.
+      silenceScrollAt(viewport);
       viewport.scrollTop = top;
 
       return { top, travel, jumped: true };
@@ -201,14 +201,14 @@ export function Scrollbar({
 
   const step = (delta: number) => (viewportRef.current ? stepScroll(viewportRef.current, delta) : false);
 
-  const isCollapsed = !overflow && !resizeControl;
+  const isCollapsed = !hasOverflow && !resizeControl;
 
   return (
     <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
-      <ScrollArrow direction="up" hidden={!overflow} onStep={() => step(-ARROW_STEP_PX)} />
+      <ScrollArrow direction="up" hidden={!hasOverflow} onStep={() => step(-ARROW_STEP_PX)} />
       <div
         ref={trackRef}
-        className={cx(styles.track, overflow && styles.filled)}
+        className={cx(styles.track, hasOverflow && styles.filled)}
         role="scrollbar"
         aria-label="Vertical scrollbar"
         aria-orientation="vertical"
@@ -219,9 +219,9 @@ export function Scrollbar({
         aria-valuetext={`${scrolledPercent}% scrolled`}
         {...trackHandlers}
       >
-        {overflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
+        {hasOverflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>
-      <ScrollArrow direction="down" hidden={!overflow} onStep={() => step(ARROW_STEP_PX)} />
+      <ScrollArrow direction="down" hidden={!hasOverflow} onStep={() => step(ARROW_STEP_PX)} />
       {resizeControl}
     </div>
   );

@@ -5,5 +5,5 @@
   flex: 1;
 
   min-height: 0;
-  margin: 0 var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
+  margin: 0 var(--layout-safe-area-right) var(--layout-safe-area-bottom) var(--layout-safe-area-left);
 }

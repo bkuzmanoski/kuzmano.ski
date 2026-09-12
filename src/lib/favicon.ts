@@ -15,37 +15,37 @@ const SCHEME_PARAMETER = "color-scheme";
  * TODO: Remove this once https://crbug.com/1026539 is fixed.
  */
 export function watchFaviconColorScheme(): () => void {
-  const media = (window as Partial<Window>).matchMedia?.(DARK_SCHEME_QUERY);
+  const darkSchemeQuery = (window as Partial<Window>).matchMedia?.(DARK_SCHEME_QUERY);
   const icon = document.querySelector<HTMLLinkElement>(ICON_SELECTOR);
-  const source = icon?.getAttribute("href")?.split("?")[0];
+  const sourceHref = icon?.getAttribute("href")?.split("?")[0];
 
-  if (!media || !icon || !source) {
+  if (!darkSchemeQuery || !icon || !sourceHref) {
     return () => undefined;
   }
 
-  let applied: string | undefined;
+  let appliedScheme: string | undefined;
 
   const sync = () => {
     if (document.visibilityState !== "visible") {
       return;
     }
 
-    const scheme = media.matches ? "dark" : "light";
+    const scheme = darkSchemeQuery.matches ? "dark" : "light";
 
-    if (scheme === applied) {
+    if (scheme === appliedScheme) {
       return;
     }
 
-    applied = scheme;
-    icon.href = `${source}?${SCHEME_PARAMETER}=${scheme}`;
+    appliedScheme = scheme;
+    icon.href = `${sourceHref}?${SCHEME_PARAMETER}=${scheme}`;
   };
 
-  media.addEventListener("change", sync);
+  darkSchemeQuery.addEventListener("change", sync);
   document.addEventListener("visibilitychange", sync);
   sync();
 
   return () => {
-    media.removeEventListener("change", sync);
+    darkSchemeQuery.removeEventListener("change", sync);
     document.removeEventListener("visibilitychange", sync);
   };
 }

@@ -8,25 +8,25 @@ const node = { id: "node" };
 
 describe("mergeRefs", () => {
   test("attaches a ref object and a callback ref in argument order", () => {
-    const calls: Array<string> = [];
-    const object: RefObject<typeof node | null> = { current: null };
+    const callOrder: Array<string> = [];
+    const refObject: RefObject<typeof node | null> = { current: null };
     const callback = (value: typeof node | null) => {
-      calls.push(value === null ? "detach" : "attach");
+      callOrder.push(value === null ? "detach" : "attach");
     };
 
-    mergeRefs(object, callback)(node);
+    mergeRefs(refObject, callback)(node);
 
-    expect(object.current).toBe(node);
-    expect(calls).toEqual(["attach"]);
+    expect(refObject.current).toBe(node);
+    expect(callOrder).toEqual(["attach"]);
   });
 
   test("clears a ref object and calls a cleanup-less callback ref with null on detach", () => {
-    const object: RefObject<typeof node | null> = { current: null };
+    const refObject: RefObject<typeof node | null> = { current: null };
     const callback = vi.fn();
 
-    mergeRefs(object, callback)(node)();
+    mergeRefs(refObject, callback)(node)();
 
-    expect(object.current).toBeNull();
+    expect(refObject.current).toBeNull();
     expect(callback).toHaveBeenLastCalledWith(null);
   });
 
@@ -41,11 +41,11 @@ describe("mergeRefs", () => {
   });
 
   test("ignores a null or undefined ref", () => {
-    const object: RefObject<typeof node | null> = { current: null };
+    const refObject: RefObject<typeof node | null> = { current: null };
 
     expect(() => mergeRefs(null, undefined)(node)()).not.toThrow();
 
-    mergeRefs(object, undefined)(node);
-    expect(object.current).toBe(node);
+    mergeRefs(refObject, undefined)(node);
+    expect(refObject.current).toBe(node);
   });
 });

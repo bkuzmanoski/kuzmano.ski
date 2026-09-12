@@ -16,7 +16,7 @@ export interface Settings {
 
 const SOUND_EFFECTS_STORAGE_KEY = "sound";
 
-const DEFAULTS: Settings = { theme: "system", soundEffects: "on" };
+const DEFAULT_SETTINGS: Settings = { theme: "system", soundEffects: "on" };
 
 const isSoundEffectsSetting = (value: string): value is SoundEffectsSetting => value === "off" || value === "on";
 
@@ -27,12 +27,12 @@ function parseStored<T extends string>(key: string, isValid: (value: string) => 
 
 function read(): Settings {
   return {
-    theme: parseStored(THEME_STORAGE_KEY, isThemeSetting, DEFAULTS.theme),
-    soundEffects: parseStored(SOUND_EFFECTS_STORAGE_KEY, isSoundEffectsSetting, DEFAULTS.soundEffects),
+    theme: parseStored(THEME_STORAGE_KEY, isThemeSetting, DEFAULT_SETTINGS.theme),
+    soundEffects: parseStored(SOUND_EFFECTS_STORAGE_KEY, isSoundEffectsSetting, DEFAULT_SETTINGS.soundEffects),
   };
 }
 
-const { useValue, getValue, setValue } = createClientStore(DEFAULTS, read);
+const { useValue, getValue, setValue } = createClientStore(DEFAULT_SETTINGS, read);
 
 function save<TKey extends keyof Settings>(key: TKey, storageKey: string, value: Settings[TKey]) {
   setValue({ ...getValue(), [key]: value });

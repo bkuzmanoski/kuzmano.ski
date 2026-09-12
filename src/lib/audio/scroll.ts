@@ -3,9 +3,9 @@ import { clamp } from "../math.ts";
 import { playScrollDetent } from "./sounds.ts";
 
 export const IDLE_DURATION_MS = 250;
-export const DETENT_PIXELS = 40; // Content distance between detents.
+export const DETENT_PX = 40; // Content distance between detents.
 
-const STEP_SPEED = 450;
+const STEP_SPEED_PX_PER_S = 450;
 const SPEED_SMOOTHING = 0;
 
 interface ScrollGesture {
@@ -27,7 +27,7 @@ function getScrollTop(element: Element) {
 
 // Start with a full detent so the first real movement plays a sound immediately.
 function openGesture(top: number, at: number, silent = false): ScrollGesture {
-  return { top, at, speed: 0, distance: DETENT_PIXELS, silent };
+  return { top, at, speed: 0, distance: DETENT_PX, silent };
 }
 
 /** Records the current position without playing a detent. */
@@ -71,7 +71,7 @@ export function scrollIntoViewSilently(element: Element, options?: Omit<ScrollIn
 
 export function playScrollStep(element: Element) {
   recordScrollAt(element);
-  playScrollDetent(STEP_SPEED);
+  playScrollDetent(STEP_SPEED_PX_PER_S);
 }
 
 /** Scrolls `element` by `delta` and reports whether the viewport moved. */
@@ -99,12 +99,12 @@ export function playScroll(element: Element) {
     return;
   }
 
-  const elapsed = now - gesture.at;
-  const moved = Math.abs(top - gesture.top);
+  const elapsedMs = now - gesture.at;
+  const movedDistance = Math.abs(top - gesture.top);
 
   // A long pause starts a new gesture, so saved positions and layout changes
   // do not inherit the previous gesture's accumulated distance.
-  if (elapsed > IDLE_DURATION_MS) {
+  if (elapsedMs > IDLE_DURATION_MS) {
     gestures.set(element, openGesture(top, now));
     return;
   }
@@ -116,19 +116,19 @@ export function playScroll(element: Element) {
     return;
   }
 
-  gesture.distance += moved;
+  gesture.distance += movedDistance;
 
-  if (elapsed <= 0 || moved <= 0 || gesture.distance < DETENT_PIXELS) {
+  if (elapsedMs <= 0 || movedDistance <= 0 || gesture.distance < DETENT_PX) {
     return;
   }
 
-  const speed = (moved / elapsed) * 1000;
+  const speed = (movedDistance / elapsedMs) * 1000;
 
   gesture.speed = gesture.speed > 0 ? gesture.speed * SPEED_SMOOTHING + speed * (1 - SPEED_SMOOTHING) : speed;
 
   // Keep the remainder so detents stay evenly spaced across event boundaries,
   // but never carry more than one detent into the next event.
-  gesture.distance = Math.min(gesture.distance - DETENT_PIXELS, DETENT_PIXELS);
+  gesture.distance = Math.min(gesture.distance - DETENT_PX, DETENT_PX);
 
   playScrollDetent(gesture.speed);
 }

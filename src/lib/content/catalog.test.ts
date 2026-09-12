@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { CONTENT_ROOT, fakeContentSource, frontmatterOf } from "#/test-utils/content-source.ts";
+import { CONTENT_DIRECTORY_PATH, fakeContentSource, frontmatterOf } from "#/test-utils/content-source.ts";
 import type { FakeDocument } from "#/test-utils/content-source.ts";
 
 import { createCatalog } from "./catalog.ts";
@@ -9,7 +9,7 @@ import type { TrackedPromise } from "../tracked-promise.ts";
 import type { Catalog, CatalogOptions, MDXModule } from "./catalog.ts";
 
 const CATALOG_OPTIONS: CatalogOptions = {
-  pagesDirectory: "pages",
+  pagesDirectoryName: "pages",
   collections: { collection: { title: "Collection", description: "Description." } },
   includeDrafts: false,
 };
@@ -41,11 +41,6 @@ describe("createCatalog", () => {
 
     expect(collections.unconfigured).toBeUndefined();
     expect(pages.has("entry")).toBe(false);
-  });
-
-  test("creating a catalog whose assets are keyed by paths outside the content glob throws", () => {
-    const source = fakeContentSource(DOCUMENTS, { assets: { "/dist/collection/newest.mdx": "/assets/newest.js" } });
-    expect(() => createCatalog(source, CATALOG_OPTIONS)).toThrow(/Content assets are keyed by paths/);
   });
 
   test("a collection takes its title and description from its configuration", () => {
@@ -98,18 +93,18 @@ describe("createCatalog", () => {
     expect(collection.frontmatterOf("draft")?.title).toBe("Draft");
   });
 
-  test("an entry's frontmatter is looked up by slug, or null when the index does not hold it", () => {
+  test("an entry's frontmatter is looked up by slug, or null when the index does not contain it", () => {
     const collection = catalogOf().collections.collection!;
 
     expect(collection.frontmatterOf("newest")?.title).toBe("Newest");
-    expect(collection.frontmatterOf("absent-entry")).toBeNull();
+    expect(collection.frontmatterOf("missing-entry")).toBeNull();
   });
 
-  test("looking up frontmatter that does not parse throws, with the document's path in the message", () => {
+  test("throws when looking up frontmatter that does not parse, with the document's path in the message", () => {
     const catalog = catalogOf({ "collection/broken.mdx": { frontmatter: { description: "No title." } } });
 
     expect(() => catalog.collections.collection!.frontmatterOf("broken")).toThrow(
-      `"${CONTENT_ROOT}/collection/broken.mdx" is missing a title.`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/broken.mdx" is missing a title.`,
     );
   });
 
@@ -133,24 +128,34 @@ describe("createCatalog", () => {
 
     await collection.load("newest");
 
-    const reloaded = collection.load("newest") as TrackedPromise<MDXModule>;
+    const reloadedModule = collection.load("newest") as TrackedPromise<MDXModule>;
 
-    expect(reloaded).toBe(collection.load("newest"));
-    expect(reloaded.status).toBe("fulfilled"); // Tracked, so a body that has loaded renders without suspending again.
+    expect(reloadedModule).toBe(collection.load("newest"));
+    expect(reloadedModule.status).toBe("fulfilled"); // Tracked, so a body that has loaded renders without suspending again.
   });
 
-  test("loading an entry the index does not hold throws", () => {
-    expect(() => catalogOf().collections.collection!.load("absent-entry")).toThrow(
-      /Content not found: collection\/absent-entry/,
+  test("throws when loading an entry the index does not include", () => {
+    expect(() => catalogOf().collections.collection!.load("missing-entry")).toThrow(
+      /Content not found: collection\/missing-entry/,
     );
   });
 
   test("an entry resolves to the URL of its compiled body chunk, or null when the build produced no asset for it", () => {
-    const documents = { ...DOCUMENTS, "collection/newest.mdx": { ...NEWEST_DOCUMENT, asset: "/assets/newest.js" } };
+    const documents = {
+      ...DOCUMENTS,
+      "collection/newest.mdx": { ...NEWEST_DOCUMENT, bodyChunkUrl: "/assets/newest.js" },
+    };
     const collection = catalogOf(documents).collections.collection!;
 
-    expect(collection.assetOf("newest")).toBe("/assets/newest.js");
-    expect(collection.assetOf("middle")).toBeNull();
-    expect(collection.assetOf("absent-entry")).toBeNull();
+    expect(collection.bodyChunkUrlOf("newest")).toBe("/assets/newest.js");
+    expect(collection.bodyChunkUrlOf("middle")).toBeNull();
+    expect(collection.bodyChunkUrlOf("missing-entry")).toBeNull();
+  });
+
+  test("an entry resolves to the entry key of its directory and slug", () => {
+    const { collections, pages } = catalogOf();
+
+    expect(collections.collection!.entryKeyOf("newest")).toBe("collection/newest");
+    expect(pages.entryKeyOf("page")).toBe("pages/page");
   });
 });

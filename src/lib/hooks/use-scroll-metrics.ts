@@ -41,15 +41,15 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
       return;
     }
 
-    let frame: number | null = null;
+    let frameId: number | null = null;
 
     const schedule = () => {
-      if (frame !== null) {
+      if (frameId !== null) {
         return;
       }
 
-      frame = requestAnimationFrame(() => {
-        frame = null;
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
         measure();
       });
     };
@@ -79,8 +79,8 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
       resizeObserver.disconnect();
       mutationObserver?.disconnect();
 
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
       }
     };
   }, [ref, measure]);

@@ -86,12 +86,12 @@ test("a second collection reuses the collection window", async () => {
 });
 
 test("a new unknown path replaces the current not-found alert", async () => {
-  const { history } = renderRoute("/no-such-page");
+  const { history } = renderRoute("/non-existent-page");
 
   await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE });
-  history.push("/another-typo");
+  history.push("/other-nonexistent-page");
 
-  await waitFor(() => expect(history.location.pathname).toBe("/another-typo"));
+  await waitFor(() => expect(history.location.pathname).toBe("/other-nonexistent-page"));
   expect(screen.getAllByRole("dialog")).toHaveLength(1);
   expect(openWindows()).toHaveLength(0);
 });
@@ -126,7 +126,7 @@ test("stepping back and forward over the desktop route follows the window focus 
 });
 
 test("an unknown path opens the not-found dialog instead of a window", async () => {
-  renderRoute("/no-such-page");
+  renderRoute("/non-existent-page");
 
   expect(await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
   expect(openWindows()).toHaveLength(0);
@@ -138,7 +138,7 @@ test("an unknown entry in a collection opens the not-found dialog", async () => 
 });
 
 test("dismissing a deep-linked not-found alert returns to the desktop", async () => {
-  const { history } = renderRoute("/no-such-page");
+  const { history } = renderRoute("/non-existent-page");
 
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
 
@@ -151,7 +151,7 @@ test("dismissing a not-found alert reached from a window returns to that window"
   const { history } = renderRoute(collection.route);
   const window = await screen.findByRole("region", { name: collection.title });
 
-  history.push("/no-such-page");
+  history.push("/non-existent-page");
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
 
   await waitFor(() => expect(history.location.pathname).toBe(collection.route));

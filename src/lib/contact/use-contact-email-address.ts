@@ -15,9 +15,9 @@ export function useContactEmailAddress(): string | null {
   useEffect(() => {
     const controller = new AbortController();
 
-    void readContactEmailAddress(controller.signal).then((resolved) => {
+    void readContactEmailAddress(controller.signal).then((resolvedEmailAddress) => {
       if (!controller.signal.aborted) {
-        setEmailAddress(resolved);
+        setEmailAddress(resolvedEmailAddress);
       }
     });
 

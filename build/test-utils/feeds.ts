@@ -1,4 +1,5 @@
 import type { CollectionSegment } from "#/config/content.ts";
+import { FEED_FILE_NAME } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 
 import type { Feed, FeedEntry } from "../feeds/atom.ts";
@@ -20,7 +21,7 @@ export const feedMetadata = ({
 }: Partial<Omit<FeedMetadata, "collections">> & { collections?: Array<string> } = {}): FeedMetadata => ({
   title: "Feed title",
   description: "Feed subtitle.",
-  path: "/feed.xml",
+  path: `/${FEED_FILE_NAME}`,
   route: "/",
   collections: collections as Array<CollectionSegment>,
   ...overrides,
@@ -33,7 +34,7 @@ export const feedDocument = (overrides: Partial<Feed> = {}): Feed => ({
   icon: "https://kuzmano.ski/logo192.png",
   logo: "https://kuzmano.ski/logo512.png",
   url: "https://kuzmano.ski/collection",
-  selfUrl: "https://kuzmano.ski/collection/feed.xml",
+  selfUrl: `https://kuzmano.ski/collection/${FEED_FILE_NAME}`,
   updated: "2026-07-19",
   entries: [],
   ...overrides,

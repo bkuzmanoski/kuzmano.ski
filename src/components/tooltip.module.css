@@ -39,8 +39,8 @@
   justify-self: anchor-center;
 
   width: max-content;
-  margin-block: var(--tooltip-margin) var(--tooltip-viewport-margin);
-  margin-inline: var(--tooltip-viewport-margin);
+  margin-block: var(--tooltip-margin) var(--layout-tooltip-viewport-margin);
+  margin-inline: var(--layout-tooltip-viewport-margin);
   padding: 4px 8px;
 
   font: var(--font-ui);

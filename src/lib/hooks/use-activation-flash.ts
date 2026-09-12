@@ -24,9 +24,9 @@ export function useActivationFlash<T>({
     setFlash({ target, isOn: false });
 
     // The step above turned the highlight off; the rest alternate from there.
-    const steps = count * 2 - 1;
+    const stepCount = count * 2 - 1;
 
-    for (let step = 1; step <= steps; step += 1) {
+    for (let step = 1; step <= stepCount; step += 1) {
       timers.add(() => setFlash({ target, isOn: step % 2 === 1 }), intervalMs * step);
     }
 
@@ -36,7 +36,7 @@ export function useActivationFlash<T>({
         setFlash(null);
         onDone?.();
       },
-      intervalMs * (steps + 1),
+      intervalMs * (stepCount + 1),
     );
   }
 

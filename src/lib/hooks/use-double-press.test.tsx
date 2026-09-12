@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { DOUBLE_PRESS_INTERVAL, useDoublePress } from "./use-double-press.ts";
+import { DOUBLE_PRESS_INTERVAL_MS, useDoublePress } from "./use-double-press.ts";
 
 const onDoublePress = vi.fn();
 
@@ -20,7 +20,7 @@ beforeEach(() => {
 
 const target = () => screen.getByTestId("target");
 
-const at = (time: number) => {
+const setNow = (time: number) => {
   now = time;
 };
 
@@ -40,7 +40,7 @@ function press({ x = 0, y = 0, pointerType = "touch" } = {}) {
 describe("pointer input", () => {
   test("two touch presses within the interval fire a single double press", () => {
     press();
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press();
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);
@@ -48,7 +48,7 @@ describe("pointer input", () => {
 
   test("two pen presses within the interval fire a single double press", () => {
     press({ pointerType: "pen" });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ pointerType: "pen" });
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);
@@ -56,12 +56,12 @@ describe("pointer input", () => {
 
   test("a second press past the interval does not fire, and starts a fresh pairing", () => {
     press();
-    at(DOUBLE_PRESS_INTERVAL + 1);
+    setNow(DOUBLE_PRESS_INTERVAL_MS + 1);
     press();
 
     expect(onDoublePress).not.toHaveBeenCalled();
 
-    at(DOUBLE_PRESS_INTERVAL + 2);
+    setNow(DOUBLE_PRESS_INTERVAL_MS + 2);
     press();
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);
@@ -69,7 +69,7 @@ describe("pointer input", () => {
 
   test("a second press landing too far from the first does not fire a double press", () => {
     press({ x: 0, y: 0 });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ x: 0, y: 40 });
 
     expect(onDoublePress).not.toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe("pointer input", () => {
       clientY: 0,
       pointerType: "touch",
     });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ x: 80, y: 0 });
 
     expect(onDoublePress).not.toHaveBeenCalled();
@@ -95,7 +95,7 @@ describe("pointer input", () => {
   test("a cancelled press does not participate in a double press", () => {
     press();
     fireEvent.pointerCancel(target(), { pointerType: "touch" });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press();
 
     expect(onDoublePress).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe("pointer input", () => {
 
   test("a native double click does not cause a second double press after a touch double press", () => {
     press();
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press();
     fireEvent.doubleClick(target());
 
@@ -114,7 +114,7 @@ describe("pointer input", () => {
 describe("mouse", () => {
   test("mouse pointer events alone do not fire a double press", () => {
     press({ pointerType: "mouse" });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ pointerType: "mouse" });
 
     expect(onDoublePress).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe("mouse", () => {
 
   test("a native double click fires a double press after mouse pointer events", () => {
     press({ pointerType: "mouse" });
-    at(DOUBLE_PRESS_INTERVAL);
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ pointerType: "mouse" });
     fireEvent.doubleClick(target());
 

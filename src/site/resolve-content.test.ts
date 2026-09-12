@@ -9,7 +9,7 @@ vi.mock("./catalog.ts", async () => (await import("#/test-utils/catalog.ts")).si
 
 const collectionEntry = collectionEntries[0]!;
 
-test("a segment holding a page resolves to that page, with its frontmatter", () => {
+test("a segment corresponding to a page resolves to that page, with its frontmatter", () => {
   expect(resolveContent("page")).toMatchObject({
     kind: "page",
     slug: "page",
@@ -17,7 +17,7 @@ test("a segment holding a page resolves to that page, with its frontmatter", () 
   });
 });
 
-test("a slug in a collection resolves to a collection entry, with its frontmatter", () => {
+test("a slug belonging to a collection resolves to a collection entry, with its frontmatter", () => {
   expect(resolveContent("collection", collectionEntry.slug)).toMatchObject({
     kind: "collectionEntry",
     collection,
@@ -26,20 +26,11 @@ test("a slug in a collection resolves to a collection entry, with its frontmatte
   });
 });
 
-test("a segment holding a collection resolves to that collection", () => {
-  expect(resolveContent("collection")).toEqual({ kind: "collection", collection });
+test("a page with an additional entry slug resolves to not found", () => {
+  expect(resolveContent("page", "page")).toEqual({ kind: "notFound" });
 });
 
-test("a reserved segment resolves to the route it reserves rather than to content", () => {
-  expect(resolveContent(CONTACT_ROUTE.slice(1))).toEqual({ kind: "reserved", route: CONTACT_ROUTE });
-});
-
-// A window serves a reserved route, so there are no entries beneath it.
-test("a slug under a reserved segment resolves to not found", () => {
-  expect(resolveContent(CONTACT_ROUTE.slice(1), "anything")).toEqual({ kind: "notFound" });
-});
-
-test("a slug the collection does not hold resolves to not found", () => {
+test("a slug not present in a collection resolves to not found", () => {
   expect(resolveContent("collection", "does-not-exist")).toEqual({ kind: "notFound" });
 });
 
@@ -48,6 +39,14 @@ test("a segment that is neither a collection nor a page resolves to not found", 
   expect(resolveContent("unknown-segment", "unknown-entry")).toEqual({ kind: "notFound" });
 });
 
-test("a page addressed as a collection entry resolves to not found", () => {
-  expect(resolveContent("page", "page")).toEqual({ kind: "notFound" });
+test("a segment corresponding to a collection resolves to that collection", () => {
+  expect(resolveContent("collection")).toEqual({ kind: "collection", collection });
+});
+
+test("a segment for a feature resolves to its feature route", () => {
+  expect(resolveContent(CONTACT_ROUTE.slice(1))).toEqual({ kind: "feature", route: CONTACT_ROUTE });
+});
+
+test("a feature segment with an additional slug resolves as not found", () => {
+  expect(resolveContent(CONTACT_ROUTE.slice(1), "anything")).toEqual({ kind: "notFound" });
 });

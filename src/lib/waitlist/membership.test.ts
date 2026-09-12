@@ -48,8 +48,8 @@ test.each([
 });
 
 test("an invalid email address is rejected with its field error", () => {
-  const parsed = parseSubmission({ ...VALID_SUBMISSION, emailAddress: "user@" });
+  const parsedSubmission = parseSubmission({ ...VALID_SUBMISSION, emailAddress: "user@" });
 
-  expect(parsed).toMatchObject({ ok: false, reason: "invalid" });
-  expect(parsed).toHaveProperty("errors.emailAddress", expect.stringMatching(/email address/));
+  expect(parsedSubmission).toMatchObject({ ok: false, reason: "invalid" });
+  expect(parsedSubmission).toHaveProperty("errors.emailAddress", expect.stringMatching(/email address/));
 });

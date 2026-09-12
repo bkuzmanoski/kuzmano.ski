@@ -31,20 +31,20 @@ export function renderBuffer(
 
   let peak = 0;
 
-  for (let i = 0; i < length; i++) {
-    const attack = Math.min(1, (i + 1) / attackSamples);
-    const fade = Math.min(1, (length - 1 - i) / fadeSamples);
-    const value = sample(i, i / sampleRate) * attack * fade;
+  for (let index = 0; index < length; index++) {
+    const attackGain = Math.min(1, (index + 1) / attackSamples);
+    const fadeGain = Math.min(1, (length - 1 - index) / fadeSamples);
+    const value = sample(index, index / sampleRate) * attackGain * fadeGain;
 
-    samples[i] = value;
+    samples[index] = value;
     peak = Math.max(peak, Math.abs(value));
   }
 
   const normalizedAmplitude = peak > 0 ? 1 / peak : 0;
-  const finalize = quantize ?? ((value: number) => value);
+  const quantizeSample = quantize ?? ((value: number) => value);
 
-  for (let i = 0; i < length; i++) {
-    samples[i] = finalize(samples[i]! * normalizedAmplitude);
+  for (let index = 0; index < length; index++) {
+    samples[index] = quantizeSample(samples[index]! * normalizedAmplitude);
   }
 
   return buffer;

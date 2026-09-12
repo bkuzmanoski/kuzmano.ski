@@ -8,22 +8,22 @@ test("a promise is marked pending until it settles", () => {
 });
 
 test("a fulfilled promise contains its value, which is how `use()` reads it without suspending", async () => {
-  const tracked = trackPromise(Promise.resolve("content"));
+  const trackedPromise = trackPromise(Promise.resolve("content"));
 
-  await tracked;
+  await trackedPromise;
 
-  expect(tracked.status).toBe("fulfilled");
-  expect(tracked.value).toBe("content");
+  expect(trackedPromise.status).toBe("fulfilled");
+  expect(trackedPromise.value).toBe("content");
 });
 
 test("a rejected promise contains its reason", async () => {
-  const failure = new Error("Content not found");
-  const tracked = trackPromise(Promise.reject(failure));
+  const rejectionReason = new Error("Content not found");
+  const trackedPromise = trackPromise(Promise.reject(rejectionReason));
 
-  await expect(tracked).rejects.toThrow(failure);
+  await expect(trackedPromise).rejects.toThrow(rejectionReason);
 
-  expect(tracked.status).toBe("rejected");
-  expect(tracked.reason).toBe(failure);
+  expect(trackedPromise.status).toBe("rejected");
+  expect(trackedPromise.reason).toBe(rejectionReason);
 });
 
 test("the promise handed back is the one passed in, as React reads the state off that object", () => {

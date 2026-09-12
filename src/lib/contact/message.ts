@@ -35,8 +35,8 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
     return { ok: false, reason: "malformed" };
   }
 
-  const fields: ContactFields = { from: from.trim(), message: message.trim() };
-  const errors = validate(CONTACT_SCHEMA, fields);
+  const trimmedFields: ContactFields = { from: from.trim(), message: message.trim() };
+  const errors = validate(CONTACT_SCHEMA, trimmedFields);
 
-  return Object.keys(errors).length > 0 ? { ok: false, reason: "invalid", errors } : { ok: true, value: fields };
+  return Object.keys(errors).length > 0 ? { ok: false, reason: "invalid", errors } : { ok: true, value: trimmedFields };
 }

@@ -6,14 +6,14 @@ export function isIsoDate(value: unknown): value is string {
     return false;
   }
 
-  const time = Date.parse(value);
+  const timestamp = Date.parse(value);
 
-  return !Number.isNaN(time) && new Date(time).toISOString().startsWith(value);
+  return !Number.isNaN(timestamp) && new Date(timestamp).toISOString().startsWith(value);
 }
 
 export function formatDate(isoString: string, format: Intl.DateTimeFormat): string {
-  const time = Date.parse(isoString);
-  return Number.isNaN(time) ? isoString : format.format(time);
+  const timestamp = Date.parse(isoString);
+  return Number.isNaN(timestamp) ? isoString : format.format(timestamp);
 }
 
 export const byNewestDate = (a: string | undefined, b: string | undefined) => (b ?? "").localeCompare(a ?? "");

@@ -81,7 +81,7 @@ describe("resolveWindow", () => {
 
   test("a route that opens no window resolves to null", () => {
     expect(resolveWindow("/")).toBeNull();
-    expect(resolveWindow("/no-such-page")).toBeNull();
+    expect(resolveWindow("/nonexistent-page")).toBeNull();
   });
 });
 
@@ -107,7 +107,7 @@ describe("isDestinationOpen", () => {
   });
 
   test("a route that opens no window leaves its destination closed", () => {
-    expect(isDestinationOpen("/no-such-page", ["/no-such-page"])).toBe(false);
+    expect(isDestinationOpen("/nonexistent-page", ["/nonexistent-page"])).toBe(false);
     expect(isDestinationOpen("/collection", ["/", "/collection/does-not-exist"])).toBe(false);
   });
 

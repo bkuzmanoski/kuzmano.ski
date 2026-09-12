@@ -12,20 +12,20 @@ export function mergeHandlers<TFirst extends object, TSecond extends object>(
   first: TFirst,
   second: TSecond,
 ): TFirst & TSecond {
-  const merged = { ...first } as Record<string, Handler | undefined>;
+  const mergedHandlers = { ...first } as Record<string, Handler | undefined>;
 
   for (const name of Object.keys(second)) {
-    const before = merged[name];
-    const after = (second as Record<string, Handler | undefined>)[name];
+    const firstHandler = mergedHandlers[name];
+    const secondHandler = (second as Record<string, Handler | undefined>)[name];
 
-    merged[name] =
-      before && after
+    mergedHandlers[name] =
+      firstHandler && secondHandler
         ? (event) => {
-            before(event);
-            after(event);
+            firstHandler(event);
+            secondHandler(event);
           }
-        : (after ?? before);
+        : (secondHandler ?? firstHandler);
   }
 
-  return merged as TFirst & TSecond;
+  return mergedHandlers as TFirst & TSecond;
 }

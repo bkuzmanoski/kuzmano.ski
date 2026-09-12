@@ -22,7 +22,6 @@ export function siteCollection(segment: string): SiteCollection {
   return { collection, entries: collection.list() };
 }
 
-/** Returns the newest entry in the site's `segment` collection, or `null` if there are no entries. Throws when the collection is missing. */
 export function newestCollectionEntry(segment: string): Entry | null {
   return siteCollection(segment).entries[0] ?? null;
 }

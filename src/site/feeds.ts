@@ -2,7 +2,10 @@ import { COLLECTIONS } from "#/config/content.ts";
 import type { CollectionSegment } from "#/config/content.ts";
 import { SITE_DESCRIPTION, SITE_NAME } from "#/config/site.ts";
 
-import { collectionRoute } from "./content-routes.ts";
+import { collectionRoute } from "./routes.ts";
+
+/** The name every feed is published under, at the root of the route it syndicates. */
+export const FEED_FILE_NAME = "feed.xml";
 
 export interface FeedMetadata {
   title: string;
@@ -16,7 +19,7 @@ export interface FeedMetadata {
 export const SITE_FEED: FeedMetadata = {
   title: SITE_NAME,
   description: SITE_DESCRIPTION,
-  path: "/feed.xml",
+  path: `/${FEED_FILE_NAME}`,
   route: "/",
   collections: Object.keys(COLLECTIONS) as Array<CollectionSegment>,
 };
@@ -24,7 +27,7 @@ export const SITE_FEED: FeedMetadata = {
 const COLLECTION_FEEDS: Array<FeedMetadata> = Object.entries(COLLECTIONS).map(([segment, { title, description }]) => ({
   title: `${SITE_NAME}: ${title}`,
   description,
-  path: `${collectionRoute(segment)}/feed.xml`,
+  path: `${collectionRoute(segment)}/${FEED_FILE_NAME}`,
   route: collectionRoute(segment),
   collections: [segment as CollectionSegment],
 }));

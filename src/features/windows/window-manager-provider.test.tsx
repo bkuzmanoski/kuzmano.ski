@@ -10,7 +10,6 @@ import { useEffect } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { CONTACT_ROUTE } from "#/config/contact.ts";
-import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import {
   useFocusedWindow,
   useNotFoundRoute,
@@ -19,6 +18,7 @@ import {
 } from "#/lib/window-manager/context.ts";
 import type { WindowActions } from "#/lib/window-manager/context.ts";
 import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
+import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 import type * as SiteWindows from "#/site/windows.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 
@@ -45,7 +45,6 @@ vi.mock("#/site/windows.ts", async (importOriginal) => {
 const DESKTOP_ROUTE = "/";
 const ENTRY_ROUTE = collection.routeOf(collectionEntries[0]!.slug);
 const COLLECTION_ROUTE = collection.route;
-const UNKNOWN_ROUTE = "/no-such-page";
 
 let windowActions: WindowActions | null = null;
 let openWindows: WindowRecord<WindowContent>;
@@ -212,10 +211,10 @@ test("an unknown path is reported as not found, and its URL is left in place unt
 
   await waitFor(() => expect(focusedWindow).toBe("collection"));
 
-  history.push(UNKNOWN_ROUTE);
+  history.push("/nonexistent-page");
 
-  await waitFor(() => expect(notFoundRoute).toBe(UNKNOWN_ROUTE));
-  expect(history.location.pathname).toBe(UNKNOWN_ROUTE); // Left in place, though the collection window is still the focused one.
+  await waitFor(() => expect(notFoundRoute).toBe("/nonexistent-page"));
+  expect(history.location.pathname).toBe("/nonexistent-page"); // Left in place, though the collection window is still focused.
 
   act(() => actions().dismissNotFoundAlert());
   await settle(COLLECTION_ROUTE, history);

@@ -83,7 +83,7 @@ describe("sequence", () => {
     expect(steps[3].durationMs).toBe(MOTION_DURATION_MS.logoDraw + HOLD_DURATION_MS.logo);
   });
 
-  test("reduced motion disables the zoom, warm-up and desktop reveal motion but keeps their hold durations", () => {
+  test("reduced motion disables the zoom, warm-up, and desktop reveal motion but keeps their hold durations", () => {
     const steps = sequence(REDUCED_MOTION_DURATION_MS);
 
     expect(steps[1].durationMs).toBe(HOLD_DURATION_MS.stageZoom);

@@ -4,15 +4,15 @@ import { collectionRoute, entryRoute, isRootPath, pageRoute, parseContentPath } 
 
 describe("routes", () => {
   test("a page is served at its slug", () => {
-    expect(pageRoute("about")).toBe("/about");
+    expect(pageRoute("page")).toBe("/page");
   });
 
   test("a collection entry is served under its collection", () => {
-    expect(entryRoute("blog", "a-post")).toBe("/blog/a-post");
+    expect(entryRoute("collection", "entry")).toBe("/collection/entry");
   });
 
   test("a collection is served at its segment", () => {
-    expect(collectionRoute("blog")).toBe("/blog");
+    expect(collectionRoute("collection")).toBe("/collection");
   });
 });
 
@@ -24,31 +24,31 @@ describe("isRootPath", () => {
   });
 
   test("a path with a segment is not the root", () => {
-    expect(isRootPath("/about")).toBe(false);
+    expect(isRootPath("/page")).toBe(false);
   });
 });
 
 describe("parseContentPath", () => {
-  test("a one-segment path parses into a segment with no slug", () => {
-    expect(parseContentPath("/about")).toEqual({ segment: "about" });
+  test("a one-segment path resolves to a segment with no slug", () => {
+    expect(parseContentPath("/page")).toEqual({ segment: "page" });
   });
 
-  test("a two-segment path parses into a segment and a slug", () => {
-    expect(parseContentPath("/blog/a-post")).toEqual({ segment: "blog", slug: "a-post" });
+  test("a two-segment path resolves to a segment and a slug", () => {
+    expect(parseContentPath("/collection/entry")).toEqual({ segment: "collection", slug: "entry" });
   });
 
-  test("leading, trailing and repeated slashes are ignored", () => {
-    expect(parseContentPath("/about/")).toEqual({ segment: "about" });
-    expect(parseContentPath("//about//")).toEqual({ segment: "about" });
-    expect(parseContentPath("blog/a-post")).toEqual({ segment: "blog", slug: "a-post" });
+  test("leading, trailing, and repeated slashes are ignored", () => {
+    expect(parseContentPath("/page/")).toEqual({ segment: "page" });
+    expect(parseContentPath("//page//")).toEqual({ segment: "page" });
+    expect(parseContentPath("collection/entry")).toEqual({ segment: "collection", slug: "entry" });
   });
 
-  test("the root path parses into null", () => {
+  test("the root path resolves to null", () => {
     expect(parseContentPath("/")).toBeNull();
     expect(parseContentPath("")).toBeNull();
   });
 
-  test("a path deeper than a collection entry parses into null", () => {
-    expect(parseContentPath("/blog/a-post/deeper")).toBeNull();
+  test("a path deeper than a collection entry resolves to null", () => {
+    expect(parseContentPath("/collection/entry/deeper")).toBeNull();
   });
 });
