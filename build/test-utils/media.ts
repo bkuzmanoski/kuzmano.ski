@@ -18,7 +18,10 @@ export const BODY_IMAGE_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${BODY_IMAGE_FI
 export const VIDEO_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${VIDEO_FILE_NAME}`;
 export const POSTER_IMAGE_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${POSTER_IMAGE_FILE_NAME}`;
 
-export const ENTRY_SOURCE = '![An image](./image.png)\n\n<video src="./video.mp4" />\n';
+export const ENTRY_SOURCE = `![An image](./image.png)
+
+<video src="./video.mp4" />
+`;
 const MEDIA_FILE_BYTES = 1024;
 const IMAGE_DIMENSIONS = { width: 900, height: 500 };
 export const VIDEO_DIMENSIONS = { width: 1280, height: 720 };

@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 
 import { TextArea, TextInput, TextInputFrame } from "./text-input.tsx";
 
-test("a text input defaults to text unless given another type", () => {
+test("a text input defaults the `type` attribute to `text` unless given a `type` prop", () => {
   render(
     <>
       <TextInput aria-label="Name" />
@@ -18,7 +18,7 @@ test("a text input defaults to text unless given another type", () => {
 test.each([
   ["a text input", <TextInput key="input" className="caller" aria-label="Field" />],
   ["a text area", <TextArea key="area" className="caller" aria-label="Field" />],
-])("%s keeps a caller's class alongside its own", (_label, control) => {
+])("%s applies a caller's class alongside its own", (_label, control) => {
   render(control);
 
   const field = screen.getByLabelText("Field");
@@ -27,7 +27,7 @@ test.each([
   expect(field.className.split(" ").length).toBeGreaterThan(1); // The component's own class is a CSS module hash.
 });
 
-test("a text input frame keeps its class on the element wrapping the control", () => {
+test("a text input frame applies a caller's class alongside its own, on the element wrapping the control", () => {
   render(
     <TextInputFrame className="caller">
       <TextInput aria-label="Field" />

@@ -8,15 +8,15 @@ const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
 const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
 describe("containsPoint", () => {
-  test("a point within the rect is contained", () => {
+  test("returns `true` for a point within the rect", () => {
     expect(containsPoint(rect, { x: 300, y: 200 })).toBe(true);
   });
 
-  test("a point on an edge is contained", () => {
+  test("returns `true` for a point on an edge", () => {
     expect(containsPoint(rect, { x: 100, y: 350 })).toBe(true);
   });
 
-  test("a point beyond any side is not contained", () => {
+  test("returns `false` for a point beyond any side", () => {
     expect(containsPoint(rect, { x: 99, y: 200 })).toBe(false);
     expect(containsPoint(rect, { x: 501, y: 200 })).toBe(false);
     expect(containsPoint(rect, { x: 300, y: 49 })).toBe(false);
@@ -29,11 +29,11 @@ describe("scaleInset", () => {
     expect(scaleInset(inset, 0.5)).toEqual({ top: 14, right: 12, bottom: 14, left: 12 });
   });
 
-  test("a scale of one leaves the inset alone", () => {
+  test("returns an equal inset for a scale of one", () => {
     expect(scaleInset(inset, 1)).toEqual(inset);
   });
 
-  test("preserves the sign of an edge that reaches past its container", () => {
+  test("preserves the sign of an edge that extends past its container", () => {
     expect(scaleInset({ top: -100, right: -200, bottom: 0, left: 50 }, 2)).toEqual({
       top: -200,
       right: -400,
@@ -55,14 +55,14 @@ describe("insetRect", () => {
     expect(innerRect.y + innerRect.height / 2).toBeCloseTo(rect.y + rect.height / 2);
   });
 
-  test("a zero inset returns the rect itself", () => {
+  test("returns an equal rect for a zero inset", () => {
     expect(insetRect(rect, { top: 0, right: 0, bottom: 0, left: 0 })).toEqual(rect);
   });
 
-  test("grows the rect for a negative inset, which is what reaching out to the viewport is", () => {
+  test("grows the rect for a negative inset", () => {
     expect(
       insetRect({ x: 100, y: 50, width: 400, height: 300 }, { top: -50, right: -100, bottom: -450, left: -100 }),
-    ).toEqual({ x: 0, y: 0, width: 600, height: 800 });
+    ).toEqual({ x: 0, y: 0, width: 600, height: 800 }); // `insetToViewport` returns negative insets for a box inside the viewport, which grow it to its edges.
   });
 });
 
@@ -123,7 +123,7 @@ describe("transformBetween", () => {
     expect(transformBetween(originalRect, originalRect)).toEqual({ scale: 1, x: 0, y: 0 });
   });
 
-  test("holds a scale of one for an unmeasured rect", () => {
+  test("returns a scale of one and the target's position for a rect of zero width", () => {
     expect(transformBetween({ x: 0, y: 0, width: 0, height: 0 }, targetRect)).toEqual({
       scale: 1,
       x: targetRect.x,

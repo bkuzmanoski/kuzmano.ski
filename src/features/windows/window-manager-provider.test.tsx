@@ -159,9 +159,6 @@ test("an external change to the desktop route unfocuses the open window without 
   expect(openRoutes()).toEqual([ENTRY_ROUTE]);
 });
 
-// The provider's own navigation arrives back as a URL change. `expectedRouteRef` records the route it
-// navigated to, so the URL-to-focus effect skips that one; without it, every internal navigation would
-// be resolved a second time and dispatched back into the state it came from.
 test("the URL the provider navigated to itself is not resolved a second time", async () => {
   const history = await renderProvider(ENTRY_ROUTE);
 
@@ -175,6 +172,9 @@ test("the URL the provider navigated to itself is not resolved a second time", a
   act(() => actions().focus("entry"));
   await settle(ENTRY_ROUTE, history);
 
+  // The provider's own navigation arrives back as a URL change. `expectedRouteRef` records the route it
+  // navigated to, so the URL-to-focus effect skips that one; without it, every internal navigation would
+  // be resolved a second time and dispatched back into the state it came from.
   expect(resolveRoute).not.toHaveBeenCalled();
   expect(openRoutes()).toHaveLength(2);
 });
@@ -188,7 +188,7 @@ test("opening a window with `replaceUrl` leaves the previous route out of the se
   expect(history.length).toBe(1);
 });
 
-test("opening a window without `replaceUrl` keeps the previous route in the session history", async () => {
+test("opening a window without `replaceUrl` retains the previous route in the session history", async () => {
   const history = await renderProvider(DESKTOP_ROUTE);
 
   act(() => actions().open(COLLECTION_ROUTE));
@@ -206,7 +206,7 @@ test("the initial route replaces the desktop route in the session history", asyn
   expect(history.length).toBe(1);
 });
 
-test("an unknown path is reported as not found, and its URL is left in place until the alert is dismissed", async () => {
+test("an unknown path becomes the not-found route, and the URL does not change until the not-found alert is dismissed", async () => {
   const history = await renderProvider(COLLECTION_ROUTE);
 
   await waitFor(() => expect(focusedWindow).toBe("collection"));

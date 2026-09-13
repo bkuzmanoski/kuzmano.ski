@@ -43,7 +43,7 @@ describe("playTone", () => {
     expect(bufferFor(shared)).toBe(bufferFor(shared));
   });
 
-  test("two tones with the same shape still use separate buffers", () => {
+  test("uses separate buffers for two tones with the same shape", () => {
     expect(bufferFor(tone([{ hz: 440, seconds: 0.05 }]))).not.toBe(bufferFor(tone([{ hz: 440, seconds: 0.05 }])));
   });
 

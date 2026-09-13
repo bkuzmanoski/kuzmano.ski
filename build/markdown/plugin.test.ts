@@ -36,13 +36,13 @@ describe("markdownFilesFor", () => {
     expect(pathsOf()).toStrictEqual(["/page.md", "/collection/published.md", "/collection.md"]);
   });
 
-  test("omits a draft entry, and leaves the draft out of the collection index", async () => {
+  test("omits a draft entry, and does not list the draft in the collection index", async () => {
     expect(pathsOf()).not.toContain("/unfinished.md");
     expect(pathsOf()).not.toContain("/collection/hidden.md");
     await expect(collectionIndexMarkdown(content)).resolves.not.toContain("hidden");
   });
 
-  test("returns a draft entry, and lists the draft in the collection index, when `includeDrafts` is true", async () => {
+  test("returns a draft entry, and lists the draft in the collection index, when `includeDrafts` is `true`", async () => {
     expect(pathsOf({ includeDrafts: true })).toContain("/unfinished.md");
     expect(pathsOf({ includeDrafts: true })).toContain("/collection/hidden.md");
     await expect(collectionIndexMarkdown(content, { includeDrafts: true })).resolves.toContain("hidden");
@@ -68,7 +68,7 @@ describe("markdownFilesFor", () => {
     expect(index.indexOf("newer")).toBeLessThan(index.indexOf("older"));
   });
 
-  test("escapes a title and folds a description so neither breaks its list item", async () => {
+  test("escapes the brackets in a title and collapses a description onto one line in its list item", async () => {
     const index = await collectionIndexMarkdown({
       ...content,
       collections: [

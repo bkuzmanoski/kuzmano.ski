@@ -8,7 +8,7 @@ import styles from "./spinner.module.css";
  *
  * `label` describes the work being waited for rather than the indicator itself.
  *
- * The `inline` layout is announced as an image when reached. The `fill` layout centres
+ * The `inline` layout is announced as an image when reached. The `fill` layout centers
  * itself in its container and uses a live region for content that arrives after the
  * surrounding page.
  *

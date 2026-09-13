@@ -47,7 +47,7 @@ test("a hidden label names the control", () => {
   expect(screen.getByLabelText("Label:").tagName).toBe("TEXTAREA");
 });
 
-test("an error marks the control invalid and describes it", () => {
+test("an input field with an error marks the control invalid and describes it with the error", () => {
   render(<Harness label="Label:" error="Error message." />);
 
   const inputField = screen.getByLabelText("Label:");
@@ -58,7 +58,7 @@ test("an error marks the control invalid and describes it", () => {
   expect(document.getElementById(describedBy!)?.textContent).toBe("Error message.");
 });
 
-test("an input field without an error is neither invalid nor described", () => {
+test("an input field without an error does not mark the control invalid or describe it", () => {
   render(<Harness label="From:" />);
 
   const inputField = screen.getByLabelText("From:");
@@ -67,14 +67,14 @@ test("an input field without an error is neither invalid nor described", () => {
   expect(inputField.hasAttribute("aria-describedby")).toBe(false);
 });
 
-test("an error is described without creating a second live region", () => {
+test("an input field with an error does not render a live region", () => {
   const { container } = render(<Harness label="From:" error="Not an email address." />);
 
   expect(container.querySelector("[aria-live]")).toBeNull();
   expect(container.querySelector('[role="status"]')).toBeNull();
 });
 
-test("each input field gets its own id", () => {
+test("each input field gives its control its own ID", () => {
   render(
     <>
       <Harness label="From:" />
@@ -84,7 +84,7 @@ test("each input field gets its own id", () => {
   expect(screen.getByLabelText("From:").id).not.toBe(screen.getByLabelText("To:").id);
 });
 
-test("a press on the control plays one click", () => {
+test("a press on the control plays one click sound", () => {
   render(<Harness label="From:" />);
 
   const control = screen.getByLabelText("From:");
@@ -96,7 +96,7 @@ test("a press on the control plays one click", () => {
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press on the label plays one click, and the click it forwards does not play another", () => {
+test("a press on the label plays one click sound, and the click it forwards does not play another", () => {
   render(<Harness label="From:" />);
 
   fireEvent.pointerDown(screen.getByText("From:"));
@@ -108,7 +108,7 @@ test("a press on the label plays one click, and the click it forwards does not p
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press on a control that plays its own sound is left to that control", () => {
+test("a press on a control that plays its own press sound does not play the input field's click sound", () => {
   render(
     <Harness
       label="Message:"

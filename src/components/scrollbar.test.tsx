@@ -81,14 +81,14 @@ function renderScrollbar() {
   return { viewport, track, thumb, scrollDownButton: screen.getByRole("button", { name: "Scroll down" }) };
 }
 
-const thumbCentreAt = (position: number) => TRACK_TOP + THUMB_HEIGHT / 2 + position * THUMB_TRAVEL;
+const thumbCenterAt = (position: number) => TRACK_TOP + THUMB_HEIGHT / 2 + position * THUMB_TRAVEL;
 
 function pressTrackAt(track: HTMLElement, position: number) {
-  fireEvent.pointerDown(track, { button: 0, clientY: thumbCentreAt(position) });
+  fireEvent.pointerDown(track, { button: 0, clientY: thumbCenterAt(position) });
 }
 
 function dragTrackTo(track: HTMLElement, position: number) {
-  fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCentreAt(position) });
+  fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCenterAt(position) });
   advance(FRAME_MS);
 }
 
@@ -132,7 +132,7 @@ test("the click event that follows a press does not step a second time", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-test("a tap whose touch pointer events do not reach the control still plays a click sound", () => {
+test("a tap whose touch pointer events do not reach the arrow still steps the viewport", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.click(scrollDownButton, { detail: 1 }); // The press landed outside, so only the click arrives.
@@ -140,7 +140,7 @@ test("a tap whose touch pointer events do not reach the control still plays a cl
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-test("a browser-cancelled press scrolls once, and the following click scrolls again", () => {
+test("a browser-canceled press scrolls once, and the following click scrolls again", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
@@ -171,8 +171,6 @@ test("a keyboard activation steps the viewport", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-// A press released outside the arrow does not deliver a click to clear the press it
-// recorded, so a keyboard activation must not be mistaken for that press arriving late.
 test("a keyboard activation steps the viewport after a press is abandoned outside the arrow", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
@@ -183,6 +181,8 @@ test("a keyboard activation steps the viewport after a press is abandoned outsid
 
   fireEvent.click(scrollDownButton);
 
+  // A press released outside the arrow does not deliver a click to clear the press it
+  // recorded, so a keyboard activation must not be mistaken for that press arriving late.
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
@@ -200,7 +200,7 @@ test("a held press keeps scrolling when the pointer leaves the arrow", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 4);
 });
 
-test("a release away from the arrow ends the press", () => {
+test("a release away from the arrow stops the repeating steps", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
@@ -211,7 +211,7 @@ test("a release away from the arrow ends the press", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
-test("a press released away from the arrow does not affect the next activation", () => {
+test("a click that follows a press released away from the arrow still steps the viewport", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
@@ -224,7 +224,7 @@ test("a press released away from the arrow does not affect the next activation",
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
-test("a press on the track scrolls to the pressed point and plays a click", () => {
+test("a press on the track scrolls to the pressed point and plays a click sound", () => {
   const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.5);
@@ -245,13 +245,12 @@ test("a press past either end of the thumb's travel scrolls to that end", () => 
   expect(viewport.scrollTop).toBe(0);
 });
 
-// The thumb sits inside the track and runs its own drag, whose press bubbles through the track.
 test("a press on the thumb does not scroll the viewport", () => {
   const { viewport, thumb } = renderScrollbar();
 
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
 
-  expect(viewport.scrollTop).toBe(0);
+  expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and runs its own drag, whose press bubbles through the track.
   expect(playClick).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
 });
 
@@ -298,18 +297,17 @@ test("a track press transitions into a thumb drag from the point it jumped to", 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.75);
 });
 
-// The press jumps on its own, so pointer jitter must not drag the jump off its mark.
-test("a pointer that moves within the drag threshold after a track press does begin a thumb drag", () => {
+test("a pointer that moves within the drag threshold after a track press does not begin a thumb drag", () => {
   const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.5);
-  fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCentreAt(0.5) + DRAG_THRESHOLD_PX });
+  fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCenterAt(0.5) + DRAG_THRESHOLD_PX });
   advance(FRAME_MS);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP / 2);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.5); // The press jumps on its own, so pointer jitter must not drag the jump off its mark.
 });
 
-test("the scrolling that follows the jump from a thumb press plays scroll sounds", () => {
+test("the scrolling that follows the jump from a track press plays scroll sounds", () => {
   const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 1);

@@ -48,7 +48,7 @@ function openWindow(setFocusedWindow: (id: WindowId | null) => void, id: WindowI
   (document.activeElement as HTMLElement | null)?.blur();
 }
 
-test("the selected icon regains focus when the last window closes and remains keyboard-accessible", () => {
+test("closing the last window focuses the selected icon, and the Enter key still opens it", () => {
   const setFocusedWindow = renderIcons();
 
   icon(0).focus();
@@ -75,7 +75,7 @@ test("closing the last window does not focus an icon when none is selected", () 
   expect(document.activeElement).toBe(document.body);
 });
 
-test("closing the last window does not focus an icon when another element holds the focus", () => {
+test("closing the last window does not focus an icon when another element has the focus", () => {
   const setFocusedWindow = renderIcons();
   const buttonElement = document.body.appendChild(document.createElement("button"));
 

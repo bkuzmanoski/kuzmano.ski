@@ -49,7 +49,7 @@ describe("screensaver lifecycle", () => {
     expect(state()).toBe("awake");
   });
 
-  test("does not interrupt the transition to asleep", () => {
+  test("ignores `wake` until the fade-in completes", () => {
     const state = getState();
 
     act(sleep);
@@ -104,7 +104,7 @@ describe("screensaver lifecycle", () => {
     alert.remove();
   });
 
-  test("applies the backdrop color to the theme-color meta tag while asleep", () => {
+  test("adds a `theme-color` `<meta>` with the `--color-screensaver-backdrop` color on `sleep`, and removes it on `wake`", () => {
     document.documentElement.style.setProperty("--color-screensaver-backdrop", "#151a1d");
 
     expect(themeColors()).toHaveLength(0);

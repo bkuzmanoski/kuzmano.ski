@@ -7,7 +7,7 @@ describe("clamp", () => {
     expect(clamp(5, 0, 10)).toBe(5);
   });
 
-  test("holds a value at each end of the range", () => {
+  test("returns the nearest end of the range for a value outside it", () => {
     expect(clamp(-3, 0, 10)).toBe(0);
     expect(clamp(14, 0, 10)).toBe(10);
   });
@@ -16,7 +16,7 @@ describe("clamp", () => {
     expect(clamp(5, 2, 2)).toBe(2);
   });
 
-  test("settles on the floor when the ceiling falls below it", () => {
+  test("returns the floor when the ceiling is below it", () => {
     expect(clamp(5, 0, -40)).toBe(0);
     expect(clamp(-5, 0, -40)).toBe(0);
   });
@@ -33,17 +33,17 @@ describe("cycle", () => {
     expect(cycle(4, 0, -1)).toBe(3);
   });
 
-  test("an index of -1 steps to the first or the last entry", () => {
+  test("steps from an index of -1 to the first or the last entry", () => {
     expect(cycle(4, -1, 1)).toBe(0);
     expect(cycle(4, -1, -1)).toBe(3);
   });
 
-  test("a step from -1 reaches the only entry of a single-entry list", () => {
+  test("steps from an index of -1 to the only entry of a single-entry list", () => {
     expect(cycle(1, -1, 1)).toBe(0);
     expect(cycle(1, -1, -1)).toBe(0);
   });
 
-  test("an empty list has nowhere to step", () => {
+  test("returns 0 for an empty list", () => {
     expect(cycle(0, 0, 1)).toBe(0);
   });
 });

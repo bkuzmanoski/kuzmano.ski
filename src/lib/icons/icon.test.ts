@@ -37,7 +37,7 @@ describe("loadPositions", () => {
     expect(everyPositionIsValid(loadPositions(ICON_IDS, ICON_LAYOUT, STORAGE_KEY))).toBe(true);
   });
 
-  test("ignores a saved position that is unparseable", () => {
+  test("ignores saved positions that are not valid JSON", () => {
     localStorage.setItem(STORAGE_KEY, "not-json");
     expect(everyPositionIsValid(loadPositions(ICON_IDS, ICON_LAYOUT, STORAGE_KEY))).toBe(true);
   });

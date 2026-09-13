@@ -21,7 +21,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("the configured email address is published", async () => {
+test("`contactEmailAddress` returns the configured email address", async () => {
   await expect(contactEmailAddress()).resolves.toBe(ADDRESS);
   expect(console.error).not.toHaveBeenCalled();
 });
@@ -30,7 +30,7 @@ test.each([
   ["the secret is missing", () => (env.current = {})],
   ["the secret is empty", () => (env.current = { [CONTACT_EMAIL_ADDRESS_BINDING]: "" })],
   ["the environment is unreachable", () => (env.fails = true)],
-])("an email address is not published, and the missing binding is logged, when %s", async (_label, arrange) => {
+])("`contactEmailAddress` returns `null` and logs the missing binding when %s", async (_label, arrange) => {
   arrange();
 
   await expect(contactEmailAddress()).resolves.toBeNull();

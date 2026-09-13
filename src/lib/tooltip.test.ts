@@ -44,7 +44,7 @@ describe("the tooltip on screen", () => {
     expect(hideFirst).toHaveBeenCalledOnce();
   });
 
-  test("a tooltip registering again under its own ID stays on screen", () => {
+  test("a tooltip registering again under its own ID is not hidden", () => {
     const hideFirst = show("first");
 
     show("first");
@@ -61,8 +61,6 @@ describe("the tooltip on screen", () => {
     expect(hideFirst).not.toHaveBeenCalled();
   });
 
-  // A replaced tooltip unregisters as its effect is torn down, which happens
-  // after the tooltip that replaced it has already registered.
   test("a replaced tooltip cannot unregister its replacement", () => {
     show("first");
 
@@ -89,14 +87,13 @@ describe("deferred hides", () => {
     expect(hide).toHaveBeenCalledOnce();
   });
 
-  // Deferring both hides would leave two tooltips on screen at once.
   test("scheduling a second hide runs the first immediately", () => {
     const hideFirst = vi.fn();
 
     hideAfterDelay(hideFirst);
     hideAfterDelay(vi.fn());
 
-    expect(hideFirst).toHaveBeenCalledOnce();
+    expect(hideFirst).toHaveBeenCalledOnce(); // Deferring both hides would leave two tooltips on screen at once.
   });
 
   test("a hide that has already run is not repeated when its delay elapses", () => {
@@ -120,7 +117,7 @@ describe("the group grace period", () => {
   });
 
   test.each([
-    ["a control with no wrapper", () => null],
+    ["a control without a wrapper", () => null],
     ["a control in another group", () => createGroup().first],
   ])("%s is outside the grace period", (_label, wrapper) => {
     const { first } = createGroup();
@@ -172,7 +169,7 @@ describe("the group grace period", () => {
     expect(isGroupInGracePeriod(first)).toBe(true);
   });
 
-  test("hiding a tooltip that a later one replaced leaves the later tooltip's grace period running", () => {
+  test("hiding a tooltip that a later one replaced does not schedule the expiry of the grace period", () => {
     const { first, second } = createGroup();
 
     // The replacement registers before the tooltip it replaces hides, so the earlier hide must not

@@ -3,21 +3,21 @@ import { describe, expect, test } from "vitest";
 import { collectionRoute, entryRoute, isRootPath, pageRoute, parseContentPath } from "./paths.ts";
 
 describe("routes", () => {
-  test("a page is served at its slug", () => {
+  test("a page is routed at its slug", () => {
     expect(pageRoute("page")).toBe("/page");
   });
 
-  test("a collection entry is served under its collection", () => {
+  test("a collection entry is routed under its collection", () => {
     expect(entryRoute("collection", "entry")).toBe("/collection/entry");
   });
 
-  test("a collection is served at its segment", () => {
+  test("a collection is routed at its segment", () => {
     expect(collectionRoute("collection")).toBe("/collection");
   });
 });
 
 describe("isRootPath", () => {
-  test("a path with no segments is the root, however it is spelled", () => {
+  test("a path without segments is the root, however it is spelled", () => {
     expect(isRootPath("/")).toBe(true);
     expect(isRootPath("")).toBe(true);
     expect(isRootPath("//")).toBe(true);
@@ -29,7 +29,7 @@ describe("isRootPath", () => {
 });
 
 describe("parseContentPath", () => {
-  test("a one-segment path resolves to a segment with no slug", () => {
+  test("a one-segment path resolves to a segment without a slug", () => {
     expect(parseContentPath("/page")).toEqual({ segment: "page" });
   });
 
@@ -43,12 +43,12 @@ describe("parseContentPath", () => {
     expect(parseContentPath("collection/entry")).toEqual({ segment: "collection", slug: "entry" });
   });
 
-  test("the root path resolves to null", () => {
+  test("the root path resolves to `null`", () => {
     expect(parseContentPath("/")).toBeNull();
     expect(parseContentPath("")).toBeNull();
   });
 
-  test("a path deeper than a collection entry resolves to null", () => {
+  test("a path deeper than a collection entry resolves to `null`", () => {
     expect(parseContentPath("/collection/entry/deeper")).toBeNull();
   });
 });

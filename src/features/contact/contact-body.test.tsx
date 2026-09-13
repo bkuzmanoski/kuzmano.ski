@@ -113,7 +113,7 @@ async function submit() {
   await waitFor(() => expect(sendMessageCalls()).not.toHaveLength(0));
 }
 
-test("the copy to clipboard action uses the email address that was read", async () => {
+test("the copy button copies the email address that was read", async () => {
   const writeText = vi.fn<(value: string) => Promise<void>>().mockResolvedValue(undefined);
 
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
@@ -146,12 +146,12 @@ test("a window without a contact email address still sends messages", async () =
   expect(await screen.findByText("Message sent!")).toBeDefined();
 });
 
-test("the message field remains accessible without a visible label", () => {
+test("the message field is a `<textarea>` named by its label", () => {
   render(<ContactBody />);
   expect(input("Message:").tagName).toBe("TEXTAREA");
 });
 
-test("a key that can move the caret out of view prevents the scroll sound", () => {
+test("a scroll that follows a caret-moving key does not play the scroll sound", () => {
   render(<ContactBody />);
   const field = input("Message:");
 
@@ -195,7 +195,7 @@ test("dismissing a validation alert focuses the first invalid field", () => {
   expect(document.activeElement).toBe(input("Message:"));
 });
 
-test("dismissing a validation alert marks the invalid field and leaves the status silent", () => {
+test("dismissing a validation alert marks the invalid field with its field error and does not show the sending spinner", () => {
   render(<ContactBody />);
 
   fireEvent.click(button("Send"));
@@ -207,7 +207,7 @@ test("dismissing a validation alert marks the invalid field and leaves the statu
   expect(describedBy("From:")).toBe("Enter your email address.");
 });
 
-test("an invalid email is checked on blur and clears when corrected", () => {
+test("an invalid email address is marked with its field error on blur, which clears when the address is corrected", () => {
   render(<ContactBody />);
 
   fill("From:", "nope");
@@ -225,7 +225,7 @@ test("an invalid email is checked on blur and clears when corrected", () => {
   expect(describedBy("From:")).toBeNull();
 });
 
-test("the message counter appears as the message approaches the length limit", () => {
+test("the message character count appears once the remaining characters drop to the visibility threshold", () => {
   render(<ContactBody />);
 
   fill("Message:", "a".repeat(100));
@@ -351,7 +351,7 @@ test("a pending submission covers the form and announces its progress", async ()
   expect(input("Message:").closest("[inert]")).toBeNull();
 });
 
-test("cancelling during submission aborts the request and ignores its result", async () => {
+test("canceling during submission aborts the request and ignores its result", async () => {
   const { resolveRequest } = startPendingSubmission();
 
   await waitFor(() => expect(sendingSpinner()).not.toBeNull());
@@ -373,7 +373,7 @@ test("cancelling during submission aborts the request and ignores its result", a
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 
-test("discarding a written message asks for confirmation and preserves it when cancelled", () => {
+test("discarding a written message shows a confirmation alert and preserves the message when canceled", () => {
   render(<ContactBody />);
   compose();
 
@@ -400,7 +400,7 @@ test("confirming a discard closes the window", () => {
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 
-test("discarding an empty message closes the window without confirmation", () => {
+test("discarding an empty message closes the window without showing a confirmation alert", () => {
   render(<ContactBody />);
 
   fireEvent.click(button("Cancel"));
@@ -422,7 +422,7 @@ test("the close guard allows an empty form to close and blocks a form with conte
   expect(closeGuardRef.current?.()).toBe(true);
 });
 
-test("confirming a guarded close dismisses the window", () => {
+test("confirming a guarded close closes the window", () => {
   render(<ContactBody />);
   compose();
   act(() => {

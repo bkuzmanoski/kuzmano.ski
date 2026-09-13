@@ -10,18 +10,17 @@ beforeEach(() => {
 });
 
 describe("error and success", () => {
-  // Each call schedules the sound again; caching the rendered buffer does not cache playback.
   test.each([
     ["playError", playError],
     ["playSuccess", playSuccess],
-  ])("%s schedules a sound each time it is called", (_name, play) => {
+  ])("%s plays its sound each time it is called", (_name, play) => {
     play();
     play();
 
-    expect(playSound).toHaveBeenCalledTimes(2);
+    expect(playSound).toHaveBeenCalledTimes(2); // Each call schedules the sound again; caching the rendered buffer does not cache playback.
   });
 
-  test("both play through the sound gate", () => {
+  test("both play their sounds through the audio context", () => {
     playError();
     playSuccess();
 

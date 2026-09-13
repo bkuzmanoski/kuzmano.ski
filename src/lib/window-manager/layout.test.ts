@@ -58,7 +58,7 @@ describe("createWindowPlacer", () => {
     });
   });
 
-  test("resizes a window to zero dimensions on a desktop with no room to place it", () => {
+  test("resizes a window to zero dimensions on a desktop without room inside the padding", () => {
     const placedRect = placeWindow(windowRect, { width: WINDOW_LAYOUT.padding, height: WINDOW_LAYOUT.padding });
     expect(placedRect).toEqual({ x: WINDOW_LAYOUT.padding, y: WINDOW_LAYOUT.padding, width: 0, height: 0 });
   });

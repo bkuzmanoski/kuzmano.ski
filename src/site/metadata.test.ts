@@ -25,12 +25,12 @@ test("a document the site publishes does not emit a robots tag", () => {
   expect(robotsTagOf({ ...DOCUMENT, noindex: false })).toBeUndefined();
 });
 
-test("a document marked noindex keeps its canonical URL", () => {
+test("a document marked noindex still emits its canonical URL", () => {
   const { links } = documentHead({ ...DOCUMENT, noindex: true });
   expect(links).toContainEqual({ rel: "canonical", href: canonicalUrl(DOCUMENT.path) });
 });
 
-test("an entry with a cover image emits it as the Open Graph image, with its dimensions", () => {
+test("a document with a cover image emits it as the Open Graph image, with its dimensions", () => {
   const coverImage = fakeCoverImage("entry");
   const document = { ...DOCUMENT, coverImage };
 
@@ -39,7 +39,7 @@ test("an entry with a cover image emits it as the Open Graph image, with its dim
   expect(propertyContentsOf(document, "og:image:height")).toEqual(["512"]);
 });
 
-test("an entry with no cover image emits the site image, without dimensions", () => {
+test("a document without a cover image emits the site image, without dimensions", () => {
   expect(propertyContentsOf(DOCUMENT, "og:image")).toEqual([canonicalUrl(SOCIAL_IMAGE)]);
   expect(propertyContentsOf(DOCUMENT, "og:image:width")).toEqual([]);
   expect(propertyContentsOf(DOCUMENT, "og:image:height")).toEqual([]);

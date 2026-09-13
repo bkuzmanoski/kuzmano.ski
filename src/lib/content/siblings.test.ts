@@ -24,7 +24,7 @@ test("an entry the listing does not contain has no siblings", () => {
   expect(entrySiblings(collection, "not-in-the-listing")).toEqual({ previous: null, next: null });
 });
 
-test("a collection of one entry has no siblings", () => {
+test("the only entry in a collection has no siblings", () => {
   const single = fakeCollection([collectionEntries[0]!]);
   expect(entrySiblings(single, "newest")).toEqual({ previous: null, next: null });
 });

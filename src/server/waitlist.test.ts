@@ -118,7 +118,7 @@ test.each([
   [401, "unavailable"],
   [404, "unavailable"],
   [500, "unavailable"],
-])("a %i response from Notion produces %s", async (status, result) => {
+])("a %i response from Notion produces `%s`", async (status, result) => {
   fetchMock.mockReset();
   respondToLookup([]);
   respondToWrite(status);
@@ -127,7 +127,7 @@ test.each([
   expect(console.error).toHaveBeenCalled();
 });
 
-test("a write that throws responds with unavailable", async () => {
+test("a write that throws produces `unavailable`", async () => {
   fetchMock.mockReset();
   respondToLookup([]);
   fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"));
@@ -146,7 +146,7 @@ test.each([
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ binding }));
 });
 
-test("an unreachable Workers environment responds with unavailable", async () => {
+test("an unreachable Workers environment produces `unavailable` without a request to Notion", async () => {
   env.fails = true;
 
   await expect(recordMembership(MEMBERSHIP)).resolves.toBe("unavailable");

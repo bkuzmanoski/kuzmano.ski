@@ -92,7 +92,7 @@ describe("encodeImageDerivative", () => {
     await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 10, height: 5 });
   });
 
-  test("keeps an image narrower than the derivative's width at its own size", async () => {
+  test("preserves the size of an image narrower than the derivative's width", async () => {
     const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", width: 80 });
     await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 40, height: 20 });
   });

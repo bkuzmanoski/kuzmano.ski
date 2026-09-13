@@ -50,7 +50,7 @@ describe("playScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays a detent after a full notch of travel", () => {
+  test("plays a detent once the element has scrolled `DETENT_PX`", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
@@ -59,7 +59,7 @@ describe("playScroll", () => {
     expect(detents()).toBe(1);
   });
 
-  test("stays silent until another full notch has been travelled", () => {
+  test("does not play another detent until the element has scrolled another `DETENT_PX`", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
@@ -70,7 +70,7 @@ describe("playScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays one detent per notch of travel, not one per event", () => {
+  test("plays one detent per `DETENT_PX` scrolled, not one per scroll event", () => {
     const element = fakeScrollViewport();
     const move = DETENT_PX / 4; // Four events to the notch, so one per event would play eight.
 
@@ -80,10 +80,10 @@ describe("playScroll", () => {
       scrollTo(element, move * event);
     }
 
-    expect(detents()).toBe(3); // The notch the gesture opens with, then one for each travelled.
+    expect(detents()).toBe(3); // The notch the gesture opens with, then one for each traveled.
   });
 
-  test("starts a new gesture after a long pause", () => {
+  test("starts a new gesture after a pause longer than `IDLE_DURATION_MS`", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
@@ -102,7 +102,7 @@ describe("playScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("reports faster travel at a higher speed", () => {
+  test("plays a detent at a higher speed for faster scrolling", () => {
     const slowViewport = fakeScrollViewport();
     const fastViewport = fakeScrollViewport();
 
@@ -177,9 +177,7 @@ describe("recordScrollIntoView", () => {
 });
 
 describe("silenceScrollIntoView", () => {
-  // Safari animates the scroll that reveals a focused element, so it arrives afterwards as a
-  // run of scroll events rather than as one move that could have been recorded beforehand.
-  test("silences a scrolling ancestor for as long as the scroll it causes is still running", () => {
+  test("silences a scrolling ancestor while its scroll events arrive within `IDLE_DURATION_MS` of each other", () => {
     const parent = fakeScrollViewport();
     const child = fakeScrollViewport();
 
@@ -192,10 +190,12 @@ describe("silenceScrollIntoView", () => {
       scrollTo(parent, DETENT_PX * frame);
     }
 
+    // Safari animates the scroll that reveals a focused element, so it arrives afterwards as a
+    // run of scroll events rather than as one move that could have been recorded beforehand.
     expect(detents()).toBe(0);
   });
 
-  test("resumes the ancestor's scroll sounds after its scroll has settled", () => {
+  test("resumes the ancestor's scroll sounds after a pause longer than `IDLE_DURATION_MS`", () => {
     const parent = fakeScrollViewport();
     const child = fakeScrollViewport();
 
@@ -214,7 +214,7 @@ describe("silenceScrollIntoView", () => {
 });
 
 describe("stepScroll", () => {
-  test("scrolls by the step and plays a detent", () => {
+  test("scrolls by the step, plays a detent, and returns `true`", () => {
     const element = fakeScrollViewport();
 
     expect(stepScroll(element, 40)).toBe(true);
@@ -222,7 +222,8 @@ describe("stepScroll", () => {
     expect(detents()).toBe(1);
   });
 
-  test("scrolls instantly, so the move is complete before the result is read", () => {
+  test("scrolls instantly", () => {
+    // The step completes before its result is read.
     const element = fakeScrollViewport();
     const scrollBy = vi.spyOn(element, "scrollBy");
 
@@ -231,7 +232,7 @@ describe("stepScroll", () => {
     expect(scrollBy).toHaveBeenCalledWith({ top: 40, behavior: "instant" });
   });
 
-  test("reports a step that cannot move the viewport and stays silent", () => {
+  test("returns `false` and does not play a detent for a step that cannot move the viewport", () => {
     const element = fakeScrollViewport();
 
     expect(stepScroll(element, -40)).toBe(false);
@@ -258,7 +259,8 @@ describe("scrollIntoViewSilently", () => {
     return { item, scrollIntoView };
   }
 
-  test("scrolls instantly, so the jump cannot arrive as a stream of scroll events", () => {
+  test("scrolls instantly", () => {
+    // A smooth scroll would arrive as a stream of scroll events after the one that is silenced.
     const { item, scrollIntoView } = fakeItem(fakeScrollViewport());
 
     scrollIntoViewSilently(item);
@@ -266,7 +268,7 @@ describe("scrollIntoViewSilently", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest", behavior: "instant" });
   });
 
-  test("keeps the caller's alignment but never its behaviour", () => {
+  test("preserves the caller's alignment and still scrolls instantly", () => {
     const { item, scrollIntoView } = fakeItem(fakeScrollViewport());
 
     scrollIntoViewSilently(item, { block: "start" });
@@ -274,7 +276,7 @@ describe("scrollIntoViewSilently", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "instant" });
   });
 
-  test("records the scroll it causes so the viewport does not play a detent for it", () => {
+  test("ignores the scroll it causes", () => {
     const viewport = fakeScrollViewport();
     const { item, scrollIntoView } = fakeItem(viewport);
 
@@ -291,7 +293,7 @@ describe("scrollIntoViewSilently", () => {
 });
 
 describe("playScrollStep", () => {
-  test("plays a detent and ignores the scroll it causes", () => {
+  test("plays a detent and ignores a later scroll event at the same position", () => {
     const element = fakeScrollViewport();
 
     playScroll(element);
@@ -342,7 +344,7 @@ describe("playPaneScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays the next scroll using the viewport height after a resize", () => {
+  test("plays a detent for the scroll after the one a resize causes", () => {
     const element = fakeScrollViewport();
 
     playPaneScroll(element);
@@ -381,7 +383,7 @@ describe("playInputScroll", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays the next scroll using the field height after an edit", () => {
+  test("plays a detent for the scroll after the one an edit causes", () => {
     const element = fakeScrollViewport();
 
     playInputScroll(element);

@@ -30,7 +30,7 @@ test("each generated icon represented by the manifest is listed with its file na
   ]);
 });
 
-test("apple-touch-icon.png is generated, and omitted from the icons array", () => {
+test("`apple-touch-icon.png` is generated, and omitted from the `icons` array", () => {
   expect(icons.map(({ fileName }) => fileName)).toContain("apple-touch-icon.png");
   expect(manifest.icons.map(({ src }) => src)).not.toContain("apple-touch-icon.png");
 });

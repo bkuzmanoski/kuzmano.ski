@@ -8,12 +8,13 @@ import { documentTitle } from "#/site/metadata.ts";
 import { verifyPrerenderedDocument } from "./verify.ts";
 
 // The parts of a prerendered document that the verifier checks, with `body` as the window content.
-const pageHtml = (body: string) =>
-  [
-    `<title>${documentTitle("Collection")}</title>`,
-    '<nav aria-label="Main menu"></nav>',
-    `<section aria-labelledby="window-title"><header><span id="window-title">Collection</span></header><div id="window-content">${body}</div></section>`,
-  ].join("");
+const pageHtml = (body: string) => `<title>${documentTitle("Collection")}</title>
+<nav aria-label="Main menu"></nav>
+<section aria-labelledby="window-title">
+  <header><span id="window-title">Collection</span></header>
+  <div id="window-content">${body}</div>
+</section>
+`;
 
 const verify =
   (html: string, path = "/collection") =>
@@ -21,53 +22,56 @@ const verify =
     verifyPrerenderedDocument({ page: { path }, html });
 
 describe("verifyPrerenderedDocument", () => {
-  test("fails when the menu bar is missing", () => {
+  test("throws when the menu bar is missing", () => {
     const html = pageHtml("<p>Menu Bar</p>").replace('aria-label="Main menu"', "");
     expect(verify(html)).toThrow(/menu bar is missing/);
   });
 
-  test("passes when a document rendered its content", () => {
+  test("accepts a document that rendered its content", () => {
     expect(verify(pageHtml("<p>Content</p>"))).not.toThrow();
   });
 
-  test("fails when the window title does not match the document", () => {
+  test("throws when the window title does not match the document title", () => {
     const html = pageHtml("<p>Content</p>").replace(">Collection<", ">Something else<");
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 
-  test("fails when the element labelling the window is missing", () => {
+  test("throws when the element labeling the window is missing", () => {
     const html = pageHtml("<p>Content</p>").replace('<header><span id="window-title">Collection</span></header>', "");
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 
-  test("fails when the window body is empty", () => {
+  test("throws when the window body is empty", () => {
     expect(verify(pageHtml(""))).toThrow(/window body is empty/);
   });
 
-  test("the loading indicator has the prerender marker", () => {
+  test("`Spinner` renders the `data-loading-indicator` attribute", () => {
     const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(loadingIndicator).toContain("data-loading-indicator");
   });
 
-  test("fails when a loading indicator remains in the window body", () => {
+  test("throws when a loading indicator remains in the window body", () => {
     const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);
   });
 
-  test("passes when other live regions are present", () => {
+  test("accepts a live region in the window body that is not a loading indicator", () => {
     expect(verify(pageHtml('<p>test@example.com</p><span role="status">Copied</span>'))).not.toThrow();
   });
 
-  test("passes when the document and window titles write the same characters with different escape sequences", () => {
-    const html = [
-      `<title>${documentTitle("Q&amp;A&#x27;s")}</title>`,
-      '<nav aria-label="Main menu"></nav>',
-      '<section aria-labelledby="window-title"><header><span id="window-title">Q&#38;A\'s</span></header><div id="window-content"><p>Content</p></div></section>',
-    ].join("");
+  test("accepts document and window titles that encode the same characters with different escape sequences", () => {
+    const html = `
+      <title>${documentTitle("Q&amp;A&#x27;s")}</title>
+      <nav aria-label="Main menu"></nav>
+      <section aria-labelledby="window-title">
+        <header><span id="window-title">Q&#38;A's</span></header>
+        <div id="window-content"><p>Content</p></div>
+      </section>
+    `;
     expect(verify(html, "/q-and-a")).not.toThrow();
   });
 
-  test("passes when the document has no open windows", () => {
+  test("accepts a document at the root path without open windows", () => {
     expect(verify('<nav aria-label="Main menu"></nav>', "/")).not.toThrow();
   });
 });

@@ -49,7 +49,7 @@ test("a field's error is withheld until the field has been visited", () => {
   expect(formHarness.form.visibleErrors).toEqual({ name: "Enter a name." });
 });
 
-test("revealing errors shows all errors at once and reports them to the caller", () => {
+test("revealing errors makes every error visible at once and returns them", () => {
   const formHarness = renderForm();
 
   let reportedErrors: unknown;
@@ -62,7 +62,7 @@ test("revealing errors shows all errors at once and reports them to the caller",
   expect(formHarness.form.visibleErrors).toEqual({ name: "Enter a name.", emailAddress: "Enter an email address." });
 });
 
-test("a submission with no errors reports null", () => {
+test("revealing errors returns `null` when every field is valid, and `isValid` is `true`", () => {
   const formHarness = renderForm();
 
   act(() => {
@@ -80,7 +80,7 @@ test("a submission with no errors reports null", () => {
   expect(formHarness.form.isValid).toBe(true);
 });
 
-test("an error is cleared as soon as the value stops failing, with no second submission", () => {
+test("a visible error updates as the value changes and is cleared once the value is valid, without a second submission", () => {
   const formHarness = renderForm();
 
   act(() => {
@@ -101,7 +101,7 @@ test("an error is cleared as soon as the value stops failing, with no second sub
   expect(formHarness.form.visibleErrors.emailAddress).toBeUndefined();
 });
 
-test("`isDirty` tracks whether anything has been entered, and a reset clears the form", () => {
+test("`isDirty` becomes `true` when a value is entered, and `reset` restores the initial values and hides errors", () => {
   const formHarness = renderForm();
 
   expect(formHarness.form.isDirty).toBe(false);
@@ -150,7 +150,7 @@ test("a change handler writes to its own field", () => {
   expect(formHarness.form.values).toEqual({ name: "A name", emailAddress: "" });
 });
 
-test("an unedited form does not show errors but is still invalid", () => {
+test("a new form has no visible errors, but `isValid` is `false`", () => {
   const formHarness = renderForm();
 
   expect(formHarness.form.visibleErrors).toEqual({});

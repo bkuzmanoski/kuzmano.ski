@@ -25,14 +25,14 @@ const darkValueOf = async (value: string, otherProperties: Record<string, string
   (await paletteFrom(stylesheet({ ...otherProperties, "--color-foreground": value }))).foreground.dark;
 
 describe("paletteFrom", () => {
-  test("reads a hex literal into both schemes", async () => {
+  test("resolves a hex literal to the same lowercase hex literal in both schemes", async () => {
     const palette = await paletteFrom(stylesheet({ "--color-foreground": "#AABBCC" }));
 
     expect(palette.foreground.light).toBe("#aabbcc");
     expect(palette.foreground.dark).toBe("#aabbcc");
   });
 
-  test("expands a three digit hex literal", async () => {
+  test("expands a three-digit hex literal", async () => {
     await expect(lightValueOf("#abc")).resolves.toBe("#aabbcc");
   });
 
@@ -40,7 +40,7 @@ describe("paletteFrom", () => {
     await expect(lightValueOf("#aabbccdd")).resolves.toBe("#aabbcc");
   });
 
-  test("reads every property the palette needs", async () => {
+  test("resolves every property the palette needs", async () => {
     const palette = await paletteFrom(
       stylesheet({
         "--color-foreground": "light-dark(#111111, #222222)",
@@ -102,11 +102,11 @@ describe("var()", () => {
     await expect(lightValueOf("oklch(from var(--accent) l c h)", { "--accent": "#1e90ff" })).resolves.toBe("#1e90ff");
   });
 
-  test("prefers a declared value over the fallback", async () => {
+  test("resolves to the declared value rather than the fallback when the property is declared", async () => {
     await expect(lightValueOf("var(--accent, #000000)", { "--accent": "#ff0000" })).resolves.toBe("#ff0000");
   });
 
-  test("falls back when the property is not declared", async () => {
+  test("resolves to the fallback when the property is not declared", async () => {
     await expect(lightValueOf("var(--missing, #0000ff)")).resolves.toBe("#0000ff");
   });
 
@@ -119,7 +119,7 @@ describe("var()", () => {
     await expect(lightValueOf("var(--empty)", { "--empty": "" })).rejects.toThrow("`--empty` is not declared");
   });
 
-  test("throws on a cycle, naming the trail", async () => {
+  test("throws when custom properties reference each other in a cycle, naming each property in the cycle", async () => {
     await expect(lightValueOf("var(--a)", { "--a": "var(--b)", "--b": "var(--a)" })).rejects.toThrow(
       /cycle.*--a.*--b.*--a/s,
     );
@@ -153,12 +153,12 @@ describe("color notations", () => {
     await expect(lightValueOf("oklch(70% 0.35 150deg)")).resolves.toBe("#00be58");
   });
 
-  test("throws on a notation the color plugins leave as written", async () => {
+  test("throws when the color plugins do not convert a notation", async () => {
     await expect(lightValueOf("hsl(0 100% 50%)")).rejects.toThrow("Cannot resolve `hsl(0 100% 50%)`");
     await expect(lightValueOf("rebeccapurple")).rejects.toThrow("Cannot resolve `rebeccapurple`");
   });
 
-  test("throws on a value that does not compute to a color", async () => {
+  test("throws when a value does not compute to a color", async () => {
     await expect(lightValueOf("not-a-color(1)")).rejects.toThrow("Cannot resolve");
     await expect(lightValueOf("var(--a) var(--b)", { "--a": "#ffffff", "--b": "#000000" })).rejects.toThrow(
       "Cannot resolve",
@@ -167,13 +167,13 @@ describe("color notations", () => {
 });
 
 describe("rgb()", () => {
-  test("reads the three channels and drops the alpha channel", async () => {
+  test("resolves the three channels and omits the alpha channel", async () => {
     await expect(lightValueOf("rgb(1 2 3)")).resolves.toBe("#010203");
     await expect(lightValueOf("rgba(1, 2, 3, 0.5)")).resolves.toBe("#010203");
     await expect(lightValueOf("rgb(1 2 3 / 50%)")).resolves.toBe("#010203");
   });
 
-  test("reads a percentage channel as its share of 255", async () => {
+  test("resolves a percentage channel to its share of 255", async () => {
     await expect(lightValueOf("rgb(100% 0% 50%)")).resolves.toBe("#ff0080");
   });
 
@@ -192,7 +192,7 @@ describe("rgb()", () => {
 });
 
 describe("readPalette", () => {
-  test("resolves every color in the site stylesheet to a canonical hex literal", async () => {
+  test("resolves every color in the site stylesheet to a six-digit lowercase hex literal", async () => {
     const palette = await readPalette();
 
     expect(Object.keys(palette)).toHaveLength(4);

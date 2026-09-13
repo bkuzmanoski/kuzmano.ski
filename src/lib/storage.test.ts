@@ -21,7 +21,7 @@ describe("readStored", () => {
     expect(readStored("theme")).toBe("dark");
   });
 
-  test("returns null when reading throws", () => {
+  test("returns `null` when reading throws", () => {
     stubStorageThrowing(PRIVATE_MODE_ERROR);
     expect(readStored("theme")).toBeNull();
   });
@@ -33,16 +33,16 @@ describe("readStoredJson", () => {
     expect(readStoredJson("icon-positions")).toEqual({ first: { top: 8, right: 16 } });
   });
 
-  test("returns null for a key that has never been written", () => {
+  test("returns `null` for a key that has never been written", () => {
     expect(readStoredJson("icon-positions")).toBeNull();
   });
 
-  test("returns null for a stored value that is not valid JSON", () => {
+  test("returns `null` for a stored value that is not valid JSON", () => {
     localStorage.setItem("icon-positions", "{ truncated");
     expect(readStoredJson("icon-positions")).toBeNull();
   });
 
-  test("returns null when reading throws", () => {
+  test("returns `null` when reading throws", () => {
     stubStorageThrowing(PRIVATE_MODE_ERROR);
     expect(readStoredJson("icon-positions")).toBeNull();
   });

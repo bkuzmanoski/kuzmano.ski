@@ -32,7 +32,7 @@ const lastEntryIndex = collectionEntries.length - 1;
 const routeOf = (index: number) => collection.routeOf(collectionEntries[index]!.slug);
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 
-test("the toolbar reports the entry's date", () => {
+test("the toolbar renders the entry's date with its `datetime` attribute", () => {
   const entry = collectionEntries[1]!;
 
   render(<WindowToolbar route={routeOf(1)} />);

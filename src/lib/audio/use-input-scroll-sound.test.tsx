@@ -28,7 +28,7 @@ beforeEach(() => {
   silenceScrollAt.mockClear();
 });
 
-test("a scroll without a preceding key press plays the ordinary scroll sound", () => {
+test("a scroll without a preceding key press plays the scroll sound", () => {
   const input = renderInput();
 
   fireEvent.scroll(input);
@@ -38,7 +38,7 @@ test("a scroll without a preceding key press plays the ordinary scroll sound", (
 });
 
 test.each(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"])(
-  "the scroll %s causes to keep the caret in view is silenced",
+  "a scroll that follows a %s key press does not play the scroll sound",
   (key) => {
     const input = renderInput();
 
@@ -50,7 +50,7 @@ test.each(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "Pa
   },
 );
 
-test("a key press that cannot move the caret out of view does not mark the next scroll", () => {
+test("a scroll that follows a key press that cannot move the caret out of view plays the scroll sound", () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "a" });
@@ -60,7 +60,7 @@ test("a key press that cannot move the caret out of view does not mark the next 
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test("a key press only silences the first scroll, not subsequent ones", () => {
+test("a key press silences only the first scroll that follows it", () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -71,7 +71,7 @@ test("a key press only silences the first scroll, not subsequent ones", () => {
   expect(playInputScroll).toHaveBeenCalledTimes(1);
 });
 
-test("a key press that does not cause scrolling clears its mark on the next frame", async () => {
+test("a scroll a frame after a key press plays the scroll sound", async () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -82,7 +82,7 @@ test("a key press that does not cause scrolling clears its mark on the next fram
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test("a held key press keeps its mark alive across repeats", async () => {
+test("a scroll that follows a repeated key press does not play the scroll sound, even a frame after the previous repeat", async () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "ArrowDown", repeat: true });
@@ -94,7 +94,7 @@ test("a held key press keeps its mark alive across repeats", async () => {
   expect(playInputScroll).not.toHaveBeenCalled();
 });
 
-test("an input that unmounts before its scroll mark is cleared cancels the pending frame", () => {
+test("unmounting before the scroll mark is cleared cancels the pending frame", () => {
   const cancelAnimationFrame = vi.spyOn(globalThis, "cancelAnimationFrame");
   const { unmount } = render(<Input />);
 

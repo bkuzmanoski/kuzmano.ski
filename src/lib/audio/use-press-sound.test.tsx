@@ -48,7 +48,7 @@ test("a keyboard activation does not play a sound", () => {
   expect(playClick).not.toHaveBeenCalled();
 });
 
-test("a cancelled pointer down event lets the next pointer click event play a sound", () => {
+test("a canceled pointer down event lets the next pointer click event play a sound", () => {
   const control = renderControl();
 
   fireEvent.pointerDown(control);
@@ -67,7 +67,7 @@ test("a non-primary press does not play a sound", () => {
   expect(playClick).not.toHaveBeenCalled();
 });
 
-test("a scroll-safe control defers a touch press until release", () => {
+test("a scroll-safe control plays a sound for a touch press on pointer up", () => {
   const control = renderControl({ scrollSafe: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -80,7 +80,7 @@ test("a scroll-safe control defers a touch press until release", () => {
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a scroll-safe control does not play a touch press that becomes a scroll", () => {
+test("a scroll-safe control does not play a sound for a canceled touch press", () => {
   const control = renderControl({ scrollSafe: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });

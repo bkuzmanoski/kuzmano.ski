@@ -19,14 +19,14 @@ beforeEach(() => {
   env.current = { [SEND_EMAIL_RATELIMIT_BINDING]: { limit: rateLimit } };
 });
 
-test("the budget is counted against the sender's key", async () => {
+test("the sender's key is counted against the binding's budget", async () => {
   rateLimit.mockResolvedValue({ success: true });
 
   await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
   expect(rateLimit).toHaveBeenCalledWith({ key: "203.0.113.1" });
 });
 
-test("a key over its budget is refused", async () => {
+test("a key over its budget is outside the rate limit", async () => {
   rateLimit.mockResolvedValue({ success: false });
   await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(false);
 });
@@ -42,7 +42,7 @@ test.each([
   ["there is no binding", () => (env.current = {})],
   ["the environment is unreachable", () => (env.fails = true)],
   ["the binding itself throws", () => rateLimit.mockRejectedValue(new Error("Unavailable."))],
-])("a request passes when %s", async (_label, arrange) => {
+])("a key is within the rate limit when %s", async (_label, arrange) => {
   arrange();
   await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
 });

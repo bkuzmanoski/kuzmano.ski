@@ -79,39 +79,39 @@ describe("resolveWindow", () => {
     expect(resolveWindow("/collection")).toMatchObject({ id: "collection" });
   });
 
-  test("a route that opens no window resolves to null", () => {
+  test("a route that does not open a window resolves to `null`", () => {
     expect(resolveWindow("/")).toBeNull();
     expect(resolveWindow("/nonexistent-page")).toBeNull();
   });
 });
 
 describe("isDestinationOpen", () => {
-  test("a window open at a destination reports it open", () => {
+  test("a destination is open when a window is open at its route", () => {
     expect(isDestinationOpen("/page", ["/page"])).toBe(true);
     expect(isDestinationOpen("/collection", ["/collection"])).toBe(true);
     expect(isDestinationOpen("/contact", ["/contact"])).toBe(true);
   });
 
-  test("a collection window reports its collection open however the route spells it", () => {
+  test("a collection destination is open when its window's route has a trailing slash", () => {
     expect(isDestinationOpen("/collection", ["/collection/"])).toBe(true);
   });
 
-  test("an open collection entry leaves its parent collection closed", () => {
+  test("a collection destination is closed when only one of its entries is open", () => {
     expect(isDestinationOpen("/collection", [`/collection/${collectionEntry.slug}`])).toBe(false);
   });
 
-  test("every open window is checked for the destination", () => {
+  test("a destination is open when any of several open windows is at its route", () => {
     expect(isDestinationOpen("/collection", ["/page", `/collection/${collectionEntry.slug}`, "/collection"])).toBe(
       true,
     );
   });
 
-  test("a route that opens no window leaves its destination closed", () => {
+  test("a destination is closed when an open route does not open a window", () => {
     expect(isDestinationOpen("/nonexistent-page", ["/nonexistent-page"])).toBe(false);
     expect(isDestinationOpen("/collection", ["/", "/collection/does-not-exist"])).toBe(false);
   });
 
-  test("a desktop with no open windows leaves every destination closed", () => {
+  test("a destination is closed when there are no open windows", () => {
     expect(isDestinationOpen("/collection", [])).toBe(false);
   });
 });

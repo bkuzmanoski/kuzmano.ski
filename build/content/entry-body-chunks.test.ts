@@ -30,15 +30,15 @@ test("a module ID that is not an `.mdx` file exactly two levels below the conten
   expect(entryKeyOf(null)).toBeNull();
 });
 
-test("every `.mdx` file in the listing is keyed, and no other file in it is", () => {
+test("the entry keys of a listing are the keys of its `.mdx` files, in listing order", () => {
   expect(entryKeysIn(CONTENT_LISTING)).toEqual(["collection/entry-1", "collection/entry-2", "_pages/page"]);
 });
 
-test("chunks matching the entries on disk are not reported", () => {
+test("chunks matching the entries on disk are accepted", () => {
   expect(entryChunkDriftBetween(entryKeysIn(CONTENT_LISTING), entryKeysIn(CONTENT_LISTING))).toEqual([]);
 });
 
-test("an entry the build produced no chunk for is reported, by key", () => {
+test("an entry the build did not produce a chunk for is reported, by key", () => {
   expect(entryChunkDriftBetween(["collection/entry-1"], ["collection/entry-1", "_pages/page"])).toEqual([
     "no chunk was produced for _pages/page",
   ]);
@@ -53,7 +53,7 @@ test("a chunk keyed by something that is not an entry is reported, by key", () =
   );
 });
 
-test("the virtual entry body chunk module is empty outside the SSR build and ignores unrelated modules", () => {
+test("the entry body chunks plugin exports an empty map outside the SSR build, and loads only its virtual module", () => {
   const [, provider] = entryBodyChunksPlugin();
 
   const load = provider!.load as (this: unknown, id: string) => string | null;

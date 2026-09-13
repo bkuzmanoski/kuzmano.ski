@@ -9,7 +9,7 @@ describe("articleContentOf", () => {
     expect(articleContentOf(articleDocument("<p>A body.</p>"), ENTRY_URL)).toBe("<p>A body.</p>");
   });
 
-  test("resolves links and images against the entry", () => {
+  test("resolves the URLs of links and images against the entry's URL", () => {
     const body = articleContentOf(
       articleDocument('<a href="/collection">Link 1</a><img src="/image.png"><a href="#section">Link 2</a>'),
       ENTRY_URL,
@@ -20,7 +20,7 @@ describe("articleContentOf", () => {
     expect(body).toContain(`href="${ENTRY_URL}#section"`);
   });
 
-  test("omits the classes and inline styles the document renders with", () => {
+  test("omits the `class` and `style` attributes", () => {
     const body = articleContentOf(articleDocument('<p class="_p_1a2b" style="color:var(--x)">A body.</p>'), ENTRY_URL);
     expect(body).toBe("<p>A body.</p>");
   });
@@ -33,7 +33,7 @@ describe("articleContentOf", () => {
     expect(body).toBe("<p>A body.</p>");
   });
 
-  test("removes scripts and style elements", () => {
+  test("removes every `<script>` and `<style>`", () => {
     const body = articleContentOf(
       articleDocument("<style>p{color:red}</style><script>alert(1);</script><p>A body.</p>"),
       ENTRY_URL,
@@ -47,12 +47,12 @@ describe("articleContentOf", () => {
     expect(articleContentOf(articleDocument(heading), ENTRY_URL)).toBe('<h2 id="section">A Heading</h2>');
   });
 
-  test("removes anything a component has marked as UI", () => {
+  test("removes an element that has a `data-feed-omit` attribute", () => {
     const body = articleContentOf(articleDocument("<p>A body.</p><div data-feed-omit><p>UI</p></div>"), ENTRY_URL);
     expect(body).toBe("<p>A body.</p>");
   });
 
-  test("replaces an element with a paragraph containing text supplied by the component", () => {
+  test("replaces an element that has a `data-feed-text` attribute with a paragraph containing the attribute's value", () => {
     const body = articleContentOf(
       articleDocument(
         `<p>A body.</p><aside data-feed-text="Join the waitlist at ${ENTRY_URL}"><form><input></form></aside>`,
@@ -63,13 +63,13 @@ describe("articleContentOf", () => {
     expect(body).toBe(`<p>A body.</p><p>Join the waitlist at ${ENTRY_URL}</p>`);
   });
 
-  test("unwraps the spans left bare by sanitizing, keeping a code block's shape", () => {
+  test("unwraps every `<span>` left without attributes by sanitizing, preserving a code block's line breaks", () => {
     const code =
       '<pre><code><span class="line"><span style="color:red">token</span></span>\n<span class="line"></span>\ntoken</code></pre>';
     expect(articleContentOf(articleDocument(code), ENTRY_URL)).toBe("<pre><code>token\n\ntoken</code></pre>");
   });
 
-  test("resolves a srcset's candidates, keeping their descriptors", () => {
+  test("resolves the candidate URLs in a `srcset` attribute, preserving their descriptors", () => {
     const body = articleContentOf(
       articleDocument(
         '<picture><source srcset="/image-1.avif 1x, /image-2.avif 2x"><img src="/image-1.png" alt="A"></picture>',
@@ -81,7 +81,7 @@ describe("articleContentOf", () => {
     expect(body).toContain('src="https://kuzmano.ski/image-1.png"');
   });
 
-  test("keeps a video embed, resolving the poster it is shown behind", () => {
+  test("preserves a `<video>`, resolving its `src` and `poster` attributes", () => {
     const body = articleContentOf(
       articleDocument('<video src="/video.mp4" poster="/video-poster.png" controls></video>'),
       ENTRY_URL,
@@ -91,12 +91,12 @@ describe("articleContentOf", () => {
     expect(body).toContain('poster="https://kuzmano.ski/video-poster.png"');
   });
 
-  test("unwraps the layout a component wraps its content in", () => {
+  test("unwraps a `<div>` left without attributes by sanitizing", () => {
     const body = articleContentOf(articleDocument('<div class="_container_1a2b"><p>A body.</p></div>'), ENTRY_URL);
     expect(body).toBe("<p>A body.</p>");
   });
 
-  test("throws when the document does not contain exactly one article", () => {
+  test("throws when the document does not contain exactly one `<article>`", () => {
     expect(() => articleContentOf("<html><body></body></html>", ENTRY_URL)).toThrow("found 0");
     expect(() =>
       articleContentOf(articleDocument("<p>Paragraph 1.</p>") + articleDocument("<p>Paragraph 2.</p>"), ENTRY_URL),

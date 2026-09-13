@@ -63,13 +63,13 @@ beforeEach(() => {
   playHover.mockClear();
 });
 
-test("the active entry is brought into view on mount, and the scroll is silent", () => {
+test("the active item is scrolled into view silently on mount", () => {
   const { links } = renderList({ count: 3, activeIndex: 1 });
 
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
 
-test("an arrow key focuses the next item without the browser's own scroll, then brings it into view", () => {
+test("a Down arrow key press focuses the next item without a native focus scroll, scrolls it into view silently, and plays the hover sound", () => {
   const { links } = renderList({ count: 3, activeIndex: 0 });
   const focus = vi.spyOn(links[1]!, "focus");
 
@@ -83,7 +83,7 @@ test("an arrow key focuses the next item without the browser's own scroll, then 
   expect(playHover).toHaveBeenCalled();
 });
 
-test("a press takes over the browser's own focus-scroll", () => {
+test("a press on an item prevents its default action, focuses the item without a native focus scroll, and scrolls it into view silently", () => {
   const { links } = renderList({ count: 3, activeIndex: 0 });
   const focus = vi.spyOn(links[2]!, "focus");
 
@@ -94,7 +94,7 @@ test("a press takes over the browser's own focus-scroll", () => {
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[2]);
 });
 
-test("a press a merged handler has already opted out of is left alone", () => {
+test("a press on an item whose default a merged handler has already prevented does not focus the item or scroll it into view", () => {
   const { links } = renderList({ count: 3, activeIndex: 0, guardedIndex: 2 });
   const focus = vi.spyOn(links[2]!, "focus");
 
@@ -105,7 +105,7 @@ test("a press a merged handler has already opted out of is left alone", () => {
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("the tab stop stays on the list once it shrinks past the focused entry", () => {
+test("the tab stop stays on the list once it shrinks past the focused item", () => {
   const { links, rerender } = renderList({ count: 3, activeIndex: 0 });
 
   fireEvent.focus(links.at(-1)!);
@@ -116,7 +116,7 @@ test("the tab stop stays on the list once it shrinks past the focused entry", ()
   expect(remaining.filter((link) => link.tabIndex === 0)).toEqual([remaining[0]]);
 });
 
-test("navigation follows the rendered list after it shrinks", () => {
+test("an End key press focuses the last remaining item after the list shrinks", () => {
   const { links, rerender } = renderList({ count: 4, activeIndex: 0 });
 
   links[0]!.focus();
@@ -130,7 +130,7 @@ test("navigation follows the rendered list after it shrinks", () => {
   expect(document.activeElement).toBe(remaining[1]);
 });
 
-test("a list navigates its own items, not those of a list nested inside it", () => {
+test("an End key press focuses the last item of the outer list, not an item of a list nested inside it", () => {
   render(
     <List count={2} activeIndex={0}>
       <List count={3} activeIndex={0} label="Inner" />

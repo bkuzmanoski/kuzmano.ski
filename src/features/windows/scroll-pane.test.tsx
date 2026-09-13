@@ -46,7 +46,7 @@ function focusJump(viewport: HTMLElement, item: HTMLElement, to: number, afterMs
 
 const detents = () => playScrollDetent.mock.calls.length;
 
-test("a tab key press into content below the fold does not play a sound for the scroll that reaches it", () => {
+test("a Tab key press into content below the fold does not play a sound for the scroll that brings it into view", () => {
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 
@@ -59,9 +59,7 @@ test("a tab key press into content below the fold does not play a sound for the 
   expect(detents()).toBe(0);
 });
 
-// Safari animates the scroll that reveals a focused element, so it arrives as a run of scroll
-// events after the focus rather than as one jump before it.
-test("an animated scroll into view stays silent for as long as it runs", () => {
+test("an animated scroll into view does not play a sound while it runs", () => {
   const viewport = renderPane();
   const [first] = screen.getAllByRole("button");
 
@@ -74,10 +72,12 @@ test("an animated scroll into view stays silent for as long as it runs", () => {
     fireEvent.scroll(viewport);
   }
 
+  // Safari animates the scroll that reveals a focused element, so it arrives as a run of scroll
+  // events after the focus rather than as one jump before it.
   expect(detents()).toBe(0);
 });
 
-test("user scrolling plays a sound again after an animated scroll into view settles", () => {
+test("user scrolling plays a sound again once the idle duration has elapsed after an animated scroll into view", () => {
   const viewport = renderPane();
   const [first] = screen.getAllByRole("button");
 
@@ -101,7 +101,7 @@ test("user scrolling plays a sound again after an animated scroll into view sett
   expect(detents()).toBe(1);
 });
 
-test("a held tab key does not play a sound for the scrolls its repeats cause", () => {
+test("repeated Tab key presses within the idle duration do not play a sound for the scrolls they cause", () => {
   const viewport = renderPane();
   const [first, second] = screen.getAllByRole("button");
 

@@ -52,7 +52,7 @@ describe("stageMetricsFor", () => {
     }
   });
 
-  test("reports the scale the illustration is rendered at", () => {
+  test("returns the scale the illustration is rendered at", () => {
     for (const viewport of VIEWPORTS) {
       const { illustration, scale } = stageMetricsFor(viewport);
 
@@ -65,7 +65,7 @@ describe("stageMetricsFor", () => {
     expect(stageMetricsFor(WIDE_VIEWPORT).viewport).toEqual(WIDE_VIEWPORT);
   });
 
-  test("zooms out to a smaller illustration than the one it zooms in to", () => {
+  test("returns a `zoomOut` transform that scales the illustration down", () => {
     for (const viewport of VIEWPORTS) {
       expect(stageMetricsFor(viewport).zoomOut.scale).toBeLessThan(1);
     }
@@ -89,7 +89,7 @@ describe("the zoomed out framing", () => {
     expect(box.x).toBeLessThan(0);
   });
 
-  test("keeps the whole illustration in view on every viewport", () => {
+  test("fits the illustration's full height within every viewport", () => {
     for (const viewport of VIEWPORTS) {
       const box = zoomedOutBoxFor(viewport);
 
@@ -100,7 +100,7 @@ describe("the zoomed out framing", () => {
 });
 
 describe("the zoomed in framing", () => {
-  test("places the display in the middle of the viewport", () => {
+  test("centers the display horizontally within the viewport", () => {
     for (const viewport of VIEWPORTS) {
       const { display } = stageMetricsFor(viewport);
 
@@ -146,11 +146,11 @@ describe("the vertical placement of both framings", () => {
     }
   });
 
-  test("holds a minimum margin above the illustration", () => {
+  test("applies a minimum margin above the illustration when the height is what binds", () => {
     for (const viewport of [WIDE_VIEWPORT, LANDSCAPE_VIEWPORT]) {
       for (const box of boxesFor(viewport)) {
         expect(box.y).toBeGreaterThan(0);
-        expect(box.y).toBeGreaterThanOrEqual((viewport.height - box.height) / 2); // Never placed above where centring it alone would.
+        expect(box.y).toBeGreaterThanOrEqual((viewport.height - box.height) / 2); // Never placed above where centering it alone would.
       }
 
       expect((viewport.height - zoomedInBoxFor(viewport).height) / 2).toBeLessThan(0);

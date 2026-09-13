@@ -170,7 +170,7 @@ export function Scrollbar({
     onDragMove: dragScroll,
   });
 
-  // A press on the track jumps to the pressed point, placing the thumb's centre under the pointer.
+  // A press on the track jumps to the pressed point, placing the thumb's center under the pointer.
   // The point pressed becomes the scrolled position and continues from there as a drag.
   const trackHandlers = usePointerDrag({
     preventDefault: true,

@@ -39,7 +39,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("a message is addressed to the configured destination email address, replying to its sender", async () => {
+test("a message is addressed to the configured destination email address, with its sender as the reply-to address", async () => {
   await expect(deliver(MESSAGE)).resolves.toBe("sent");
   expect(send).toHaveBeenCalledWith({
     from: SENDER,
@@ -52,9 +52,9 @@ test("a message is addressed to the configured destination email address, replyi
 
 describe("expected bindings", () => {
   test.each([
-    ["send_mail binding", { [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION }, SEND_EMAIL_BINDING],
-    ["destination secret", { [SEND_EMAIL_BINDING]: { send } }, CONTACT_EMAIL_ADDRESS_BINDING],
-  ])("a missing %s is reported", async (_label, partial, binding) => {
+    ["send email", { [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION }, SEND_EMAIL_BINDING],
+    ["destination email address", { [SEND_EMAIL_BINDING]: { send } }, CONTACT_EMAIL_ADDRESS_BINDING],
+  ])("a missing %s binding is reported without sending a message", async (_label, partial, binding) => {
     env.current = partial;
 
     await expect(deliver(MESSAGE)).resolves.toBe("unavailable");
@@ -69,19 +69,19 @@ test.each([
   ["E_SENDER_NOT_VERIFIED", "unavailable"],
   ["E_RECIPIENT_NOT_ALLOWED", "unavailable"],
   ["E_DELIVERY_FAILED", "unavailable"],
-])('"%s" maps to "%s"', async (code, delivery) => {
+])("a rejection with the code `%s` produces `%s`", async (code, delivery) => {
   rejectWith(code);
   await expect(deliver(MESSAGE)).resolves.toBe(delivery);
 });
 
-test("a rejection without a code is still reported and logged", async () => {
+test("a rejection without a code produces `unavailable` and is logged with an unknown code", async () => {
   send.mockRejectedValue("nope");
 
   await expect(deliver(MESSAGE)).resolves.toBe("unavailable");
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ code: "unknown" }));
 });
 
-test("a failed send logs the refused sender and recipient", async () => {
+test("a rejection logs the sender, recipient, and code", async () => {
   rejectWith("E_RECIPIENT_NOT_ALLOWED");
   await deliver(MESSAGE);
 
@@ -97,7 +97,7 @@ test("the message body is never logged", async () => {
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(MESSAGE.text);
 });
 
-test("an environment that cannot be resolved is reported rather than thrown", async () => {
+test("an unreachable Workers environment produces `unavailable` and is reported", async () => {
   env.fails = true;
 
   await expect(deliver(MESSAGE)).resolves.toBe("unavailable");

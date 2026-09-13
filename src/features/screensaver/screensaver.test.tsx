@@ -50,15 +50,17 @@ test.each([
   expect(screensaver.childElementCount).toBe(0);
 });
 
-test("a finger dragging across it does not dismiss the screensaver, so the tap's final click is caught by it", () => {
+test("a pointer move with a button pressed does not dismiss the screensaver", () => {
   const screensaver = raise();
 
   fireEvent.pointerMove(screensaver, TOUCH_MOVE);
 
+  // The screensaver stays up for the rest of a tap, so the tap's final `click` is
+  // dispatched to it rather than to what is under it.
   expect(screensaver.childElementCount).toBeGreaterThan(0);
 });
 
-test("input that trails the gesture it was raised with does not dismiss the screensaver", () => {
+test("input before the fade-in duration has elapsed does not dismiss the screensaver", () => {
   const { container } = render(<Screensaver />);
   const screensaver = container.firstElementChild!;
 

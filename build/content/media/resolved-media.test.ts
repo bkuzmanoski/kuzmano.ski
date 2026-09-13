@@ -160,7 +160,7 @@ describe("createMediaFileReader", () => {
     expect(readFile).toHaveBeenCalledTimes(1);
   });
 
-  test("performs only one file read for concurrent reads of the same file", async () => {
+  test("reads a file once for concurrent calls", async () => {
     const reader = createMediaFileReader();
 
     await Promise.all([reader.readImage(IMAGE_FILE_PATH), reader.readImage(IMAGE_FILE_PATH)]);
@@ -193,7 +193,7 @@ describe("createMediaFileReader", () => {
 });
 
 describe("mp4MetadataIn", () => {
-  test("reads an H.264 file into one `avc1` track at its encoded size, with its movie box first", () => {
+  test("reads an H.264 file into one `avc1` track with its display dimensions, and its movie box first", () => {
     expect(mp4MetadataIn(fixture("h264.mp4"))).toEqual({
       sampleFormats: ["avc1"],
       dimensions: { width: 320, height: 180 },
@@ -217,15 +217,15 @@ describe("mp4MetadataIn", () => {
     expect(mp4MetadataIn(withMovieBoxLast(fixture("h264.mp4")))?.movieBoxPrecedesMediaData).toBe(false);
   });
 
-  test("returns null for bytes that are not an MP4", () => {
+  test("returns `null` for bytes that are not an MP4", () => {
     expect(mp4MetadataIn(Buffer.from("\x1aE\xdf\xa3 not matroska either", "latin1"))).toBeNull();
   });
 
-  test("returns null for a buffer shorter than one box header", () => {
+  test("returns `null` for a buffer shorter than one box header", () => {
     expect(mp4MetadataIn(Buffer.alloc(4))).toBeNull();
   });
 
-  test("returns null for a file that ends before its movie box", () => {
+  test("returns `null` for a file that ends before its movie box", () => {
     const movieBoxLast = withMovieBoxLast(fixture("h264.mp4"));
     expect(mp4MetadataIn(movieBoxLast.subarray(0, movieBoxLast.byteLength - 16))).toBeNull();
   });

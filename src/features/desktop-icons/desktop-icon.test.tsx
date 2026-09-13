@@ -59,21 +59,21 @@ test("a plain double press opens the icon in place", () => {
   expect(onOpen).toHaveBeenCalledOnce();
 });
 
-test("a secondary press does not select the icon, as the browser opens its own menu over it", () => {
+test("a secondary press does not select the icon", () => {
   const icon = renderIcon();
 
   fireEvent.pointerDown(icon, { button: 2 });
 
   expect(fireEvent.mouseDown(icon, { button: 2 })).toBe(false); // The default, which selects the icon by focusing it, was prevented.
-  expect(onSelect).not.toHaveBeenCalled();
-  expect(fireEvent.mouseDown(icon)).toBe(true); // A press that does select it keeps that default.
+  expect(onSelect).not.toHaveBeenCalled(); // The browser opens its context menu over the icon instead.
+  expect(fireEvent.mouseDown(icon)).toBe(true); // The default is not prevented for a primary press.
 });
 
-test("a modified press is left to the browser, which opens the route in a new tab", () => {
+test("a modified press is left for the browser to handle, and does not open the icon in place", () => {
   const icon = renderIcon();
 
   expect(fireEvent.click(icon, { detail: 1, metaKey: true })).toBe(true); // The default was not prevented.
-  expect(onOpen).not.toHaveBeenCalled();
+  expect(onOpen).not.toHaveBeenCalled(); // The browser opens the icon's route in a new tab.
 });
 
 test("a modified double press follows the link once, and does not also open the icon in place", () => {

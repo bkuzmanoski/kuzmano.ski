@@ -27,7 +27,7 @@ describe("mergeHandlers", () => {
     expect(callOrder).toEqual(["first", "second"]);
   });
 
-  test("keeps the handlers that only one bag provides", () => {
+  test("retains the handlers that only one bag provides", () => {
     const onPointerDown = vi.fn();
     const onDoubleClick = vi.fn();
     const merged = mergeHandlers({ onPointerDown }, { onDoubleClick });
@@ -49,7 +49,7 @@ describe("mergeHandlers", () => {
     expect(secondHandler).toHaveBeenCalledWith(event);
   });
 
-  test("tolerates an empty bag on either side", () => {
+  test("calls the handler from the other bag when either bag is empty", () => {
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
 

@@ -21,7 +21,7 @@ function labelIdOf(section: Element): string {
   return String((Array.isArray(labelledBy) ? labelledBy[0] : labelledBy) ?? "");
 }
 
-// Every window is a `<section>` labelled by the element that holds its title. The ids come
+// Every window is a `<section>` labeled by the element that holds its title. The IDs come
 // from `useId`, so they are resolved by lookup rather than by matching a known value.
 function windowTitlesOf(tree: Nodes): Array<string> {
   const textById = new Map(

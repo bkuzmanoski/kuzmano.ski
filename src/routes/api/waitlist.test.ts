@@ -42,7 +42,7 @@ const post = (body: unknown, { origin = ORIGIN, headers = {} }: { origin?: strin
     }),
   });
 
-test("a well-formed submission is recorded, with the list and the entry it came from", async () => {
+test("a well-formed submission is recorded, with its email address, list, and source route", async () => {
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);
@@ -53,7 +53,7 @@ test("a well-formed submission is recorded, with the list and the entry it came 
   });
 });
 
-test("a cross-origin request is refused before anything is read", async () => {
+test("a cross-origin request is refused before the rate limit is checked, and a membership is not recorded", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
@@ -83,7 +83,7 @@ test("a submission rejected by the schema returns its errors", async () => {
 test.each([
   ["throttled", 429],
   ["unavailable", 502],
-] as const)("a %s result responds with a %i status code", async (result, status) => {
+] as const)("a result of `%s` responds with a %i status code", async (result, status) => {
   recordMembership.mockResolvedValue(result);
   expect((await post(VALID_SUBMISSION)).status).toBe(status);
 });

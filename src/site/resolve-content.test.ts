@@ -43,10 +43,10 @@ test("a segment corresponding to a collection resolves to that collection", () =
   expect(resolveContent("collection")).toEqual({ kind: "collection", collection });
 });
 
-test("a segment for a feature resolves to its feature route", () => {
+test("a segment corresponding to a feature resolves to its feature route", () => {
   expect(resolveContent(CONTACT_ROUTE.slice(1))).toEqual({ kind: "feature", route: CONTACT_ROUTE });
 });
 
-test("a feature segment with an additional slug resolves as not found", () => {
+test("a feature segment with an additional slug resolves to not found", () => {
   expect(resolveContent(CONTACT_ROUTE.slice(1), "anything")).toEqual({ kind: "notFound" });
 });

@@ -11,7 +11,7 @@ export interface CompilerOptimizationFailure {
 }
 
 const lineOf = (location: SourceLocation | null | undefined) =>
-  typeof location === "object" && location !== null ? location.start.line : null; // A location is `GeneratedSource` (a symbol) for a node the compiler synthesised itself.
+  typeof location === "object" && location !== null ? location.start.line : null; // A location is `GeneratedSource` (a symbol) for a node the compiler synthesized itself.
 const functionLine = (event: LoggerEvent) => ("fnLoc" in event ? lineOf(event.fnLoc) : null);
 
 export function optimizationFailureFrom(

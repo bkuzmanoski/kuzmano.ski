@@ -38,14 +38,14 @@ const hotUpdateContext = (loaded: unknown) => ({
 });
 
 describe("stylesheetValuePlugin", () => {
-  test("resolves its own module id, and returns null for any other source", () => {
+  test("resolves its own module ID, and returns `null` for any other source", () => {
     const resolveId = resolveIdHook();
 
     expect(resolveId(MODULE_ID)).toBe(RESOLVED_MODULE_ID);
     expect(resolveId("virtual:other-module")).toBeNull();
   });
 
-  test("serves the value it reads as the named export, and returns null for another module id", async () => {
+  test("serves the value it reads as the named export, and returns `null` for another module ID", async () => {
     const load = loadHook();
 
     expect(await load.call(watchContext(), RESOLVED_MODULE_ID)).toBe('export const PROBE = {"gutter":16};');
@@ -79,14 +79,14 @@ describe("stylesheetValuePlugin", () => {
     expect(context.environment.moduleGraph.invalidateModule).toHaveBeenCalledWith(loadedModule);
   });
 
-  test("returns no updated modules when a file other than the stylesheet is edited", () => {
+  test("does not invalidate the module or return updated modules when a file other than the stylesheet is edited", () => {
     const context = hotUpdateContext({ id: RESOLVED_MODULE_ID });
 
     expect(hotUpdateHook().call(context, { file: fromRoot("src/app/root-document.tsx"), modules: [] })).toBeUndefined();
     expect(context.environment.moduleGraph.invalidateModule).not.toHaveBeenCalled();
   });
 
-  test("returns no updated modules when the stylesheet is edited before the module is loaded", () => {
+  test("does not invalidate the module or return updated modules when the stylesheet is edited before the module is loaded", () => {
     const context = hotUpdateContext(null);
 
     expect(hotUpdateHook().call(context, { file: fromRoot(STYLESHEET_FILE_PATH), modules: [] })).toBeUndefined();

@@ -16,29 +16,29 @@ const click = (overrides: Partial<MouseEvent> = {}) =>
   }) as MouseEvent;
 
 describe("isRepeatClick", () => {
-  test("returns false for the first press of a sequence", () => {
+  test("returns `false` for the first press of a sequence", () => {
     expect(isRepeatClick(click({ detail: 1 }))).toBe(false);
   });
 
-  test("returns true for every press after the first", () => {
+  test("returns `true` for every press after the first", () => {
     expect(isRepeatClick(click({ detail: 2 }))).toBe(true);
     expect(isRepeatClick(click({ detail: 3 }))).toBe(true);
   });
 });
 
 describe("isBrowserHandledClick", () => {
-  test("returns false for an unmodified primary press", () => {
+  test("returns `false` for a primary button press without a modifier key", () => {
     expect(isBrowserHandledClick(click())).toBe(false);
   });
 
-  test("returns true for a modified press", () => {
+  test("returns `true` for a press with a modifier key", () => {
     expect(isBrowserHandledClick(click({ metaKey: true }))).toBe(true);
     expect(isBrowserHandledClick(click({ ctrlKey: true }))).toBe(true);
     expect(isBrowserHandledClick(click({ shiftKey: true }))).toBe(true);
     expect(isBrowserHandledClick(click({ altKey: true }))).toBe(true);
   });
 
-  test("returns true for a non-primary button press", () => {
+  test("returns `true` for a non-primary button press", () => {
     expect(isBrowserHandledClick(click({ button: 1 }))).toBe(true);
   });
 });

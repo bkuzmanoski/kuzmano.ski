@@ -16,7 +16,7 @@ describe("useIconPositions", () => {
     expect(Object.keys(result.current!)).toEqual(IDS);
   });
 
-  test("a move re-renders subscribers with the new position", () => {
+  test("re-renders with the new position after `moveIcon`", () => {
     const { useIconPositions, moveIcon } = createIconPositionsStore(IDS, ICON_LAYOUT);
     const { result } = renderHook(() => useIconPositions());
 
@@ -27,7 +27,7 @@ describe("useIconPositions", () => {
 });
 
 describe("commitIconPositions", () => {
-  test("persists the whole layout under the storage key", () => {
+  test("persists every icon position under the storage key", () => {
     const { useIconPositions, moveIcon, commitIconPositions } = createIconPositionsStore(IDS, ICON_LAYOUT);
     renderHook(() => useIconPositions());
 

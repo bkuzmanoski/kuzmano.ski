@@ -20,7 +20,7 @@ const stubDialogBox = (rect: { x: number; y: number; width: number; height: numb
 
 const escape = () => fireEvent(screen.getByRole("dialog"), new Event("cancel", { bubbles: false, cancelable: true }));
 
-test("a closed modal alert has no reachable content", () => {
+test("a closed modal alert does not set the `open` attribute or render its actions", () => {
   render(
     <Alert
       {...CONTENT}
@@ -34,7 +34,7 @@ test("a closed modal alert has no reachable content", () => {
   expect(screen.queryAllByRole("button", { hidden: true })).toHaveLength(0);
 });
 
-test("a page-level alert is rendered open without JavaScript", () => {
+test("a page-level alert renders with the `open` attribute", () => {
   render(<Alert message="There was a problem." modal={false} primaryAction={{ label: "Go Home", onAction: "/" }} />);
   expect(screen.getByRole("dialog")).toBeDefined();
 });
@@ -141,7 +141,7 @@ test("the Escape key runs the primary action when there is no secondary action",
   expect(onPrimary).toHaveBeenCalledOnce();
 });
 
-test("pressing outside a modal alert plays the error tone", () => {
+test("pressing outside a modal alert plays the error sound", () => {
   render(
     <Alert
       {...CONTENT}
@@ -157,7 +157,7 @@ test("pressing outside a modal alert plays the error tone", () => {
   expect(playError).toHaveBeenCalledOnce();
 });
 
-test("pressing within the alert, including its padding, does not play the error tone", () => {
+test("pressing within the alert, including its padding, does not play the error sound", () => {
   render(
     <Alert
       {...CONTENT}

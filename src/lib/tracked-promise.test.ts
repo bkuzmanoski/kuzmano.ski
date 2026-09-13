@@ -7,16 +7,17 @@ test("a promise is marked pending until it settles", () => {
   expect(trackPromise(neverSettles).status).toBe("pending");
 });
 
-test("a fulfilled promise contains its value, which is how `use()` reads it without suspending", async () => {
+test("a fulfilled promise is marked fulfilled and contains its value", async () => {
   const trackedPromise = trackPromise(Promise.resolve("content"));
 
   await trackedPromise;
 
+  // `use()` reads `status` and `value` to return a settled promise's value without suspending.
   expect(trackedPromise.status).toBe("fulfilled");
   expect(trackedPromise.value).toBe("content");
 });
 
-test("a rejected promise contains its reason", async () => {
+test("a rejected promise is marked rejected and contains its reason", async () => {
   const rejectionReason = new Error("Content not found");
   const trackedPromise = trackPromise(Promise.reject(rejectionReason));
 
@@ -26,7 +27,7 @@ test("a rejected promise contains its reason", async () => {
   expect(trackedPromise.reason).toBe(rejectionReason);
 });
 
-test("the promise handed back is the one passed in, as React reads the state off that object", () => {
+test("the returned promise is the one passed in", () => {
   const promise = Promise.resolve("content");
-  expect(trackPromise(promise)).toBe(promise);
+  expect(trackPromise(promise)).toBe(promise); // React reads the status and value from the promise object it is given, so it has to be the same object.
 });

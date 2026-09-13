@@ -40,8 +40,12 @@ vi.mock("node:fs/promises", () => ({ default: { readFile }, readFile }));
 
 const ENTRY = authoredEntryMedia();
 const COVER_IMAGE_SIZE = 64;
-const SOURCE_WITH_IMAGE_IN_PICTURE =
-  '<picture>\n  <img src="./image.png" alt="An image" />\n</picture>\n\n<video src="./video.mp4" />\n';
+const SOURCE_WITH_IMAGE_IN_PICTURE = `<picture>
+  <img src="./image.png" alt="An image" />
+</picture>
+
+<video src="./video.mp4" />
+`;
 const VIDEO_WITHOUT_POSTER_IMAGE = { videoFileName: VIDEO_FILE_NAME, posterImageFileName: null };
 const HASHED_URL = /\.[0-9a-f]{16}\./;
 
@@ -199,10 +203,9 @@ describe("buildMediaIndex", () => {
       },
     });
 
-    // Unreadable images are reported once, not as missing references.
     expect(index.problems()).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry/image.png" could not be read as an image.`,
-    ]);
+    ]); // Unreadable images are reported once, not as missing references.
     expect(mediaFor(index, "./video.mp4")).not.toBeNull();
   });
 
@@ -221,7 +224,7 @@ describe("buildMediaIndex", () => {
     expect(posterImage?.src).toMatch(/\.webp$/);
   });
 
-  test("maps the URL of a video without a poster image to a rendition, and resolves the video reference to null", async () => {
+  test("maps the URL of a video without a poster image to a rendition, and resolves the video reference to `null`", async () => {
     const index = await indexOf({ entryMedia: [{ ...ENTRY, videos: [VIDEO_WITHOUT_POSTER_IMAGE] }] });
 
     expect(index.renditionsByUrl.has(mediaRoute(`collection/entry/video.${MEDIA_FILE_HASH}.mp4`))).toBe(true);
@@ -271,12 +274,12 @@ describe("buildMediaIndex", () => {
     expect(renditionsByUrl.has(mediaRoute(`collection/entry/video.poster.${MEDIA_FILE_HASH}.png`))).toBe(false);
   });
 
-  test("resolves a reference into a subdirectory of the media directory to null", async () => {
+  test("resolves a reference into a subdirectory of the media directory to `null`", async () => {
     const index = await indexOf();
     expect(mediaFor(index, "./nested/image.png")).toBeNull();
   });
 
-  test("resolves a reference from a file that is not an indexed entry to null", async () => {
+  test("resolves a reference from a file that is not an indexed entry to `null`", async () => {
     const index = await indexOf();
     expect(index.mediaForEntry(fromContent("collection/other-entry.mdx"))("./image.png")).toBeNull();
   });
@@ -308,14 +311,16 @@ describe("buildMediaIndex", () => {
     expect(index.problems()).toEqual([]);
   });
 
-  test("returns `true` when rechecking a source changes references but not body image alternates", async () => {
+  test("returns `true` when rechecking a source that changes references but not which body images have alternates", async () => {
     const index = await indexOf();
-    const source = `${ENTRY_SOURCE}\n<img src="./image.png" alt="An image" />\n`;
+    const source = `${ENTRY_SOURCE}
+      <img src="./image.png" alt="An image" />
+    `;
 
     expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, source)).toBe(true);
   });
 
-  test("returns `false` when rechecking changes which body images have alternates", async () => {
+  test("returns `false` when rechecking a source that changes which body images have alternates", async () => {
     const index = await indexOf();
     expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, SOURCE_WITH_IMAGE_IN_PICTURE)).toBe(false);
   });
@@ -342,7 +347,7 @@ describe("buildMediaIndex", () => {
     expect(index.problems().slice(0, 2)).toEqual(["An authored media problem.", "An unreadable image."]);
   });
 
-  test("lists cover images, renditions and problems in entry order when the first entry's cover image is read last", async () => {
+  test("lists cover images, renditions, and problems in entry order when the first entry's cover image is read last", async () => {
     // Both cover images are below the minimum size on their shortest side, so each entry produces a problem.
     const firstEntry = authoredEntryMedia({ bodyImageFileNames: [], videos: [] });
     const secondEntry = authoredEntryMedia({

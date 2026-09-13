@@ -24,11 +24,11 @@ const parseXml = (xml: string) => {
 };
 
 describe("atomFeed", () => {
-  test("declares the XML version and encoding before the `<feed>` element", () => {
+  test("declares the XML version and encoding before the `<feed>`", () => {
     expect(feed([])).toMatch(/^<\?xml version="1\.0" encoding="utf-8"\?><feed /);
   });
 
-  test("widens calendar dates to RFC 3339 timestamps", () => {
+  test("converts calendar dates to RFC 3339 timestamps", () => {
     expect(feed([feedEntry()])).toContain("<published>2026-07-19T00:00:00Z</published>");
   });
 
@@ -97,7 +97,7 @@ describe("atomFeed", () => {
     expect(document.querySelector("entry > content")?.textContent).toBe(`<p>${EMOJI}</p>`);
   });
 
-  test("writes well-formed XML when every field contains markup, quotes, `]]>`, and a lone surrogate", () => {
+  test("writes well-formed XML when every field contains markup, quotes, `]]>`, control characters, and a lone surrogate", () => {
     const hostileText = `& < > " ' ]]> ${NULL}${FORM_FEED}${LONE_SURROGATE} <b onclick="x">`;
     const document = parseXml(
       atomFeed(
@@ -123,7 +123,7 @@ describe("atomFeed", () => {
     expect(document.querySelector("entry > content")?.children).toHaveLength(0);
   });
 
-  test("writes a feed with no entries", () => {
+  test("writes a feed without entries", () => {
     const xml = feed([]);
 
     expect(xml).toContain("<updated>2026-07-19T00:00:00Z</updated>");

@@ -21,7 +21,7 @@ const palette: Palette = {
 const artwork: Artwork = { width: 100, height: 100, path: "M0 0h100v100H0z" };
 
 // The share of a maskable icon's width that a platform mask is guaranteed to leave visible is a
-// circle of 80% of its width, so the monogram has to stay within 40% of the centre.
+// circle of 80% of its width, so the monogram has to stay within 40% of the center.
 // See https://www.w3.org/TR/appmanifest/#icon-masks.
 const MASKABLE_SAFE_RADIUS = 0.4;
 
@@ -49,7 +49,7 @@ function rasterContentsIn(icons: Array<IconFile>, fileName: string): Buffer {
   return contents;
 }
 
-// The distance from the centre of an icon to its furthest monogram pixel, as a share of its width.
+// The distance from the center of an icon to its furthest monogram pixel, as a share of its width.
 async function monogramRadiusIn(contents: Buffer): Promise<number> {
   const { data, info } = await sharp(contents).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height, channels } = info;
@@ -69,7 +69,7 @@ async function monogramRadiusIn(contents: Buffer): Promise<number> {
   return radius / width;
 }
 
-test("the six icon files are produced with the file names the site links to and their media types", () => {
+test("the six icon files are produced with their file names and media types", () => {
   expect(files.map(({ fileName, mediaType }) => ({ fileName, mediaType }))).toEqual([
     { fileName: "favicon.svg", mediaType: "image/svg+xml" },
     { fileName: "favicon.ico", mediaType: "image/x-icon" },
@@ -80,7 +80,7 @@ test("the six icon files are produced with the file names the site links to and 
   ]);
 });
 
-test("each icon file records its web app manifest metadata, except apple-touch-icon.png", () => {
+test("each icon file records its web app manifest metadata, or `null` for `apple-touch-icon.png`", () => {
   expect(files.map(({ fileName, manifestIcon }) => [fileName, manifestIcon])).toEqual([
     ["favicon.svg", { sizes: "any" }],
     ["favicon.ico", { sizes: "48x48 32x32 16x16" }],
@@ -91,7 +91,7 @@ test("each icon file records its web app manifest metadata, except apple-touch-i
   ]);
 });
 
-test("favicon.svg fills the monogram with the palette's light foreground, and with its dark foreground under `prefers-color-scheme: dark`", () => {
+test("`favicon.svg` fills the monogram with the palette's light foreground, and with its dark foreground under `prefers-color-scheme: dark`", () => {
   const [beforeQuery, insideQuery] = String(fileNamed(files, "favicon.svg").contents).split(
     "@media (prefers-color-scheme: dark)",
   );

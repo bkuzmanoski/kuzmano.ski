@@ -54,7 +54,7 @@ describe("pointer input", () => {
     expect(onDoublePress).toHaveBeenCalledTimes(1);
   });
 
-  test("a second press past the interval does not fire, and starts a fresh pairing", () => {
+  test("a second press past the interval does not fire a double press, and pairs with the next press instead", () => {
     press();
     setNow(DOUBLE_PRESS_INTERVAL_MS + 1);
     press();
@@ -67,7 +67,7 @@ describe("pointer input", () => {
     expect(onDoublePress).toHaveBeenCalledTimes(1);
   });
 
-  test("a second press landing too far from the first does not fire a double press", () => {
+  test("a second press farther from the first than the tolerance does not fire a double press", () => {
     press({ x: 0, y: 0 });
     setNow(DOUBLE_PRESS_INTERVAL_MS);
     press({ x: 0, y: 40 });
@@ -92,7 +92,7 @@ describe("pointer input", () => {
     expect(onDoublePress).not.toHaveBeenCalled();
   });
 
-  test("a cancelled press does not participate in a double press", () => {
+  test("a canceled press does not participate in a double press", () => {
     press();
     fireEvent.pointerCancel(target(), { pointerType: "touch" });
     setNow(DOUBLE_PRESS_INTERVAL_MS);

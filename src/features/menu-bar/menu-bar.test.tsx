@@ -62,7 +62,7 @@ function releasePointerOver(element: Element, init: MouseEventInit = {}) {
 const runActivationFlash = () => void act(() => vi.advanceTimersByTime(1000)); // Long enough for an item's highlight to play out.
 
 describe("navigating the menu bar", () => {
-  test("the left and right keys move the focus between menu titles without opening their menus", () => {
+  test("the Left and Right arrow keys move the focus between menu titles without opening their menus", () => {
     render(<MenuBar />);
     menuTitle("File").focus();
     fireEvent.keyDown(menuTitle("File"), { key: "ArrowRight" });
@@ -83,7 +83,7 @@ describe("navigating the menu bar", () => {
     expect(playHover).toHaveBeenCalledTimes(1);
   });
 
-  test("navigating to menu title using the arrow keys plays hover sound when a menu is open", () => {
+  test("pressing the Left and Right arrow keys across menu titles plays a hover sound when a menu is open", () => {
     render(<MenuBar />);
     menuTitle("File").focus();
     fireEvent.keyDown(menuTitle("File"), { key: "ArrowRight" });
@@ -99,7 +99,7 @@ describe("navigating the menu bar", () => {
 });
 
 describe("holding the pointer across the menu bar", () => {
-  test("moving the pointer over another title opens its menu in place", () => {
+  test("moving the pointer over another title opens its menu in place of the open one", () => {
     render(<MenuBar />);
     openWithPointer("File");
     fireEvent.pointerOver(menuTitle("Go"), { buttons: 1 });
@@ -108,7 +108,7 @@ describe("holding the pointer across the menu bar", () => {
     expect(isExpanded("Go")).toBe(true);
   });
 
-  test("a cancelled gesture ends the hold, leaving the menu open for the next press", () => {
+  test("a canceled gesture ends the hold, so the menu closes on the next press rather than the next release", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     fireEvent(document, new Event("pointercancel", { bubbles: true }));
@@ -121,7 +121,7 @@ describe("holding the pointer across the menu bar", () => {
     expect(menu()).toBeNull();
   });
 
-  test("a press gives up the implicit capture that would keep a touch pointer on one title", () => {
+  test("a touch press releases the implicit pointer capture on the menu title", () => {
     render(<MenuBar />);
 
     const anchor = menuTitle("File");
@@ -174,7 +174,8 @@ describe("opening a menu", () => {
     expect(document.activeElement).toBe(menuTitle("Go"));
   });
 
-  test("a secondary press leaves the menu closed, as the browser opens its own over the page", () => {
+  test("a secondary press does not open the menu", () => {
+    // The browser opens its context menu over the page instead.
     render(<MenuBar />);
     fireEvent.pointerDown(menuTitle("File"), { button: 2 });
 
@@ -184,7 +185,7 @@ describe("opening a menu", () => {
 });
 
 describe("dismissing a menu", () => {
-  test("a press elsewhere on the page closes it", () => {
+  test("a press elsewhere on the page closes the menu", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     fireEvent(menuTitle("Go"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, leaving the menu open.
@@ -193,7 +194,7 @@ describe("dismissing a menu", () => {
     expect(menu()).toBeNull();
   });
 
-  test("a hold released away from the menu and its title closes it", () => {
+  test("a hold released away from the menu and its title closes the menu", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     fireEvent(document, new MouseEvent("pointerup", { bubbles: true }));
@@ -203,7 +204,7 @@ describe("dismissing a menu", () => {
 });
 
 describe("navigating an open menu", () => {
-  test("the up and down keys cycle the menu items", () => {
+  test("the Up and Down arrow keys move the highlight between menu items", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     fireEvent.keyDown(menu()!, { key: "ArrowDown" });
@@ -219,7 +220,7 @@ describe("navigating an open menu", () => {
     expect(highlightedMenuItem()).toBe("About");
   });
 
-  test("the up key enters a freshly opened menu at its last item", () => {
+  test("the Up arrow key highlights the last item when no item is highlighted", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     fireEvent.keyDown(menu()!, { key: "ArrowUp" });
@@ -227,7 +228,7 @@ describe("navigating an open menu", () => {
     expect(highlightedMenuItem()).toBe("Contact");
   });
 
-  test("the left and right keys walk the menu bar, wrapping around", () => {
+  test("the Left and Right arrow keys open the adjacent menu, wrapping around at each end of the menu bar", () => {
     render(<MenuBar />);
     openWithKeyboard("File");
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
@@ -248,7 +249,7 @@ describe("navigating an open menu", () => {
     expect(isExpanded("Special")).toBe(true);
   });
 
-  test("the menu walked to is itself navigable", () => {
+  test("an adjacent menu opened with the arrow keys receives the focus, and the Down arrow key highlights its first item", () => {
     render(<MenuBar />);
     openWithKeyboard("File");
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
@@ -260,7 +261,7 @@ describe("navigating an open menu", () => {
     expect(highlightedMenuItem()).toBe("About");
   });
 
-  test("the escape key closes the menu and returns the focus to its title", () => {
+  test("the Escape key closes the menu and returns the focus to its title", () => {
     render(<MenuBar />);
     openWithKeyboard("Go");
     fireEvent.keyDown(menu()!, { key: "Escape" });
@@ -269,7 +270,7 @@ describe("navigating an open menu", () => {
     expect(document.activeElement).toBe(menuTitle("Go"));
   });
 
-  test("the highlighted item is reported to assistive technology", () => {
+  test("the menu's `aria-activedescendant` attribute references the highlighted item", () => {
     render(<MenuBar />);
     openWithKeyboard("Go");
 
@@ -308,7 +309,7 @@ describe("disabled items", () => {
 });
 
 describe("items that open a destination", () => {
-  test("an item with a destination is an anchor that keeps its menu item role and is not a tab stop", () => {
+  test("an item with a destination is an `<a>` with the `menuitem` role and is not a tab stop", () => {
     render(<MenuBar />);
     openWithPointer("Go");
 
@@ -320,7 +321,7 @@ describe("items that open a destination", () => {
     expect(about.getAttribute("tabindex")).toBe("-1");
   });
 
-  test("an item without a destination is not an anchor", () => {
+  test("an item without a destination is not an `<a>`", () => {
     render(<MenuBar />);
     openWithPointer("Special");
 
@@ -345,22 +346,25 @@ describe("items that open a destination", () => {
   });
 
   test.each([
-    ["meta", { metaKey: true }],
-    ["ctrl", { ctrlKey: true }],
-    ["shift", { shiftKey: true }],
-    ["alt", { altKey: true }],
-  ] as const)("%s-clicking an item is left for the browser to handle, and the menu stays open", (_modifier, init) => {
-    render(<MenuBar />);
-    openWithPointer("Go");
+    ["Meta", { metaKey: true }],
+    ["Control", { ctrlKey: true }],
+    ["Shift", { shiftKey: true }],
+    ["Alt", { altKey: true }],
+  ] as const)(
+    "clicking an item with the %s key held is left for the browser to handle, and the menu stays open",
+    (_modifier, init) => {
+      render(<MenuBar />);
+      openWithPointer("Go");
 
-    const about = menuItem("About");
+      const about = menuItem("About");
 
-    releasePointerOver(about, init);
+      releasePointerOver(about, init);
 
-    expect(fireEvent.click(about, init)).toBe(true); // The default was not prevented.
-    expect(open).not.toHaveBeenCalled();
-    expect(menu()).not.toBeNull();
-  });
+      expect(fireEvent.click(about, init)).toBe(true); // The default was not prevented.
+      expect(open).not.toHaveBeenCalled();
+      expect(menu()).not.toBeNull();
+    },
+  );
 
   test("a secondary pointer up event does not activate the menu item", () => {
     vi.useFakeTimers();
@@ -373,7 +377,7 @@ describe("items that open a destination", () => {
     expect(menu()).not.toBeNull(); // An item that was chosen would have run and closed the menu behind it.
   });
 
-  test("a middle click is left for the browser to handle, and the menu stays open", () => {
+  test("a middle pointer up event does not open the destination, and the menu stays open", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     releasePointerOver(menuItem("About"), { button: 1 });
@@ -382,7 +386,7 @@ describe("items that open a destination", () => {
     expect(menu()).not.toBeNull();
   });
 
-  test("the enter key follows a menu item link once its activation flash is complete", () => {
+  test("the Enter key follows a menu item link once its activation flash is complete", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
     openWithKeyboard("Special");
@@ -399,7 +403,7 @@ describe("items that open a destination", () => {
     expect(follow).toHaveBeenCalled();
   });
 
-  test('the "View Source" menu item opens a new tab', () => {
+  test('the "View Source" menu item links to the site source URL with a `target` attribute of `_blank`', () => {
     render(<MenuBar />);
     openWithPointer("Special");
 
@@ -473,7 +477,7 @@ describe("status controls", () => {
     expect(tooltip()?.textContent).toBe(soundControl.getAttribute("aria-label"));
   });
 
-  test("a pointer leaving hides the tooltip before the duration is up", () => {
+  test("a pointer leaving the control hides the tooltip after the hide delay, before the display duration has elapsed", () => {
     render(<MenuBar />);
 
     const wrapper = appearanceControl().parentElement!;

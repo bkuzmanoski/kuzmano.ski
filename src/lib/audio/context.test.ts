@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe("playSound", () => {
-  test("does not play a sound or create an audio context if sound is turned off", async () => {
+  test("does not play a sound or create an audio context when sound is turned off", async () => {
     settings.soundEffects = "off";
 
     const { playSound } = await loadContextModule();
@@ -110,7 +110,7 @@ describe("playSound", () => {
 });
 
 describe("primeAudio", () => {
-  test("does not create an audio context if sound is turned off", async () => {
+  test("does not create an audio context when sound is turned off", async () => {
     settings.soundEffects = "off";
 
     const { primeAudio } = await loadContextModule();
@@ -129,7 +129,7 @@ describe("primeAudio", () => {
     expect(FakeAudioContext.instances[0]!.resumeCount).toBe(2);
   });
 
-  test("ignores a rejected resume and recovers on a later gesture", async () => {
+  test("ignores a rejected resume without blocking a later sound", async () => {
     const { playSound, primeAudio } = await loadContextModule();
     const play = vi.fn();
 
@@ -181,7 +181,7 @@ describe("primeAudio", () => {
 });
 
 describe("needsAudioPriming", () => {
-  test("is false if sound is turned off", async () => {
+  test("is `false` when sound is turned off", async () => {
     settings.soundEffects = "off";
 
     const { needsAudioPriming } = await loadContextModule();
@@ -189,12 +189,12 @@ describe("needsAudioPriming", () => {
     expect(needsAudioPriming()).toBe(false);
   });
 
-  test("is true before a context has been opened", async () => {
+  test("is `true` before a context has been opened", async () => {
     const { needsAudioPriming } = await loadContextModule();
     expect(needsAudioPriming()).toBe(true);
   });
 
-  test("is false once the context is running", async () => {
+  test("is `false` once the context is running", async () => {
     FakeAudioContext.initialState = "running";
 
     const { needsAudioPriming, primeAudio } = await loadContextModule();
@@ -204,7 +204,7 @@ describe("needsAudioPriming", () => {
     expect(needsAudioPriming()).toBe(false);
   });
 
-  test("is true while the context is suspended", async () => {
+  test("is `true` while the context is suspended", async () => {
     const { needsAudioPriming, primeAudio } = await loadContextModule();
 
     primeAudio();

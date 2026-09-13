@@ -48,7 +48,7 @@ const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overr
 const paths = (overrides?: Partial<AuthoredContent>) => routes(overrides).map(({ path }) => path);
 
 describe("routes", () => {
-  test("includes the home pages, collections, collection entries, and contact routes in order", () => {
+  test("includes the root, page, collection, collection entry, and contact routes in order", () => {
     expect(paths()).toEqual([
       "/",
       "/page-1",
@@ -62,21 +62,21 @@ describe("routes", () => {
     ]);
   });
 
-  test("uses an entry's date as its sitemap lastmod", () => {
+  test("uses an entry's date as its sitemap `lastmod`", () => {
     expect(routes()).toContainEqual({
       path: "/collection-1/entry-1",
       sitemap: { lastmod: "2026-01-02" },
     });
   });
 
-  test("uses the newest entry date as a collection's sitemap lastmod", () => {
+  test("uses the newest entry date as a collection's sitemap `lastmod`", () => {
     expect(routes()).toContainEqual({
       path: "/collection-1",
       sitemap: { lastmod: "2026-01-02" },
     });
   });
 
-  test("uses the newest date anywhere for the home page and empty collections", () => {
+  test("uses the newest entry date across the site as the sitemap `lastmod` of the root route and an empty collection", () => {
     expect(routes()).toContainEqual({
       path: "/",
       sitemap: { lastmod: "2026-03-04" },
@@ -87,7 +87,7 @@ describe("routes", () => {
     });
   });
 
-  test("omits the sitemap metadata for an entry with no date", () => {
+  test("omits the sitemap metadata for an entry without a date", () => {
     expect(routes()).toContainEqual({ path: "/page-2" });
   });
 
@@ -112,7 +112,7 @@ describe("routes", () => {
     expect(pathsWithDrafts).toContain("/collection-1");
   });
 
-  test("prerenders a page the site does not link to, but omits it from the sitemap", () => {
+  test("includes a page that is not declared in `PAGE_SLUGS`, and excludes it from the sitemap", () => {
     const routesWithUnregisteredPage = routes({
       pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
         authoredEntry("page-1", { date: "2026-02-03" }),
@@ -139,7 +139,7 @@ describe("routes", () => {
 });
 
 describe("invalid content", () => {
-  test("fails for a collection name that is not URL-safe", () => {
+  test("throws for a collection name that is not URL-safe", () => {
     expect(() =>
       paths({
         collections: [
@@ -152,7 +152,7 @@ describe("invalid content", () => {
     ).toThrow(/URL-unsafe.*Collection Four/s);
   });
 
-  test("fails for an entry slug that is not URL-safe", () => {
+  test("throws for an entry slug that is not URL-safe", () => {
     expect(() =>
       paths({
         collections: [
@@ -164,7 +164,7 @@ describe("invalid content", () => {
     ).toThrow(/URL-unsafe.*Not A Slug/s);
   });
 
-  test("fails for a page slug that is not URL-safe", () => {
+  test("throws for a page slug that is not URL-safe", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -176,13 +176,13 @@ describe("invalid content", () => {
     ).toThrow(/URL-unsafe.*Read Me/s);
   });
 
-  test("fails when a declared page has no corresponding file", () => {
+  test("throws for a declared page without a corresponding file", () => {
     expect(() =>
       paths({ pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [authoredEntry("page-1", undatedEntry)]) }),
     ).toThrow(/declared with no corresponding content file.*page-2/s);
   });
 
-  test("fails when a page has the same slug as a collection", () => {
+  test("throws for a page with the same slug as a collection", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -194,7 +194,7 @@ describe("invalid content", () => {
     ).toThrow(/shadowed by a collection.*collection-1/s);
   });
 
-  test("fails when content shadows a reserved route", () => {
+  test("throws for content that shadows a reserved route", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -206,19 +206,19 @@ describe("invalid content", () => {
     ).toThrow(/shadowing reserved route/);
   });
 
-  test("fails when a declared collection has no corresponding directory", () => {
+  test("throws for a declared collection without a corresponding directory", () => {
     expect(() =>
       paths({ collections: [authoredCollection("collection-1"), authoredCollection("collection-2")] }),
     ).toThrow(/no corresponding content directory.*collection-3/s);
   });
 
-  test("fails when a content directory has no declared collection", () => {
+  test("throws for a content directory without a declared collection", () => {
     expect(() => paths({ collections: [...content().collections, authoredCollection("unregistered")] })).toThrow(
       /no declared collection.*unregistered/s,
     );
   });
 
-  test("fails for a directory inside a collection without an entry of the same name", () => {
+  test("throws for a directory inside a collection without an entry of the same name", () => {
     expect(() =>
       paths({
         collections: [
@@ -230,7 +230,7 @@ describe("invalid content", () => {
     ).toThrow(/no matching entry.*archive/s);
   });
 
-  test("fails for a directory inside the pages directory without an entry of the same name", () => {
+  test("throws for a directory inside the pages directory without an entry of the same name", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(
@@ -242,7 +242,7 @@ describe("invalid content", () => {
     ).toThrow(/no matching entry.*drafts/s);
   });
 
-  test("fails for a page whose name shadows the media segment", () => {
+  test("throws for a page whose name shadows the media segment", () => {
     const pathsWithMediaPage = () =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -255,7 +255,7 @@ describe("invalid content", () => {
     expect(pathsWithMediaPage).toThrow(`${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/${MEDIA_SEGMENT}.mdx`);
   });
 
-  test("fails for a collection directory whose name shadows the media segment", () => {
+  test("throws for a collection directory whose name shadows the media segment", () => {
     const pathsWithMediaCollection = () =>
       paths({ collections: [...content().collections, authoredCollection(MEDIA_SEGMENT)] });
 

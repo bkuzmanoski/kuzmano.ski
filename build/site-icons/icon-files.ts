@@ -62,7 +62,7 @@ const faviconSvg = (artwork: Artwork, palette: Palette) =>
 
 // Render at high density so Sharp downsamples the SVG instead of upscaling its 96 DPI output.
 //
-// Indexed PNGs reduce the size of standalone flat-colour icons. ICO frames use full colour because
+// Indexed PNGs reduce the size of standalone flat-color icons. ICO frames use full color because
 // `sharp-ico` cannot read indexed PNGs, and palette/transparency metadata outweighs the savings at
 // 48px and below.
 const rasterize = (markup: string, size: number, { indexed }: { indexed: boolean }) =>

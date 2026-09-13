@@ -20,7 +20,7 @@ describe("mergeRefs", () => {
     expect(callOrder).toEqual(["attach"]);
   });
 
-  test("clears a ref object and calls a cleanup-less callback ref with null on detach", () => {
+  test("clears a ref object and calls a cleanup-less callback ref with `null` on detach", () => {
     const refObject: RefObject<typeof node | null> = { current: null };
     const callback = vi.fn();
 
@@ -30,7 +30,7 @@ describe("mergeRefs", () => {
     expect(callback).toHaveBeenLastCalledWith(null);
   });
 
-  test("detaches a callback ref that returned a cleanup by invoking it, without a null call", () => {
+  test("detaches a callback ref that returned a cleanup by calling the cleanup instead of calling the ref with `null`", () => {
     const cleanup = vi.fn();
     const callback = vi.fn(() => cleanup);
 
@@ -40,7 +40,7 @@ describe("mergeRefs", () => {
     expect(callback).toHaveBeenCalledExactlyOnceWith(node);
   });
 
-  test("ignores a null or undefined ref", () => {
+  test("ignores a `null` or `undefined` ref", () => {
     const refObject: RefObject<typeof node | null> = { current: null };
 
     expect(() => mergeRefs(null, undefined)(node)()).not.toThrow();

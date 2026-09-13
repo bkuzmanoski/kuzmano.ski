@@ -70,7 +70,7 @@ describe("feedXmlFor", () => {
 
   test("outputs well-formed XML when an entry's content contains markup, quotes, and `]]>`", async () => {
     const hostileDocument = articleDocument(
-      `<pre><code>if (a &lt; b &amp;&amp; c) { d[e[f]]&gt; }</code></pre><p>'Lorem' &amp; "ipsum" &lt;b&gt;.</p>`,
+      `<pre><code>if (a &lt; b &amp;&amp; c) { d[e[f]]&gt; }</code></pre><p>'Single' &amp; "double" quotes &lt;b&gt;.</p>`,
     );
     const xml = await feedXmlFor(feedMetadata(), content(), () => Promise.resolve(hostileDocument));
     const document = new DOMParser().parseFromString(xml, "text/xml");

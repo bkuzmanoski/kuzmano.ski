@@ -95,7 +95,7 @@ export function useListNavigation(
       },
       onKeyDown: (event: KeyboardEvent) => {
         if (isActivationKey(event.key)) {
-          event.preventDefault(); // Prevent the browser's default scroll and click behaviour so activation happens only once.
+          event.preventDefault(); // Prevent the browser's default scroll and click behavior so activation happens only once.
           onActivate(index);
 
           return;

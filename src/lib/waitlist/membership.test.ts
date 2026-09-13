@@ -27,7 +27,7 @@ test("surrounding whitespace is trimmed from every field", () => {
 test.each([
   ["a missing email address", { emailAddress: undefined }],
   ["a missing list", { list: undefined }],
-  ["an empty list", { list: "   " }],
+  ["a whitespace-only list", { list: "   " }],
   ["a missing source", { source: undefined }],
   ["a field of the wrong type", { list: 42 }],
   [

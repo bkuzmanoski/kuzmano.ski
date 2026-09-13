@@ -218,7 +218,7 @@ export function Menu({
     }
   });
 
-  // A cancelled gesture never delivers its `pointerup`, so the hold ends here instead:
+  // A canceled gesture never delivers its `pointerup`, so the hold ends here instead:
   // the menu turns sticky and waits for a press, rather than reading a later unrelated
   // release as the end of a hold that is long over.
   const onPointerCancel = useEffectEvent(() => {

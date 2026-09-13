@@ -28,7 +28,7 @@ describe("optimizationFailureFrom", () => {
     });
   });
 
-  test("returns both a compile error's reason and description", () => {
+  test("returns a reason joining a compile error's reason and description with a colon", () => {
     expect(
       optimizationFailureFrom(fromRoot("src/source-a.ts"), compileError("Todo", "Rewrite hoisted references", 4))
         ?.reason,
@@ -52,11 +52,11 @@ describe("optimizationFailureFrom", () => {
     });
   });
 
-  test('returns "unknown file" as the file path for a null absolute path', () => {
+  test('returns "unknown file" as the file path for a `null` absolute path', () => {
     expect(optimizationFailureFrom(null, compileError("Todo", null, 1))?.filePath).toBe("unknown file");
   });
 
-  test("returns null for a `CompileSuccess` or `CompileSkip` event", () => {
+  test("returns `null` for a `CompileSuccess` or `CompileSkip` event", () => {
     const compileSuccessEvent = {
       kind: "CompileSuccess",
       fnLoc: sourceLocationAt(1),
@@ -75,7 +75,7 @@ describe("optimizationFailureFrom", () => {
 });
 
 describe("formatOptimizationFailures", () => {
-  test("outputs one diagnostic line per optimization failure, without a line number when the line is null", () => {
+  test("outputs one diagnostic line per optimization failure, without a line number when the line is `null`", () => {
     expect(
       formatOptimizationFailures([
         { filePath: "src/source-a.ts", line: 7, reason: "Handle ??=" },

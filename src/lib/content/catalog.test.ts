@@ -85,7 +85,7 @@ describe("createCatalog", () => {
     expect(slugsOf(catalogOf(documents, { includeDrafts: true }))).toEqual(["draft", "newest", "middle", "oldest"]);
   });
 
-  test("a draft entry is still resolved by slug when the index holds it", () => {
+  test("a draft entry is still resolved by slug when the index contains it", () => {
     const collection = catalogOf({ "collection/draft.mdx": { frontmatter: frontmatterOf("Draft", { draft: true }) } })
       .collections.collection!;
 
@@ -93,7 +93,7 @@ describe("createCatalog", () => {
     expect(collection.frontmatterOf("draft")?.title).toBe("Draft");
   });
 
-  test("an entry's frontmatter is looked up by slug, or null when the index does not contain it", () => {
+  test("an entry's frontmatter is looked up by slug, or `null` when the index does not contain it", () => {
     const collection = catalogOf().collections.collection!;
 
     expect(collection.frontmatterOf("newest")?.title).toBe("Newest");
@@ -115,7 +115,7 @@ describe("createCatalog", () => {
     expect(module.className).toBeUndefined(); // No stylesheet sits beside this entry.
   });
 
-  test("a stylesheet beside an entry applies its entry class to the entry", async () => {
+  test("a loaded entry with a stylesheet beside it resolves with that stylesheet's `entry` class", async () => {
     const catalog = catalogOf({ "collection/styled.mdx": { styles: { entry: "styledEntry" } } });
     const module = await catalog.collections.collection!.load("styled");
 
@@ -140,7 +140,7 @@ describe("createCatalog", () => {
     );
   });
 
-  test("an entry resolves to the URL of its compiled body chunk, or null when the build produced no asset for it", () => {
+  test("an entry resolves to the URL of its compiled body chunk, or `null` when the build did not produce an asset for it", () => {
     const documents = {
       ...DOCUMENTS,
       "collection/newest.mdx": { ...NEWEST_DOCUMENT, bodyChunkUrl: "/assets/newest.js" },

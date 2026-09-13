@@ -11,12 +11,12 @@ describe("cx", () => {
     expect(cx("one", false, null, undefined, "", 0, "two")).toBe("one two");
   });
 
-  test("keeps a conditional class only while its condition holds", () => {
+  test("includes a conditional class only when its condition is true", () => {
     const isActive = (name: string) => name === "two";
     expect(cx("one", isActive("two") && "two", isActive("three") && "three")).toBe("one two");
   });
 
-  test("returns an empty string when given no arguments or only falsy values", () => {
+  test("returns an empty string when called without arguments or with only falsy values", () => {
     expect(cx()).toBe("");
     expect(cx(false, null, undefined)).toBe("");
   });
@@ -29,11 +29,11 @@ describe("cx", () => {
     expect(cx({ one: true, two: 0, three: "yes", four: undefined })).toBe("one three");
   });
 
-  test("mixes every form in one call", () => {
+  test("joins every accepted form mixed in one call", () => {
     expect(cx("one", ["two", { three: true, four: false }], { five: 1 })).toBe("one two three five");
   });
 
-  test("renders numbers", () => {
+  test("includes numbers as class names", () => {
     expect(cx(1, ["2"])).toBe("1 2");
   });
 

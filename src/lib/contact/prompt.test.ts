@@ -4,16 +4,16 @@ import { alertFor } from "./prompt.ts";
 
 const FAILURE = { kind: "failed", message: "The message couldn’t be sent.", suggestDirectEmail: true } as const;
 
-test("a failure that offers a fallback names the email address", () => {
+test("the alert message for a failure with `suggestDirectEmail` includes the email address", () => {
   expect(alertFor(FAILURE, "inbox@example.com").message).toBe(
     "The message couldn’t be sent. You can write directly to inbox@example.com instead.",
   );
 });
 
-test("a failure raised before the email address is read shows the message without it", () => {
+test("the alert message for a failure with `suggestDirectEmail` omits the email address when it is `null`", () => {
   expect(alertFor(FAILURE, null).message).toBe(FAILURE.message);
 });
 
-test("a failure with no fallback leaves the email address out", () => {
+test("the alert message for a failure without `suggestDirectEmail` omits the email address", () => {
   expect(alertFor({ kind: "failed", message: FAILURE.message }, "inbox@example.com").message).toBe(FAILURE.message);
 });

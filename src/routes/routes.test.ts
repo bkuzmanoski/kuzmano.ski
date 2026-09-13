@@ -29,7 +29,7 @@ const collectionEntryRoute = collection.routeOf(collectionEntry.slug);
 const openWindows = () => screen.queryAllByRole("region");
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // Title bar controls are rendered only for the focused window.
 
-test("a collection entry route opens a window titled by its frontmatter, holding its compiled MDX body", async () => {
+test("a collection entry route opens a window titled by its frontmatter, containing its compiled MDX body", async () => {
   const { container } = renderRoute(collectionEntryRoute);
 
   expect(await screen.findByRole("region", { name: collectionEntry.title })).toBeDefined();
@@ -47,7 +47,7 @@ test("a collection route opens a window with the collection title and its entry 
   );
 });
 
-test("a collection entry link opens a new window", async () => {
+test("a collection entry link opens a new window and sets the link's `aria-current` attribute", async () => {
   const { history } = renderRoute(collection.route);
   const window = await screen.findByRole("region", { name: collection.title });
 
@@ -59,7 +59,7 @@ test("a collection entry link opens a new window", async () => {
   expect(within(window).getByRole("link", { name: collectionEntry.title }).getAttribute("aria-current")).toBe("true");
 });
 
-test("closing a collection entry window focuses and updates the state the collection window behind it", async () => {
+test("closing a collection entry window focuses the collection window behind it and removes the `aria-current` attribute from its links", async () => {
   const { history } = renderRoute(collection.route);
   const collectionWindow = await screen.findByRole("region", { name: collection.title });
 
@@ -75,7 +75,7 @@ test("closing a collection entry window focuses and updates the state the collec
   expect(openWindows()).toHaveLength(1);
 });
 
-test("a second collection reuses the collection window", async () => {
+test("navigating to a second collection reuses the collection window", async () => {
   const { history } = renderRoute(collection.route);
 
   await screen.findByRole("region", { name: collection.title });
@@ -85,7 +85,7 @@ test("a second collection reuses the collection window", async () => {
   expect(openWindows()).toHaveLength(1);
 });
 
-test("a new unknown path replaces the current not-found alert", async () => {
+test("navigating to a second unknown path replaces the current not-found alert", async () => {
   const { history } = renderRoute("/non-existent-page");
 
   await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE });
@@ -96,17 +96,17 @@ test("a new unknown path replaces the current not-found alert", async () => {
   expect(openWindows()).toHaveLength(0);
 });
 
-// A push would leave an entry that reopens the window as soon as Back reached it,
-// which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`).
-test("the initial window opened by the desktop replaces the desktop in the session history", async () => {
+test("loading the root path opens the initial window, replacing the root path in the session history", async () => {
   const { history } = renderRoute("/");
 
+  // A push would leave an entry that reopens the window as soon as Back reached it,
+  // which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`).
   expect(await screen.findByRole("region", { name: initialPage.title })).toBeDefined();
   expect(history.location.pathname).toBe(INITIAL_WINDOW_ROUTE);
   expect(history.length).toBe(1);
 });
 
-test("stepping back and forward over the desktop route follows the window focus both ways", async () => {
+test("stepping back and forward over the root path focuses and unfocuses the window", async () => {
   const { history } = renderRoute(collectionEntryRoute);
   const window = await screen.findByRole("region", { name: collectionEntry.title });
 
@@ -125,14 +125,14 @@ test("stepping back and forward over the desktop route follows the window focus 
   expect(history.location.pathname).toBe("/");
 });
 
-test("an unknown path opens the not-found dialog instead of a window", async () => {
+test("an unknown path opens the not-found alert instead of a window", async () => {
   renderRoute("/non-existent-page");
 
   expect(await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
   expect(openWindows()).toHaveLength(0);
 });
 
-test("an unknown entry in a collection opens the not-found dialog", async () => {
+test("an unknown entry in a collection opens the not-found alert", async () => {
   renderRoute(collection.routeOf("does-not-exist"));
   expect(await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
 });
@@ -160,7 +160,8 @@ test("dismissing a not-found alert reached from a window returns to that window"
   expect(openWindows()).toHaveLength(1);
 });
 
-test("the contact route opens a compose window rather than resolving a document", async () => {
+test("the contact route opens a compose window with From and Message fields", async () => {
+  // The contact route is a feature route, so there is no document to resolve.
   const { history } = renderRoute("/contact");
   const window = await screen.findByRole("region", { name: "Contact" });
 
@@ -188,7 +189,7 @@ test("closing the contact window with an unsent message prompts for confirmation
   await waitFor(() => expect(openWindows()).toHaveLength(0));
 });
 
-test("closing the contact window with no message closes without prompting", async () => {
+test("closing the contact window with an empty message closes it without prompting for confirmation", async () => {
   renderRoute("/contact");
 
   const window = await screen.findByRole("region", { name: "Contact" });

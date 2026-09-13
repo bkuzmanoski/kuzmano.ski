@@ -22,7 +22,7 @@ describe("readAuthoredContent", () => {
     ]);
   });
 
-  test("returns an entry without a frontmatter block as published, with an undefined date", () => {
+  test("returns an entry without a frontmatter block as published, with `null` frontmatter and an `undefined` date", () => {
     readFileSync.mockReturnValue("A body.\n");
     expect(readAuthoredContent([collectionDirectory]).collections[0]?.entries[0]).toMatchObject({
       frontmatter: null,

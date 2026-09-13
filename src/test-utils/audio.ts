@@ -53,7 +53,7 @@ export class FakeAudioContext {
   resumeCount = 0;
 
   // What the next `resume()` returns. Set it to a rejected promise, or to one that
-  // never settles, to stand in for a gesture the browser declined to honour.
+  // never settles, to stand in for a gesture the browser declined to honor.
   resumeResult: Promise<void> = Promise.resolve();
 
   private listeners = new Set<() => void>();

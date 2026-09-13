@@ -64,14 +64,14 @@ test("a submission includes the email address, list, and source route", async ()
   expect(submittedBody()).toMatchObject({ emailAddress: EMAIL_ADDRESS, list: LIST, source: SOURCE });
 });
 
-test("an unnamed list uses the source route", async () => {
+test("a submission includes the source route as its list when `list` is whitespace-only", async () => {
   const waitlist = renderWaitlist({ list: "  " });
   await waitlist.join();
 
   expect(submittedBody()).toMatchObject({ list: SOURCE });
 });
 
-test("a recorded membership changes the state to joined", async () => {
+test("a successful submission changes the state to `joined` and plays the success sound", async () => {
   const waitlist = renderWaitlist();
 
   expect(waitlist.state).toBe("idle");
@@ -82,7 +82,7 @@ test("a recorded membership changes the state to joined", async () => {
   expect(onFailure).not.toHaveBeenCalled();
 });
 
-test("the state remains joining until the request settles", async () => {
+test("the state remains `joining` until the request settles", async () => {
   let release: (response: Response) => void = () => undefined;
 
   fetchMock.mockReturnValue(
@@ -109,7 +109,7 @@ test("the state remains joining until the request settles", async () => {
   expect(waitlist.state).toBe("joined");
 });
 
-test("a failed submission returns the state to idle and reports the failure", async () => {
+test("a failed submission returns the state to `idle` and reports the failure message", async () => {
   fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
 
   const waitlist = renderWaitlist();
@@ -120,7 +120,7 @@ test("a failed submission returns the state to idle and reports the failure", as
   expect(onFailure).toHaveBeenCalledWith(expect.stringMatching(/couldn’t be joined/));
 });
 
-test("an invalid submission reports the field's validation error", async () => {
+test("an invalid submission reports its field error", async () => {
   fetchMock.mockResolvedValue(
     Response.json({ errors: { emailAddress: "That doesn’t look like an email address." } }, { status: 400 }),
   );
@@ -132,7 +132,7 @@ test("an invalid submission reports the field's validation error", async () => {
   expect(onFailure).toHaveBeenCalledWith("That doesn’t look like an email address.");
 });
 
-test("an invalid submission with no field error reports the default message", async () => {
+test("an invalid submission without a field error reports the default message", async () => {
   fetchMock.mockResolvedValue(Response.json({ errors: {} }, { status: 400 }));
 
   const waitlist = renderWaitlist();

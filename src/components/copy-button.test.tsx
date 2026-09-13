@@ -56,7 +56,7 @@ test("clicking the button copies the value", async () => {
   expect(writeText).toHaveBeenCalledWith("test@example.com");
 });
 
-test("the button confirms a successful copy, then returns to its original state", async () => {
+test("the button announces the confirmation after a successful copy without changing its label, then clears it after the state display duration", async () => {
   renderButton();
 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
@@ -72,7 +72,7 @@ test("the button confirms a successful copy, then returns to its original state"
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
-test("the button stays pressed until the confirmation ends", async () => {
+test("the button stays pressed until the confirmation clears", async () => {
   let completeWrite: (() => void) | undefined;
 
   writeText.mockReturnValue(new Promise<void>((resolve) => (completeWrite = resolve)));
@@ -96,7 +96,7 @@ test("the button stays pressed until the confirmation ends", async () => {
   expect(screen.getByRole("button").className).not.toContain("pressed");
 });
 
-test("a failed copy leaves the button in its original state and alerts the user", async () => {
+test("a failed copy shows an alert and does not show the confirmation or leave the button pressed", async () => {
   writeText.mockRejectedValue(new Error("Denied"));
   renderButton();
 
@@ -112,7 +112,7 @@ test("a failed copy leaves the button in its original state and alerts the user"
   expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
 });
 
-test("a button with a null value is disabled", async () => {
+test("a button with a `null` value is disabled", async () => {
   renderButton(null);
 
   expect(screen.getByRole("button").hasAttribute("disabled")).toBe(true);
@@ -122,7 +122,7 @@ test("a button with a null value is disabled", async () => {
   expect(writeText).not.toHaveBeenCalled();
 });
 
-test("the confirmation clears on its own delay while the pointer stays on the button", async () => {
+test("the confirmation clears after the state display duration while the pointer stays on the button", async () => {
   renderButton();
   hoverUntilTooltipShown();
   await clickCopy();
@@ -140,7 +140,7 @@ test("the confirmation clears on its own delay while the pointer stays on the bu
   expect(screen.getByRole("tooltip").textContent).toBe("Copy to clipboard"); // Still hovered.
 });
 
-test("the confirmation clears as soon as the tooltip showing it leaves the screen", async () => {
+test("the confirmation clears as soon as the tooltip showing it is hidden", async () => {
   renderButton();
   hoverUntilTooltipShown();
   await clickCopy();
@@ -152,7 +152,7 @@ test("the confirmation clears as soon as the tooltip showing it leaves the scree
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
-test("a tap shows the confirmation, then clears it after a delay", async () => {
+test("a tap shows the confirmation, then clears it after the state display duration", async () => {
   renderButton();
   await clickCopy();
 

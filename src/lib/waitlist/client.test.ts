@@ -48,12 +48,12 @@ test.each([
   await expect(joinWaitlist(SUBMISSION)).resolves.toMatchObject({ status: "failed", message });
 });
 
-test("a network failure does not throw", async () => {
+test("a network error is treated as a failure rather than thrown", async () => {
   fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
   await expect(joinWaitlist(SUBMISSION)).resolves.toMatchObject({ status: "failed" });
 });
 
-test("an invalid submission returns the endpoint's field errors", async () => {
+test("a 400 response is treated as an invalid submission with the field errors returned by the endpoint", async () => {
   respond(400, { errors: { emailAddress: "That doesn’t look like an email address." } });
 
   await expect(joinWaitlist(SUBMISSION)).resolves.toEqual({

@@ -51,20 +51,20 @@ const post = (body: unknown, { origin = ORIGIN, headers = {} }: { origin?: strin
     }),
   });
 
-test("the contact email address is served to a same-site request", async () => {
+test("the contact email address is served to a same-origin request", async () => {
   const response = await get();
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual({ emailAddress: EMAIL_ADDRESS });
 });
 
-test("the contact email address is not cached", async () => {
+test("the contact email address is served with a `Cache-Control: no-store` header", async () => {
   expect((await get()).headers.get("cache-control")).toBe("no-store");
 });
 
 test.each([
-  ["from a cross-site context", "cross-site"],
-  ["without a site context", "none"],
+  ["from another site", "cross-site"],
+  ["from the address bar or a bookmark", "none"],
 ])("a request %s is refused", async (_label, site) => {
   const response = await get({ site: site });
 
@@ -98,7 +98,7 @@ test("requests to read and send are counted against separate rate limits", async
   expect(isWithinRateLimit).toHaveBeenCalledWith(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.7");
 });
 
-test("an unreachable email address reports a failure instead of returning empty", async () => {
+test("a missing contact email address responds with a 502 status code and an empty body", async () => {
   contactEmailAddress.mockResolvedValue(null);
 
   const response = await get();
@@ -107,7 +107,7 @@ test("an unreachable email address reports a failure instead of returning empty"
   await expect(response.text()).resolves.toBe("");
 });
 
-test("a well-formed submission is delivered, replying to its sender", async () => {
+test("a well-formed submission is delivered, with its sender as the reply-to address", async () => {
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);
@@ -116,7 +116,7 @@ test("a well-formed submission is delivered, replying to its sender", async () =
   );
 });
 
-test("a cross-origin request is refused before anything is read", async () => {
+test("a cross-origin request is refused before the rate limit is checked, and a message is not delivered", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
@@ -142,12 +142,12 @@ test.each([
   ["throttled", 429],
   ["unavailable", 502],
   ["exhausted", 503],
-] as const)("a %s delivery responds with a %i status code", async (delivery, status) => {
+] as const)("a delivery of `%s` responds with a %i status code", async (delivery, status) => {
   deliver.mockResolvedValue(delivery);
   expect((await post(VALID_SUBMISSION)).status).toBe(status);
 });
 
-test("a failed delivery does not expose its reason", async () => {
+test("a delivery of `unavailable` responds with a 502 status code and an empty body", async () => {
   deliver.mockResolvedValue("unavailable");
 
   const response = await post(VALID_SUBMISSION);

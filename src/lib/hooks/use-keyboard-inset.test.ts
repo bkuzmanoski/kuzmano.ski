@@ -41,7 +41,7 @@ afterEach(() => {
   document.documentElement.removeAttribute("style");
 });
 
-test("the inset reports the height the keyboard covers", () => {
+test("`--keyboard-inset` is set to the gap between the layout and visual viewport heights", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
@@ -57,7 +57,7 @@ test("the inset reports the height the keyboard covers", () => {
   expect(inset()).toBe("0px");
 });
 
-test("a gap too small to be a keyboard is ignored", () => {
+test("`--keyboard-inset` is set to `0px` when the gap is below the keyboard threshold", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
@@ -66,7 +66,7 @@ test("a gap too small to be a keyboard is ignored", () => {
   expect(inset()).toBe("0px");
 });
 
-test("a zoomed page reserves no space", () => {
+test("`--keyboard-inset` is removed while the page is zoomed in", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
@@ -75,7 +75,7 @@ test("a zoomed page reserves no space", () => {
   expect(inset()).toBe("");
 });
 
-test("the pan the browser made to reveal the focused field is reset", () => {
+test("the window is scrolled back to the top when the visual viewport scrolls", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
@@ -85,7 +85,7 @@ test("the pan the browser made to reveal the focused field is reset", () => {
   expect(viewport.scrollTo).toHaveBeenCalledWith(0, 0);
 });
 
-test("unmounting stops reserving space", () => {
+test("unmounting removes `--keyboard-inset`", () => {
   const viewport = stubViewport();
   const { unmount } = renderHook(() => useKeyboardInset());
 

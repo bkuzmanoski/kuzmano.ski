@@ -19,14 +19,14 @@ describe("adjacentIconId", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "bottom-right", "ArrowUp")).toBe("top-right");
   });
 
-  test("returns null when there is no neighbour in a given direction", () => {
+  test("returns `null` when there is no neighbor in a given direction", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "top-left", "ArrowUp")).toBeNull();
     expect(adjacentIconId(ICON_PLACEMENTS, "top-left", "ArrowLeft")).toBeNull();
     expect(adjacentIconId(ICON_PLACEMENTS, "bottom-right", "ArrowDown")).toBeNull();
     expect(adjacentIconId(ICON_PLACEMENTS, "bottom-right", "ArrowRight")).toBeNull();
   });
 
-  test("returns null when there is no neighbour in a single-column layout", () => {
+  test("returns `null` when there is no neighbor in a single-column layout", () => {
     const column = [
       { id: "top", x: 0, y: 0 },
       { id: "bottom", x: 0, y: 100 },
@@ -36,7 +36,7 @@ describe("adjacentIconId", () => {
     expect(adjacentIconId(column, "top", "ArrowDown")).toBe("bottom");
   });
 
-  test("returns the closest neighbour when there are multiple in a given direction", () => {
+  test("returns a farther neighbor on the arrow's axis over a nearer one off it", () => {
     const placements = [
       { id: "start", x: 0, y: 0 },
       { id: "nearer-off-axis", x: 30, y: 60 },
@@ -45,7 +45,7 @@ describe("adjacentIconId", () => {
     expect(adjacentIconId(placements, "start", "ArrowDown")).toBe("farther-on-axis");
   });
 
-  test("returns null when the given ID is not in the placements", () => {
+  test("returns `null` when the given ID is not in the placements", () => {
     expect(adjacentIconId(ICON_PLACEMENTS, "not-an-icon", "ArrowDown")).toBeNull();
   });
 });

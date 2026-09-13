@@ -16,7 +16,7 @@ const AVIF: ImageDerivative = { format: "avif" };
 const THUMBNAIL_WEBP: ImageDerivative = { format: "webp", variant: "thumbnail", width: 128 };
 
 describe("authoredRendition", () => {
-  test("serves a media file's own bytes at a URL including its hash, with the media type of its extension", () => {
+  test("returns an authored rendition at a URL including the media file's hash, with the media type of its extension", () => {
     expect(authoredRendition(resolvedImage())).toMatchObject({
       origin: "authored",
       url: mediaRoute(`collection/entry/image.${MEDIA_FILE_HASH}.png`),
@@ -30,7 +30,7 @@ describe("authoredRendition", () => {
     );
   });
 
-  test("serves a file without an extension at a URL ending in its hash", () => {
+  test("returns a URL ending in the hash of a file without an extension", () => {
     expect(authoredRendition(resolvedImage({ path: "collection/entry/image" })).url).toBe(
       mediaRoute(`collection/entry/image.${MEDIA_FILE_HASH}`),
     );
@@ -38,7 +38,7 @@ describe("authoredRendition", () => {
 });
 
 describe("imageDerivativeRendition", () => {
-  test("serves a derivative at a URL including the image's hash and the fingerprint of its encoding settings", () => {
+  test("returns a derivative rendition at a URL including the image's hash and the fingerprint of its encoding settings, with the media type of its format", () => {
     expect(imageDerivativeRendition(resolvedImage(), AVIF)).toMatchObject({
       url: mediaRoute(`collection/entry/image.${MEDIA_FILE_HASH}.${imageDerivativeFingerprint(AVIF)}.avif`),
       type: "image/avif",
@@ -56,7 +56,7 @@ describe("imageDerivativeRendition", () => {
     });
   });
 
-  test("changes a derivative's URL when its encoding settings change", () => {
+  test("returns a different URL for a derivative with different encoding settings", () => {
     expect(imageDerivativeRendition(resolvedImage(), { ...AVIF, width: 128 }).url).not.toBe(
       imageDerivativeRendition(resolvedImage(), AVIF).url,
     );

@@ -48,9 +48,9 @@ export function startGroupGracePeriod(id: string) {
 /**
  * Records the tooltip on screen, hiding whichever was there before it.
  *
- * A tooltip a control shows to report its own state appears without a pointer having travelled to
- * it, so there is no hand-over to take the previous one down. Without this, two controls tapped in
- * turn would overlap.
+ * A tooltip a control shows to report its own state appears without a pointer having
+ * traveled to it, so there is no hand-over to take the previous one down. Without this,
+ * two controls tapped in turn would overlap.
  */
 export function registerShownTooltip(id: string, hideAction: () => void) {
   if (shownTooltip !== null && shownTooltip.id !== id) {
@@ -68,7 +68,7 @@ export function unregisterShownTooltip(id: string) {
 }
 
 /**
- * Runs the pending hide immediately, cancelling any scheduled timeout.
+ * Runs the pending hide immediately, canceling any scheduled timeout.
  *
  * This lets the next tooltip replace the current one without both being visible at once.
  */

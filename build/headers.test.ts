@@ -18,25 +18,21 @@ const TYPED_RULE: HeadersRule = {
   pathPatterns: ["/first.txt", "/second.txt"],
   headers: { "Content-Type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex" },
 };
+const TYPED_RULE_TEXT = `/first.txt
+  Content-Type: text/plain; charset=utf-8
+  X-Robots-Tag: noindex
+/second.txt
+  Content-Type: text/plain; charset=utf-8
+  X-Robots-Tag: noindex`;
 
 describe("headersRuleText", () => {
   test("writes each path pattern with every header, under the rule's description", () => {
-    expect(headersRuleText(TYPED_RULE)).toBe(
-      [
-        "# Typed paths.",
-        "/first.txt",
-        "  Content-Type: text/plain; charset=utf-8",
-        "  X-Robots-Tag: noindex",
-        "/second.txt",
-        "  Content-Type: text/plain; charset=utf-8",
-        "  X-Robots-Tag: noindex",
-      ].join("\n"),
-    );
+    expect(headersRuleText(TYPED_RULE)).toBe(TYPED_RULE_TEXT);
   });
 });
 
 describe("headersWithRules", () => {
-  test("writes the rules alone, separated by a blank line, into a file that contains no rules", () => {
+  test("writes the rules alone, separated by a blank line, into an empty file", () => {
     expect(headersWithRules("", [CACHE_RULE, TYPED_RULE])).toBe(
       `${headersRuleText(CACHE_RULE)}\n\n${headersRuleText(TYPED_RULE)}\n`,
     );
@@ -56,7 +52,7 @@ describe("headersWithRules", () => {
 });
 
 describe("addHeadersRules", () => {
-  test("creates the file in an output that has none, then adds to it", async () => {
+  test("creates the `_headers` file in an output directory without one, then adds rules to it", async () => {
     const outputDirectoryAbsolutePath = await mkdtemp(join(tmpdir(), "headers-"));
 
     try {

@@ -58,7 +58,7 @@ describe("watchFaviconColorScheme", () => {
   test.for([
     ["dark", true, `${HREF}?color-scheme=dark`],
     ["light", false, `${HREF}?color-scheme=light`],
-  ] as const)("gives the icon an updated URL for a %s color scheme on start", ([, matches, expected]) => {
+  ] as const)("sets the icon's `href` attribute for a %s color scheme on start", ([, matches, expected]) => {
     const change = stubMatchMedia();
 
     change(matches);
@@ -73,17 +73,20 @@ describe("watchFaviconColorScheme", () => {
   test.for([
     ["dark", true, `${HREF}?color-scheme=dark`],
     ["light", false, `${HREF}?color-scheme=light`],
-  ] as const)("gives the icon an updated URL for a %s color scheme when it changes", ([, matches, expected]) => {
-    const change = stubMatchMedia();
-    const icon = addIcon();
+  ] as const)(
+    "sets the icon's `href` attribute for a %s color scheme when the scheme changes",
+    ([, matches, expected]) => {
+      const change = stubMatchMedia();
+      const icon = addIcon();
 
-    watchFaviconColorScheme();
-    change(matches);
+      watchFaviconColorScheme();
+      change(matches);
 
-    expect(icon.getAttribute("href")).toBe(expected);
-  });
+      expect(icon.getAttribute("href")).toBe(expected);
+    },
+  );
 
-  test("keeps one parameter across repeated changes", () => {
+  test("replaces the color scheme parameter on each change rather than appending another", () => {
     const change = stubMatchMedia();
     const icon = addIcon();
 
@@ -154,7 +157,7 @@ describe("watchFaviconColorScheme", () => {
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });
 
-  test("does not throw when the favicon is not an SVG", () => {
+  test("does not throw when the document has no SVG favicon", () => {
     const change = stubMatchMedia();
 
     expect(() => {
@@ -163,7 +166,7 @@ describe("watchFaviconColorScheme", () => {
     }).not.toThrow();
   });
 
-  test("does not throw or change the favicon href without `matchMedia`", () => {
+  test("does not throw or change the icon's `href` attribute without `matchMedia`", () => {
     const icon = addIcon();
 
     expect(() => watchFaviconColorScheme()()).not.toThrow();

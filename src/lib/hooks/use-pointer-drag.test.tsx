@@ -70,7 +70,7 @@ function dragBy(move: Move) {
 
 const release = ({ pointerId = POINTER_ID } = {}) => fireEvent.pointerUp(window, { pointerId });
 
-test("a pointer that travels no further than the threshold reports no move", () => {
+test("a pointer that travels no further than the threshold does not report a move", () => {
   renderHandle({ threshold: DRAG_THRESHOLD_PX });
   press();
   dragBy({ dx: DRAG_THRESHOLD_PX - 1 });
@@ -88,17 +88,17 @@ test("a pointer that travels past the threshold reports the move that crossed it
   expect(onDragMove).toHaveBeenCalledWith({ dx: DRAG_THRESHOLD_PX + 1, dy: 0 }, START_VALUE);
 });
 
-// The threshold exists for handles that also respond to a click; a handle with no
-// threshold drags as soon as the pointer travels at all.
-test("the first move of any distance drags a handle with no threshold", () => {
+test("a pointer that travels any distance reports its first move on a handle without a threshold", () => {
   renderHandle();
   press();
   dragBy({ dy: 1 });
 
+  // The threshold exists for handles that also respond to a click; a handle with no
+  // threshold drags as soon as the pointer travels at all.
   expect(onDragMove).toHaveBeenCalledWith({ dx: 0, dy: 1 }, START_VALUE);
 });
 
-test("each move reports its distance from the press point, alongside the value the press recorded", () => {
+test("each move reports its distance from the press point, alongside the value `start` returned at the press", () => {
   renderHandle();
   press();
   dragBy({ dx: 20, dy: 10 });
@@ -113,7 +113,7 @@ test("each move reports its distance from the press point, alongside the value t
   expect(start).toHaveBeenCalledTimes(1);
 });
 
-test("a release reports the drag as moved once the pointer has travelled past the threshold", () => {
+test("a release reports the drag as moved once the pointer has traveled past the threshold", () => {
   renderHandle({ threshold: DRAG_THRESHOLD_PX });
   press();
   dragBy({ dx: DRAG_THRESHOLD_PX + 1 });
@@ -131,7 +131,7 @@ test("a release reports the drag as unmoved while the pointer stays within the t
   expect(onEnd).toHaveBeenCalledExactlyOnceWith(false);
 });
 
-test("a press with a secondary button starts no drag", () => {
+test("a press with a secondary button does not start a drag", () => {
   renderHandle();
   press({ button: 2 });
   dragBy({ dx: 20 });
@@ -142,7 +142,7 @@ test("a press with a secondary button starts no drag", () => {
   expect(onEnd).not.toHaveBeenCalled();
 });
 
-test("a press that canStart refuses starts no drag", () => {
+test("a press for which `canStart` returns `false` does not start a drag", () => {
   renderHandle({ canStart: () => false });
   press();
   dragBy({ dx: 20 });
@@ -151,8 +151,7 @@ test("a press that canStart refuses starts no drag", () => {
   expect(onDragMove).not.toHaveBeenCalled();
 });
 
-// The release reached no listener of this drag, so the next move is the first evidence the drag is over.
-test("a move arriving with no button held ends the drag", () => {
+test("a move while no button is held ends the drag", () => {
   renderHandle();
   press();
   dragBy({ dx: 20 });
@@ -180,8 +179,7 @@ test("moves within one frame report once, at the last position", () => {
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 15, dy: 0 }, START_VALUE);
 });
 
-// The last position of a gesture is the one that matters most, so it must not be lost to a frame whose callback never runs.
-test("a move still waiting for its frame reports before the drag ends", () => {
+test("a pending move reports once, before the drag ends", () => {
   renderHandle();
   press();
   movePointerBy({ dx: 12, dy: 8 });
@@ -190,7 +188,7 @@ test("a move still waiting for its frame reports before the drag ends", () => {
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 12, dy: 8 }, START_VALUE);
   expect(onDragMove.mock.invocationCallOrder[0]).toBeLessThan(onEnd.mock.invocationCallOrder[0]!);
 
-  advance(FRAME_MS); // The cancelled frame must not report the same move a second time.
+  advance(FRAME_MS); // The canceled frame must not report the same move a second time.
 
   expect(onDragMove).toHaveBeenCalledTimes(1);
 });
@@ -222,7 +220,6 @@ test("the pressing pointer still reports its moves after a second pointer has mo
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 20, dy: 0 }, START_VALUE);
 });
 
-// Only one gesture may be in flight, so the earlier one is closed out rather than left listening.
 test("a press arriving mid-drag ends the drag in flight", () => {
   renderHandle();
   press();
@@ -235,7 +232,7 @@ test("a press arriving mid-drag ends the drag in flight", () => {
   dragBy({ dx: 30 });
 
   expect(onDragMove).toHaveBeenLastCalledWith({ dx: 30, dy: 0 }, START_VALUE);
-  expect(onDragMove).toHaveBeenCalledTimes(2); // The abandoned drag's listeners are gone, so the move reports once.
+  expect(onDragMove).toHaveBeenCalledTimes(2);
 });
 
 test("unmounting during a drag stops reporting the gesture", () => {

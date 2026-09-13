@@ -3,11 +3,11 @@ import { describe, expect, test } from "vitest";
 import { metricIn, metricKeyOf, metricPropertyOf } from "./layout-metrics.ts";
 
 describe("metricKeyOf", () => {
-  test("reads a hyphenated property name as a camel case key", () => {
+  test("returns the camel case key corresponding to a hyphenated property name", () => {
     expect(metricKeyOf("--layout-window-layer-padding")).toBe("windowLayerPadding");
   });
 
-  test("reads a single-word property name as the word itself", () => {
+  test("returns the word itself as the key for a single-word property name", () => {
     expect(metricKeyOf("--layout-gutter")).toBe("gutter");
   });
 
@@ -20,7 +20,7 @@ describe("metricKeyOf", () => {
     expect(() => metricKeyOf("--layout-fooBar")).toThrow("`--layout-fooBar` is not a layout metric name");
   });
 
-  test("throws for a property name without the CSS variable prefix", () => {
+  test("throws for a property name without the `--layout-` prefix", () => {
     expect(() => metricKeyOf("--color-foreground")).toThrow("`--color-foreground` is not a layout metric name");
   });
 
@@ -48,11 +48,11 @@ describe("metricPropertyOf", () => {
 });
 
 describe("metricIn", () => {
-  test("returns the metric the stylesheet declares", () => {
+  test("returns the metric for a key", () => {
     expect(metricIn({ gutter: 16 }, "gutter")).toBe(16);
   });
 
-  test("throws for a metric the stylesheet does not declare, naming the custom property to add", () => {
+  test("throws for a key without a metric, naming its custom property", () => {
     expect(() => metricIn({}, "windowLayerPadding")).toThrow("`--layout-window-layer-padding` is not declared");
   });
 

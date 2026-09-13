@@ -33,29 +33,29 @@ const bufferFor = (played: Strike) => {
 const samplesOf = (played: Strike) => Array.from(bufferFor(played).getChannelData(0));
 
 describe("playStrike", () => {
-  test("a strike renders a buffer for its full duration", () => {
+  test("renders a buffer for the strike's full duration", () => {
     const buffer = bufferFor(strike({ durationSeconds: 0.02 }));
     expect(buffer.length / buffer.sampleRate).toBeCloseTo(0.02, 3);
   });
 
-  test("the same seed renders the same noise burst", () => {
+  test("renders the same noise burst for the same seed", () => {
     expect(samplesOf(strike())).toEqual(samplesOf(strike()));
   });
 
-  test("a different seed renders a different noise burst", () => {
+  test("renders a different noise burst for a different seed", () => {
     expect(samplesOf(strike({ seed: 1 }))).not.toEqual(samplesOf(strike({ seed: 2 })));
   });
 
-  test("a repeated strike renders once and plays the same buffer again", () => {
+  test("renders a strike once and plays that same buffer again", () => {
     const shared = strike();
     expect(bufferFor(shared)).toBe(bufferFor(shared));
   });
 
-  test("two strikes with the same shape use separate buffers", () => {
+  test("uses separate buffers for two strikes with the same shape", () => {
     expect(bufferFor(strike())).not.toBe(bufferFor(strike()));
   });
 
-  test("the schedule reaches playback unchanged", () => {
+  test("passes the schedule to playback unchanged", () => {
     playStrike(fakeAudioContext(), strike(), { at: 1.25, level: 0.4, rate: 0.92 });
     expect(vi.mocked(playBuffer).mock.lastCall![2]).toEqual({ at: 1.25, level: 0.4, rate: 0.92 });
   });

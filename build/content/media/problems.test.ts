@@ -68,7 +68,7 @@ describe("renditionSizeProblems", () => {
     ]);
   });
 
-  test("reports a derivative one byte over the maximum size, naming the image it was encoded from", () => {
+  test("reports a derivative rendition one byte over the maximum size, naming the image it was encoded from", () => {
     expect(
       renditionSizeProblems(imageDerivativeRendition(RESOLVED_IMAGE, { format: "avif" }), MAX_RENDITION_BYTES + 1),
     ).toEqual([
@@ -111,7 +111,7 @@ describe("videoProblems", () => {
     expect(videoProblems(resolvedVideo({ mp4Metadata: withAudio }))).toEqual([]);
   });
 
-  test("skips the metadata checks for a video one byte over the maximum size", () => {
+  test("reports a video one byte over the maximum size without checking its metadata", () => {
     expect(videoProblems(resolvedVideo({ bytes: MAX_RENDITION_BYTES + 1, mp4Metadata: null }))).toEqual([
       expect.stringContaining(
         `"${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" exceeds the ${MAX_RENDITION_SIZE} video limit (${OVERSIZED_RENDITION_SIZE}).`,

@@ -16,7 +16,7 @@ beforeEach(() => vi.mocked(playClick).mockClear());
 const MOUSE = { pointerType: "mouse" };
 const CLICK = { detail: 1 };
 
-test("a button forwards native disabled, autofocus, and accessibility props", () => {
+test("a button forwards the `disabled`, `autoFocus`, and `aria-describedby` props", () => {
   render(
     <>
       <Button disabled aria-describedby="disabled-description">
@@ -42,7 +42,7 @@ test("a button forwards native disabled, autofocus, and accessibility props", ()
   expect(document.activeElement).toBe(focusedButton);
 });
 
-test("a button keeps a caller's class alongside its own", () => {
+test("a button applies a caller's class alongside its own", () => {
   render(
     <>
       <Button className="caller">Button</Button>
@@ -60,7 +60,7 @@ test("a button keeps a caller's class alongside its own", () => {
   }
 });
 
-test("an href renders an anchor, which still applies autoFocus", () => {
+test("a button with an `href` prop renders an anchor, which still applies the `autoFocus` prop", () => {
   render(
     <Button autoFocus href="/">
       Go Home
@@ -74,7 +74,7 @@ test("an href renders an anchor, which still applies autoFocus", () => {
   expect(document.activeElement).toBe(link);
 });
 
-test("both variants populate a caller-supplied ref, and the anchor still applies autoFocus", () => {
+test("both variants populate a caller-supplied ref, and the anchor still applies the `autoFocus` prop", () => {
   const buttonRef: RefObject<HTMLButtonElement | null> = { current: null };
   const linkRef: RefObject<HTMLAnchorElement | null> = { current: null };
 
@@ -92,7 +92,7 @@ test("both variants populate a caller-supplied ref, and the anchor still applies
   expect(document.activeElement).toBe(linkRef.current);
 });
 
-test("a press plays a single click sound, on the press itself", () => {
+test("a press and the click that follows it play a single click sound", () => {
   render(<Button>Press</Button>);
 
   const button = screen.getByRole("button", { name: "Press" });

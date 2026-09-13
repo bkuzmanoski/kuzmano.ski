@@ -23,7 +23,7 @@ function renderInputField() {
   };
 }
 
-test("an input control is described by the error and marked invalid only while there is one", () => {
+test("an input control has the `aria-invalid` and `aria-describedby` attributes only while there is an error", () => {
   const fieldHarness = renderInputField();
 
   expect(fieldHarness.inputFieldBinding.control["aria-invalid"]).toBeUndefined();
@@ -35,7 +35,7 @@ test("an input control is described by the error and marked invalid only while t
   expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBe(fieldHarness.inputFieldBinding.errorId);
 });
 
-test("the error is carried to the input field that reports it", () => {
+test("the input field binding includes the error passed to `useInputField`", () => {
   const fieldHarness = renderInputField();
 
   fieldHarness.show("Validation error.");
@@ -43,7 +43,7 @@ test("the error is carried to the input field that reports it", () => {
   expect(fieldHarness.inputFieldBinding.error).toBe("Validation error.");
 });
 
-test("a control keeps its attributes across renders that don't change the error", () => {
+test("an input control's props retain their identity across renders that don't change the error", () => {
   const fieldHarness = renderInputField();
   const unchangedBinding = fieldHarness.inputFieldBinding.control;
 

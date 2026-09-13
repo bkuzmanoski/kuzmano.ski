@@ -39,28 +39,28 @@ test("a well-formed report is logged as a client error", async () => {
   expect(console.error).toHaveBeenCalledWith({ event: "client_error", ...VALID_REPORT });
 });
 
-test("a report that names no kind is logged as unknown", async () => {
+test("a report without a kind is logged with an unknown kind", async () => {
   await post({ ...VALID_REPORT, kind: undefined });
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ kind: "unknown" }));
 });
 
 test.each([
-  ["a report with no message", { ...VALID_REPORT, message: undefined }],
-  ["a report with no route", { ...VALID_REPORT, route: undefined }],
-  ["a report from a route that does not address this site", { ...VALID_REPORT, route: "https://elsewhere.example" }],
+  ["a report without a message", { ...VALID_REPORT, message: undefined }],
+  ["a report without a route", { ...VALID_REPORT, route: undefined }],
+  ["a report whose route does not start with `/`", { ...VALID_REPORT, route: "https://elsewhere.example" }],
 ])("%s is refused", async (_label, body) => {
   expect((await post(body)).status).toBe(400);
   expect(console.error).not.toHaveBeenCalled();
 });
 
-test("a field longer than the log accepts is truncated rather than refused", async () => {
+test("a message longer than the maximum message length is truncated rather than refused", async () => {
   const response = await post({ ...VALID_REPORT, message: "a".repeat(600) });
 
   expect(response.status).toBe(204);
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ message: "a".repeat(500) }));
 });
 
-test("a cross-origin request is refused before anything is read", async () => {
+test("a cross-origin request is refused, and its report is not logged", async () => {
   const response = await post(VALID_REPORT, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);

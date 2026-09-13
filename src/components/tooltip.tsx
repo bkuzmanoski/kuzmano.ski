@@ -139,8 +139,8 @@ export function Tooltip({
 
         setIsPointerHovering(isHovering);
 
-        // The grace period is a hover affordance. A touch pointer has not travelled from a
-        // neighbouring control, and showing on contact would pre-empt the press it is about to make.
+        // The grace period is a hover affordance. A touch pointer has not traveled from a neighboring
+        // control, and showing on contact would pre-empt the press it is about to make.
         const skipsHoverDelay = isHovering && isGroupInGracePeriod(wrapperRef.current);
 
         show(skipsHoverDelay ? 0 : HOVER_DELAY_MS);

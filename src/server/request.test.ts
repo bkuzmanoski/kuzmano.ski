@@ -29,7 +29,7 @@ describe("exceedsMaxLength", () => {
     expect(exceedsMaxLength(post({ "content-length": String(MAX_BODY_LENGTH + 1) }))).toBe(true);
   });
 
-  test("a request that declares no content length is measured as empty", () => {
+  test("a request that does not declare a content length is accepted", () => {
     expect(exceedsMaxLength(post())).toBe(false);
   });
 
@@ -72,13 +72,13 @@ describe("isSameOrigin", () => {
     expect(isSameOrigin(post({ origin }))).toBe(false);
   });
 
-  test("a request that declares no origin is refused", () => {
+  test("a request that does not declare an origin is refused", () => {
     expect(isSameOrigin(post())).toBe(false);
   });
 });
 
 describe("isSameSite", () => {
-  test("a request the browser labels same-origin is accepted", () => {
+  test("a request whose `Sec-Fetch-Site` header identifies it as same-origin is accepted", () => {
     expect(isSameSite(post({ "sec-fetch-site": "same-origin" }))).toBe(true);
   });
 
@@ -86,18 +86,18 @@ describe("isSameSite", () => {
     ["another site", "cross-site"],
     ["a sibling subdomain", "same-site"],
     ["the address bar or a bookmark", "none"],
-  ])("a request the browser labels as %s is refused", (_label, site) => {
+  ])("a request whose `Sec-Fetch-Site` header identifies it as sent from %s is refused", (_label, site) => {
     expect(isSameSite(post({ "sec-fetch-site": site }))).toBe(false);
   });
 
-  test("a request from a client that sends no fetch metadata is refused", () => {
+  test("a request that does not declare a `Sec-Fetch-Site` header is refused", () => {
     expect(isSameSite(post())).toBe(false);
   });
 });
 
 // The body guard measures UTF-8 bytes, while field limits measure UTF-16 code units. These tests build each
 // form's largest valid submission and fail if the body cap would reject it with a 413 before validation.
-describe("the body limit admits every submission the forms accept", () => {
+describe("every submission that passes validation is within the maximum body length", () => {
   test("a contact message of the maximum email address and message length is accepted", () => {
     const body = JSON.stringify({
       from: fieldOfMaximumLength(MAX_EMAIL_ADDRESS_LENGTH),

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { getRouter } from "./router.tsx";
 
-test("the router is built from the generated route tree", () => {
+test("`getRouter` builds a router from the generated route tree, with scroll restoration and preloading on intent", () => {
   const router = getRouter();
 
   expect(router.routesByPath["/"]).toBeDefined();

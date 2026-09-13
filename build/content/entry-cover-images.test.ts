@@ -21,7 +21,7 @@ const pluginServing = (coverImages: Record<EntryKey, CoverImage>) => {
 };
 
 describe("entryCoverImagesPlugin", () => {
-  test("resolves the virtual module's ID", () => {
+  test("resolves only the virtual module's ID", () => {
     expect(pluginServing({}).resolveId("virtual:entry-cover-images")).toBe(RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID);
     expect(pluginServing({}).resolveId("virtual:other-module")).toBeNull();
   });

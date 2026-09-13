@@ -131,7 +131,7 @@ describe("authoredMediaIn", () => {
     ]);
   });
 
-  test("assigns a cover image to an entry whose slug ends with the cover stem suffix", () => {
+  test("assigns a cover image to an entry whose slug ends with the `.cover` stem suffix", () => {
     const { entryMedia, problems } = authoredMediaIn(
       directoryListing({ fileNames: ["entry.mdx", "entry.cover.mdx", "entry.cover.cover.png"] }),
     );
@@ -295,9 +295,10 @@ describe("mediaReferenceProblems", () => {
   });
 
   test("accepts a reference to a poster image", () => {
-    expect(
-      referenceProblemsIn(`${ENTRY_SOURCE}\n<video src="./video.mp4" poster="./video.poster.png" />\n`, entry),
-    ).toEqual([]);
+    const source = `${ENTRY_SOURCE}
+      <video src="./video.mp4" poster="./video.poster.png" />
+    `;
+    expect(referenceProblemsIn(source, entry)).toEqual([]);
   });
 
   test("accepts a poster image the entry does not reference", () => {
@@ -305,7 +306,10 @@ describe("mediaReferenceProblems", () => {
   });
 
   test("reports a reference to a missing file", () => {
-    expect(referenceProblemsIn(`${ENTRY_SOURCE}\n![Missing](./missing.png)\n`, entry)).toEqual([
+    const source = `${ENTRY_SOURCE}
+      ![Missing](./missing.png)
+    `;
+    expect(referenceProblemsIn(source, entry)).toEqual([
       expect.stringContaining(
         `references "./missing.png", which is not a file in "${CONTENT_DIRECTORY_PATH}/collection/entry/"`,
       ),
@@ -313,9 +317,10 @@ describe("mediaReferenceProblems", () => {
   });
 
   test("reports a reference into a subdirectory", () => {
-    expect(referenceProblemsIn(`${ENTRY_SOURCE}\n![Nested](./nested/image.png)\n`, entry)).toEqual([
-      expect.stringMatching(/references "\.\/nested\/image\.png"/),
-    ]);
+    const source = `${ENTRY_SOURCE}
+      ![Nested](./nested/image.png)
+    `;
+    expect(referenceProblemsIn(source, entry)).toEqual([expect.stringMatching(/references "\.\/nested\/image\.png"/)]);
   });
 
   test("reports a body image the entry does not reference", () => {
@@ -324,14 +329,21 @@ describe("mediaReferenceProblems", () => {
     ]);
   });
 
-  test("reports a Markdown image whose source references a video", () => {
-    expect(referenceProblemsIn(`${ENTRY_SOURCE}\n![A video](./video.mp4)\n`, entry)).toEqual([
+  test("reports a Markdown image whose destination references a video", () => {
+    const source = `${ENTRY_SOURCE}
+      ![A video](./video.mp4)
+    `;
+    expect(referenceProblemsIn(source, entry)).toEqual([
       expect.stringMatching(/references "\.\/video\.mp4", which is a video, where only an image can be rendered/),
     ]);
   });
 
-  test("reports a `<video>` whose source references an image", () => {
-    const withImageSource = '![An image](./image.png)\n\n<video src="./image.png" />\n';
+  test("reports a `<video>` whose `src` attribute references an image", () => {
+    const withImageSource = `
+      ![An image](./image.png)
+
+      <video src="./image.png" />
+    `;
     expect(referenceProblemsIn(withImageSource, entry)).toEqual([
       expect.stringMatching(/references "\.\/image\.png", which is an image, where only a video can be rendered/),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" is not referenced by`),
@@ -339,7 +351,11 @@ describe("mediaReferenceProblems", () => {
   });
 
   test("reports a `<video>` whose `<source>` references an image", () => {
-    const withImageSourceChild = '![An image](./image.png)\n\n<video><source src="./image.png" /></video>\n';
+    const withImageSourceChild = `
+      ![An image](./image.png)
+
+      <video><source src="./image.png" /></video>
+    `;
 
     expect(referenceProblemsIn(withImageSourceChild, entry)).toEqual([
       expect.stringMatching(/references "\.\/image\.png", which is an image, where only a video can be rendered/),
@@ -347,8 +363,8 @@ describe("mediaReferenceProblems", () => {
     ]);
   });
 
-  test("parses a title containing MDX syntax as frontmatter rather than as the entry's body", () => {
-    const withMdxSyntaxInTitle = `---\ntitle: "Taps: <NSEvent> and { a brace }"\n---\n\n${ENTRY_SOURCE}`;
+  test("accepts an entry with MDX syntax in its frontmatter title", () => {
+    const withMdxSyntaxInTitle = `---\ntitle: "A title with <Component> and { a brace }"\n---\n\n${ENTRY_SOURCE}`;
     expect(referenceProblemsIn(withMdxSyntaxInTitle, entry)).toEqual([]);
   });
 
@@ -370,7 +386,11 @@ describe("mediaReferenceProblems", () => {
       coverImageFilePath: null,
       bodyImageFileNames: ["second.png", "first.png"],
     });
-    expect(referenceProblemsIn('<video src="./video.mp4" />\n![Missing](./missing.png)\n', withTwoImages)).toEqual([
+    const source = `
+      <video src="./video.mp4" />
+      ![Missing](./missing.png)
+    `;
+    expect(referenceProblemsIn(source, withTwoImages)).toEqual([
       expect.stringMatching(/references "\.\/missing\.png"/),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/first.png" is not referenced`),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/second.png" is not referenced`),
@@ -378,6 +398,11 @@ describe("mediaReferenceProblems", () => {
   });
 
   test("resolves a reference written without a leading `./` to the same file", () => {
-    expect(referenceProblemsIn('![An image](image.png)\n\n<video src="video.mp4" />\n', entry)).toEqual([]);
+    const source = `
+      ![An image](image.png)
+
+      <video src="video.mp4" />
+    `;
+    expect(referenceProblemsIn(source, entry)).toEqual([]);
   });
 });

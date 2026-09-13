@@ -52,7 +52,7 @@ describe("isEmailAddress", () => {
     "plus+addressing@example.co.nz",
     "tag_underscore-hyphen@sub.domain.example",
     "  padded@example.com  ",
-  ])('accepts "%j"', (value) => {
+  ])("accepts %j", (value) => {
     expect(isEmailAddress(value)).toBe(true);
   });
 
@@ -68,7 +68,7 @@ describe("isEmailAddress", () => {
     "with,comma@example.com",
     "newline@example.com\nBcc: someone@else.com", // The shape a header injection would take.
     "hyphen@-example.com",
-  ])('rejects "%j"', (value) => {
+  ])("rejects %j", (value) => {
     expect(isEmailAddress(value)).toBe(false);
   });
 
@@ -91,14 +91,14 @@ describe("isEmailAddress", () => {
 describe("emailAddress", () => {
   const rule = emailAddress("Not an email address.");
 
-  test("allows an empty value, leaving emptiness for `required` to report", () => {
-    expect(rule("")).toBeNull();
+  test("accepts an empty value, and rejects a value that is not an email address", () => {
+    expect(rule("")).toBeNull(); // An empty value is left for `required` to reject.
     expect(rule("nope")).toBe("Not an email address.");
   });
 });
 
 describe("firstError", () => {
-  test("reports one reason at a time, in the order the rules are defined", () => {
+  test("returns the message of the first rule that fails, or `null` when every rule passes", () => {
     const rules = [required("Required."), maxLength(2, "Too long.")];
 
     expect(firstError(rules, "")).toBe("Required.");
@@ -118,14 +118,14 @@ describe("validate", () => {
     email: [required("Enter an email address."), emailAddress("Not an email address.")],
   };
 
-  test("reports the first failure for every invalid field", () => {
+  test("returns the message of the first rule that fails for every invalid field", () => {
     expect(validate(schema, { name: "", email: "nope" })).toEqual({
       name: "Enter a name.",
       email: "Not an email address.",
     });
   });
 
-  test("omits valid fields, so an empty result means valid", () => {
+  test("returns an empty object when every field is valid", () => {
     expect(validate(schema, { name: "Test", email: "test@example.com" })).toEqual({});
   });
 });

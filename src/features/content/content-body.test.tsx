@@ -74,7 +74,7 @@ test("an entry's own class is applied alongside the shared one", async () => {
   expect(article.className.split(" ")).toEqual([styles.content, "aboutEntry"]);
 });
 
-test("the title heads the article, from the frontmatter rather than the body", async () => {
+test("the article opens with the title as an `<h1>` marked with the `data-feed-omit` attribute", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
   const heading = screen.getByRole("heading", { level: 1 });
 
@@ -83,7 +83,7 @@ test("the title heads the article, from the frontmatter rather than the body", a
   expect(heading.hasAttribute("data-feed-omit")).toBe(true); // A feed reader renders the entry's title itself, so the body must not repeat it.
 });
 
-test("every heading is followed by a named link to itself that is accessible to assistive technology", async () => {
+test("every heading contains a link to its own ID, named after the heading and outside any element with the `aria-hidden` attribute", async () => {
   await renderContent(headingAnchorFixture);
 
   for (const { tagName, title, id } of HEADINGS) {
@@ -95,16 +95,19 @@ test("every heading is followed by a named link to itself that is accessible to 
   }
 });
 
-test.each(HEADINGS)("an entry opened at a fragment scrolls to the $tagName it names", async ({ title, id }) => {
-  window.location.hash = `#${id}`;
+test.each(HEADINGS)(
+  "an entry opened at a fragment scrolls to the $tagName it names and focuses it",
+  async ({ title, id }) => {
+    window.location.hash = `#${id}`;
 
-  await renderContent(headingAnchorFixture);
+    await renderContent(headingAnchorFixture);
 
-  const heading = screen.getByRole("heading", { name: new RegExp(title) });
+    const heading = screen.getByRole("heading", { name: new RegExp(title) });
 
-  expect(scrollIntoViewSilently).toHaveBeenCalledWith(heading, { block: "start" });
-  expect(document.activeElement).toBe(heading);
-});
+    expect(scrollIntoViewSilently).toHaveBeenCalledWith(heading, { block: "start" });
+    expect(document.activeElement).toBe(heading);
+  },
+);
 
 test("an entry opened at a fragment that does not name a heading does not scroll", async () => {
   window.location.hash = "#missing-heading";
@@ -119,7 +122,7 @@ test("an entry opened without a fragment does not scroll", async () => {
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("clicking a heading link copies the heading's address and shows the confirmation", async () => {
+test("clicking a heading link copies the heading's canonical URL and shows the confirmation", async () => {
   await renderContent(headingAnchorFixture);
 
   const link = screen.getByRole("link", { name: 'Link to "Fixture Heading"' });
@@ -144,7 +147,7 @@ test("clicking a heading link does not scroll the heading into view", async () =
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("a copy failure displays an alert and no confirmation", async () => {
+test("a failed copy shows an alert and does not show the confirmation", async () => {
   writeText.mockRejectedValue(new Error("Denied"));
 
   await renderContent(headingAnchorFixture);

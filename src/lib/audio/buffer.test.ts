@@ -51,7 +51,7 @@ describe("renderBuffer", () => {
     }
   });
 
-  test("keeps a silent kernel silent", () => {
+  test("renders a buffer of zeros for a kernel that returns 0", () => {
     const samples = read(
       renderBuffer(fakeAudioContext(), {
         sampleRate: 100,

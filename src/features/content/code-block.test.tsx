@@ -38,7 +38,7 @@ test("the control copies the source of the code block it belongs to", async () =
   expect(writeText).toHaveBeenCalledWith("const answer = 42;");
 });
 
-test("the code block keeps the attributes set by the syntax highlighter", () => {
+test("the code block preserves the attributes set by the syntax highlighter", () => {
   const { container } = render(<CodeBlock className="shiki" style={{ color: "red" }} tabIndex={0} />);
   const block = container.querySelector("pre")!;
 

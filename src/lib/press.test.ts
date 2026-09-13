@@ -28,7 +28,7 @@ function pressTarget() {
   };
 }
 
-test("the focus the press would move is refused, while the press itself still reaches its target", () => {
+test("the focus change of the swallowed press is prevented, while its mouse down event is still dispatched to its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -37,7 +37,7 @@ test("the focus the press would move is refused, while the press itself still re
   expect(target.onMouseDown).toHaveBeenCalledTimes(1);
 });
 
-test("the click that ends the press is swallowed before it reaches its target", () => {
+test("the click that ends the press is swallowed before it is dispatched to its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -46,7 +46,7 @@ test("the click that ends the press is swallowed before it reaches its target", 
   expect(target.onClick).not.toHaveBeenCalled();
 });
 
-test("a press that follows the swallowed one keeps its own focus", () => {
+test("the focus change of a press that follows the swallowed one is not prevented", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -66,7 +66,7 @@ test("only one click is swallowed", () => {
   expect(target.onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press that does not produce a click clears the swallow, so the next press is unaffected", () => {
+test("a click after the next pointer down event is not swallowed", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -76,7 +76,7 @@ test("a press that does not produce a click clears the swallow, so the next pres
   expect(target.onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a click too late to belong to the press is not swallowed", () => {
+test("a click once `MAX_CLICK_DELAY_MS` has passed is not swallowed", () => {
   const target = pressTarget();
 
   swallowNextPress();

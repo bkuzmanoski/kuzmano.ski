@@ -38,11 +38,11 @@ const read = (
 
 const refusalStatus = (result: Awaited<ReturnType<typeof read>>) => (result.ok ? undefined : result.response.status);
 
-test("a well-formed body can be parsed as a submission", async () => {
+test("a well-formed body is parsed into the submitted fields", async () => {
   await expect(read(VALID_SUBMISSION)).resolves.toEqual({ ok: true, fields: VALID_SUBMISSION });
 });
 
-test("a cross-origin request is refused before anything is read", async () => {
+test("a cross-origin request is refused before the rate limit is checked", async () => {
   expect(refusalStatus(await read(VALID_SUBMISSION, { origin: "https://elsewhere.example" }))).toBe(403);
   expect(isWithinRateLimit).not.toHaveBeenCalled();
 });
@@ -73,12 +73,13 @@ test("rate limiting uses the sender's IP address as its key", async () => {
   expect(isWithinRateLimit).toHaveBeenCalledWith(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.7");
 });
 
-test("a request with no IP address shares one bucket rather than escaping the limit", async () => {
+test("rate limiting uses the fallback key for a request without an IP address", async () => {
+  // Requests without an IP address share one key rather than each escaping the limit.
   await read(VALID_SUBMISSION);
   expect(isWithinRateLimit).toHaveBeenCalledWith(SEND_EMAIL_RATELIMIT_BINDING, "unknown");
 });
 
-test("an endpoint with no rate limit of its own reads the body without counting the sender", async () => {
+test("an endpoint that has no rate limit of its own reads the body without counting the sender", async () => {
   await expect(read(VALID_SUBMISSION, { rateLimit: null })).resolves.toEqual({
     ok: true,
     fields: VALID_SUBMISSION,
@@ -87,13 +88,13 @@ test("an endpoint with no rate limit of its own reads the body without counting 
 });
 
 test.each([
-  ["invalid JSON", "{"],
-  ["a JSON array instead of an object", "[]"],
-])("%s is rejected", async (_label, body) => {
+  ["a body that does not parse as JSON", "{"],
+  ["a body that is a JSON array instead of an object", "[]"],
+])("%s is refused", async (_label, body) => {
   expect(refusalStatus(await read(body))).toBe(400);
 });
 
-test("a malformed submission is refused without a reason", async () => {
+test("a malformed submission is refused with an empty body", async () => {
   const response = refusalFor({ ok: false, reason: "malformed" });
 
   expect(response.status).toBe(400);

@@ -33,19 +33,18 @@ describe.each([
   { section: SEND_EMAIL_SECTION, read: [SEND_EMAIL_BINDING] },
   { section: RATE_LIMIT_SECTION, read: RATE_LIMIT_BINDINGS },
 ])("$section", ({ section, read }) => {
-  // Compared in both directions: a binding the application reads but wrangler does not declare resolves
-  // to `undefined` at runtime, and one wrangler declares that nothing reads is provisioned for no reason.
-  test("wrangler.jsonc declares exactly the bindings the application reads", () => {
+  test("`wrangler.jsonc` declares exactly the bindings the application reads", () => {
     expect([...declaredNames(section)].sort()).toEqual([...read].sort());
   });
 });
 
-test.each(SECRET_BINDINGS)("%s is set as a secret rather than declared in wrangler.jsonc", (name) => {
+test.each(SECRET_BINDINGS)("%s is not declared in `wrangler.jsonc` as a binding or a plain-text variable", (name) => {
+  // Secrets are set outside `wrangler.jsonc`, so their values are never committed.
   expect(allDeclaredNames).not.toContain(name);
   expect(plainTextVariables).not.toHaveProperty(name);
 });
 
-test.each(SECRET_BINDINGS)("%s is set in .env.example, for local development", (name) => {
+test.each(SECRET_BINDINGS)("%s is set in `.env.example`", (name) => {
   expect(environmentExample).toMatch(new RegExp(`^${name}=`, "m"));
 });
 

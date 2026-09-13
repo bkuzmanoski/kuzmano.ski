@@ -83,7 +83,7 @@ test("a submission contains the email address, the list, and the entry's route",
   expect(submittedBody()).toMatchObject({ emailAddress: EMAIL_ADDRESS, list: "List", source: ROUTE });
 });
 
-test("an empty list falls back to the entry's route", async () => {
+test("a submission uses the entry's route as the list when the `list` prop is empty", async () => {
   renderWaitlist(undefined, { list: "" });
   await join();
 
@@ -100,7 +100,7 @@ test("a successful submission is confirmed in place of the form", async () => {
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("an email address the form rejects is not sent, and the reason is raised as an alert", async () => {
+test("an invalid email address is not sent, and its field error is shown in an alert", async () => {
   renderWaitlist();
   await join("user@");
 
@@ -109,7 +109,7 @@ test("an email address the form rejects is not sent, and the reason is raised as
   await expect(alertMessage()).resolves.toMatch(/email address/);
 });
 
-test("the field is described by its error, and holds the focus once the alert is dismissed", async () => {
+test("the field is described by its field error, and receives the focus once the alert is dismissed", async () => {
   renderWaitlist();
   await join("user@");
   await screen.findByRole("dialog");
@@ -120,7 +120,7 @@ test("the field is described by its error, and holds the focus once the alert is
   expect(describedBy(field())).toMatch(/email address/);
 });
 
-test("a failed submission reports why in an alert without clearing the form", async () => {
+test("a failed submission shows an error in an alert and preserves the entered email address", async () => {
   respond(new Response(null, { status: 502 }));
   renderWaitlist();
   await join();
@@ -160,7 +160,7 @@ test("the form is covered and inert while the submission is in flight", async ()
   expect(field().closest("[inert]")).not.toBeNull();
 });
 
-test("the waitlist is labelled by its title and contains its children", () => {
+test("the waitlist is labeled by its title and contains its children", () => {
   renderWaitlist("Message.", { title: "Title" });
 
   const block = screen.getByRole("complementary", { name: "Title" });

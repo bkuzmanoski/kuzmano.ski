@@ -36,7 +36,7 @@ describe("imageDerivativeAuditBetween", () => {
   const storedByteLengths = (...fileNames: Array<string>) =>
     new Map(fileNames.map((fileName) => [fileName, ENCODED_BYTES.byteLength]));
 
-  test("returns a required derivative as missing when it is not stored, regardless of how many URLs it serves", () => {
+  test("returns a required derivative that is not stored as missing once, however many URLs it is served at", () => {
     const otherEntryAvifRendition = imageDerivativeRendition(
       resolvedImage({ path: "collection/other-entry/image.png" }),
       AVIF_DERIVATIVE,
@@ -78,7 +78,7 @@ describe("imageDerivativeAuditBetween", () => {
     ).toEqual([]);
   });
 
-  test("checks the stored byte length of each required derivative against the maximum size", () => {
+  test("returns the size problems of a required derivative stored one byte over the maximum size", () => {
     const oversizedByteLength = MAX_RENDITION_BYTES + 1;
     const storedDerivativeByteLengths = new Map([[DERIVATIVE_FILE_NAME, oversizedByteLength]]);
 
@@ -98,7 +98,7 @@ describe("createImageDerivativeStore", () => {
 
   afterEach(() => rm(directoryAbsolutePath, { recursive: true, force: true }));
 
-  test("writes the encoded bytes under the derivative name without leaving a temporary file, and returns their byte length", async () => {
+  test("writes the encoded bytes under the derivative's file name without leaving a temporary file, and returns their byte length", async () => {
     const store = createImageDerivativeStore(directoryAbsolutePath);
 
     await expect(store.encodeIfMissing(AVIF_RENDITION)).resolves.toBe(ENCODED_BYTES.byteLength);
@@ -115,7 +115,7 @@ describe("createImageDerivativeStore", () => {
   });
 
   test.skipIf(process.getuid?.() === 0)(
-    "rethrows a failure to measure a derivative other than its absence",
+    "rethrows a file system error other than a missing file or directory",
     async () => {
       const store = createImageDerivativeStore(directoryAbsolutePath);
 

@@ -14,14 +14,24 @@ describe("mediaReferencesInSource", () => {
   });
 
   test("returns the destination of a definition used by an image reference", () => {
-    expect(referencesIn("![An image][d]\n\n[d]: ./image.png\n")).toEqual(["./image.png"]);
+    const source = `
+      ![An image][definition]
+
+      [definition]: ./image.png
+    `;
+    expect(referencesIn(source)).toEqual(["./image.png"]);
   });
 
   test("omits the destination of a definition used only by a link", () => {
-    expect(referencesIn("[A link][d]\n\n[d]: ./page.md\n")).toEqual([]);
+    const source = `
+      [A link][definition]
+
+      [definition]: ./page.md
+    `;
+    expect(referencesIn(source)).toEqual([]);
   });
 
-  test("returns the `src` and `poster` attributes of authored markup", () => {
+  test("returns the values of the `src` and `poster` attributes in authored markup", () => {
     const source = '<video poster="./video.poster.png" src="./video.mp4" />\n';
     expect(referencesIn(source)).toEqual(["./video.poster.png", "./video.mp4"]);
   });
@@ -30,7 +40,7 @@ describe("mediaReferencesInSource", () => {
     expect(expectedKindsIn("![An image](./image.png)\n")).toEqual([{ reference: "./image.png", expected: "image" }]);
   });
 
-  test("expects the `src` attribute of a `<video>` to reference a video and its `poster` attribute to reference an image", () => {
+  test("expects a video for the `src` attribute of a `<video>`, and an image for its `poster` attribute", () => {
     expect(expectedKindsIn('<video poster="./video.poster.png" src="./video.mp4" />\n')).toEqual([
       { reference: "./video.poster.png", expected: "image" },
       { reference: "./video.mp4", expected: "video" },
@@ -38,9 +48,12 @@ describe("mediaReferencesInSource", () => {
   });
 
   test("expects a video for the `src` attribute of a `<source>` inside a `<video>`", () => {
-    expect(expectedKindsIn('<video>\n  <source src="./video.mp4" />\n</video>\n')).toEqual([
-      { reference: "./video.mp4", expected: "video" },
-    ]);
+    const source = `
+      <video>
+        <source src="./video.mp4" />
+      </video>
+    `;
+    expect(expectedKindsIn(source)).toEqual([{ reference: "./video.mp4", expected: "video" }]);
   });
 
   test("expects either kind for the `src` attribute of a `<source>` outside a `<video>`", () => {
@@ -53,14 +66,21 @@ describe("mediaReferencesInSource", () => {
     ]);
   });
 
-  test("returns each candidate in a `srcset` as a reference of its own", () => {
+  test("returns each candidate in a `srcSet` attribute as a reference of its own", () => {
     const source = '<img srcSet="./image.png 1x, ./image@2x.png 2x" src="./image.png" />\n';
     expect(referencesIn(source)).toEqual(["./image.png", "./image@2x.png", "./image.png"]);
   });
 
-  test("marks standalone Markdown and authored image references as rendering alternates", () => {
-    const source =
-      '![An image](./image-1.png)\n\n![An image][d]\n\n<img src="./image-3.png" />\n\n[d]: ./image-2.png\n';
+  test("marks a Markdown image, an image reference's definition, and an authored `<img>` outside a `<picture>` as rendering alternates", () => {
+    const source = `
+      ![An image](./image-1.png)
+
+      ![An image][definition]
+
+      <img src="./image-3.png" />
+
+      [definition]: ./image-2.png
+    `;
 
     expect(alternatesIn(source)).toEqual([
       { reference: "./image-1.png", rendersAlternates: true },
@@ -91,7 +111,17 @@ describe("mediaReferencesInSource", () => {
   });
 
   test("does not mark a Markdown image or an image reference inside an authored `<picture>` as rendering alternates", () => {
-    const source = "<picture>\n\n![An image](./image-1.png)\n\n![An image][d]\n\n</picture>\n\n[d]: ./image-2.png\n";
+    const source = `
+      <picture>
+
+      ![An image](./image-1.png)
+
+      ![An image][definition]
+
+      </picture>
+
+      [definition]: ./image-2.png
+    `;
     expect(alternatesIn(source)).toEqual([
       { reference: "./image-1.png", rendersAlternates: false },
       { reference: "./image-2.png", rendersAlternates: false },
@@ -99,13 +129,28 @@ describe("mediaReferencesInSource", () => {
   });
 
   test("marks a definition as rendering alternates when an image reference outside an authored `<picture>` also uses it", () => {
-    const source = "<picture>\n\n![An image][d]\n\n</picture>\n\n![An image][d]\n\n[d]: ./image.png\n";
+    const source = `
+      <picture>
+
+      ![An image][definition]
+
+      </picture>
+
+      ![An image][definition]
+
+      [definition]: ./image.png
+    `;
     expect(alternatesIn(source)).toEqual([{ reference: "./image.png", rendersAlternates: true }]);
   });
 
-  test("omits an absolute, root-relative, or external reference", () => {
-    const source =
-      "![An image](https://example.com/image.png)\n\n![An image](/image.png)\n\n![An image](data:image/gif;base64,AA)\n";
+  test("omits root-relative, external, and data URI references", () => {
+    const source = `
+      ![An image](https://example.com/image.png)
+
+      ![An image](/image.png)
+
+      ![An image](data:image/gif;base64,AA)
+    `;
     expect(referencesIn(source)).toEqual([]);
   });
 
@@ -114,9 +159,11 @@ describe("mediaReferencesInSource", () => {
   });
 
   test("returns references in document order", () => {
-    expect(referencesIn("![First image](./image-1.png)\n\n![Second image](./image-2.png)\n")).toEqual([
-      "./image-1.png",
-      "./image-2.png",
-    ]);
+    const source = `
+      ![First image](./image-1.png)
+
+      ![Second image](./image-2.png)
+    `;
+    expect(referencesIn(source)).toEqual(["./image-1.png", "./image-2.png"]);
   });
 });

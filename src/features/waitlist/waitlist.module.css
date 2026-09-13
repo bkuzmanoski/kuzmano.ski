@@ -79,7 +79,7 @@
 
   & .checkmarkIcon {
     flex: none;
-    margin-block-start: 2px; /* Centres the 20px mark on the message's first 26px line. */
+    margin-block-start: 2px; /* Centers the 20px mark on the message's first 26px line. */
     filter: drop-shadow(1px 0 0 var(--color-background)) drop-shadow(-1px 0 0 var(--color-background))
       drop-shadow(0 1px 0 var(--color-background)) drop-shadow(0 -1px 0 var(--color-background));
     stroke-width: 1.75px;

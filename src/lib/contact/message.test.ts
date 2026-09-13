@@ -23,12 +23,12 @@ test("surrounding whitespace is trimmed from every field", () => {
   });
 });
 
-test("a length limit is measured before trimming, so padding counts towards it", () => {
+test("a message that exceeds the maximum length before trimming is malformed", () => {
   const padding = " ".repeat(MESSAGE_MAX_LENGTH);
   expect(parseSubmission({ ...VALID_SUBMISSION, message: `${padding}Hello.` })).toEqual({
     ok: false,
     reason: "malformed",
-  });
+  }); // Padding counts toward the limit, so trimming cannot shorten an over-long message into a valid one.
 });
 
 test.each([

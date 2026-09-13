@@ -11,7 +11,7 @@ describe("close guards", () => {
     guards = createCloseGuards();
   });
 
-  test("a window without a guard leaves the close request unclaimed", () => {
+  test("a close request for a window without a guard is not claimed", () => {
     expect(guards.claim("entry")).toBe(false);
   });
 
@@ -26,12 +26,12 @@ describe("close guards", () => {
     expect(guards.claim("contact")).toBe(false);
   });
 
-  test("a guard that declines a request leaves the window closable", () => {
+  test("a guard that returns `false` does not claim the close request", () => {
     guards.register("contact", () => false);
     expect(guards.claim("contact")).toBe(false);
   });
 
-  test("unregistering a replaced guard leaves the replacement registered", () => {
+  test("unregistering a replaced guard does not unregister its replacement", () => {
     const unregisterFirst = guards.register("contact", () => false);
 
     guards.register("contact", () => true);

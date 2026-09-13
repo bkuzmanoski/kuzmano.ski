@@ -25,7 +25,7 @@ beforeEach(() => {
   fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
 });
 
-test("the report is queued as a JSON beacon to the client errors endpoint", async () => {
+test("reporting an error queues the report as a JSON beacon to the client errors endpoint", async () => {
   reportClientError(REPORT);
 
   const [url, blob] = beacon.mock.calls[0]!;
@@ -36,7 +36,7 @@ test("the report is queued as a JSON beacon to the client errors endpoint", asyn
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-test("a report the browser will not queue is posted as a keepalive request", () => {
+test("reporting an error posts the report as a `keepalive` request when `sendBeacon` returns `false`", () => {
   beacon.mockReturnValue(false);
   reportClientError(REPORT);
 
@@ -48,14 +48,14 @@ test("a report the browser will not queue is posted as a keepalive request", () 
   expect(JSON.parse(init?.body as string)).toEqual(REPORT);
 });
 
-test("a failed fallback request does not reach the caller", () => {
+test("reporting an error does not throw when the fallback request fails", () => {
   beacon.mockReturnValue(false);
   fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
 
   expect(() => reportClientError(REPORT)).not.toThrow();
 });
 
-test("an error thrown by the browser does not reach the caller", () => {
+test("reporting an error does not throw or post a fallback request when `sendBeacon` throws", () => {
   beacon.mockImplementation(() => {
     throw new Error("Denied.");
   });

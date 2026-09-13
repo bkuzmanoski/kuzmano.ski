@@ -17,7 +17,7 @@ vi.mock("./catalog.ts", async () => {
       pagesDirectoryName,
     ),
     collections: {
-      collection: fakeCollection([...fakeCollectionEntries("published"), fakeEntry("draft", { draft: true })]),
+      collection: fakeCollection([...fakeCollectionEntries("published"), fakeEntry("draft-entry", { draft: true })]),
     },
   });
 });
@@ -56,40 +56,41 @@ test("an entry the site publishes is not marked noindex", () => {
 });
 
 test("a draft entry is marked noindex", () => {
-  expect(loadCollectionEntry("draft").noindex).toBe(true);
+  expect(loadCollectionEntry("draft-entry").noindex).toBe(true);
 });
 
 test("a collection listing is not marked noindex", () => {
   expect(loadSegment("collection").noindex).toBeUndefined();
 });
 
-test("a published entry exposes the Markdown alternate the build emits for it", () => {
-  vi.stubEnv("DEV", false);
-  expect(loadCollectionEntry("published").markdown).toBe(true);
-});
-
-test("a draft entry does not expose a Markdown alternate, which is not emitted in a production build", () => {
-  vi.stubEnv("DEV", false);
-
-  expect(loadCollectionEntry("draft").markdown).toBe(false);
-  expect(loadSegment("draft-page").markdown).toBe(false);
-});
-
-test("a draft exposes its Markdown alternate in development, where the server renders one", () => {
-  vi.stubEnv("DEV", true);
-  expect(loadCollectionEntry("draft").markdown).toBe(true);
-});
-
-test("a collection listing exposes its Markdown alternate", () => {
-  vi.stubEnv("DEV", false);
-  expect(loadSegment("collection").markdown).toBe(true);
-});
-
 test("a page exposes its cover image", () => {
   expect(loadSegment(REGISTERED_PAGE).coverImage).toEqual(fakeCoverImage(REGISTERED_PAGE));
 });
 
-test("an entry exposes its cover image, or null when it does not have one", () => {
+test("a collection listing exposes a Markdown alternate in production", () => {
+  vi.stubEnv("DEV", false);
+  expect(loadSegment("collection").markdown).toBe(true);
+});
+
+test("a published entry exposes a Markdown alternate in production", () => {
+  vi.stubEnv("DEV", false);
+  expect(loadCollectionEntry("published").markdown).toBe(true);
+});
+
+test("a draft page or entry does not expose a Markdown alternate in production", () => {
+  vi.stubEnv("DEV", false);
+
+  // A production build does not emit Markdown alternates for drafts.
+  expect(loadSegment("draft-page").markdown).toBe(false);
+  expect(loadCollectionEntry("draft-entry").markdown).toBe(false);
+});
+
+test("a draft entry exposes a Markdown alternate in development", () => {
+  vi.stubEnv("DEV", true);
+  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The development server renders the Markdown alternate of a draft.
+});
+
+test("an entry exposes its cover image, or `null` when it does not have one", () => {
   expect(loadCollectionEntry("published").coverImage).toEqual(fakeCoverImage("published"));
   expect(loadCollectionEntry("draft").coverImage).toBeNull();
 });

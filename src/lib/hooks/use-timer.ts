@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-/** A single resettable timeout, cancelled when the component unmounts. */
+/** A single resettable timeout, canceled when the component unmounts. */
 export function useTimer() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -22,7 +22,7 @@ export function useTimer() {
   return { start, cancel };
 }
 
-/** A batch of timeouts started together and cancelled together, and on unmount. */
+/** A batch of timeouts started together and canceled together, and on unmount. */
 export function useTimers() {
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 

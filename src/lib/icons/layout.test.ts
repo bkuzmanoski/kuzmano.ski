@@ -27,17 +27,16 @@ describe("resolveIconPlacements", () => {
     ]);
   });
 
-  test("starts a new column for icons the container is too short to hold", () => {
-    // Only the first two icons fit: the third would end at 216 + 72 = 288.
+  test("starts a new column for icons that would extend past the bottom of the container", () => {
     expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 1000, height: 280 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(1000, 0), y: 24 },
       { id: "second", x: columnX(1000, 0), y: 120 },
       { id: "third", x: columnX(1000, 1), y: 24 },
       { id: "fourth", x: columnX(1000, 1), y: 120 },
-    ]);
+    ]); // Only the first two icons fit: the third would end at 216 + 72 = 288.
   });
 
-  test("places icons pushed off the left edge into a slot instead of clamping them to it", () => {
+  test("places icons that extend past the left edge in a free slot instead of clamping them to it", () => {
     const iconPositions: IconPositions = {
       first: { top: 24, right: 32 },
       second: { top: 24, right: 400 },
@@ -55,7 +54,7 @@ describe("resolveIconPlacements", () => {
     ]);
   });
 
-  test("skips a slot a free-form icon already covers", () => {
+  test("skips a slot that overlaps an icon at its saved position", () => {
     const iconPositions: IconPositions = {
       first: { top: 24, right: 32 },
       second: { top: 60, right: 128 }, // Straddles both usable slots of the second column.
@@ -71,7 +70,8 @@ describe("resolveIconPlacements", () => {
     ]);
   });
 
-  test("leaves icons the visitor stacked themselves alone", () => {
+  test("places icons that overlap each other at their saved positions", () => {
+    // Icons a visitor stacked deliberately stay at their saved positions rather than being moved into slots.
     const iconPositions: IconPositions = {
       first: { top: 24, right: 32 },
       second: { top: 40, right: 48 },
@@ -84,7 +84,7 @@ describe("resolveIconPlacements", () => {
     expect(iconPlacements[1]).toEqual({ id: "second", x: 880, y: 40 }); // 1000 - 48 - cellSize: its own anchor, not a column.
   });
 
-  test("skips slot placement and returns raw projected positions when the container is unmeasured (zero size)", () => {
+  test("returns the projected placements without assigning slots when the container has zero size", () => {
     expect(resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 0, height: 0 }, ICON_LAYOUT)).toEqual([
       { id: "first", x: columnX(0, 0), y: 24 },
       { id: "second", x: columnX(0, 0), y: 120 },
@@ -93,7 +93,7 @@ describe("resolveIconPlacements", () => {
     ]);
   });
 
-  test("keeps icons on screen when the container has no free slot left", () => {
+  test("clamps icons to the container bounds when the container has no free slot left", () => {
     const placements = resolveIconPlacements(ICON_IDS, ICON_POSITIONS, { width: 120, height: 120 }, ICON_LAYOUT);
 
     for (const placement of placements) {
@@ -104,7 +104,7 @@ describe("resolveIconPlacements", () => {
     }
   });
 
-  test("omits ids that have no position", () => {
+  test("omits IDs that have no position", () => {
     expect(
       resolveIconPlacements(ICON_IDS, { first: { top: 24, right: 32 } }, { width: 1000, height: 800 }, ICON_LAYOUT),
     ).toEqual([{ id: "first", x: columnX(1000, 0), y: 24 }]);

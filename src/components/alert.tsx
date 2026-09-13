@@ -45,7 +45,7 @@ function ActionButton({ action, autoFocus, ref }: { action: AlertAction; autoFoc
  * A modal or page-level alert.
  *
  * Modal alerts are controlled with `open`; page-level alerts are always present so they
- * remain available in prerendered HTML. `showModal` provides the browser's modal behaviour.
+ * remain available in prerendered HTML. `showModal` provides the browser's modal behavior.
  */
 export function Alert(
   props: ({ modal?: true; open: boolean } | { modal: false; open?: never }) & {

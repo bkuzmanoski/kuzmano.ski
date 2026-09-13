@@ -85,7 +85,10 @@ const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
   ...overrides,
 });
 
-const stylesheetDeclaringCoverImageSize = (pixels: number) => `:root {\n  --layout-cover-image-size: ${pixels}px;\n}\n`;
+const stylesheetDeclaringCoverImageSize = (pixels: number) => `:root {
+  --layout-cover-image-size: ${pixels}px;
+}
+`;
 const mediaIndexWithCoverImage = () => mediaIndex({ coverImages: { ["collection/entry" as EntryKey]: COVER_IMAGE } });
 const mediaIndexResolvingTo = (src: string) =>
   mediaIndex({ mediaForEntry: () => () => ({ kind: "image", src, width: 1, height: 1, alternates: [] }) });
@@ -166,7 +169,7 @@ describe("contentMedia", () => {
     await expect(mediaSourceFor("./image.png")).resolves.toBe(mediaRoute("collection/entry/image.new.png"));
   });
 
-  test("resolves a reference through the newest index build when it finishes last", async () => {
+  test("resolves a reference through the newest index build when it finishes after an earlier build", async () => {
     const { updateFile, mediaSourceFor } = setUpContentMedia();
     const firstFileUpdate = updateFile({ file: IMAGE_ABSOLUTE_PATH });
     const secondFileUpdate = updateFile({ file: IMAGE_ABSOLUTE_PATH });
@@ -196,7 +199,7 @@ describe("contentMedia", () => {
     await expect(mediaSourceFor("./image.png")).resolves.toBe(mediaRoute("collection/entry/image.png"));
   });
 
-  test("resolves an entry compiled during a rebuild against the rebuilt index", async () => {
+  test("resolves a reference requested during a rebuild through the rebuilt index", async () => {
     const { updateFile, mediaSourceFor, buildInitialIndex } = setUpContentMedia();
 
     await buildInitialIndex(mediaIndexResolvingTo(mediaRoute("collection/entry/image.old.png")));
@@ -210,7 +213,7 @@ describe("contentMedia", () => {
     await expect(sourceDuringRebuild).resolves.toBe(mediaRoute("collection/entry/image.new.png"));
   });
 
-  test("warns about the problems the first index build finds when the dev server starts", async () => {
+  test("warns about the problems of the first index build when the dev server starts", async () => {
     const { startDevServer, warnedProblems } = setUpContentMedia();
 
     startDevServer();
@@ -272,7 +275,7 @@ describe("contentMedia", () => {
     await Promise.all([clientFileUpdate, serverFileUpdate]);
   });
 
-  test("rebuilds the index when a stylesheet is updated to change the cover image size", async () => {
+  test("rebuilds the index when an update to the site stylesheet changes the cover image size", async () => {
     const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
     const changedCoverImageSize = COVER_IMAGE_SIZE + 8;
 
@@ -288,7 +291,7 @@ describe("contentMedia", () => {
     expect(indexBuilds).toHaveLength(2);
   });
 
-  test("does not rebuild the index when a stylesheet is updated but the cover image size does not change", async () => {
+  test("does not rebuild the index when an update to the site stylesheet does not change the cover image size", async () => {
     const { updateFile, buildInitialIndex } = setUpContentMedia();
 
     await buildInitialIndex();
@@ -300,7 +303,7 @@ describe("contentMedia", () => {
     expect(indexBuilds).toHaveLength(1);
   });
 
-  test("invalidates only the entry whose media directory holds an updated media file", async () => {
+  test("invalidates only the entry whose media directory contains an updated media file", async () => {
     const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
 
     await buildInitialIndex();
@@ -352,7 +355,7 @@ describe("contentMedia", () => {
     expect(serverStaleModules?.map(({ id }) => id)).toEqual([RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID]);
   });
 
-  test("checks an updated entry's references only in the client environment", async () => {
+  test("rechecks an updated entry's references only in the client environment", async () => {
     const { updateFile, buildInitialIndex } = setUpContentMedia();
     const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>();
 
@@ -362,7 +365,7 @@ describe("contentMedia", () => {
     expect(recheckReferences).not.toHaveBeenCalled();
   });
 
-  test("re-checks an updated entry's references without rebuilding the index when the images with alternates are unchanged", async () => {
+  test("rechecks an updated entry's references, and does not rebuild the index, when an entry update does not change which images have alternates", async () => {
     const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
     const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => true);
     const source = "![An image](./missing.png)\n";
@@ -394,7 +397,7 @@ describe("contentMedia", () => {
     await expect(mediaSourceFor("./image.png")).resolves.toBe(mediaRoute("collection/entry/image.png"));
   });
 
-  test("warns about a problem once, after the rebuild that first finds it", async () => {
+  test("warns about a problem once, after the first rebuild that produces it", async () => {
     const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
 
     await buildInitialIndex();

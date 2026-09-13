@@ -31,7 +31,7 @@
 
 .navigation {
   display: flex;
-  grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the centre track. */
+  grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the center track. */
   gap: 4px;
   justify-self: end;
 }

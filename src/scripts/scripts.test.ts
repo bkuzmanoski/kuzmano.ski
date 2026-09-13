@@ -6,7 +6,7 @@ import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 
 // These tests evaluate the bundled scripts exactly as the browser receives them, covering the
-// plugin, tree-shaking, minification, and runtime behaviour. Attribute names are intentionally
+// plugin, tree-shaking, minification, and runtime behavior. Attribute names are intentionally
 // defined inline because they must match the strings used by the stylesheet.
 
 function run(script: string) {
@@ -61,10 +61,10 @@ describe("theme", () => {
   });
 
   test.for([
-    ["no stored theme", null],
-    ["the system theme", "system"],
-    ["an unrecognised theme", "sepia"],
-  ] as const)("leaves the theme attribute unset for %s", ([, stored]) => {
+    ["there is no stored theme", null],
+    ["the stored theme is the system theme", "system"],
+    ["the stored theme is unrecognized", "sepia"],
+  ] as const)("leaves the `data-theme` attribute unset when %s", ([, stored]) => {
     if (stored !== null) {
       localStorage.setItem("theme", stored);
     }
@@ -76,12 +76,12 @@ describe("theme", () => {
 });
 
 describe("boot sequence", () => {
-  test("enables the overlay when the session has not booted", () => {
+  test("enables the overlay when the boot sequence has not run in this session", () => {
     run(bootSequenceScript);
     expect(document.documentElement.getAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe("");
   });
 
-  test("does not enable the overlay when the session has already booted", () => {
+  test("does not enable the overlay when the boot sequence has already run in this session", () => {
     sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
     run(bootSequenceScript);
 
@@ -94,12 +94,12 @@ describe("boot sequence theme colors", () => {
     setThemeColorMetaTags();
   });
 
-  test("keeps the theme colors while the boot sequence runs", () => {
+  test("retains the theme colors when the boot sequence has not run in this session", () => {
     run(bootSequenceScript);
     expect(bootThemeColors()).toHaveLength(2);
   });
 
-  test("removes the theme colors when there is no boot sequence", () => {
+  test("removes the theme colors when the boot sequence has already run in this session", () => {
     sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
     run(bootSequenceScript);
 

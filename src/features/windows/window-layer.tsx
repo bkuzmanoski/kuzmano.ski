@@ -132,9 +132,9 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   // the zoom-rect has landed on it.
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
 
-  // The window being moved or resized, which remains stationary while an outline shows its proposed
-  // position. The drag is stored here rather than in the window, keeping every window out of the
-  // re-render it causes on each pointer frame.
+  // The window being moved or resized, which remains stationary while an outline shows its
+  // proposed position. The drag is stored here rather than in the window, so its update on
+  // each pointer frame does not re-render every window.
   const [windowDrag, setWindowDrag] = useState<WindowDragState | null>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -165,7 +165,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
           onDone={() => setZoomRect(null)}
         />
       )}
-      {/* Sort by id for stable DOM order (preserves scroll positions). `zIndex` manages the stacking order. */}
+      {/* Sort by ID for stable DOM order (preserves scroll positions). `zIndex` manages the stacking order. */}
       {WINDOW_DOM_ORDER.map((id) => {
         const windowContent = content[id];
         const windowGeometry = geometry[id];
