@@ -8,7 +8,7 @@ import {
   encodeImageDerivative,
   imageDerivativeExtensionOf,
 } from "../build/content/media/derivatives.ts";
-import { isSourceImage, withoutExtension } from "../build/content/media/formats.ts";
+import { isEncodableImage, withoutExtension } from "../build/content/media/formats.ts";
 import { fileSize } from "../build/content/media/problems.ts";
 
 import { wholeNumberOption } from "./helpers/arguments.ts";
@@ -62,13 +62,13 @@ const outputFilePathOf = (inputFilePath: string, derivative: ImageDerivative) =>
   `${withoutExtension(inputFilePath)}${imageDerivativeExtensionOf(derivative)}`;
 
 async function convert(inputFilePath: string, qualityByFormat: Arguments["qualityByFormat"]) {
-  if (!isSourceImage(inputFilePath)) {
+  if (!isEncodableImage(inputFilePath)) {
     throw new Error(`${inputFilePath} is not a PNG or a JPEG.`);
   }
 
   console.log(`${inputFilePath} (${fileSize((await stat(inputFilePath)).size)})`);
 
-  for (const derivative of BODY_IMAGE_DERIVATIVES) {
+  for (const derivative of BODY_IMAGE_DERIVATIVES.alternates) {
     const outputFilePath = outputFilePathOf(inputFilePath, derivative);
     const encodedBytes = await encodeImageDerivative(resolve(inputFilePath), {
       ...derivative,

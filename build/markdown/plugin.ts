@@ -37,7 +37,7 @@ const asLinkText = (value: string) => value.replace(/[\\[\]]/g, (character) => `
 const asOneLine = (value: string) => value.replace(/\s+/g, " ").trim(); // Collapses a description onto the single line its list item occupies.
 
 // A collection's entries as a Markdown index, linking each entry's Markdown. A collection
-// has no document of its own, so the index is its alternate representation.
+// has no document of its own, so the index is its Markdown representation.
 function collectionMarkdown(name: string, entries: Array<AuthoredEntry>): string {
   // Widened because `name` may be a directory that is not a declared collection.
   const declaredCollections: Record<string, { title: string; description: string } | undefined> = COLLECTIONS;
@@ -91,7 +91,7 @@ export function markdownFilesFor(
   ];
 }
 
-/** Emits a Markdown alternate file for every route. */
+/** Emits a Markdown representation for every route. */
 export function markdownPlugin({ mediaForEntry = NO_MEDIA_FOR_ENTRY }: { mediaForEntry?: MediaForEntry } = {}): Plugin {
   return {
     name: "kuzmano.ski:markdown",

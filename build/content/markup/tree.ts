@@ -1,7 +1,7 @@
 /**
  * A node in the MDX, Markdown, or HTML syntax tree the content pipeline walks.
  *
- * The media references and the Markdown alternate walk three vocabularies — mdast (`image`,
+ * The media references and the Markdown representation walk three vocabularies — mdast (`image`,
  * `definition`, `imageReference`, `text`), hast (`element`), and mdx-jsx (`mdxJsxFlowElement`,
  * `mdxJsxTextElement`). This flattens all of them into one optional-field shape rather than composing
  * `@types/mdast` and `@types/hast` to avoid a narrowing step in every callback before it could read
@@ -49,6 +49,10 @@ export function hasAttribute(node: ContentNode, name: string): boolean {
 
   return node.properties !== undefined && name in node.properties;
 }
+
+/** Whether a JSX element spreads an expression into its attributes, which can set any attribute at runtime. */
+export const hasSpreadAttribute = (node: ContentNode) =>
+  node.attributes?.some(({ type }) => type === "mdxJsxExpressionAttribute") ?? false;
 
 export function stringAttributeOf(node: ContentNode, name: string): string | null {
   const value = node.attributes

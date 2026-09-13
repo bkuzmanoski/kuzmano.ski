@@ -13,7 +13,7 @@ export interface DocumentMetadata {
   kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
   bodyChunkUrl?: string | null; // URL of the chunk holding the entry's compiled content, preloaded so it is available to hydration.
   coverImage?: CoverImage | null; // Used as `og:image` in place of the site image.
-  markdown?: boolean; // Whether the document has a Markdown alternate to advertise.
+  markdown?: boolean; // Whether the document has a Markdown representation to advertise.
   feed?: FeedLink;
   noindex?: boolean;
 }

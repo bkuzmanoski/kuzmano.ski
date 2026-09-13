@@ -1,5 +1,3 @@
-// Build-generated media types.
-
 export type MediaKind = "image" | "video";
 
 export interface Dimensions {
@@ -19,7 +17,7 @@ export interface SizedMedia extends Dimensions {
 
 export interface ContentImage extends SizedMedia {
   kind: "image";
-  alternates: Array<PictureSource>; // Preferred encodings for browsers that support them.
+  alternates: Array<PictureSource>; // Offered ahead of the fallback at `src`, in preference order.
 }
 
 export interface ContentVideo extends SizedMedia {

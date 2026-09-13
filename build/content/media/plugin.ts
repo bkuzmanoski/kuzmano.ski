@@ -100,18 +100,8 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
     return (indexBuild = currentIndexBuild);
   };
 
-  // Rebuilds the index for an update to a file under the content directory, or to the stylesheet when
-  // `readStylesheet` is given. Resolves to `null` when the update leaves the index unchanged.
-  async function changeIndex(readStylesheet: (() => string | Promise<string>) | null): Promise<IndexChange | null> {
+  async function rebuildIndex(): Promise<IndexChange> {
     const previousIndexBuild = indexBuild;
-
-    if (readStylesheet) {
-      const coverImageSize = coverImageSizeIn(layoutMetricsFrom(await readStylesheet()));
-
-      if (coverImageSize === (await ensureIndex()).coverImageSize) {
-        return null;
-      }
-    }
 
     indexBuild = null;
 
@@ -119,6 +109,34 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
     const previousIndex = await previousIndexBuild?.catch(() => null);
 
     return { index, hasChangedCoverImages: !isDeepStrictEqual(previousIndex?.coverImages, index.coverImages) };
+  }
+
+  async function changeIndexForStylesheet(readStylesheet: () => string | Promise<string>) {
+    const coverImageSize = coverImageSizeIn(layoutMetricsFrom(await readStylesheet()));
+    return coverImageSize === (await ensureIndex()).coverImageSize ? null : rebuildIndex();
+  }
+
+  // Resolves to the current index when the update does not change which body images have alternates,
+  // so the rechecked reference problems are still reported.
+  async function changeIndexForEntry(absolutePath: string, readSource: () => string | Promise<string>) {
+    const source = await readSource();
+    const index = await ensureIndex();
+    const { requiresRebuild } = index.recheckReferences(absolutePath, source);
+
+    return requiresRebuild ? rebuildIndex() : { index, hasChangedCoverImages: false };
+  }
+
+  // Resolves to `null` when the update leaves the index unchanged.
+  function changeIndexFor(
+    file: string,
+    type: "create" | "update" | "delete",
+    read: () => string | Promise<string>,
+  ): Promise<IndexChange | null> {
+    if (file === stylesheetAbsolutePath) {
+      return changeIndexForStylesheet(read);
+    }
+
+    return isEntryFile(file) && type === "update" ? changeIndexForEntry(file, read) : rebuildIndex();
   }
 
   const mediaForEntry: MediaForEntry = async (absolutePath) => (await ensureIndex()).mediaForEntry(absolutePath);
@@ -185,32 +203,16 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
         return;
       }
 
-      const isClientEnvironment = this.environment.name === CLIENT_ENVIRONMENT;
-
-      if (isEntryFile(file) && type === "update") {
-        if (!isClientEnvironment) {
-          return;
-        }
-
-        const index = await ensureIndex();
-        const isIndexCurrent = index.recheckReferences(file, await read());
-
-        if (isIndexCurrent) {
-          problemReporter.replaceIndexProblems(index.problems());
-          return;
-        }
-      }
-
       if (!isStylesheet && !isContentMedia(file) && !isEntryFile(file)) {
         return;
       }
 
-      // Vite calls `hotUpdate` once per environment for the same file update, so the environments after the first
-      // await the index change it started, including its comparison with the index before the update.
+      // Vite calls `hotUpdate` once per environment for the same file update, so whichever environment it calls first
+      // starts the index change, and the others await it, including its comparison with the index before the update.
       const trigger = `${timestamp}:${type}:${file}`;
 
       if (latestIndexChange?.trigger !== trigger) {
-        latestIndexChange = { trigger, indexChange: changeIndex(isStylesheet ? read : null) };
+        latestIndexChange = { trigger, indexChange: changeIndexFor(file, type, read) };
       }
 
       const indexChange = await latestIndexChange.indexChange;
@@ -221,7 +223,7 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
 
       const { index, hasChangedCoverImages } = indexChange;
 
-      if (isClientEnvironment) {
+      if (this.environment.name === CLIENT_ENVIRONMENT) {
         problemReporter.replaceIndexProblems(index.problems());
       }
 

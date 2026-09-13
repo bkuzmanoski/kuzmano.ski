@@ -72,7 +72,7 @@ describe("authoredMediaIn", () => {
     ]);
   });
 
-  test("reports a cover image in a format the build does not encode, and does not assign it", () => {
+  test("reports a cover image in a format that is not encodable, and does not assign it", () => {
     const { entryMedia, problems } = authoredMediaIn(
       directoryListing({ fileNames: ["entry.mdx", "entry.cover.webp"] }),
     );
@@ -232,7 +232,7 @@ describe("authoredMediaIn", () => {
     ]);
   });
 
-  test("reports a poster image in a format the build does not encode, and records the video without one", () => {
+  test("reports a poster image in a format that is not encodable, and records the video without one", () => {
     const { entryMedia, problems } = authoredMediaIn(
       directoryListing({ fileNamesBySubdirectoryName: { entry: ["video.mp4", "video.poster.gif"] } }),
     );

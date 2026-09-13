@@ -6,8 +6,8 @@ describe("mediaReferencesInSource", () => {
   const referencesIn = (source: string) => mediaReferencesInSource(source).map(({ reference }) => reference);
   const expectedKindsIn = (source: string) =>
     mediaReferencesInSource(source).map(({ reference, expected }) => ({ reference, expected }));
-  const alternatesIn = (source: string) =>
-    mediaReferencesInSource(source).map(({ reference, rendersAlternates }) => ({ reference, rendersAlternates }));
+  const canRenderAlternatesIn = (source: string) =>
+    mediaReferencesInSource(source).map(({ reference, canRenderAlternates }) => ({ reference, canRenderAlternates }));
 
   test("returns the destination of a Markdown image", () => {
     expect(referencesIn("![An image](./image.png)\n")).toEqual(["./image.png"]);
@@ -71,7 +71,7 @@ describe("mediaReferencesInSource", () => {
     expect(referencesIn(source)).toEqual(["./image.png", "./image@2x.png", "./image.png"]);
   });
 
-  test("marks a Markdown image, an image reference's definition, and an authored `<img>` outside a `<picture>` as rendering alternates", () => {
+  test("marks a Markdown image, an image reference's definition, and an authored `<img>` outside a `<picture>` as able to render alternates", () => {
     const source = `
       ![An image](./image-1.png)
 
@@ -81,36 +81,51 @@ describe("mediaReferencesInSource", () => {
 
       [definition]: ./image-2.png
     `;
-
-    expect(alternatesIn(source)).toEqual([
-      { reference: "./image-1.png", rendersAlternates: true },
-      { reference: "./image-3.png", rendersAlternates: true },
-      { reference: "./image-2.png", rendersAlternates: true },
+    expect(canRenderAlternatesIn(source)).toEqual([
+      { reference: "./image-1.png", canRenderAlternates: true },
+      { reference: "./image-3.png", canRenderAlternates: true },
+      { reference: "./image-2.png", canRenderAlternates: true },
     ]);
   });
 
-  test("does not mark references in an authored `<picture>` as rendering alternates", () => {
+  test("marks an authored `<img>` inside a component as able to render alternates", () => {
+    expect(canRenderAlternatesIn('<Component><img src="./image.png" /></Component>\n')).toEqual([
+      { reference: "./image.png", canRenderAlternates: true },
+    ]);
+  });
+
+  test("does not mark references in an authored `<picture>` as able to render alternates", () => {
     const source = `
       <picture>
         <source srcSet="./image-1.png 2x" />
         <img src="./image-2.png" />
       </picture>
     `;
-    expect(alternatesIn(source)).toEqual([
-      { reference: "./image-1.png", rendersAlternates: false },
-      { reference: "./image-2.png", rendersAlternates: false },
+    expect(canRenderAlternatesIn(source)).toEqual([
+      { reference: "./image-1.png", canRenderAlternates: false },
+      { reference: "./image-2.png", canRenderAlternates: false },
     ]);
   });
 
-  test("does not mark an authored `<img>` with a `srcSet` attribute of its own as rendering alternates", () => {
-    expect(alternatesIn('<img srcSet="./image-1.png 1x, ./image-2.png 2x" src="./image-1.png" />\n')).toEqual([
-      { reference: "./image-1.png", rendersAlternates: false },
-      { reference: "./image-2.png", rendersAlternates: false },
-      { reference: "./image-1.png", rendersAlternates: false },
+  test.each(["srcSet", "srcset"])(
+    "does not mark an authored `<img>` with a `%s` attribute of its own as able to render alternates",
+    (attribute) => {
+      const source = `<img ${attribute}="./image-1.png 1x, ./image-2.png 2x" src="./image-1.png" />\n`;
+      expect(canRenderAlternatesIn(source)).toEqual([
+        { reference: "./image-1.png", canRenderAlternates: false },
+        { reference: "./image-2.png", canRenderAlternates: false },
+        { reference: "./image-1.png", canRenderAlternates: false },
+      ]);
+    },
+  );
+
+  test("does not mark an authored `<img>` with a spread attribute, which can set a `srcSet` attribute, as able to render alternates", () => {
+    expect(canRenderAlternatesIn('<img src="./image.png" {...props} />\n')).toEqual([
+      { reference: "./image.png", canRenderAlternates: false },
     ]);
   });
 
-  test("does not mark a Markdown image or an image reference inside an authored `<picture>` as rendering alternates", () => {
+  test("does not mark a Markdown image or an image reference inside an authored `<picture>` as able to render alternates", () => {
     const source = `
       <picture>
 
@@ -122,13 +137,13 @@ describe("mediaReferencesInSource", () => {
 
       [definition]: ./image-2.png
     `;
-    expect(alternatesIn(source)).toEqual([
-      { reference: "./image-1.png", rendersAlternates: false },
-      { reference: "./image-2.png", rendersAlternates: false },
+    expect(canRenderAlternatesIn(source)).toEqual([
+      { reference: "./image-1.png", canRenderAlternates: false },
+      { reference: "./image-2.png", canRenderAlternates: false },
     ]);
   });
 
-  test("marks a definition as rendering alternates when an image reference outside an authored `<picture>` also uses it", () => {
+  test("marks a definition as able to render alternates when an image reference outside an authored `<picture>` also uses it", () => {
     const source = `
       <picture>
 
@@ -140,7 +155,7 @@ describe("mediaReferencesInSource", () => {
 
       [definition]: ./image.png
     `;
-    expect(alternatesIn(source)).toEqual([{ reference: "./image.png", rendersAlternates: true }]);
+    expect(canRenderAlternatesIn(source)).toEqual([{ reference: "./image.png", canRenderAlternates: true }]);
   });
 
   test("omits root-relative, external, and data URI references", () => {

@@ -11,8 +11,8 @@ import {
   authoredExtensionOf,
   coverImageStemOf,
   isContentMedia,
+  isEncodableImage,
   isImage,
-  isSourceImage,
   isVideo,
   posterImageStemOf,
   withoutExtension,
@@ -24,7 +24,7 @@ import type { MediaReference } from "../markup/media-references.ts";
 /** A video in an entry's media directory, and the poster image paired with it by name. */
 export interface AuthoredVideo {
   videoFileName: string;
-  posterImageFileName: string | null; // `null` unless exactly one poster image, in a format the build encodes, is named after the video.
+  posterImageFileName: string | null; // `null` unless exactly one poster image, in an encodable format, is named after the video.
 }
 
 export interface AuthoredEntryMedia extends ListedEntry {
@@ -68,7 +68,7 @@ function authoredVideosIn(mediaDirectoryPath: string, imageFileNames: Array<stri
       problems.push(`${quotedVideoPath} has more than one poster image: ${candidatePosterImageFileNames.join(", ")}.`);
     } else if (posterImageFileName === undefined) {
       problems.push(`${quotedVideoPath} has no poster image.`);
-    } else if (!isSourceImage(posterImageFileName)) {
+    } else if (!isEncodableImage(posterImageFileName)) {
       problems.push(
         `The image format of ${quotedContentPath(mediaDirectoryPath, posterImageFileName)} is not supported for poster images.`,
       );
@@ -105,7 +105,7 @@ function coverImageOf(directoryName: string, slug: string, directoryCoverImageFi
         ]
       : []),
     ...coverImageFileNames
-      .filter((fileName) => !isSourceImage(fileName))
+      .filter((fileName) => !isEncodableImage(fileName))
       .map(
         (fileName) =>
           `The image format of ${quotedContentPath(directoryName, fileName)} is not supported for cover images.`,
@@ -115,7 +115,7 @@ function coverImageOf(directoryName: string, slug: string, directoryCoverImageFi
       .map((fileName) => `${quotedContentPath(directoryName, fileName)} has a URL-unsafe file name.`),
   ];
   const isAssignable =
-    coverImageFileNames.length === 1 && coverImageFileName !== undefined && isSourceImage(coverImageFileName);
+    coverImageFileNames.length === 1 && coverImageFileName !== undefined && isEncodableImage(coverImageFileName);
 
   return { coverImageFilePath: isAssignable ? `${directoryName}/${coverImageFileName}` : null, problems };
 }
@@ -177,7 +177,7 @@ export function readAuthoredMedia(listing: ContentListing = readContentListing()
   };
 }
 
-/** Reports invalid references and unreferenced body media among an entry's media references. */
+/** Reports invalid references and body media that is not referenced. */
 export function mediaReferenceProblems(
   references: Array<MediaReference>,
   { entryFilePath, mediaDirectoryPath, bodyImageFileNames, videos }: AuthoredEntryMedia,

@@ -2,7 +2,7 @@ import type { Dimensions } from "#/lib/content/media.ts";
 
 import { quotedContentPath } from "../../paths.ts";
 
-import { isSourceImage } from "./formats.ts";
+import { isEncodableImage } from "./formats.ts";
 import { rootRelativePathOf } from "./renditions.ts";
 
 import type { MediaRendition } from "./renditions.ts";
@@ -121,7 +121,7 @@ export function imageMetadataProblems({
 
   const metadataNameList =
     embeddedMetadataNames.length === 1 ? embeddedMetadataNames.join("") : `${embeddedMetadataNames.join(", ")}`;
-  const remedy = isSourceImage(path)
+  const remedy = isEncodableImage(path)
     ? "Strip it with `npm run optimize-image`."
     : "Strip it before committing the image.";
 

@@ -1,9 +1,9 @@
 import { SKIP, visit } from "unist-util-visit";
 
-import type { ContentImage, ContentMedia, SizedMedia } from "#/lib/content/media.ts";
+import type { ContentImage, ContentMedia } from "#/lib/content/media.ts";
 
 import { mediaReferencesIn } from "./media-references.ts";
-import { elementNameOf, hasAttribute, setMissingAttributes } from "./tree.ts";
+import { hasAttribute, setMissingAttributes } from "./tree.ts";
 
 import type { MediaReference } from "./media-references.ts";
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
@@ -42,10 +42,8 @@ async function renderableReferencesIn(
   });
 }
 
-const isImageElementSource = ({ node, attribute }: MediaReference) =>
-  elementNameOf(node) === "img" && attribute === "src";
-const missingDimensionsOf = (node: ContentNode, { width, height }: SizedMedia): Record<string, number> =>
-  hasAttribute(node, "width") || hasAttribute(node, "height") ? {} : { width, height };
+const isMarkdownImageSource = ({ node, attribute }: MediaReference) =>
+  node.type === "element" && node.tagName === "img" && attribute === "src";
 const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
   alternates.map(({ srcSet, type }) => ({
     type: "element",
@@ -57,33 +55,40 @@ const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
 /** Rewrites media references in an entry's compiled markup. */
 export function rehypeMedia(mediaForEntry: MediaForEntry) {
   return async function transform(tree: ContentParent, file: EntryVFile) {
-    const imagesRenderingAlternates = new Map<ContentNode, ContentImage>();
+    const picturesByImageNode = new Map<ContentNode, ContentImage>();
 
     for (const { reference, media } of await renderableReferencesIn(tree, file, mediaForEntry)) {
       reference.replace(media.src);
 
       if (media.kind === "video" && reference.video) {
+        const isSized = hasAttribute(reference.video, "width") || hasAttribute(reference.video, "height");
         setMissingAttributes(reference.video, {
           poster: media.posterImage.src,
-          ...missingDimensionsOf(reference.video, media),
+          ...(isSized ? {} : { width: media.width, height: media.height }), // An entry that sets one dimension is scaling the video, and the browser derives the other.
         });
-      } else if (media.kind === "image" && isImageElementSource(reference)) {
-        setMissingAttributes(reference.node, {
-          ...missingDimensionsOf(reference.node, media),
-          loading: "lazy",
-          decoding: "async",
-        });
+      } else if (media.kind === "image") {
+        // A hast `img` node originates from Markdown, which cannot set an image's attributes, so the build
+        // sets them. An authored `<img>` remains `mdx-jsx` and keeps only its authored attributes.
 
-        if (reference.rendersAlternates) {
-          imagesRenderingAlternates.set(reference.node, media);
+        if (isMarkdownImageSource(reference)) {
+          Object.assign(reference.node.properties!, {
+            width: media.width,
+            height: media.height,
+            loading: "lazy",
+            decoding: "async",
+          });
+        }
+
+        if (reference.canRenderAlternates) {
+          picturesByImageNode.set(reference.node, media);
         }
       }
     }
 
     visit(tree, (node, index, parent) => {
-      const image = imagesRenderingAlternates.get(node);
+      const picture = picturesByImageNode.get(node);
 
-      if (!image || image.alternates.length === 0 || !parent || index === undefined) {
+      if (!picture || picture.alternates.length === 0 || !parent || index === undefined) {
         return;
       }
 
@@ -91,7 +96,7 @@ export function rehypeMedia(mediaForEntry: MediaForEntry) {
         type: "element",
         tagName: "picture",
         properties: {},
-        children: [...sourceElements(image), node],
+        children: [...sourceElements(picture), node], // The `<img>` keeps its attributes inside the `<picture>`.
       };
 
       return SKIP; // Do not revisit the replacement subtree.
@@ -99,15 +104,14 @@ export function rehypeMedia(mediaForEntry: MediaForEntry) {
   };
 }
 
-/** Rewrites media references in an entry's Markdown alternate to absolute URLs. */
+/** Rewrites media references in an entry's Markdown representation to absolute URLs. */
 export function remarkMedia(mediaForEntry: MediaForEntry, absolute: (path: string) => string) {
   return async function transform(tree: ContentParent, file: EntryVFile) {
     for (const { reference, media } of await renderableReferencesIn(tree, file, mediaForEntry)) {
       reference.replace(absolute(media.src));
 
       if (media.kind === "video" && reference.video) {
-        // The alternate strips `<source>` elements and reads the file URL from `src`.
-        setMissingAttributes(reference.video, { src: absolute(media.src), poster: absolute(media.posterImage.src) });
+        setMissingAttributes(reference.video, { src: absolute(media.src), poster: absolute(media.posterImage.src) }); // The Markdown representation drops `<source>` elements and reads the file URL from `src`.
       }
     }
   };

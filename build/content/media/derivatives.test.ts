@@ -20,13 +20,13 @@ const AVIF: ImageDerivative = { format: "avif" };
 const WEBP: ImageDerivative = { format: "webp" };
 
 describe("imageDerivativeFileName", () => {
-  test("returns a file name containing the source hash, fingerprint, and suffix", () => {
+  test("returns a file name containing the image hash, fingerprint, and suffix", () => {
     expect(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF)).toBe(
       `${MEDIA_FILE_HASH}.${imageDerivativeFingerprint(AVIF)}.avif`,
     );
   });
 
-  test("returns the same file name for equivalent source and derivative inputs", () => {
+  test("returns the same file name for an equivalent derivative of the same image", () => {
     expect(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF)).toBe(imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF }));
   });
 
@@ -49,7 +49,7 @@ describe("imageDerivativeFileName", () => {
     );
   });
 
-  test("returns different file names for different derivatives of the same source", () => {
+  test("returns different file names for different derivatives of the same image", () => {
     expect(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF)).not.toBe(imageDerivativeFileName(MEDIA_FILE_HASH, WEBP));
   });
 

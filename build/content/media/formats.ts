@@ -15,7 +15,7 @@ export const IMAGE_MEDIA_TYPES = {
 
 const VIDEO_MEDIA_TYPES = { ".mp4": "video/mp4" } as const;
 const MEDIA_TYPES: Record<string, string | undefined> = { ...IMAGE_MEDIA_TYPES, ...VIDEO_MEDIA_TYPES };
-const SOURCE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"]; // The formats the build encodes derivatives from. The others are served as authored.
+const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"]; // Images in these formats have derivatives. Images in other formats are served as authored.
 
 export const CONTENT_MEDIA_EXTENSIONS = Object.keys(MEDIA_TYPES);
 
@@ -26,7 +26,7 @@ const extensionOf = (filePath: string) => authoredExtensionOf(filePath).toLowerC
 export const withoutExtension = (filePath: string) =>
   filePath.slice(0, filePath.length - authoredExtensionOf(filePath).length);
 export const mediaTypeOf = (filePath: string): string | null => MEDIA_TYPES[extensionOf(filePath)] ?? null;
-export const isSourceImage = (filePath: string) => SOURCE_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
+export const isEncodableImage = (filePath: string) => ENCODABLE_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
 export const coverImageStemOf = (slug: string) => `${slug}${COVER_IMAGE_STEM_SUFFIX}`;
 export const posterImageStemOf = (videoFilePath: string) =>
   `${withoutExtension(videoFilePath)}${VIDEO_POSTER_IMAGE_STEM_SUFFIX}`;

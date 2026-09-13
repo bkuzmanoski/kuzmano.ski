@@ -3,11 +3,11 @@ import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { parseSrcset, stringifySrcset } from "srcset";
 import { unified } from "unified";
-import { SKIP, visit } from "unist-util-visit";
+import { visitParents } from "unist-util-visit-parents";
 
 import type { MediaKind } from "#/lib/content/media.ts";
 
-import { elementNameOf, hasAttribute, isJsxElement } from "./tree.ts";
+import { elementNameOf, hasAttribute, hasSpreadAttribute, isJsxElement } from "./tree.ts";
 
 import type { ContentNode } from "./tree.ts";
 
@@ -26,7 +26,7 @@ export function mediaDirectoryFileNameOf(reference: string): string | null {
 export interface MediaReference {
   reference: string;
   expected: MediaKind | null; // `null` when the markup renders either kind, such as a component's `src`.
-  rendersAlternates: boolean;
+  canRenderAlternates: boolean; // Whether the markup can be wrapped in a `<picture>` that offers the image's alternates.
   node: ContentNode; // The Markdown image, definition, or element.
   attribute: string | null; // `null` for Markdown URLs.
   video: ContentNode | null; // The video playing this source, if any.
@@ -39,37 +39,33 @@ interface StringAttribute {
   replaceValue: (replacement: string) => void;
 }
 
-function nodesInsidePicturesIn(tree: ContentNode): Set<ContentNode> {
-  const nodes = new Set<ContentNode>();
+/**
+ * Whether a Markdown image, image reference, or `<img>` can be wrapped in a `<picture>` that offers its image's alternates.
+ *
+ * A `<picture>` cannot contain another. An `<img>` with a `srcset`, which a spread attribute can also set, chooses
+ * among its own candidates, and a `<source>` would take precedence over them.
+ */
+function canRenderAlternates(node: ContentNode, ancestors: Array<ContentNode>): boolean {
+  const isImage = node.type === "image" || node.type === "imageReference" || elementNameOf(node) === "img";
+  const canSetSrcset = hasSpreadAttribute(node) || [...URL_LIST_ATTRIBUTES].some((name) => hasAttribute(node, name));
 
-  visit(tree, (node) => {
-    if (elementNameOf(node) !== "picture") {
-      return;
-    }
-
-    visit(node, (descendant) => {
-      nodes.add(descendant);
-    });
-
-    return SKIP;
-  });
-
-  return nodes;
+  return isImage && !canSetSrcset && !ancestors.some((ancestor) => elementNameOf(ancestor) === "picture");
 }
 
-function imageDefinitionsIn(tree: ContentNode, nodesInsidePictures: Set<ContentNode>): Map<string, boolean> {
-  const rendersAlternatesByIdentifier = new Map<string, boolean>();
+/** Returns definitions used by image references that satisfy `isIncluded`, excluding link-only definitions. */
+function imageDefinitionIdentifiersIn(
+  tree: ContentNode,
+  isIncluded: (imageReference: ContentNode, ancestors: Array<ContentNode>) => boolean = () => true,
+): Set<string> {
+  const identifiers = new Set<string>();
 
-  visit(tree, (node) => {
-    if (node.type === "imageReference" && node.identifier) {
-      rendersAlternatesByIdentifier.set(
-        node.identifier,
-        (rendersAlternatesByIdentifier.get(node.identifier) ?? false) || !nodesInsidePictures.has(node),
-      );
+  visitParents(tree, (node: ContentNode, ancestors: Array<ContentNode>) => {
+    if (node.type === "imageReference" && node.identifier && isIncluded(node, ancestors)) {
+      identifiers.add(node.identifier);
     }
   });
 
-  return rendersAlternatesByIdentifier;
+  return identifiers;
 }
 
 /** Returns string attributes from JSX or compiled Markdown elements. */
@@ -133,16 +129,16 @@ function videoPlaying(node: ContentNode, attribute: string, parent: ContentNode 
 
 /** Returns relative media references in document order for validation and rewriting. */
 export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
-  const nodesInsidePictures = nodesInsidePicturesIn(tree);
-  const imageDefinitions = imageDefinitionsIn(tree, nodesInsidePictures);
-
+  const imageDefinitionIdentifiers = imageDefinitionIdentifiersIn(tree);
+  const imageDefinitionIdentifiersThatCanRenderAlternates = imageDefinitionIdentifiersIn(tree, canRenderAlternates);
   const mediaReferences: Array<MediaReference> = [];
 
-  visit(tree, (node, _index, parent: ContentNode | undefined) => {
-    const isMarkdownImage =
-      node.type === "image" || (node.type === "definition" && imageDefinitions.has(node.identifier ?? ""));
+  visitParents(tree, (node: ContentNode, ancestors: Array<ContentNode>) => {
+    const parent = ancestors.at(-1);
+    const canImageRenderAlternates = canRenderAlternates(node, ancestors);
+    const isImageDefinition = node.type === "definition" && imageDefinitionIdentifiers.has(node.identifier ?? "");
 
-    if (isMarkdownImage && typeof node.url === "string") {
+    if ((node.type === "image" || isImageDefinition) && typeof node.url === "string") {
       const replace = (url: string) => {
         node.url = url;
       };
@@ -152,18 +148,15 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
         attribute: null,
         reference: node.url,
         expected: "image",
-        rendersAlternates:
-          node.type === "image" ? !nodesInsidePictures.has(node) : imageDefinitions.get(node.identifier ?? "") === true,
+        canRenderAlternates: isImageDefinition
+          ? imageDefinitionIdentifiersThatCanRenderAlternates.has(node.identifier ?? "")
+          : canImageRenderAlternates,
         video: null,
         replace,
       });
     }
 
     const element = elementNameOf(node);
-    const isImageRenderingAlternates =
-      element === "img" &&
-      !nodesInsidePictures.has(node) &&
-      ![...URL_LIST_ATTRIBUTES].some((name) => hasAttribute(node, name));
 
     for (const { name, value, replaceValue } of stringAttributesOf(node)) {
       if (URL_ATTRIBUTES.has(name)) {
@@ -172,7 +165,7 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
           attribute: name,
           reference: value,
           expected: expectedKindOf(element, name, elementNameOf(parent)),
-          rendersAlternates: isImageRenderingAlternates && name === "src",
+          canRenderAlternates: name === "src" && canImageRenderAlternates,
           video: videoPlaying(node, name, parent),
           replace: replaceValue,
         });
@@ -186,7 +179,7 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
             attribute: name,
             reference: candidate.url,
             expected: "image",
-            rendersAlternates: false,
+            canRenderAlternates: false,
             video: null,
             replace: (url) => {
               candidates[index] = { ...candidate, url };

@@ -23,7 +23,7 @@ import {
   imageDerivativeDimensionsOf,
   thumbnailImageDerivativesFor,
 } from "./derivatives.ts";
-import { isSourceImage } from "./formats.ts";
+import { isEncodableImage } from "./formats.ts";
 import {
   coverImageProblems,
   imageMetadataProblems,
@@ -35,7 +35,7 @@ import { authoredRendition, imageDerivativeRendition } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
 
 import type { AuthoredEntryMedia, AuthoredVideo } from "./authored-media.ts";
-import type { ImageDerivative } from "./derivatives.ts";
+import type { PictureDerivatives } from "./derivatives.ts";
 import type { MediaRendition } from "./renditions.ts";
 import type { MediaFileReader, ResolvedImage } from "./resolved-media.ts";
 import type { MediaReference } from "../markup/media-references.ts";
@@ -47,7 +47,9 @@ export interface MediaIndex {
   renditionsByUrl: Map<string, MediaRendition>;
   entryAbsolutePathsByMediaDirectoryPath: Map<string, string>;
   mediaForEntry: (absolutePath: string) => MediaForReference;
-  recheckReferences: (absolutePath: string, source: string) => boolean; // Replaces an entry's reference problems with those of its edited source. Returns `false` when an index needs to be rebuilt.
+  // Replaces an entry's reference problems with those of its edited source. An edit that changes
+  // which body images have alternates changes the renditions, so it requires a rebuild instead.
+  recheckReferences: (absolutePath: string, source: string) => { requiresRebuild: boolean };
   problems: () => Array<string>;
 }
 
@@ -62,7 +64,7 @@ interface ResolvedEntryMedia {
   entry: AuthoredEntryMedia;
   coverImage: CoverImage | null;
   mediaByFileName: Map<string, ContentMedia>;
-  alternateImageFileNames: Set<string>;
+  bodyImageFileNamesWithAlternates: Set<string>; // Compared when the entry's source is rechecked.
   renditions: Array<MediaRendition>;
   mediaProblems: Array<string>;
   referenceProblems: Array<string>; // Replaced when the entry's source is rechecked.
@@ -73,31 +75,39 @@ export const coverImageSizeIn = (layoutMetrics: LayoutMetrics) => metricIn(layou
 const pictureSourceOf = ({ url, type }: MediaRendition): PictureSource => ({ srcSet: url, type });
 const sizedMediaOf = ({ url }: MediaRendition, dimensions: Dimensions): SizedMedia => ({ src: url, ...dimensions });
 
-function alternateImageFileNamesIn(
+function bodyImageFileNamesWithAlternatesIn(
   references: Array<MediaReference>,
   { bodyImageFileNames }: AuthoredEntryMedia,
 ): Set<string> {
-  const referencedFileNames = new Set(
-    references.flatMap(({ reference, rendersAlternates }) =>
-      rendersAlternates ? (mediaDirectoryFileNameOf(reference) ?? []) : [],
+  const fileNamesThatCanRenderAlternates = new Set(
+    references.flatMap(({ reference, canRenderAlternates }) =>
+      canRenderAlternates ? (mediaDirectoryFileNameOf(reference) ?? []) : [],
     ),
   );
-  return new Set(bodyImageFileNames.filter((fileName) => isSourceImage(fileName) && referencedFileNames.has(fileName)));
+
+  return new Set(
+    bodyImageFileNames.filter(
+      (fileName) => isEncodableImage(fileName) && fileNamesThatCanRenderAlternates.has(fileName),
+    ),
+  );
 }
 
 function pictureOf(
   image: ResolvedImage,
-  fallbackRendition: MediaRendition,
-  fallbackDimensions: Dimensions,
-  alternateDerivatives: Array<ImageDerivative>,
-): { picture: ContentImage; renditions: Array<MediaRendition> } {
-  const alternateRenditions = alternateDerivatives.map((derivative) => imageDerivativeRendition(image, derivative));
+  { alternates, fallback }: PictureDerivatives,
+): { picture: ContentImage; fallbackRendition: MediaRendition; renditions: Array<MediaRendition> } {
+  const fallbackRendition = fallback === null ? authoredRendition(image) : imageDerivativeRendition(image, fallback);
+  const fallbackDimensions =
+    fallback === null ? image.dimensions : imageDerivativeDimensionsOf(image.dimensions, fallback);
+  const alternateRenditions = alternates.map((derivative) => imageDerivativeRendition(image, derivative));
+
   return {
     picture: {
       kind: "image",
       ...sizedMediaOf(fallbackRendition, fallbackDimensions),
       alternates: alternateRenditions.map(pictureSourceOf),
     },
+    fallbackRendition,
     renditions: [fallbackRendition, ...alternateRenditions],
   };
 }
@@ -115,12 +125,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     }
 
     const socialImageRendition = authoredRendition(coverImage);
-    const thumbnail = pictureOf(
-      coverImage,
-      imageDerivativeRendition(coverImage, thumbnailDerivatives.fallback),
-      imageDerivativeDimensionsOf(coverImage.dimensions, thumbnailDerivatives.fallback),
-      thumbnailDerivatives.alternates,
-    );
+    const thumbnail = pictureOf(coverImage, thumbnailDerivatives);
 
     return {
       coverImage: { social: sizedMediaOf(socialImageRendition, coverImage.dimensions), thumbnail: thumbnail.picture },
@@ -140,18 +145,15 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       return { mediaByFileName: [], renditions: [], problems: [bodyImage.problem] };
     }
 
-    const bodyImageRendition = authoredRendition(bodyImage);
-    const { picture, renditions } = pictureOf(
+    const { picture, fallbackRendition, renditions } = pictureOf(
       bodyImage,
-      bodyImageRendition,
-      bodyImage.dimensions,
-      hasAlternates ? BODY_IMAGE_DERIVATIVES : [],
+      hasAlternates ? BODY_IMAGE_DERIVATIVES : { ...BODY_IMAGE_DERIVATIVES, alternates: [] },
     );
 
     return {
       mediaByFileName: [[fileName, picture]],
       renditions,
-      problems: [...imageMetadataProblems(bodyImage), ...renditionSizeProblems(bodyImageRendition, bodyImage.bytes)],
+      problems: [...imageMetadataProblems(bodyImage), ...renditionSizeProblems(fallbackRendition, bodyImage.bytes)],
     };
   }
 
@@ -200,33 +202,25 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     };
   }
 
-  async function resolveBodyMedia(entry: AuthoredEntryMedia) {
-    const { absolutePath, mediaDirectoryPath, bodyImageFileNames, videos } = entry;
-    const references = mediaReferencesInSource(await readFile(absolutePath, "utf8"));
-    const alternateImageFileNames = alternateImageFileNamesIn(references, entry);
-    const resolutions = await Promise.all([
-      ...bodyImageFileNames.map((fileName) =>
-        resolveBodyImage(mediaDirectoryPath, fileName, alternateImageFileNames.has(fileName)),
-      ),
-      ...videos.map((video) => resolveVideo(mediaDirectoryPath, video)),
-    ]);
-
-    return { resolutions, alternateImageFileNames, referenceProblems: mediaReferenceProblems(references, entry) };
-  }
-
   async function resolveEntryMedia(entry: AuthoredEntryMedia): Promise<ResolvedEntryMedia> {
-    const { coverImageFilePath } = entry;
-    const [coverImageResolution, { resolutions: bodyMediaResolutions, alternateImageFileNames, referenceProblems }] =
-      await Promise.all([
-        coverImageFilePath === null ? null : resolveCoverImage(coverImageFilePath),
-        resolveBodyMedia(entry),
-      ]);
+    const { absolutePath, coverImageFilePath, mediaDirectoryPath, bodyImageFileNames, videos } = entry;
+    const references = mediaReferencesInSource(await readFile(absolutePath, "utf8")); // The source is read before the media because its references decide which body images have alternates.
+    const bodyImageFileNamesWithAlternates = bodyImageFileNamesWithAlternatesIn(references, entry);
+    const [coverImageResolution, bodyMediaResolutions] = await Promise.all([
+      coverImageFilePath === null ? null : resolveCoverImage(coverImageFilePath),
+      Promise.all([
+        ...bodyImageFileNames.map((fileName) =>
+          resolveBodyImage(mediaDirectoryPath, fileName, bodyImageFileNamesWithAlternates.has(fileName)),
+        ),
+        ...videos.map((video) => resolveVideo(mediaDirectoryPath, video)),
+      ]),
+    ]);
 
     return {
       entry,
       coverImage: coverImageResolution?.coverImage ?? null,
       mediaByFileName: new Map(bodyMediaResolutions.flatMap(({ mediaByFileName }) => mediaByFileName)),
-      alternateImageFileNames,
+      bodyImageFileNamesWithAlternates,
       renditions: [
         ...(coverImageResolution?.renditions ?? []),
         ...bodyMediaResolutions.flatMap(({ renditions }) => renditions),
@@ -235,7 +229,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
         ...(coverImageResolution?.problems ?? []),
         ...bodyMediaResolutions.flatMap(({ problems }) => problems),
       ],
-      referenceProblems,
+      referenceProblems: mediaReferenceProblems(references, entry),
     };
   }
 
@@ -274,17 +268,19 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       const resolvedEntry = resolvedEntriesByAbsolutePath.get(absolutePath);
 
       if (!resolvedEntry) {
-        return true;
+        return { requiresRebuild: false };
       }
 
+      const { entry, bodyImageFileNamesWithAlternates } = resolvedEntry;
       const references = mediaReferencesInSource(source);
 
-      resolvedEntry.referenceProblems = mediaReferenceProblems(references, resolvedEntry.entry);
+      if (!isDeepStrictEqual(bodyImageFileNamesWithAlternatesIn(references, entry), bodyImageFileNamesWithAlternates)) {
+        return { requiresRebuild: true }; // The rebuild checks the references again, so this index retains its problems.
+      }
 
-      return isDeepStrictEqual(
-        alternateImageFileNamesIn(references, resolvedEntry.entry),
-        resolvedEntry.alternateImageFileNames,
-      );
+      resolvedEntry.referenceProblems = mediaReferenceProblems(references, entry);
+
+      return { requiresRebuild: false };
     },
     problems: () => [
       ...authoredMediaProblems,

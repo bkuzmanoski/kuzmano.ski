@@ -15,7 +15,7 @@ import { toRootRelative } from "../paths.ts";
 import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
 import type { ContentNode, EntryVFile } from "../content/markup/tree.ts";
 
-// Converts an entry's MDX source to the Markdown a reader is served at its `.md` alternate.
+// Converts an entry's MDX source to the Markdown representation a reader is served at its `.md` URL.
 
 interface ComponentMarkdown {
   inline?: boolean;
@@ -36,14 +36,17 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   Waitlist: { replace: (node, { url }) => (url ? [...(node.children ?? []), paragraph(fallbackText(url))] : []) },
   img: {
     inline: true,
+    // A `<picture>` is replaced by its children, which keeps its `<img>` and drops its `<source>` elements.
+    // `remarkMedia` has already rewritten the `src` attribute to an absolute media URL.
     replace: (node) => {
       const url = stringAttributeOf(node, "src");
       return url ? [{ type: "image", url, alt: stringAttributeOf(node, "alt") ?? "" }] : [];
     },
   },
-  // Render videos as file links, using the poster image and `aria-label` when available.
   video: {
     inline: true,
+    // Markdown has no video element, so a video becomes a link to its file. The link contains the poster image, with
+    // the video's `aria-label` as its alternative text, or the `aria-label` alone for a video without a poster image.
     replace: (node) => {
       const url = stringAttributeOf(node, "src");
       const poster = stringAttributeOf(node, "poster");

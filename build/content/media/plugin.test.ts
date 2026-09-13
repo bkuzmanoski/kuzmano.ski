@@ -80,7 +80,7 @@ const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
     ["collection/second-entry", SECOND_ENTRY_ABSOLUTE_PATH],
   ]),
   mediaForEntry: () => () => null,
-  recheckReferences: () => true,
+  recheckReferences: () => ({ requiresRebuild: false }),
   problems: () => [],
   ...overrides,
 });
@@ -355,19 +355,25 @@ describe("contentMedia", () => {
     expect(serverStaleModules?.map(({ id }) => id)).toEqual([RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID]);
   });
 
-  test("rechecks an updated entry's references only in the client environment", async () => {
+  test("rechecks an updated entry's references once when each environment reports the same entry update, whichever environment reports it first", async () => {
     const { updateFile, buildInitialIndex } = setUpContentMedia();
-    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>();
+    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => ({ requiresRebuild: false }));
 
     await buildInitialIndex(mediaIndex({ recheckReferences }));
-    await updateFile({ file: ENTRY_ABSOLUTE_PATH, environmentName: SERVER_ENVIRONMENT });
 
-    expect(recheckReferences).not.toHaveBeenCalled();
+    const timestamp = nextTimestamp();
+
+    await Promise.all([
+      updateFile({ file: ENTRY_ABSOLUTE_PATH, timestamp, environmentName: SERVER_ENVIRONMENT }),
+      updateFile({ file: ENTRY_ABSOLUTE_PATH, timestamp }),
+    ]);
+
+    expect(recheckReferences).toHaveBeenCalledOnce();
   });
 
-  test("rechecks an updated entry's references, and does not rebuild the index, when an entry update does not change which images have alternates", async () => {
+  test("rechecks an updated entry's references, and does not rebuild the index, when the update does not change which body images have alternates", async () => {
     const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
-    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => true);
+    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => ({ requiresRebuild: false }));
     const source = "![An image](./missing.png)\n";
 
     await buildInitialIndex(
@@ -383,10 +389,10 @@ describe("contentMedia", () => {
     expect(warnedProblems()).toEqual(["A reference problem."]);
   });
 
-  test("rebuilds the index, and resolves references through the rebuilt index, when an entry update changes which images have alternates", async () => {
+  test("rebuilds the index, and resolves references through the rebuilt index, when an entry update changes which body images have alternates", async () => {
     const { updateFile, mediaSourceFor, buildInitialIndex } = setUpContentMedia();
 
-    await buildInitialIndex(mediaIndex({ recheckReferences: () => false }));
+    await buildInitialIndex(mediaIndex({ recheckReferences: () => ({ requiresRebuild: true }) }));
 
     const fileUpdate = updateFile({ file: ENTRY_ABSOLUTE_PATH });
 
@@ -395,6 +401,25 @@ describe("contentMedia", () => {
     await fileUpdate;
 
     await expect(mediaSourceFor("./image.png")).resolves.toBe(mediaRoute("collection/entry/image.png"));
+  });
+
+  test("rebuilds the index once, and warns about the rebuilt index's problems, when the server environment reports an entry update that changes which body images have alternates before the client environment", async () => {
+    const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
+    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => ({ requiresRebuild: true }));
+
+    await buildInitialIndex(mediaIndex({ recheckReferences }));
+
+    const timestamp = nextTimestamp();
+    const serverFileUpdate = updateFile({ file: ENTRY_ABSOLUTE_PATH, timestamp, environmentName: SERVER_ENVIRONMENT });
+    const clientFileUpdate = updateFile({ file: ENTRY_ABSOLUTE_PATH, timestamp });
+
+    await vi.waitFor(() => expect(indexBuilds).toHaveLength(2));
+    indexBuilds[1]!.resolve(mediaIndex({ problems: () => ["A problem."] }));
+    await Promise.all([serverFileUpdate, clientFileUpdate]);
+
+    expect(indexBuilds).toHaveLength(2);
+    expect(recheckReferences).toHaveBeenCalledOnce();
+    expect(warnedProblems()).toEqual(["A problem."]);
   });
 
   test("warns about a problem once, after the first rebuild that produces it", async () => {

@@ -137,7 +137,7 @@ describe("buildMediaIndex", () => {
     expect(alternates.map(({ srcSet }) => srcSet.split(".").at(-1))).toEqual(["avif", "webp"]);
   });
 
-  test("resolves a body image reference to its authored URL without alternates when the build does not encode its format", async () => {
+  test("resolves a body image reference to its authored URL without alternates when its format is not encodable", async () => {
     const animationFilePath = "collection/entry/animation.gif";
     const index = await indexOf({
       entryMedia: [{ ...ENTRY, bodyImageFileNames: ["animation.gif"] }],
@@ -151,7 +151,7 @@ describe("buildMediaIndex", () => {
     });
   });
 
-  test("resolves a body image referenced only inside an authored `<picture>` without alternates, and does not map derivatives of it to renditions", async () => {
+  test("resolves a body image referenced only inside an authored `<picture>` to its authored URL without alternates, and does not index derivative renditions of it", async () => {
     const index = await indexOf({ source: SOURCE_WITH_IMAGE_IN_PICTURE });
     const bodyImageUrls = [...index.renditionsByUrl.keys()].filter((url) =>
       url.startsWith(mediaRoute("collection/entry/image.")),
@@ -298,39 +298,36 @@ describe("buildMediaIndex", () => {
   });
 
   test("replaces an entry's reference problems with those of the source it is rechecked against", async () => {
-    const index = await indexOf({ source: "![Missing](./missing.png)\n" });
+    const index = await indexOf({ source: `${ENTRY_SOURCE}\n![Missing](./missing.png)\n` });
 
-    expect(index.problems()).toEqual([
-      expect.stringMatching(/references "\.\/missing\.png"/),
-      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/image.png" is not referenced`),
-      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" is not referenced`),
-    ]);
-
-    index.recheckReferences(ENTRY_ABSOLUTE_PATH, ENTRY_SOURCE);
-
+    expect(index.problems()).toEqual([expect.stringMatching(/references "\.\/missing\.png"/)]);
+    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, ENTRY_SOURCE)).toEqual({ requiresRebuild: false });
     expect(index.problems()).toEqual([]);
   });
 
-  test("returns `true` when rechecking a source that changes references but not which body images have alternates", async () => {
+  test("does not require a rebuild when a rechecked source changes references but not which body images have alternates", async () => {
     const index = await indexOf();
     const source = `${ENTRY_SOURCE}
       <img src="./image.png" alt="An image" />
     `;
 
-    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, source)).toBe(true);
+    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, source)).toEqual({ requiresRebuild: false });
   });
 
-  test("returns `false` when rechecking a source that changes which body images have alternates", async () => {
+  test("requires a rebuild, and retains the entry's reference problems, when a rechecked source changes which body images have alternates", async () => {
     const index = await indexOf();
-    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, SOURCE_WITH_IMAGE_IN_PICTURE)).toBe(false);
+    const source = `${SOURCE_WITH_IMAGE_IN_PICTURE}\n![Missing](./missing.png)\n`;
+
+    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, source)).toEqual({ requiresRebuild: true });
+    expect(index.problems()).toEqual([]);
   });
 
   test("ignores a recheck of a file that is not an indexed entry", async () => {
     const index = await indexOf();
 
-    expect(index.recheckReferences(fromContent("collection/other-entry.mdx"), "![Missing](./missing.png)\n")).toBe(
-      true,
-    );
+    expect(index.recheckReferences(fromContent("collection/other-entry.mdx"), "![Missing](./missing.png)\n")).toEqual({
+      requiresRebuild: false,
+    });
     expect(index.problems()).toEqual([]);
   });
 

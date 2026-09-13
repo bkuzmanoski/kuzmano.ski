@@ -25,16 +25,20 @@ export interface ImageDerivative {
   quality?: number; // Default quality for the format used when omitted.
 }
 
-export const BODY_IMAGE_DERIVATIVES: Array<ImageDerivative> = [{ format: "avif" }, { format: "webp" }]; // In `<picture>` preference order.
-export const POSTER_IMAGE_DERIVATIVE: ImageDerivative = { format: "webp" };
-
-interface ThumbnailImageDerivatives {
+/** The alternates a `<picture>` element's `<source>`s offer and the fallback its `<img>` serves. */
+export interface PictureDerivatives {
   alternates: Array<ImageDerivative>; // In `<picture>` preference order.
-  fallback: ImageDerivative; // Fallback `<img>` source.
+  fallback: ImageDerivative | null; // `null` when the `<img>` serves the authored image.
 }
 
+export const BODY_IMAGE_DERIVATIVES: PictureDerivatives = {
+  alternates: [{ format: "avif" }, { format: "webp" }],
+  fallback: null,
+};
+export const POSTER_IMAGE_DERIVATIVE: ImageDerivative = { format: "webp" };
+
 /** Cover-image derivatives at `width` (2x the rendered thumbnail width). */
-export const thumbnailImageDerivativesFor = (width: number): ThumbnailImageDerivatives => ({
+export const thumbnailImageDerivativesFor = (width: number): PictureDerivatives => ({
   alternates: [{ format: "avif", variant: "thumbnail", width }],
   fallback: { format: "webp", variant: "thumbnail", width },
 });
@@ -63,7 +67,7 @@ export const imageDerivativeFingerprint = (derivative: ImageDerivative) =>
     .digest("hex")
     .slice(0, 8);
 
-/** Media storage filename: `<source hash>.<derivative fingerprint>.<suffix>`. */
+/** Media storage filename: `<image hash>.<derivative fingerprint>.<suffix>`. */
 export const imageDerivativeFileName = (hash: string, derivative: ImageDerivative) =>
   `${hash}.${imageDerivativeFingerprint(derivative)}.${imageDerivativeSuffixOf(derivative)}`;
 

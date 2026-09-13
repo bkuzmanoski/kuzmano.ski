@@ -13,7 +13,8 @@ import type { Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
 const isRegisteredPage = (slug: string) => (PAGE_SLUGS as ReadonlyArray<string>).includes(slug);
-const hasMarkdownAlternate = (frontmatter: Frontmatter | null) => frontmatter?.draft !== true || import.meta.env.DEV;
+const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>
+  frontmatter?.draft !== true || import.meta.env.DEV;
 
 function documentData(
   frontmatter: Frontmatter | null,
@@ -37,7 +38,7 @@ export const contentRoute = {
           path: pageRoute(content.slug),
           bodyChunkUrl: pages.bodyChunkUrlOf(content.slug),
           coverImage: ENTRY_COVER_IMAGES[pages.entryKeyOf(content.slug)] ?? null,
-          markdown: hasMarkdownAlternate(content.frontmatter),
+          markdown: hasMarkdownRepresentation(content.frontmatter),
           noindex: content.frontmatter?.draft === true || !isRegisteredPage(content.slug),
         });
 
@@ -47,7 +48,7 @@ export const contentRoute = {
           kind: "article",
           bodyChunkUrl: content.collection.bodyChunkUrlOf(content.slug),
           coverImage: ENTRY_COVER_IMAGES[content.collection.entryKeyOf(content.slug)] ?? null,
-          markdown: hasMarkdownAlternate(content.frontmatter),
+          markdown: hasMarkdownRepresentation(content.frontmatter),
           feed,
           noindex: content.frontmatter?.draft === true,
         });

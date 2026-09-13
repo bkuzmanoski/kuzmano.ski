@@ -47,9 +47,9 @@ test("a page exposes its cover image", () => {
   expect(loadSegment(REGISTERED_PAGE).coverImage).toEqual(fakeCoverImage(REGISTERED_PAGE));
 });
 
-test("a draft page does not expose a Markdown alternate in production", () => {
+test("a draft page does not expose a Markdown representation in production", () => {
   vi.stubEnv("DEV", false);
-  expect(loadSegment("draft-page").markdown).toBe(false); // A production build does not emit Markdown alternates for drafts.
+  expect(loadSegment("draft-page").markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
 });
 
 test("a page the site links to is not marked noindex", () => {
@@ -65,19 +65,19 @@ test("an entry exposes its cover image, or `null` when it does not have one", ()
   expect(loadCollectionEntry("draft-entry").coverImage).toBeNull();
 });
 
-test("a published entry exposes a Markdown alternate in production", () => {
+test("a published entry exposes a Markdown representation in production", () => {
   vi.stubEnv("DEV", false);
   expect(loadCollectionEntry("published").markdown).toBe(true);
 });
 
-test("a draft entry does not expose a Markdown alternate in production", () => {
+test("a draft entry does not expose a Markdown representation in production", () => {
   vi.stubEnv("DEV", false);
-  expect(loadCollectionEntry("draft-entry").markdown).toBe(false); // A production build does not emit Markdown alternates for drafts.
+  expect(loadCollectionEntry("draft-entry").markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
 });
 
-test("a draft entry exposes a Markdown alternate in development", () => {
+test("a draft entry exposes a Markdown representation in development", () => {
   vi.stubEnv("DEV", true);
-  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The development server renders the Markdown alternate of a draft.
+  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The development server renders the Markdown representation of a draft.
 });
 
 test("an entry the site publishes is not marked noindex", () => {
@@ -88,7 +88,7 @@ test("a draft entry is marked noindex", () => {
   expect(loadCollectionEntry("draft-entry").noindex).toBe(true);
 });
 
-test("a collection listing exposes a Markdown alternate in production", () => {
+test("a collection listing exposes a Markdown representation in production", () => {
   vi.stubEnv("DEV", false);
   expect(loadSegment("collection").markdown).toBe(true);
 });

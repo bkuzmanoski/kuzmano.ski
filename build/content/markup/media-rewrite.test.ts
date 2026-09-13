@@ -209,23 +209,25 @@ describe("rehypeMedia", () => {
     expect(picture?.children?.slice(0, 2).map((child) => child.properties?.type)).toEqual(["image/avif", "image/webp"]);
   });
 
-  test("rewrites an authored `<img>` to the file the site serves, at its intrinsic size", async () => {
+  test("rewrites the `src` attribute of an authored `<img>` to the file the site serves, and does not add `width`, `height`, `loading`, or `decoding` attributes", async () => {
     const [image] = jsxElementsNamed(await compiledTree('<img src="./image.png" alt="An image" />\n'), "img");
 
+    expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt"]);
     expect(attributeOf(image, "src")).toBe(IMAGE_WITH_ALTERNATES.src);
-    expect(attributeOf(image, "width")).toBe("900");
-    expect(attributeOf(image, "height")).toBe("500");
-    expect(attributeOf(image, "loading")).toBe("lazy");
-    expect(attributeOf(image, "decoding")).toBe("async");
   });
 
-  test("preserves the `width` and `loading` attributes written on an authored `<img>`, and does not supply a `height` attribute", async () => {
+  test("preserves authored `<img>` attributes when wrapping the image in a `<picture>`", async () => {
     const tree = await compiledTree('<img src="./image.png" alt="An image" width="450" loading="eager" />\n');
+    const [picture] = elementsNamed(tree, "picture");
     const [image] = jsxElementsNamed(tree, "img");
 
-    expect(attributeOf(image, "width")).toBe("450");
-    expect(attributeOf(image, "height")).toBeUndefined();
-    expect(attributeOf(image, "loading")).toBe("eager");
+    expect(picture?.children?.at(-1)).toBe(image);
+    expect(image?.attributes?.map(({ name, value }) => [name, value])).toEqual([
+      ["src", IMAGE_WITH_ALTERNATES.src],
+      ["alt", "An image"],
+      ["width", "450"],
+      ["loading", "eager"],
+    ]);
   });
 
   test("does not wrap an authored `<img>` with a `srcSet` attribute of its own in a `<picture>`", async () => {
@@ -237,6 +239,13 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "img")[0], "srcSet")).toBe(
       `${IMAGE_WITHOUT_ALTERNATES.src} 1x, ${HI_DPI_IMAGE.src} 2x`,
     );
+  });
+
+  test("does not wrap an authored `<img>` with a spread attribute in a `<picture>`", async () => {
+    const tree = await compiledTree('<img src="./image.png" alt="An image" {...props} />\n');
+
+    expect(elementsNamed(tree, "picture")).toHaveLength(0);
+    expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe(IMAGE_WITH_ALTERNATES.src);
   });
 
   test("preserves the elements of an authored `<picture>`, and rewrites every reference in it", async () => {
