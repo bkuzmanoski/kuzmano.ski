@@ -60,7 +60,7 @@ To add styles for a single entry, add a CSS module beside its MDX file:
 <entry>.module.css
 ```
 
-The module's `.entry` class is applied to the entry's `<article>` element.
+The module's `.entry` class is applied to the entry container.
 
 ### Media
 
@@ -78,10 +78,10 @@ content-hashed URL.
 
 #### Images
 
-PNG and JPEG images referenced with Markdown syntax are served with AVIF and
-WebP alternates (see [Generated media](#generated-media)). The authored file is
-still served as their fallback, and wherever alternates are not used (e.g.,
-other image formats, `<img>` elements, and Open Graph previews).
+PNG and JPEG images referenced with Markdown syntax or an `<img>` element are
+served with AVIF and WebP alternates (see [Generated media](#generated-media)).
+The authored file is still served as their fallback and wherever alternates are
+not used (e.g., other image formats, `<picture>` elements, Open Graph previews).
 
 To optimize PNG and JPEG images in place:
 
@@ -118,14 +118,13 @@ The poster image is taken from the first frame unless a time is given (e.g.,
 
 #### Generated media
 
-The build serves derivatives generated from content images: AVIF and WebP
-alternates of PNG and JPEG images, thumbnails of cover images, and WebP versions
-of poster images. Derivatives are committed to `/media` (see
-`/media/README.md`).
+The site serves AVIF and WebP derivatives for PNG and JPEG entry cover
+thumbnails and images referenced in Markdown or `<img>` elements, plus WebP
+derivatives for video poster images.
 
-The dev server generates missing derivatives on demand, and a pre-commit hook
-updates `/media` when content is staged. To validate content media and update
-`/media` manually:
+The dev server generates missing derivatives on demand in `/media` (see
+`/media/README.md`). A pre-commit hook also updates `/media` when content is
+staged. To validate content media and update `/media` manually:
 
 ```bash
 npm run prepare-media

@@ -3,7 +3,7 @@ import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { parseSrcset, stringifySrcset } from "srcset";
 import { unified } from "unified";
-import { visit } from "unist-util-visit";
+import { SKIP, visit } from "unist-util-visit";
 
 import type { MediaKind } from "#/lib/content/media.ts";
 
@@ -26,6 +26,7 @@ export function mediaDirectoryFileNameOf(reference: string): string | null {
 export interface MediaReference {
   reference: string;
   expected: MediaKind | null; // `null` when the markup renders either kind, such as a component's `src`.
+  rendersAlternates: boolean;
   node: ContentNode; // The Markdown image, definition, or element.
   attribute: string | null; // `null` for Markdown URLs.
   video: ContentNode | null; // The video playing this source, if any.
@@ -38,17 +39,37 @@ interface StringAttribute {
   replaceValue: (replacement: string) => void;
 }
 
-/** Returns definitions referenced by Markdown images, excluding link-only definitions. */
-function imageDefinitionIdentifiersIn(tree: ContentNode): Set<string> {
-  const identifiers = new Set<string>();
+function nodesInsidePicturesIn(tree: ContentNode): Set<ContentNode> {
+  const nodes = new Set<ContentNode>();
+
+  visit(tree, (node) => {
+    if (elementNameOf(node) !== "picture") {
+      return;
+    }
+
+    visit(node, (descendant) => {
+      nodes.add(descendant);
+    });
+
+    return SKIP;
+  });
+
+  return nodes;
+}
+
+function imageDefinitionsIn(tree: ContentNode, nodesInsidePictures: Set<ContentNode>): Map<string, boolean> {
+  const rendersAlternatesByIdentifier = new Map<string, boolean>();
 
   visit(tree, (node) => {
     if (node.type === "imageReference" && node.identifier) {
-      identifiers.add(node.identifier);
+      rendersAlternatesByIdentifier.set(
+        node.identifier,
+        (rendersAlternatesByIdentifier.get(node.identifier) ?? false) || !nodesInsidePictures.has(node),
+      );
     }
   });
 
-  return identifiers;
+  return rendersAlternatesByIdentifier;
 }
 
 /** Returns string attributes from JSX or compiled Markdown elements. */
@@ -112,7 +133,9 @@ function videoPlaying(node: ContentNode, attribute: string, parent: ContentNode 
 
 /** Returns relative media references in document order for validation and rewriting. */
 export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
-  const imageDefinitions = imageDefinitionIdentifiersIn(tree);
+  const nodesInsidePictures = nodesInsidePicturesIn(tree);
+  const imageDefinitions = imageDefinitionsIn(tree, nodesInsidePictures);
+
   const mediaReferences: Array<MediaReference> = [];
 
   visit(tree, (node, _index, parent: ContentNode | undefined) => {
@@ -129,12 +152,18 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
         attribute: null,
         reference: node.url,
         expected: "image",
+        rendersAlternates:
+          node.type === "image" ? !nodesInsidePictures.has(node) : imageDefinitions.get(node.identifier ?? "") === true,
         video: null,
         replace,
       });
     }
 
     const element = elementNameOf(node);
+    const isImageRenderingAlternates =
+      element === "img" &&
+      !nodesInsidePictures.has(node) &&
+      ![...URL_LIST_ATTRIBUTES].some((name) => hasAttribute(node, name));
 
     for (const { name, value, replaceValue } of stringAttributesOf(node)) {
       if (URL_ATTRIBUTES.has(name)) {
@@ -143,6 +172,7 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
           attribute: name,
           reference: value,
           expected: expectedKindOf(element, name, elementNameOf(parent)),
+          rendersAlternates: isImageRenderingAlternates && name === "src",
           video: videoPlaying(node, name, parent),
           replace: replaceValue,
         });
@@ -156,6 +186,7 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
             attribute: name,
             reference: candidate.url,
             expected: "image",
+            rendersAlternates: false,
             video: null,
             replace: (url) => {
               candidates[index] = { ...candidate, url };

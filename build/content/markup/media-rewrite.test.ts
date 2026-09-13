@@ -123,7 +123,7 @@ describe("rehypeMedia", () => {
     expect(resolve.mock.calls).toEqual([[ENTRY_ABSOLUTE_PATH]]);
   });
 
-  test("wraps a Markdown image in one `<picture>` containing a `<source>` per alternate format the build encoded", async () => {
+  test("wraps a Markdown image in a `<picture>` with one `<source>` for each encoded alternate format", async () => {
     const [picture, ...others] = elementsNamed(await compiledTree("![An image](./image.png)\n"), "picture");
 
     expect(others).toHaveLength(0);
@@ -134,7 +134,7 @@ describe("rehypeMedia", () => {
     ]);
   });
 
-  test("rewrites the `img` inside the `<picture>` to the file the site serves, at its intrinsic size", async () => {
+  test("rewrites the `<picture>` fallback `<img>` to the served file with its intrinsic dimensions", async () => {
     const tree = await compiledTree("![An image](./image.png)\n");
     expect(elementsNamed(tree, "img")[0]?.properties).toEqual({
       src: IMAGE_WITH_ALTERNATES.src,
@@ -146,14 +146,14 @@ describe("rehypeMedia", () => {
     });
   });
 
-  test("wraps each Markdown image in a `<picture>` of its own", async () => {
+  test("wraps every Markdown image in a separate `<picture>` element", async () => {
     const tree = await compiledTree("![First image](./image.png)\n\n![Second image](./image.png)\n");
 
     expect(elementsNamed(tree, "picture")).toHaveLength(2);
     expect(elementsNamed(tree, "img")).toHaveLength(2);
   });
 
-  test("leaves a Markdown image without alternate formats in its own `img` element", async () => {
+  test("renders a Markdown image without alternate formats as an `<img>` without a `<picture>` wrapper", async () => {
     const tree = await compiledTree("![An image](./image.jpg)\n");
 
     expect(elementsNamed(tree, "picture")).toHaveLength(0);
@@ -173,7 +173,6 @@ describe("rehypeMedia", () => {
 
   test("leaves an unresolved image reference as written", async () => {
     const tree = await compiledTree("![An image](./missing-image.png)\n");
-
     expect(elementsNamed(tree, "img")[0]?.properties).toEqual({ src: "./missing-image.png", alt: "An image" });
   });
 
@@ -181,24 +180,56 @@ describe("rehypeMedia", () => {
     const tree = await compiledTree(
       "![First image](/absolute.png)\n\n![Second image](https://example.com/external.png)\n",
     );
-
     expect(elementsNamed(tree, "img").map((image) => image.properties?.src)).toEqual([
       "/absolute.png",
       "https://example.com/external.png",
     ]);
   });
 
-  test("rewrites an authored `img` to the file the site serves, without wrapping it in a `<picture>`", async () => {
-    const tree = await compiledTree('<img src="./image.png" alt="An image" />\n');
+  test("wraps an authored `<img>` in a `<picture>` containing a `<source>` per alternate format the build encoded", async () => {
+    const [picture, ...others] = elementsNamed(
+      await compiledTree('<img src="./image.png" alt="An image" />\n'),
+      "picture",
+    );
 
-    expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe(IMAGE_WITH_ALTERNATES.src); // Not `IMAGE_WITH_ALTERNATES.alternates`: an author who needs a `<picture>` writes one and names each format in it.
+    expect(others).toHaveLength(0);
+    expect(picture?.children?.map((child) => child.tagName ?? child.name)).toEqual(["source", "source", "img"]);
+    expect(picture?.children?.slice(0, 2).map((child) => child.properties?.type)).toEqual(["image/avif", "image/webp"]);
+  });
+
+  test("rewrites an authored `<img>` to the file the site serves, at its intrinsic size", async () => {
+    const [image] = jsxElementsNamed(await compiledTree('<img src="./image.png" alt="An image" />\n'), "img");
+
+    expect(attributeOf(image, "src")).toBe(IMAGE_WITH_ALTERNATES.src);
+    expect(attributeOf(image, "width")).toBe("900");
+    expect(attributeOf(image, "height")).toBe("500");
+    expect(attributeOf(image, "loading")).toBe("lazy");
+    expect(attributeOf(image, "decoding")).toBe("async");
+  });
+
+  test("preserves authored `<img>` width and loading attributes without supplying a height", async () => {
+    const tree = await compiledTree('<img src="./image.png" alt="An image" width="450" loading="eager" />\n');
+    const [image] = jsxElementsNamed(tree, "img");
+
+    expect(attributeOf(image, "width")).toBe("450");
+    expect(attributeOf(image, "height")).toBeUndefined();
+    expect(attributeOf(image, "loading")).toBe("eager");
+  });
+
+  test("does not wrap an authored `<img>` with a `srcSet` of its own in a `<picture>`", async () => {
+    const tree = await compiledTree(
+      '<img srcSet="./image.jpg 1x, ./image@2x.jpg 2x" src="./image.png" alt="An image" />\n',
+    );
+
     expect(elementsNamed(tree, "picture")).toHaveLength(0);
+    expect(attributeOf(jsxElementsNamed(tree, "img")[0], "srcSet")).toBe(
+      `${IMAGE_WITHOUT_ALTERNATES.src} 1x, ${HI_DPI_IMAGE.src} 2x`,
+    );
   });
 
   test("preserves the elements of an authored `<picture>`, and rewrites every reference in it", async () => {
     const tree = await compiledTree(
-      '<picture>\n  <source srcSet="./image.jpg 1x, ./image@2x.jpg 2x" type="image/jpeg" />\n' +
-        '  <img src="./image.jpg" alt="An image" />\n</picture>\n',
+      '<picture>\n  <source srcSet="./image.jpg 1x, ./image@2x.jpg 2x" type="image/jpeg" />\n  <img src="./image.jpg" alt="An image" />\n</picture>\n',
     );
 
     expect(jsxElementsNamed(tree, "picture")).toHaveLength(1);
@@ -251,14 +282,14 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "video")[0], "poster")).toBeUndefined();
   });
 
-  test("leaves an `img` whose source references a video as written", async () => {
+  test("leaves an `<img>` whose source references a video as written", async () => {
     const [image] = elementsNamed(await compiledTree("![A video](./video.mp4)\n"), "img");
 
     expect(image?.properties?.src).toBe("./video.mp4");
     expect(image?.properties?.width).toBeUndefined();
   });
 
-  test("leaves an authored `img` whose source references a video as written", async () => {
+  test("leaves an authored `<img>` whose source references a video as written", async () => {
     const tree = await compiledTree('<img src="./video.mp4" alt="A video" />\n');
     expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe("./video.mp4");
   });
@@ -270,11 +301,16 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "video")[0], "poster")).toBeUndefined();
   });
 
-  test("rewrites an `img` written inside a sentence", async () => {
+  test("rewrites an `<img>` written inside a sentence, and wraps it in a `<picture>` inside the paragraph", async () => {
     const tree = await compiledTree('Text with an <img src="./image.png" alt="An image" /> in it.\n');
 
     expect(jsxElementsNamed(tree, "img")[0]?.type).toBe("mdxJsxTextElement");
     expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe(IMAGE_WITH_ALTERNATES.src);
+    expect(elementsNamed(tree, "p")[0]?.children?.map((child) => child.tagName ?? child.type)).toEqual([
+      "text",
+      "picture",
+      "text",
+    ]);
   });
 
   test("does not wrap a Markdown image inside an authored `<picture>` in a second `<picture>` element", async () => {
@@ -285,7 +321,7 @@ describe("rehypeMedia", () => {
     expect(elementsNamed(tree, "img")[0]?.properties?.src).toBe(IMAGE_WITH_ALTERNATES.src);
   });
 
-  test("does not wrap an authored `img` already inside a `<picture>` in a second `<picture>` element", async () => {
+  test("does not wrap an authored `<img>` already inside a `<picture>` in a second `<picture>` element", async () => {
     const tree = fromHtml('<picture><img src="./image.png" alt="An image"></picture>', { fragment: true });
 
     await rehypeMedia(mediaForEntry)(tree, { path: ENTRY_ABSOLUTE_PATH });

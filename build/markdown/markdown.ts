@@ -34,9 +34,6 @@ const quotedEntryPathOf = ({ path }: EntryVFile) => `"${path ? toRootRelative(pa
 // A component without fallback Markdown is replaced by its children.
 const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   Waitlist: { replace: (node, { url }) => (url ? [...(node.children ?? []), paragraph(fallbackText(url))] : []) },
-  // Authored `img` elements are converted to Markdown images. For `<picture>` elements, retaining
-  // their children keeps the rewritten `img` while dropping childless `<source>` elements. `remarkMedia`
-  // has already resolved the image `src` to an absolute media URL before the tree is stripped.
   img: {
     inline: true,
     replace: (node) => {
@@ -44,9 +41,7 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
       return url ? [{ type: "image", url, alt: stringAttributeOf(node, "alt") ?? "" }] : [];
     },
   },
-  // Markdown has no video element, so a video is rendered as a link to the file. The link contains
-  // the video's poster image, with the video's `aria-label` as that image's alternative text. A
-  // video without a poster image is linked by its `aria-label` instead.
+  // Render videos as file links, using the poster image and `aria-label` when available.
   video: {
     inline: true,
     replace: (node) => {

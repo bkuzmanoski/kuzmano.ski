@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
 
 import type { EntryKey } from "#/lib/content/entry-file.ts";
 import type {
@@ -13,7 +14,7 @@ import { metricIn } from "#/lib/layout-metrics.ts";
 import type { LayoutMetrics } from "#/lib/layout-metrics.ts";
 
 import { readLayoutMetrics } from "../../stylesheet/layout-metrics.ts";
-import { mediaDirectoryFileNameOf } from "../markup/media-references.ts";
+import { mediaDirectoryFileNameOf, mediaReferencesInSource } from "../markup/media-references.ts";
 
 import { mediaReferenceProblems, readAuthoredMedia } from "./authored-media.ts";
 import {
@@ -37,6 +38,7 @@ import type { AuthoredEntryMedia, AuthoredVideo } from "./authored-media.ts";
 import type { ImageDerivative } from "./derivatives.ts";
 import type { MediaRendition } from "./renditions.ts";
 import type { MediaFileReader, ResolvedImage } from "./resolved-media.ts";
+import type { MediaReference } from "../markup/media-references.ts";
 import type { MediaForReference } from "../markup/media-rewrite.ts";
 
 export interface MediaIndex {
@@ -45,7 +47,7 @@ export interface MediaIndex {
   renditionsByUrl: Map<string, MediaRendition>;
   entryAbsolutePathsByMediaDirectoryPath: Map<string, string>;
   mediaForEntry: (absolutePath: string) => MediaForReference;
-  recheckReferences: (absolutePath: string, source: string) => void; // Replaces an entry's reference problems with those of its edited source.
+  recheckReferences: (absolutePath: string, source: string) => boolean; // Replaces an entry's reference problems with those of its edited source. Returns `false` when an index needs to be rebuilt.
   problems: () => Array<string>;
 }
 
@@ -60,6 +62,7 @@ interface ResolvedEntryMedia {
   entry: AuthoredEntryMedia;
   coverImage: CoverImage | null;
   mediaByFileName: Map<string, ContentMedia>;
+  alternateImageFileNames: Set<string>;
   renditions: Array<MediaRendition>;
   mediaProblems: Array<string>;
   referenceProblems: Array<string>; // Replaced when the entry's source is rechecked.
@@ -69,6 +72,18 @@ export const coverImageSizeIn = (layoutMetrics: LayoutMetrics) => metricIn(layou
 
 const pictureSourceOf = ({ url, type }: MediaRendition): PictureSource => ({ srcSet: url, type });
 const sizedMediaOf = ({ url }: MediaRendition, dimensions: Dimensions): SizedMedia => ({ src: url, ...dimensions });
+
+function alternateImageFileNamesIn(
+  references: Array<MediaReference>,
+  { bodyImageFileNames }: AuthoredEntryMedia,
+): Set<string> {
+  const referencedFileNames = new Set(
+    references.flatMap(({ reference, rendersAlternates }) =>
+      rendersAlternates ? (mediaDirectoryFileNameOf(reference) ?? []) : [],
+    ),
+  );
+  return new Set(bodyImageFileNames.filter((fileName) => isSourceImage(fileName) && referencedFileNames.has(fileName)));
+}
 
 function pictureOf(
   image: ResolvedImage,
@@ -114,7 +129,11 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     };
   }
 
-  async function resolveBodyImage(mediaDirectoryPath: string, fileName: string): Promise<BodyMediaResolution> {
+  async function resolveBodyImage(
+    mediaDirectoryPath: string,
+    fileName: string,
+    hasAlternates: boolean,
+  ): Promise<BodyMediaResolution> {
     const bodyImage = await reader.readImage(`${mediaDirectoryPath}/${fileName}`);
 
     if ("problem" in bodyImage) {
@@ -126,7 +145,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       bodyImage,
       bodyImageRendition,
       bodyImage.dimensions,
-      isSourceImage(fileName) ? BODY_IMAGE_DERIVATIVES : [], // Formats the build does not encode (e.g., GIF and SVG) are served as authored.
+      hasAlternates ? BODY_IMAGE_DERIVATIVES : [],
     );
 
     return {
@@ -181,21 +200,33 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     };
   }
 
-  async function resolveEntryMedia(entry: AuthoredEntryMedia): Promise<ResolvedEntryMedia> {
-    const { absolutePath, coverImageFilePath, mediaDirectoryPath, bodyImageFileNames, videos } = entry;
-    const [coverImageResolution, bodyMediaResolutions, source] = await Promise.all([
-      coverImageFilePath === null ? null : resolveCoverImage(coverImageFilePath),
-      Promise.all([
-        ...bodyImageFileNames.map((fileName) => resolveBodyImage(mediaDirectoryPath, fileName)),
-        ...videos.map((video) => resolveVideo(mediaDirectoryPath, video)),
-      ]),
-      readFile(absolutePath, "utf8"),
+  async function resolveBodyMedia(entry: AuthoredEntryMedia) {
+    const { absolutePath, mediaDirectoryPath, bodyImageFileNames, videos } = entry;
+    const references = mediaReferencesInSource(await readFile(absolutePath, "utf8"));
+    const alternateImageFileNames = alternateImageFileNamesIn(references, entry);
+    const resolutions = await Promise.all([
+      ...bodyImageFileNames.map((fileName) =>
+        resolveBodyImage(mediaDirectoryPath, fileName, alternateImageFileNames.has(fileName)),
+      ),
+      ...videos.map((video) => resolveVideo(mediaDirectoryPath, video)),
     ]);
+
+    return { resolutions, alternateImageFileNames, referenceProblems: mediaReferenceProblems(references, entry) };
+  }
+
+  async function resolveEntryMedia(entry: AuthoredEntryMedia): Promise<ResolvedEntryMedia> {
+    const { coverImageFilePath } = entry;
+    const [coverImageResolution, { resolutions: bodyMediaResolutions, alternateImageFileNames, referenceProblems }] =
+      await Promise.all([
+        coverImageFilePath === null ? null : resolveCoverImage(coverImageFilePath),
+        resolveBodyMedia(entry),
+      ]);
 
     return {
       entry,
       coverImage: coverImageResolution?.coverImage ?? null,
       mediaByFileName: new Map(bodyMediaResolutions.flatMap(({ mediaByFileName }) => mediaByFileName)),
+      alternateImageFileNames,
       renditions: [
         ...(coverImageResolution?.renditions ?? []),
         ...bodyMediaResolutions.flatMap(({ renditions }) => renditions),
@@ -204,7 +235,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
         ...(coverImageResolution?.problems ?? []),
         ...bodyMediaResolutions.flatMap(({ problems }) => problems),
       ],
-      referenceProblems: mediaReferenceProblems(source, entry),
+      referenceProblems,
     };
   }
 
@@ -242,9 +273,18 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     recheckReferences(absolutePath, source) {
       const resolvedEntry = resolvedEntriesByAbsolutePath.get(absolutePath);
 
-      if (resolvedEntry) {
-        resolvedEntry.referenceProblems = mediaReferenceProblems(source, resolvedEntry.entry);
+      if (!resolvedEntry) {
+        return true;
       }
+
+      const references = mediaReferencesInSource(source);
+
+      resolvedEntry.referenceProblems = mediaReferenceProblems(references, resolvedEntry.entry);
+
+      return isDeepStrictEqual(
+        alternateImageFileNamesIn(references, resolvedEntry.entry),
+        resolvedEntry.alternateImageFileNames,
+      );
     },
     problems: () => [
       ...authoredMediaProblems,

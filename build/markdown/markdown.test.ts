@@ -175,7 +175,7 @@ describe("markdownFor", () => {
     expect(markdown).toContain("[n]: ./notes.md");
   });
 
-  test("renders an `img` as a Markdown image with the absolute URL of the file the site serves", async () => {
+  test("renders an `<img>` as a Markdown image with the absolute URL of the file the site serves", async () => {
     const markdown = await markdownFor(
       `${FRONTMATTER}\n<picture>\n  <source srcSet="./image.png" type="image/avif" />\n  <img src="./image.png" alt="An image" />\n</picture>\n`,
       { path: ENTRY_ABSOLUTE_PATH, mediaForEntry },
@@ -183,7 +183,7 @@ describe("markdownFor", () => {
     expect(markdown).toContain(`![An image](https://kuzmano.ski${IMAGE.src})`);
   });
 
-  test("preserves the blank lines around an `img` written as a block", async () => {
+  test("preserves the blank lines around an `<img>` written as a block", async () => {
     const markdown = await markdownFor(
       `${FRONTMATTER}\nBefore.\n\n<img src="./image.png" alt="An image" />\n\nAfter.\n`,
       { path: ENTRY_ABSOLUTE_PATH, mediaForEntry },

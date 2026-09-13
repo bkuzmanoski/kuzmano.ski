@@ -80,7 +80,7 @@ const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
     ["collection/second-entry", SECOND_ENTRY_ABSOLUTE_PATH],
   ]),
   mediaForEntry: () => () => null,
-  recheckReferences: () => undefined,
+  recheckReferences: () => true,
   problems: () => [],
   ...overrides,
 });
@@ -352,9 +352,19 @@ describe("contentMedia", () => {
     expect(serverStaleModules?.map(({ id }) => id)).toEqual([RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID]);
   });
 
-  test("re-checks an updated entry's references without rebuilding the index", async () => {
-    const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
+  test("checks an updated entry's references only in the client environment", async () => {
+    const { updateFile, buildInitialIndex } = setUpContentMedia();
     const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>();
+
+    await buildInitialIndex(mediaIndex({ recheckReferences }));
+    await updateFile({ file: ENTRY_ABSOLUTE_PATH, environmentName: SERVER_ENVIRONMENT });
+
+    expect(recheckReferences).not.toHaveBeenCalled();
+  });
+
+  test("re-checks an updated entry's references without rebuilding the index when the images with alternates are unchanged", async () => {
+    const { updateFile, buildInitialIndex, warnedProblems } = setUpContentMedia();
+    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => true);
     const source = "![An image](./missing.png)\n";
 
     await buildInitialIndex(
@@ -370,14 +380,18 @@ describe("contentMedia", () => {
     expect(warnedProblems()).toEqual(["A reference problem."]);
   });
 
-  test("checks an updated entry's references only in the client environment", async () => {
-    const { updateFile, buildInitialIndex } = setUpContentMedia();
-    const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>();
+  test("rebuilds the index, and resolves references through the rebuilt index, when an entry update changes which images have alternates", async () => {
+    const { updateFile, mediaSourceFor, buildInitialIndex } = setUpContentMedia();
 
-    await buildInitialIndex(mediaIndex({ recheckReferences }));
-    await updateFile({ file: ENTRY_ABSOLUTE_PATH, environmentName: SERVER_ENVIRONMENT });
+    await buildInitialIndex(mediaIndex({ recheckReferences: () => false }));
 
-    expect(recheckReferences).not.toHaveBeenCalled();
+    const fileUpdate = updateFile({ file: ENTRY_ABSOLUTE_PATH });
+
+    await vi.waitFor(() => expect(indexBuilds).toHaveLength(2));
+    indexBuilds[1]!.resolve(mediaIndexResolvingTo(mediaRoute("collection/entry/image.png")));
+    await fileUpdate;
+
+    await expect(mediaSourceFor("./image.png")).resolves.toBe(mediaRoute("collection/entry/image.png"));
   });
 
   test("warns about a problem once, after the rebuild that first finds it", async () => {

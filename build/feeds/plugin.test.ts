@@ -79,7 +79,7 @@ describe("feedXmlFor", () => {
     expect(document.querySelector("entry > content")?.textContent).toContain("]]>");
   });
 
-  test("outputs an empty `<content>` element when the document source does not return a document", async () => {
+  test("outputs an empty `<content>` when the document source does not return a document", async () => {
     await expect(feedXmlFor(feedMetadata(), content(), missingDocumentSource)).resolves.toContain(
       '<content type="html"/>',
     );

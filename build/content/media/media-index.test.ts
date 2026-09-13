@@ -40,6 +40,8 @@ vi.mock("node:fs/promises", () => ({ default: { readFile }, readFile }));
 
 const ENTRY = authoredEntryMedia();
 const COVER_IMAGE_SIZE = 64;
+const SOURCE_WITH_IMAGE_IN_PICTURE =
+  '<picture>\n  <img src="./image.png" alt="An image" />\n</picture>\n\n<video src="./video.mp4" />\n';
 const VIDEO_WITHOUT_POSTER_IMAGE = { videoFileName: VIDEO_FILE_NAME, posterImageFileName: null };
 const HASHED_URL = /\.[0-9a-f]{16}\./;
 
@@ -143,6 +145,16 @@ describe("buildMediaIndex", () => {
       src: mediaRoute(animationFilePath).replace(".gif", `.${MEDIA_FILE_HASH}.gif`),
       alternates: [],
     });
+  });
+
+  test("resolves a body image referenced only inside an authored `<picture>` without alternates, and does not map derivatives of it to renditions", async () => {
+    const index = await indexOf({ source: SOURCE_WITH_IMAGE_IN_PICTURE });
+    const bodyImageUrls = [...index.renditionsByUrl.keys()].filter((url) =>
+      url.startsWith(mediaRoute("collection/entry/image.")),
+    );
+
+    expect(mediaFor(index, "./image.png")).toMatchObject({ alternates: [] });
+    expect(bodyImageUrls).toEqual([mediaRoute(`collection/entry/image.${MEDIA_FILE_HASH}.png`)]);
   });
 
   test("lists a problem for a body image one byte over the maximum size", async () => {
@@ -296,11 +308,24 @@ describe("buildMediaIndex", () => {
     expect(index.problems()).toEqual([]);
   });
 
+  test("returns `true` when rechecking a source changes references but not body image alternates", async () => {
+    const index = await indexOf();
+    const source = `${ENTRY_SOURCE}\n<img src="./image.png" alt="An image" />\n`;
+
+    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, source)).toBe(true);
+  });
+
+  test("returns `false` when rechecking changes which body images have alternates", async () => {
+    const index = await indexOf();
+    expect(index.recheckReferences(ENTRY_ABSOLUTE_PATH, SOURCE_WITH_IMAGE_IN_PICTURE)).toBe(false);
+  });
+
   test("ignores a recheck of a file that is not an indexed entry", async () => {
     const index = await indexOf();
 
-    index.recheckReferences(fromContent("collection/other-entry.mdx"), "![Missing](./missing.png)\n");
-
+    expect(index.recheckReferences(fromContent("collection/other-entry.mdx"), "![Missing](./missing.png)\n")).toBe(
+      true,
+    );
     expect(index.problems()).toEqual([]);
   });
 

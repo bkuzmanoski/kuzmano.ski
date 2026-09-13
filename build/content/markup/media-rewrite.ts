@@ -1,6 +1,6 @@
 import { SKIP, visit } from "unist-util-visit";
 
-import type { ContentImage, ContentMedia } from "#/lib/content/media.ts";
+import type { ContentImage, ContentMedia, SizedMedia } from "#/lib/content/media.ts";
 
 import { mediaReferencesIn } from "./media-references.ts";
 import { elementNameOf, hasAttribute, setMissingAttributes } from "./tree.ts";
@@ -42,11 +42,10 @@ async function renderableReferencesIn(
   });
 }
 
-// hast `img` nodes originate from Markdown; authored JSX remains `mdx-jsx`.
-// Only Markdown images are sized and wrapped in `<picture>`.
-const isMarkdownImageSource = ({ node, attribute }: MediaReference) =>
-  node.type === "element" && node.tagName === "img" && attribute === "src";
-
+const isImageElementSource = ({ node, attribute }: MediaReference) =>
+  elementNameOf(node) === "img" && attribute === "src";
+const missingDimensionsOf = (node: ContentNode, { width, height }: SizedMedia): Record<string, number> =>
+  hasAttribute(node, "width") || hasAttribute(node, "height") ? {} : { width, height };
 const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
   alternates.map(({ srcSet, type }) => ({
     type: "element",
@@ -58,37 +57,31 @@ const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
 /** Rewrites media references in an entry's compiled markup. */
 export function rehypeMedia(mediaForEntry: MediaForEntry) {
   return async function transform(tree: ContentParent, file: EntryVFile) {
-    const markdownImages = new Map<ContentNode, ContentImage>();
+    const imagesRenderingAlternates = new Map<ContentNode, ContentImage>();
 
     for (const { reference, media } of await renderableReferencesIn(tree, file, mediaForEntry)) {
       reference.replace(media.src);
 
       if (media.kind === "video" && reference.video) {
-        const isSized = hasAttribute(reference.video, "width") || hasAttribute(reference.video, "height");
-
         setMissingAttributes(reference.video, {
           poster: media.posterImage.src,
-          // Filled in together: an entry that writes one dimension is scaling the video, and the browser derives the other.
-          ...(isSized ? {} : { width: media.width, height: media.height }),
+          ...missingDimensionsOf(reference.video, media),
         });
-      } else if (media.kind === "image" && isMarkdownImageSource(reference)) {
-        Object.assign(reference.node.properties!, {
-          width: media.width,
-          height: media.height,
+      } else if (media.kind === "image" && isImageElementSource(reference)) {
+        setMissingAttributes(reference.node, {
+          ...missingDimensionsOf(reference.node, media),
           loading: "lazy",
           decoding: "async",
         });
-        markdownImages.set(reference.node, media);
+
+        if (reference.rendersAlternates) {
+          imagesRenderingAlternates.set(reference.node, media);
+        }
       }
     }
 
     visit(tree, (node, index, parent) => {
-      // An authored `<picture>` already chooses its sources, and a `<picture>` cannot contain another.
-      if (elementNameOf(node) === "picture") {
-        return SKIP;
-      }
-
-      const image = markdownImages.get(node);
+      const image = imagesRenderingAlternates.get(node);
 
       if (!image || image.alternates.length === 0 || !parent || index === undefined) {
         return;

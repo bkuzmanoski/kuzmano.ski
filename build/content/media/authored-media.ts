@@ -3,7 +3,7 @@ import type { MediaKind } from "#/lib/content/media.ts";
 
 import { quotedContentPath } from "../../paths.ts";
 import { URL_SAFE_NAME, listedEntriesIn, readContentListing } from "../listing.ts";
-import { mediaDirectoryFileNameOf, mediaReferencesInSource } from "../markup/media-references.ts";
+import { mediaDirectoryFileNameOf } from "../markup/media-references.ts";
 
 import {
   COVER_IMAGE_STEM_SUFFIX,
@@ -19,6 +19,7 @@ import {
 } from "./formats.ts";
 
 import type { ContentDirectoryListing, ContentListing, ListedEntry } from "../listing.ts";
+import type { MediaReference } from "../markup/media-references.ts";
 
 /** A video in an entry's media directory, and the poster image paired with it by name. */
 export interface AuthoredVideo {
@@ -176,9 +177,9 @@ export function readAuthoredMedia(listing: ContentListing = readContentListing()
   };
 }
 
-/** Reports invalid references and unreferenced body media. */
+/** Reports invalid references and unreferenced body media among an entry's media references. */
 export function mediaReferenceProblems(
-  source: string,
+  references: Array<MediaReference>,
   { entryFilePath, mediaDirectoryPath, bodyImageFileNames, videos }: AuthoredEntryMedia,
 ): Array<string> {
   const videoFileNames = videos.map(({ videoFileName }) => videoFileName);
@@ -190,7 +191,7 @@ export function mediaReferenceProblems(
   const problems: Array<string> = [];
   const referencedFileNames = new Set<string>();
 
-  for (const { reference, expected } of mediaReferencesInSource(source)) {
+  for (const { reference, expected } of references) {
     const fileName = mediaDirectoryFileNameOf(reference);
     const kind = fileName === null ? undefined : kindsByFileName.get(fileName);
 

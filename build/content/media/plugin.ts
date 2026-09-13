@@ -188,16 +188,17 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
       const isClientEnvironment = this.environment.name === CLIENT_ENVIRONMENT;
 
       if (isEntryFile(file) && type === "update") {
-        // Entry updates only change references, so keep the index and re-check them in the
-        // client only. The MDX pipeline invalidates the entry.
-        if (isClientEnvironment) {
-          const index = await ensureIndex();
-
-          index.recheckReferences(file, await read());
-          problemReporter.replaceIndexProblems(index.problems());
+        if (!isClientEnvironment) {
+          return;
         }
 
-        return;
+        const index = await ensureIndex();
+        const isIndexCurrent = index.recheckReferences(file, await read());
+
+        if (isIndexCurrent) {
+          problemReporter.replaceIndexProblems(index.problems());
+          return;
+        }
       }
 
       if (!isStylesheet && !isContentMedia(file) && !isEntryFile(file)) {
