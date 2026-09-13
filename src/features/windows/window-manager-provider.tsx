@@ -97,12 +97,7 @@ export function WindowManagerProvider({
     };
   }, [closeGuards, dispatch]);
 
-  const syncUrlToFocus = useEffectEvent((focusedRoute: string | null, notFoundRoute: string | null) => {
-    if (notFoundRoute !== null) {
-      return; // The not-found route owns the URL until its alert is dismissed.
-    }
-
-    const route = focusedRoute ?? "/";
+  const syncUrlToFocus = useEffectEvent((route: string) => {
     const shouldReplaceUrl = shouldReplaceUrlRef.current;
 
     shouldReplaceUrlRef.current = false; // Cleared on every path, so a sync that does not navigate cannot leave it set for the next one.
@@ -116,11 +111,11 @@ export function WindowManagerProvider({
     void navigate({ to: route, replace: shouldReplaceUrl });
   });
 
-  const focusedRoute = state.focused === null ? null : (state.content[state.focused]?.route ?? null);
+  const urlRoute = state.notFoundRoute ?? (state.focused === null ? null : state.content[state.focused]?.route) ?? "/"; // The not-found route owns the URL until its alert is dismissed.
 
   useEffect(() => {
-    syncUrlToFocus(focusedRoute, state.notFoundRoute);
-  }, [focusedRoute, state.notFoundRoute]);
+    syncUrlToFocus(urlRoute);
+  }, [urlRoute]);
 
   // Opens or focuses the window for a route the URL changed to externally (deep link, browser back/forward).
   const syncFocusToUrl = useEffectEvent((route: string) => {
