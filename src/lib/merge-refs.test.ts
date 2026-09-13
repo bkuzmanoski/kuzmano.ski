@@ -9,15 +9,23 @@ const node = { id: "node" };
 describe("mergeRefs", () => {
   test("attaches a ref object and a callback ref in argument order", () => {
     const callOrder: Array<string> = [];
-    const refObject: RefObject<typeof node | null> = { current: null };
-    const callback = (value: typeof node | null) => {
-      callOrder.push(value === null ? "detach" : "attach");
+    let current: typeof node | null = null;
+    const refObject: RefObject<typeof node | null> = {
+      get current() {
+        return current;
+      },
+      set current(value: typeof node | null) {
+        callOrder.push("ref object");
+        current = value;
+      },
     };
 
-    mergeRefs(refObject, callback)(node);
+    mergeRefs(refObject, () => {
+      callOrder.push("callback ref");
+    })(node);
 
     expect(refObject.current).toBe(node);
-    expect(callOrder).toEqual(["attach"]);
+    expect(callOrder).toEqual(["ref object", "callback ref"]);
   });
 
   test("clears a ref object and calls a cleanup-less callback ref with `null` on detach", () => {

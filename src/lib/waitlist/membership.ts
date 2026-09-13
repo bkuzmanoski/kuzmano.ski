@@ -1,5 +1,6 @@
 import { EMAIL_ADDRESS_RULES } from "../forms/rules.ts";
-import { MAX_EMAIL_ADDRESS_LENGTH, isWithinLengthLimit, validate } from "../forms/validation.ts";
+import { trimmedStringField } from "../forms/submission.ts";
+import { MAX_EMAIL_ADDRESS_LENGTH, validate } from "../forms/validation.ts";
 
 import type { ParsedSubmission } from "../forms/submission.ts";
 import type { Schema } from "../forms/validation.ts";
@@ -25,32 +26,18 @@ export interface Membership extends WaitlistFields {
 const isSitePath = (value: string) => value.startsWith("/") && !value.startsWith("//");
 
 export function parseSubmission(value: Record<string, unknown>): ParsedSubmission<Membership, WaitlistFields> {
-  const { emailAddress, list, source } = value;
+  const emailAddress = trimmedStringField(value.emailAddress, MAX_EMAIL_ADDRESS_LENGTH);
+  const list = trimmedStringField(value.list, LIST_MAX_LENGTH);
+  const source = trimmedStringField(value.source, SOURCE_MAX_LENGTH);
 
-  // Lengths are measured before trimming, so a value that exceeds its limit is malformed rather
-  // than shortened into an accepted one.
-  if (
-    typeof emailAddress !== "string" ||
-    !isWithinLengthLimit(emailAddress, MAX_EMAIL_ADDRESS_LENGTH) ||
-    typeof list !== "string" ||
-    !isWithinLengthLimit(list, LIST_MAX_LENGTH) ||
-    typeof source !== "string" ||
-    !isWithinLengthLimit(source, SOURCE_MAX_LENGTH)
-  ) {
+  if (emailAddress === null || list === null || list.length === 0 || source === null || !isSitePath(source)) {
     return { ok: false, reason: "malformed" };
   }
 
-  const trimmedList = list.trim();
-  const trimmedSource = source.trim();
-
-  if (trimmedList.length === 0 || !isSitePath(trimmedSource)) {
-    return { ok: false, reason: "malformed" };
-  }
-
-  const trimmedFields: WaitlistFields = { emailAddress: emailAddress.trim() };
+  const trimmedFields: WaitlistFields = { emailAddress };
   const errors = validate(WAITLIST_SCHEMA, trimmedFields);
 
   return Object.keys(errors).length > 0
     ? { ok: false, reason: "invalid", errors }
-    : { ok: true, value: { ...trimmedFields, list: trimmedList, source: trimmedSource } };
+    : { ok: true, value: { ...trimmedFields, list, source } };
 }

@@ -45,11 +45,6 @@ describe("verifyPrerenderedDocument", () => {
     expect(verify(pageHtml(""))).toThrow(/window body is empty/);
   });
 
-  test("`Spinner` renders the `data-loading-indicator` attribute", () => {
-    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
-    expect(loadingIndicator).toContain("data-loading-indicator");
-  });
-
   test("throws when a loading indicator remains in the window body", () => {
     const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);

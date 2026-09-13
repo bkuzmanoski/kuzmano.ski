@@ -163,6 +163,15 @@ test("a step at the scroll boundary still plays a click sound", () => {
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
+test("a tap whose touch pointer events do not reach the arrow still plays a click sound at the scroll boundary", () => {
+  const { viewport, scrollDownButton } = renderScrollbar();
+
+  viewport.scrollTop = MAX_SCROLL_TOP;
+  fireEvent.click(scrollDownButton, { detail: 1 }); // The press landed outside, so only the click arrives.
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+});
+
 test("a keyboard activation steps the viewport", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 

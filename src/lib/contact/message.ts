@@ -1,5 +1,6 @@
 import { EMAIL_ADDRESS_RULES } from "../forms/rules.ts";
-import { MAX_EMAIL_ADDRESS_LENGTH, isWithinLengthLimit, maxLength, required, validate } from "../forms/validation.ts";
+import { trimmedStringField } from "../forms/submission.ts";
+import { MAX_EMAIL_ADDRESS_LENGTH, maxLength, required, validate } from "../forms/validation.ts";
 
 import type { ParsedSubmission } from "../forms/submission.ts";
 import type { Schema } from "../forms/validation.ts";
@@ -22,20 +23,14 @@ export const CONTACT_SCHEMA: Schema<ContactFields> = {
 export const EMPTY_MESSAGE: ContactFields = { from: "", message: "" };
 
 export function parseSubmission(value: Record<string, unknown>): ParsedSubmission<ContactFields> {
-  const { from, message } = value;
+  const from = trimmedStringField(value.from, MAX_EMAIL_ADDRESS_LENGTH);
+  const message = trimmedStringField(value.message, MESSAGE_MAX_LENGTH);
 
-  // Lengths are measured before trimming, so a value that exceeds its limit is malformed rather
-  // than shortened into an accepted one.
-  if (
-    typeof from !== "string" ||
-    !isWithinLengthLimit(from, MAX_EMAIL_ADDRESS_LENGTH) ||
-    typeof message !== "string" ||
-    !isWithinLengthLimit(message, MESSAGE_MAX_LENGTH)
-  ) {
+  if (from === null || message === null) {
     return { ok: false, reason: "malformed" };
   }
 
-  const trimmedFields: ContactFields = { from: from.trim(), message: message.trim() };
+  const trimmedFields: ContactFields = { from, message };
   const errors = validate(CONTACT_SCHEMA, trimmedFields);
 
   return Object.keys(errors).length > 0 ? { ok: false, reason: "invalid", errors } : { ok: true, value: trimmedFields };

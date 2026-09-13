@@ -47,6 +47,10 @@ test("the icon links to its route", () => {
 test("a plain press only selects, so the link is not followed", () => {
   const icon = renderIcon();
 
+  fireEvent.pointerDown(icon, { button: 0 });
+  fireEvent.pointerUp(icon, { button: 0 });
+
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith(ICON);
   expect(fireEvent.click(icon, { detail: 1 })).toBe(false); // The default was prevented.
   expect(onOpen).not.toHaveBeenCalled();
 });

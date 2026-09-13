@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { MAX_EMAIL_ADDRESS_LENGTH } from "../forms/validation.ts";
 
-import { LIST_MAX_LENGTH, parseSubmission } from "./membership.ts";
+import { LIST_MAX_LENGTH, SOURCE_MAX_LENGTH, parseSubmission } from "./membership.ts";
 
 const VALID_SUBMISSION = {
   emailAddress: "user@example.com",
@@ -35,6 +35,7 @@ test.each([
     { emailAddress: `${"a".repeat(MAX_EMAIL_ADDRESS_LENGTH)}@example.com` },
   ],
   ["a list that exceeds the maximum length", { list: "a".repeat(LIST_MAX_LENGTH + 1) }],
+  ["a source that exceeds the maximum length", { source: `/${"a".repeat(SOURCE_MAX_LENGTH)}` }],
 ])("%s is malformed", (_label, overrides) => {
   expect(parseSubmission({ ...VALID_SUBMISSION, ...overrides })).toEqual({ ok: false, reason: "malformed" });
 });

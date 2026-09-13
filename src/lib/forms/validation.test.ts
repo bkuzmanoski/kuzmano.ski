@@ -72,11 +72,12 @@ describe("isEmailAddress", () => {
     expect(isEmailAddress(value)).toBe(false);
   });
 
-  test("rejects an email address that exceeds SMTP's maximum length", () => {
-    const label = `${"b".repeat(60)}.`;
+  test("accepts an email address of 254 characters, and rejects one of 255", () => {
+    const emailAddressOfLength = (length: number) =>
+      `${"a".repeat(64)}@${`${"b".repeat(60)}.`.repeat(3)}${"c".repeat(length - 252)}.com`;
 
-    expect(isEmailAddress(`${"a".repeat(64)}@${label.repeat(2)}com`)).toBe(true); // 190 characters.
-    expect(isEmailAddress(`${"a".repeat(64)}@${label.repeat(4)}com`)).toBe(false); // 312 characters.
+    expect(isEmailAddress(emailAddressOfLength(254))).toBe(true);
+    expect(isEmailAddress(emailAddressOfLength(255))).toBe(false); // SMTP limits an address to 254 characters (RFC 5321).
   });
 
   test("rejects a domain label longer than 63 characters", () => {

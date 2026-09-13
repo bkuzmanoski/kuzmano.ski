@@ -46,8 +46,10 @@ const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
 
 const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides));
 const paths = (overrides?: Partial<AuthoredContent>) => routes(overrides).map(({ path }) => path);
+const pagesWith = (slug: string) =>
+  authoredContentDirectory(PAGES_DIRECTORY_NAME, [...content().pages.entries, authoredEntry(slug, undatedEntry)]);
 
-describe("routes", () => {
+describe("routesFor", () => {
   test("includes the root, page, collection, collection entry, and contact routes in order", () => {
     expect(paths()).toEqual([
       "/",
@@ -136,9 +138,7 @@ describe("routes", () => {
       }),
     ).toContain("/collection-1/entry-1");
   });
-});
 
-describe("invalid content", () => {
   test("throws for a collection name that is not URL-safe", () => {
     expect(() =>
       paths({
@@ -194,16 +194,24 @@ describe("invalid content", () => {
     ).toThrow(/shadowed by a collection.*collection-1/s);
   });
 
-  test("throws for content that shadows a reserved route", () => {
-    expect(() =>
-      paths({
-        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
-          authoredEntry("page-1", undatedEntry),
-          authoredEntry("page-2", undatedEntry),
-          authoredEntry("contact", undatedEntry),
-        ]),
-      }),
-    ).toThrow(/shadowing reserved route/);
+  test.each([
+    [
+      "a page that shadows a feature route",
+      { pages: pagesWith("contact") },
+      `${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/contact.mdx`,
+    ],
+    [
+      "a page that shadows the media route",
+      { pages: pagesWith(MEDIA_SEGMENT) },
+      `${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/${MEDIA_SEGMENT}.mdx`,
+    ],
+    [
+      "a collection directory that shadows the media route",
+      { collections: [...content().collections, authoredCollection(MEDIA_SEGMENT)] },
+      `${CONTENT_DIRECTORY_PATH}/${MEDIA_SEGMENT}/`,
+    ],
+  ])("throws for %s, naming its source", (_label, overrides, sourcePath) => {
+    expect(() => paths(overrides)).toThrow(`Content shadowing reserved route(s): ${sourcePath}.`);
   });
 
   test("throws for a declared collection without a corresponding directory", () => {
@@ -240,26 +248,5 @@ describe("invalid content", () => {
         ),
       }),
     ).toThrow(/no matching entry.*drafts/s);
-  });
-
-  test("throws for a page whose name shadows the media segment", () => {
-    const pathsWithMediaPage = () =>
-      paths({
-        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
-          ...content().pages.entries,
-          authoredEntry(MEDIA_SEGMENT, undatedEntry),
-        ]),
-      });
-
-    expect(pathsWithMediaPage).toThrow("reserved route");
-    expect(pathsWithMediaPage).toThrow(`${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/${MEDIA_SEGMENT}.mdx`);
-  });
-
-  test("throws for a collection directory whose name shadows the media segment", () => {
-    const pathsWithMediaCollection = () =>
-      paths({ collections: [...content().collections, authoredCollection(MEDIA_SEGMENT)] });
-
-    expect(pathsWithMediaCollection).toThrow("reserved route");
-    expect(pathsWithMediaCollection).toThrow(`${CONTENT_DIRECTORY_PATH}/${MEDIA_SEGMENT}/`);
   });
 });

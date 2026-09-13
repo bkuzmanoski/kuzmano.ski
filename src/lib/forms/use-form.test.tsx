@@ -49,6 +49,10 @@ test("a field's error is withheld until the field has been visited", () => {
   expect(formHarness.form.visibleErrors).toEqual({ name: "Enter a name." });
 });
 
+test("`isValid` is `false` while a new form's errors are withheld", () => {
+  expect(renderForm().form.isValid).toBe(false);
+});
+
 test("revealing errors makes every error visible at once and returns them", () => {
   const formHarness = renderForm();
 
@@ -101,7 +105,7 @@ test("a visible error updates as the value changes and is cleared once the value
   expect(formHarness.form.visibleErrors.emailAddress).toBeUndefined();
 });
 
-test("`isDirty` becomes `true` when a value is entered, and `reset` restores the initial values and hides errors", () => {
+test("`isDirty` is `true` once a value differs from its initial value", () => {
   const formHarness = renderForm();
 
   expect(formHarness.form.isDirty).toBe(false);
@@ -111,7 +115,14 @@ test("`isDirty` becomes `true` when a value is entered, and `reset` restores the
   });
 
   expect(formHarness.form.isDirty).toBe(true);
+});
 
+test("`reset` restores the initial values and hides visible errors", () => {
+  const formHarness = renderForm();
+
+  act(() => {
+    formHarness.form.setValue("name", "A name");
+  });
   act(() => {
     formHarness.form.revealErrors();
   });
@@ -119,9 +130,9 @@ test("`isDirty` becomes `true` when a value is entered, and `reset` restores the
     formHarness.form.reset();
   });
 
-  expect(formHarness.form.isDirty).toBe(false);
   expect(formHarness.form.values).toEqual(INITIAL_VALUES);
   expect(formHarness.form.visibleErrors).toEqual({});
+  expect(formHarness.form.isDirty).toBe(false);
 });
 
 test("a field's handlers are fixed while its value changes", () => {
@@ -148,11 +159,4 @@ test("a change handler writes to its own field", () => {
   });
 
   expect(formHarness.form.values).toEqual({ name: "A name", emailAddress: "" });
-});
-
-test("a new form has no visible errors, but `isValid` is `false`", () => {
-  const formHarness = renderForm();
-
-  expect(formHarness.form.visibleErrors).toEqual({});
-  expect(formHarness.form.isValid).toBe(false);
 });

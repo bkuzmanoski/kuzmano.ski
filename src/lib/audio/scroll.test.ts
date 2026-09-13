@@ -155,8 +155,7 @@ describe("recordScrollIntoView", () => {
     Object.defineProperty(child, "parentElement", { value: parent });
 
     recordScrollIntoView(child);
-    parent.scrollTop = 500;
-    playScroll(parent);
+    scrollTo(parent, 500); // Advances the clock, so a gesture wrongly created above would play a detent.
 
     expect(detents()).toBe(0);
   });

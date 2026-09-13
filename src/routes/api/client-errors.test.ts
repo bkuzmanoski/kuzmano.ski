@@ -4,8 +4,14 @@ import { API } from "#/api.ts";
 
 import { Route } from "./client-errors.ts";
 
+const isWithinRateLimit = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
+
+vi.mock("#/server/rate-limit.ts", () => ({ isWithinRateLimit }));
+
 beforeEach(() => {
   vi.spyOn(console, "error").mockReturnValue();
+  isWithinRateLimit.mockReset();
+  isWithinRateLimit.mockResolvedValue(true);
 });
 
 const ORIGIN = "https://example.com";
@@ -60,9 +66,14 @@ test("a message longer than the maximum message length is truncated rather than 
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ message: "a".repeat(500) }));
 });
 
-test("a cross-origin request is refused, and its report is not logged", async () => {
+test("a cross-origin request is refused, and a client error is not logged", async () => {
   const response = await post(VALID_REPORT, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
   expect(console.error).not.toHaveBeenCalled();
+});
+
+test("reports are not counted against a Worker rate limit", async () => {
+  await post(VALID_REPORT);
+  expect(isWithinRateLimit).not.toHaveBeenCalled(); // A Cloudflare rule rate limits this route before a request reaches the Worker.
 });

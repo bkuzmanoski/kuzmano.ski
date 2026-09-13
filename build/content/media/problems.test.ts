@@ -177,8 +177,14 @@ describe("posterImageProblems", () => {
     expect(posterImageProblems(posterImage(640, 360), video)).toEqual([]);
   });
 
-  test("accepts a poster image one pixel off the video's aspect ratio", () => {
-    expect(posterImageProblems(posterImage(640, 361), video)).toEqual([]);
+  test("accepts a poster image whose aspect ratio differs from the video's by less than 1%", () => {
+    expect(posterImageProblems(posterImage(640, 363), video)).toEqual([]); // 0.83% narrower.
+  });
+
+  test("reports a poster image whose aspect ratio differs from the video's by more than 1%", () => {
+    expect(posterImageProblems(posterImage(640, 364), video)).toEqual([
+      expect.stringContaining("must match the aspect ratio"),
+    ]); // 1.10% narrower.
   });
 
   test("reports a poster image of a different aspect ratio, naming both aspect ratios", () => {

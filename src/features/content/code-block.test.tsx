@@ -43,5 +43,6 @@ test("the code block preserves the attributes set by the syntax highlighter", ()
   const block = container.querySelector("pre")!;
 
   expect(block.className).toBe("shiki");
+  expect(block.style.color).toBe("red");
   expect(block.getAttribute("tabindex")).toBe("0");
 });

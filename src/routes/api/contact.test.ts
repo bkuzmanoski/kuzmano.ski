@@ -79,7 +79,7 @@ test("a request without `Sec-Fetch-Site` is refused", async () => {
   expect(contactEmailAddress).not.toHaveBeenCalled();
 });
 
-test("a request that exceeds the rate limit is refused", async () => {
+test("a request for the contact email address that exceeds its rate limit is refused before the address is looked up", async () => {
   isWithinRateLimit.mockResolvedValue(false);
 
   const response = await get();
@@ -116,11 +116,10 @@ test("a well-formed submission is delivered, with its sender as the reply-to add
   );
 });
 
-test("a cross-origin request is refused before the rate limit is checked, and a message is not delivered", async () => {
+test("a cross-origin request is refused, and a message is not delivered", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
-  expect(isWithinRateLimit).not.toHaveBeenCalled();
   expect(deliver).not.toHaveBeenCalled();
 });
 

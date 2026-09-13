@@ -53,11 +53,10 @@ test("a well-formed submission is recorded, with its email address, list, and so
   });
 });
 
-test("a cross-origin request is refused before the rate limit is checked, and a membership is not recorded", async () => {
+test("a cross-origin request is refused, and a membership is not recorded", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
-  expect(isWithinRateLimit).not.toHaveBeenCalled();
   expect(recordMembership).not.toHaveBeenCalled();
 });
 

@@ -18,7 +18,8 @@ const TYPED_RULE: HeadersRule = {
   pathPatterns: ["/first.txt", "/second.txt"],
   headers: { "Content-Type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex" },
 };
-const TYPED_RULE_TEXT = `/first.txt
+const TYPED_RULE_TEXT = `# Typed paths.
+/first.txt
   Content-Type: text/plain; charset=utf-8
   X-Robots-Tag: noindex
 /second.txt

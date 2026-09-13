@@ -113,9 +113,9 @@ describe("the zoomed in framing", () => {
 
   test("keeps the Apple logo and disk drive in view", () => {
     for (const viewport of VIEWPORTS) {
-      const { illustration, display } = stageMetricsFor(viewport);
+      const { illustration } = stageMetricsFor(viewport);
 
-      expect(illustration.y + illustration.height * DISK_DRIVE_BOTTOM).toBeGreaterThan(display.y + display.height);
+      expect(illustration.y + illustration.height * DISK_DRIVE_BOTTOM).toBeLessThan(viewport.height);
       expect(illustration.y + illustration.height * APPLE_LOGO_BOTTOM).toBeLessThan(viewport.height);
     }
   });

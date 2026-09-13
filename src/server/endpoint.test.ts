@@ -42,8 +42,15 @@ test("a well-formed body is parsed into the submitted fields", async () => {
   await expect(read(VALID_SUBMISSION)).resolves.toEqual({ ok: true, fields: VALID_SUBMISSION });
 });
 
-test("a cross-origin request is refused before the rate limit is checked", async () => {
-  expect(refusalStatus(await read(VALID_SUBMISSION, { origin: "https://elsewhere.example" }))).toBe(403);
+test("a cross-origin request is refused before its body is read or the rate limit is checked", async () => {
+  const request = new Request(URL, {
+    method: "POST",
+    headers: { origin: "https://elsewhere.example", "content-type": "application/json" },
+    body: JSON.stringify(VALID_SUBMISSION),
+  });
+
+  expect(refusalStatus(await readSubmission(request, SEND_EMAIL_RATELIMIT_BINDING))).toBe(403);
+  expect(request.bodyUsed).toBe(false);
   expect(isWithinRateLimit).not.toHaveBeenCalled();
 });
 

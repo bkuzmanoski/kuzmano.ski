@@ -74,14 +74,14 @@ test("a button with an `href` prop renders an anchor, which still applies the `a
   expect(document.activeElement).toBe(link);
 });
 
-test("both variants populate a caller-supplied ref, and the anchor still applies the `autoFocus` prop", () => {
+test("both variants populate a caller-supplied ref", () => {
   const buttonRef: RefObject<HTMLButtonElement | null> = { current: null };
   const linkRef: RefObject<HTMLAnchorElement | null> = { current: null };
 
   render(
     <>
       <Button ref={buttonRef}>Button</Button>
-      <Button ref={linkRef} autoFocus href="/">
+      <Button ref={linkRef} href="/">
         Anchor
       </Button>
     </>,
@@ -89,7 +89,18 @@ test("both variants populate a caller-supplied ref, and the anchor still applies
 
   expect(buttonRef.current).toBe(screen.getByRole("button", { name: "Button" }));
   expect(linkRef.current).toBe(screen.getByRole("link", { name: "Anchor" }));
-  expect(document.activeElement).toBe(linkRef.current);
+});
+
+test("an anchor with a caller-supplied ref still applies the `autoFocus` prop", () => {
+  const linkRef: RefObject<HTMLAnchorElement | null> = { current: null };
+
+  render(
+    <Button ref={linkRef} autoFocus href="/">
+      Anchor
+    </Button>,
+  );
+
+  expect(document.activeElement).toBe(linkRef.current); // The anchor merges the caller's ref with the one that applies `autoFocus`.
 });
 
 test("a press and the click that follows it play a single click sound", () => {

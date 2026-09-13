@@ -8,7 +8,6 @@ import { canonicalUrl } from "#/site/metadata.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 
 const open = vi.hoisted(() => vi.fn());
-const playClick = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
 
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
@@ -18,12 +17,11 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClick }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
 beforeEach(() => {
   open.mockClear();
-  playClick.mockClear();
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
 });
@@ -67,10 +65,7 @@ test("stepping to a sibling entry opens it in the entry window rather than follo
 
   const next = screen.getByRole("link", { name: "Next entry" });
 
-  fireEvent.pointerDown(next);
-  fireEvent.click(next);
-
-  expect(playClick).toHaveBeenCalled();
+  expect(fireEvent.click(next)).toBe(false); // The default was prevented.
   expect(open).toHaveBeenCalledWith(routeOf(2));
 });
 

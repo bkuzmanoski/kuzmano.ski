@@ -107,6 +107,27 @@ describe("playSound", () => {
 
     expect(FakeAudioContext.instances).toHaveLength(1);
   });
+
+  test("plays once the context starts running, without waiting for a resume that never settles", async () => {
+    const { playSound, primeAudio } = await loadContextModule();
+    const play = vi.fn();
+
+    primeAudio(); // Creates the context, so the resume below is the one `playSound` issues.
+
+    const context = FakeAudioContext.instances[0]!;
+
+    // Some iOS gestures can leave resume() pending even though a later gesture
+    // can successfully start the context. Waiting for that promise would strand audio.
+    context.resumeResult = new Promise<void>(() => undefined);
+
+    playSound(play);
+
+    expect(play).not.toHaveBeenCalled();
+
+    context.transitionToRunning();
+
+    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
+  });
 });
 
 describe("primeAudio", () => {
@@ -129,7 +150,7 @@ describe("primeAudio", () => {
     expect(FakeAudioContext.instances[0]!.resumeCount).toBe(2);
   });
 
-  test("ignores a rejected resume without blocking a later sound", async () => {
+  test("ignores a rejected resume, and a later sound still plays once the context is running", async () => {
     const { playSound, primeAudio } = await loadContextModule();
     const play = vi.fn();
 
@@ -143,27 +164,6 @@ describe("primeAudio", () => {
     context.resumeResult = Promise.resolve();
 
     playSound(play);
-    context.transitionToRunning();
-
-    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
-  });
-
-  test("does not wait for a resume promise that never settles", async () => {
-    const { playSound, primeAudio } = await loadContextModule();
-    const play = vi.fn();
-
-    primeAudio();
-
-    const context = FakeAudioContext.instances[0]!;
-
-    // Some iOS gestures can leave resume() pending even though a later gesture
-    // can successfully start the context. Waiting for that promise would strand audio.
-    context.resumeResult = new Promise<void>(() => undefined);
-
-    playSound(play);
-
-    expect(play).not.toHaveBeenCalled();
-
     context.transitionToRunning();
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
