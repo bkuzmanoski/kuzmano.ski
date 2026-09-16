@@ -1,21 +1,9 @@
-/* Element rules are wrapped in `:where()` so an entry's own stylesheet can override them with
- * a plain selector that doesn't depend on the order the two modules are bundled in. */
-
-.content {
+:where(.content) {
   /* Metrics */
-  --content-measure: 64ch;
-  --content-space: 20px;
-  --content-space-loose: 40px;
-  --content-space-x-loose: 64px;
-  --content-space-heading-1: var(--content-space-x-loose) var(--content-space-loose);
-  --content-space-heading-2: var(--content-space-loose) var(--content-space);
-  --content-space-heading-3: var(--content-space);
-  --content-space-rule: var(--content-space-loose);
-  --content-scrollbar-offset: clamp(
-    0px,
-    100% - var(--reserved-scrollbar-width, 0px) - var(--content-measure),
-    var(--scrollbar-gutter-width, 0px)
-  );
+  --layout-content-inset-max-width: 640px;
+  --layout-content-space: 20px;
+  --layout-content-space-loose: 40px;
+  --layout-content-space-x-loose: 64px;
 
   /* Typography */
   --font-family-heading: "Lora", ui-serif, serif;
@@ -25,43 +13,42 @@
   --font-body: 500 16px/26px "Inter Variable", ui-sans-serif, sans-serif;
   --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
 
-  max-width: calc(var(--content-measure) + var(--content-scrollbar-offset) + var(--reserved-scrollbar-width, 0px));
-  margin-inline: auto;
-  padding-block: clamp(
-    var(--content-space-loose),
-    (100% - var(--content-measure)) / 2 + var(--layout-gutter),
-    var(--content-space-x-loose)
-  );
-  padding-inline: calc(var(--content-scrollbar-offset) + var(--layout-gutter))
-    calc(var(--layout-gutter) + var(--reserved-scrollbar-width, 0px));
-
-  font: var(--font-body); /* Also the font `--content-measure` is resolved against. */
+  font: var(--font-body);
   font-feature-settings:
     "liga" 1,
     "calt" 1;
+}
 
-  & > * {
-    margin-block: var(--content-space);
-  }
+.content {
+  & :where([data-content-body]) {
+    display: grid;
+    grid-template-columns:
+      [full-bleed-start] minmax(var(--layout-gutter), 1fr)
+      [inset-start] minmax(0, var(--layout-content-inset-max-width)) [inset-end]
+      minmax(var(--layout-gutter), 1fr) [full-bleed-end];
+    padding-block: clamp(
+      var(--layout-content-space-loose),
+      (100% - var(--layout-content-inset-max-width)) / 2,
+      var(--layout-content-space-x-loose)
+    );
 
-  & > :first-child {
-    margin-block-start: 0;
-  }
+    & > * {
+      grid-column: inset;
+      margin-block: 0;
+    }
 
-  & > :last-child {
-    margin-block-end: 0;
-  }
+    & > :where([data-content-full-bleed]) {
+      grid-column: full-bleed;
+    }
 
-  & > :where(h1) {
-    margin-block: var(--content-space-heading-1);
-  }
+    & > * + * {
+      margin-block-start: var(--layout-content-space);
+    }
 
-  & > :where(h2) {
-    margin-block: var(--content-space-heading-2);
-  }
-
-  & > :where(h3) {
-    margin-block: var(--content-space-heading-3);
+    & > :where(h1, hr, [data-content-space="loose"]) + *,
+    & > * + :where(h2, hr, [data-content-space="loose"]) {
+      margin-block-start: var(--layout-content-space-loose);
+    }
   }
 
   & :where(ul, ol) {
@@ -70,14 +57,6 @@
 
   & :where(li + li) {
     margin-block-start: 4px;
-  }
-
-  & > :where(hr) {
-    margin-block: var(--content-space-rule);
-  }
-
-  & > :where([data-content-space="loose"]) {
-    margin-block: var(--content-space-loose);
   }
 
   & :where(h1, h2, h3, p, li) {

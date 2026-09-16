@@ -74,12 +74,21 @@ test("an entry's own class is applied alongside the shared one", async () => {
   expect(article.className.split(" ")).toEqual([styles.content, "aboutEntry"]);
 });
 
-test("the article opens with the title as an `<h1>` marked with the `data-feed-omit` attribute", async () => {
+test("the article contains a single element with the `data-content-body` attribute", async () => {
+  const article = await renderContent({ default: () => <p>Body</p> });
+  const body = article.querySelector("[data-content-body]");
+
+  expect(article.children.length).toBe(1);
+  expect(article.firstElementChild).toBe(body);
+  expect(screen.getByText("Body").closest("[data-content-body]")).toBe(body);
+});
+
+test("the content body begins a `<h1>` marked with the `data-feed-omit` attribute", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
   const heading = screen.getByRole("heading", { level: 1 });
 
   expect(heading.textContent).toBe(TITLE);
-  expect(article.firstElementChild).toBe(heading);
+  expect(article.querySelector("[data-content-body]")?.firstElementChild).toBe(heading);
   expect(heading.hasAttribute("data-feed-omit")).toBe(true); // A feed reader renders the entry's title itself, so the body must not repeat it.
 });
 
