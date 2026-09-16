@@ -56,6 +56,7 @@
   --layout-gutter: 16px;
   --layout-title-bar-height: 28px; /* Excludes its bottom border. */
   --layout-scrollbar-width: 20px; /* Excludes its leading border. */
+  --layout-scrollbar-gutter-width: calc(var(--layout-scrollbar-width) + 1px); /* Includes its leading border. */
   --layout-tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
   --layout-shadow-length: 3px;
 

@@ -14,10 +14,7 @@
   & pre {
     overflow-x: auto;
     padding: var(--layout-gutter);
-
-    & code {
-      font: var(--font-code);
-    }
+    font: var(--font-code);
 
     &:focus-visible {
       outline: none;

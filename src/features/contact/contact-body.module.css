@@ -36,9 +36,7 @@
     border-top: 1px solid var(--color-border);
 
     &:has(> [data-collapsed]) {
-      --reserved-scrollbar-width: calc(
-        var(--layout-scrollbar-width) + 1px
-      ); /* +1px for the border defined in `scrollbar.module.css`. */
+      --reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
     }
   }
 

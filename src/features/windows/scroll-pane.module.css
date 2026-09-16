@@ -1,26 +1,17 @@
 .scrollPane {
-  /* The width the pane reserves at the inline end for the scrollbar, filled by the bar itself or by
-   * the `--reserved-scrollbar-width` padding set below once it collapses. Centered content reads it
-   * to offset itself by the same width at the inline start. */
-  --scrollbar-gutter-width: calc(
-    var(--layout-scrollbar-width) + 1px
-  ); /* +1px for the border defined in `scrollbar.module.css`. */
-
   display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
 
-  /* The scrollbar is hidden when there is a safe-area inset (see below). */
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
-  @container not style(--window-safe-area-inline-end: 0px) {
-    --scrollbar-gutter-width: 0px;
-  }
-
-  /* Keep the content width stable when the scrollbar appears or disappears. The content is anchored
-   * to the inline end, so only its full-width edges move. */
+  /* Children read this value to the content width stable as the scrollbar appears and disappears. */
   &:has(> [data-collapsed]) {
-    --reserved-scrollbar-width: var(--scrollbar-gutter-width);
+    --reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
+
+    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+    @container not style(--window-safe-area-inline-end: 0px) {
+      --reserved-scrollbar-width: 0px; /* The scrollbar is hidden when there is a safe-area inset (see below). */
+    }
   }
 }
 
@@ -43,7 +34,7 @@
 
   min-width: 0;
 
-  /* The window provides these values; the fallbacks match its uninset default. */
+  /* The window provides these values; the fallbacks match its un-inset default. */
   padding-block-end: var(--window-safe-area-block-end, 0);
   padding-inline: var(--window-safe-area-inline-start, 0) var(--window-safe-area-inline-end, 0);
 

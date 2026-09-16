@@ -33,13 +33,13 @@
 .scrollbarBorder {
   composes: vertical;
   top: calc(var(--layout-title-bar-height) + 2px);
-  right: calc(var(--layout-scrollbar-width) + 1px);
+  right: var(--layout-scrollbar-gutter-width);
   bottom: 1px;
 }
 
 .resizeControlBorder {
   composes: horizontal;
   right: 1px;
-  bottom: calc(var(--layout-scrollbar-width) + 1px);
+  bottom: var(--layout-scrollbar-gutter-width);
   width: var(--layout-scrollbar-width);
 }

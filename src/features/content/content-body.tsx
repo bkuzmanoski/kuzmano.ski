@@ -90,8 +90,10 @@ export function ContentBody({ route, title, content }: { route: string; title: s
     <RenderedEntryContext value={renderedEntry}>
       <MDXProvider components={MDX_COMPONENTS}>
         <article ref={revealInitialFragmentTarget} className={cx(styles.content, className)}>
-          <h1 data-feed-omit>{title}</h1>
-          <MDXContent />
+          <div data-content-body>
+            <h1 data-feed-omit>{title}</h1>
+            <MDXContent />
+          </div>
         </article>
       </MDXProvider>
       <CopyFailureAlert entity="link" open={hasFailedCopy} onDismiss={() => setHasFailedCopy(false)} />
