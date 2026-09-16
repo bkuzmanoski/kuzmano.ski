@@ -8,8 +8,8 @@ import { rootRelativePathOf } from "./renditions.ts";
 import type { MediaRendition } from "./renditions.ts";
 import type { ResolvedImage, ResolvedVideo } from "./resolved-media.ts";
 
-const MIN_COVER_IMAGE_SIZE = 144; // X `summary` cards drop smaller images.
-const MAX_COVER_IMAGE_BYTES = 5 * 1024 * 1024; // X fetches cover images up to this size.
+const MIN_SOCIAL_COVER_IMAGE_SHORTEST_SIDE_PX = 144; // X `summary` cards drop smaller images.
+const MAX_SOCIAL_COVER_IMAGE_BYTES = 5 * 1024 * 1024; // X fetches cover images up to this size.
 
 /** The largest file Cloudflare serves as a static asset. */
 export const MAX_RENDITION_BYTES = 25 * 1024 * 1024;
@@ -29,22 +29,24 @@ export const fileSize = (bytes: number) =>
     ? `${Math.round(bytes / BYTES_PER_KILOBYTE)}KB`
     : `${Math.round((bytes / BYTES_PER_MEGABYTE) * 10) / 10}MB`;
 
-export function coverImageProblems({
-  path,
-  bytes,
-  dimensions: { width, height },
-}: Pick<ResolvedImage, "path" | "bytes" | "dimensions">): Array<string> {
+export function coverImageProblems(
+  { path, bytes, dimensions: { width, height } }: Pick<ResolvedImage, "path" | "bytes" | "dimensions">,
+  thumbnailShortestSideLength: number,
+): Array<string> {
   const problems: Array<string> = [];
   const quotedFilePath = quotedContentPath(path);
+  const minimumShortestSideLength = Math.max(thumbnailShortestSideLength, MIN_SOCIAL_COVER_IMAGE_SHORTEST_SIDE_PX);
 
-  if (Math.min(width, height) < MIN_COVER_IMAGE_SIZE) {
+  if (Math.min(width, height) < minimumShortestSideLength) {
     problems.push(
-      `${quotedFilePath} is smaller than the ${MIN_COVER_IMAGE_SIZE}px minimum on its shortest side (${width}x${height}px).`,
+      `${quotedFilePath} is smaller than the ${minimumShortestSideLength}px minimum on its shortest side (${width}x${height}px).`,
     );
   }
 
-  if (bytes > MAX_COVER_IMAGE_BYTES) {
-    problems.push(`${quotedFilePath} exceeds the ${fileSize(MAX_COVER_IMAGE_BYTES)} limit (${fileSize(bytes)}).`);
+  if (bytes > MAX_SOCIAL_COVER_IMAGE_BYTES) {
+    problems.push(
+      `${quotedFilePath} exceeds the ${fileSize(MAX_SOCIAL_COVER_IMAGE_BYTES)} limit (${fileSize(bytes)}).`,
+    );
   }
 
   return problems;

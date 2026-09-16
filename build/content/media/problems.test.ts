@@ -80,29 +80,50 @@ describe("renditionSizeProblems", () => {
 });
 
 describe("coverImageProblems", () => {
-  test("accepts a cover image within both limits", () => {
-    expect(coverImageProblems(coverImage())).toEqual([]);
+  const THUMBNAIL_SHORTEST_SIDE_PX = 128; // Below the 144px social card minimum.
+  const LARGE_THUMBNAIL_SHORTEST_SIDE_PX = 200;
+
+  test("accepts a cover image that meets every requirement", () => {
+    expect(coverImageProblems(coverImage(), THUMBNAIL_SHORTEST_SIDE_PX)).toEqual([]);
   });
 
-  test("reports a cover image one pixel under the minimum size on its shortest side", () => {
-    expect(coverImageProblems(coverImage({ dimensions: { width: 800, height: 143 } }))).toEqual([
+  test("reports a cover image one pixel under the social card minimum on its shortest side", () => {
+    expect(
+      coverImageProblems(coverImage({ dimensions: { width: 800, height: 143 } }), THUMBNAIL_SHORTEST_SIDE_PX),
+    ).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 144px minimum on its shortest side (800x143px).`,
     ]);
   });
 
-  test("accepts a cover image of exactly the minimum size on its shortest side", () => {
-    expect(coverImageProblems(coverImage({ dimensions: { width: 800, height: 144 } }))).toEqual([]);
+  test("accepts a cover image of exactly the social card minimum on its shortest side", () => {
+    expect(
+      coverImageProblems(coverImage({ dimensions: { width: 800, height: 144 } }), THUMBNAIL_SHORTEST_SIDE_PX),
+    ).toEqual([]);
+  });
+
+  test("reports a cover image one pixel under the thumbnail's shortest side length, when that is larger than the social card minimum", () => {
+    expect(
+      coverImageProblems(coverImage({ dimensions: { width: 800, height: 199 } }), LARGE_THUMBNAIL_SHORTEST_SIDE_PX),
+    ).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 200px minimum on its shortest side (800x199px).`,
+    ]);
+  });
+
+  test("accepts a cover image of exactly the thumbnail's shortest side length, when that is larger than the social card minimum", () => {
+    expect(
+      coverImageProblems(coverImage({ dimensions: { width: 800, height: 200 } }), LARGE_THUMBNAIL_SHORTEST_SIDE_PX),
+    ).toEqual([]);
   });
 
   test("reports a cover image one byte over the maximum size", () => {
-    expect(coverImageProblems(coverImage({ bytes: megabytesInBytes(5) + 1 }))).toEqual([
+    expect(coverImageProblems(coverImage({ bytes: megabytesInBytes(5) + 1 }), THUMBNAIL_SHORTEST_SIDE_PX)).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" exceeds the 5MB limit (5MB).`,
     ]);
   });
 });
 
 describe("videoProblems", () => {
-  test("accepts an H.264 video within every limit", () => {
+  test("accepts an H.264 video that meets every requirement", () => {
     expect(videoProblems(resolvedVideo())).toEqual([]);
   });
 

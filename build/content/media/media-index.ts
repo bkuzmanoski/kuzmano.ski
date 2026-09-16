@@ -114,7 +114,8 @@ function pictureOf(
 
 export async function buildMediaIndex(reader: MediaFileReader = createMediaFileReader()): Promise<MediaIndex> {
   const coverImageSize = coverImageSizeIn(await readLayoutMetrics());
-  const thumbnailDerivatives = thumbnailImageDerivativesFor(coverImageSize * 2); // Twice the width it is rendered at for high-density displays.
+  const thumbnailShortestSideLength = coverImageSize * 2; // Twice the size it is rendered at for high-density displays.
+  const thumbnailDerivatives = thumbnailImageDerivativesFor(thumbnailShortestSideLength);
   const { entryMedia, problems: authoredMediaProblems } = readAuthoredMedia();
 
   async function resolveCoverImage(coverImageFilePath: string) {
@@ -130,7 +131,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     return {
       coverImage: { social: sizedMediaOf(socialImageRendition, coverImage.dimensions), thumbnail: thumbnail.picture },
       renditions: [socialImageRendition, ...thumbnail.renditions],
-      problems: [...coverImageProblems(coverImage), ...imageMetadataProblems(coverImage)],
+      problems: [...coverImageProblems(coverImage, thumbnailShortestSideLength), ...imageMetadataProblems(coverImage)],
     };
   }
 

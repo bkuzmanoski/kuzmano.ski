@@ -31,8 +31,8 @@ describe("imageDerivativeFileName", () => {
   });
 
   test("returns the same file name for a derivative whatever order its fields are written in", () => {
-    expect(imageDerivativeFileName(MEDIA_FILE_HASH, { format: "avif", width: 128 })).toBe(
-      imageDerivativeFileName(MEDIA_FILE_HASH, { width: 128, format: "avif" }),
+    expect(imageDerivativeFileName(MEDIA_FILE_HASH, { format: "avif", shortestSideLength: 128 })).toBe(
+      imageDerivativeFileName(MEDIA_FILE_HASH, { shortestSideLength: 128, format: "avif" }),
     );
   });
 
@@ -53,9 +53,15 @@ describe("imageDerivativeFileName", () => {
     expect(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF)).not.toBe(imageDerivativeFileName(MEDIA_FILE_HASH, WEBP));
   });
 
-  test("returns different file names for derivatives with different widths", () => {
-    expect(imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF, width: 128 })).not.toBe(
-      imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF, width: 160 }),
+  test("returns different file names for derivatives with different shortest side lengths", () => {
+    expect(imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF, shortestSideLength: 128 })).not.toBe(
+      imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF, shortestSideLength: 160 }),
+    );
+  });
+
+  test("returns different file names for a resized derivative and one encoded at the source's dimensions", () => {
+    expect(imageDerivativeFileName(MEDIA_FILE_HASH, { ...AVIF, shortestSideLength: 128 })).not.toBe(
+      imageDerivativeFileName(MEDIA_FILE_HASH, AVIF),
     );
   });
 
@@ -87,13 +93,28 @@ describe("encodeImageDerivative", () => {
     expect(encodedFormat).toBe(format === "avif" ? "heif" : format); // sharp reports AVIF as its HEIF container.
   });
 
-  test("resizes an image to the derivative's width, preserving its aspect ratio", async () => {
-    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", width: 10 });
-    await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 10, height: 5 });
+  test("resizes a landscape image until its height is the derivative's shortest side length, preserving its aspect ratio", async () => {
+    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", shortestSideLength: 10 });
+    await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 20, height: 10 });
   });
 
-  test("preserves the size of an image narrower than the derivative's width", async () => {
-    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", width: 80 });
+  test("resizes a portrait image until its width is the derivative's shortest side length, preserving its aspect ratio", async () => {
+    const portraitImageAbsolutePath = join(directoryAbsolutePath, "portrait.png");
+
+    await sharp({ create: { width: 20, height: 40, channels: 3, background: "#336699" } })
+      .png()
+      .toFile(portraitImageAbsolutePath);
+
+    const encodedBytes = await encodeImageDerivative(portraitImageAbsolutePath, {
+      format: "webp",
+      shortestSideLength: 10,
+    });
+
+    await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 10, height: 20 });
+  });
+
+  test("preserves the dimensions of an image whose shortest side length is below the derivative's", async () => {
+    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", shortestSideLength: 80 });
     await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 40, height: 20 });
   });
 
@@ -103,7 +124,7 @@ describe("encodeImageDerivative", () => {
       .png()
       .toFile(imageAbsolutePath);
 
-    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", width: 10 });
+    const encodedBytes = await encodeImageDerivative(imageAbsolutePath, { format: "webp", shortestSideLength: 10 });
 
     await expect(metadataOf(encodedBytes)).resolves.toMatchObject({ width: 10, height: 20 });
   });

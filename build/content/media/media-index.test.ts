@@ -39,7 +39,8 @@ vi.mock("../../stylesheet/layout-metrics.ts", () => ({ readLayoutMetrics }));
 vi.mock("node:fs/promises", () => ({ default: { readFile }, readFile }));
 
 const ENTRY = authoredEntryMedia();
-const COVER_IMAGE_SIZE = 64;
+const AUTHORED_COVER_IMAGE_DIMENSIONS = { width: 1200, height: 630 };
+const RENDERED_COVER_IMAGE_SIZE = 64;
 const SOURCE_WITH_IMAGE_IN_PICTURE = `<picture>
   <img src="./image.png" alt="An image" />
 </picture>
@@ -50,30 +51,35 @@ const VIDEO_WITHOUT_POSTER_IMAGE = { videoFileName: VIDEO_FILE_NAME, posterImage
 const HASHED_URL = /\.[0-9a-f]{16}\./;
 
 interface ContentFixture {
+  coverImageSize?: number;
   entryMedia?: Array<AuthoredEntryMedia>;
   problems?: Array<string>;
+  source?: string;
   images?: Record<string, ResolvedImage | UnreadableImage>;
   video?: ResolvedVideo;
-  source?: string;
   reader?: MediaFileReader;
 }
 
 function indexOf({
+  coverImageSize = RENDERED_COVER_IMAGE_SIZE,
   entryMedia = [ENTRY],
   problems = [],
+  source = ENTRY_SOURCE,
   images = {},
   video,
-  source = ENTRY_SOURCE,
   reader,
 }: ContentFixture = {}) {
   const resolvedImages: Record<string, ResolvedImage | UnreadableImage> = {
-    [COVER_IMAGE_FILE_PATH]: resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 512, height: 512 } }),
+    [COVER_IMAGE_FILE_PATH]: resolvedImage({
+      path: COVER_IMAGE_FILE_PATH,
+      dimensions: AUTHORED_COVER_IMAGE_DIMENSIONS,
+    }),
     [BODY_IMAGE_FILE_PATH]: resolvedImage(),
     [POSTER_IMAGE_FILE_PATH]: resolvedImage({ path: POSTER_IMAGE_FILE_PATH, dimensions: VIDEO_DIMENSIONS }),
     ...images,
   };
 
-  readLayoutMetrics.mockResolvedValue({ coverImageSize: COVER_IMAGE_SIZE });
+  readLayoutMetrics.mockResolvedValue({ coverImageSize });
   readAuthoredMedia.mockReturnValue({ entryMedia, problems });
   readFile.mockResolvedValue(source);
 
@@ -91,22 +97,21 @@ const mediaFor = (index: Awaited<ReturnType<typeof buildMediaIndex>>, reference:
 describe("buildMediaIndex", () => {
   test("returns the layout metrics' cover image size", async () => {
     const { coverImageSize } = await indexOf();
-    expect(coverImageSize).toBe(COVER_IMAGE_SIZE);
+    expect(coverImageSize).toBe(RENDERED_COVER_IMAGE_SIZE);
   });
 
-  test("resolves a cover image to a social image at its authored URL and a WebP thumbnail at twice the cover image size with an AVIF alternate", async () => {
+  test("resolves a cover image to a social image at its authored URL and a WebP thumbnail whose shortest side is twice the cover image size with an AVIF alternate", async () => {
     const { coverImages } = await indexOf();
     const coverImage = coverImages[ENTRY.key]!;
 
     expect(coverImage.social).toEqual({
       src: mediaRoute(`collection/entry.cover.${MEDIA_FILE_HASH}.png`),
-      width: 512,
-      height: 512,
+      ...AUTHORED_COVER_IMAGE_DIMENSIONS,
     });
     expect(coverImage.thumbnail).toMatchObject({
       kind: "image",
-      width: COVER_IMAGE_SIZE * 2,
-      height: COVER_IMAGE_SIZE * 2,
+      width: 244, // The landscape cover image's width at twice the cover image size, rather than its shortest side.
+      height: RENDERED_COVER_IMAGE_SIZE * 2,
     });
     expect(coverImage.thumbnail.src).toContain(mediaRoute("collection/entry.cover."));
     expect(coverImage.thumbnail.src).toMatch(/\.thumbnail\.webp$/);
@@ -115,11 +120,34 @@ describe("buildMediaIndex", () => {
     expect(coverImage.thumbnail.alternates[0]?.srcSet).toMatch(/\.thumbnail\.avif$/);
   });
 
-  test("resolves a cover image narrower than twice the cover image size to a thumbnail at the cover image's dimensions", async () => {
-    const narrowCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 100, height: 50 } });
-    const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: narrowCoverImage } });
+  test("lists a problem for a cover image whose shortest side is below twice the cover image size, when that is larger than the social card minimum", async () => {
+    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 800, height: 150 } });
+    const index = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage }, coverImageSize: 100 });
 
-    expect(coverImages[ENTRY.key]?.thumbnail).toMatchObject({ width: 100, height: 50 });
+    expect(index.problems()).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 200px minimum on its shortest side (800x150px).`,
+    ]);
+  });
+
+  test("does not list a problem for a cover image whose shortest side is above the social card minimum, when that is larger than twice the cover image size", async () => {
+    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 800, height: 150 } });
+    const index = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
+
+    expect(index.problems()).toEqual([]);
+  });
+
+  test("resolves a portrait cover image to a thumbnail whose width is twice the cover image size", async () => {
+    const portraitCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 630, height: 1200 } });
+    const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: portraitCoverImage } });
+
+    expect(coverImages[ENTRY.key]?.thumbnail).toMatchObject({ width: RENDERED_COVER_IMAGE_SIZE * 2, height: 244 });
+  });
+
+  test("resolves a cover image whose shortest side is below twice the cover image size to a thumbnail at its authored dimensions", async () => {
+    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 200, height: 100 } });
+    const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
+
+    expect(coverImages[ENTRY.key]?.thumbnail).toMatchObject({ width: 200, height: 100 });
   });
 
   test("resolves a body image reference to its authored URL with AVIF and WebP alternates", async () => {

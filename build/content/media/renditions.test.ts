@@ -13,7 +13,7 @@ import { authoredRendition, imageDerivativeRendition, rootRelativePathOf } from 
 import type { ImageDerivative } from "./derivatives.ts";
 
 const AVIF: ImageDerivative = { format: "avif" };
-const THUMBNAIL_WEBP: ImageDerivative = { format: "webp", variant: "thumbnail", width: 128 };
+const THUMBNAIL_WEBP: ImageDerivative = { format: "webp", variant: "thumbnail", shortestSideLength: 128 };
 
 describe("authoredRendition", () => {
   test("returns an authored rendition at a URL including the media file's hash, with the media type of its extension", () => {
@@ -57,7 +57,7 @@ describe("imageDerivativeRendition", () => {
   });
 
   test("returns a different URL for a derivative with different encoding settings", () => {
-    expect(imageDerivativeRendition(resolvedImage(), { ...AVIF, width: 128 }).url).not.toBe(
+    expect(imageDerivativeRendition(resolvedImage(), { ...AVIF, shortestSideLength: 128 }).url).not.toBe(
       imageDerivativeRendition(resolvedImage(), AVIF).url,
     );
   });

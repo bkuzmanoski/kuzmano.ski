@@ -4,7 +4,7 @@ import sharp from "sharp";
 
 import type { Dimensions } from "#/lib/content/media.ts";
 
-import type { AvifOptions, WebpOptions } from "sharp";
+import type { AvifOptions, ResizeOptions, WebpOptions } from "sharp";
 
 export const IMAGE_ENCODING_OPTIONS = {
   avif: { quality: 80 },
@@ -21,7 +21,7 @@ export type ImageDerivativeFormat = "avif" | "webp";
 export interface ImageDerivative {
   format: ImageDerivativeFormat;
   variant?: "thumbnail";
-  width?: number; // Source dimensions are used when omitted.
+  shortestSideLength?: number; // Source dimensions are used when omitted.
   quality?: number; // Default quality for the format used when omitted.
 }
 
@@ -37,35 +37,47 @@ export const BODY_IMAGE_DERIVATIVES: PictureDerivatives = {
 };
 export const POSTER_IMAGE_DERIVATIVE: ImageDerivative = { format: "webp" };
 
-/** Cover-image derivatives at `width` (2x the rendered thumbnail width). */
-export const thumbnailImageDerivativesFor = (width: number): PictureDerivatives => ({
-  alternates: [{ format: "avif", variant: "thumbnail", width }],
-  fallback: { format: "webp", variant: "thumbnail", width },
+export const thumbnailImageDerivativesFor = (shortestSideLength: number): PictureDerivatives => ({
+  alternates: [{ format: "avif", variant: "thumbnail", shortestSideLength }],
+  fallback: { format: "webp", variant: "thumbnail", shortestSideLength },
 });
 
 export function imageDerivativeDimensionsOf({ width, height }: Dimensions, derivative: ImageDerivative): Dimensions {
-  if (derivative.width === undefined || derivative.width >= width) {
+  const { shortestSideLength } = derivative;
+
+  if (shortestSideLength === undefined || shortestSideLength >= Math.min(width, height)) {
     return { width, height };
   }
 
-  return { width: derivative.width, height: Math.round((height * derivative.width) / width) };
+  return width <= height
+    ? { width: shortestSideLength, height: Math.round((height * shortestSideLength) / width) }
+    : { width: Math.round((width * shortestSideLength) / height), height: shortestSideLength };
 }
 
 export const imageDerivativeExtensionOf = ({ format }: ImageDerivative) => `.${format}` as const;
 
+const imageResizeOptionsOf = ({ shortestSideLength }: ImageDerivative): ResizeOptions | null =>
+  shortestSideLength === undefined
+    ? null
+    : { width: shortestSideLength, height: shortestSideLength, fit: "outside", withoutEnlargement: true };
 const imageEncodingOptionsOf = ({ format, quality }: ImageDerivative): AvifOptions | WebpOptions => ({
   ...IMAGE_ENCODING_OPTIONS[format],
   quality: quality ?? IMAGE_ENCODING_OPTIONS[format].quality,
 });
-const imageDerivativeSuffixOf = ({ format, variant }: ImageDerivative) => (variant ? `${variant}.${format}` : format);
 
 export const imageDerivativeFingerprint = (derivative: ImageDerivative) =>
   createHash("sha256")
     .update(
-      JSON.stringify([derivative.format, derivative.width ?? null, Object.entries(imageEncodingOptionsOf(derivative))]),
+      JSON.stringify([
+        derivative.format,
+        Object.entries(imageResizeOptionsOf(derivative) ?? {}),
+        Object.entries(imageEncodingOptionsOf(derivative)),
+      ]),
     )
     .digest("hex")
     .slice(0, 8);
+
+const imageDerivativeSuffixOf = ({ format, variant }: ImageDerivative) => (variant ? `${variant}.${format}` : format);
 
 /** Media storage filename: `<image hash>.<derivative fingerprint>.<suffix>`. */
 export const imageDerivativeFileName = (hash: string, derivative: ImageDerivative) =>
@@ -74,8 +86,8 @@ export const imageDerivativeFileName = (hash: string, derivative: ImageDerivativ
 /** Encodes one derivative of the image at `absolutePath` and returns its bytes. */
 export async function encodeImageDerivative(absolutePath: string, derivative: ImageDerivative): Promise<Buffer> {
   const image = sharp(absolutePath, { autoOrient: true });
-  const resized =
-    derivative.width === undefined ? image : image.resize({ width: derivative.width, withoutEnlargement: true });
+  const resizeOptions = imageResizeOptionsOf(derivative);
+  const resizedImage = resizeOptions === null ? image : image.resize(resizeOptions);
 
-  return resized.toFormat(derivative.format, imageEncodingOptionsOf(derivative)).toBuffer();
+  return resizedImage.toFormat(derivative.format, imageEncodingOptionsOf(derivative)).toBuffer();
 }
