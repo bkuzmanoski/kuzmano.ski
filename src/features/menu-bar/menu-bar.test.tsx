@@ -165,7 +165,7 @@ describe("opening a menu", () => {
     expect(isExpanded("Go")).toBe(true);
   });
 
-  test("a press that closes the menu leaves the focus on the menu title", () => {
+  test("a press that closes the menu keeps the focus on the menu title", () => {
     render(<MenuBar />);
     openWithPointer("Go");
     openWithPointer("Go");
@@ -351,7 +351,7 @@ describe("items that open a destination", () => {
     ["Shift", { shiftKey: true }],
     ["Alt", { altKey: true }],
   ] as const)(
-    "clicking an item with the %s key held is left for the browser to handle, and the menu stays open",
+    "clicking an item with the %s key held is handled by the browser, and the menu stays open",
     (_modifier, init) => {
       render(<MenuBar />);
       openWithPointer("Go");
@@ -374,7 +374,7 @@ describe("items that open a destination", () => {
     releasePointerOver(menuItem("Close"), { button: 2 });
     runActivationFlash();
 
-    expect(menu()).not.toBeNull(); // An item that was chosen would have run and closed the menu behind it.
+    expect(menu()).not.toBeNull(); // An item that was chosen would have invoked its action and closed the menu behind it.
   });
 
   test("a middle pointer up event does not open the destination, and the menu stays open", () => {

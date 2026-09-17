@@ -145,7 +145,7 @@ describe("focus", () => {
 });
 
 describe("move", () => {
-  test("sets the position and leaves the size unchanged", () => {
+  test("sets the position and keeps the size unchanged", () => {
     const state = reducer(opened("entry"), { type: "move", id: "entry", x: 50, y: 50 });
     expect(state.geometry.entry).toMatchObject({ x: 50, y: 50, ...DEFAULT_SIZE });
   });

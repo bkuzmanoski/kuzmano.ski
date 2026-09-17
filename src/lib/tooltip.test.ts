@@ -74,7 +74,7 @@ describe("the tooltip on screen", () => {
 });
 
 describe("deferred hides", () => {
-  test("a scheduled hide runs after the hide delay", () => {
+  test("a scheduled hide executes after the hide delay", () => {
     const hide = vi.fn();
 
     hideAfterDelay(hide);
@@ -87,7 +87,7 @@ describe("deferred hides", () => {
     expect(hide).toHaveBeenCalledOnce();
   });
 
-  test("scheduling a second hide runs the first immediately", () => {
+  test("scheduling another hide immediately executes the first", () => {
     const hideFirst = vi.fn();
 
     hideAfterDelay(hideFirst);
@@ -96,7 +96,7 @@ describe("deferred hides", () => {
     expect(hideFirst).toHaveBeenCalledOnce(); // Deferring both hides would leave two tooltips on screen at once.
   });
 
-  test("a hide that has already run is not repeated when its delay elapses", () => {
+  test("a hide that has already executed is not repeated when its delay elapses", () => {
     const hide = vi.fn();
 
     hideAfterDelay(hide);
@@ -127,7 +127,7 @@ describe("the group grace period", () => {
     expect(isGroupInGracePeriod(wrapper())).toBe(false);
   });
 
-  test("the group leaves the grace period once the grace period has elapsed since its tooltip hid", () => {
+  test("the group exits the grace period once the grace period has elapsed since its tooltip hid", () => {
     const { first, second } = createGroup();
 
     resetGroupGracePeriod("first", first);

@@ -201,7 +201,7 @@ test("a persisted tooltip shows the updated label when the control is relabeled"
   expect(tip()?.textContent).toBe("New Label");
 });
 
-test("a persisted tooltip is hidden when the pointer leaves the control", () => {
+test("a persisted tooltip is hidden after the pointer moves outside the control", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   hoverTooltipUntilShown(wrapper);

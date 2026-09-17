@@ -179,7 +179,7 @@ test("the URL the provider navigated to itself is not resolved a second time", a
   expect(openRoutes()).toHaveLength(2);
 });
 
-test("opening a window with `replaceUrl` leaves the previous route out of the session history", async () => {
+test("opening a window with `replaceUrl` keeps the previous route out of the session history", async () => {
   const history = await renderProvider(DESKTOP_ROUTE);
 
   act(() => actions().open(COLLECTION_ROUTE, { replaceUrl: true }));

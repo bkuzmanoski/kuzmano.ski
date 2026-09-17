@@ -91,7 +91,7 @@ test("a navigation action is rendered as a link", () => {
   expect(screen.queryByRole("button", { name: "Go Home" })).toBeNull();
 });
 
-test("clicking an action runs that action", () => {
+test("clicking an action invokes that action", () => {
   const onPrimary = vi.fn<() => void>();
   const onSecondary = vi.fn<() => void>();
 
@@ -113,7 +113,7 @@ test("clicking an action runs that action", () => {
   expect(onSecondary).toHaveBeenCalledOnce();
 });
 
-test("the Escape key runs the secondary action without closing the dialog", () => {
+test("the Escape key invokes the secondary action without closing the dialog", () => {
   const onPrimary = vi.fn<() => void>();
   const onSecondary = vi.fn<() => void>();
 
@@ -132,7 +132,7 @@ test("the Escape key runs the secondary action without closing the dialog", () =
   expect(screen.getByRole("dialog")).toBeDefined();
 });
 
-test("the Escape key runs the primary action when there is no secondary action", () => {
+test("the Escape key invokes the primary action when there is no secondary action", () => {
   const onPrimary = vi.fn<() => void>();
 
   render(<Alert message="Your message is on its way." open primaryAction={{ label: "OK", onAction: onPrimary }} />);

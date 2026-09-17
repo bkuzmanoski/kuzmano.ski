@@ -239,7 +239,7 @@ test("a press on an inactive window does not trigger a click on the content unde
   expect(onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press on the chrome of a window leaves the focus within it unchanged", () => {
+test("a press on the chrome of a window keeps the focus within it unchanged", () => {
   const { rerender } = render(windowShowing("tall", button));
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
@@ -384,7 +384,7 @@ test("dragging the resize control reports the size being chosen and applies it o
   expect(onDrag).toHaveBeenLastCalledWith(null);
 });
 
-test("the resize control clears its pressed state when the pointer leaves it", async () => {
+test("the resize control clears its pressed state when the pointer moves outside it", async () => {
   render(windowShowing("tall", tallPane));
 
   const control = screen.getByRole("button", { name: "Resize" });

@@ -190,12 +190,12 @@ test("a keyboard activation steps the viewport after a press is abandoned outsid
 
   fireEvent.click(scrollDownButton);
 
-  // A press released outside the arrow does not deliver a click to clear the press it
+  // A press released outside the arrow button does not deliver a click to clear the press it
   // recorded, so a keyboard activation must not be mistaken for that press arriving late.
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
-test("a held press keeps scrolling when the pointer leaves the arrow", () => {
+test("a held press keeps scrolling after the pointer moves outside the arrow button", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
@@ -259,7 +259,7 @@ test("a press on the thumb does not scroll the viewport", () => {
 
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
 
-  expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and runs its own drag, whose press bubbles through the track.
+  expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and initiates its own drag, whose press bubbles through the track.
   expect(playClick).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
 });
 
