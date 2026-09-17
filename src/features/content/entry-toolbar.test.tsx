@@ -40,14 +40,49 @@ test("the toolbar renders the entry's date with its `datetime` attribute", () =>
   expect(date.getAttribute("datetime")).toBe(entry.date);
 });
 
-test("the step controls link to the entries either side of the one being shown", () => {
+test("the toolbar omits the share control when the browser does not support the Web Share API", () => {
+  render(<WindowToolbar route={routeOf(1)} />);
+  expect(screen.queryByRole("button", { name: "Share" })).toBeNull();
+});
+
+test("the toolbar shares the entry's canonical URL and title when the browser supports the Web Share API", async () => {
+  const share = vi.fn<(data: ShareData) => Promise<void>>().mockResolvedValue(undefined);
+
+  Object.defineProperty(navigator, "share", { value: share, configurable: true });
+
+  try {
+    render(<WindowToolbar route={routeOf(1)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Share" }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(share).toHaveBeenCalledWith({ url: canonicalUrl(routeOf(1)), title: collectionEntries[1]!.title });
+  } finally {
+    Reflect.deleteProperty(navigator, "share");
+  }
+});
+
+test("the toolbar copies the entry's canonical URL rather than the address the window was opened from", async () => {
+  render(<WindowToolbar route={routeOf(1)} />);
+  fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(writeText).toHaveBeenCalledWith(canonicalUrl(routeOf(1)));
+});
+
+test("the navigation controls link to the entries immediately preceding and following the one being shown", () => {
   render(<WindowToolbar route={routeOf(1)} />);
 
   expect(screen.getByRole("link", { name: "Previous entry" }).getAttribute("href")).toBe(routeOf(0));
   expect(screen.getByRole("link", { name: "Next entry" }).getAttribute("href")).toBe(routeOf(2));
 });
 
-test("the step controls are disabled at each end of the collection", () => {
+test("the navigation controls are disabled at each end of the collection", () => {
   const { unmount } = render(<WindowToolbar route={routeOf(0)} />);
 
   expect(screen.getByRole("button", { name: "Previous entry" }).hasAttribute("disabled")).toBe(true);
@@ -60,22 +95,11 @@ test("the step controls are disabled at each end of the collection", () => {
   expect(screen.getByRole("button", { name: "Next entry" }).hasAttribute("disabled")).toBe(true);
 });
 
-test("stepping to a sibling entry opens it in the entry window rather than following the link", () => {
+test("navigating to a sibling entry opens it in the entry window rather than following the link", () => {
   render(<WindowToolbar route={routeOf(1)} />);
 
   const next = screen.getByRole("link", { name: "Next entry" });
 
   expect(fireEvent.click(next)).toBe(false); // The default was prevented.
   expect(open).toHaveBeenCalledWith(routeOf(2));
-});
-
-test("the toolbar copies the entry's canonical URL rather than the address the window was opened from", async () => {
-  render(<WindowToolbar route={routeOf(1)} />);
-  fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
-
-  await act(async () => {
-    await Promise.resolve();
-  });
-
-  expect(writeText).toHaveBeenCalledWith(canonicalUrl(routeOf(1)));
 });

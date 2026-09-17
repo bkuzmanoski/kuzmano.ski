@@ -9,13 +9,12 @@ import { Button } from "./button.tsx";
 import { CopyFailureAlert } from "./copy-failure-alert.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
-const VARIANT_ICONS = { copy: CopyIcon, link: LinkIcon };
+const VARIANT_ICONS = { value: CopyIcon, url: LinkIcon };
 
-/** The button is disabled until the value is available. */
 export function CopyButton({
   value,
   entity,
-  variant = "copy",
+  variant = "value",
   label = "Copy to clipboard",
   confirmation = "Copied",
   className,

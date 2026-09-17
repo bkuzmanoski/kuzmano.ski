@@ -29,9 +29,18 @@
   white-space: nowrap;
 }
 
+.actions,
 .navigation {
   display: flex;
-  grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the center track. */
   gap: 4px;
+}
+
+.actions {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.navigation {
+  grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the center track. */
   justify-self: end;
 }
