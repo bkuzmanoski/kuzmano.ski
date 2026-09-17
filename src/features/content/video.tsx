@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import FullScreenEnterIcon from "#/assets/images/video-full-screen-enter.svg?react";
+import FullScreenExitIcon from "#/assets/images/video-full-screen-exit.svg?react";
 import PauseIcon from "#/assets/images/video-pause.svg?react";
 import PlayIcon from "#/assets/images/video-play.svg?react";
 import SoundOffIcon from "#/assets/images/video-sound-off.svg?react";
@@ -8,7 +10,7 @@ import { playClick } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
-import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
+import { useClientValue, useIsHydrated } from "#/lib/hooks/use-client-value.ts";
 import { usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
 import { clamp } from "#/lib/math.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
@@ -19,19 +21,32 @@ import type { ComponentProps, KeyboardEvent } from "react";
 
 const SEEK_STEP_S = 5;
 
+interface WebKitVideoElement extends HTMLVideoElement {
+  webkitEnterFullscreen?: () => void; // Safari on iPhone can't make an arbitrary element full screen, only a `<video>` through its native player.
+}
+
+const canEnterFullScreen = () =>
+  Boolean(document.fullscreenEnabled) || "webkitEnterFullscreen" in HTMLVideoElement.prototype;
+
 export function Video({ controls, ...props }: ComponentProps<"video">) {
   return controls ? <ControlledVideo {...props} /> : <video {...props} />;
 }
 
 function ControlledVideo({
   className,
+  "data-content-wide": contentWide,
+  "data-content-space": contentSpace,
   onClick,
   onPointerDown,
   ref,
   ...props
-}: Omit<ComponentProps<"video">, "controls">) {
+}: Omit<ComponentProps<"video">, "controls"> & {
+  "data-content-wide"?: boolean | string;
+  "data-content-space"?: string;
+}) {
   const [isPaused, setIsPaused] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentSecond, setCurrentSecond] = useState(0);
   const [duration, setDuration] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,6 +55,7 @@ function ControlledVideo({
   const thumbRef = useRef<HTMLDivElement>(null);
 
   const hasSiteControls = useIsHydrated();
+  const canToggleFullScreen = useClientValue(false, canEnterFullScreen);
   const pressSoundHandlers = usePressSound();
 
   const hasDuration = duration > 0;
@@ -86,6 +102,14 @@ function ControlledVideo({
     return () => cancelAnimationFrame(frame);
   }, [isPaused]);
 
+  useEffect(() => {
+    const syncFullScreen = () => setIsFullScreen(document.fullscreenElement === containerRef.current);
+
+    document.addEventListener("fullscreenchange", syncFullScreen);
+
+    return () => document.removeEventListener("fullscreenchange", syncFullScreen);
+  }, []);
+
   function togglePlayback() {
     const video = videoRef.current;
 
@@ -124,6 +148,18 @@ function ControlledVideo({
 
     if (video) {
       video.muted = !video.muted;
+    }
+  }
+
+  function toggleFullScreen() {
+    const video: WebKitVideoElement | null = videoRef.current;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => undefined);
+    } else if (document.fullscreenEnabled) {
+      containerRef.current?.requestFullscreen().catch(() => undefined);
+    } else {
+      video?.webkitEnterFullscreen?.();
     }
   }
 
@@ -172,7 +208,14 @@ function ControlledVideo({
   }
 
   return (
-    <div ref={containerRef} className={cx(styles.video, className)} tabIndex={-1} onKeyDown={onKeyDown}>
+    <div
+      ref={containerRef}
+      className={cx(styles.video, className)}
+      data-content-wide={contentWide}
+      data-content-space={contentSpace}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+    >
       <video
         {...props}
         ref={mergeRefs(ref, videoRef)}
@@ -237,6 +280,23 @@ function ControlledVideo({
           }}
         >
           {isMuted ? <SoundOffIcon className={styles.controlIcon} /> : <SoundOnIcon className={styles.controlIcon} />}
+        </button>
+        <button
+          type="button"
+          className={cx(styles.button, styles.fullScreenButton)}
+          disabled={!canToggleFullScreen}
+          aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          {...pressSoundHandlers}
+          onClick={(event) => {
+            pressSoundHandlers.onClick(event);
+            toggleFullScreen();
+          }}
+        >
+          {isFullScreen ? (
+            <FullScreenExitIcon className={styles.controlIcon} />
+          ) : (
+            <FullScreenEnterIcon className={styles.controlIcon} />
+          )}
         </button>
       </div>
     </div>

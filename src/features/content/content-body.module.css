@@ -23,9 +23,11 @@
   & :where([data-content-body]) {
     display: grid;
     grid-template-columns:
-      [full-bleed-start] minmax(var(--layout-gutter), 1fr)
+      [full-bleed-start] var(--layout-gutter)
+      [wide-start] minmax(0, 1fr)
       [inset-start] minmax(0, var(--layout-content-inset-max-width)) [inset-end]
-      minmax(var(--layout-gutter), 1fr) [full-bleed-end];
+      minmax(0, 1fr) [wide-end]
+      var(--layout-gutter) [full-bleed-end];
     padding-block: clamp(
       var(--layout-content-space-loose),
       (100% - var(--layout-content-inset-max-width)) / 2,
@@ -35,6 +37,10 @@
     & > * {
       grid-column: inset;
       margin-block: 0;
+    }
+
+    & > :where([data-content-wide]) {
+      grid-column: wide;
     }
 
     & > :where([data-content-full-bleed]) {

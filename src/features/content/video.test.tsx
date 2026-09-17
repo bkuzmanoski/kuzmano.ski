@@ -14,10 +14,12 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 const DURATION_S = 60;
 
 let playback: { paused: boolean; muted: boolean; currentTime: number };
+let isFullScreen: boolean;
 
 // jsdom does not load or play media, so playback is simulated on the element's prototype.
 beforeEach(() => {
   playback = { paused: true, muted: false, currentTime: 0 };
+  isFullScreen = false;
 
   vi.mocked(playClick).mockClear();
   vi.spyOn(HTMLMediaElement.prototype, "duration", "get").mockReturnValue(DURATION_S);
@@ -43,6 +45,24 @@ beforeEach(() => {
     playback.paused = true;
     this.dispatchEvent(new Event("pause"));
   });
+
+  // jsdom does not implement the Fullscreen API, so it is simulated on the document and the element's prototype.
+  const setFullScreen = (value: boolean) => {
+    isFullScreen = value;
+    document.dispatchEvent(new Event("fullscreenchange"));
+    return Promise.resolve();
+  };
+  const requestFullscreen = vi.fn(() => setFullScreen(true));
+
+  Object.defineProperties(document, {
+    fullscreenEnabled: { configurable: true, value: true },
+    fullscreenElement: {
+      configurable: true,
+      get: () => (isFullScreen ? requestFullscreen.mock.contexts.at(-1) : null),
+    },
+    exitFullscreen: { configurable: true, value: () => setFullScreen(false) },
+  });
+  Object.defineProperty(Element.prototype, "requestFullscreen", { configurable: true, value: requestFullscreen });
 });
 
 const renderVideo = () =>
@@ -65,6 +85,7 @@ test("a video with the `controls` prop renders the site's playback controls in p
   expect(screen.getByRole("button", { name: "Play" })).toHaveProperty("disabled", false);
   expect(screen.getByRole("slider", { name: "Seek" })).toBeDefined();
   expect(screen.getByRole("button", { name: "Mute" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Enter full screen" })).toHaveProperty("disabled", false);
 });
 
 test("a video with the `controls` prop passes its other props to the `<video>`", () => {
@@ -74,6 +95,19 @@ test("a video with the `controls` prop passes its other props to the `<video>`",
   expect(video.getAttribute("poster")).toBe("/video.poster.webp");
   expect(video.getAttribute("width")).toBe("640");
   expect(video.getAttribute("aria-label")).toBe("A video");
+});
+
+test("a video with the `controls` prop sets the `data-content-wide` and `data-content-space` attributes on its container", () => {
+  const { container } = render(
+    <Video src="/video.mp4" controls aria-label="A video" data-content-wide data-content-space="loose" />,
+  );
+  const videoContainer = container.firstElementChild!;
+  const video = container.querySelector("video")!;
+
+  expect(videoContainer.hasAttribute("data-content-wide")).toBe(true);
+  expect(videoContainer.getAttribute("data-content-space")).toBe("loose");
+  expect(video.hasAttribute("data-content-wide")).toBe(false);
+  expect(video.hasAttribute("data-content-space")).toBe(false);
 });
 
 test("a video with the `controls` prop forwards its `ref` prop to the `<video>`", () => {
@@ -92,6 +126,7 @@ test("the server render of a video with the `controls` prop includes the `contro
   expect(container.querySelector("video")!.hasAttribute("controls")).toBe(true);
   expect(container.querySelector("[aria-label='Play']")).toHaveProperty("disabled", true);
   expect(container.querySelector("[aria-label='Mute']")).toHaveProperty("disabled", true);
+  expect(container.querySelector("[aria-label='Enter full screen']")).toHaveProperty("disabled", true);
 });
 
 test("the playback controls are marked with the `data-feed-omit` attribute", () => {
@@ -132,6 +167,38 @@ test("the Mute button mutes the video, and becomes an Unmute button that unmutes
   fireEvent.click(screen.getByRole("button", { name: "Unmute" }));
 
   expect(playback.muted).toBe(false);
+});
+
+test("the Enter Full Screen button makes the container full screen, and becomes an Exit Full Screen button that exits full screen", () => {
+  const { container } = renderVideo();
+
+  fireEvent.click(screen.getByRole("button", { name: "Enter full screen" }));
+
+  expect(document.fullscreenElement).toBe(container.firstElementChild);
+
+  fireEvent.click(screen.getByRole("button", { name: "Exit full screen" }));
+
+  expect(document.fullscreenElement).toBeNull();
+  expect(screen.getByRole("button", { name: "Enter full screen" })).toBeDefined();
+});
+
+test("the Enter Full Screen button enters the native full screen player of the `<video>` where the Fullscreen API is unavailable", () => {
+  const webkitEnterFullscreen = vi.fn();
+
+  Object.defineProperty(document, "fullscreenEnabled", { configurable: true, value: undefined });
+  Object.defineProperty(HTMLVideoElement.prototype, "webkitEnterFullscreen", {
+    configurable: true,
+    value: webkitEnterFullscreen,
+  });
+
+  try {
+    renderVideo();
+    fireEvent.click(screen.getByRole("button", { name: "Enter full screen" }));
+
+    expect(webkitEnterFullscreen).toHaveBeenCalledOnce();
+  } finally {
+    Reflect.deleteProperty(HTMLVideoElement.prototype, "webkitEnterFullscreen");
+  }
 });
 
 test("pressing on the video toggles playback", () => {

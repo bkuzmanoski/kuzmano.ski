@@ -9,6 +9,19 @@
     height: auto;
     padding: 1px;
   }
+
+  &:fullscreen {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    background: #000;
+
+    & video {
+      flex: 1;
+      min-height: 0;
+      object-fit: contain;
+    }
+  }
 }
 
 .controls {
@@ -23,6 +36,11 @@
   border-top: 1px solid var(--color-border);
 
   background: var(--color-background);
+
+  .video:fullscreen & {
+    height: calc(var(--control-height) + 2px);
+    border: 1px solid var(--color-border);
+  }
 }
 
 .button {
@@ -46,7 +64,8 @@
   border-right: 1px solid var(--color-border);
 }
 
-.muteButton {
+.muteButton,
+.fullScreenButton {
   border-left: 1px solid var(--color-border);
 }
 
