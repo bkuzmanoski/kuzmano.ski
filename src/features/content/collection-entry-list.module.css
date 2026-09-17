@@ -19,13 +19,13 @@
   user-select: none;
 
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 12px;
+  align-items: center;
 
   padding-block: 12px;
-  padding-inline: calc(var(--gutter) - var(--padding-inline-title) + var(--window-safe-area-inline-start, 0px))
+  padding-inline: calc(var(--layout-gutter) - var(--padding-inline-title) + var(--window-safe-area-inline-start, 0px))
     calc(
-      var(--gutter) - var(--padding-inline-title) + var(--reserved-scrollbar-width, 0px) +
+      var(--layout-gutter) - var(--padding-inline-title) + var(--reserved-scrollbar-width, 0px) +
         var(--window-safe-area-inline-end, 0px)
     ); /* Inset list content to clear the window safe area and reserved scrollbar width. */
 
@@ -59,23 +59,58 @@
   }
 }
 
-.title {
-  --padding-block-title: 1px;
+.coverImage {
+  display: grid;
+  flex: none;
+  place-items: center;
 
-  width: fit-content;
-  margin-block: calc(-1 * var(--padding-block-title));
-  padding-block: var(--padding-block-title);
-  padding-inline: var(--padding-inline-title);
+  width: var(--layout-cover-image-size);
+  height: var(--layout-cover-image-size);
+  border: 1px solid var(--color-border);
 
-  font: var(--font-ui-bold);
+  background: var(--color-background);
 
-  .listItem:focus & {
-    background: var(--dotted-frame);
+  & picture,
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  & img {
+    object-fit: cover;
+  }
+
+  & .coverImageGlyph {
+    width: calc(var(--layout-cover-image-size) / 2);
+    height: auto;
   }
 }
 
-.date {
-  display: block;
-  padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
-  color: var(--color-foreground-secondary);
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* A long title wraps rather than widening the row past the list. */
+
+  & .title {
+    --padding-block-title: 1px;
+
+    width: fit-content;
+    margin-block: calc(-1 * var(--padding-block-title));
+    padding-block: var(--padding-block-title);
+    padding-inline: var(--padding-inline-title);
+
+    font: var(--font-ui-bold);
+
+    .listItem:focus & {
+      background: var(--dotted-frame);
+    }
+  }
+
+  & .date {
+    display: block;
+    padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
+    color: var(--color-foreground-secondary);
+  }
 }

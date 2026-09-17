@@ -2,7 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClick } from "#/lib/audio/sounds.ts";
-import { fakeCollection, fakeCollectionEntries } from "#/test-utils/collection.ts";
+import { EntryCoverImagesContext } from "#/lib/content/entry-cover-images.ts";
+import type { CoverImage } from "#/lib/content/media.ts";
+import { fakeCollection, fakeCollectionEntries, fakeCoverImage, fakeEntry } from "#/test-utils/collection.ts";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list.tsx";
 
@@ -37,7 +39,43 @@ function renderList(activeSlug: string | null) {
   return screen.getAllByRole("link");
 }
 
-test("a collection with no entries shows an empty state", () => {
+function renderEntryWithCoverImage(slug: string, coverImage: CoverImage) {
+  const collectionWithCoverImage = fakeCollection([fakeEntry(slug)]);
+  return render(
+    <EntryCoverImagesContext value={{ [collectionWithCoverImage.entryKeyOf(slug)]: coverImage }}>
+      <CollectionEntryList activeSlug={null} collection={collectionWithCoverImage} />
+    </EntryCoverImagesContext>,
+  );
+}
+
+test("an entry with a cover image shows its thumbnail, with a `<source>` for each alternate format", () => {
+  const coverImage = fakeCoverImage("newest");
+  const { container } = renderEntryWithCoverImage("newest", coverImage);
+  const image = container.querySelector("img");
+
+  expect(image?.getAttribute("src")).toBe(coverImage.thumbnail.src);
+  expect([...container.querySelectorAll("source")].map((source) => source.getAttribute("srcset"))).toEqual(
+    coverImage.thumbnail.alternates.map(({ srcSet }) => srcSet),
+  );
+});
+
+test("the cover image thumbnail does not contribute to the entry link's accessible name", () => {
+  const { container } = renderEntryWithCoverImage("newest", fakeCoverImage("newest"));
+
+  expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
+  expect(screen.getByRole("link").getAttribute("aria-label")).toBe("newest");
+});
+
+test("an entry without a cover image shows the placeholder glyph in place of a thumbnail", () => {
+  const { container } = render(
+    <CollectionEntryList activeSlug={null} collection={fakeCollection([fakeEntry("newest")])} />,
+  );
+
+  expect(container.querySelector("img")).toBeNull();
+  expect(container.querySelector("svg")).not.toBeNull();
+});
+
+test("a collection without entries shows the empty collection message instead of a list", () => {
   render(<CollectionEntryList activeSlug={null} collection={{ ...collection, list: () => [] }} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
@@ -65,7 +103,7 @@ test("the arrow keys move the focus along the list", () => {
   expect(document.activeElement).toBe(links[0]);
 });
 
-test("home and end reach the ends of the list, and the arrow keys stop there", () => {
+test("the Home and End keys move the focus to the ends of the list, and the arrow keys stop there", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "End" });
@@ -97,7 +135,7 @@ test("a key that moves the focus plays a detent", () => {
   expect(playHover).toHaveBeenCalledTimes(2);
 });
 
-test("a key that runs into the end of the list does not play a detent", () => {
+test("a key that does not move the focus at an end of the list does not play a detent", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
@@ -106,7 +144,7 @@ test("a key that runs into the end of the list does not play a detent", () => {
   expect(playHover).not.toHaveBeenCalled();
 });
 
-test("the scroll the focus causes does not play a detent", () => {
+test("moving the focus scrolls the focused entry into view silently", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
@@ -114,7 +152,7 @@ test("the scroll the focus causes does not play a detent", () => {
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
 
-test("the focus makes the entry it lands on the tab stop", () => {
+test("focusing an entry makes it the tab stop", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.focus(links.at(-1)!);
@@ -122,7 +160,7 @@ test("the focus makes the entry it lands on the tab stop", () => {
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
-test("enter and space open the entry that holds the focus", () => {
+test("the Enter and Space keys open the focused entry", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.keyDown(links[1]!, { key: "Enter" });
@@ -142,7 +180,7 @@ test("pressing an entry with the mouse plays a click sound", () => {
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a tap holds the pressed state until release, but clears it when scrolling starts", () => {
+test("a tap plays a click sound on release, but not when it is canceled by scrolling", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
@@ -159,7 +197,7 @@ test("a tap holds the pressed state until release, but clears it when scrolling 
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a press on a partly visible entry takes over the browser's own focus-scroll", () => {
+test("a press on an entry prevents the native focus, then focuses the entry and scrolls it into view silently", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
@@ -170,12 +208,12 @@ test("a press on a partly visible entry takes over the browser's own focus-scrol
 });
 
 test.each([
-  ["a command press", { metaKey: true }],
-  ["a control press", { ctrlKey: true }],
-  ["a shift press", { shiftKey: true }],
-  ["an option press", { altKey: true }],
+  ["a press with the Command key", { metaKey: true }],
+  ["a press with the Control key", { ctrlKey: true }],
+  ["a press with the Shift key", { shiftKey: true }],
+  ["a press with the Option key", { altKey: true }],
   ["a middle press", { button: 1 }],
-])("%s opens the link in the background, leaving the list's focus and scroll unchanged", (_name, press) => {
+])("%s does not change the list's focus or scroll", (_name, press) => {
   const links = renderList(collectionEntries[0]!.slug);
   const focus = vi.spyOn(links[1]!, "focus");
 
@@ -187,7 +225,7 @@ test.each([
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("a press opens the entry without leaving the page", () => {
+test("a press opens the entry rather than following the link", () => {
   const links = renderList(collectionEntries[0]!.slug);
   const click = fireEvent.click(links[1]!);
 
@@ -195,7 +233,7 @@ test("a press opens the entry without leaving the page", () => {
   expect(open).toHaveBeenCalledWith(routeOf(1));
 });
 
-test("a modified press is handled by the browser so the entry opens in a new tab", () => {
+test("a modified or middle press follows the link rather than opening the entry", () => {
   const links = renderList(collectionEntries[0]!.slug);
 
   for (const modifier of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }]) {
