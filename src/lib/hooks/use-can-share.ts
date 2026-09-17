@@ -1,10 +1,7 @@
-import { useSyncExternalStore } from "react";
-
-import { noSubscribe } from "../emitter.ts";
+import { useClientValue } from "./use-client-value.ts";
 
 const canShare = () => typeof navigator.share === "function";
-const serverCanShare = () => false;
 
 export function useCanShare(): boolean {
-  return useSyncExternalStore(noSubscribe, canShare, serverCanShare);
+  return useClientValue(false, canShare);
 }

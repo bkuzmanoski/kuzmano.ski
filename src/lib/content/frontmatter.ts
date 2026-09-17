@@ -1,4 +1,4 @@
-import { isIsoDate } from "../date.ts";
+import { isIsoDate } from "../datetime.ts";
 import { isRecord } from "../guards.ts";
 
 export interface Frontmatter {

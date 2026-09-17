@@ -1,6 +1,6 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 
-import { noSubscribe } from "../emitter.ts";
+import { useClientValue } from "./use-client-value.ts";
 
 export interface DateFormat {
   locale: string; // The locale the prerendered markup is written in.
@@ -14,10 +14,6 @@ export interface DateFormat {
  * React re-renders with browser's own locale once hydration has finished.
  */
 export function useDateFormat({ locale, options }: DateFormat): Intl.DateTimeFormat {
-  const userLocale = useSyncExternalStore(
-    noSubscribe,
-    () => navigator.language || locale,
-    () => locale,
-  );
+  const userLocale = useClientValue(locale, () => navigator.language || locale);
   return useMemo(() => new Intl.DateTimeFormat(userLocale, options), [userLocale, options]);
 }

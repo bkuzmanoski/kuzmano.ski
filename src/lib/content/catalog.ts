@@ -1,4 +1,4 @@
-import { byNewestDate } from "../date.ts";
+import { byNewestDate } from "../datetime.ts";
 import { trackPromise } from "../tracked-promise.ts";
 
 import { entryKey, entrySlugOf, stylesheetFilePathOf } from "./entry-file.ts";

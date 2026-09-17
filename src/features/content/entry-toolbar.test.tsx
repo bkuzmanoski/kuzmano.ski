@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { WindowToolbar } from "#/features/windows/window-toolbar.tsx";
-import { formatDate } from "#/lib/date.ts";
+import { formatDate } from "#/lib/datetime.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 

@@ -17,3 +17,13 @@ export function formatDate(isoString: string, format: Intl.DateTimeFormat): stri
 }
 
 export const byNewestDate = (a: string | undefined, b: string | undefined) => (b ?? "").localeCompare(a ?? "");
+
+/** Formats a media playback position as `m:ss` or `h:mm:ss`. */
+export function formatPlaybackTime(seconds: number): string {
+  const totalSeconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secondsPart = String(totalSeconds % 60).padStart(2, "0");
+
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${secondsPart}` : `${minutes}:${secondsPart}`;
+}

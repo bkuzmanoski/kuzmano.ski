@@ -8,7 +8,7 @@ import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useEntryCoverImage } from "#/lib/content/entry-cover-images.ts";
 import type { EntryKey } from "#/lib/content/entry-file.ts";
-import { formatDate } from "#/lib/date.ts";
+import { formatDate } from "#/lib/datetime.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";

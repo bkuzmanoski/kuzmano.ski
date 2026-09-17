@@ -14,6 +14,7 @@ import type { MDXModule } from "#/site/catalog.ts";
 import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
 import { HeadingLink } from "./heading-link.tsx";
+import { Video } from "./video.tsx";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps, MouseEvent } from "react";
@@ -72,6 +73,7 @@ const MDX_COMPONENTS: MDXComponents = {
     );
   },
   pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} />,
+  video: Video,
   Waitlist,
 };
 

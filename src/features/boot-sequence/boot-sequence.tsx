@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import LogoIcon from "#/assets/images/logo.svg?react";
 import macintoshBodyAvifUrl from "#/assets/images/macintosh-body.avif";
@@ -37,9 +37,9 @@ import {
 import type { StageMetrics } from "#/lib/boot-sequence/stage.ts";
 import { cx } from "#/lib/class-names.ts";
 import { isTouchOnly } from "#/lib/device.ts";
-import { noSubscribe } from "#/lib/emitter.ts";
 import { insetToViewport } from "#/lib/geometry.ts";
 import type { Inset, Size, Transform } from "#/lib/geometry.ts";
+import { useClientValue } from "#/lib/hooks/use-client-value.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
@@ -294,10 +294,6 @@ function BootSequenceContent() {
   );
 }
 
-const serverShouldRunBootSequence = () => false;
-
 export function BootSequence() {
-  return useSyncExternalStore(noSubscribe, shouldRunBootSequence, serverShouldRunBootSequence) ? (
-    <BootSequenceContent />
-  ) : null;
+  return useClientValue(false, shouldRunBootSequence) ? <BootSequenceContent /> : null;
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
-import { byNewestDate } from "#/lib/date.ts";
+import { byNewestDate } from "#/lib/datetime.ts";
 import { isRecord } from "#/lib/guards.ts";
 
 import { frontmatterOf } from "./frontmatter.ts";

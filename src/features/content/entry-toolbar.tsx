@@ -3,7 +3,7 @@ import { ShareButton } from "#/components/share-button.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { NavigationButton } from "#/features/windows/navigation-button.tsx";
 import { entrySiblings } from "#/lib/content/siblings.ts";
-import { formatDate } from "#/lib/date.ts";
+import { formatDate } from "#/lib/datetime.ts";
 import { useCanShare } from "#/lib/hooks/use-can-share.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
