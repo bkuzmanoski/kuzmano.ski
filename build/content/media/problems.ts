@@ -145,4 +145,4 @@ export function renditionSizeProblems(rendition: MediaRendition, bytes: number):
 }
 
 export const contentMediaProblemReport = (problems: Array<string>) =>
-  `Content media could not be resolved:\n- ${problems.join("\n- ")}`;
+  `Content media failed validation:\n- ${problems.join("\n- ")}`;

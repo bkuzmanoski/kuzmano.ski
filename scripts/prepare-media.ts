@@ -47,9 +47,13 @@ for (const fileName of staleDerivativeFileNames) {
   console.log(`- ${join(MEDIA_DIRECTORY_PATH, fileName)}`);
 }
 
-console.log(`Encoded ${encodedCount} derivative(s). Removed ${staleDerivativeFileNames.length} stale derivative(s).`);
+const hasChanges = encodedCount + staleDerivativeFileNames.length > 0;
+
+console.log(
+  `${hasChanges ? "\n" : ""}Encoded ${encodedCount} derivative(s). Removed ${staleDerivativeFileNames.length} stale derivative(s).`,
+);
 
 if (sizeProblems.length > 0) {
-  console.error(contentMediaProblemReport(sizeProblems));
+  console.error(`\n${contentMediaProblemReport(sizeProblems)}`);
   process.exit(1);
 }

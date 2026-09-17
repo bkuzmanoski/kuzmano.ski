@@ -52,7 +52,7 @@ describe("fileSize", () => {
 describe("contentMediaProblemReport", () => {
   test("lists each problem on a line of its own", () => {
     expect(contentMediaProblemReport(["A problem.", "Another problem."])).toBe(
-      "Content media could not be resolved:\n- A problem.\n- Another problem.",
+      "Content media failed validation:\n- A problem.\n- Another problem.",
     );
   });
 });
