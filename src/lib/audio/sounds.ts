@@ -59,11 +59,11 @@ const SUCCESS: Tone = {
 };
 
 const HOVER_INTERVAL_S = 0.03;
-const HOVER_LEVEL = 0.22;
+const HOVER_LEVEL = 0.2;
 
 const SCROLL_DETENT_INTERVAL_S = 0.03;
 const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000; // The speed, in pixels per second, at which a detent is at full strength.
-const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.3 };
+const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.2 };
 const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
 
 const BOOT_CHIME_LEVEL = 0.5;
