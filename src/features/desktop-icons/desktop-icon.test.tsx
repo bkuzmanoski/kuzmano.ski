@@ -51,7 +51,7 @@ test("a plain press only selects, so the link is not followed", () => {
   fireEvent.pointerUp(icon, { button: 0 });
 
   expect(onSelect).toHaveBeenCalledExactlyOnceWith(ICON);
-  expect(fireEvent.click(icon, { detail: 1 })).toBe(false); // The default was prevented.
+  expect(fireEvent.click(icon, { detail: 1 })).toBe(false); // The default behavior was prevented.
   expect(onOpen).not.toHaveBeenCalled();
 });
 
@@ -68,15 +68,15 @@ test("a secondary press does not select the icon", () => {
 
   fireEvent.pointerDown(icon, { button: 2 });
 
-  expect(fireEvent.mouseDown(icon, { button: 2 })).toBe(false); // The default, which selects the icon by focusing it, was prevented.
+  expect(fireEvent.mouseDown(icon, { button: 2 })).toBe(false); // The default behavior, which selects the icon by focusing it, was prevented.
   expect(onSelect).not.toHaveBeenCalled(); // The browser opens its context menu over the icon instead.
-  expect(fireEvent.mouseDown(icon)).toBe(true); // The default is not prevented for a primary press.
+  expect(fireEvent.mouseDown(icon)).toBe(true); // The default behavior is not prevented for a primary press.
 });
 
 test("a modified press is left for the browser to handle, and does not open the icon in place", () => {
   const icon = renderIcon();
 
-  expect(fireEvent.click(icon, { detail: 1, metaKey: true })).toBe(true); // The default was not prevented.
+  expect(fireEvent.click(icon, { detail: 1, metaKey: true })).toBe(true); // The default behavior was not prevented.
   expect(onOpen).not.toHaveBeenCalled(); // The browser opens the icon's route in a new tab.
 });
 

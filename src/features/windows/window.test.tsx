@@ -192,7 +192,7 @@ test("the window does not restore focus to its resize control", () => {
   expect(document.activeElement).toBe(focusableElement);
 });
 
-test("a press on an inactive window prevents the browser's default focus change, and a press on an active window does not", () => {
+test("a press on an inactive window prevents the default focus behavior, while a press on an active window does not", () => {
   const { rerender } = render(windowShowing("tall", button, false));
   const windowElement = screen.getByRole("region", { name: "Window" });
 
