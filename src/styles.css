@@ -52,7 +52,7 @@
   --layout-safe-area-left: env(safe-area-inset-left, 0px);
   --layout-menu-bar-height: 32px;
   --layout-window-layer-padding: 12px; /* Kept clear around a window as it is placed. */
-  --layout-cover-image-size: 64px;
+  --layout-cover-image-size: 48px;
   --layout-gutter: 16px;
   --layout-title-bar-height: 28px; /* Excludes its bottom border. */
   --layout-scrollbar-width: 20px; /* Excludes its leading border. */
