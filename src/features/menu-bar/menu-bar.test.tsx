@@ -338,7 +338,7 @@ describe("items that open a destination", () => {
 
     releasePointerOver(about);
 
-    expect(fireEvent.click(about)).toBe(false); // The default was prevented.
+    expect(fireEvent.click(about)).toBe(false); // The default behavior was prevented.
 
     runActivationFlash();
 
@@ -360,7 +360,7 @@ describe("items that open a destination", () => {
 
       releasePointerOver(about, init);
 
-      expect(fireEvent.click(about, init)).toBe(true); // The default was not prevented.
+      expect(fireEvent.click(about, init)).toBe(true); // The default behavior was not prevented.
       expect(open).not.toHaveBeenCalled();
       expect(menu()).not.toBeNull();
     },

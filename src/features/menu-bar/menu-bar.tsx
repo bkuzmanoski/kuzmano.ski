@@ -229,7 +229,7 @@ export function MenuBar() {
           : [],
       ),
     ),
-    { code: "Tab", run: cycleWindows, runsWhileEditing: true },
+    { code: "Tab", run: cycleWindows, invokesWhileEditing: true },
   ]);
 
   function openMenuAt(label: string, anchor: HTMLButtonElement, { pointerHeld = false } = {}) {

@@ -202,7 +202,7 @@ test("a press on an entry prevents the native focus, then focuses the entry and 
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
 
-  expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The default was prevented.
+  expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The default behavior was prevented.
   expect(document.activeElement).toBe(links[1]);
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
@@ -229,7 +229,7 @@ test("a press opens the entry rather than following the link", () => {
   const links = renderList(collectionEntries[0]!.slug);
   const click = fireEvent.click(links[1]!);
 
-  expect(click).toBe(false); // The default was prevented.
+  expect(click).toBe(false); // The default behavior was prevented.
   expect(open).toHaveBeenCalledWith(routeOf(1));
 });
 

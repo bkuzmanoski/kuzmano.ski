@@ -100,6 +100,6 @@ test("navigating to a sibling entry opens it in the entry window rather than fol
 
   const next = screen.getByRole("link", { name: "Next entry" });
 
-  expect(fireEvent.click(next)).toBe(false); // The default was prevented.
+  expect(fireEvent.click(next)).toBe(false); // The default behavior was prevented.
   expect(open).toHaveBeenCalledWith(routeOf(2));
 });
