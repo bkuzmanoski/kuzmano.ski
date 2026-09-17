@@ -2,13 +2,14 @@ import { useState } from "react";
 
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
+import { activateOnKeyPress } from "#/lib/keys.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
 import { isPrimaryPress } from "#/lib/press.ts";
 
 import styles from "./button.module.css";
 
-import type { ComponentProps, PointerEvent, ReactElement, SVGProps } from "react";
+import type { ComponentProps, KeyboardEvent, PointerEvent, ReactElement, SVGProps } from "react";
 
 /**
  * Renders a `<button>`, or an `<a>` when an `href` is supplied.
@@ -52,6 +53,12 @@ export function Button(
     },
     onPointerCancel: () => setIsPressing(false),
     onClick: () => setIsPressing(false),
+    onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+      if (props.href !== undefined) {
+        const link = event.currentTarget;
+        activateOnKeyPress(event, () => link.click());
+      }
+    },
   });
 
   if (props.href !== undefined) {

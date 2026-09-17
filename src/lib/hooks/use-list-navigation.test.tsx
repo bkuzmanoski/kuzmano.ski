@@ -83,24 +83,24 @@ test("a Down arrow key press focuses the next item without a native focus scroll
   expect(playHover).toHaveBeenCalled();
 });
 
-test("a press on an item prevents its default action, focuses the item without a native focus scroll, and scrolls it into view silently", () => {
+test("a press on an item prevents its default behavior, focuses the item without a native focus scroll, and scrolls it into view silently", () => {
   const { links } = renderList({ count: 3, activeIndex: 0 });
   const focus = vi.spyOn(links[2]!, "focus");
 
   scrollIntoViewSilently.mockClear();
 
-  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The default was prevented.
+  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The default behavior was prevented.
   expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[2]);
 });
 
-test("a press on an item whose default a merged handler has already prevented does not focus the item or scroll it into view", () => {
+test("a press on an item whose default behavior a merged handler has already prevented does not focus the item or scroll it into view", () => {
   const { links } = renderList({ count: 3, activeIndex: 0, guardedIndex: 2 });
   const focus = vi.spyOn(links[2]!, "focus");
 
   scrollIntoViewSilently.mockClear();
 
-  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // Prevented by the guard, not this hook.
+  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The default behavior was prevented by the guard, not this hook.
   expect(focus).not.toHaveBeenCalled();
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });

@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from "react";
 
 import { scrollIntoViewSilently } from "../audio/scroll.ts";
 import { playHover } from "../audio/sounds.ts";
-import { isActivationKey } from "../keys.ts";
+import { activateOnKeyPress } from "../keys.ts";
 import { clamp } from "../math.ts";
 
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
@@ -94,10 +94,7 @@ export function useListNavigation(
         focusItem(event.currentTarget);
       },
       onKeyDown: (event: KeyboardEvent) => {
-        if (isActivationKey(event.key)) {
-          event.preventDefault(); // Prevent the browser's default scroll and click behavior so activation happens only once.
-          onActivate(index);
-
+        if (activateOnKeyPress(event, () => onActivate(index))) {
           return;
         }
 

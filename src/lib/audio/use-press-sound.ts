@@ -1,10 +1,11 @@
 import { useRef } from "react";
 
+import { isActivationKey } from "../keys.ts";
 import { isPointerClick, isPrimaryPress } from "../press.ts";
 
 import { playClick } from "./sounds.ts";
 
-import type { MouseEvent, PointerEvent } from "react";
+import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
 /**
  * Plays one sound for each press that reaches a control.
@@ -31,6 +32,7 @@ export function usePressSound({
   playOnClickWithoutPress = true,
 }: { scrollSafe?: boolean; playOnClickWithoutPress?: boolean } = {}) {
   const pressPendingRef = useRef(false);
+  const keyPendingRef = useRef(false);
 
   return {
     onPointerDown: (event: PointerEvent) => {
@@ -52,12 +54,23 @@ export function usePressSound({
     onPointerCancel: () => {
       pressPendingRef.current = false;
     },
+    onKeyDown: (event: KeyboardEvent) => {
+      if (isActivationKey(event.key) && !event.repeat) {
+        keyPendingRef.current = true;
+      }
+    },
+    onBlur: () => {
+      keyPendingRef.current = false;
+    },
     onClick: (event: MouseEvent) => {
-      if (playOnClickWithoutPress && !pressPendingRef.current && isPointerClick(event)) {
+      const isPointerActivation = isPointerClick(event);
+
+      if (isPointerActivation ? playOnClickWithoutPress && !pressPendingRef.current : keyPendingRef.current) {
         playClick();
       }
 
       pressPendingRef.current = false;
+      keyPendingRef.current = false;
     },
   };
 }

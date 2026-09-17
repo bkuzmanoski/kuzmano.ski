@@ -43,8 +43,37 @@ test("a pointer click event without a preceding pointer down event plays a sound
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a keyboard activation does not play a sound", () => {
-  fireEvent.click(renderControl());
+test("a keyboard activation with Enter or Space plays a sound once", () => {
+  const control = renderControl();
+
+  fireEvent.keyDown(control, { key: "Enter" });
+  fireEvent.click(control);
+
+  expect(playClick).toHaveBeenCalledTimes(1);
+
+  fireEvent.keyDown(control, { key: " " });
+  fireEvent.keyUp(control, { key: " " });
+  fireEvent.click(control);
+
+  expect(playClick).toHaveBeenCalledTimes(2);
+});
+
+test("a click event without a preceding pointer or activation key press does not play a sound", () => {
+  const control = renderControl();
+
+  fireEvent.keyDown(control, { key: "a" });
+  fireEvent.click(control);
+
+  expect(playClick).not.toHaveBeenCalled();
+});
+
+test("an activation key pressed before the control loses focus does not play a sound on a later click event", () => {
+  const control = renderControl();
+
+  fireEvent.keyDown(control, { key: " " });
+  fireEvent.blur(control);
+  fireEvent.click(control);
+
   expect(playClick).not.toHaveBeenCalled();
 });
 

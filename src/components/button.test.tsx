@@ -5,7 +5,7 @@ import { playClick } from "#/lib/audio/sounds.ts";
 
 import { Button } from "./button.tsx";
 
-import type { RefObject } from "react";
+import type { MouseEvent, RefObject } from "react";
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
@@ -121,4 +121,56 @@ test("a tap whose touch pointer events do not reach the button still plays a cli
   fireEvent.click(screen.getByRole("button", { name: "Press" }), CLICK);
 
   expect(playClick).toHaveBeenCalledTimes(1);
+});
+
+test("a button and a link activated with the keyboard each play a click sound", () => {
+  render(
+    <>
+      <Button>Button</Button>
+      <Button href="/somewhere">Link</Button>
+    </>,
+  );
+
+  const button = screen.getByRole("button", { name: "Button" });
+  const link = screen.getByRole("link", { name: "Link" });
+
+  fireEvent.keyDown(button, { key: " " });
+  fireEvent.click(button);
+  fireEvent.keyDown(link, { key: "Enter" });
+
+  expect(playClick).toHaveBeenCalledTimes(2);
+});
+
+test("a button with an `href` prop is activated with the Enter or Space key", () => {
+  const onClick = vi.fn((event: MouseEvent) => event.preventDefault());
+
+  render(
+    <Button href="/somewhere" onClick={onClick}>
+      Link
+    </Button>,
+  );
+
+  const link = screen.getByRole("link", { name: "Link" });
+
+  expect(fireEvent.keyDown(link, { key: "Enter" })).toBe(false);
+  expect(onClick).toHaveBeenCalledTimes(1);
+  expect(fireEvent.keyDown(link, { key: " " })).toBe(false); // Default behavior is prevented to keep a Space key press from scrolling.
+  expect(onClick).toHaveBeenCalledTimes(2);
+});
+
+test("a button with an `href` prop defers a repeated or modified activation key press to the browser", () => {
+  const onClick = vi.fn((event: MouseEvent) => event.preventDefault());
+
+  render(
+    <Button href="/somewhere" onClick={onClick}>
+      Link
+    </Button>,
+  );
+
+  const link = screen.getByRole("link", { name: "Link" });
+
+  fireEvent.keyDown(link, { key: "Enter", repeat: true });
+
+  expect(fireEvent.keyDown(link, { key: "Enter", metaKey: true })).toBe(true);
+  expect(onClick).not.toHaveBeenCalled();
 });
