@@ -69,6 +69,11 @@
     &:focus {
       outline: none;
     }
+
+    & code {
+      padding-block: 2px;
+      font-size: 0.875em;
+    }
   }
 
   & :where(h1) {
@@ -100,7 +105,7 @@
     padding-inline: 4px;
 
     font: var(--font-code);
-    font-size: 0.925em;
+    font-size: 1em;
 
     background: var(--color-background-tertiary);
     box-decoration-break: clone;
