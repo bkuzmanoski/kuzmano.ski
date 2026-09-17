@@ -11,7 +11,7 @@ export interface KeyboardShortcut {
   code: string;
   run: () => void;
   enabled?: boolean;
-  runsWhileEditing?: boolean;
+  invokesWhileEditing?: boolean;
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
@@ -21,7 +21,7 @@ export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
       (shortcut) =>
         shortcut.code === event.code &&
         shortcut.enabled !== false &&
-        (!isEditing || shortcut.runsWhileEditing === true),
+        (!isEditing || shortcut.invokesWhileEditing === true),
     );
 
     if (matchedShortcut) {
