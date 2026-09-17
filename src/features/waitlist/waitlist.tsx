@@ -88,7 +88,9 @@ export function Waitlist({
     >
       <div className={styles.content} inert={isJoining}>
         <div className={styles.intro}>
-          <h3 id={titleId}>{title}</h3>
+          <h2 id={titleId} className={styles.title}>
+            {title}
+          </h2>
           {children}
         </div>
         <div className={styles.slot}>

@@ -1,41 +1,51 @@
 .waitlist {
   position: relative;
-  padding: 20px;
-
-  &::before {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    background: var(--color-border);
-
-    mask: url("../../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
-  }
+  border: 1px solid var(--color-border-secondary);
 
   & .content {
-    position: relative;
-
     display: flex;
     flex-direction: column;
-    gap: 16px;
-
-    paint-order: stroke fill;
-
-    -webkit-text-stroke: 4px var(--color-background);
   }
 
   & .intro {
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    padding: var(--layout-gutter);
+
+    background: var(--color-background);
+
+    & .title {
+      font: var(--font-heading-3);
+    }
   }
 
   & .slot {
+    position: relative;
+
     display: grid;
-    padding-block-end: 4px;
+
+    padding: var(--layout-gutter);
+    border-block-start: 1px solid var(--color-border-secondary);
+
+    paint-order: stroke fill;
+
+    -webkit-text-stroke: 4px var(--color-background);
+
+    &::before {
+      content: "";
+
+      position: absolute;
+      inset: 1px 0.5px 0.5px 1px;
+
+      background: var(--color-border);
+
+      mask: url("../../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
+    }
 
     & > * {
+      position: relative;
       grid-area: 1 / 1;
     }
   }
@@ -101,7 +111,7 @@
   }
 
   &[data-joined] {
-    &::before {
+    & .slot::before {
       background: color-mix(in srgb, var(--color-success) 50%, var(--color-background));
     }
 
