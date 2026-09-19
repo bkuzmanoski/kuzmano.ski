@@ -51,7 +51,7 @@ function indexAt(x: number, y: number): number {
 // activation flash effect to finish, then runs the action or follows the link. A plain click is
 // suppressed here so the anchor cannot navigate before that.
 //
-// A modified or non-primary click is left to the browser.
+// A modified or non-primary click is left for the browser to handle.
 function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
   if (!isFollowingLink(event.currentTarget) && !isBrowserHandledClick(event)) {
     event.preventDefault();
