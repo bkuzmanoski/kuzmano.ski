@@ -26,18 +26,18 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
 
   return (
     <div className={styles.toolbar}>
-      <div className={styles.actions}>
-        {canShare && <ShareButton url={url} title={frontmatter?.title} />}
-        <CopyButton value={url} entity="link" variant="url" label="Copy link" />
+      <div className={styles.navigation}>
+        <NavigationButton variant="previous" label="Previous entry" route={previous} />
+        <NavigationButton variant="next" label="Next entry" route={next} />
       </div>
       {frontmatter && (
         <time className={styles.date} dateTime={frontmatter.date}>
           {formatDate(frontmatter.date, dateFormat)}
         </time>
       )}
-      <div className={styles.navigation}>
-        <NavigationButton variant="previous" label="Previous entry" route={previous} />
-        <NavigationButton variant="next" label="Next entry" route={next} />
+      <div className={styles.actions}>
+        <CopyButton value={url} entity="link" variant="url" label="Copy link" />
+        {canShare && <ShareButton url={url} title={frontmatter?.title} />}
       </div>
     </div>
   );
