@@ -81,7 +81,7 @@
     object-fit: cover;
   }
 
-  & .coverImageGlyph {
+  & .documentDesktopIcon {
     width: calc(var(--layout-cover-image-size) / 2);
     height: auto;
   }

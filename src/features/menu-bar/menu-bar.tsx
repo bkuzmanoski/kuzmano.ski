@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import LogoIcon from "#/assets/images/logo.svg?react";
-import SoundOffIcon from "#/assets/images/sound-effects-off.svg?react";
-import SoundOnIcon from "#/assets/images/sound-effects-on.svg?react";
-import ThemeLightDarkIcon from "#/assets/images/toggle-theme-lightdark.svg?react";
-import ThemeSystemIcon from "#/assets/images/toggle-theme-system.svg?react";
+import Logo from "#/assets/images/logo.svg?react";
+import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-off.svg?react";
+import SoundEffectsOnMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-on.svg?react";
+import ToggleThemeLightDarkMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-theme-light-dark.svg?react";
+import ToggleThemeSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-theme-system.svg?react";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
@@ -93,18 +93,18 @@ const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", d
 function ThemeStatus() {
   const { theme } = useSettings();
   const nextTheme = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
-  const Icon = theme === "system" ? ThemeSystemIcon : ThemeLightDarkIcon;
+  const Icon = theme === "system" ? ToggleThemeSystemMenuBarIcon : ToggleThemeLightDarkMenuBarIcon;
 
   return (
     <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(nextTheme)}>
-      <Icon className={styles.icon} />
+      <Icon className={styles.menuBarIcon} />
     </StatusButton>
   );
 }
 
 function SoundStatus() {
   const { soundEffects: sound } = useSettings();
-  const Icon = sound === "on" ? SoundOnIcon : SoundOffIcon;
+  const Icon = sound === "on" ? SoundEffectsOnMenuBarIcon : SoundEffectsOffMenuBarIcon;
 
   return (
     <StatusButton
@@ -112,13 +112,12 @@ function SoundStatus() {
       onClick={() => {
         setSoundEffects(sound === "on" ? "off" : "on");
 
-        // Switching on: the press itself was gated by the setting it just changed.
         if (sound === "off") {
-          playClick();
+          playClick(); // The press itself was gated by the setting being enabled.
         }
       }}
     >
-      <Icon className={styles.icon} />
+      <Icon className={styles.menuBarIcon} />
     </StatusButton>
   );
 }
@@ -315,7 +314,7 @@ export function MenuBar() {
   return (
     <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <div className={styles.logo}>
-        <LogoIcon className={styles.logoIcon} aria-hidden />
+        <Logo aria-hidden />
       </div>
       <nav className={styles.menus} aria-label="Main menu">
         {menus.map(({ label, items }) => (

@@ -42,7 +42,7 @@ export const HOLD_DURATION_MS = {
   logo: 1400,
 };
 
-export const MIN_LOADING_DURATION_MS = 1000; // The shortest time the loading spinner is shown for (to avoid a flash on warm loads).
+export const MIN_LOADING_DURATION_MS = 1000; // The shortest time the loading indicator is shown for (to avoid a flash on warm loads).
 
 export function phaseFlags(phase: Phase) {
   const phaseIndex = PHASES.indexOf(phase);

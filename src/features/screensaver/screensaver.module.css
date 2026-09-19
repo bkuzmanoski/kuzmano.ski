@@ -74,7 +74,7 @@
   --flap-phase: 0; /* Set from JS. */
   --flap-ms: 200ms; /* One stroke of the wings, across the four frames of `flap`. */
 
-  background-image: url("../../assets/images/toaster-sprite.gif");
+  background-image: url("../../assets/images/screensaver-toaster-sprite.gif");
 
   animation-name: flap, fly;
   animation-duration: var(--flap-ms), var(--flight-duration);
@@ -85,15 +85,15 @@
 }
 
 .toast-1 {
-  background-image: url("../../assets/images/toast-1.gif");
+  background-image: url("../../assets/images/screensaver-toast-1.gif");
 }
 
 .toast-2 {
-  background-image: url("../../assets/images/toast-2.gif");
+  background-image: url("../../assets/images/screensaver-toast-2.gif");
 }
 
 .toast-3 {
-  background-image: url("../../assets/images/toast-3.gif");
+  background-image: url("../../assets/images/screensaver-toast-3.gif");
 }
 
 @keyframes flap {

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import DocumentIcon from "#/assets/images/document.svg?react";
+import DocumentDesktopIcon from "#/assets/images/desktop-icon-document.svg?react";
 import { EmptyState } from "#/components/empty-state.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { playClick } from "#/lib/audio/sounds.ts";
@@ -28,7 +28,7 @@ function EntryCoverImage({ entryKey }: { entryKey: EntryKey }) {
   if (!coverImage) {
     return (
       <span className={styles.coverImage}>
-        <DocumentIcon className={styles.coverImageGlyph} aria-hidden="true" />
+        <DocumentDesktopIcon className={styles.documentDesktopIcon} aria-hidden="true" />
       </span>
     );
   }

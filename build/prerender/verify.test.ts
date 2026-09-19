@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { Spinner } from "#/components/spinner.tsx";
+import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { documentTitle } from "#/site/metadata.ts";
 
 import { verifyPrerenderedDocument } from "./verify.ts";
@@ -46,7 +46,7 @@ describe("verifyPrerenderedDocument", () => {
   });
 
   test("throws when a loading indicator remains in the window body", () => {
-    const loadingIndicator = renderToStaticMarkup(createElement(Spinner, { layout: "fill" }));
+    const loadingIndicator = renderToStaticMarkup(createElement(LoadingIndicator, { layout: "fill" }));
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);
   });
 

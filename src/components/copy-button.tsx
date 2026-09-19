@@ -1,15 +1,15 @@
 import { useState } from "react";
 
-import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
-import CopyIcon from "#/assets/images/copy.svg?react";
-import LinkIcon from "#/assets/images/link.svg?react";
+import CopyButtonIcon from "#/assets/images/button-icon-copy.svg?react";
+import LinkButtonIcon from "#/assets/images/button-icon-link.svg?react";
+import Checkmark from "#/assets/images/checkmark.svg?react";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
 import { Button } from "./button.tsx";
 import { CopyFailureAlert } from "./copy-failure-alert.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
-const VARIANT_ICONS = { value: CopyIcon, url: LinkIcon };
+const VARIANT_ICONS = { value: CopyButtonIcon, url: LinkButtonIcon };
 
 export function CopyButton({
   value,
@@ -52,7 +52,7 @@ export function CopyButton({
             }
           }}
         >
-          {isCopied ? <CheckmarkIcon /> : <Icon />}
+          {isCopied ? <Checkmark /> : <Icon />}
         </Button>
       </CopyTooltip>
       <CopyFailureAlert entity={entity} open={hasFailed} onDismiss={() => setHasFailed(false)} />

@@ -42,7 +42,11 @@
       background: var(--color-highlight-background);
     }
 
-    & .downloadIcon {
+    & .labelText {
+      transform: translateY(0.5px); /* Helvetica baseline alignment. */
+    }
+
+    & .downloadIndicator {
       flex: none;
       width: 10px;
       height: 12px;

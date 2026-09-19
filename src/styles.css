@@ -268,7 +268,7 @@ hr {
   }
 }
 
-/* Fills a container to stand in for pending content: a spinner, or a message. */
+/* Fills a container to stand in for pending content (i.e. a loading indicator or empty state message). */
 .placeholder {
   display: flex;
   align-items: center;

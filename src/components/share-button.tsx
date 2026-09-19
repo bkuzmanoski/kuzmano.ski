@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import ShareIcon from "#/assets/images/share.svg?react";
+import ShareButtonIcon from "#/assets/images/button-icon-share.svg?react";
 
 import { Button } from "./button.tsx";
 import { Tooltip } from "./tooltip.tsx";
@@ -44,7 +44,7 @@ export function ShareButton({
           void share();
         }}
       >
-        <ShareIcon />
+        <ShareButtonIcon />
       </Button>
     </Tooltip>
   );

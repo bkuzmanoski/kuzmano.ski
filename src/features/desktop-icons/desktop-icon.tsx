@@ -1,14 +1,14 @@
 import { memo, useRef } from "react";
 
-import ApplicationSelectedIcon from "#/assets/images/application-selected.svg?react";
-import ApplicationIcon from "#/assets/images/application.svg?react";
-import DocumentSelectedIcon from "#/assets/images/document-selected.svg?react";
-import DocumentIcon from "#/assets/images/document.svg?react";
-import DownloadIcon from "#/assets/images/download.svg?react";
-import FolderOpenSelectedIcon from "#/assets/images/folder-open-selected.svg?react";
-import FolderOpenIcon from "#/assets/images/folder-open.svg?react";
-import FolderSelectedIcon from "#/assets/images/folder-selected.svg?react";
-import FolderIcon from "#/assets/images/folder.svg?react";
+import ApplicationSelectedDesktopIcon from "#/assets/images/desktop-icon-application-selected.svg?react";
+import ApplicationDesktopIcon from "#/assets/images/desktop-icon-application.svg?react";
+import DocumentSelectedDesktopIcon from "#/assets/images/desktop-icon-document-selected.svg?react";
+import DocumentDesktopIcon from "#/assets/images/desktop-icon-document.svg?react";
+import FolderOpenSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-open-selected.svg?react";
+import FolderOpenDesktopIcon from "#/assets/images/desktop-icon-folder-open.svg?react";
+import FolderSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-selected.svg?react";
+import FolderDesktopIcon from "#/assets/images/desktop-icon-folder.svg?react";
+import DownloadDesktopIconIndicator from "#/assets/images/desktop-icon-indicator-download.svg?react";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useDoublePress } from "#/lib/hooks/use-double-press.ts";
@@ -26,10 +26,13 @@ import type { ComponentType, KeyboardEvent, MouseEvent } from "react";
 type GlyphIcon = ComponentType<{ className?: string }>;
 
 const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
-  entry: { closed: [DocumentIcon, DocumentSelectedIcon] },
-  collection: { closed: [FolderIcon, FolderSelectedIcon], open: [FolderOpenIcon, FolderOpenSelectedIcon] },
-  contact: { closed: [ApplicationIcon, ApplicationSelectedIcon] },
-  download: { closed: [DocumentIcon, DocumentSelectedIcon] },
+  entry: { closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon] },
+  collection: {
+    closed: [FolderDesktopIcon, FolderSelectedDesktopIcon],
+    open: [FolderOpenDesktopIcon, FolderOpenSelectedDesktopIcon],
+  },
+  contact: { closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon] },
+  download: { closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon] },
 };
 
 function Glyph({
@@ -144,8 +147,8 @@ export const DesktopIcon = memo(function Icon({
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
       <span className={cx(styles.label, selected && styles.selected)}>
-        {iconDefinition.label}
-        {iconDefinition.kind === "download" && <DownloadIcon className={styles.downloadIcon} />}
+        <span className={styles.labelText}>{iconDefinition.label}</span>
+        {iconDefinition.kind === "download" && <DownloadDesktopIconIndicator className={styles.downloadIndicator} />}
       </span>
     </a>
   );

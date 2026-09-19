@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import FullScreenEnterIcon from "#/assets/images/video-full-screen-enter.svg?react";
-import FullScreenExitIcon from "#/assets/images/video-full-screen-exit.svg?react";
-import PauseIcon from "#/assets/images/video-pause.svg?react";
-import PlayIcon from "#/assets/images/video-play.svg?react";
-import SoundOffIcon from "#/assets/images/video-sound-off.svg?react";
-import SoundOnIcon from "#/assets/images/video-sound-on.svg?react";
+import FullScreenEnterVideoIcon from "#/assets/images/video-icon-full-screen-enter.svg?react";
+import FullScreenExitVideoIcon from "#/assets/images/video-icon-full-screen-exit.svg?react";
+import PauseVideoIcon from "#/assets/images/video-icon-pause.svg?react";
+import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
+import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
+import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -251,7 +251,7 @@ function ControlledVideo({
             togglePlayback();
           }}
         >
-          {isPaused ? <PlayIcon className={styles.controlIcon} /> : <PauseIcon className={styles.controlIcon} />}
+          {isPaused ? <PlayVideoIcon className={styles.videoIcon} /> : <PauseVideoIcon className={styles.videoIcon} />}
         </button>
         <div
           ref={trackRef}
@@ -279,7 +279,11 @@ function ControlledVideo({
             toggleMuted();
           }}
         >
-          {isMuted ? <SoundOffIcon className={styles.controlIcon} /> : <SoundOnIcon className={styles.controlIcon} />}
+          {isMuted ? (
+            <SoundOffVideoIcon className={styles.videoIcon} />
+          ) : (
+            <SoundOnVideoIcon className={styles.videoIcon} />
+          )}
         </button>
         <button
           type="button"
@@ -293,9 +297,9 @@ function ControlledVideo({
           }}
         >
           {isFullScreen ? (
-            <FullScreenExitIcon className={styles.controlIcon} />
+            <FullScreenExitVideoIcon className={styles.videoIcon} />
           ) : (
-            <FullScreenEnterIcon className={styles.controlIcon} />
+            <FullScreenEnterVideoIcon className={styles.videoIcon} />
           )}
         </button>
       </div>

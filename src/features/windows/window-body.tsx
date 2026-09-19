@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { Spinner } from "#/components/spinner.tsx";
+import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { ContactBody } from "#/features/contact/contact-body.tsx";
 import { CollectionBody } from "#/features/content/collection-body.tsx";
 import { ContentBody } from "#/features/content/content-body.tsx";
@@ -16,7 +16,7 @@ export function WindowBody({ route }: { route: string }) {
   switch (target.id) {
     case "entry":
       return (
-        <Suspense fallback={<Spinner layout="fill" />}>
+        <Suspense fallback={<LoadingIndicator layout="fill" />}>
           <ContentBody route={route} title={target.title} content={target.contentIndex.load(target.slug)} />
         </Suspense>
       );

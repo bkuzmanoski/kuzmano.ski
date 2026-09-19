@@ -4,8 +4,8 @@ import { Alert } from "#/components/alert.tsx";
 import { Button } from "#/components/button.tsx";
 import { CopyButton } from "#/components/copy-button.tsx";
 import { InputField, InputFieldValue } from "#/components/input-field.tsx";
+import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { Scrollbar } from "#/components/scrollbar.tsx";
-import { Spinner } from "#/components/spinner.tsx";
 import { TextArea, TextInput } from "#/components/text-input.tsx";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact.ts";
 import { useInputScrollSound } from "#/lib/audio/use-input-scroll-sound.ts";
@@ -193,7 +193,7 @@ export function ContactBody() {
           </Button>
         </div>
         <div className={cx(styles.scrim, isSending && styles.sending)} role="status">
-          {isSending && <Spinner label={SENDING_MESSAGE} />}
+          {isSending && <LoadingIndicator label={SENDING_MESSAGE} />}
         </div>
       </form>
       <Alert

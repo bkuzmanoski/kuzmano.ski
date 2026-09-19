@@ -1,10 +1,10 @@
 import { useId, useRef, useState } from "react";
 
-import CheckmarkIcon from "#/assets/images/checkmark.svg?react";
+import Checkmark from "#/assets/images/checkmark.svg?react";
 import { Alert } from "#/components/alert.tsx";
 import { Button } from "#/components/button.tsx";
 import { InputField } from "#/components/input-field.tsx";
-import { Spinner } from "#/components/spinner.tsx";
+import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { TextInput, TextInputFrame } from "#/components/text-input.tsx";
 import { SITE_URL } from "#/config/site.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -128,7 +128,7 @@ export function Waitlist({
               JOINING_MESSAGE
             ) : hasJoined ? (
               <>
-                <CheckmarkIcon className={styles.checkmarkIcon} aria-hidden />
+                <Checkmark className={styles.checkmark} aria-hidden />
                 {confirmation}
               </>
             ) : null}
@@ -137,7 +137,7 @@ export function Waitlist({
       </div>
       {isJoining && (
         <div className={styles.scrim} aria-hidden>
-          <Spinner />
+          <LoadingIndicator />
         </div>
       )}
       <Alert

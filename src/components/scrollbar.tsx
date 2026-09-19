@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import ArrowIcon from "#/assets/images/scroll-arrow.svg?react";
+import ArrowScrollbarIcon from "#/assets/images/scrollbar-icon-arrow.svg?react";
 import { recordScrollAt, silenceScrollAt, stepScroll } from "#/lib/audio/scroll.ts";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -109,7 +109,9 @@ function ScrollArrow({
         startRepeating();
       }}
     >
-      <ArrowIcon className={cx(styles.arrowIcon, direction === "down" && styles.down, isPressed && styles.filled)} />
+      <ArrowScrollbarIcon
+        className={cx(styles.arrowScrollbarIcon, direction === "down" && styles.down, isPressed && styles.filled)}
+      />
     </button>
   );
 }

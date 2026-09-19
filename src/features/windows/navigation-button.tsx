@@ -1,4 +1,4 @@
-import ArrowIcon from "#/assets/images/arrow.svg?react";
+import ChevronButtonIcon from "#/assets/images/button-icon-chevron.svg?react";
 import { Button } from "#/components/button.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { cx } from "#/lib/class-names.ts";
@@ -21,8 +21,12 @@ export function NavigationButton({
   const { open } = useWindowActions();
 
   const icon = (
-    <ArrowIcon
-      className={cx(styles.icon, variant === "previous" && styles.previous, variant === "next" && styles.next)}
+    <ChevronButtonIcon
+      className={cx(
+        styles.chevronButtonIcon,
+        variant === "previous" && styles.previous,
+        variant === "next" && styles.next,
+      )}
     />
   );
 

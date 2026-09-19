@@ -1,7 +1,7 @@
 import { memo, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
-import DownloadIcon from "#/assets/images/download.svg?react";
-import ExternalLinkIcon from "#/assets/images/external-link.svg?react";
+import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-download.svg?react";
+import ExternalLinkMenuItemIndicator from "#/assets/images/menu-item-indicator-external-link.svg?react";
 import { playClick, playHover } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
@@ -98,15 +98,23 @@ const MenuItemRow = memo(function MenuRow({
   };
   const itemContent = (
     <>
-      <span>{item.label}</span>
+      <span className={styles.label}>{item.label}</span>
       {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
-      {item.accessory === "download" && <DownloadIcon className={styles.accessory} />}
-      {item.accessory === "external-link" && <ExternalLinkIcon className={styles.accessory} />}
+      {item.accessory === "download" && <DownloadMenuItemIndicator className={styles.menuItemIndicator} />}
+      {item.accessory === "external-link" && <ExternalLinkMenuItemIndicator className={styles.menuItemIndicator} />}
     </>
   );
 
   return item.href ? (
-    <a {...itemProps} href={item.href} target={item.target} draggable={false} tabIndex={-1} onClick={onItemClick}>
+    <a
+      {...itemProps}
+      href={item.href}
+      target={item.target}
+      download={item.accessory === "download" || undefined}
+      draggable={false}
+      tabIndex={-1}
+      onClick={onItemClick}
+    >
       {itemContent}
     </a>
   ) : (

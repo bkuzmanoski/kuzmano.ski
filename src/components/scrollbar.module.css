@@ -38,7 +38,7 @@
   visibility: hidden;
 }
 
-.arrowIcon {
+.arrowScrollbarIcon {
   --color-icon-foreground: var(--color-border);
 
   width: 100%;

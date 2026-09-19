@@ -1,9 +1,9 @@
 import { useId, useRef, useState } from "react";
 
-import ActiveIcon from "#/assets/images/window-control-active.svg?react";
-import CloseIcon from "#/assets/images/window-control-close.svg?react";
-import ResizeIcon from "#/assets/images/window-control-resize.svg?react";
-import ZoomIcon from "#/assets/images/window-control-zoom.svg?react";
+import ActiveWindowControl from "#/assets/images/window-control-active.svg?react";
+import CloseWindowControl from "#/assets/images/window-control-close.svg?react";
+import ResizeWindowControl from "#/assets/images/window-control-resize.svg?react";
+import ZoomWindowControl from "#/assets/images/window-control-zoom.svg?react";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
@@ -63,7 +63,7 @@ function TitleBarButton({
           onPointerUp: () => setIsPressed(false),
         })}
       >
-        {isPressed ? <ActiveIcon /> : icon}
+        {isPressed ? <ActiveWindowControl /> : icon}
       </button>
     </Tooltip>
   );
@@ -215,7 +215,7 @@ export function Window({
           {...PRESERVE_FOCUS_PROPS}
           {...resizeHandlers}
         >
-          <ResizeIcon />
+          <ResizeWindowControl />
         </button>
       </Tooltip>
     );
@@ -251,9 +251,19 @@ export function Window({
         </span>
         {focused && (
           <>
-            <TitleBarButton className={styles.controlClose} icon={<CloseIcon />} label="Close" onClick={onClose} />
+            <TitleBarButton
+              className={styles.controlClose}
+              icon={<CloseWindowControl />}
+              label="Close"
+              onClick={onClose}
+            />
             {onZoom && (
-              <TitleBarButton className={styles.controlZoom} icon={<ZoomIcon />} label="Zoom" onClick={onZoom} />
+              <TitleBarButton
+                className={styles.controlZoom}
+                icon={<ZoomWindowControl />}
+                label="Zoom"
+                onClick={onZoom}
+              />
             )}
           </>
         )}

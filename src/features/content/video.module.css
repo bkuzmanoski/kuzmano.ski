@@ -69,7 +69,7 @@
   border-left: 1px solid var(--color-border);
 }
 
-.controlIcon {
+.videoIcon {
   --color-icon-foreground: var(--color-border);
 
   flex: none;

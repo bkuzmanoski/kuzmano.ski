@@ -100,7 +100,7 @@ function compose() {
   fill("Message:", "Hello.");
 }
 
-const sendingSpinner = () => screen.queryByRole("img", { name: SENDING_MESSAGE });
+const loadingIndicator = () => screen.queryByRole("img", { name: SENDING_MESSAGE });
 const liveRegionsWithText = () => screen.getAllByRole("status").filter((region) => region.textContent !== "");
 
 function describedBy(label: string) {
@@ -195,14 +195,14 @@ test("dismissing a validation alert focuses the first invalid field", () => {
   expect(document.activeElement).toBe(input("Message:"));
 });
 
-test("dismissing a validation alert marks the invalid field with its field error and does not show the sending spinner", () => {
+test("dismissing a validation alert marks the invalid field with its field error and does not show the loading indicator", () => {
   render(<ContactBody />);
 
   fireEvent.click(button("Send"));
   fireEvent.click(alertButton("OK"));
 
   expect(screen.queryByRole("dialog")).toBeNull();
-  expect(sendingSpinner()).toBeNull();
+  expect(loadingIndicator()).toBeNull();
   expect(input("From:").getAttribute("aria-invalid")).toBe("true");
   expect(describedBy("From:")).toBe("Enter your email address.");
 });
@@ -335,9 +335,9 @@ function startPendingSubmission() {
 test("a pending submission covers the form and announces its progress", async () => {
   const { resolveRequest } = startPendingSubmission();
 
-  await waitFor(() => expect(sendingSpinner()).not.toBeNull());
+  await waitFor(() => expect(loadingIndicator()).not.toBeNull());
 
-  expect(sendingSpinner()?.closest('[role="status"]')).not.toBeNull();
+  expect(loadingIndicator()?.closest('[role="status"]')).not.toBeNull();
   expect(input("Message:").closest("[inert]")).not.toBeNull();
   expect((input("Message:") as HTMLTextAreaElement).disabled).toBe(false);
   expect(button("Send").hasAttribute("disabled")).toBe(true);
@@ -347,14 +347,14 @@ test("a pending submission covers the form and announces its progress", async ()
     await Promise.resolve();
   });
 
-  expect(sendingSpinner()).toBeNull();
+  expect(loadingIndicator()).toBeNull();
   expect(input("Message:").closest("[inert]")).toBeNull();
 });
 
 test("canceling during submission aborts the request and ignores its result", async () => {
   const { resolveRequest } = startPendingSubmission();
 
-  await waitFor(() => expect(sendingSpinner()).not.toBeNull());
+  await waitFor(() => expect(loadingIndicator()).not.toBeNull());
 
   fireEvent.click(button("Cancel"));
   fireEvent.click(alertButton("Discard"));

@@ -1,14 +1,14 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
-import LogoIcon from "#/assets/images/logo.svg?react";
-import macintoshBodyAvifUrl from "#/assets/images/macintosh-body.avif";
-import macintoshBodyWebpUrl from "#/assets/images/macintosh-body.webp";
-import DiskActivityIndicator from "#/assets/images/macintosh-disk-activity-indicator.svg?react";
-import DisplayBackdrop from "#/assets/images/macintosh-display-backdrop.svg?react";
-import DisplayGlassLayer from "#/assets/images/macintosh-display-glass-layer.svg?react";
-import macintoshKeyboardAvifUrl from "#/assets/images/macintosh-keyboard.avif";
-import macintoshKeyboardWebpUrl from "#/assets/images/macintosh-keyboard.webp";
-import { Spinner } from "#/components/spinner.tsx";
+import Logo from "#/assets/images/logo.svg?react";
+import bodyMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illustration-body.avif";
+import bodyMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-body.webp";
+import DiskActivityIndicatorMacintoshIllustration from "#/assets/images/macintosh-illustration-disk-activity-indicator.svg?react";
+import DisplayBackdropMacintoshIllustration from "#/assets/images/macintosh-illustration-display-backdrop.svg?react";
+import DisplayGlassLayerMacintoshIllustration from "#/assets/images/macintosh-illustration-display-glass-layer.svg?react";
+import keyboardMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illustration-keyboard.avif";
+import keyboardMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-keyboard.webp";
+import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context.ts";
 import { playBootChime } from "#/lib/audio/sounds.ts";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect.ts";
@@ -50,7 +50,7 @@ const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) 
 
 const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
 
-type CoverContent = "spinner" | "beginPrompt";
+type CoverContent = "loadingIndicator" | "beginPrompt";
 
 function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
   const { display, scale, viewport } = metrics;
@@ -82,7 +82,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
       className={cx(styles.displayMask, isLoadingCoverUp && styles.hidden, isRevealingDesktop && styles.revealing)}
       aria-hidden
     >
-      <DisplayBackdrop className={styles.displayBackdrop} />
+      <DisplayBackdropMacintoshIllustration className={styles.displayBackdropMacintoshIllustration} />
       <div
         className={cx(
           styles.display,
@@ -95,13 +95,13 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
       >
         {isScreenContentVisible && (
           <div className={cx(styles.screen, isGlassHidden && styles.leaving)}>
-            <LogoIcon className={styles.logo} />
+            <Logo className={styles.logo} />
           </div>
         )}
       </div>
-      <DisplayGlassLayer
+      <DisplayGlassLayerMacintoshIllustration
         className={cx(
-          styles.glassOverlay,
+          styles.displayGlassLayerMacintoshIllustration,
           isPreparingToLeave && styles.preparingToLeave,
           isGlassHidden && styles.leaving,
         )}
@@ -117,7 +117,7 @@ function BootSequenceContent() {
     getPrefersReducedMotion() ? REDUCED_MOTION_DURATION_MS : MOTION_DURATION_MS,
   );
 
-  const [coverContent, setCoverContent] = useState<CoverContent>("spinner");
+  const [coverContent, setCoverContent] = useState<CoverContent>("loadingIndicator");
   const [phase, setPhase] = useState<Phase>("loading");
   const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
   const bodyImageRef = useRef<HTMLImageElement>(null);
@@ -259,30 +259,30 @@ function BootSequenceContent() {
           )}
           style={illustrationStyle}
         >
-          <picture className={styles.bodyLayer}>
-            <source srcSet={macintoshBodyAvifUrl} type="image/avif" />
-            <img ref={bodyImageRef} alt="Illustration of a classic Mac 128K." src={macintoshBodyWebpUrl} />
+          <picture className={styles.bodyMacintoshIllustration}>
+            <source srcSet={bodyMacintoshIllustrationAvifUrl} type="image/avif" />
+            <img ref={bodyImageRef} alt="Illustration of a classic Mac 128K." src={bodyMacintoshIllustrationWebpUrl} />
           </picture>
-          <DiskActivityIndicator
+          <DiskActivityIndicatorMacintoshIllustration
             style={{
               left: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.x * 100}%`,
               top: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.y * 100}%`,
               width: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.width * 100}%`,
               height: `${DISK_ACTIVITY_INDICATOR_PLACEMENT.height * 100}%`,
             }}
-            className={cx(styles.diskActivityIndicator, isDisplayOn && styles.reading)}
+            className={cx(styles.diskActivityIndicatorMacintoshIllustration, isDisplayOn && styles.reading)}
             aria-hidden
           />
-          <picture className={styles.keyboardLayer}>
-            <source srcSet={macintoshKeyboardAvifUrl} type="image/avif" />
-            <img ref={keyboardImageRef} alt="" src={macintoshKeyboardWebpUrl} />
+          <picture className={styles.keyboardMacintoshIllustration}>
+            <source srcSet={keyboardMacintoshIllustrationAvifUrl} type="image/avif" />
+            <img ref={keyboardImageRef} alt="" src={keyboardMacintoshIllustrationWebpUrl} />
           </picture>
         </div>
       </div>
       <div className={cx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
       <div className={cx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
-        {coverContent === "spinner" ? (
-          <Spinner className={styles.spinner} />
+        {coverContent === "loadingIndicator" ? (
+          <LoadingIndicator className={styles.loadingIndicator} />
         ) : (
           <div className={styles.prompt}>
             {beginPrompt}
