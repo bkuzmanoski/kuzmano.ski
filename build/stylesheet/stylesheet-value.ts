@@ -10,7 +10,7 @@ export interface StylesheetValueModule {
   read: () => Promise<unknown>;
 }
 
-/** Creates a virtual module that exports a JSON-serialized value read from `STYLESHEET_FILE_PATH`. */
+/** Exposes a JSON-serialized value read from `STYLESHEET_FILE_PATH` through a virtual module. */
 export function stylesheetValuePlugin({ name, moduleId, exportName, read }: StylesheetValueModule): Plugin {
   const resolvedModuleId = `\0${moduleId}`;
   return {

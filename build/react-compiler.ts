@@ -41,7 +41,7 @@ export const formatOptimizationFailures = (failures: Array<CompilerOptimizationF
     .map(({ filePath, line, reason }) => `  ${filePath}${line === null ? "" : `:${line}`} — ${reason}`)
     .join("\n");
 
-/** A logger for `reactCompilerPreset` that collects optimization failures and a Vite plugin that reports them at the end of the build. */
+/** Creates a logger for `reactCompilerPreset` that collects optimization failures and a plugin that reports them at the end of the build. */
 export function reactCompilerOptimizationFailures(): { logger: Logger; plugin: Plugin } {
   const failures: Array<CompilerOptimizationFailure> = [];
   return {

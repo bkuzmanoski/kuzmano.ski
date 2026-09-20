@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { reportClientError } from "./client.ts";
 
@@ -30,7 +30,7 @@ test("reporting an error queues the report as a JSON beacon to the client errors
 
   const [url, blob] = beacon.mock.calls[0]!;
 
-  expect(url).toBe(API.clientErrors);
+  expect(url).toBe(API_ROUTES.clientErrors);
   expect((blob as Blob).type).toBe("application/json");
   await expect((blob as Blob).text()).resolves.toBe(JSON.stringify(REPORT));
   expect(fetchMock).not.toHaveBeenCalled();
@@ -42,7 +42,7 @@ test("reporting an error posts the report as a `keepalive` request when `sendBea
 
   const [url, init] = fetchMock.mock.calls[0]!;
 
-  expect(url).toBe(API.clientErrors);
+  expect(url).toBe(API_ROUTES.clientErrors);
   expect(init?.method).toBe("POST");
   expect(init?.keepalive).toBe(true);
   expect(JSON.parse(init?.body as string)).toEqual(REPORT);

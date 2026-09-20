@@ -3,11 +3,32 @@
   "name": "kuzmano-ski",
   "compatibility_date": "2026-07-19",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "dist/server/server.js",
+  "main": "dist/server/worker.js",
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS",
-    "html_handling": "drop-trailing-slash"
+    "html_handling": "drop-trailing-slash",
+    // Route documents and `.md` files through the Worker for `text/markdown` responses; let the
+    // Asset Worker serve all other assets without a Worker invocation. `*` matches across `/`.
+    //
+    // Exclude Vite output and media by directory because their hashed file types vary. Exclude
+    // root assets by extension so new icons, feeds, and manifests do not need rule changes. Do not
+    // use `!/*.*`: negative rules cannot be overridden, which would prevent `.md` handling.
+    //
+    // Documents vary by `Accept`, but Cloudflare caches only by `Accept-Encoding`. Do not add a
+    // Cache Rule or `cacheEverything` unless the cache key also includes `Accept`.
+    "run_worker_first": [
+      "/*",
+      "!/assets/*",
+      "!/media/*",
+      "!/*.html",
+      "!/*.ico",
+      "!/*.json",
+      "!/*.png",
+      "!/*.svg",
+      "!/*.txt",
+      "!/*.xml"
+    ]
   },
   "send_email": [
     {

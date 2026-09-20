@@ -1,7 +1,7 @@
 import { toXml } from "xast-util-to-xml";
 import { x } from "xastscript";
 
-import { FEED_TYPE } from "#/config/site.ts";
+import { FEED_MEDIA_TYPE, HTML_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 
 export interface FeedEntry {
   title: string;
@@ -42,8 +42,8 @@ const entryElement = ({ title, description, url, markdownUrl, date, category, co
   x("entry", [
     x("title", removeForbiddenCharacters(title)),
     x("id", removeForbiddenCharacters(url)),
-    link("alternate", "text/html", url),
-    link("alternate", "text/markdown", markdownUrl),
+    link("alternate", HTML_MEDIA_TYPE, url),
+    link("alternate", MARKDOWN_MEDIA_TYPE, markdownUrl),
     x("published", timestamp(date)),
     x("updated", timestamp(date)),
     category ? x("category", { term: removeForbiddenCharacters(category) }) : undefined,
@@ -65,8 +65,8 @@ export function atomFeed({ title, subtitle, author, icon, logo, url, selfUrl, up
       x("id", removeForbiddenCharacters(url)),
       x("icon", removeForbiddenCharacters(icon)),
       x("logo", removeForbiddenCharacters(logo)),
-      link("self", FEED_TYPE, selfUrl),
-      link("alternate", "text/html", url),
+      link("self", FEED_MEDIA_TYPE, selfUrl),
+      link("alternate", HTML_MEDIA_TYPE, url),
       x("updated", timestamp(updated)),
       x("author", [x("name", removeForbiddenCharacters(author))]),
       ...entries.map(entryElement),

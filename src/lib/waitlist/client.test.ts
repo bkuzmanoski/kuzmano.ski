@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { joinWaitlist } from "./client.ts";
 
@@ -29,7 +29,7 @@ test("the submission is posted as JSON to the endpoint", async () => {
 
   const [url, init] = fetchMock.mock.calls[0]!;
 
-  expect(url).toBe(API.waitlist);
+  expect(url).toBe(API_ROUTES.waitlist);
   expect(init?.method).toBe("POST");
   expect(JSON.parse(init?.body as string)).toEqual(SUBMISSION);
 });

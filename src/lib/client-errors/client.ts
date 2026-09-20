@@ -1,4 +1,4 @@
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 /** A browser-side failure to record on the server. */
 export interface ClientErrorReport {
@@ -20,11 +20,11 @@ export function reportClientError(report: ClientErrorReport) {
     const serializedReport = JSON.stringify(report);
     const reportBlob = new Blob([serializedReport], { type: "application/json" });
 
-    if (navigator.sendBeacon(API.clientErrors, reportBlob)) {
+    if (navigator.sendBeacon(API_ROUTES.clientErrors, reportBlob)) {
       return;
     }
 
-    fetch(API.clientErrors, {
+    fetch(API_ROUTES.clientErrors, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: serializedReport,

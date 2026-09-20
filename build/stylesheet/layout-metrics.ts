@@ -51,6 +51,7 @@ export function layoutMetricsFrom(css: string): LayoutMetrics {
 export const readLayoutMetrics = async (): Promise<LayoutMetrics> =>
   layoutMetricsFrom(await readFile(fromRoot(STYLESHEET_FILE_PATH), "utf8"));
 
+/** Exposes the stylesheet's layout metrics through `virtual:layout-metrics`. */
 export const layoutMetricsPlugin = (): Plugin =>
   stylesheetValuePlugin({
     name: "kuzmano.ski:layout-metrics",

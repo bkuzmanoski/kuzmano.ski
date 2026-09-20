@@ -12,6 +12,7 @@ export const pageRoute = (slug: string) => `/${slug}`;
 export const entryRoute = (segment: string, slug: string) => `/${segment}/${slug}`;
 export const collectionRoute = (segment: string) => `/${segment}`;
 export const mediaRoute = (mediaPath: string) => `/${MEDIA_SEGMENT}/${mediaPath}`;
+export const markdownPath = (path: string) => `${path}.md`;
 
 const segmentsOf = (path: string) => path.split("/").filter(Boolean); // Dropping empty parts ignores leading, trailing, and repeated slashes.
 

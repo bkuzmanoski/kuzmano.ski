@@ -39,7 +39,6 @@ export function mdxPlugin({ syntaxHighlight = true, mediaForEntry = NO_MEDIA_FOR
     ],
     ...(syntaxHighlight ? ([[rehypeShiki, { theme: shikiTheme, langs: [], lazy: true }]] as PluggableList) : []),
   ];
-
   return {
     enforce: "pre",
     ...mdx({ providerImportSource: "@mdx-js/react", remarkPlugins: [remarkFrontmatter], rehypePlugins }),

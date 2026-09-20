@@ -2,6 +2,7 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { isEntryFile } from "#/lib/content/entry-file.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 
@@ -25,11 +26,13 @@ import type { Logger, Plugin } from "vite";
 
 const MEDIA_PATH_PREFIX = mediaRoute("");
 
-// A media URL changes whenever the bytes served at it do, so a browser can cache a media file indefinitely.
 const MEDIA_HEADERS_RULE: HeadersRule = {
   description: "Media URLs include content hashes and encoding-setting fingerprints.",
   pathPatterns: [mediaRoute("*")],
-  headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+  headers: {
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Content-Signal": CONTENT_SIGNAL,
+  },
 };
 
 interface IndexChange {

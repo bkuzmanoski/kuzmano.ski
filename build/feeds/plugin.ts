@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, FEED_TYPE, SITE_NAME } from "#/config/site.ts";
+import { FEED_CONTENT_TYPE } from "#/config/media-types.ts";
+import { CONTENT_SIGNAL, FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME } from "#/config/site.ts";
 import { parseFrontmatter } from "#/lib/content/frontmatter.ts";
 import { FEEDS } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
@@ -23,11 +24,10 @@ import type { Plugin } from "vite";
 
 export type DocumentSource = (route: string) => Promise<string | undefined>;
 
-const FEED_CONTENT_TYPE = `${FEED_TYPE}; charset=utf-8`;
 const FEED_HEADERS_RULE: HeadersRule = {
   description: "Atom is served from a .xml path, which would otherwise be typed as generic XML.",
   pathPatterns: FEEDS.map(({ path }) => path),
-  headers: { "Content-Type": FEED_CONTENT_TYPE },
+  headers: { "Content-Type": FEED_CONTENT_TYPE, "Content-Signal": CONTENT_SIGNAL },
 };
 
 const prerenderedDocuments = new Map<string, string>(); // Prerendered document HTML, keyed by route path.

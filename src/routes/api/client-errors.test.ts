@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { Route } from "./client-errors.ts";
 
@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 
 const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API.clientErrors}`;
+const URL = `${ORIGIN}${API_ROUTES.clientErrors}`;
 const VALID_REPORT = {
   kind: "render",
   message: "Cannot read properties of null",

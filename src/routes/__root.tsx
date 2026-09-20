@@ -5,7 +5,7 @@ import { ErrorPage } from "#/app/error-page.tsx";
 import { NotFound } from "#/app/not-found.tsx";
 import { RootDocument } from "#/app/root-document.tsx";
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
-import { FEED_TYPE } from "#/config/site.ts";
+import { FEED_MEDIA_TYPE } from "#/config/media-types.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
 import stylesheet from "#/styles.css?url";
 
@@ -25,7 +25,7 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "any" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.json" },
-      { rel: "alternate", type: FEED_TYPE, href: SITE_FEED.path, title: SITE_FEED.title },
+      { rel: "alternate", type: FEED_MEDIA_TYPE, href: SITE_FEED.path, title: SITE_FEED.title },
     ],
   }),
   shellComponent: RootDocument,

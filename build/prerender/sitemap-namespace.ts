@@ -5,9 +5,8 @@ import { CLIENT_ENVIRONMENT } from "../environments.ts";
 
 import type { Plugin } from "vite";
 
-const SITEMAP_FILE_NAME = "sitemap.xml";
-const WRONG_NAMESPACE = 'xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"';
-const NAMESPACE = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+const INCORRECT_NAMESPACE = 'xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"';
+const CORRECT_NAMESPACE = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
 
 /**
  * Corrects the namespace on the generated sitemap.
@@ -39,7 +38,7 @@ export function sitemapNamespacePlugin(): Plugin {
         const sitemapAbsolutePath = resolve(
           clientEnvironment.config.root,
           clientEnvironment.config.build.outDir,
-          SITEMAP_FILE_NAME,
+          "sitemap.xml",
         );
         const sitemap = await readFile(sitemapAbsolutePath, "utf8").catch(() => null);
 
@@ -50,8 +49,8 @@ export function sitemapNamespacePlugin(): Plugin {
           return;
         }
 
-        if (sitemap.includes(WRONG_NAMESPACE)) {
-          await writeFile(sitemapAbsolutePath, sitemap.replace(WRONG_NAMESPACE, NAMESPACE));
+        if (sitemap.includes(INCORRECT_NAMESPACE)) {
+          await writeFile(sitemapAbsolutePath, sitemap.replace(INCORRECT_NAMESPACE, CORRECT_NAMESPACE));
         }
       },
     },

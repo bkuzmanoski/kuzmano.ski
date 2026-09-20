@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { CONTACT_EMAIL_ADDRESS_STORAGE_KEY, readContactEmailAddress, sendMessage } from "./client.ts";
 
@@ -32,7 +32,7 @@ describe("readContactEmailAddress", () => {
 
   test("the email address is read from the contact endpoint", async () => {
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
-    expect(fetchMock.mock.calls[0]![0]).toBe(API.contact);
+    expect(fetchMock.mock.calls[0]![0]).toBe(API_ROUTES.contact);
   });
 
   test("the email address is stored for the session, and a second read does not request it again", async () => {
@@ -91,7 +91,7 @@ describe("sendMessage", () => {
 
     const [url, init] = fetchMock.mock.calls[0]!;
 
-    expect(url).toBe(API.contact);
+    expect(url).toBe(API_ROUTES.contact);
     expect(init?.method).toBe("POST");
     expect(JSON.parse(init?.body as string)).toEqual(SUBMISSION);
   });

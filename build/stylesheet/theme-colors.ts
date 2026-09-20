@@ -11,6 +11,7 @@ export const themeColorsFrom = ({ wallpaper, bootSequenceBackdrop }: Palette) =>
 
 export type ThemeColors = ReturnType<typeof themeColorsFrom>;
 
+/** Exposes the palette's theme colors through `virtual:theme-colors`. */
 export const themeColorsPlugin = (): Plugin =>
   stylesheetValuePlugin({
     name: "kuzmano.ski:theme-colors",

@@ -1,4 +1,4 @@
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { postSubmission } from "../forms/client.ts";
 import { isRecord } from "../guards.ts";
@@ -36,7 +36,7 @@ export async function readContactEmailAddress(signal?: AbortSignal): Promise<str
   }
 
   try {
-    const response = await fetch(API.contact, { headers: { accept: "application/json" }, signal });
+    const response = await fetch(API_ROUTES.contact, { headers: { accept: "application/json" }, signal });
 
     if (!response.ok) {
       return null;
@@ -68,7 +68,7 @@ export type SendResult =
   | { status: "failed"; message: string };
 
 export async function sendMessage(submission: ContactFields, signal?: AbortSignal): Promise<SendResult> {
-  const outcome = await postSubmission<ContactFields>(API.contact, submission, {
+  const outcome = await postSubmission<ContactFields>(API_ROUTES.contact, submission, {
     messages: { 429: TOO_MANY_MESSAGES, 503: QUOTA_EXCEEDED }, // A 503 means the send quota has run out, so its message says to try later rather than again now.
     fallbackMessage: UNAVAILABLE,
     signal,

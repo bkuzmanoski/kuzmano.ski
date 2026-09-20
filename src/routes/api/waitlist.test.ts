@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
 import type { MembershipResult } from "#/server/waitlist.ts";
 
@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 
 const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API.waitlist}`;
+const URL = `${ORIGIN}${API_ROUTES.waitlist}`;
 const VALID_SUBMISSION = {
   emailAddress: "user@example.com",
   list: "List",

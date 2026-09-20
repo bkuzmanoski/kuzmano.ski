@@ -1,7 +1,10 @@
 // Names of the Worker bindings and variables used by the application.
 
+export const ASSETS_SECTION = "assets";
 export const SEND_EMAIL_SECTION = "send_email";
 export const RATE_LIMIT_SECTION = "ratelimits";
+
+export const ASSETS_BINDING = "ASSETS";
 
 export const SEND_EMAIL_BINDING = "SEND_EMAIL";
 export const SEND_EMAIL_RATELIMIT_BINDING = "SEND_EMAIL_RATELIMIT";

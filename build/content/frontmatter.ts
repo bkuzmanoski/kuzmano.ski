@@ -19,7 +19,7 @@ export function frontmatterOf(source: string): unknown {
 
 const moduleFor = (source: string) => `export default ${JSON.stringify(frontmatterOf(source))};`;
 
-/** Exposes `<name>.mdx?frontmatter` as a module containing only the MDX file's frontmatter. */
+/** Exposes `<name>.mdx?frontmatter` as a module containing only an MDX file's frontmatter. */
 export function frontmatterPlugin(): Plugin {
   const lastLoadedCode = new Map<string, string>();
 

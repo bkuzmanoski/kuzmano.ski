@@ -1,4 +1,4 @@
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 
 import { postSubmission } from "../forms/client.ts";
 
@@ -15,7 +15,7 @@ export type JoinResult =
 
 /** Records a membership. A repeat join succeeds without adding a second row. */
 export async function joinWaitlist(submission: Membership, signal?: AbortSignal): Promise<JoinResult> {
-  const outcome = await postSubmission<WaitlistFields>(API.waitlist, submission, {
+  const outcome = await postSubmission<WaitlistFields>(API_ROUTES.waitlist, submission, {
     messages: { 429: TOO_MANY_LISTS },
     fallbackMessage: UNAVAILABLE, // Notion unavailability returns 502; the fallback already tells users to try again later.
     signal,

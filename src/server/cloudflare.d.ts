@@ -12,6 +12,15 @@
 // Last verified against workerd@1.20260811.1. The declarations follow the runtime shapes,
 // which differ from the published docs for `EmailAddress.name`.
 declare module "cloudflare:workers" {
+  /**
+   * Provides access to the Asset Worker.
+   *
+   * Responses apply `_headers` rules and the `html_handling` setting from `/wrangler.jsonc`.
+   */
+  export interface AssetsBinding {
+    fetch: (request: Request) => Promise<Response>;
+  }
+
   export interface EmailAddress {
     name: string;
     email: string;
@@ -36,10 +45,19 @@ declare module "cloudflare:workers" {
 
   /** Worker bindings, keyed by the names declared in `server/bindings.ts`. */
   /* eslint-disable @typescript-eslint/consistent-type-imports -- A top-level import would make this an invalid module augmentation. */
-  export type WorkerEnv = Partial<Record<typeof import("./bindings.ts").SEND_EMAIL_BINDING, SendEmailBinding>> &
+  export type WorkerEnv = Partial<Record<typeof import("./bindings.ts").ASSETS_BINDING, AssetsBinding>> &
+    Partial<Record<typeof import("./bindings.ts").SEND_EMAIL_BINDING, SendEmailBinding>> &
     Partial<Record<import("./bindings.ts").RateLimitBindingName, RateLimitBinding>> &
     Partial<Record<import("./bindings.ts").SecretName, string>>;
   /* eslint-enable @typescript-eslint/consistent-type-imports */
 
   export const env: WorkerEnv;
+
+  /**
+   * A deployable Worker module. Cloudflare provides bindings through `env`; use `workerEnv` from
+   * `./env.ts` when running outside Workers, such as under `vite dev`.
+   */
+  export interface WorkerEntry {
+    fetch: (request: Request, env?: WorkerEnv) => Promise<Response>;
+  }
 }

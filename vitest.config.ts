@@ -8,6 +8,7 @@ import { entryCoverImagesPlugin } from "./build/content/entry-cover-images.ts";
 import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
+import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
 import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
 import { svgrOptions } from "./build/svgr.ts";
@@ -21,11 +22,13 @@ export default defineConfig({
     layoutMetricsPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
-    // Required for content catalog resolution (see `/src/site/catalog.ts`) and tests that load the real content catalog.
-    // No cover images are served; a test provides them through `EntryCoverImagesContext` or by mocking this module.
+    // Enables content catalog resolution (see `/src/site/catalog.ts`) for tests that load the real content catalog.
+    // Does not serve cover images; tests provide them through `EntryCoverImagesContext` or by mocking the module.
     entryCoverImagesPlugin(() => Promise.resolve({})),
     mdxPlugin({ syntaxHighlight: false }),
     entryBodyChunksPlugin(),
+    // Enables the Worker entry to resolve `virtual:markdown-token-counts`; tests that need counts mock the module.
+    markdownTokenCountsPlugin(() => Promise.resolve({})),
     themeColorsPlugin(),
     viteReact({ include: /\.(tsx?|mdx)$/ }),
     babel({ presets: [reactCompilerPreset()] }),

@@ -5,6 +5,7 @@ import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
+import { buildOutputHeadersPlugin } from "./build/build-output-headers.ts";
 import { entryBodyChunksPlugin } from "./build/content/entry-body-chunks.ts";
 import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
@@ -17,6 +18,7 @@ import { prerenderRoutes } from "./build/prerender/routes.ts";
 import { sitemapNamespacePlugin } from "./build/prerender/sitemap-namespace.ts";
 import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
+import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
 import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
@@ -43,16 +45,19 @@ export default defineConfig(({ command }) => {
       workersRuntimePlugin(),
       themeColorsPlugin(),
       cssAssetsPlugin(),
+      buildOutputHeadersPlugin(),
+      robotsPlugin(),
       siteIconsPlugin(),
       inlineScriptsPlugin(),
       layoutMetricsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
       ...mediaPlugins,
-      markdownPlugin({ mediaForEntry }),
+      ...markdownPlugin({ mediaForEntry }),
       mdxPlugin({ mediaForEntry }),
       entryBodyChunksPlugin(),
       tanstackStart({
+        server: { entry: "worker" },
         router: { routeFileIgnorePattern: "\\.test\\." },
         pages: command === "build" ? prerenderRoutes() : [],
         sitemap: { host: SITE_URL },

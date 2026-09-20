@@ -167,6 +167,9 @@ Published entries and collections are also available as Markdown.
 /<collection>.md # An index of published entries.
 ```
 
+Standard HTML routes also serve their Markdown representation when a request
+prefers it (i.e. sends an `Accept: text/markdown` header).
+
 When rendered as Markdown, MDX React components are replaced with their
 children. Components requiring custom Markdown output can define it in
 `/build/markdown/markdown.ts`.

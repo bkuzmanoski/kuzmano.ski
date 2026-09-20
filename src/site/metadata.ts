@@ -1,5 +1,7 @@
-import { FEED_TYPE, SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
+import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
+import { SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
+import { markdownPath } from "#/lib/content/paths.ts";
 
 interface FeedLink {
   title: string;
@@ -20,7 +22,6 @@ export interface DocumentMetadata {
 
 export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
 export const canonicalUrl = (path: string) => `${SITE_URL}${path}`;
-export const markdownPath = (path: string) => `${path}.md`;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 
 /**
@@ -66,8 +67,10 @@ export function documentHead({
     links: [
       { rel: "canonical", href: url },
       ...(bodyChunkUrl ? [{ rel: "modulepreload", href: bodyChunkUrl }] : []),
-      ...(markdown ? [{ rel: "alternate", type: "text/markdown", href: markdownUrl(path), title: "Markdown" }] : []),
-      ...(feed ? [{ rel: "alternate", type: FEED_TYPE, href: feed.path, title: feed.title }] : []),
+      ...(markdown
+        ? [{ rel: "alternate", type: MARKDOWN_MEDIA_TYPE, href: markdownUrl(path), title: "Markdown" }]
+        : []),
+      ...(feed ? [{ rel: "alternate", type: FEED_MEDIA_TYPE, href: feed.path, title: feed.title }] : []),
     ],
   };
 }

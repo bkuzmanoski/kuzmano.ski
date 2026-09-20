@@ -60,11 +60,10 @@ export function entryChunkDriftBetween(
 }
 
 /**
- * Captures the URL of every entry's body chunk in the client build and exposes them through
- * `virtual:entry-body-chunks`.
+ * Captures client entry body chunk URLs and exposes them through `virtual:entry-body-chunks`.
  *
- * Server builds use the map to preload an entry's body chunk before hydration. The map is
- * empty for client builds and development.
+ * Server builds use the URLs to preload body chunks before hydration; client and development
+ * builds receive an empty map.
  */
 export function entryBodyChunksPlugin(): Array<Plugin> {
   let entryBodyChunkUrls: Record<EntryKey, string> = {};

@@ -77,7 +77,7 @@ test("a draft entry does not expose a Markdown representation in production", ()
 
 test("a draft entry exposes a Markdown representation in development", () => {
   vi.stubEnv("DEV", true);
-  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The development server renders the Markdown representation of a draft.
+  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The dev server renders the Markdown representation of a draft.
 });
 
 test("an entry the site publishes is not marked noindex", () => {

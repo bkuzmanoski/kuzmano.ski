@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings.ts";
 import type { Delivery } from "#/server/mail.ts";
 
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API.contact}`;
+const URL = `${ORIGIN}${API_ROUTES.contact}`;
 const VALID_SUBMISSION = {
   from: "test@example.com",
   message: "Hello.",
@@ -72,7 +72,7 @@ test.each([
   expect(contactEmailAddress).not.toHaveBeenCalled();
 });
 
-test("a request without `Sec-Fetch-Site` is refused", async () => {
+test("a request without a `Sec-Fetch-Site` header is refused", async () => {
   const response = await GET({ request: new Request(URL) });
 
   expect(response.status).toBe(403);

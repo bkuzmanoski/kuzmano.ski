@@ -28,7 +28,7 @@ const CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION: ImportPattern = {
 
 const SERVER_MODULE_IMPORT_RESTRICTION: ImportPattern = {
   regex: String.raw`^(#/server/|(\.\./)+server/|\./server/)`,
-  message: "`/src/server` may only be imported by a server handler in `/src/routes/api`.",
+  message: "`/src/server` may only be imported by the Worker entry or an API handler in `/src/routes/api`.",
 };
 
 // Flat config replaces rule options instead of merging them, so the final matching block
@@ -124,7 +124,7 @@ export default defineConfig(
                 "./src/server",
                 "./src/site",
                 // Exception: `/src/test-utils` intentionally mounts the real router
-                // Exception: `/src/api.ts` only enumerates route paths.
+                // Exception: `/src/api-routes.ts` only enumerates route paths.
               ],
               from: ["./src/client.tsx", "./src/router.tsx", "./src/routeTree.gen.ts"],
             },
@@ -200,7 +200,7 @@ export default defineConfig(
   },
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/routes/api/**", "src/server/**"],
+    ignores: ["src/routes/api/**", "src/server/**", "src/worker.ts"],
     rules: restrictImports(SERVER_MODULE_IMPORT_RESTRICTION),
   },
   {
@@ -217,7 +217,7 @@ export default defineConfig(
     rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION, SERVER_MODULE_IMPORT_RESTRICTION),
   },
   {
-    files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}"],
+    files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}", "src/worker.ts"],
     rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION),
   },
   {
@@ -243,14 +243,14 @@ export default defineConfig(
     ),
   },
   {
-    files: ["src/api.ts"],
+    files: ["src/api-routes.ts"],
     rules: restrictImports(
-      // Every layer may read `/src/api.ts`, so importing the route tree's value would pull
+      // Every layer may read `/src/api-routes.ts`, so importing the route tree's value would pull
       // every route into each `lib/*/client.ts` caller.
       {
         regex: String.raw`^(#/|\./)routeTree\.gen\.ts$`,
         allowTypeImports: true,
-        message: "`/src/api.ts` may import the route tree's types, but must not import its value.",
+        message: "`/src/api-routes.ts` may import the route tree's types, but must not import its value.",
       },
       SERVER_MODULE_IMPORT_RESTRICTION,
     ),

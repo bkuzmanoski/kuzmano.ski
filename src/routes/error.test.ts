@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { API } from "#/api.ts";
+import { API_ROUTES } from "#/api-routes.ts";
 import type * as Catalog from "#/site/catalog.ts";
 import { renderRoute } from "#/test-utils/router.tsx";
 
@@ -44,5 +44,5 @@ test("a route that throws while loading posts a client error report", async () =
   renderRoute("/about");
   await screen.findByText("There was a problem loading this page.");
 
-  expect(sendBeacon).toHaveBeenCalledWith(API.clientErrors, expect.any(Blob));
+  expect(sendBeacon).toHaveBeenCalledWith(API_ROUTES.clientErrors, expect.any(Blob));
 });
