@@ -11,7 +11,6 @@ import { entryRoute } from "#/site/routes.ts";
 
 import { byNewestFirst, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
 import { CLIENT_ENVIRONMENT } from "../environments.ts";
-import { addHeadersRules } from "../headers.ts";
 import { requestPathOf } from "../paths.ts";
 
 import { articleContentOf } from "./article.ts";
@@ -19,10 +18,11 @@ import { atomFeed } from "./atom.ts";
 
 import type { FeedEntry } from "./atom.ts";
 import type { AuthoredContent, AuthoredEntry } from "../content/authored-content.ts";
-import type { HeadersRule } from "../headers.ts";
+import type { AddHeadersRules, HeadersRule } from "../headers.ts";
 import type { Plugin } from "vite";
 
 export type DocumentSource = (route: string) => Promise<string | undefined>;
+export type ArticleContentCache = Map<string, Promise<string>>;
 
 const FEED_HEADERS_RULE: HeadersRule = {
   description: "Atom is served from a .xml path, which would otherwise be typed as generic XML.",
@@ -42,11 +42,23 @@ export function captureDocument({ page, html }: { page: { path: string }; html: 
   prerenderedDocuments.set(page.path, html);
 }
 
-async function feedEntryOf(segment: string, entry: AuthoredEntry, documentOf: DocumentSource): Promise<FeedEntry> {
+const articleContentFor = async (route: string, url: string, documentOf: DocumentSource) => {
+  const html = await documentOf(route);
+  return html ? articleContentOf(html, url) : "";
+};
+
+async function feedEntryOf(
+  segment: string,
+  entry: AuthoredEntry,
+  documentOf: DocumentSource,
+  articleContents: ArticleContentCache,
+): Promise<FeedEntry> {
   const { title, description, date, category } = parseFrontmatter(entry.frontmatter, entry.entryFilePath);
   const route = entryRoute(segment, entry.slug);
   const url = canonicalUrl(route);
-  const html = await documentOf(route);
+  const pendingContent = articleContents.get(route) ?? articleContentFor(route, url, documentOf);
+
+  articleContents.set(route, pendingContent);
 
   return {
     title,
@@ -55,26 +67,35 @@ async function feedEntryOf(segment: string, entry: AuthoredEntry, documentOf: Do
     markdownUrl: markdownUrl(route),
     date,
     category,
-    content: html ? articleContentOf(html, url) : "",
+    content: await pendingContent,
   };
 }
 
-function entriesFor(feed: FeedMetadata, { collections }: AuthoredContent, documentOf: DocumentSource) {
+function entriesFor(
+  feed: FeedMetadata,
+  { collections }: AuthoredContent,
+  documentOf: DocumentSource,
+  articleContents: ArticleContentCache,
+) {
   return collections
     .filter(({ name }) => feed.collections.some((collection) => collection === name))
     .flatMap(({ name, entries }) => publishedEntries(entries).map((entry) => ({ segment: name, entry })))
     .sort((a, b) => byNewestFirst(a.entry, b.entry))
     .slice(0, FEED_MAX_ENTRIES)
-    .map(({ segment, entry }) => feedEntryOf(segment, entry, documentOf));
+    .map(({ segment, entry }) => feedEntryOf(segment, entry, documentOf, articleContents));
 }
 
-/** Builds one feed's Atom document from a content tree and a source of prerendered documents. */
+/**
+ * Builds one feed's Atom document from a content tree and a source of prerendered documents. Feeds
+ * built with the same `articleContents` read each entry's document once.
+ */
 export async function feedXmlFor(
   feed: FeedMetadata,
   content: AuthoredContent,
   documentOf: DocumentSource,
+  articleContents: ArticleContentCache = new Map(),
 ): Promise<string> {
-  const entries = await Promise.all(entriesFor(feed, content, documentOf));
+  const entries = await Promise.all(entriesFor(feed, content, documentOf, articleContents));
   const updatedDate = entries[0]?.date ?? "1970-01-01"; // The entries are sorted newest first, so the first one is the feed's own newest date.
 
   return atomFeed({
@@ -91,10 +112,15 @@ export async function feedXmlFor(
 }
 
 /** Writes an Atom feed for the site and for each collection from prerendered content. */
-export function feedsPlugin(): Plugin {
+export function feedsPlugin({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): Plugin {
   return {
     name: "kuzmano.ski:feeds",
     enforce: "post",
+    buildStart() {
+      if (this.environment.name === CLIENT_ENVIRONMENT) {
+        addHeadersRules([FEED_HEADERS_RULE]);
+      }
+    },
     buildApp: {
       order: "post",
       async handler(builder) {
@@ -117,17 +143,13 @@ export function feedsPlugin(): Plugin {
             ? Promise.resolve(prerenderedDocuments.get(route))
             : Promise.reject(new Error(`No prerendered document was captured for "${route}".`));
 
-        try {
-          for (const feed of FEEDS) {
-            const feedAbsolutePath = join(outputDirectoryAbsolutePath, feed.path);
+        const articleContents: ArticleContentCache = new Map();
 
-            await mkdir(dirname(feedAbsolutePath), { recursive: true });
-            await writeFile(feedAbsolutePath, await feedXmlFor(feed, authoredContent, documentOf));
-          }
+        for (const feed of FEEDS) {
+          const feedAbsolutePath = join(outputDirectoryAbsolutePath, feed.path);
 
-          await addHeadersRules(outputDirectoryAbsolutePath, [FEED_HEADERS_RULE]);
-        } finally {
-          prerenderedDocuments.clear(); // Released once written so a rebuild under `--watch` reads only the documents it just prerendered.
+          await mkdir(dirname(feedAbsolutePath), { recursive: true });
+          await writeFile(feedAbsolutePath, await feedXmlFor(feed, authoredContent, documentOf, articleContents));
         }
       },
     },

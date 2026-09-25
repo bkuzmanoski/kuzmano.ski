@@ -1,8 +1,18 @@
 import { describe, expect, test } from "vitest";
 
-import { containsPoint, insetRect, insetToViewport, scaleInset, transformBetween } from "./geometry.ts";
+import { transformedBox } from "#/test-utils/geometry.ts";
 
-import type { Inset, Rect, Transform } from "./geometry.ts";
+import {
+  containsPoint,
+  insetRect,
+  insetToViewport,
+  intersectionOf,
+  intersectionRatioOf,
+  scaleInset,
+  transformBetween,
+} from "./geometry.ts";
+
+import type { Inset, Rect } from "./geometry.ts";
 
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
 const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
@@ -21,6 +31,35 @@ describe("containsPoint", () => {
     expect(containsPoint(rect, { x: 501, y: 200 })).toBe(false);
     expect(containsPoint(rect, { x: 300, y: 49 })).toBe(false);
     expect(containsPoint(rect, { x: 300, y: 351 })).toBe(false);
+  });
+});
+
+describe("intersectionOf", () => {
+  test("returns the rect two overlapping rects share", () => {
+    expect(intersectionOf(rect, { x: 400, y: 300, width: 200, height: 200 })).toEqual({
+      x: 400,
+      y: 300,
+      width: 100,
+      height: 50,
+    });
+  });
+
+  test("returns `null` for rects that only meet at an edge", () => {
+    expect(intersectionOf(rect, { x: 500, y: 50, width: 100, height: 100 })).toBeNull();
+  });
+});
+
+describe("intersectionRatioOf", () => {
+  test("returns the fraction of the rect's area within the bounds", () => {
+    expect(intersectionRatioOf(rect, { x: 0, y: 0, width: 1_000, height: 125 })).toBe(0.25);
+  });
+
+  test("returns `0` for a rect outside the bounds", () => {
+    expect(intersectionRatioOf(rect, { x: 0, y: 400, width: 1_000, height: 100 })).toBe(0);
+  });
+
+  test("returns `0` for an empty rect", () => {
+    expect(intersectionRatioOf({ x: 100, y: 100, width: 0, height: 0 }, rect)).toBe(0);
   });
 });
 
@@ -95,23 +134,16 @@ describe("insetToViewport", () => {
 });
 
 describe("transformBetween", () => {
-  const apply = ({ scale, x, y }: Transform, box: Rect): Rect => ({
-    x: box.x * scale + x,
-    y: box.y * scale + y,
-    width: box.width * scale,
-    height: box.height * scale,
-  });
-
   const originalRect: Rect = { x: 200, y: 150, width: 400, height: 300 };
   const targetRect: Rect = { x: 50, y: 25, width: 800, height: 600 };
 
   test("transforms the original rect to the target rect", () => {
-    expect(apply(transformBetween(originalRect, targetRect), originalRect)).toEqual(targetRect);
+    expect(transformedBox(transformBetween(originalRect, targetRect), originalRect)).toEqual(targetRect);
   });
 
   test("transforms a child rect of the original rect to the corresponding position and size in the target rect", () => {
     const childRect: Rect = { x: 300, y: 250, width: 100, height: 100 }; // Offset by 100, 100 inside `originalRect`.
-    const transformedRect = apply(transformBetween(originalRect, targetRect), childRect);
+    const transformedRect = transformedBox(transformBetween(originalRect, targetRect), childRect);
 
     expect(transformedRect.x - targetRect.x).toBeCloseTo(200); // The offset doubles with the rect.
     expect(transformedRect.y - targetRect.y).toBeCloseTo(200);

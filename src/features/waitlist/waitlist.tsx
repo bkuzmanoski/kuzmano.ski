@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import Checkmark from "#/assets/images/checkmark.svg?react";
 import { Alert } from "#/components/alert.tsx";
@@ -7,7 +8,6 @@ import { InputField } from "#/components/input-field.tsx";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { TextInput, TextInputFrame } from "#/components/text-input.tsx";
 import { SITE_URL } from "#/config/site.ts";
-import { cx } from "#/lib/class-names.ts";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { useForm } from "#/lib/forms/use-form.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
@@ -25,6 +25,8 @@ interface Prompt {
 }
 
 export const JOINING_MESSAGE = "Adding you to the list…";
+
+const focusOnMount = (element: HTMLElement | null) => element?.focus();
 
 export function Waitlist({
   list,
@@ -44,7 +46,9 @@ export function Waitlist({
   const form = useForm({ initialValues: EMPTY_MEMBERSHIP, schema: WAITLIST_SCHEMA });
   const emailAddressField = useInputField(form.visibleErrors.emailAddress);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const emailAddressFieldRef = useRef<HTMLInputElement>(null);
+  const elementFocusedAtJoinRef = useRef<HTMLElement | null>(null);
 
   const entryRoute = renderedEntry?.route ?? "";
 
@@ -65,36 +69,43 @@ export function Waitlist({
       return;
     }
 
+    const { activeElement } = document;
+    const isFocusInForm = activeElement instanceof HTMLElement && formRef.current?.contains(activeElement) === true;
+
+    elementFocusedAtJoinRef.current = isFocusInForm ? activeElement : emailAddressFieldRef.current;
+
     void waitlistJoin.join({ emailAddress: form.values.emailAddress });
   }
 
   function closePrompt() {
-    const shouldFocusField = prompt?.kind === "incomplete";
-
-    setPrompt(null);
-
-    if (shouldFocusField) {
-      emailAddressFieldRef.current?.focus();
-    }
+    flushSync(() => setPrompt(null));
+    (prompt?.kind === "incomplete" ? emailAddressFieldRef.current : elementFocusedAtJoinRef.current)?.focus();
   }
 
   return (
     <aside
       className={styles.waitlist}
       aria-labelledby={titleId}
+      data-content-default-styles="off"
+      data-content-panel
       data-content-space="loose"
       data-feed-text={fallbackText(`${SITE_URL}${entryRoute}`)}
       data-joined={hasJoined || undefined}
     >
-      <div className={styles.content} inert={isJoining}>
-        <div className={styles.intro}>
+      <div className={styles.body} inert={isJoining}>
+        <div className={styles.header}>
           <h2 id={titleId} className={styles.title}>
             {title}
           </h2>
-          {children}
+          {children !== undefined && (
+            <div className={styles.description} data-content-default-styles="on">
+              {children}
+            </div>
+          )}
         </div>
-        <div className={styles.slot}>
+        <div className={styles.formArea}>
           <form
+            ref={formRef}
             className={styles.form}
             noValidate
             inert={hasJoined}
@@ -103,8 +114,13 @@ export function Waitlist({
               join();
             }}
           >
-            <InputField label="Email address" binding={emailAddressField} labelHidden className={styles.inputField}>
-              <TextInputFrame className={styles.inputFieldFrame}>
+            <InputField
+              label="Email address"
+              binding={emailAddressField}
+              labelHidden
+              className={styles.emailAddressField}
+            >
+              <TextInputFrame className={styles.emailAddressFieldFrame}>
                 <TextInput
                   {...emailAddressField.control}
                   {...form.handlers.emailAddress}
@@ -119,20 +135,19 @@ export function Waitlist({
                 />
               </TextInputFrame>
             </InputField>
-            <Button type="submit" className={styles.action}>
+            <Button type="submit" className={styles.submitButton}>
               {action}
             </Button>
           </form>
-          <p className={cx(styles.status, isJoining && styles.hidden)} role="status">
-            {isJoining ? (
-              JOINING_MESSAGE
-            ) : hasJoined ? (
-              <>
-                <Checkmark className={styles.checkmark} aria-hidden />
-                {confirmation}
-              </>
-            ) : null}
+          <p className={styles.joiningStatus} role="status">
+            {isJoining && JOINING_MESSAGE}
           </p>
+          {hasJoined && (
+            <p ref={focusOnMount} className={styles.confirmation} tabIndex={-1}>
+              <Checkmark className={styles.checkmark} />
+              {confirmation}
+            </p>
+          )}
         </div>
       </div>
       {isJoining && (

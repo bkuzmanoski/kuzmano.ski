@@ -25,17 +25,17 @@ export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (
       reportResize({ width, height });
     };
 
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    const observer = new ResizeObserver(measure);
 
-    // A background tab's viewport can change before it becomes visible, and hidden documents
-    // don't run observer callbacks. Let the observer provide the initial measurement when it does.
-    if (!observer || document.visibilityState === "visible") {
+    // A background tab's viewport can change before it becomes visible, and hidden documents don't
+    // run observer callbacks. Let the observer provide the initial measurement when it does.
+    if (document.visibilityState === "visible") {
       measure();
     }
 
-    observer?.observe(element);
+    observer.observe(element);
 
-    return () => observer?.disconnect();
+    return () => observer.disconnect();
   }, [ref]);
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 
 import { playError, playSuccess } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -57,6 +57,7 @@ export function Alert(
     secondaryAction?: AlertAction;
   },
 ) {
+  const messageId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const primaryActionRef = useRef<HTMLElement>(null);
 
@@ -64,7 +65,7 @@ export function Alert(
   const modal = props.modal !== false;
   const open = props.modal === false || props.open;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = dialogRef.current;
 
     if (!dialog || !modal) {
@@ -87,8 +88,11 @@ export function Alert(
     <dialog
       ref={dialogRef}
       open={modal ? undefined : open}
+      role="alertdialog"
       className={styles.alert}
       aria-label={label}
+      aria-labelledby={label === undefined ? messageId : undefined}
+      aria-describedby={label === undefined ? undefined : messageId}
       onPointerDown={(event) => {
         if (isPressOutside(event)) {
           playError();
@@ -104,7 +108,9 @@ export function Alert(
           <span className={cx(styles.icon, styles[variant ?? "error"])} aria-hidden>
             {variant === "information" ? CHAR_INFORMATION_ICON : CHAR_ERROR_ICON}
           </span>
-          <p className={styles.message}>{message}</p>
+          <p id={messageId} className={styles.message}>
+            {message}
+          </p>
           <div className={styles.actions}>
             {secondaryAction && <ActionButton action={secondaryAction} autoFocus={false} />}
             <ActionButton action={primaryAction} autoFocus={!modal} ref={primaryActionRef as Ref<never>} />

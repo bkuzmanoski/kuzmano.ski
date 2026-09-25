@@ -1,5 +1,7 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
+
+import { nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { useInputScrollSound } from "./use-input-scroll-sound.ts";
 
@@ -21,8 +23,6 @@ function renderInput() {
 }
 
 // Lets the frame that clears an unclaimed mark run.
-const nextFrame = () => act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
-
 beforeEach(() => {
   playInputScroll.mockClear();
   silenceScrollAt.mockClear();
@@ -75,7 +75,7 @@ test("a scroll a frame after a key press plays the scroll sound", async () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "ArrowDown" });
-  await nextFrame();
+  await nextAnimationFrame();
   fireEvent.scroll(input);
 
   expect(playInputScroll).toHaveBeenCalledWith(input);
@@ -86,7 +86,7 @@ test("a scroll that follows a repeated key press does not play the scroll sound,
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "ArrowDown", repeat: true });
-  await nextFrame();
+  await nextAnimationFrame();
   fireEvent.keyDown(input, { key: "ArrowDown", repeat: true });
   fireEvent.scroll(input);
 

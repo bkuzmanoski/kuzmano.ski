@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest";
 
+import { transformedBox } from "#/test-utils/geometry.ts";
+
 import { stageMetricsFor } from "./stage.ts";
 
-import type { Rect, Size, Transform } from "../geometry.ts";
+import type { Rect, Size } from "../geometry.ts";
 
 const WIDE_VIEWPORT: Size = { width: 1440, height: 900 };
 const TALL_VIEWPORT: Size = { width: 430, height: 932 };
@@ -14,14 +16,6 @@ const ILLUSTRATION_ASPECT_RATIO = 1214 / 1067;
 const DISPLAY_PLACEMENT: Rect = { x: 330 / 1214, y: 99 / 1067, width: 554 / 1214, height: 410 / 1067 };
 const APPLE_LOGO_BOTTOM = 735 / 1067;
 const DISK_DRIVE_BOTTOM = 692 / 1067;
-
-// Applies a transform the way the compositor does, for an origin at the viewport's top-left corner.
-const transformedBox = ({ scale, x, y }: Transform, box: Rect): Rect => ({
-  x: box.x * scale + x,
-  y: box.y * scale + y,
-  width: box.width * scale,
-  height: box.height * scale,
-});
 
 const zoomedInBoxFor = (viewport: Size) => stageMetricsFor(viewport).illustration;
 const zoomedOutBoxFor = (viewport: Size) => {

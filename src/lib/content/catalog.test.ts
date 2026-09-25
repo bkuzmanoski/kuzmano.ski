@@ -140,16 +140,14 @@ describe("createCatalog", () => {
     );
   });
 
-  test("an entry resolves to the URL of its compiled body chunk, or `null` when the build did not produce an asset for it", () => {
-    const documents = {
-      ...DOCUMENTS,
-      "collection/newest.mdx": { ...NEWEST_DOCUMENT, bodyChunkUrl: "/assets/newest.js" },
-    };
+  test("an entry resolves to the chunks and stylesheets the build produced for it, or `null` when the build did not produce a body chunk for it", () => {
+    const bodyChunks = { moduleUrls: ["/assets/newest.js"], stylesheetUrls: ["/assets/newest.css"] };
+    const documents = { ...DOCUMENTS, "collection/newest.mdx": { ...NEWEST_DOCUMENT, bodyChunks } };
     const collection = catalogOf(documents).collections.collection!;
 
-    expect(collection.bodyChunkUrlOf("newest")).toBe("/assets/newest.js");
-    expect(collection.bodyChunkUrlOf("middle")).toBeNull();
-    expect(collection.bodyChunkUrlOf("missing-entry")).toBeNull();
+    expect(collection.bodyChunksOf("newest")).toEqual(bodyChunks);
+    expect(collection.bodyChunksOf("middle")).toBeNull();
+    expect(collection.bodyChunksOf("missing-entry")).toBeNull();
   });
 
   test("an entry resolves to the entry key of its directory and slug", () => {

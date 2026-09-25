@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { WindowToolbar } from "#/features/windows/window-toolbar.tsx";
@@ -26,6 +26,10 @@ beforeEach(() => {
   writeText.mockResolvedValue(undefined);
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 const lastEntryIndex = collectionEntries.length - 1;
 const routeOf = (index: number) => collection.routeOf(collectionEntries[index]!.slug);
 const dateFormat = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
@@ -38,6 +42,13 @@ test("the toolbar renders the entry's date with its `datetime` attribute", () =>
   const date = screen.getByText(formatDate(entry.date, dateFormat));
 
   expect(date.getAttribute("datetime")).toBe(entry.date);
+});
+
+test("the toolbar marks the entry's date with the `lang` attribute of the browser's locale when its language differs from the document's", () => {
+  vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
+  render(<WindowToolbar route={routeOf(1)} />);
+
+  expect(document.querySelector("time")?.getAttribute("lang")).toBe("de-DE");
 });
 
 test("the toolbar omits the share control when the browser does not support the Web Share API", () => {

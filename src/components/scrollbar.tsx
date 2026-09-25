@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import ArrowScrollbarIcon from "#/assets/images/scrollbar-icon-arrow.svg?react";
-import { recordScrollAt, silenceScrollAt, stepScroll } from "#/lib/audio/scroll.ts";
+import { recordScrollAt, silenceScrollAt, stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
@@ -16,7 +16,7 @@ import styles from "./scrollbar.module.css";
 
 import type { ReactNode, RefObject } from "react";
 
-export const ARROW_STEP_PX = 40;
+export const ARROW_STEP_PX = 40; // The distance one press on a scrollbar arrow scrolls the viewport.
 export const ARROW_STEP_REPEAT_INTERVAL_MS = 70;
 export const ARROW_STEP_REPEAT_DELAY_MS = 400; // Delay repeating so an ordinary press does not step twice.
 
@@ -27,7 +27,7 @@ function ScrollArrow({
 }: {
   direction: "up" | "down";
   hidden: boolean;
-  onStep: () => boolean;
+  onStep: (isRepeat: boolean) => void; // `isRepeat` is `true` for each step after the first while the arrow is held.
 }) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimer = useTimer();
@@ -63,16 +63,9 @@ function ScrollArrow({
   // The scrollbar can unmount while the pointer is held, so the window listener must also be removed.
   useEffect(() => () => holdControllerRef.current?.abort(), []);
 
-  // A successful step plays its own sound. At the scroll boundary, where no step occur a click is played to indicate the press was received.
-  function step(isRepeat = false) {
-    if (!onStep() && !isRepeat) {
-      playClick();
-    }
-  }
-
   function startRepeating() {
     const repeat = () => {
-      step(true);
+      onStep(true);
       repeatTimer.start(repeat, ARROW_STEP_REPEAT_INTERVAL_MS);
     };
 
@@ -83,16 +76,17 @@ function ScrollArrow({
     <button
       ref={arrowRef}
       type="button"
-      tabIndex={hidden ? -1 : undefined}
-      className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown, hidden && styles.hidden)}
+      tabIndex={-1}
+      className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown)}
+      style={hidden ? { visibility: "hidden" } : undefined} // Hidden rather than removed, so the arrow keeps its space in the scrollbar.
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
-      // Keyboard activation has no preceding `pointerdown`, so the click steps here. A pointer
-      // click normally follows a `pointerdown` that already stepped and only clears that press.
-      // iOS can retarget a tap's click to the arrow without retargeting its pointer events, in
-      // which case the click has no corresponding press and must step here as well.
+      // A pointer click normally follows a `pointerdown` that already stepped and only clears that
+      // press. A click from an assistive technology has no preceding `pointerdown`, so it steps here.
+      // iOS can retarget a tap's click to the arrow without retargeting its pointer events, in which
+      // case the click has no corresponding press and must step here as well.
       onClick={(event) => {
         if (!isPointerClick(event) || !hasUnconsumedPressRef.current) {
-          step();
+          onStep(false);
         }
 
         hasUnconsumedPressRef.current = false;
@@ -105,7 +99,7 @@ function ScrollArrow({
         hasUnconsumedPressRef.current = true;
         beginHold();
         setIsPressed(true);
-        step();
+        onStep(false);
         startRepeating();
       }}
     >
@@ -201,13 +195,17 @@ export function Scrollbar({
     onDragMove: dragScroll,
   });
 
-  const step = (delta: number) => (viewportRef.current ? stepScroll(viewportRef.current, delta) : false);
+  function step(delta: number, isRepeat: boolean) {
+    if (viewportRef.current) {
+      stepScrollForPress(viewportRef.current, delta, isRepeat);
+    }
+  }
 
   const isCollapsed = !hasOverflow && !resizeControl;
 
   return (
     <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
-      <ScrollArrow direction="up" hidden={!hasOverflow} onStep={() => step(-ARROW_STEP_PX)} />
+      <ScrollArrow direction="up" hidden={!hasOverflow} onStep={(isRepeat) => step(-ARROW_STEP_PX, isRepeat)} />
       <div
         ref={trackRef}
         className={cx(styles.track, hasOverflow && styles.filled)}
@@ -223,7 +221,7 @@ export function Scrollbar({
       >
         {hasOverflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
       </div>
-      <ScrollArrow direction="down" hidden={!hasOverflow} onStep={() => step(ARROW_STEP_PX)} />
+      <ScrollArrow direction="down" hidden={!hasOverflow} onStep={(isRepeat) => step(ARROW_STEP_PX, isRepeat)} />
       {resizeControl}
     </div>
   );

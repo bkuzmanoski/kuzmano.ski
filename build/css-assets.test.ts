@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { readStylesheets, unresolvedUrlsIn, urlsIn } from "./css-assets.ts";
+import { readStylesheetProblems, unresolvedUrlsIn, urlsIn } from "./css-assets.ts";
 
 const cssRule = (reference: string) => `.a { background-image: url("${reference}"); }`;
 const noFile = () => false;
 
 test("every relative `url()` in the stylesheets under `/src` resolves to a file", async () => {
-  expect((await readStylesheets()).problems).toEqual([]);
+  expect(await readStylesheetProblems()).toEqual([]);
 });
 
 describe("unresolvedUrlsIn", () => {

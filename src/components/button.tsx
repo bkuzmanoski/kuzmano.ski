@@ -37,7 +37,6 @@ export function Button(
     (props.holdPressed || isPressing) && styles.pressed,
     props.className,
   );
-
   const pressHandlers = mergeHandlers(pressSoundHandlers, {
     onPointerDown: (event: PointerEvent) => {
       if (props.holdPressed !== undefined && isPrimaryPress(event)) {

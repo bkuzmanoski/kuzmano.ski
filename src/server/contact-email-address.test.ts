@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING } from "./bindings.ts";
-import { contactEmailAddress } from "./contact-email-address.ts";
+import { readContactEmailAddress } from "./contact-email-address.ts";
 
 const env = vi.hoisted(() => ({ current: {}, fails: false }));
 
@@ -21,20 +21,28 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test("`contactEmailAddress` returns the configured email address", async () => {
-  await expect(contactEmailAddress()).resolves.toBe(ADDRESS);
+test("`readContactEmailAddress` returns the configured email address", async () => {
+  await expect(readContactEmailAddress()).resolves.toBe(ADDRESS);
   expect(console.error).not.toHaveBeenCalled();
 });
 
 test.each([
   ["the secret is missing", () => (env.current = {})],
   ["the secret is empty", () => (env.current = { [CONTACT_EMAIL_ADDRESS_BINDING]: "" })],
-  ["the environment is unreachable", () => (env.fails = true)],
-])("`contactEmailAddress` returns `null` and logs the missing binding when %s", async (_label, arrange) => {
+])("`readContactEmailAddress` returns `null` and logs the missing binding when %s", async (_label, arrange) => {
   arrange();
 
-  await expect(contactEmailAddress()).resolves.toBeNull();
+  await expect(readContactEmailAddress()).resolves.toBeNull();
   expect(console.error).toHaveBeenCalledWith(
     expect.objectContaining({ event: "contact_binding_missing", binding: CONTACT_EMAIL_ADDRESS_BINDING }),
+  );
+});
+
+test("`readContactEmailAddress` returns `null` and logs the Workers environment as missing when it is unreachable", async () => {
+  env.fails = true;
+
+  await expect(readContactEmailAddress()).resolves.toBeNull();
+  expect(console.error).toHaveBeenCalledWith(
+    expect.objectContaining({ event: "contact_binding_missing", binding: "the Workers environment" }),
   );
 });

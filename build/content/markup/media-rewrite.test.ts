@@ -13,6 +13,7 @@ import { rehypeMedia } from "./media-rewrite.ts";
 
 import type { MediaForEntry, MediaForReference } from "./media-rewrite.ts";
 import type { ContentNode, ContentParent } from "./tree.ts";
+import type { Root } from "hast";
 import type { PluggableList } from "unified";
 
 const servedUrl = (name: string, extension: string) =>
@@ -136,6 +137,12 @@ describe("rehypeMedia", () => {
     ]);
   });
 
+  test("renders a Markdown image it wraps in a `<picture>` as its `<source>` elements followed by the `<img>`", async () => {
+    expect(toHtml((await compiledTree("![An image](./image.png)\n")) as Root)).toBe(
+      `<p><picture><source srcset="${IMAGE_WITH_ALTERNATES.alternates[0]!.srcSet}" type="image/avif"><source srcset="${IMAGE_WITH_ALTERNATES.alternates[1]!.srcSet}" type="image/webp"><img src="${IMAGE_WITH_ALTERNATES.src}" alt="An image" width="900" height="500" loading="lazy" decoding="async"></picture></p>`,
+    );
+  });
+
   test("rewrites a Markdown image to the file the site serves, at its intrinsic size", async () => {
     const tree = await compiledTree("![An image](./image.png)\n");
     expect(elementsNamed(tree, "img")[0]?.properties).toEqual({
@@ -209,11 +216,63 @@ describe("rehypeMedia", () => {
     expect(picture?.children?.slice(0, 2).map((child) => child.properties?.type)).toEqual(["image/avif", "image/webp"]);
   });
 
-  test("rewrites the `src` attribute of an authored `<img>` to the file the site serves, and does not add `width`, `height`, `loading`, or `decoding` attributes", async () => {
+  test("rewrites the `src` attribute of an authored `<img>` to the file the site serves, and does not add `loading` or `decoding` attributes", async () => {
     const [image] = jsxElementsNamed(await compiledTree('<img src="./image.png" alt="An image" />\n'), "img");
 
-    expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt"]);
+    expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt", "width", "height"]);
     expect(attributeOf(image, "src")).toBe(IMAGE_WITH_ALTERNATES.src);
+  });
+
+  test("sets the `width` and `height` attributes of an authored `<img>` to the dimensions of the image", async () => {
+    const [image] = jsxElementsNamed(await compiledTree('<img src="./image.png" alt="An image" />\n'), "img");
+
+    expect(attributeOf(image, "width")).toBe("900");
+    expect(attributeOf(image, "height")).toBe("500");
+  });
+
+  test("sets the `width` and `height` attributes of an authored `<img>` written inside a sentence", async () => {
+    const [image] = jsxElementsNamed(
+      await compiledTree('Text with an <img src="./image.jpg" alt="An image" /> in it.\n'),
+      "img",
+    );
+
+    expect(attributeOf(image, "width")).toBe("1200");
+    expect(attributeOf(image, "height")).toBe("800");
+  });
+
+  test("preserves the `width` attribute written on an authored `<img>`, and does not set a `height` attribute", async () => {
+    const [image] = jsxElementsNamed(
+      await compiledTree('<img src="./image.png" alt="An image" width="450" />\n'),
+      "img",
+    );
+
+    expect(attributeOf(image, "width")).toBe("450");
+    expect(attributeOf(image, "height")).toBeUndefined();
+  });
+
+  test("preserves the `height` attribute written on an authored `<img>`, and does not set a `width` attribute", async () => {
+    const [image] = jsxElementsNamed(
+      await compiledTree('<img src="./image.png" alt="An image" height="250" />\n'),
+      "img",
+    );
+
+    expect(attributeOf(image, "width")).toBeUndefined();
+    expect(attributeOf(image, "height")).toBe("250");
+  });
+
+  test("does not set the `width` or `height` attribute of an authored `<img>` with a spread attribute", async () => {
+    const [image] = jsxElementsNamed(
+      await compiledTree('<img src="./image.png" alt="An image" {...props} />\n'),
+      "img",
+    );
+
+    expect(attributeOf(image, "width")).toBeUndefined();
+    expect(attributeOf(image, "height")).toBeUndefined();
+  });
+
+  test("does not set the `width` or `height` attribute of an authored `<img>` whose `src` attribute is unresolved", async () => {
+    const [image] = jsxElementsNamed(await compiledTree('<img src="./missing-image.png" alt="An image" />\n'), "img");
+    expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt"]);
   });
 
   test("preserves authored `<img>` attributes when wrapping the image in a `<picture>`", async () => {
@@ -228,6 +287,25 @@ describe("rehypeMedia", () => {
       ["width", "450"],
       ["loading", "eager"],
     ]);
+  });
+
+  test("moves the `data-content-*` attributes of an authored `<img>` to the `<picture>` that wraps it", async () => {
+    const tree = await compiledTree(
+      '<img src="./image.png" alt="An image" data-content-wide data-content-space="loose" data-other="value" />\n',
+    );
+    const [picture] = elementsNamed(tree, "picture");
+    const [image] = jsxElementsNamed(tree, "img");
+
+    expect(picture?.properties).toEqual({ "data-content-wide": "", "data-content-space": "loose" });
+    expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt", "data-other", "width", "height"]);
+  });
+
+  test("preserves the `data-content-*` attributes of an authored `<img>` that is not wrapped in a `<picture>`", async () => {
+    const [image] = jsxElementsNamed(
+      await compiledTree('<img src="./image.jpg" alt="An image" data-content-wide />\n'),
+      "img",
+    );
+    expect(image?.attributes?.map(({ name }) => name)).toContain("data-content-wide");
   });
 
   test("does not wrap an authored `<img>` with a `srcSet` attribute of its own in a `<picture>`", async () => {
@@ -263,6 +341,19 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe(IMAGE_WITHOUT_ALTERNATES.src);
   });
 
+  test("sets the `width` and `height` attributes of an authored `<img>` in a `<picture>`", async () => {
+    const tree = await compiledTree(`
+      <picture>
+        <source srcSet="./image@2x.jpg" type="image/jpeg" />
+        <img src="./image.jpg" alt="An image" />
+      </picture>
+    `);
+    const [image] = jsxElementsNamed(tree, "img");
+
+    expect(attributeOf(image, "width")).toBe("1200");
+    expect(attributeOf(image, "height")).toBe("800");
+  });
+
   test("rewrites the `poster` and `src` attributes of a `<video>` to the files the site serves", async () => {
     const tree = await compiledTree('<video poster="./video.poster.webp" src="./video.mp4" />\n');
 
@@ -282,10 +373,17 @@ describe("rehypeMedia", () => {
     expect(attributeOf(video, "height")).toBe("720");
   });
 
-  test("preserves the `width` attribute written on a `<video>`, and does not supply a `height` attribute", async () => {
+  test("preserves the `width` attribute written on a `<video>`, and does not set a `height` attribute", async () => {
     const [video] = jsxElementsNamed(await compiledTree('<video src="./video.mp4" width="480" />\n'), "video");
 
     expect(attributeOf(video, "width")).toBe("480");
+    expect(attributeOf(video, "height")).toBeUndefined();
+  });
+
+  test("does not set the `width` or `height` attribute of a `<video>` with a spread attribute", async () => {
+    const [video] = jsxElementsNamed(await compiledTree('<video src="./video.mp4" {...props} />\n'), "video");
+
+    expect(attributeOf(video, "width")).toBeUndefined();
     expect(attributeOf(video, "height")).toBeUndefined();
   });
 

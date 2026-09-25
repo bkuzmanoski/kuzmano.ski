@@ -97,18 +97,22 @@ test("a video with the `controls` prop passes its other props to the `<video>`",
   expect(video.getAttribute("aria-label")).toBe("A video");
 });
 
-test("a video with the `controls` prop sets the `data-content-wide` and `data-content-space` attributes on its container", () => {
-  const { container } = render(
-    <Video src="/video.mp4" controls aria-label="A video" data-content-wide data-content-space="loose" />,
-  );
-  const videoContainer = container.firstElementChild!;
-  const video = container.querySelector("video")!;
+test.each([
+  { name: "data-content-wide", value: "" },
+  { name: "data-content-full-bleed", value: "" },
+  { name: "data-content-rail-span", value: "" },
+  { name: "data-content-space", value: "loose" },
+])(
+  "a video with the `controls` prop sets the `$name` attribute on its container rather than its `<video>`",
+  ({ name, value }) => {
+    const { container } = render(<Video src="/video.mp4" controls aria-label="A video" {...{ [name]: value }} />);
+    const videoContainer = container.firstElementChild!;
+    const video = container.querySelector("video")!;
 
-  expect(videoContainer.hasAttribute("data-content-wide")).toBe(true);
-  expect(videoContainer.getAttribute("data-content-space")).toBe("loose");
-  expect(video.hasAttribute("data-content-wide")).toBe(false);
-  expect(video.hasAttribute("data-content-space")).toBe(false);
-});
+    expect(videoContainer.getAttribute(name)).toBe(value);
+    expect(video.hasAttribute(name)).toBe(false);
+  },
+);
 
 test("a video with the `controls` prop forwards its `ref` prop to the `<video>`", () => {
   const ref = createRef<HTMLVideoElement>();

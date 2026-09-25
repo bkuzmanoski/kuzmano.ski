@@ -1,6 +1,6 @@
 import { clamp } from "../math.ts";
 
-import { playScrollDetent } from "./sounds.ts";
+import { playClick, playScrollDetent } from "./sounds.ts";
 
 export const IDLE_DURATION_MS = 250;
 export const DETENT_PX = 40; // Content distance between detents.
@@ -87,6 +87,16 @@ export function stepScroll(element: Element, delta: number) {
   playScrollStep(element);
 
   return true;
+}
+
+/**
+ * Scrolls `element` by `delta` for one press of a control that steps it, such as a scrollbar
+ * arrow or an arrow key, and plays that press's sound.
+ */
+export function stepScrollForPress(element: Element, delta: number, isRepeat: boolean) {
+  if (!stepScroll(element, delta) && !isRepeat) {
+    playClick();
+  }
 }
 
 export function playScroll(element: Element) {

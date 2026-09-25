@@ -55,10 +55,20 @@
   &.active {
     color: var(--color-highlight-foreground);
     background: var(--color-highlight-background);
+
+    @media (forced-colors: active) {
+      color: HighlightText;
+      forced-color-adjust: none;
+      background: Highlight;
+    }
   }
 
   &.disabled {
     color: var(--color-foreground-disabled);
+
+    @media (forced-colors: active) {
+      color: GrayText;
+    }
   }
 }
 

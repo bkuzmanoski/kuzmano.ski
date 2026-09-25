@@ -19,12 +19,23 @@ import type { ReactNode } from "react";
 
 export const HOVER_DELAY_MS = 400;
 
+interface TooltipChildProps {
+  "aria-describedby"?: string;
+  "aria-label"?: string;
+}
+
+// A control whose `aria-label` attribute is the tooltip's label already has the name the tooltip
+// shows, so describing it by the tooltip as well would read the same words twice. A control named
+// otherwise is described, since its name need not include the label.
+const isNamedByLabel = (props: TooltipChildProps, label: string) => props["aria-label"] === label;
+
 export function Tooltip({
   label,
   margin = 4,
   persistOnPress = false,
   showsState = false,
   suppressed = false,
+  childTextIncludesLabel = false, // Set when the child's text already contains the label, such as in visually hidden text.
   onDidHide, // Run when a visible tooltip is hidden. Use it to clear transient state once the tooltip has finished displaying it.
   className,
   children,
@@ -34,6 +45,7 @@ export function Tooltip({
   persistOnPress?: boolean;
   showsState?: boolean;
   suppressed?: boolean;
+  childTextIncludesLabel?: boolean;
   onDidHide?: () => void;
   className?: string;
   children: ReactNode;
@@ -45,6 +57,7 @@ export function Tooltip({
   const [isPointerHovering, setIsPointerHovering] = useState(false);
   const timer = useTimer();
   const wrapperRef = useRef<HTMLSpanElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
   const lastPointerTypeRef = useRef<string | null>(null);
   const reportHidden = useEffectEvent(() => onDidHide?.());
 
@@ -77,6 +90,24 @@ export function Tooltip({
       reportHidden();
     };
   }, [isVisible, id]);
+
+  // The Escape key hides a visible tooltip while the pointer and the focus stay on the control. The
+  // event is not stopped, so the press that hides a tooltip in a menu also closes the menu.
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isVisible]);
 
   function show(delay: number) {
     timer.cancel();
@@ -120,7 +151,8 @@ export function Tooltip({
       onPointerDownCapture={(event) => {
         lastPointerTypeRef.current = event.pointerType;
 
-        if (!persistOnPress) {
+        // `persistOnPress` keeps the tooltip through a press on the control, not on the tooltip.
+        if (!persistOnPress || tipRef.current?.contains(event.target as Node)) {
           hide(true);
         }
       }}
@@ -167,11 +199,11 @@ export function Tooltip({
         hide(true);
       }}
     >
-      {isValidElement<{ "aria-describedby"?: string }>(children)
+      {isValidElement<TooltipChildProps>(children) && !childTextIncludesLabel && !isNamedByLabel(children.props, label)
         ? cloneElement(children, { "aria-describedby": isVisible ? id : undefined })
         : children}
       {isVisible && (
-        <span id={id} className={styles.tip} role="tooltip">
+        <span ref={tipRef} id={id} className={styles.tip} role="tooltip">
           {label}
         </span>
       )}

@@ -10,6 +10,7 @@ import {
   authoredEntry,
   draftEntry,
 } from "../test-utils/authored-content.ts";
+import { linkTextsIn } from "../test-utils/markdown.ts";
 
 import { markdownFilesFor, renderedMarkdownFilesFor } from "./markdown-files.ts";
 
@@ -22,6 +23,8 @@ vi.mock("#/config/content.ts", async (importOriginal) => ({
     undescribed: { title: "Undescribed", description: "" },
   },
 }));
+
+const MARKDOWN_SYNTAX_TITLE = "A *title* with _emphasis_, `code`, <html>, and [brackets]";
 
 const collectionIndexMarkdown = async (tree: AuthoredContent, options?: { includeDrafts?: boolean }) => {
   const index = markdownFilesFor(tree, options).find(({ path }) => path === "/collection.md");
@@ -81,18 +84,39 @@ describe("markdownFilesFor", () => {
     expect(index.indexOf("newer")).toBeLessThan(index.indexOf("older"));
   });
 
-  test("escapes the brackets in a title and collapses a description onto one line in its list item", async () => {
+  test("writes a title containing Markdown syntax as the literal text of its link", async () => {
     const index = await collectionIndexMarkdown({
       ...content,
       collections: [
         authoredCollection("collection", [
-          authoredEntry("brackets", {
-            frontmatter: { title: "A title with [brackets]", description: "Two\nlines.", date: "2026-07-19" },
+          authoredEntry("entry", {
+            frontmatter: { title: MARKDOWN_SYNTAX_TITLE, description: "A description.", date: "2026-07-19" },
           }),
         ]),
       ],
     });
-    expect(index).toContain("- [A title with \\[brackets\\]](/collection/brackets.md) (2026-07-19)\n  Two lines.\n");
+    expect(linkTextsIn(index)).toStrictEqual([MARKDOWN_SYNTAX_TITLE]);
+  });
+
+  test("collapses a description written over several lines onto the line below its link", async () => {
+    const index = await collectionIndexMarkdown({
+      ...content,
+      collections: [
+        authoredCollection("collection", [
+          authoredEntry("entry", {
+            frontmatter: {
+              title: "A title",
+              description: `The first line
+                and the second line.`,
+              date: "2026-07-19",
+            },
+          }),
+        ]),
+      ],
+    });
+    expect(index).toContain(`- [A title](/collection/entry.md) (2026-07-19)
+  The first line and the second line.
+`);
   });
 
   test("throws when rendering a collection index containing an entry without a title", async () => {

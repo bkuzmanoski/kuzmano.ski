@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { SITE_URL } from "#/config/site.ts";
+
 import { ENTRY_URL, articleDocument } from "../test-utils/feeds.ts";
 
 import { articleContentOf } from "./article.ts";
@@ -15,8 +17,8 @@ describe("articleContentOf", () => {
       ENTRY_URL,
     );
 
-    expect(body).toContain('href="https://kuzmano.ski/collection"');
-    expect(body).toContain('src="https://kuzmano.ski/image.png"');
+    expect(body).toContain(`href="${SITE_URL}/collection"`);
+    expect(body).toContain(`src="${SITE_URL}/image.png"`);
     expect(body).toContain(`href="${ENTRY_URL}#section"`);
   });
 
@@ -45,6 +47,29 @@ describe("articleContentOf", () => {
     const heading =
       '<h2 id="section">A Heading<span class="wrapper"><a data-heading-link href="#section"><span>#</span></a></span></h2>';
     expect(articleContentOf(articleDocument(heading), ENTRY_URL)).toBe('<h2 id="section">A Heading</h2>');
+  });
+
+  test("removes the `id` attribute of an element that is not a heading when a link in the article does not name it", () => {
+    const body = articleContentOf(
+      articleDocument('<aside aria-labelledby="_R_1_"><p id="_R_1_">A label.</p><p>A note.</p></aside>'),
+      ENTRY_URL,
+    );
+    expect(body).toBe("<p>A label.</p><p>A note.</p>");
+  });
+
+  test("preserves the `id` attribute of an element that a link in the article names", () => {
+    const body = articleContentOf(articleDocument('<a href="#note">A link.</a><p id="note">A note.</p>'), ENTRY_URL);
+    expect(body).toContain('<p id="note">A note.</p>');
+  });
+
+  test("preserves the `id` attribute of each `<th>` that the `headers` attribute of a cell names", () => {
+    const body = articleContentOf(
+      articleDocument(
+        '<table><tr><th id="column">Column</th><th id="row">Row</th><td headers="column row">A value.</td></tr></table>',
+      ),
+      ENTRY_URL,
+    );
+    expect(body).toContain('<th id="column">Column</th><th id="row">Row</th>');
   });
 
   test("removes an element that has a `data-feed-omit` attribute", () => {
@@ -77,8 +102,8 @@ describe("articleContentOf", () => {
       ENTRY_URL,
     );
 
-    expect(body).toContain('srcset="https://kuzmano.ski/image-1.avif 1x, https://kuzmano.ski/image-2.avif 2x"');
-    expect(body).toContain('src="https://kuzmano.ski/image-1.png"');
+    expect(body).toContain(`srcset="${SITE_URL}/image-1.avif 1x, ${SITE_URL}/image-2.avif 2x"`);
+    expect(body).toContain(`src="${SITE_URL}/image-1.png"`);
   });
 
   test("preserves a `<video>`, resolving its `src` and `poster` attributes", () => {
@@ -87,8 +112,8 @@ describe("articleContentOf", () => {
       ENTRY_URL,
     );
 
-    expect(body).toContain('src="https://kuzmano.ski/video.mp4"');
-    expect(body).toContain('poster="https://kuzmano.ski/video-poster.png"');
+    expect(body).toContain(`src="${SITE_URL}/video.mp4"`);
+    expect(body).toContain(`poster="${SITE_URL}/video-poster.png"`);
   });
 
   test("unwraps a `<div>` left without attributes by sanitizing", () => {

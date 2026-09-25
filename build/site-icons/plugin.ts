@@ -18,6 +18,9 @@ const SITE_ASSET_FILE_NAMES = [
   WEB_APP_MANIFEST_FILE_NAME,
 ];
 
+// The files every icon and the web app manifest are generated from.
+const INPUT_FILE_ABSOLUTE_PATHS = [fromRoot(ICON_ARTWORK_FILE_PATH), fromRoot(STYLESHEET_FILE_PATH)];
+
 interface GeneratedFile {
   fileName: string;
   mediaType: string;
@@ -62,10 +65,6 @@ export function siteIconsPlugin(): Plugin {
 
   return {
     name: "kuzmano.ski:site-icons",
-    buildStart() {
-      this.addWatchFile(fromRoot(ICON_ARTWORK_FILE_PATH));
-      this.addWatchFile(fromRoot(STYLESHEET_FILE_PATH));
-    },
     async generateBundle() {
       if (this.environment.name !== CLIENT_ENVIRONMENT) {
         return;
@@ -101,8 +100,10 @@ export function siteIconsPlugin(): Plugin {
           .catch(next);
       });
     },
-    hotUpdate({ file }) {
-      if (file === fromRoot(ICON_ARTWORK_FILE_PATH) || file === fromRoot(STYLESHEET_FILE_PATH)) {
+    // Under `vite dev`, an edit to an input clears the generated files, so the next icon request
+    // generates them from the edited input.
+    watchChange(id) {
+      if (INPUT_FILE_ABSOLUTE_PATHS.includes(id)) {
         generatedFilesPromise = null;
       }
     },

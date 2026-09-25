@@ -6,6 +6,7 @@ import { entrySiblings } from "#/lib/content/siblings.ts";
 import { formatDate } from "#/lib/datetime.ts";
 import { useCanShare } from "#/lib/hooks/use-can-share.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
+import { languageAttributeInDocumentFor } from "#/site/language.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 import type { EntryTarget } from "#/site/windows.ts";
 
@@ -31,7 +32,11 @@ export function EntryToolbar({ target }: { target: EntryTarget }) {
         <NavigationButton variant="next" label="Next entry" route={next} />
       </div>
       {frontmatter && (
-        <time className={styles.date} dateTime={frontmatter.date}>
+        <time
+          className={styles.date}
+          dateTime={frontmatter.date}
+          lang={languageAttributeInDocumentFor(dateFormat)} // Formatted in the browser's locale.
+        >
           {formatDate(frontmatter.date, dateFormat)}
         </time>
       )}

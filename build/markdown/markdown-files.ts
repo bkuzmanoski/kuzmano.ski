@@ -7,31 +7,39 @@ import { canonicalUrl } from "#/site/metadata.ts";
 import { collectionRoute, entryRoute, pageRoute } from "#/site/routes.ts";
 
 import { byNewestFirst, publishedEntries } from "../content/authored-content.ts";
-import { NO_MEDIA_FOR_ENTRY } from "../content/markup/media-rewrite.ts";
 
-import { markdownFor } from "./markdown.ts";
+import { markdownRendererFor } from "./markdown.ts";
+import { asOneLine, listOf, markdownFrom, paragraphOf, textNode, textParagraph } from "./nodes.ts";
 
+import type { EntryDataModuleReader } from "./entry-data.ts";
+import type { MarkdownRenderer } from "./markdown.ts";
 import type { AuthoredContent, AuthoredEntry } from "../content/authored-content.ts";
-import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
 
 interface MarkdownFile {
   path: string;
   render: () => Promise<string>;
 }
 
-async function entryMarkdown(entry: AuthoredEntry, route: string, mediaForEntry: MediaForEntry): Promise<string> {
+export interface MarkdownFilesOptions {
+  renderMarkdown?: MarkdownRenderer; // Created once by the caller, so its processor is reused across renders.
+  readEntryDataModule?: EntryDataModuleReader;
+}
+
+async function entryMarkdown(
+  entry: AuthoredEntry,
+  route: string,
+  renderMarkdown: MarkdownRenderer,
+  readEntryDataModule: EntryDataModuleReader | undefined,
+): Promise<string> {
   // Validate the frontmatter even though it is emitted unchanged. A malformed block should
   // fail the build rather than be included in the Markdown file.
   parseFrontmatter(entry.frontmatter, entry.entryFilePath);
-  return markdownFor(await readFile(entry.absolutePath, "utf8"), {
+  return renderMarkdown(await readFile(entry.absolutePath, "utf8"), {
     path: entry.absolutePath,
     url: canonicalUrl(route),
-    mediaForEntry,
+    readEntryDataModule,
   });
 }
-
-const asLinkText = (value: string) => value.replace(/[\\[\]]/g, (character) => `\\${character}`); // Escapes the characters that would otherwise end a link's text or its destination early.
-const asOneLine = (value: string) => value.replace(/\s+/g, " ").trim(); // Collapses a description onto the single line its list item occupies.
 
 // A collection's entries as a Markdown index, linking each entry's Markdown. A collection
 // has no document of its own, so the index is its Markdown representation.
@@ -46,15 +54,19 @@ function collectionMarkdown(name: string, entries: Array<AuthoredEntry>): string
 
   const entryListItems = [...entries].sort(byNewestFirst).map((entry) => {
     const { title, description, date } = parseFrontmatter(entry.frontmatter, entry.entryFilePath);
-    return `- [${asLinkText(title)}](${markdownPath(entryRoute(name, entry.slug))}) (${date})\n  ${asOneLine(description)}`;
+    return [
+      paragraphOf([
+        { type: "link", url: markdownPath(entryRoute(name, entry.slug)), children: [textNode(title)] },
+        textNode(` (${date})\n${asOneLine(description)}`),
+      ]),
+    ];
   });
-  const markdownSections = [
-    `# ${collectionMetadata.title}`,
-    ...(collectionMetadata.description ? [collectionMetadata.description] : []),
-    ...(entryListItems.length > 0 ? [entryListItems.join("\n")] : []),
-  ];
 
-  return `${markdownSections.join("\n\n")}\n`;
+  return markdownFrom([
+    { type: "heading", depth: 1, children: [textNode(collectionMetadata.title)] },
+    ...(collectionMetadata.description ? [textParagraph(collectionMetadata.description)] : []),
+    ...(entryListItems.length > 0 ? [listOf(entryListItems)] : []),
+  ]);
 }
 
 /** Returns Markdown files for entries and collection indexes, each rendered on demand. */
@@ -62,21 +74,22 @@ export function markdownFilesFor(
   { pages, collections }: AuthoredContent,
   {
     includeDrafts = false,
-    mediaForEntry = NO_MEDIA_FOR_ENTRY,
-  }: { includeDrafts?: boolean; mediaForEntry?: MediaForEntry } = {},
+    renderMarkdown = markdownRendererFor(),
+    readEntryDataModule,
+  }: { includeDrafts?: boolean } & MarkdownFilesOptions = {},
 ): Array<MarkdownFile> {
   const includedEntries = (entries: Array<AuthoredEntry>) => (includeDrafts ? entries : publishedEntries(entries));
   return [
     ...includedEntries(pages.entries).map((entry) => ({
       path: markdownPath(pageRoute(entry.slug)),
-      render: () => entryMarkdown(entry, pageRoute(entry.slug), mediaForEntry),
+      render: () => entryMarkdown(entry, pageRoute(entry.slug), renderMarkdown, readEntryDataModule),
     })),
     ...collections.flatMap(({ name, entries }) => {
       const entriesToRender = includedEntries(entries);
       return [
         ...entriesToRender.map((entry) => ({
           path: markdownPath(entryRoute(name, entry.slug)),
-          render: () => entryMarkdown(entry, entryRoute(name, entry.slug), mediaForEntry),
+          render: () => entryMarkdown(entry, entryRoute(name, entry.slug), renderMarkdown, readEntryDataModule),
         })),
         {
           path: markdownPath(collectionRoute(name)),
@@ -91,7 +104,7 @@ export function markdownFilesFor(
 /** Renders each Markdown file once and returns its contents keyed by served path. */
 export async function renderedMarkdownFilesFor(
   content: AuthoredContent,
-  options?: { mediaForEntry?: MediaForEntry },
+  options?: MarkdownFilesOptions,
 ): Promise<Map<string, string>> {
   const renders = markdownFilesFor(content, options).map(async ({ path, render }) => [path, await render()] as const);
   return new Map(await Promise.all(renders));

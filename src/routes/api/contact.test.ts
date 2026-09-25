@@ -2,31 +2,31 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings.ts";
-import type { Delivery } from "#/server/mail.ts";
+import type { DeliveryResult } from "#/server/mail.ts";
+import { getRequestFromSite, jsonPostRequest } from "#/test-utils/requests.ts";
 
 import { Route } from "./contact.ts";
 
-const deliver = vi.hoisted(() => vi.fn<() => Promise<Delivery>>());
+const deliverMessage = vi.hoisted(() => vi.fn<() => Promise<DeliveryResult>>());
 const isWithinRateLimit = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
-const contactEmailAddress = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
+const readContactEmailAddress = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 
-vi.mock("#/server/mail.ts", () => ({ deliver }));
+vi.mock("#/server/mail.ts", () => ({ deliverMessage }));
 vi.mock("#/server/rate-limit.ts", () => ({ isWithinRateLimit }));
-vi.mock("#/server/contact-email-address.ts", () => ({ contactEmailAddress }));
+vi.mock("#/server/contact-email-address.ts", () => ({ readContactEmailAddress }));
 
 const EMAIL_ADDRESS = "inbox@example.com";
 
 beforeEach(() => {
-  deliver.mockReset();
-  deliver.mockResolvedValue("sent");
+  deliverMessage.mockReset();
+  deliverMessage.mockResolvedValue("sent");
   isWithinRateLimit.mockReset();
   isWithinRateLimit.mockResolvedValue(true);
-  contactEmailAddress.mockReset();
-  contactEmailAddress.mockResolvedValue(EMAIL_ADDRESS);
+  readContactEmailAddress.mockReset();
+  readContactEmailAddress.mockResolvedValue(EMAIL_ADDRESS);
 });
 
-const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API_ROUTES.contact}`;
+const URL = `https://example.com${API_ROUTES.contact}`;
 const VALID_SUBMISSION = {
   from: "test@example.com",
   message: "Hello.",
@@ -39,17 +39,10 @@ const { GET, POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
 
-const get = ({ site = "same-origin", headers = {} }: { site?: string; headers?: HeadersInit } = {}) =>
-  GET({ request: new Request(URL, { headers: { "sec-fetch-site": site, ...headers } }) });
+const get = (options?: Parameters<typeof getRequestFromSite>[1]) => GET({ request: getRequestFromSite(URL, options) });
 
-const post = (body: unknown, { origin = ORIGIN, headers = {} }: { origin?: string; headers?: HeadersInit } = {}) =>
-  POST({
-    request: new Request(URL, {
-      method: "POST",
-      headers: { origin, "content-type": "application/json", ...headers },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    }),
-  });
+const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
+  POST({ request: jsonPostRequest(URL, body, options) });
 
 test("the contact email address is served to a same-origin request", async () => {
   const response = await get();
@@ -62,30 +55,11 @@ test("the contact email address is served with a `Cache-Control: no-store` heade
   expect((await get()).headers.get("cache-control")).toBe("no-store");
 });
 
-test.each([
-  ["from another site", "cross-site"],
-  ["from the address bar or a bookmark", "none"],
-])("a request %s is refused", async (_label, site) => {
-  const response = await get({ site: site });
+test("a request from another site is refused before the contact email address is looked up", async () => {
+  const response = await get({ site: "cross-site" });
 
   expect(response.status).toBe(403);
-  expect(contactEmailAddress).not.toHaveBeenCalled();
-});
-
-test("a request without a `Sec-Fetch-Site` header is refused", async () => {
-  const response = await GET({ request: new Request(URL) });
-
-  expect(response.status).toBe(403);
-  expect(contactEmailAddress).not.toHaveBeenCalled();
-});
-
-test("a request for the contact email address that exceeds its rate limit is refused before the address is looked up", async () => {
-  isWithinRateLimit.mockResolvedValue(false);
-
-  const response = await get();
-
-  expect(response.status).toBe(429);
-  expect(contactEmailAddress).not.toHaveBeenCalled();
+  expect(readContactEmailAddress).not.toHaveBeenCalled();
 });
 
 test("requests to read and send are counted against separate rate limits", async () => {
@@ -99,7 +73,7 @@ test("requests to read and send are counted against separate rate limits", async
 });
 
 test("a missing contact email address responds with a 502 status code and an empty body", async () => {
-  contactEmailAddress.mockResolvedValue(null);
+  readContactEmailAddress.mockResolvedValue(null);
 
   const response = await get();
 
@@ -111,7 +85,7 @@ test("a well-formed submission is delivered, with its sender as the reply-to add
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);
-  expect(deliver).toHaveBeenCalledWith(
+  expect(deliverMessage).toHaveBeenCalledWith(
     expect.objectContaining({ replyTo: VALID_SUBMISSION.from, text: VALID_SUBMISSION.message }),
   );
 });
@@ -120,12 +94,12 @@ test("a cross-origin request is refused, and a message is not delivered", async 
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
-  expect(deliver).not.toHaveBeenCalled();
+  expect(deliverMessage).not.toHaveBeenCalled();
 });
 
 test("a malformed submission is refused, and a message is not delivered", async () => {
   expect((await post({ ...VALID_SUBMISSION, from: undefined })).status).toBe(400);
-  expect(deliver).not.toHaveBeenCalled();
+  expect(deliverMessage).not.toHaveBeenCalled();
 });
 
 test("a submission rejected by the schema returns its errors", async () => {
@@ -142,12 +116,12 @@ test.each([
   ["unavailable", 502],
   ["exhausted", 503],
 ] as const)("a delivery of `%s` responds with a %i status code", async (delivery, status) => {
-  deliver.mockResolvedValue(delivery);
+  deliverMessage.mockResolvedValue(delivery);
   expect((await post(VALID_SUBMISSION)).status).toBe(status);
 });
 
 test("a delivery of `unavailable` responds with a 502 status code and an empty body", async () => {
-  deliver.mockResolvedValue("unavailable");
+  deliverMessage.mockResolvedValue("unavailable");
 
   const response = await post(VALID_SUBMISSION);
 

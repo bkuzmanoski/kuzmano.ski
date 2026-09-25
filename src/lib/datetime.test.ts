@@ -1,6 +1,28 @@
 import { describe, expect, test } from "vitest";
 
-import { formatPlaybackTime } from "./datetime.ts";
+import { formatDate, formatPlaybackTime } from "./datetime.ts";
+
+describe("formatDate", () => {
+  const dayFormat = new Intl.DateTimeFormat("en-AU", {
+    year: "numeric",
+    month: "long", // A long month name, since the abbreviations ICU writes for en-AU differ between ICU versions.
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  const monthFormat = new Intl.DateTimeFormat("en-AU", { year: "numeric", month: "long", timeZone: "UTC" });
+
+  test("writes a `YYYY-MM-DD` date in the format it is given", () => {
+    expect(formatDate("2026-09-01", dayFormat)).toBe("1 September 2026");
+  });
+
+  test("writes a `YYYY-MM` month in the format it is given", () => {
+    expect(formatDate("2026-09", monthFormat)).toBe("September 2026");
+  });
+
+  test("returns the input unchanged when it does not parse", () => {
+    expect(formatDate("undated", dayFormat)).toBe("undated");
+  });
+});
 
 describe("formatPlaybackTime", () => {
   test("formats a time under an hour as minutes and zero-padded seconds", () => {

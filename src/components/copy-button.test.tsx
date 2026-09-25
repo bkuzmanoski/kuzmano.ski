@@ -3,6 +3,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playError } from "#/lib/audio/sounds.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
+import { deferWrite } from "#/test-utils/clipboard.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { CopyButton } from "./copy-button.tsx";
 import { HOVER_DELAY_MS } from "./tooltip.tsx";
@@ -29,16 +31,11 @@ afterEach(() => {
 const renderButton = (value: string | null = "test@example.com") =>
   render(<CopyButton value={value} entity="email address" confirmation="Copied" />);
 
-const advance = (ms: number) =>
-  act(() => {
-    vi.advanceTimersByTime(ms);
-  });
-
 const wrapper = () => screen.getByRole("button").parentElement!;
 
 function hoverUntilTooltipShown() {
   fireEvent.pointerEnter(wrapper(), { pointerType: "mouse" });
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 }
 
 const clickCopy = async () => {
@@ -66,7 +63,7 @@ test("the button announces the confirmation after a successful copy without chan
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
-  advance(STATE_DISPLAY_DURATION_MS);
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
 
   expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
   expect(screen.getByRole("status").textContent).toBe("");
@@ -91,7 +88,7 @@ test("the button stays pressed until the confirmation clears", async () => {
 
   expect(screen.getByRole("button").className).toContain("pressed");
 
-  advance(STATE_DISPLAY_DURATION_MS);
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
 
   expect(screen.getByRole("button").className).not.toContain("pressed");
 });
@@ -104,12 +101,45 @@ test("a failed copy shows an alert and does not show the confirmation or leave t
 
   expect(screen.getByRole("button", { name: "Copy to clipboard" }).className).not.toContain("pressed");
   expect(screen.getByRole("status").textContent).toBe("");
-  expect(screen.getByRole("dialog").textContent).toContain("The email address couldn’t be copied.");
+  expect(screen.getByRole("alertdialog").textContent).toContain("The email address couldn’t be copied.");
   expect(playError).toHaveBeenCalledOnce();
 
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
-  expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
+  expect(screen.getByRole("alertdialog", { hidden: true }).hasAttribute("open")).toBe(false);
+});
+
+test("a write that succeeds after a second copy has started does not confirm the second copy", async () => {
+  renderButton();
+
+  const firstWrite = deferWrite(writeText);
+  const secondWrite = deferWrite(writeText);
+
+  await clickCopy();
+  await clickCopy();
+  await firstWrite.succeed();
+
+  expect(screen.getByRole("status").textContent).toBe("");
+
+  await secondWrite.fail();
+
+  expect(screen.getByRole("status").textContent).toBe("");
+  expect(screen.getByRole("alertdialog").textContent).toContain("The email address couldn’t be copied.");
+});
+
+test("a write that fails after a second copy has started does not show the failure alert", async () => {
+  renderButton();
+
+  const firstWrite = deferWrite(writeText);
+  const secondWrite = deferWrite(writeText);
+
+  await clickCopy();
+  await clickCopy();
+  await secondWrite.succeed();
+  await firstWrite.fail();
+
+  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(screen.getByRole("status").textContent).toBe("Copied");
 });
 
 test("a button with a `null` value is disabled", async () => {
@@ -130,11 +160,11 @@ test("the confirmation clears after the state display duration while the pointer
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
-  advance(STATE_DISPLAY_DURATION_MS - 1);
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS - 1);
 
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(screen.getByRole("status").textContent).toBe("");
   expect(screen.getByRole("tooltip").textContent).toBe("Copy to clipboard"); // Still hovered.
@@ -146,7 +176,7 @@ test("the confirmation clears as soon as the tooltip showing it is hidden", asyn
   await clickCopy();
 
   fireEvent.pointerLeave(wrapper(), { pointerType: "mouse" });
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(screen.queryByRole("tooltip")).toBeNull();
   expect(screen.getByRole("status").textContent).toBe("");
@@ -159,7 +189,7 @@ test("a tap shows the confirmation, then clears it after the state display durat
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
-  advance(STATE_DISPLAY_DURATION_MS);
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
 
   expect(screen.queryByRole("tooltip")).toBeNull();
   expect(screen.getByRole("status").textContent).toBe("");

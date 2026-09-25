@@ -1,8 +1,8 @@
 // Minimal declarations for the Cloudflare Workers APIs used by this project.
 //
-// `wrangler types` does not declare `cloudflare:workers`, and its generated types also
-// redeclare browser globals such as `Response` and `ReadableStream`, which conflict with
-// the browser types used elsewhere in the project.
+// `wrangler types` declares `cloudflare:workers`, but its generated types also redeclare
+// browser globals such as `Response` and `ReadableStream`, which conflict with the browser
+// types used elsewhere in the project.
 //
 // Keep these declarations aligned with the runtime. To verify them against the generated
 // types, run:
@@ -52,6 +52,9 @@ declare module "cloudflare:workers" {
   /* eslint-enable @typescript-eslint/consistent-type-imports */
 
   export const env: WorkerEnv;
+
+  /** Extends the request's lifetime until `promise` settles, after the response is sent. */
+  export function waitUntil(promise: Promise<unknown>): void;
 
   /**
    * A deployable Worker module. Cloudflare provides bindings through `env`; use `workerEnv` from

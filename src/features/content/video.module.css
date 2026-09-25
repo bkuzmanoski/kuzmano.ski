@@ -103,7 +103,7 @@
 
     background: var(--color-border);
 
-    mask: url("../../assets/images/dither-pattern.svg") right top / 4px 4px repeat; /* Anchored to the fixed end, so the dots hold still as the thumb moves. */
+    mask: url("../../assets/images/background-dither-pattern.svg") right top / 4px 4px repeat; /* Anchored to the fixed end, so the dots hold still as the thumb moves. */
   }
 }
 
@@ -127,6 +127,6 @@
 
     color: var(--color-focus-ring);
 
-    background: var(--dotted-frame);
+    background: var(--marching-ants-frame);
   }
 }

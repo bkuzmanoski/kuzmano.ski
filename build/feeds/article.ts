@@ -35,9 +35,8 @@ const FEED_SCHEMA: Schema = {
   },
   clobber: [],
 };
+const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 const WRAPPER_TAGS = new Set(["span", "div"]);
-
-// Properties containing URLs relative to the entry, by their hast names.
 const URL_PROPERTIES = ["src", "poster", "href"];
 const URL_LIST_PROPERTIES = ["srcSet"];
 
@@ -124,6 +123,49 @@ function resolveRelativeUrls(article: Element, url: string) {
   });
 }
 
+// The ID a URL's fragment names when the URL is the entry's own, or `null` for any other URL.
+function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
+  try {
+    const target = new URL(href);
+    return target.origin === entryUrl.origin && target.pathname === entryUrl.pathname && target.hash.length > 1
+      ? decodeURIComponent(target.hash.slice(1))
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// A heading's ID is a fragment a reader can link to from outside the feed, so it is preserved. Any other
+// ID is preserved only when an element in the article references it: a link names it as its fragment, or
+// a table cell lists it in its `headers` attribute. An ID a component generates for an attribute the
+// sanitizer removes, such as `aria-labelledby`, is not referenced by any element in the feed.
+function removeUnreferencedIds(article: Element, url: string) {
+  const entryUrl = new URL(url);
+  const referencedIds = new Set<string>();
+
+  visit(article, "element", (element) => {
+    const { href, headers } = element.properties;
+    const fragmentId = typeof href === "string" ? entryFragmentIdOf(href, entryUrl) : null;
+
+    if (fragmentId !== null) {
+      referencedIds.add(fragmentId);
+    }
+
+    // hast parses the `headers` attribute as the list of the space-separated IDs in its value.
+    for (const headerId of Array.isArray(headers) ? headers : []) {
+      referencedIds.add(String(headerId));
+    }
+  });
+
+  visit(article, "element", (element) => {
+    const { id } = element.properties;
+
+    if (typeof id === "string" && !HEADING_TAGS.has(element.tagName) && !referencedIds.has(id)) {
+      delete element.properties.id;
+    }
+  });
+}
+
 /**
  * Reads an entry's body from its prerendered document as the HTML a feed reader can show.
  *
@@ -143,6 +185,8 @@ export function articleContentOf(html: string, url: string): string {
   resolveRelativeUrls(article, url);
 
   const sanitizedArticle = sanitize(article, FEED_SCHEMA) as Element;
+
+  removeUnreferencedIds(sanitizedArticle, url);
 
   return toHtml({ type: "root", children: unwrapPlainWrappers(sanitizedArticle.children) });
 }

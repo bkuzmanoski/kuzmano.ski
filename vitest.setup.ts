@@ -3,6 +3,12 @@ import { afterEach, vi } from "vitest";
 
 vi.stubGlobal("scrollTo", vi.fn());
 
+globalThis.ResizeObserver = class {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
+
 Document.prototype.elementFromPoint = () => null;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.setPointerCapture = vi.fn();

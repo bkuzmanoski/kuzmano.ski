@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { SITE_URL } from "#/config/site.ts";
+
 import { ENTRY_URL, feedDocument, feedEntry } from "../test-utils/feeds.ts";
 
 import { atomFeed } from "./atom.ts";
@@ -61,8 +63,8 @@ describe("atomFeed", () => {
   test("declares the icon and logo images for the feed", () => {
     const xml = feed([]);
 
-    expect(xml).toContain("<icon>https://kuzmano.ski/logo192.png</icon>");
-    expect(xml).toContain("<logo>https://kuzmano.ski/logo512.png</logo>");
+    expect(xml).toContain(`<icon>${SITE_URL}/logo192.png</icon>`);
+    expect(xml).toContain(`<logo>${SITE_URL}/logo512.png</logo>`);
   });
 
   test("removes the control characters and lone surrogates XML cannot represent", () => {

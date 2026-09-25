@@ -1,0 +1,17 @@
+/* Markdown wraps images written on consecutive lines in one paragraph, so the paragraph generates no
+ * box and each image is a flex item of its own. The white space between them is not rendered. */
+.images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  & :where(p) {
+    display: contents;
+  }
+
+  & :where(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+}

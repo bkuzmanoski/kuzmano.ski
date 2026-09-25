@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useRef } from "react";
+import { createContext, use, useEffect, useEffectEvent } from "react";
 
 import type { CloseGuard } from "./close-guards.ts";
 
@@ -20,13 +20,9 @@ export function useCloseWindow(): (() => void) | null {
  */
 export function useCloseGuard(guard: CloseGuard): () => void {
   const windowClose = use(WindowCloseContext);
-  const guardRef = useRef(guard);
+  const claimClose = useEffectEvent(guard);
 
-  useEffect(() => {
-    guardRef.current = guard;
-  });
-
-  useEffect(() => windowClose?.registerGuard(() => guardRef.current()), [windowClose]);
+  useEffect(() => windowClose?.registerGuard(() => claimClose()), [windowClose]);
 
   return () => windowClose?.forceClose();
 }

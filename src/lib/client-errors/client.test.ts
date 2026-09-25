@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
+import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
 
 import { reportClientError } from "./client.ts";
 
@@ -22,7 +23,7 @@ beforeEach(() => {
   beacon.mockReset();
   beacon.mockReturnValue(true);
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+  respondWith(fetchMock, 204);
 });
 
 test("reporting an error queues the report as a JSON beacon to the client errors endpoint", async () => {
@@ -45,7 +46,7 @@ test("reporting an error posts the report as a `keepalive` request when `sendBea
   expect(url).toBe(API_ROUTES.clientErrors);
   expect(init?.method).toBe("POST");
   expect(init?.keepalive).toBe(true);
-  expect(JSON.parse(init?.body as string)).toEqual(REPORT);
+  expect(jsonBodyOfFirstRequest(fetchMock)).toEqual(REPORT);
 });
 
 test("reporting an error does not throw when the fallback request fails", () => {

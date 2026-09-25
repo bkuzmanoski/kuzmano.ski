@@ -13,17 +13,6 @@
 
     font: var(--font-chrome);
   }
-
-  & .value {
-    transform: translateY(0.5px); /* Helvetica baseline alignment. */
-
-    flex: 1;
-
-    font: var(--font-ui-large);
-    color: var(--color-foreground);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
 
 .hidden,

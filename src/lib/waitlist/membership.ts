@@ -1,6 +1,7 @@
 import { EMAIL_ADDRESS_RULES } from "../forms/rules.ts";
 import { trimmedStringField } from "../forms/submission.ts";
 import { MAX_EMAIL_ADDRESS_LENGTH, validate } from "../forms/validation.ts";
+import { isSitePath } from "../link.ts";
 
 import type { ParsedSubmission } from "../forms/submission.ts";
 import type { Schema } from "../forms/validation.ts";
@@ -22,8 +23,6 @@ export interface Membership extends WaitlistFields {
   list: string;
   source: string; // The path to the entry where the waitlist was joined.
 }
-
-const isSitePath = (value: string) => value.startsWith("/") && !value.startsWith("//");
 
 export function parseSubmission(value: Record<string, unknown>): ParsedSubmission<Membership, WaitlistFields> {
   const emailAddress = trimmedStringField(value.emailAddress, MAX_EMAIL_ADDRESS_LENGTH);

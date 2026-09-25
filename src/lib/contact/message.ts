@@ -16,7 +16,7 @@ export const CONTACT_SCHEMA: Schema<ContactFields> = {
   from: EMAIL_ADDRESS_RULES,
   message: [
     required("Write a message to send."),
-    maxLength(MESSAGE_MAX_LENGTH, `Keep the message under ${MESSAGE_MAX_LENGTH.toLocaleString()} characters.`),
+    maxLength(MESSAGE_MAX_LENGTH, `Keep the message under ${MESSAGE_MAX_LENGTH.toLocaleString("en")} characters.`),
   ],
 };
 

@@ -6,12 +6,16 @@ import { CollectionBody } from "#/features/content/collection-body.tsx";
 import { ContentBody } from "#/features/content/content-body.tsx";
 import { resolveWindow } from "#/site/windows.ts";
 
+import styles from "./window-body.module.css";
+
 export function WindowBody({ route }: { route: string }) {
   const target = resolveWindow(route);
 
   if (!target) {
     return null;
   }
+
+  const hiddenTitle = <h1 className={styles.title}>{target.title}</h1>;
 
   switch (target.id) {
     case "entry":
@@ -22,9 +26,19 @@ export function WindowBody({ route }: { route: string }) {
       );
 
     case "collection":
-      return <CollectionBody target={target} />;
+      return (
+        <>
+          {hiddenTitle}
+          <CollectionBody target={target} />
+        </>
+      );
 
     case "contact":
-      return <ContactBody />;
+      return (
+        <>
+          {hiddenTitle}
+          <ContactBody />
+        </>
+      );
   }
 }

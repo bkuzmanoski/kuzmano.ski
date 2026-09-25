@@ -14,8 +14,9 @@ import {
   scrollIntoViewSilently,
   silenceScrollIntoView,
   stepScroll,
+  stepScrollForPress,
 } from "./scroll.ts";
-import { playScrollDetent } from "./sounds.ts";
+import { playClick, playScrollDetent } from "./sounds.ts";
 
 vi.mock("./sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
@@ -27,6 +28,7 @@ beforeEach(() => {
   now = 0;
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.mocked(playScrollDetent).mockClear();
+  vi.mocked(playClick).mockClear();
 });
 
 afterEach(() => {
@@ -247,6 +249,41 @@ describe("stepScroll", () => {
     scrollTo(element, 40);
 
     expect(detents()).toBe(1);
+  });
+});
+
+describe("stepScrollForPress", () => {
+  test("plays a detent for a single press after a pause longer than `IDLE_DURATION_MS`", () => {
+    const element = fakeScrollViewport();
+
+    playScroll(element);
+
+    now += IDLE_DURATION_MS + 1;
+
+    stepScrollForPress(element, 40, false);
+    playScroll(element);
+
+    expect(element.scrollTop).toBe(40);
+    expect(detents()).toBe(1);
+    expect(playClick).not.toHaveBeenCalled();
+  });
+
+  test("plays a click sound, and not a detent, for a press at the scroll boundary", () => {
+    const element = fakeScrollViewport();
+
+    stepScrollForPress(element, -40, false);
+
+    expect(playClick).toHaveBeenCalledTimes(1);
+    expect(detents()).toBe(0);
+  });
+
+  test("plays neither a click sound nor a detent for a repeat at the scroll boundary", () => {
+    const element = fakeScrollViewport();
+
+    stepScrollForPress(element, -40, true);
+
+    expect(playClick).not.toHaveBeenCalled();
+    expect(detents()).toBe(0);
   });
 });
 

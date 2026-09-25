@@ -76,3 +76,7 @@
     white-space: nowrap;
   }
 }
+
+.hidden {
+  composes: visuallyHidden from global;
+}

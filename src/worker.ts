@@ -1,6 +1,7 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { MARKDOWN_TOKEN_COUNTS } from "virtual:markdown-token-counts";
 
+import { API_PATH_PREFIX } from "#/api-routes.ts";
 import { HTML_MEDIA_TYPE, MARKDOWN_CONTENT_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { ASSETS_BINDING } from "#/server/bindings.ts";
@@ -10,6 +11,7 @@ import {
   markdownRepresentationPathFor,
   prefersMarkdown,
 } from "#/site/markdown-negotiation.ts";
+import { LLMS_TXT_LINK_HEADER } from "#/site/metadata.ts";
 
 import type { AssetsBinding, WorkerEntry, WorkerEnv } from "cloudflare:workers";
 
@@ -31,6 +33,7 @@ function asMarkdownResponse(file: Response, path: string): Response {
   const tokenCount = MARKDOWN_TOKEN_COUNTS[path];
 
   headers.set("content-type", MARKDOWN_CONTENT_TYPE);
+  headers.set("link", LLMS_TXT_LINK_HEADER);
 
   if (tokenCount !== undefined && file.status === 200) {
     headers.set(MARKDOWN_TOKEN_COUNT_HEADER, String(tokenCount));
@@ -82,12 +85,13 @@ function declaringContentSignal(response: Response): Response {
 
 async function respondTo(request: Request, env?: WorkerEnv): Promise<Response> {
   const assets = env?.[ASSETS_BINDING];
+  const { pathname } = new URL(request.url);
 
-  if (!assets || !["GET", "HEAD"].includes(request.method)) {
+  // The Asset Worker has no file under an API path, so an API request goes straight to the router
+  // rather than first costing a request to the Asset Worker.
+  if (!assets || !["GET", "HEAD"].includes(request.method) || pathname.startsWith(API_PATH_PREFIX)) {
     return await startFetch(request);
   }
-
-  const { pathname } = new URL(request.url);
 
   if (isMarkdownPath(pathname)) {
     const markdown = await fetchAssetAt(assets, request, pathname);

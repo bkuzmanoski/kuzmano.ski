@@ -14,7 +14,13 @@ export default {
     "value-keyword-case": ["lower", { ignoreProperties: ["composes", "/font/"], ignoreKeywords: ["currentColor"] }],
     "csstools/value-no-unknown-custom-properties": [
       true,
-      { importFrom: ["./src/styles.css", "./src/features/content/content-body.module.css"] },
+      {
+        importFrom: [
+          "./src/styles.css",
+          "./src/features/content/content-body.module.css",
+          "./src/features/windows/window-layer.module.css",
+        ],
+      },
     ],
   },
 } satisfies Config;

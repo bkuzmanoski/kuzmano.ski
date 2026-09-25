@@ -7,6 +7,7 @@ import { RootDocument } from "#/app/root-document.tsx";
 import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
 import { FEED_MEDIA_TYPE } from "#/config/media-types.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
+import { fontPreloadLinkFor } from "#/site/metadata.ts";
 import stylesheet from "#/styles.css?url";
 
 export const Route = createRootRoute({
@@ -20,7 +21,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: stylesheet },
-      { rel: "preload", as: "font", href: chromeFont, type: "font/woff2", crossOrigin: "anonymous" },
+      fontPreloadLinkFor(chromeFont),
       { rel: "icon", href: "/favicon.ico", sizes: "32x32" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "any" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },

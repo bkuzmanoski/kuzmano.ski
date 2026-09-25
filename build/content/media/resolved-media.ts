@@ -139,7 +139,7 @@ export function createMediaFileReader(): MediaFileReader {
       resultsByPath.set(path, { signature, result });
       result.catch(() => {
         if (resultsByPath.get(path)?.result === result) {
-          resultsByPath.delete(path); // A rejected result is removed so the next build retries reading the file instead of reusing the rejection.
+          resultsByPath.delete(path); // A rejected result is removed so the next index build retries reading the file instead of reusing the rejection.
         }
       });
 

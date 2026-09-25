@@ -1,4 +1,4 @@
-// Import only types: importing a value would load the module being mocked.
+// This module imports only types. Importing a value would load the module being mocked.
 import type { WindowActions } from "#/lib/window-manager/context.ts";
 import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
 

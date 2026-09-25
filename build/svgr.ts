@@ -7,4 +7,7 @@ export const svgrOptions = {
     black: "var(--color-icon-foreground)",
     white: "var(--color-icon-background)",
   },
+  svgProps: {
+    "aria-hidden": "true",
+  },
 };

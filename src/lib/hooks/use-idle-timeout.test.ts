@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { advanceTimersBy } from "#/test-utils/timers.ts";
+
 import { useIdleTimeout } from "./use-idle-timeout.ts";
 
 const DELAY_MS = 1000;
@@ -8,20 +10,15 @@ const DELAY_MS = 1000;
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-const wait = (ms: number) =>
-  act(() => {
-    vi.advanceTimersByTime(ms);
-  });
-
 test("the timeout fires once the delay passes without input events", () => {
   const onIdle = vi.fn();
 
   renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
-  wait(DELAY_MS - 1);
+  advanceTimersBy(DELAY_MS - 1);
 
   expect(onIdle).not.toHaveBeenCalled();
 
-  wait(1);
+  advanceTimersBy(1);
 
   expect(onIdle).toHaveBeenCalledOnce();
 });
@@ -37,7 +34,7 @@ test("an input event restarts the delay", () => {
     () => document.dispatchEvent(new Event("keydown")),
     () => document.dispatchEvent(new Event("wheel")),
   ]) {
-    wait(DELAY_MS - 1);
+    advanceTimersBy(DELAY_MS - 1);
     act(() => {
       fire();
     });
@@ -45,7 +42,7 @@ test("an input event restarts the delay", () => {
 
   expect(onIdle).not.toHaveBeenCalled();
 
-  wait(DELAY_MS);
+  advanceTimersBy(DELAY_MS);
 
   expect(onIdle).toHaveBeenCalledOnce();
 });
@@ -56,12 +53,12 @@ test("a disabled timeout does not fire until it is enabled and the delay passes"
     initialProps: { isEnabled: false },
   });
 
-  wait(DELAY_MS * 2);
+  advanceTimersBy(DELAY_MS * 2);
 
   expect(onIdle).not.toHaveBeenCalled();
 
   rerender({ isEnabled: true });
-  wait(DELAY_MS);
+  advanceTimersBy(DELAY_MS);
 
   expect(onIdle).toHaveBeenCalledOnce();
 });
@@ -71,14 +68,14 @@ test("unmounting clears the pending timer and stops listening", () => {
   const { unmount } = renderHook(() => useIdleTimeout(DELAY_MS, true, onIdle));
 
   unmount();
-  wait(DELAY_MS * 2);
+  advanceTimersBy(DELAY_MS * 2);
 
   expect(onIdle).not.toHaveBeenCalled();
 
   act(() => {
     document.dispatchEvent(new Event("keydown")); // A listener that outlived the effect would restart the timer here.
   });
-  wait(DELAY_MS * 2);
+  advanceTimersBy(DELAY_MS * 2);
 
   expect(onIdle).not.toHaveBeenCalled();
 });

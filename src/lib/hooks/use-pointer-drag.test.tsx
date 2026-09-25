@@ -1,5 +1,7 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "./use-pointer-drag.ts";
 
@@ -43,11 +45,6 @@ const renderHandle = (props: HandleProps = {}) => render(<Handle {...props} />);
 
 const handle = () => screen.getByTestId(HANDLE_ID);
 
-const advance = (ms: number) =>
-  act(() => {
-    vi.advanceTimersByTime(ms);
-  });
-
 function press({ button = 0, pointerId = POINTER_ID } = {}) {
   fireEvent.pointerDown(handle(), { button, pointerId, clientX: PRESS.x, clientY: PRESS.y });
 }
@@ -65,7 +62,7 @@ function movePointerBy({ dx = 0, dy = 0, buttons = 1, pointerId = POINTER_ID }: 
 
 function dragBy(move: Move) {
   movePointerBy(move);
-  advance(FRAME_MS);
+  advanceTimersBy(FRAME_MS);
 }
 
 const release = ({ pointerId = POINTER_ID } = {}) => fireEvent.pointerUp(window, { pointerId });
@@ -174,7 +171,7 @@ test("moves within one frame report once, at the last position", () => {
 
   expect(onDragMove).not.toHaveBeenCalled();
 
-  advance(FRAME_MS);
+  advanceTimersBy(FRAME_MS);
 
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 15, dy: 0 }, START_VALUE);
 });
@@ -188,7 +185,7 @@ test("a pending move reports once, before the drag ends", () => {
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 12, dy: 8 }, START_VALUE);
   expect(onDragMove.mock.invocationCallOrder[0]).toBeLessThan(onEnd.mock.invocationCallOrder[0]!);
 
-  advance(FRAME_MS); // The canceled frame must not report the same move a second time.
+  advanceTimersBy(FRAME_MS); // The canceled frame must not report the same move a second time.
 
   expect(onDragMove).toHaveBeenCalledTimes(1);
 });
@@ -241,7 +238,7 @@ test("unmounting during a drag stops reporting the gesture", () => {
   press();
   movePointerBy({ dx: 20 });
   unmount();
-  advance(FRAME_MS);
+  advanceTimersBy(FRAME_MS);
   dragBy({ dx: 40 });
   release();
 

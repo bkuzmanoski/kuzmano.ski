@@ -21,6 +21,15 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   End: (_index, lastIndex) => lastIndex,
 };
 
+// Where each key moves the focus from outside the list. Each arrow key focuses the item at the end
+// of the list it points away from, as a combobox's arrow keys do when they open its popup.
+const OUTSIDE_KEY_TARGETS: Record<string, ((lastIndex: number) => number) | undefined> = {
+  ArrowUp: (lastIndex) => lastIndex,
+  ArrowDown: () => 0,
+  Home: () => 0,
+  End: (lastIndex) => lastIndex,
+};
+
 function itemAt(list: HTMLElement | null, listId: string, index: number) {
   const items = list?.querySelectorAll<HTMLElement>(`[${ITEM_ATTRIBUTE}]`) ?? [];
 
@@ -77,7 +86,7 @@ export function useListNavigation(
 
   const tabStopIndex = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
 
-  return function itemProps(index: number) {
+  function itemProps(index: number) {
     return {
       [ITEM_ATTRIBUTE]: listId,
       tabIndex: index === tabStopIndex ? 0 : -1,
@@ -117,5 +126,23 @@ export function useListNavigation(
         playHover();
       },
     };
-  };
+  }
+
+  // Moves the focus into the list for a key pressed while an element outside it, such as the window
+  // that contains it, has the focus. It prevents the default of a key it moves the focus for, and
+  // ignores the event otherwise.
+  function onKeyDownOutsideList(event: KeyboardEvent) {
+    const targetIndex = OUTSIDE_KEY_TARGETS[event.key]?.(count - 1);
+    const item = targetIndex === undefined ? null : itemAt(listRef.current, listId, targetIndex);
+
+    if (!item) {
+      return;
+    }
+
+    event.preventDefault();
+    focusItem(item);
+    playHover();
+  }
+
+  return { itemProps, onKeyDownOutsideList };
 }

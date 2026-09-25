@@ -14,7 +14,7 @@ const catalog = createCatalog(
     }), // Frontmatter without the compiled bodies.
     bodyModules: import.meta.glob<{ default: MDXContent }>("/content/*/*.mdx"),
     stylesheetModules: import.meta.glob<{ default: { entry?: string } }>("/content/*/*.module.css"),
-    bodyChunkUrls: ENTRY_BODY_CHUNKS,
+    bodyChunks: ENTRY_BODY_CHUNKS,
   },
   { pagesDirectoryName: PAGES_DIRECTORY_NAME, collections: COLLECTIONS, includeDrafts: import.meta.env.DEV },
 );
@@ -27,6 +27,7 @@ export type {
   ContentIndex,
   CoverImage,
   Entry,
+  EntryBodyChunks,
   Frontmatter,
   PictureSource,
   MDXModule,

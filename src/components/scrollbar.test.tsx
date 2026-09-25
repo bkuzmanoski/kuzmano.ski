@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -6,6 +6,7 @@ import { DETENT_PX, playPaneScroll } from "#/lib/audio/scroll.ts";
 import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS, Scrollbar } from "./scrollbar.tsx";
 
@@ -89,13 +90,8 @@ function pressTrackAt(track: HTMLElement, position: number) {
 
 function dragTrackTo(track: HTMLElement, position: number) {
   fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCenterAt(position) });
-  advance(FRAME_MS);
+  advanceTimersBy(FRAME_MS);
 }
-
-const advance = (ms: number) =>
-  act(() => {
-    vi.advanceTimersByTime(ms);
-  });
 
 test("a press steps the viewport, then repeats while it is held", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
@@ -104,20 +100,20 @@ test("a press steps the viewport, then repeats while it is held", () => {
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
-  advance(ARROW_STEP_REPEAT_DELAY_MS - 1); // An ordinary press must not outlast the delay and step twice.
+  advanceTimersBy(ARROW_STEP_REPEAT_DELAY_MS - 1); // An ordinary press must not outlast the delay and step twice.
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 
-  advance(ARROW_STEP_REPEAT_INTERVAL_MS);
+  advanceTimersBy(ARROW_STEP_REPEAT_INTERVAL_MS);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 3);
 
   fireEvent.pointerUp(scrollDownButton);
-  advance(ARROW_STEP_REPEAT_INTERVAL_MS * 4);
+  advanceTimersBy(ARROW_STEP_REPEAT_INTERVAL_MS * 4);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 3);
 });
@@ -199,12 +195,12 @@ test("a held press keeps scrolling after the pointer moves outside the arrow but
   const { viewport, scrollDownButton } = renderScrollbar();
 
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
-  advance(ARROW_STEP_REPEAT_DELAY_MS);
+  advanceTimersBy(ARROW_STEP_REPEAT_DELAY_MS);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 
   fireEvent.pointerLeave(scrollDownButton, { buttons: 1 });
-  advance(ARROW_STEP_REPEAT_INTERVAL_MS * 2);
+  advanceTimersBy(ARROW_STEP_REPEAT_INTERVAL_MS * 2);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 4);
 });
@@ -215,7 +211,7 @@ test("a release away from the arrow stops the repeating steps", () => {
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
   fireEvent.pointerLeave(scrollDownButton, { buttons: 1 });
   fireEvent.pointerUp(document.body);
-  advance(ARROW_STEP_REPEAT_DELAY_MS + ARROW_STEP_REPEAT_INTERVAL_MS * 4);
+  advanceTimersBy(ARROW_STEP_REPEAT_DELAY_MS + ARROW_STEP_REPEAT_INTERVAL_MS * 4);
 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
@@ -275,13 +271,13 @@ test("a secondary press on the track is ignored", () => {
 test("the scroll a track press causes does not play a scroll sound", () => {
   const { viewport, track } = renderScrollbar();
 
-  advance(1);
+  advanceTimersBy(1);
   viewport.scrollTop = DETENT_PX * 2;
   fireEvent.scroll(viewport);
 
   expect(playScrollDetent).toHaveBeenCalledTimes(1);
 
-  advance(1);
+  advanceTimersBy(1);
   pressTrackAt(track, 1);
   fireEvent.scroll(viewport);
 
@@ -311,7 +307,7 @@ test("a pointer that moves within the drag threshold after a track press does no
 
   pressTrackAt(track, 0.5);
   fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCenterAt(0.5) + DRAG_THRESHOLD_PX });
-  advance(FRAME_MS);
+  advanceTimersBy(FRAME_MS);
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.5); // The press jumps on its own, so pointer jitter must not drag the jump off its mark.
 });
@@ -320,14 +316,14 @@ test("the scrolling that follows the jump from a track press plays scroll sounds
   const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 1);
-  advance(1);
+  advanceTimersBy(1);
   fireEvent.scroll(viewport);
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
   expect(playScrollDetent).not.toHaveBeenCalled();
 
   dragTrackTo(track, 0);
-  advance(1);
+  advanceTimersBy(1);
   fireEvent.scroll(viewport);
 
   expect(viewport.scrollTop).toBe(0);

@@ -11,10 +11,12 @@ import type { EntryKey } from "#/lib/content/entry-file.ts";
 import { formatDate } from "#/lib/datetime.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation.ts";
-import { isBrowserHandledClick } from "#/lib/link.ts";
+import { isBrowserHandledClick, openInAppOnPlainClick } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useWindowActions } from "#/lib/window-manager/context.ts";
+import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import type { Collection } from "#/site/catalog.ts";
+import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import styles from "./collection-entry-list.module.css";
 
@@ -28,7 +30,7 @@ function EntryCoverImage({ entryKey }: { entryKey: EntryKey }) {
   if (!coverImage) {
     return (
       <span className={styles.coverImage}>
-        <DocumentDesktopIcon className={styles.documentDesktopIcon} aria-hidden="true" />
+        <DocumentDesktopIcon className={styles.documentDesktopIcon} />
       </span>
     );
   }
@@ -57,13 +59,14 @@ function EntryCoverImage({ entryKey }: { entryKey: EntryKey }) {
 export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const { open } = useWindowActions();
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
+  const dateLanguage = languageAttributeInDocumentFor(dateFormat); // The dates are formatted in the browser's locale.
   const pressSoundHandlers = usePressSound({ scrollSafe: true });
   const listRef = useRef<HTMLUListElement>(null);
 
   const entries = collection.list();
   const openEntry = (slug: string) => open(collection.routeOf(slug));
 
-  const itemProps = useListNavigation(listRef, {
+  const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, {
     count: entries.length,
     activeIndex: entries.findIndex((entry) => entry.slug === activeSlug),
     onActivate: (index) => {
@@ -75,6 +78,10 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
       }
     },
   });
+
+  // The list is the window's content, so a key that moves the focus into it replaces the scroll
+  // the window would otherwise make for that key.
+  useWindowKeyDown(onKeyDownOutsideList);
 
   if (entries.length === 0) {
     return <EmptyState message={EMPTY_COLLECTION_MESSAGE} />;
@@ -93,14 +100,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
               event.preventDefault();
             }
           },
-          onClick: (event: MouseEvent<HTMLAnchorElement>) => {
-            if (isBrowserHandledClick(event)) {
-              return;
-            }
-
-            event.preventDefault();
-            openEntry(entry.slug);
-          },
+          onClick: (event: MouseEvent<HTMLAnchorElement>) => openInAppOnPlainClick(event, () => openEntry(entry.slug)),
         });
 
         return (
@@ -115,7 +115,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
               <EntryCoverImage entryKey={collection.entryKeyOf(entry.slug)} />
               <span className={styles.details}>
                 <span className={styles.title}>{entry.title}</span>
-                <time dateTime={entry.date} className={styles.date}>
+                <time dateTime={entry.date} className={styles.date} lang={dateLanguage}>
                   {formatDate(entry.date, dateFormat)}
                 </time>
               </span>

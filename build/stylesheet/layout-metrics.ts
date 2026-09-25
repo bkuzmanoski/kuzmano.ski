@@ -57,5 +57,5 @@ export const layoutMetricsPlugin = (): Plugin =>
     name: "kuzmano.ski:layout-metrics",
     moduleId: "virtual:layout-metrics",
     exportName: "LAYOUT_METRICS",
-    read: readLayoutMetrics,
+    load: readLayoutMetrics,
   });

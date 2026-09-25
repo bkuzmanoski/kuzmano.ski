@@ -2,7 +2,7 @@ import ChevronButtonIcon from "#/assets/images/button-icon-chevron.svg?react";
 import { Button } from "#/components/button.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { cx } from "#/lib/class-names.ts";
-import { isBrowserHandledClick } from "#/lib/link.ts";
+import { openInAppOnPlainClick } from "#/lib/link.ts";
 import { useWindowActions } from "#/lib/window-manager/context.ts";
 
 import styles from "./navigation-button.module.css";
@@ -41,14 +41,7 @@ export function NavigationButton({
           variant="icon"
           href={route}
           aria-label={label}
-          onClick={(event) => {
-            if (isBrowserHandledClick(event)) {
-              return;
-            }
-
-            event.preventDefault();
-            open(route);
-          }}
+          onClick={(event) => openInAppOnPlainClick(event, () => open(route))}
         >
           {icon}
         </Button>

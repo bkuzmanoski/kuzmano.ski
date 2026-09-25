@@ -1,3 +1,6 @@
+/** `remark-mdx` node types for authored JSX. */
+export const JSX_ELEMENT_NODE_TYPES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
+
 /**
  * A node in the MDX, Markdown, or HTML syntax tree the content pipeline walks.
  *
@@ -18,6 +21,10 @@ export interface ContentNode {
   identifier?: string; // Markdown label used by `definition` and `imageReference` nodes.
   alt?: string | null;
   title?: string | null;
+  lang?: string | null; // Language of an mdast `code` node.
+  depth?: number; // Level of an mdast `heading` node, from 1 to 6.
+  ordered?: boolean | null; // Whether an mdast `list` node is numbered.
+  spread?: boolean | null; // Whether an mdast `list` or `listItem` node separates its children with blank lines.
   properties?: Record<string, unknown>;
   attributes?: Array<{ type?: string; name?: string | null; value?: unknown }>;
   children?: Array<ContentNode>;
@@ -32,9 +39,6 @@ export interface ContentParent extends ContentNode {
 export interface EntryVFile {
   path?: string | undefined;
 }
-
-/** `remark-mdx` node types for authored JSX. */
-export const JSX_ELEMENT_NODE_TYPES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
 
 export const isJsxElement = (node: ContentNode) => JSX_ELEMENT_NODE_TYPES.has(node.type);
 
@@ -78,3 +82,28 @@ export function setMissingAttributes(node: ContentNode, attributes: Record<strin
     }
   }
 }
+
+/**
+ * A node in the ESTree program `remark-mdx` parses from an import, an export, an `{expression}`, or a
+ * JSX expression attribute and attaches as `data.estree`, flattened into one optional-field shape. It
+ * declares only the fields the build reads, since `@types/estree` is not a dependency.
+ */
+export interface EstreeNode {
+  type: string;
+  name?: string; // Name of an `Identifier` node.
+  value?: unknown; // Value of a `Literal` node, or `{ raw, cooked }` of a `TemplateElement` node.
+  body?: Array<EstreeNode>; // Statements of a `Program` node.
+  expression?: EstreeNode; // Expression of an `ExpressionStatement` node.
+  expressions?: Array<EstreeNode>; // Interpolated expressions of a `TemplateLiteral` node.
+  quasis?: Array<EstreeNode>; // `TemplateElement` nodes of a `TemplateLiteral` node.
+  properties?: Array<EstreeNode>; // Members of an `ObjectExpression` node.
+  argument?: EstreeNode; // Operand of a `SpreadElement` node.
+  specifiers?: Array<EstreeNode>; // Specifiers of an `ImportDeclaration` node.
+  source?: EstreeNode; // Module specifier of an `ImportDeclaration` node, as a `Literal` node.
+  imported?: EstreeNode; // Exported name an `ImportSpecifier` node imports.
+  local?: EstreeNode; // Name an import specifier binds in the importing module.
+}
+
+// `ContentNode` does not declare `data`, which mdast declares differently for each node type.
+export const estreeOf = (node: object): EstreeNode | null =>
+  (node as { data?: { estree?: EstreeNode | null } }).data?.estree ?? null;

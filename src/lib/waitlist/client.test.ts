@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
+import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
 
 import { joinWaitlist } from "./client.ts";
 
@@ -19,23 +20,19 @@ beforeEach(() => {
   fetchMock.mockReset();
 });
 
-const respond = (status: number, body?: unknown) => {
-  fetchMock.mockResolvedValue(body === undefined ? new Response(null, { status }) : Response.json(body, { status }));
-};
-
 test("the submission is posted as JSON to the endpoint", async () => {
-  respond(204);
+  respondWith(fetchMock, 204);
   await joinWaitlist(SUBMISSION);
 
   const [url, init] = fetchMock.mock.calls[0]!;
 
   expect(url).toBe(API_ROUTES.waitlist);
   expect(init?.method).toBe("POST");
-  expect(JSON.parse(init?.body as string)).toEqual(SUBMISSION);
+  expect(jsonBodyOfFirstRequest(fetchMock)).toEqual(SUBMISSION);
 });
 
 test.each([204, 200])("a %i response is treated as a recorded membership", async (status) => {
-  respond(status);
+  respondWith(fetchMock, status);
   await expect(joinWaitlist(SUBMISSION)).resolves.toEqual({ status: "joined" });
 });
 
@@ -44,7 +41,7 @@ test.each([
   [429, /too many lists/],
   [502, /couldn’t be joined/],
 ])("a %i response is treated as a failure with a message", async (status, message) => {
-  respond(status);
+  respondWith(fetchMock, status);
   await expect(joinWaitlist(SUBMISSION)).resolves.toMatchObject({ status: "failed", message });
 });
 
@@ -54,7 +51,7 @@ test("a network error is treated as a failure rather than thrown", async () => {
 });
 
 test("a 400 response is treated as an invalid submission with the field errors returned by the endpoint", async () => {
-  respond(400, { errors: { emailAddress: "That doesn’t look like an email address." } });
+  respondWith(fetchMock, 400, { errors: { emailAddress: "That doesn’t look like an email address." } });
 
   await expect(joinWaitlist(SUBMISSION)).resolves.toEqual({
     status: "invalid",
@@ -63,7 +60,7 @@ test("a 400 response is treated as an invalid submission with the field errors r
 });
 
 test("the abort signal is passed to the request", async () => {
-  respond(204);
+  respondWith(fetchMock, 204);
 
   const controller = new AbortController();
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import Logo from "#/assets/images/logo.svg?react";
 import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-off.svg?react";
@@ -122,6 +122,14 @@ function SoundStatus() {
   );
 }
 
+const TIME_LOCATION = "Sydney, Australia";
+
+interface SydneyTime {
+  dateTime: string; // The displayed minute as a valid global date and time string, in UTC.
+  timeText: string; // The hour, minute, and day period, without the time zone.
+  timeZoneName: string;
+}
+
 const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
   timeZone: "Australia/Sydney",
   hour: "numeric",
@@ -130,21 +138,27 @@ const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
   timeZoneName: "short",
 });
 
-function sydneyTime(): string {
-  const timeParts = TIME_FORMAT.formatToParts(new Date());
+function sydneyTime(): SydneyTime {
+  const now = new Date();
+  const timeParts = TIME_FORMAT.formatToParts(now);
+
   const partValue = (type: string) => timeParts.find((part) => part.type === type)?.value ?? "";
 
-  return `${partValue("hour")}:${partValue("minute")} ${partValue("dayPeriod")} (${partValue("timeZoneName")})`;
+  return {
+    dateTime: `${now.toISOString().slice(0, "YYYY-MM-DDTHH:MM".length)}Z`,
+    timeText: `${partValue("hour")}:${partValue("minute")} ${partValue("dayPeriod")}`,
+    timeZoneName: partValue("timeZoneName"),
+  };
 }
 
 function TimeStatus() {
-  const [time, setTime] = useState("");
+  const [clockTime, setClockTime] = useState<SydneyTime | null>(null);
 
   useEffect(() => {
     let tickTimer: ReturnType<typeof setTimeout>;
 
     const tick = () => {
-      setTime(sydneyTime());
+      setClockTime(sydneyTime());
 
       const now = new Date();
       const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
@@ -157,13 +171,21 @@ function TimeStatus() {
     return () => clearTimeout(tickTimer);
   }, []);
 
-  if (!time) {
+  if (!clockTime) {
     return null;
   }
 
   return (
-    <Tooltip label="Sydney, Australia">
-      <time className={cx(styles.control, styles.time, styles.wideOnly)}>{time}</time>
+    <Tooltip label={TIME_LOCATION} childTextIncludesLabel>
+      <time dateTime={clockTime.dateTime} className={cx(styles.control, styles.time, styles.wideOnly)}>
+        <span>
+          {clockTime.timeText}
+          {/* Hidden from assistive technology, which reads the location instead of an abbreviation that VoiceOver pronounces as a word. */}
+          <span aria-hidden>{` (${clockTime.timeZoneName})`}</span>
+          {/* One text node, so a screen reader reads the location as one phrase. */}
+          <span className={styles.timeLocation}>{` in ${TIME_LOCATION}`}</span>
+        </span>
+      </time>
     </Tooltip>
   );
 }
@@ -172,9 +194,14 @@ export function MenuBar() {
   const { open, close, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
   const isBootSequenceComplete = useIsBootSequenceComplete();
-  const [openMenu, setOpenMenu] = useState<{ label: string; anchor: HTMLButtonElement } | null>(null);
+  const [openMenu, setOpenMenu] = useState<{
+    label: string;
+    anchor: HTMLButtonElement;
+    focusesFirstItem: boolean;
+  } | null>(null);
+  const titleIdPrefix = useId();
   const [isPointerHeld, setIsPointerHeld] = useState(false);
-  const titleElements = useRef<Record<string, HTMLButtonElement | null>>({});
+  const titleElementsRef = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const hasWindow = focusedWindow !== null;
 
@@ -231,9 +258,13 @@ export function MenuBar() {
     { code: "Tab", run: cycleWindows, invokesWhileEditing: true },
   ]);
 
-  function openMenuAt(label: string, anchor: HTMLButtonElement, { pointerHeld = false } = {}) {
+  function openMenuAt(
+    label: string,
+    anchor: HTMLButtonElement,
+    { pointerHeld = false, focusesFirstItem = false } = {},
+  ) {
     setIsPointerHeld(pointerHeld);
-    setOpenMenu({ label, anchor });
+    setOpenMenu({ label, anchor, focusesFirstItem });
   }
 
   // On touch, the press that dismisses an open menu can also open the next menu.
@@ -248,7 +279,7 @@ export function MenuBar() {
   function openAdjacentMenu(fromLabel: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === fromLabel);
     const label = menus[cycle(menus.length, index, direction)]!.label;
-    const anchor = titleElements.current[label];
+    const anchor = titleElementsRef.current[label];
 
     if (!anchor) {
       return;
@@ -256,7 +287,7 @@ export function MenuBar() {
 
     if (openMenu) {
       playHover();
-      openMenuAt(label, anchor);
+      openMenuAt(label, anchor, { focusesFirstItem: true });
     } else {
       anchor.focus();
     }
@@ -283,7 +314,7 @@ export function MenuBar() {
     playClick();
     anchor.focus();
     setIsPointerHeld(true);
-    setOpenMenu((current) => (current?.label === label ? null : { label, anchor }));
+    setOpenMenu((current) => (current?.label === label ? null : { label, anchor, focusesFirstItem: false }));
   }
 
   function onTitleKeyDown(event: KeyboardEvent<HTMLButtonElement>, label: string) {
@@ -293,7 +324,7 @@ export function MenuBar() {
       case " ":
         event.preventDefault();
         playClick();
-        openMenuAt(label, event.currentTarget);
+        openMenuAt(label, event.currentTarget, { focusesFirstItem: true });
 
         break;
 
@@ -312,17 +343,18 @@ export function MenuBar() {
   }
 
   return (
-    <div className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
+    <header className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
       <div className={styles.logo}>
-        <Logo aria-hidden />
+        <Logo />
       </div>
       <nav className={styles.menus} aria-label="Main menu">
-        {menus.map(({ label, items }) => (
+        {menus.map(({ label, items }, menuIndex) => (
           <div key={label} className={styles.item}>
             <button
               ref={(node) => {
-                titleElements.current[label] = node;
+                titleElementsRef.current[label] = node;
               }}
+              id={`${titleIdPrefix}-${menuIndex}`}
               type="button"
               className={cx(styles.title, openMenu?.label === label && styles.open)}
               aria-expanded={openMenu?.label === label}
@@ -342,8 +374,10 @@ export function MenuBar() {
             {openMenu?.label === label && (
               <Menu
                 anchor={openMenu.anchor}
+                labelledBy={`${titleIdPrefix}-${menuIndex}`}
                 items={items}
                 isPointerHeld={isPointerHeld}
+                focusesFirstItem={openMenu.focusesFirstItem}
                 onOpenAdjacentMenu={(direction) => openAdjacentMenu(label, direction)}
                 onClose={() => closeMenu(label)}
               />
@@ -357,6 +391,6 @@ export function MenuBar() {
         <SoundStatus />
         <TimeStatus />
       </div>
-    </div>
+    </header>
   );
 }

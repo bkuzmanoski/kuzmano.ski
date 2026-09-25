@@ -5,11 +5,11 @@ import { useInputField } from "./use-input-field.ts";
 
 import type { InputFieldBinding } from "./use-input-field.ts";
 
-function renderInputField() {
+function renderInputField({ describedBy }: { describedBy?: string } = {}) {
   let binding!: InputFieldBinding;
 
   function Harness({ error }: { error?: string }) {
-    binding = useInputField(error);
+    binding = useInputField(error, { describedBy });
     return null;
   }
 
@@ -33,6 +33,18 @@ test("an input control has the `aria-invalid` and `aria-describedby` attributes 
 
   expect(fieldHarness.inputFieldBinding.control["aria-invalid"]).toBe(true);
   expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBe(fieldHarness.inputFieldBinding.errorId);
+});
+
+test("an input control is described by the IDs passed as `describedBy`, following its error while there is one", () => {
+  const fieldHarness = renderInputField({ describedBy: "description" });
+
+  expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBe("description");
+
+  fieldHarness.show("Validation error.");
+
+  expect(fieldHarness.inputFieldBinding.control["aria-describedby"]).toBe(
+    `${fieldHarness.inputFieldBinding.errorId} description`,
+  );
 });
 
 test("the input field binding includes the error passed to `useInputField`", () => {

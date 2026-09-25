@@ -7,7 +7,8 @@ function getQuery() {
   return reducedMotionQuery;
 }
 
-const subscribe = (onChange: () => void) => {
+/** Calls `onChange` when the visitor changes their reduced motion preference. Returns a function that stops listening. */
+export const subscribeToPrefersReducedMotion = (onChange: () => void): (() => void) => {
   const query = getQuery();
 
   query?.addEventListener("change", onChange);
@@ -24,5 +25,5 @@ export function getPrefersReducedMotion(): boolean {
 
 /** Whether the visitor has asked for reduced motion, re-rendering if they change it. */
 export function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(subscribe, getPrefersReducedMotion, serverPrefersReducedMotion);
+  return useSyncExternalStore(subscribeToPrefersReducedMotion, getPrefersReducedMotion, serverPrefersReducedMotion);
 }

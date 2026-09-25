@@ -5,6 +5,7 @@ import { SITE_SOURCE_URL } from "#/config/site.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
 
@@ -194,6 +195,16 @@ describe("dismissing a menu", () => {
     expect(menu()).toBeNull();
   });
 
+  test("a press elsewhere on the page that closes the menu does not move the focus to the menu's title", () => {
+    render(<MenuBar />);
+    openWithPointer("Go");
+    fireEvent(menuTitle("Go"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, leaving the menu open.
+    fireEvent(document.body, new MouseEvent("pointerdown", { bubbles: true }));
+
+    expect(menu()).toBeNull();
+    expect(document.activeElement).not.toBe(menuTitle("Go"));
+  });
+
   test("a hold released away from the menu and its title closes the menu", () => {
     render(<MenuBar />);
     openWithPointer("Go");
@@ -249,16 +260,44 @@ describe("navigating an open menu", () => {
     expect(isExpanded("Special")).toBe(true);
   });
 
-  test("an adjacent menu opened with the arrow keys receives the focus, and the Down arrow key highlights its first item", () => {
+  test("an adjacent menu opened with the arrow keys receives the focus and highlights its first item", () => {
     render(<MenuBar />);
     openWithKeyboard("File");
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
 
     expect(document.activeElement).toBe(menu());
+    expect(highlightedMenuItem()).toBe("About");
+  });
 
-    fireEvent.keyDown(menu()!, { key: "ArrowDown" });
+  test("a menu opened with the keyboard highlights its first item, and a menu opened with the pointer does not", () => {
+    render(<MenuBar />);
+    openWithKeyboard("Go");
 
     expect(highlightedMenuItem()).toBe("About");
+
+    fireEvent.keyDown(menu()!, { key: "Escape" });
+    openWithPointer("Go");
+
+    expect(highlightedMenuItem()).toBeUndefined();
+  });
+
+  test("the Home and End keys highlight the first and last items", () => {
+    render(<MenuBar />);
+    openWithPointer("Go");
+    fireEvent.keyDown(menu()!, { key: "End" });
+
+    expect(highlightedMenuItem()).toBe("Contact");
+
+    fireEvent.keyDown(menu()!, { key: "Home" });
+
+    expect(highlightedMenuItem()).toBe("About");
+  });
+
+  test("a menu is named by its title", () => {
+    render(<MenuBar />);
+    openWithKeyboard("Go");
+
+    expect(screen.getByRole("menu", { name: "Go" })).toBe(menu());
   });
 
   test("the Escape key closes the menu and returns the focus to its title", () => {
@@ -272,7 +311,7 @@ describe("navigating an open menu", () => {
 
   test("the menu's `aria-activedescendant` attribute references the highlighted item", () => {
     render(<MenuBar />);
-    openWithKeyboard("Go");
+    openWithPointer("Go");
 
     const openMenu = menu()!;
 
@@ -393,7 +432,6 @@ describe("items that open a destination", () => {
 
     const follow = vi.spyOn(menuItem("View Source") as HTMLAnchorElement, "click").mockReturnValue(undefined);
 
-    fireEvent.keyDown(menu()!, { key: "ArrowDown" });
     fireEvent.keyDown(menu()!, { key: "Enter" });
 
     expect(follow).not.toHaveBeenCalled(); // The highlight runs first.
@@ -401,6 +439,37 @@ describe("items that open a destination", () => {
     runActivationFlash();
 
     expect(follow).toHaveBeenCalled();
+  });
+
+  test("choosing an item that does not move the focus returns the focus to the menu's title", () => {
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    openWithKeyboard("Special");
+    vi.spyOn(menuItem("View Source") as HTMLAnchorElement, "click").mockReturnValue(undefined);
+    fireEvent.keyDown(menu()!, { key: "Enter" });
+    runActivationFlash();
+
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(menuTitle("Special"));
+  });
+
+  test('the "View Source" menu item is described as opening in a new tab', () => {
+    render(<MenuBar />);
+    openWithPointer("Special");
+
+    expect(screen.getByRole("menuitem", { name: "View Source", description: "Opens in a new tab" })).toBe(
+      menuItem("View Source"),
+    );
+  });
+
+  test("an item with a shortcut has the `aria-keyshortcuts` attribute, and its visible hint is hidden from assistive technology", () => {
+    render(<MenuBar />);
+    openWithPointer("Go");
+
+    const item = screen.getByRole("menuitem", { name: "About" });
+
+    expect(item.getAttribute("aria-keyshortcuts")).toBe("Alt+1");
+    expect(item.querySelector('[aria-hidden="true"]')?.textContent).toContain("1");
   });
 
   test('the "View Source" menu item links to the site source URL with a `target` attribute of `_blank`', () => {
@@ -419,11 +488,6 @@ describe("status controls", () => {
   const appearanceLabel = () => appearanceControl().getAttribute("aria-label");
   const tooltip = () => screen.queryByRole("tooltip");
 
-  const advance = (ms: number) =>
-    act(() => {
-      vi.advanceTimersByTime(ms);
-    });
-
   beforeEach(() => vi.useFakeTimers());
 
   test("a press shows the tooltip without a pointer over the control", () => {
@@ -441,11 +505,11 @@ describe("status controls", () => {
     render(<MenuBar />);
 
     fireEvent.click(appearanceControl());
-    advance(STATE_DISPLAY_DURATION_MS - 1);
+    advanceTimersBy(STATE_DISPLAY_DURATION_MS - 1);
 
     expect(tooltip()?.textContent).toBe(appearanceLabel());
 
-    advance(1);
+    advanceTimersBy(1);
 
     expect(tooltip()).toBeNull();
   });
@@ -454,13 +518,13 @@ describe("status controls", () => {
     render(<MenuBar />);
 
     fireEvent.click(appearanceControl());
-    advance(STATE_DISPLAY_DURATION_MS - 100);
+    advanceTimersBy(STATE_DISPLAY_DURATION_MS - 100);
     fireEvent.click(appearanceControl());
-    advance(STATE_DISPLAY_DURATION_MS - 100);
+    advanceTimersBy(STATE_DISPLAY_DURATION_MS - 100);
 
     expect(tooltip()?.textContent).toBe(appearanceLabel());
 
-    advance(100);
+    advanceTimersBy(100);
 
     expect(tooltip()).toBeNull();
   });
@@ -488,8 +552,51 @@ describe("status controls", () => {
     expect(tooltip()?.textContent).toBe(appearanceLabel());
 
     fireEvent.pointerLeave(wrapper, { pointerType: "mouse" });
-    advance(HIDE_DELAY_MS);
+    advanceTimersBy(HIDE_DELAY_MS);
 
     expect(tooltip()).toBeNull();
   });
+});
+
+test.each([["Appearance"], ["Sound"]])(
+  "the icon in the %s status button is hidden from assistive technology",
+  (name) => {
+    render(<MenuBar />);
+
+    const icon = screen.getByRole("button", { name: new RegExp(`^${name}:`) }).querySelector("svg");
+
+    expect(icon?.getAttribute("aria-hidden")).toBe("true");
+  },
+);
+
+test("the clock's text ends with its location", () => {
+  render(<MenuBar />);
+  expect(document.querySelector("time")?.textContent).toMatch(/ in Sydney, Australia$/);
+});
+
+test("the clock's location is one text node", () => {
+  render(<MenuBar />);
+
+  const locationNodes = [...document.querySelector("time")!.querySelectorAll("span")].flatMap((span) => [
+    ...span.childNodes,
+  ]);
+
+  expect(locationNodes.map((node) => node.textContent)).toContain(" in Sydney, Australia");
+});
+
+test("the clock hides its time zone abbreviation from assistive technology", () => {
+  render(<MenuBar />);
+
+  const hiddenText = [...document.querySelectorAll("time [aria-hidden]")].map((element) => element.textContent);
+
+  expect(hiddenText).toEqual([expect.stringMatching(/^ \(AE[SD]T\)$/)]);
+});
+
+test("the `dateTime` attribute of the clock is the displayed minute in UTC", () => {
+  vi.useFakeTimers({ now: new Date("2026-01-02T03:04:05.678Z") });
+  render(<MenuBar />);
+
+  expect(document.querySelector("time")?.getAttribute("dateTime")).toBe("2026-01-02T03:04Z");
+
+  vi.useRealTimers();
 });

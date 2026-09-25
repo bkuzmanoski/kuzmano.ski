@@ -36,6 +36,21 @@ test("a collection entry route opens a window titled by its frontmatter, contain
   await waitFor(() => expect(container.querySelector("article p")).not.toBeNull());
 });
 
+test("the menu bar is a `<header>` outside the main landmark, and the windows are inside it", async () => {
+  renderRoute(collection.route);
+
+  const window = await screen.findByRole("region", { name: collection.title });
+  const main = screen.getByRole("main");
+
+  // Testing Library maps every `<header>` to the banner role, including a window's title bar, which
+  // browsers map to the generic role inside a `<section>`, so the menu bar is found by its element.
+  const menuBar = screen.getByRole("navigation", { name: "Main menu" }).closest("header");
+
+  expect(menuBar).not.toBeNull();
+  expect(main.contains(menuBar)).toBe(false);
+  expect(main.contains(window)).toBe(true);
+});
+
 test("a collection route opens a window with the collection title and its entry list", async () => {
   const { history } = renderRoute(collection.route);
   const window = await screen.findByRole("region", { name: collection.title });
@@ -88,11 +103,11 @@ test("navigating to a second collection reuses the collection window", async () 
 test("navigating to a second unknown path replaces the current not-found alert", async () => {
   const { history } = renderRoute("/non-existent-page");
 
-  await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE });
+  await screen.findByRole("alertdialog", { name: NOT_FOUND_DOCUMENT_TITLE });
   history.push("/other-nonexistent-page");
 
   await waitFor(() => expect(history.location.pathname).toBe("/other-nonexistent-page"));
-  expect(screen.getAllByRole("dialog")).toHaveLength(1);
+  expect(screen.getAllByRole("alertdialog")).toHaveLength(1);
   expect(openWindows()).toHaveLength(0);
 });
 
@@ -128,13 +143,13 @@ test("stepping back and forward over the root path focuses and unfocuses the win
 test("an unknown path opens the not-found alert instead of a window", async () => {
   renderRoute("/non-existent-page");
 
-  expect(await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
+  expect(await screen.findByRole("alertdialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
   expect(openWindows()).toHaveLength(0);
 });
 
 test("an unknown entry in a collection opens the not-found alert", async () => {
   renderRoute(collection.routeOf("does-not-exist"));
-  expect(await screen.findByRole("dialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
+  expect(await screen.findByRole("alertdialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
 });
 
 test("dismissing a deep-linked not-found alert returns to the desktop", async () => {
@@ -143,7 +158,7 @@ test("dismissing a deep-linked not-found alert returns to the desktop", async ()
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
 
   await waitFor(() => expect(history.location.pathname).toBe("/"));
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(openWindows()).toHaveLength(0);
 });
 
@@ -155,7 +170,7 @@ test("dismissing a not-found alert reached from a window returns to that window"
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
 
   await waitFor(() => expect(history.location.pathname).toBe(collection.route));
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(isFocused(window)).toBe(true);
   expect(openWindows()).toHaveLength(1);
 });
@@ -179,7 +194,7 @@ test("closing the contact window with an unsent message prompts for confirmation
   fireEvent.change(within(window).getByLabelText("Message:"), { target: { value: "Hello." } });
   fireEvent.click(within(window).getByRole("button", { name: "Close" }));
 
-  const alert = await screen.findByRole("dialog");
+  const alert = await screen.findByRole("alertdialog");
 
   expect(within(alert).getByText("Discard this message?")).toBeDefined();
   expect(openWindows()).toHaveLength(1);
@@ -197,5 +212,5 @@ test("closing the contact window with an empty message closes it without prompti
   fireEvent.click(within(window).getByRole("button", { name: "Close" }));
 
   await waitFor(() => expect(openWindows()).toHaveLength(0));
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
 });

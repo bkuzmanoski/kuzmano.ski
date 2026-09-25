@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { parseSubmission } from "#/lib/waitlist/membership.ts";
 import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
-import { readSubmission, refusalFor } from "#/server/endpoint.ts";
+import { readSubmission, responseForRefusedSubmission } from "#/server/endpoint.ts";
 import { recordMembership } from "#/server/waitlist.ts";
 import type { MembershipResult } from "#/server/waitlist.ts";
 
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/waitlist")({
         const parsedSubmission = parseSubmission(receivedSubmission.fields);
 
         if (!parsedSubmission.ok) {
-          return refusalFor(parsedSubmission);
+          return responseForRefusedSubmission(parsedSubmission);
         }
 
         return new Response(null, { status: MEMBERSHIP_STATUS[await recordMembership(parsedSubmission.value)] });

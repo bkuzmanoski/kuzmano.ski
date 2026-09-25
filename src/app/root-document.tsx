@@ -2,6 +2,7 @@ import { HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { THEME_COLORS } from "virtual:theme-colors";
 
+import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
@@ -14,7 +15,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
   return (
     // suppressHydrationWarning: `themeScript` and `bootSequenceScript` set attributes on
     // `<html>` before hydration, so the client `<html>` differs from the one the server sent.
-    <html lang="en" suppressHydrationWarning>
+    <html lang={DOCUMENT_LANGUAGE} suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* The `theme-color` pairs are declared here because `HeadContent` de-duplicates meta tags

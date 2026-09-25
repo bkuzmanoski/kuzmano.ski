@@ -37,10 +37,6 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 
     measure();
 
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
-
     let frameId: number | null = null;
 
     const schedule = () => {
@@ -65,19 +61,16 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
     resizeObserver.observe(element);
     observeChildren();
 
-    let mutationObserver: MutationObserver | undefined;
+    const mutationObserver = new MutationObserver(() => {
+      observeChildren();
+      schedule();
+    });
 
-    if (typeof MutationObserver !== "undefined") {
-      mutationObserver = new MutationObserver(() => {
-        observeChildren();
-        schedule();
-      });
-      mutationObserver.observe(element, { childList: true });
-    }
+    mutationObserver.observe(element, { childList: true });
 
     return () => {
       resizeObserver.disconnect();
-      mutationObserver?.disconnect();
+      mutationObserver.disconnect();
 
       if (frameId !== null) {
         cancelAnimationFrame(frameId);

@@ -3,6 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { API_ROUTES } from "#/api-routes.ts";
 import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
 import type { MembershipResult } from "#/server/waitlist.ts";
+import { jsonPostRequest } from "#/test-utils/requests.ts";
 
 import { Route } from "./waitlist.ts";
 
@@ -19,8 +20,7 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API_ROUTES.waitlist}`;
+const URL = `https://example.com${API_ROUTES.waitlist}`;
 const VALID_SUBMISSION = {
   emailAddress: "user@example.com",
   list: "List",
@@ -33,14 +33,8 @@ const { POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
 
-const post = (body: unknown, { origin = ORIGIN, headers = {} }: { origin?: string; headers?: HeadersInit } = {}) =>
-  POST({
-    request: new Request(URL, {
-      method: "POST",
-      headers: { origin, "content-type": "application/json", ...headers },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    }),
-  });
+const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
+  POST({ request: jsonPostRequest(URL, body, options) });
 
 test("a well-formed submission is recorded, with its email address, list, and source route", async () => {
   const response = await post(VALID_SUBMISSION);

@@ -4,7 +4,9 @@ import ActiveWindowControl from "#/assets/images/window-control-active.svg?react
 import CloseWindowControl from "#/assets/images/window-control-close.svg?react";
 import ResizeWindowControl from "#/assets/images/window-control-resize.svg?react";
 import ZoomWindowControl from "#/assets/images/window-control-zoom.svg?react";
+import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
+import { stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
@@ -15,17 +17,48 @@ import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress, swallowNextPress } from "#/lib/press.ts";
+import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
 import styles from "./window.module.css";
 
-import type { PointerEvent, ReactNode } from "react";
+import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 /** The id set on the focused window's content container, so the skip link has a stable target. */
 export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 
 /** Where a window is being dragged to, reported while the gesture runs so an outline can show the proposed position. */
 export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
+
+function keyboardScrollDelta(event: KeyboardEvent, viewport: HTMLElement): number | null {
+  const pageDistance = () => Math.max(viewport.clientHeight - ARROW_STEP_PX, ARROW_STEP_PX);
+
+  switch (event.key) {
+    case "ArrowUp":
+      return -ARROW_STEP_PX;
+
+    case "ArrowDown":
+      return ARROW_STEP_PX;
+
+    case "PageUp":
+      return -pageDistance();
+
+    case "PageDown":
+      return pageDistance();
+
+    case " ":
+      return event.shiftKey ? -pageDistance() : pageDistance();
+
+    case "Home":
+      return -viewport.scrollHeight;
+
+    case "End":
+      return viewport.scrollHeight;
+
+    default:
+      return null;
+  }
+}
 
 function TitleBarButton({
   icon,
@@ -110,16 +143,20 @@ export function Window({
   toolbar?: ReactNode;
   children: ReactNode;
 }) {
-  const titleId = useId();
+  const inactiveDescriptionId = useId();
   const fallbackContentId = useId();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [isResizing, setIsResizing] = useState(false);
   const [isResizePressed, setIsResizePressed] = useState(false);
+  const [keyDownHandlers] = useState(createWindowKeyDownHandlers);
   const windowRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const hasMovedWindowRef = useRef(false);
   const dragRef = useRef<WindowDrag | null>(null);
 
-  useRestorableFocus(windowRef, { isActive: focused && !hidden, contentKey });
+  // The desktop is inert until the boot sequence completes, and focusing an element in inert content
+  // has no effect, so the focused window takes the focus only once the boot sequence has completed.
+  useRestorableFocus(windowRef, { isActive: focused && !hidden && isBootSequenceComplete, contentKey });
 
   function reportDrag(drag: WindowDrag) {
     dragRef.current = drag;
@@ -233,9 +270,31 @@ export function Window({
         unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
       )}
-      aria-labelledby={titleId}
+      aria-label={title} // Rather than `aria-labelledby` referencing the title, which Chromium ignores inside inert content.
+      aria-describedby={focused ? undefined : inactiveDescriptionId}
       data-maximized={maximized || undefined}
       onFocus={onFocus}
+      // The window is focused while none of its content is, but the browser scrolls only the scroll
+      // container around the focused element, which the window is outside of. The keys that scroll a
+      // page therefore scroll the window's content from here, unless a handler the content registered
+      // claims the key first. A key with a modifier other than Shift is a shortcut, so it reaches
+      // neither the content's handlers nor the scroll.
+      onKeyDown={(event) => {
+        const viewport = viewportRef.current;
+
+        if (event.target !== event.currentTarget || !viewport || event.altKey || event.ctrlKey || event.metaKey) {
+          return;
+        }
+
+        keyDownHandlers.handle(event);
+
+        const delta = event.defaultPrevented ? null : keyboardScrollDelta(event, viewport);
+
+        if (delta !== null) {
+          event.preventDefault();
+          stepScrollForPress(viewport, delta, event.repeat); // Each press plays the sound of a press on a scrollbar arrow.
+        }
+      }}
       onPointerDownCapture={() => {
         if (!focused) {
           swallowNextPress();
@@ -244,34 +303,39 @@ export function Window({
         onFocus();
       }}
     >
-      <header className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
-        {focused && <div className={styles.bars} aria-hidden />}
-        <span className={styles.title} id={titleId}>
-          {title}
-        </span>
-        {focused && (
-          <>
-            <TitleBarButton
-              className={styles.controlClose}
-              icon={<CloseWindowControl />}
-              label="Close"
-              onClick={onClose}
-            />
-            {onZoom && (
+      <span id={inactiveDescriptionId} hidden>
+        Inactive window
+      </span>
+      {/* An inactive window's contents are inert, so the window itself is its only tab stop and
+          neither the Tab key nor a screen reader reaches the content its scrim covers. */}
+      <div className={styles.contents} inert={!focused}>
+        <header className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
+          {focused && <div className={styles.bars} aria-hidden />}
+          <span className={styles.title}>{title}</span>
+          {focused && (
+            <>
               <TitleBarButton
-                className={styles.controlZoom}
-                icon={<ZoomWindowControl />}
-                label="Zoom"
-                onClick={onZoom}
+                className={styles.controlClose}
+                icon={<CloseWindowControl />}
+                label="Close"
+                onClick={onClose}
               />
-            )}
-          </>
-        )}
-      </header>
-      {toolbar}
-      <ScrollPane key={contentKey} id={contentId} resizeControl={resizeControl}>
-        {children}
-      </ScrollPane>
+              {onZoom && (
+                <TitleBarButton
+                  className={styles.controlZoom}
+                  icon={<ZoomWindowControl />}
+                  label="Zoom"
+                  onClick={onZoom}
+                />
+              )}
+            </>
+          )}
+        </header>
+        {toolbar}
+        <ScrollPane key={contentKey} id={contentId} viewportRef={viewportRef} resizeControl={resizeControl}>
+          <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
+        </ScrollPane>
+      </div>
     </section>
   );
 }

@@ -4,7 +4,7 @@ import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message.ts";
 import { MAX_EMAIL_ADDRESS_LENGTH } from "#/lib/forms/validation.ts";
 import { LIST_MAX_LENGTH, SOURCE_MAX_LENGTH } from "#/lib/waitlist/membership.ts";
 
-import { MAX_BODY_LENGTH, exceedsMaxLength, isSameOrigin, isSameSite } from "./request.ts";
+import { MAX_BODY_LENGTH, exceedsMaxLength, isSameOrigin, isSameOriginFetch } from "./request.ts";
 
 const ORIGIN = "https://example.com";
 const URL = `${ORIGIN}/api/endpoint`;
@@ -77,9 +77,9 @@ describe("isSameOrigin", () => {
   });
 });
 
-describe("isSameSite", () => {
+describe("isSameOriginFetch", () => {
   test("a request whose `Sec-Fetch-Site` header identifies it as same-origin is accepted", () => {
-    expect(isSameSite(post({ "sec-fetch-site": "same-origin" }))).toBe(true);
+    expect(isSameOriginFetch(post({ "sec-fetch-site": "same-origin" }))).toBe(true);
   });
 
   test.each([
@@ -87,11 +87,11 @@ describe("isSameSite", () => {
     ["a sibling subdomain", "same-site"],
     ["the address bar or a bookmark", "none"],
   ])("a request whose `Sec-Fetch-Site` header identifies it as sent from %s is refused", (_label, site) => {
-    expect(isSameSite(post({ "sec-fetch-site": site }))).toBe(false);
+    expect(isSameOriginFetch(post({ "sec-fetch-site": site }))).toBe(false);
   });
 
   test("a request that does not declare a `Sec-Fetch-Site` header is refused", () => {
-    expect(isSameSite(post())).toBe(false);
+    expect(isSameOriginFetch(post())).toBe(false);
   });
 });
 

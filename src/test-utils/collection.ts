@@ -48,7 +48,7 @@ export function fakeContentIndex(entries: Array<Entry>, directoryName = COLLECTI
     has: (slug) => bySlug.has(slug),
     entryKeyOf: (slug) => entryKey(directoryName, slug),
     frontmatterOf: (slug) => bySlug.get(slug) ?? null,
-    bodyChunkUrlOf: () => null,
+    bodyChunksOf: () => null,
     load(slug) {
       if (!bySlug.has(slug)) {
         throw new Error(`Content not found: ${slug}`);

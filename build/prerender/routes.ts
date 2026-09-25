@@ -4,7 +4,7 @@ import { CONTACT_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGES_DIRECTORY_NAME, PAGE_SLUGS } from "#/config/content.ts";
 import { entryFileName } from "#/lib/content/entry-file.ts";
 import { MEDIA_SEGMENT } from "#/lib/content/paths.ts";
-import { FEATURE_ROUTES, collectionRoute, entryRoute, pageRoute } from "#/site/routes.ts";
+import { FEATURE_ROUTES, collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "#/site/routes.ts";
 
 import { newestDate, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
 import { URL_SAFE_NAME } from "../content/listing.ts";
@@ -131,9 +131,7 @@ export function routesFor(content: AuthoredContent): Array<PrerenderRoute> {
   return [
     route("/", siteLastModifiedDate),
     ...publishedPages.map(({ slug, date }) =>
-      (PAGE_SLUGS as ReadonlyArray<string>).includes(slug)
-        ? route(pageRoute(slug), date)
-        : unlistedRoute(pageRoute(slug)),
+      isDeclaredPageSlug(slug) ? route(pageRoute(slug), date) : unlistedRoute(pageRoute(slug)),
     ),
     ...publishedCollections.flatMap(({ name, entries }) => [
       route(collectionRoute(name), newestDate(entries) ?? siteLastModifiedDate),

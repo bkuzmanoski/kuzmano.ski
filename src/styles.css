@@ -140,21 +140,14 @@
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-background: var(--color-background-secondary);
   --color-syntax-punctuation: var(--color-foreground-secondary);
-  --color-syntax-comment: light-dark(var(--neutral-645), var(--neutral-540));
-  --color-syntax-keyword: var(--accent-magenta);
-  --color-syntax-function: var(--accent-blue);
-  --color-syntax-property: var(--accent-violet);
-  --color-syntax-type: var(--accent-teal);
-  --color-syntax-constant: var(--accent-orange);
-  --color-syntax-string: var(--accent-green);
-  --color-syntax-invalid: var(--accent-red);
+  --color-syntax-comment: var(--color-foreground-secondary);
 
   /* Shadows */
   --shadow: var(--layout-shadow-length) var(--layout-shadow-length) 0 var(--color-shadow);
 
   /* Patterns */
   --grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  --dotted-frame:
+  --marching-ants-frame:
     linear-gradient(90deg, currentColor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
     linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
     linear-gradient(180deg, currentColor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
@@ -217,6 +210,10 @@ p,
 ul,
 ol,
 li,
+dl,
+dd,
+blockquote,
+figure,
 pre,
 hr {
   margin: 0;
@@ -265,10 +262,16 @@ hr {
     color: var(--color-focus-ring);
 
     background: var(--dotted-frame);
+
+    /* Forced colors remove a gradient background, so the frame is drawn as an outline instead. */
+    @media (forced-colors: active) {
+      outline: 1px dotted CanvasText;
+      outline-offset: -1px;
+    }
   }
 }
 
-/* Fills a container to stand in for pending content (i.e. a loading indicator or empty state message). */
+/* Fills a container in place of pending content (i.e. a loading indicator or empty state message). */
 .placeholder {
   display: flex;
   align-items: center;

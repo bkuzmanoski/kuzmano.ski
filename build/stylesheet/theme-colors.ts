@@ -17,5 +17,5 @@ export const themeColorsPlugin = (): Plugin =>
     name: "kuzmano.ski:theme-colors",
     moduleId: "virtual:theme-colors",
     exportName: "THEME_COLORS",
-    read: async () => themeColorsFrom(await readPalette()),
+    load: async () => themeColorsFrom(await readPalette()),
   });

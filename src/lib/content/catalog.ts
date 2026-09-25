@@ -19,12 +19,21 @@ export interface MDXModule {
   className?: string;
 }
 
+/**
+ * The client chunks and stylesheets loaded by an entry: its body chunk, the chunk of its stylesheet,
+ * and the chunks those import, other than the chunks the document loads for every page.
+ */
+export interface EntryBodyChunks {
+  moduleUrls: Array<string>;
+  stylesheetUrls: Array<string>;
+}
+
 /** Slug-keyed lookup of the content in a directory. */
 export interface ContentIndex {
   has: (slug: string) => boolean;
   entryKeyOf: (slug: string) => EntryKey;
   frontmatterOf: (slug: string) => Frontmatter | null;
-  bodyChunkUrlOf: (slug: string) => string | null; // For a document to preload the body before hydration.
+  bodyChunksOf: (slug: string) => EntryBodyChunks | null; // For a document to load the body and its stylesheets before hydration.
   load: (slug: string) => Promise<MDXModule>; // The compiled body, in a chunk of its own.
 }
 
@@ -47,7 +56,7 @@ export interface ContentSource {
   frontmatterModules: Record<string, { default: unknown }>;
   bodyModules: Record<string, () => Promise<{ default: MDXContent }>>;
   stylesheetModules: Record<string, () => Promise<{ default: { entry?: string } }>>;
-  bodyChunkUrls: Record<EntryKey, string | undefined>;
+  bodyChunks: Record<EntryKey, EntryBodyChunks | undefined>;
 }
 
 export interface Catalog {
@@ -113,7 +122,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
           const filePath = filePathsBySlug.get(slug);
           return filePath ? frontmatterFromFilePath(filePath) : null;
         },
-        bodyChunkUrlOf: (slug) => source.bodyChunkUrls[entryKey(directoryName, slug)] ?? null,
+        bodyChunksOf: (slug) => source.bodyChunks[entryKey(directoryName, slug)] ?? null,
         load(slug) {
           const filePath = filePathsBySlug.get(slug);
 

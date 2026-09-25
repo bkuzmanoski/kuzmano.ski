@@ -22,7 +22,6 @@
 .tip {
   composes: panel from global;
 
-  pointer-events: none;
   user-select: none;
 
   position: fixed;

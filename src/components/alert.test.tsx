@@ -16,9 +16,10 @@ const CONTENT = {
 const PRIMARY_ACTION = { label: "OK", onAction: () => undefined };
 
 const stubDialogBox = (rect: { x: number; y: number; width: number; height: number }) =>
-  vi.spyOn(screen.getByRole("dialog"), "getBoundingClientRect").mockReturnValue(rect as DOMRect);
+  vi.spyOn(screen.getByRole("alertdialog"), "getBoundingClientRect").mockReturnValue(rect as DOMRect);
 
-const escape = () => fireEvent(screen.getByRole("dialog"), new Event("cancel", { bubbles: false, cancelable: true }));
+const escape = () =>
+  fireEvent(screen.getByRole("alertdialog"), new Event("cancel", { bubbles: false, cancelable: true }));
 
 test("a closed modal alert does not set the `open` attribute or render its actions", () => {
   render(
@@ -30,13 +31,13 @@ test("a closed modal alert does not set the `open` attribute or render its actio
     />,
   );
 
-  expect(screen.getByRole("dialog", { hidden: true }).hasAttribute("open")).toBe(false);
+  expect(screen.getByRole("alertdialog", { hidden: true }).hasAttribute("open")).toBe(false);
   expect(screen.queryAllByRole("button", { hidden: true })).toHaveLength(0);
 });
 
 test("a page-level alert renders with the `open` attribute", () => {
   render(<Alert message="There was a problem." modal={false} primaryAction={{ label: "Go Home", onAction: "/" }} />);
-  expect(screen.getByRole("dialog")).toBeDefined();
+  expect(screen.getByRole("alertdialog")).toBeDefined();
 });
 
 test("a page-level alert renders its message", () => {
@@ -44,6 +45,18 @@ test("a page-level alert renders its message", () => {
     <Alert message="This page doesn’t exist." modal={false} primaryAction={{ label: "Go Home", onAction: "/" }} />,
   );
   expect(screen.getByText("This page doesn’t exist.")).toBeDefined();
+});
+
+test("an alert without the `label` prop is named by its message", () => {
+  render(<Alert message="There was a problem." open primaryAction={PRIMARY_ACTION} />);
+  expect(screen.getByRole("alertdialog", { name: "There was a problem." })).toBeDefined();
+});
+
+test("an alert with the `label` prop is named by its label and described by its message", () => {
+  render(<Alert label="Page not found" message="This page doesn’t exist." open primaryAction={PRIMARY_ACTION} />);
+  expect(
+    screen.getByRole("alertdialog", { name: "Page not found", description: "This page doesn’t exist." }),
+  ).toBeDefined();
 });
 
 test("an open alert renders the actions it was given", () => {
@@ -129,7 +142,7 @@ test("the Escape key invokes the secondary action without closing the dialog", (
 
   expect(onSecondary).toHaveBeenCalledOnce();
   expect(onPrimary).not.toHaveBeenCalled();
-  expect(screen.getByRole("dialog")).toBeDefined();
+  expect(screen.getByRole("alertdialog")).toBeDefined();
 });
 
 test("the Escape key invokes the primary action when there is no secondary action", () => {
@@ -152,7 +165,7 @@ test("pressing outside a modal alert plays the error sound", () => {
   );
   stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
   vi.mocked(playError).mockClear();
-  fireEvent.pointerDown(screen.getByRole("dialog"), { clientX: 40, clientY: 320 });
+  fireEvent.pointerDown(screen.getByRole("alertdialog"), { clientX: 40, clientY: 320 });
 
   expect(playError).toHaveBeenCalledOnce();
 });
@@ -168,7 +181,7 @@ test("pressing within the alert, including its padding, does not play the error 
   );
   stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
   vi.mocked(playError).mockClear();
-  fireEvent.pointerDown(screen.getByRole("dialog"), { clientX: 110, clientY: 110 });
+  fireEvent.pointerDown(screen.getByRole("alertdialog"), { clientX: 110, clientY: 110 });
 
   expect(playError).not.toHaveBeenCalled();
 });

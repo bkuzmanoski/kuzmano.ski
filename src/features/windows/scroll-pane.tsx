@@ -3,10 +3,14 @@ import { useRef } from "react";
 import { Scrollbar } from "#/components/scrollbar.tsx";
 import { playPaneScroll, silenceScrollIntoView } from "#/lib/audio/scroll.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
+import { mergeRefs } from "#/lib/merge-refs.ts";
 
 import styles from "./scroll-pane.module.css";
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
+
+/** Matches a pane's scrolling viewport, so content inside the pane can find it with `closest`. */
+export const SCROLL_PANE_VIEWPORT_SELECTOR = "[data-scroll-pane-viewport]";
 
 /**
  * A scrolling viewport paired with the window's own scrollbar.
@@ -16,10 +20,12 @@ import type { ReactNode } from "react";
  */
 export function ScrollPane({
   id,
+  viewportRef,
   resizeControl,
   children,
 }: {
   id: string;
+  viewportRef?: Ref<HTMLDivElement>; // Attached to the scrolling viewport, rather than the pane that also contains the scrollbar.
   resizeControl?: ReactNode;
   children: ReactNode;
 }) {
@@ -32,10 +38,11 @@ export function ScrollPane({
   return (
     <div className={styles.scrollPane}>
       <div
-        ref={contentContainerRef}
+        ref={mergeRefs(viewportRef, contentContainerRef)}
         id={id}
         tabIndex={-1}
         className={styles.contentContainer}
+        data-scroll-pane-viewport
         data-overscrolled={overscrolledEnd}
         onFocus={(event) => silenceScrollIntoView(event.target)}
         onScroll={(event) => {

@@ -18,8 +18,8 @@ Content is written in MDX and must contain the following frontmatter:
 title: Entry Title
 description: Collection entry lists and meta descriptions use this text.
 date: 2026-07-19
-category: Category # Optional. Groups an entry within its collection.
-draft: false # Optional. Dev renders drafts; builds omit them.
+category: Category # Optional. The entry's category in Atom feeds.
+draft: false # Optional. Unlists the entry on the deployed site.
 ```
 
 MDX files are located at:

@@ -1,6 +1,6 @@
 import { createElement } from "react";
 
-import type { ContentSource } from "#/lib/content/catalog.ts";
+import type { ContentSource, EntryBodyChunks } from "#/lib/content/catalog.ts";
 import { entryKey, stylesheetFilePathOf } from "#/lib/content/entry-file.ts";
 
 import type { MDXContent } from "mdx/types";
@@ -11,7 +11,7 @@ export interface FakeDocument {
   frontmatter?: unknown;
   body?: MDXContent;
   styles?: { entry?: string };
-  bodyChunkUrl?: string;
+  bodyChunks?: EntryBodyChunks;
 }
 
 const ENTRY_FILE_PATH_PATTERN = /^([^/]+)\/([^/]+)\.mdx$/; // The shape a fake document is keyed by, matching the entries `import.meta.glob("/content/*/*.mdx")` resolves.
@@ -35,7 +35,7 @@ export function fakeContentSource(
     frontmatterModules: {},
     bodyModules: {},
     stylesheetModules: {},
-    bodyChunkUrls: {},
+    bodyChunks: {},
   };
 
   for (const [entryFilePath, document] of Object.entries(documents)) {
@@ -57,8 +57,8 @@ export function fakeContentSource(
       source.stylesheetModules[stylesheetFilePathOf(filePath)] = () => Promise.resolve({ default: styles });
     }
 
-    if (document.bodyChunkUrl) {
-      source.bodyChunkUrls[key] = document.bodyChunkUrl;
+    if (document.bodyChunks) {
+      source.bodyChunks[key] = document.bodyChunks;
     }
   }
 

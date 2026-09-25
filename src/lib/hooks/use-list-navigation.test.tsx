@@ -32,24 +32,29 @@ function List({
   children?: ReactNode; // A nested list, rendered inside the first item as a sublist would be.
 }) {
   const listRef = useRef<HTMLUListElement>(null);
-  const itemProps = useListNavigation(listRef, { count, activeIndex, onActivate: vi.fn() });
+  const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, { count, activeIndex, onActivate: vi.fn() });
 
   return (
-    <ul ref={listRef}>
-      {Array.from({ length: count }, (_, index) => (
-        <li key={index}>
-          <a
-            href="#"
-            {...(index === guardedIndex
-              ? mergeHandlers({ onMouseDown: (event: MouseEvent) => event.preventDefault() }, itemProps(index))
-              : itemProps(index))}
-          >
-            {label} {index}
-          </a>
-          {index === 0 ? children : null}
-        </li>
-      ))}
-    </ul>
+    <>
+      <button type="button" onKeyDown={onKeyDownOutsideList}>
+        Outside {label}
+      </button>
+      <ul ref={listRef}>
+        {Array.from({ length: count }, (_, index) => (
+          <li key={index}>
+            <a
+              href="#"
+              {...(index === guardedIndex
+                ? mergeHandlers({ onMouseDown: (event: MouseEvent) => event.preventDefault() }, itemProps(index))
+                : itemProps(index))}
+            >
+              {label} {index}
+            </a>
+            {index === 0 ? children : null}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -74,7 +79,7 @@ test("a Down arrow key press focuses the next item without a native focus scroll
   const focus = vi.spyOn(links[1]!, "focus");
 
   links[0]!.focus();
-  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
+  scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the active entry into view.
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
   expect(focus).toHaveBeenCalledWith({ preventScroll: true });
@@ -145,4 +150,51 @@ test("an End key press focuses the last item of the outer list, not an item of a
 
   expect(document.activeElement).toBe(outerList[1]);
   expect(innerList.map((item) => item.textContent)).toEqual(["Inner 0", "Inner 1", "Inner 2"]);
+});
+
+test.each([
+  ["the Down arrow key", "ArrowDown", 0],
+  ["the Home key", "Home", 0],
+  ["the Up arrow key", "ArrowUp", 2],
+  ["the End key", "End", 2],
+])(
+  "pressing %s outside the list focuses the item at index %i without a native focus scroll, scrolls it into view silently, and plays the hover sound",
+  (_label, key, expectedIndex) => {
+    const { links } = renderList({ count: 3, activeIndex: 1 });
+    const outsideControl = screen.getByRole("button", { name: "Outside Item" });
+    const focus = vi.spyOn(links[expectedIndex]!, "focus");
+
+    outsideControl.focus();
+    scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the active item into view.
+
+    expect(fireEvent.keyDown(outsideControl, { key })).toBe(false); // The default behavior was prevented.
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(document.activeElement).toBe(links[expectedIndex]);
+    expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[expectedIndex]);
+    expect(playHover).toHaveBeenCalledTimes(1);
+  },
+);
+
+test("pressing the Page Down key outside the list does not move the focus or prevent the key's default action", () => {
+  renderList({ count: 3, activeIndex: 0 });
+
+  const outsideControl = screen.getByRole("button", { name: "Outside Item" });
+
+  outsideControl.focus();
+
+  expect(fireEvent.keyDown(outsideControl, { key: "PageDown" })).toBe(true);
+  expect(document.activeElement).toBe(outsideControl);
+  expect(playHover).not.toHaveBeenCalled();
+});
+
+test("pressing the Down arrow key outside a list without items does not move the focus or prevent the key's default action", () => {
+  render(<List count={0} activeIndex={-1} />);
+
+  const outsideControl = screen.getByRole("button", { name: "Outside Item" });
+
+  outsideControl.focus();
+
+  expect(fireEvent.keyDown(outsideControl, { key: "ArrowDown" })).toBe(true);
+  expect(document.activeElement).toBe(outsideControl);
+  expect(playHover).not.toHaveBeenCalled();
 });

@@ -1,17 +1,22 @@
 import { describe, expect, test, vi } from "vitest";
 
+import { CONTENT_SIGNAL } from "#/config/site.ts";
 import type { EntryKey } from "#/lib/content/entry-file.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../../environments.ts";
+import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { STYLESHEET_FILE_PATH, fromContent, fromRoot } from "../../paths.ts";
+import { devServerMiddlewareOf } from "../../test-utils/dev-server.ts";
+import { headersRulesAddedAtBuildStartBy } from "../../test-utils/headers.ts";
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID } from "../entry-cover-images.ts";
 
 import { contentMedia } from "./plugin.ts";
 
 import type * as mediaIndexModule from "./media-index.ts";
 import type { MediaIndex } from "./media-index.ts";
+import type { AddHeadersRules } from "../../headers.ts";
 import type { Plugin } from "vite";
 
 const { indexBuilds, buildMediaIndex } = vi.hoisted(() => {
@@ -54,10 +59,6 @@ interface FileChange {
 interface Logger {
   warn: (message: string) => void;
   error: (message: string) => void;
-}
-
-interface DevServer {
-  middlewares: { use: () => void };
 }
 
 type HotUpdate = (
@@ -105,13 +106,12 @@ function setUpContentMedia() {
 
   const warn = vi.fn<(message: string) => void>();
   const logger: Logger = { warn, error: vi.fn() };
-  const devServer: DevServer = { middlewares: { use: () => undefined } };
-  const { plugins, mediaForEntry } = contentMedia();
+  const { plugins, mediaForEntry } = contentMedia({ addHeadersRules: () => undefined });
   const mediaPlugin: Plugin = plugins.find((plugin) => plugin.name === "kuzmano.ski:content-media")!;
 
   (mediaPlugin.configResolved as unknown as (config: { logger: Logger }) => void)({ logger });
 
-  const startDevServer = () => (mediaPlugin.configureServer as unknown as (server: DevServer) => void)(devServer);
+  const startDevServer = () => devServerMiddlewareOf(mediaPlugin);
   const updateFile = ({
     file,
     type = "update",
@@ -153,6 +153,9 @@ function setUpContentMedia() {
     staleModuleIdsAfterRebuild,
   };
 }
+
+const mediaPluginFor = (options: { addHeadersRules: AddHeadersRules }) =>
+  contentMedia(options).plugins.find((plugin) => plugin.name === "kuzmano.ski:content-media")!;
 
 describe("contentMedia", () => {
   test("resolves a reference through the newest index build when an earlier build finishes after it", async () => {
@@ -450,5 +453,20 @@ describe("contentMedia", () => {
     }
 
     expect(warnedProblems()).toEqual(["A problem.", "A problem."]);
+  });
+});
+
+describe("the content media plugin", () => {
+  test("adds an immutable `Cache-Control` and `Content-Signal` rule for `/media/*` to `_headers` when the client environment starts", () => {
+    expect(headersRulesAddedAtBuildStartBy(mediaPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
+      expect.objectContaining({
+        pathPatterns: [mediaRoute("*")],
+        headers: { "Cache-Control": IMMUTABLE_CACHE_CONTROL, "Content-Signal": CONTENT_SIGNAL },
+      }),
+    ]);
+  });
+
+  test("adds rules to `_headers` from the client environment only", () => {
+    expect(headersRulesAddedAtBuildStartBy(mediaPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
   });
 });

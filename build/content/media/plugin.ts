@@ -7,7 +7,7 @@ import { isEntryFile } from "#/lib/content/entry-file.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { CLIENT_ENVIRONMENT } from "../../environments.ts";
-import { addHeadersRules } from "../../headers.ts";
+import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { MEDIA_DIRECTORY_PATH, STYLESHEET_FILE_PATH, fromContent, fromRoot, requestPathOf } from "../../paths.ts";
 import { layoutMetricsFrom } from "../../stylesheet/layout-metrics.ts";
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "../entry-cover-images.ts";
@@ -20,7 +20,7 @@ import { rootRelativePathOf } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
 
 import type { MediaIndex } from "./media-index.ts";
-import type { HeadersRule } from "../../headers.ts";
+import type { AddHeadersRules, HeadersRule } from "../../headers.ts";
 import type { MediaForEntry } from "../markup/media-rewrite.ts";
 import type { Logger, Plugin } from "vite";
 
@@ -30,7 +30,7 @@ const MEDIA_HEADERS_RULE: HeadersRule = {
   description: "Media URLs include content hashes and encoding-setting fingerprints.",
   pathPatterns: [mediaRoute("*")],
   headers: {
-    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cache-Control": IMMUTABLE_CACHE_CONTROL,
     "Content-Signal": CONTENT_SIGNAL,
   },
 };
@@ -70,7 +70,10 @@ function createProblemReporter(warn: (problem: string) => void) {
  *
  * A build reads only the committed derivatives. The dev server encodes a missing derivative on demand.
  */
-export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaForEntry } {
+export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): {
+  plugins: Array<Plugin>;
+  mediaForEntry: MediaForEntry;
+} {
   const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));
   const contentDirectoryAbsolutePath = fromContent();
   const stylesheetAbsolutePath = fromRoot(STYLESHEET_FILE_PATH);
@@ -149,6 +152,11 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
     enforce: "pre",
     configResolved(config) {
       logger = config.logger;
+    },
+    buildStart() {
+      if (this.environment.name === CLIENT_ENVIRONMENT) {
+        addHeadersRules([MEDIA_HEADERS_RULE]); // Registers the rule for `vite dev` as well, where the dev server serves `/media/*`.
+      }
     },
     configureServer(server) {
       ensureIndex()
@@ -292,8 +300,6 @@ export function contentMedia(): { plugins: Array<Plugin>; mediaForEntry: MediaFo
           await copyFile(fromRoot(rootRelativePathOf(rendition)), destinationAbsolutePath);
         }),
       );
-
-      await addHeadersRules(outputDirectoryAbsolutePath, [MEDIA_HEADERS_RULE]);
     },
   };
 

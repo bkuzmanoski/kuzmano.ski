@@ -8,6 +8,7 @@ import { NotFoundAlert } from "#/features/windows/not-found-alert.tsx";
 import { WindowLayer } from "#/features/windows/window-layer.tsx";
 import { WindowManagerProvider } from "#/features/windows/window-manager-provider.tsx";
 import { useAudioUnlock } from "#/lib/audio/context.ts";
+import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { useMotionDurations } from "#/lib/boot-sequence/use-motion-durations.ts";
 import { useKeyboardInset } from "#/lib/hooks/use-keyboard-inset.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
@@ -23,6 +24,7 @@ export function Desktop() {
   useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `/src/lib/audio/context.ts`).
   useKeyboardInset(); // Keeps the desktop within the space left by the software keyboard (see `/src/lib/hooks/use-keyboard-inset.ts`).
 
+  const isBootSequenceComplete = useIsBootSequenceComplete();
   const desktopStyle: StyleWithVars = {
     "--duration-desktop-reveal-step": `${useMotionDurations().desktopReveal}ms`,
   };
@@ -30,7 +32,9 @@ export function Desktop() {
   return (
     <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
       <EntryCoverImagesProvider>
-        <div className={styles.desktop} style={desktopStyle}>
+        {/* Inert while the boot sequence covers it, so neither the focus nor a screen reader
+            reaches the desktop before it is revealed. */}
+        <div className={styles.desktop} style={desktopStyle} inert={!isBootSequenceComplete}>
           <SkipLink />
           <SiteIndex />
           <MenuBar />

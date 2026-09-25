@@ -1,0 +1,7 @@
+{
+  "config": {
+    "MD033": false,
+    "heading-levels": { "minimum": 2, "maximum": 3 }
+  },
+  "customRules": ["../../../markdownlint.rules.ts"]
+}

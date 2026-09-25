@@ -1,18 +1,17 @@
 import { relative, sep } from "node:path";
 
-import { entryKey, entrySlugOf, isEntryFile } from "#/lib/content/entry-file.ts";
+import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
+import { entryKey, entrySlugOf, isEntryFile, stylesheetFilePathOf } from "#/lib/content/entry-file.ts";
 import type { EntryKey } from "#/lib/content/entry-file.ts";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../environments.ts";
+import { jsonValueModulePlugin } from "../json-value-module.ts";
 import { fromContent } from "../paths.ts";
 
 import { listedEntriesIn, readContentListing } from "./listing.ts";
 
 import type { ContentListing } from "./listing.ts";
-import type { Plugin } from "vite";
-
-const MODULE_ID = "virtual:entry-body-chunks";
-const RESOLVED_MODULE_ID = `\0${MODULE_ID}`;
+import type { Plugin, Rollup } from "vite";
 
 const MAX_LISTED_ENTRY_KEYS = 3;
 
@@ -59,57 +58,100 @@ export function entryChunkDriftBetween(
   ];
 }
 
+/** The fields of a client chunk `entryBodyChunksIn` reads. */
+export type BundledChunk = Pick<Rollup.OutputChunk, "fileName" | "facadeModuleId" | "isEntry" | "imports"> & {
+  viteMetadata?: { importedCss: Set<string> };
+};
+
 /**
- * Captures client entry body chunk URLs and exposes them through `virtual:entry-body-chunks`.
+ * Returns the chunks and stylesheets each entry loads, keyed by entry key: its body chunk, the chunk of
+ * the stylesheet beside it, and the chunks those import statically, with the stylesheets of all of them.
  *
- * Server builds use the URLs to preload body chunks before hydration; client and development
- * builds receive an empty map.
+ * The chunk of the hydration entry, `/src/client.tsx`, and the chunks it imports statically are left out,
+ * along with their stylesheets, since every document already loads them. A component an entry imports is
+ * bundled into the entry's body chunk or a chunk the body chunk imports.
+ */
+export function entryBodyChunksIn(chunks: Array<BundledChunk>, base: string): Record<EntryKey, EntryBodyChunks> {
+  const chunksByFileName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+  const chunksByFacadeModuleId = new Map(chunks.map((chunk) => [chunk.facadeModuleId, chunk]));
+
+  function staticImportClosureOf(fileNames: Array<string>): Array<string> {
+    const closure = new Set<string>();
+    const visit = (fileName: string) => {
+      if (closure.has(fileName)) {
+        return;
+      }
+
+      closure.add(fileName);
+      chunksByFileName.get(fileName)?.imports.forEach(visit);
+    };
+
+    fileNames.forEach(visit);
+
+    return [...closure];
+  }
+
+  const fileNamesEveryDocumentLoads = new Set(
+    staticImportClosureOf(chunks.filter((chunk) => chunk.isEntry).map((chunk) => chunk.fileName)),
+  );
+  const entryBodyChunks: Record<EntryKey, EntryBodyChunks> = {};
+
+  for (const chunk of chunks) {
+    const chunkEntryKey = entryKeyOf(chunk.facadeModuleId);
+
+    if (!chunkEntryKey || !chunk.facadeModuleId) {
+      continue;
+    }
+
+    const stylesheetChunk = chunksByFacadeModuleId.get(stylesheetFilePathOf(chunk.facadeModuleId));
+    const fileNames = staticImportClosureOf(
+      stylesheetChunk ? [chunk.fileName, stylesheetChunk.fileName] : [chunk.fileName],
+    ).filter((fileName) => !fileNamesEveryDocumentLoads.has(fileName));
+    const stylesheetFileNames = new Set(
+      fileNames.flatMap((fileName) => [...(chunksByFileName.get(fileName)?.viteMetadata?.importedCss ?? [])]),
+    );
+
+    entryBodyChunks[chunkEntryKey] = {
+      moduleUrls: fileNames.map((fileName) => `${base}${fileName}`),
+      stylesheetUrls: [...stylesheetFileNames].map((fileName) => `${base}${fileName}`),
+    };
+  }
+
+  return entryBodyChunks;
+}
+
+/**
+ * Captures the chunks and stylesheets each entry loads in the client build and exposes them through
+ * `virtual:entry-body-chunks`.
+ *
+ * Server builds link them from the document, so an entry's code is preloaded and its stylesheets
+ * apply before hydration; client and development builds receive an empty map.
  */
 export function entryBodyChunksPlugin(): Array<Plugin> {
-  let entryBodyChunkUrls: Record<EntryKey, string> = {};
+  let entryBodyChunks: Record<EntryKey, EntryBodyChunks> = {};
   return [
     {
       name: "kuzmano.ski:entry-body-chunks-capture",
       applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
       enforce: "post",
       generateBundle(_options, bundle) {
-        const { base } = this.environment.config;
+        entryBodyChunks = entryBodyChunksIn(
+          Object.values(bundle).filter((output) => output.type === "chunk"),
+          this.environment.config.base,
+        );
 
-        entryBodyChunkUrls = {};
-
-        for (const [fileName, output] of Object.entries(bundle)) {
-          if (output.type !== "chunk") {
-            continue;
-          }
-
-          const chunkEntryKey = entryKeyOf(output.facadeModuleId);
-
-          if (chunkEntryKey) {
-            entryBodyChunkUrls[chunkEntryKey] = `${base}${fileName}`;
-          }
-        }
-
-        const drift = entryChunkDriftBetween(Object.keys(entryBodyChunkUrls), entryKeysIn(readContentListing()));
+        const drift = entryChunkDriftBetween(Object.keys(entryBodyChunks), entryKeysIn(readContentListing()));
 
         if (drift.length > 0) {
           this.error(`Entry chunk drift: ${drift.join("; ")}.`);
         }
       },
     },
-    {
+    jsonValueModulePlugin({
       name: "kuzmano.ski:entry-body-chunks",
-      enforce: "pre",
-      resolveId: (source) => (source === MODULE_ID ? RESOLVED_MODULE_ID : null),
-      load(id) {
-        if (id !== RESOLVED_MODULE_ID) {
-          return null;
-        }
-
-        const isServerBuild =
-          this.environment.name === SERVER_ENVIRONMENT && this.environment.config.command === "build";
-
-        return `export const ENTRY_BODY_CHUNKS = ${JSON.stringify(isServerBuild ? entryBodyChunkUrls : {})};`;
-      },
-    },
+      moduleId: "virtual:entry-body-chunks",
+      exportName: "ENTRY_BODY_CHUNKS",
+      load: ({ name, config }) => (name === SERVER_ENVIRONMENT && config.command === "build" ? entryBodyChunks : {}),
+    }),
   ];
 }

@@ -1,7 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 
-import { collectionEntries } from "#/test-utils/catalog.ts";
+import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
+import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 import { RouterContext } from "#/test-utils/router-context.tsx";
 
 import { WindowBody } from "./window-body.tsx";
@@ -18,6 +19,10 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 const collectionEntry = collectionEntries[0]!;
 
@@ -58,6 +63,19 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined();
 
   await rerendering;
+});
+
+test.each([
+  ["a collection route", collection.route, collection.title],
+  ["the contact route", CONTACT_ROUTE, CONTACT_DOCUMENT_TITLE],
+])("%s renders the window's title as a `<h1>`", (_label, route, title) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn<typeof fetch>(() => new Promise<Response>(() => undefined)),
+  ); // The contact form reads its email address on mount.
+  renderBody(route);
+
+  expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(title);
 });
 
 test("a route that does not match any content renders an empty window body", () => {

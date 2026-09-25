@@ -1,5 +1,6 @@
 import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
+import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
 
@@ -13,15 +14,22 @@ export interface DocumentMetadata {
   description: string;
   path: string;
   kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
-  bodyChunkUrl?: string | null; // URL of the chunk holding the entry's compiled content, preloaded so it is available to hydration.
+  bodyChunks?: EntryBodyChunks | null; // Linked so the entry's stylesheets apply to the first paint and its body is available to hydration.
   coverImage?: CoverImage | null; // Used as `og:image` in place of the site image.
   markdown?: boolean; // Whether the document has a Markdown representation to advertise.
   feed?: FeedLink;
   noindex?: boolean;
 }
 
-export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
 export const canonicalUrl = (path: string) => `${SITE_URL}${path}`;
+
+export const LLMS_TXT_FILE_NAME = "llms.txt";
+export const LLMS_TXT_PATH = `/${LLMS_TXT_FILE_NAME}`;
+export const LLMS_TXT_LINK_HEADER = `<${canonicalUrl(LLMS_TXT_PATH)}>; rel="describedby"`; // Absolute, like the `describedby` link in the `<head>`.
+
+export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
+export const fontPreloadLinkFor = (href: string) =>
+  ({ rel: "preload", as: "font", href, type: "font/woff2", crossOrigin: "anonymous" }) as const;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 
 /**
@@ -35,7 +43,7 @@ export function documentHead({
   description,
   path,
   kind = "website",
-  bodyChunkUrl,
+  bodyChunks,
   coverImage,
   markdown,
   feed,
@@ -66,11 +74,17 @@ export function documentHead({
     ],
     links: [
       { rel: "canonical", href: url },
-      ...(bodyChunkUrl ? [{ rel: "modulepreload", href: bodyChunkUrl }] : []),
+      ...(bodyChunks?.stylesheetUrls ?? []).map((href) => ({
+        rel: "stylesheet",
+        href,
+        precedence: "entry", // The React precedence for entry stylesheets, ensuring their rules follow and override the site's default styles after navigation.
+      })),
+      ...(bodyChunks?.moduleUrls ?? []).map((href) => ({ rel: "modulepreload", href })),
       ...(markdown
         ? [{ rel: "alternate", type: MARKDOWN_MEDIA_TYPE, href: markdownUrl(path), title: "Markdown" }]
         : []),
       ...(feed ? [{ rel: "alternate", type: FEED_MEDIA_TYPE, href: feed.path, title: feed.title }] : []),
+      { rel: "describedby", href: canonicalUrl(LLMS_TXT_PATH) },
     ],
   };
 }

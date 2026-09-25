@@ -1,6 +1,8 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
+
 import { playSuccess } from "../audio/sounds.ts";
 
 import { useJoinWaitlist } from "./use-join-waitlist.ts";
@@ -22,7 +24,7 @@ const onFailure = vi.fn<(message: string) => void>();
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+  respondWith(fetchMock, 204);
   onFailure.mockReset();
   vi.mocked(playSuccess).mockClear();
 });
@@ -55,20 +57,18 @@ function renderWaitlist({ list = LIST, source = SOURCE } = {}) {
   };
 }
 
-const submittedBody = () => JSON.parse(fetchMock.mock.calls[0]![1]?.body as string) as Record<string, unknown>;
-
 test("a submission includes the email address, list, and source route", async () => {
   const waitlist = renderWaitlist();
   await waitlist.join();
 
-  expect(submittedBody()).toMatchObject({ emailAddress: EMAIL_ADDRESS, list: LIST, source: SOURCE });
+  expect(jsonBodyOfFirstRequest(fetchMock)).toMatchObject({ emailAddress: EMAIL_ADDRESS, list: LIST, source: SOURCE });
 });
 
 test("a submission includes the source route as its list when `list` is whitespace-only", async () => {
   const waitlist = renderWaitlist({ list: "  " });
   await waitlist.join();
 
-  expect(submittedBody()).toMatchObject({ list: SOURCE });
+  expect(jsonBodyOfFirstRequest(fetchMock)).toMatchObject({ list: SOURCE });
 });
 
 test("a successful submission changes the state to `joined` and plays the success sound", async () => {
@@ -110,7 +110,7 @@ test("the state remains `joining` until the request settles", async () => {
 });
 
 test("a failed submission returns the state to `idle` and reports the failure message", async () => {
-  fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
+  respondWith(fetchMock, 502);
 
   const waitlist = renderWaitlist();
 
@@ -121,9 +121,7 @@ test("a failed submission returns the state to `idle` and reports the failure me
 });
 
 test("an invalid submission reports its field error", async () => {
-  fetchMock.mockResolvedValue(
-    Response.json({ errors: { emailAddress: "That doesn’t look like an email address." } }, { status: 400 }),
-  );
+  respondWith(fetchMock, 400, { errors: { emailAddress: "That doesn’t look like an email address." } });
 
   const waitlist = renderWaitlist();
 
@@ -133,7 +131,7 @@ test("an invalid submission reports its field error", async () => {
 });
 
 test("an invalid submission without a field error reports the default message", async () => {
-  fetchMock.mockResolvedValue(Response.json({ errors: {} }, { status: 400 }));
+  respondWith(fetchMock, 400, { errors: {} });
 
   const waitlist = renderWaitlist();
 

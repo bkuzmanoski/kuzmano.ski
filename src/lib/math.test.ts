@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { clamp, cycle } from "./math.ts";
+import { clamp, cycle, smoothstep } from "./math.ts";
 
 describe("clamp", () => {
   test("returns a value already inside the range", () => {
@@ -19,6 +19,17 @@ describe("clamp", () => {
   test("returns the floor when the ceiling is below it", () => {
     expect(clamp(5, 0, -40)).toBe(0);
     expect(clamp(-5, 0, -40)).toBe(0);
+  });
+});
+
+describe("smoothstep", () => {
+  test("returns `0` below the interval and `1` above it", () => {
+    expect(smoothstep(0, 1, -1)).toBe(0);
+    expect(smoothstep(0, 1, 2)).toBe(1);
+  });
+
+  test("returns `0.5` at the midpoint", () => {
+    expect(smoothstep(0, 10, 5)).toBe(0.5);
   });
 });
 

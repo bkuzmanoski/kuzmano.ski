@@ -30,6 +30,24 @@ export function containsPoint(rect: Rect, { x, y }: Position): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
 
+/** The rect two rects overlap in, or `null` when they do not overlap. */
+export function intersectionOf(a: Rect, b: Rect): Rect | null {
+  const x = Math.max(a.x, b.x);
+  const y = Math.max(a.y, b.y);
+  const width = Math.min(a.x + a.width, b.x + b.width) - x;
+  const height = Math.min(a.y + a.height, b.y + b.height) - y;
+
+  return width > 0 && height > 0 ? { x, y, width, height } : null;
+}
+
+/** The fraction of `rect`'s area within `bounds`, from 0 to 1, as `IntersectionObserver` measures it. `0` for an empty rect. */
+export function intersectionRatioOf(rect: Rect, bounds: Rect): number {
+  const intersection = intersectionOf(rect, bounds);
+  const area = rect.width * rect.height;
+
+  return intersection && area > 0 ? (intersection.width * intersection.height) / area : 0;
+}
+
 /** Clamps a cell's leading edge so a cell of `cellSize` stays inside a container of `containerSize`. */
 export function clampToContainer(position: number, containerSize: number, cellSize: number): number {
   return clamp(position, 0, containerSize - cellSize);

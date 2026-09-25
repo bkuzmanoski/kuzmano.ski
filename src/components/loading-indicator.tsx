@@ -19,7 +19,7 @@ export function LoadingIndicator({
       aria-label={label}
       data-loading-indicator="" // Marks the indicator for `/build/prerender/verify.ts`, which fails the build if a page is prerendered while a Suspense boundary is still pending.
     >
-      <LoadingIndicatorGraphic aria-hidden />
+      <LoadingIndicatorGraphic />
     </span>
   );
 }

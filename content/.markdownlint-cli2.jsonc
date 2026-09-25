@@ -1,7 +1,8 @@
 {
   "config": {
     "MD033": false,
-    "max-heading-level": { "level": 3 }
+    "MD034": false, // The site links a bare URL or email address as a GFM autolink literal.
+    "heading-levels": { "minimum": 2, "maximum": 3 } // The document renders the entry's title as its `h1`.
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
   "customRules": ["../markdownlint.rules.ts"]

@@ -1,4 +1,4 @@
-// Import only types from `/build/content`: importing a value would read from the real content directory.
+// This module imports only types from `/build/content`. Importing a value would read from the real content directory.
 import { listedEntry } from "./listing.ts";
 
 import type { AuthoredContent, AuthoredContentDirectory, AuthoredEntry } from "../content/authored-content.ts";

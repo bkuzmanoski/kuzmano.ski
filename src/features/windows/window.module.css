@@ -68,6 +68,11 @@
   }
 }
 
+/* Wraps the title bar, toolbar, and pane only so an inactive window can make them inert. */
+.contents {
+  display: contents;
+}
+
 .titleBar {
   --control-size: 16px;
 
@@ -109,6 +114,12 @@
     height: var(--control-size);
 
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
+
+    /* Forced colors mode removes a gradient background, and the bars are what marks the focused window. */
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      background-image: repeating-linear-gradient(to bottom, CanvasText 0 1px, transparent 1px 3px);
+    }
   }
 
   & .title {
@@ -138,7 +149,10 @@
 }
 
 .controlButton {
+  --focus-frame-inset: -2px;
+
   composes: filledControl;
+  composes: focusFrame from global;
 
   position: relative;
 

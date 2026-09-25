@@ -2,24 +2,40 @@ import type { ParsedSubmission } from "#/lib/forms/submission.ts";
 import { isRecord } from "#/lib/guards.ts";
 
 import { isWithinRateLimit } from "./rate-limit.ts";
-import { exceedsMaxLength, isSameOrigin } from "./request.ts";
+import { exceedsMaxLength, isSameOrigin, isSameOriginFetch } from "./request.ts";
 
 import type { RateLimitBindingName } from "./bindings.ts";
 
 const RATE_LIMIT_FALLBACK_KEY = "unknown";
 
-export const senderKey = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
-export const json = (body: unknown, status: number) =>
+const rateLimitKeyOf = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
+
+// Whether the sender of `request` has exceeded `rateLimit`. Always `false` for an endpoint without a rate limit.
+const exceedsRateLimit = async (request: Request, rateLimit?: RateLimitBindingName) =>
+  rateLimit !== undefined && !(await isWithinRateLimit(rateLimit, rateLimitKeyOf(request)));
+
+export const jsonResponse = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 
-type MissingBindingEvent = "contact_binding_missing" | "waitlist_binding_missing";
+/**
+ * Returns a response refusing a GET, or `null` when the endpoint may serve it.
+ *
+ * The result is a response or `null` rather than a `ReceivedSubmission`, because a GET has no
+ * submitted fields to return alongside it.
+ */
+export async function refusalForGet(request: Request, rateLimit?: RateLimitBindingName): Promise<Response | null> {
+  if (!isSameOriginFetch(request)) {
+    return new Response(null, { status: 403 });
+  }
 
-/** Logs a binding or secret the Worker could not reach. */
-export function reportMissingBinding(event: MissingBindingEvent, binding: string) {
-  console.error({ event, binding, message: `The worker could not access \`${binding}\`` });
+  if (await exceedsRateLimit(request, rateLimit)) {
+    return new Response(null, { status: 429 });
+  }
+
+  return null;
 }
 
 export type ReceivedSubmission = { ok: true; fields: Record<string, unknown> } | { ok: false; response: Response };
@@ -36,7 +52,7 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
     return refuse(413);
   }
 
-  if (rateLimit && !(await isWithinRateLimit(rateLimit, senderKey(request)))) {
+  if (await exceedsRateLimit(request, rateLimit)) {
     return refuse(429);
   }
 
@@ -59,12 +75,12 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
 
 type RefusedSubmission<TFields> = Extract<ParsedSubmission<unknown, TFields>, { ok: false }>;
 
-export function refusalFor<TFields>(refused: RefusedSubmission<TFields>): Response {
+export function responseForRefusedSubmission<TFields>(refused: RefusedSubmission<TFields>): Response {
   switch (refused.reason) {
     case "malformed":
       return new Response(null, { status: 400 });
 
     case "invalid":
-      return json({ errors: refused.errors }, 400);
+      return jsonResponse({ errors: refused.errors }, 400);
   }
 }

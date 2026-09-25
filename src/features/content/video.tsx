@@ -28,22 +28,32 @@ interface WebKitVideoElement extends HTMLVideoElement {
 const canEnterFullScreen = () =>
   Boolean(document.fullscreenEnabled) || "webkitEnterFullscreen" in HTMLVideoElement.prototype;
 
+const LAYOUT_ATTRIBUTE_PREFIX = "data-content-";
+
+type LayoutAttributes = Record<`${typeof LAYOUT_ATTRIBUTE_PREFIX}${string}`, unknown>;
+type ControlledVideoProps = Omit<ComponentProps<"video">, "controls"> & Partial<LayoutAttributes>;
+
+function partitionLayoutAttributes(props: ControlledVideoProps) {
+  const layoutAttributes: LayoutAttributes = {};
+  const videoProps: Record<string, unknown> = {};
+
+  for (const [name, value] of Object.entries(props)) {
+    if (name.startsWith(LAYOUT_ATTRIBUTE_PREFIX)) {
+      layoutAttributes[name as keyof LayoutAttributes] = value;
+    } else {
+      videoProps[name] = value;
+    }
+  }
+
+  return { layoutAttributes, videoProps: videoProps as Omit<ComponentProps<"video">, "controls"> };
+}
+
 export function Video({ controls, ...props }: ComponentProps<"video">) {
   return controls ? <ControlledVideo {...props} /> : <video {...props} />;
 }
 
-function ControlledVideo({
-  className,
-  "data-content-wide": contentWide,
-  "data-content-space": contentSpace,
-  onClick,
-  onPointerDown,
-  ref,
-  ...props
-}: Omit<ComponentProps<"video">, "controls"> & {
-  "data-content-wide"?: boolean | string;
-  "data-content-space"?: string;
-}) {
+function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: ControlledVideoProps) {
+  const { layoutAttributes, videoProps } = partitionLayoutAttributes(props);
   const [isPaused, setIsPaused] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -211,14 +221,14 @@ function ControlledVideo({
     <div
       ref={containerRef}
       className={cx(styles.video, className)}
-      data-content-wide={contentWide}
-      data-content-space={contentSpace}
       tabIndex={-1}
+      data-content-panel
+      {...layoutAttributes}
       onKeyDown={onKeyDown}
     >
       <video
-        {...props}
         ref={mergeRefs(ref, videoRef)}
+        {...videoProps}
         controls={!hasSiteControls}
         onPointerDown={(event) => {
           onPointerDown?.(event);

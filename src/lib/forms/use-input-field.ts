@@ -15,12 +15,17 @@ export interface InputFieldBinding {
 }
 
 /** Binds a field to the control it labels. */
-export function useInputField(error?: string): InputFieldBinding {
+export function useInputField(error?: string, { describedBy }: { describedBy?: string } = {}): InputFieldBinding {
   const id = useId();
   const errorId = `${id}-error`;
+  const descriptionIds = [error ? errorId : undefined, describedBy].filter((descriptionId) => descriptionId);
 
   return {
-    control: { id, "aria-invalid": error ? true : undefined, "aria-describedby": error ? errorId : undefined },
+    control: {
+      id,
+      "aria-invalid": error ? true : undefined,
+      "aria-describedby": descriptionIds.length > 0 ? descriptionIds.join(" ") : undefined,
+    },
     errorId,
     error,
   };

@@ -1,8 +1,8 @@
 import { SITE_NAME } from "#/config/site.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
-import { reportMissingBinding } from "./endpoint.ts";
 import { workerEnv } from "./env.ts";
+import { errorMessageOf, logServerEvent, reportMissingBinding } from "./log.ts";
 
 const SENDER = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
 
@@ -11,70 +11,70 @@ export interface OutgoingMessage {
   subject: string;
   text: string;
 }
+
 /**
  * `throttled` and `exhausted` mean the account's send quota has run out and may recover on retry.
  * Every other failure is a misconfiguration that cannot recover this way, so it collapses to
  * `unavailable` and the diagnosis is left to the log.
  */
-export type Delivery = "sent" | "throttled" | "exhausted" | "unavailable";
+export type DeliveryResult = "sent" | "throttled" | "exhausted" | "unavailable";
 
-const QUOTA_OUTCOMES: Record<string, Delivery> = {
+const DELIVERY_BY_QUOTA_ERROR_CODE: Record<string, DeliveryResult> = {
   E_RATE_LIMIT_EXCEEDED: "throttled",
   E_DAILY_LIMIT_EXCEEDED: "exhausted",
 };
 
-function failureCode(error: unknown): string {
+function errorCodeOf(error: unknown): string {
   const code: unknown = error instanceof Error ? (error as Error & { code?: unknown }).code : undefined;
   return typeof code === "string" ? code : "unknown";
 }
 
-function reportUnavailable(binding: string): "unavailable" {
+function reportMissingContactBinding(binding: string): "unavailable" {
   reportMissingBinding("contact_binding_missing", binding);
   return "unavailable";
 }
 
-export async function deliver(message: OutgoingMessage): Promise<Delivery> {
+export async function deliverMessage(message: OutgoingMessage): Promise<DeliveryResult> {
   let env;
 
   try {
     env = await workerEnv();
   } catch {
-    return reportUnavailable("the Workers environment");
+    return reportMissingContactBinding("the Workers environment");
   }
 
-  const sendMailBinding = env[SEND_EMAIL_BINDING];
-  const destinationBinding = env[CONTACT_EMAIL_ADDRESS_BINDING];
+  const sendEmailBinding = env[SEND_EMAIL_BINDING];
+  const contactEmailAddress = env[CONTACT_EMAIL_ADDRESS_BINDING];
 
-  if (!sendMailBinding) {
-    return reportUnavailable(SEND_EMAIL_BINDING);
+  if (!sendEmailBinding) {
+    return reportMissingContactBinding(SEND_EMAIL_BINDING);
   }
 
-  if (!destinationBinding) {
-    return reportUnavailable(CONTACT_EMAIL_ADDRESS_BINDING);
+  if (!contactEmailAddress) {
+    return reportMissingContactBinding(CONTACT_EMAIL_ADDRESS_BINDING);
   }
 
   try {
-    await sendMailBinding.send({
+    await sendEmailBinding.send({
       from: SENDER,
-      to: destinationBinding,
+      to: contactEmailAddress,
       replyTo: message.replyTo,
       subject: message.subject,
       text: message.text,
     });
     return "sent";
   } catch (error) {
-    const code = failureCode(error);
-    const delivery = QUOTA_OUTCOMES[code] ?? "unavailable";
+    const code = errorCodeOf(error);
+    const deliveryResult = DELIVERY_BY_QUOTA_ERROR_CODE[code] ?? "unavailable";
 
-    console.error({
-      event: "contact_delivery_failed",
+    logServerEvent("contact_delivery_failed", {
       code,
-      delivery,
+      delivery: deliveryResult,
       from: SENDER.email,
-      to: destinationBinding,
-      message: error instanceof Error ? error.message : String(error),
+      to: contactEmailAddress,
+      message: errorMessageOf(error),
     });
 
-    return delivery;
+    return deliveryResult;
   }
 }

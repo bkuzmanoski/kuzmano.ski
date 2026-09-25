@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { SITE_NAME } from "#/config/site.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
-import { deliver } from "./mail.ts";
+import { deliverMessage } from "./mail.ts";
 
 import type { EmailAddress, WorkerEnv } from "cloudflare:workers";
 
@@ -40,7 +40,7 @@ afterEach(() => {
 });
 
 test("a message is addressed to the configured destination email address, with its sender as the reply-to address", async () => {
-  await expect(deliver(MESSAGE)).resolves.toBe("sent");
+  await expect(deliverMessage(MESSAGE)).resolves.toBe("sent");
   expect(send).toHaveBeenCalledWith({
     from: SENDER,
     to: DESTINATION,
@@ -57,7 +57,7 @@ describe("expected bindings", () => {
   ])("a missing %s binding is reported without sending a message", async (_label, partial, binding) => {
     env.current = partial;
 
-    await expect(deliver(MESSAGE)).resolves.toBe("unavailable");
+    await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
     expect(send).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ binding }));
   });
@@ -71,19 +71,19 @@ test.each([
   ["E_DELIVERY_FAILED", "unavailable"],
 ])("a rejection with the code `%s` produces `%s`", async (code, delivery) => {
   rejectWith(code);
-  await expect(deliver(MESSAGE)).resolves.toBe(delivery);
+  await expect(deliverMessage(MESSAGE)).resolves.toBe(delivery);
 });
 
 test("a rejection without a code produces `unavailable` and is logged with an unknown code", async () => {
   send.mockRejectedValue("nope");
 
-  await expect(deliver(MESSAGE)).resolves.toBe("unavailable");
+  await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ code: "unknown" }));
 });
 
 test("a rejection logs the sender, recipient, and code", async () => {
   rejectWith("E_RECIPIENT_NOT_ALLOWED");
-  await deliver(MESSAGE);
+  await deliverMessage(MESSAGE);
 
   expect(console.error).toHaveBeenCalledWith(
     expect.objectContaining({ from: SENDER.email, to: DESTINATION, code: "E_RECIPIENT_NOT_ALLOWED" }),
@@ -92,7 +92,7 @@ test("a rejection logs the sender, recipient, and code", async () => {
 
 test("the message body is never logged", async () => {
   rejectWith("E_DELIVERY_FAILED");
-  await deliver(MESSAGE);
+  await deliverMessage(MESSAGE);
 
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(MESSAGE.text);
 });
@@ -100,6 +100,6 @@ test("the message body is never logged", async () => {
 test("an unreachable Workers environment produces `unavailable` and is reported", async () => {
   env.fails = true;
 
-  await expect(deliver(MESSAGE)).resolves.toBe("unavailable");
+  await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ event: "contact_binding_missing" }));
 });

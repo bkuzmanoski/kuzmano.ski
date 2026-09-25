@@ -1,4 +1,8 @@
 .windowLayer {
+  /* Windows, the zoom-rect, and the drag outline take `z-index` values from their position in the
+   * stacking order, which stays below this value. A child set to it is drawn above all of them. */
+  --window-layer-z-above-windows: 1000;
+
   position: relative;
   z-index: var(--layer-desktop);
 

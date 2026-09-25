@@ -1,12 +1,13 @@
-// Imports only types, so `/vitest.config.ts` can serve the module without reaching the content tree.
-// `/src/markdown-token-counts.d.ts` declares its export.
+// This module imports only types and `../json-value-module.ts`, which also imports only types, so
+// `/vitest.config.ts` can serve the module without reaching the content tree.
+import { jsonValueModulePlugin, resolvedModuleIdOf } from "../json-value-module.ts";
 
 import type { MarkdownTokenCounts } from "./token-count.ts";
 import type { Plugin } from "vite";
 
 const MODULE_ID = "virtual:markdown-token-counts";
 
-export const RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID = `\0${MODULE_ID}`;
+export const RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID = resolvedModuleIdOf(MODULE_ID);
 
 /**
  * Exposes build-time Markdown token counts through `virtual:markdown-token-counts`.
@@ -15,19 +16,10 @@ export const RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID = `\0${MODULE_ID}`;
  * token count without reading the body. In development, the map remains empty because `./plugin.ts`
  * renders and counts tokens per request.
  */
-export function markdownTokenCountsPlugin(loadTokenCounts: () => Promise<MarkdownTokenCounts>): Plugin {
-  let isBuild = false;
-  return {
+export const markdownTokenCountsPlugin = (loadTokenCounts: () => Promise<MarkdownTokenCounts>): Plugin =>
+  jsonValueModulePlugin({
     name: "kuzmano.ski:markdown-token-counts",
-    enforce: "pre",
-    configResolved: (config) => void (isBuild = config.command === "build"),
-    resolveId: (source) => (source === MODULE_ID ? RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID : null),
-    async load(id) {
-      if (id !== RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID) {
-        return null;
-      }
-
-      return `export const MARKDOWN_TOKEN_COUNTS = ${JSON.stringify(isBuild ? await loadTokenCounts() : {})};`;
-    },
-  };
-}
+    moduleId: MODULE_ID,
+    exportName: "MARKDOWN_TOKEN_COUNTS",
+    load: async ({ config }) => (config.command === "build" ? await loadTokenCounts() : {}),
+  });

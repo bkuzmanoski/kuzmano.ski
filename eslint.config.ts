@@ -38,8 +38,6 @@ const restrictImports = (...patterns: Array<ImportPattern>): Linter.RulesRecord 
     "error",
     {
       patterns: [
-        // Vite resolves its config without a bundler under `configLoader: 'native'`, so every
-        // local import must use a file extension. Applied repo-wide for simplicity.
         {
           regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`, // The lookahead skips a `?query` suffix.
           message: "Include the file extension in imports.",
@@ -96,8 +94,12 @@ export default defineConfig(
                 "./audio.ts",
                 "./collection.ts",
                 "./content-source.ts",
+                "./fetch.ts",
                 "./fixtures",
+                "./geometry.ts",
+                "./match-media.ts",
                 "./router-context.tsx",
+                "./timers.ts",
                 "./window-manager.ts",
               ],
             },
@@ -192,7 +194,7 @@ export default defineConfig(
       "import/no-extraneous-dependencies": [
         "error",
         {
-          devDependencies: ["src/**/*.test.{ts,tsx}", "src/test-utils/**/*.{ts,tsx}", "src/server/env.ts"], // `src/server/env.ts` is a dev-only helper that reads `wrangler.toml` and `package.json` to populate `import.meta.env`.
+          devDependencies: ["src/**/*.test.{ts,tsx}", "src/test-utils/**/*.{ts,tsx}", "src/server/env.ts"], // `src/server/env.ts` imports `wrangler` only under `vite dev`, to read the bindings from its platform proxy.
           includeTypes: true,
         },
       ],
@@ -234,11 +236,29 @@ export default defineConfig(
     files: ["src/config/**/*.ts"],
     rules: restrictImports(
       {
-        regex: String.raw`^(#/|\.\./)`,
+        regex: String.raw`^(#/(?!server/)|\.\./)`, // `server/` is left out of the pattern that allows types, as in the `/content` block below.
         allowTypeImports: true,
         message: "`/src/config` may import types from other layers, but must not import their code.",
       },
       CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION,
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ),
+  },
+  {
+    // `/build/markdown` evaluates an entry's data file in the process running Vite, so code the file
+    // imported from `/src` would run there too. `server/` is left out of the pattern that allows types,
+    // since a type import it matches is not checked against the server pattern.
+    files: ["content/**/*.ts"],
+    rules: restrictImports(
+      {
+        regex: String.raw`^#/(?!server/)`,
+        allowTypeImports: true,
+        message: "`/content` may import types from `/src`, but must not import its code.",
+      },
+      {
+        regex: String.raw`^(\.\./)+(build|scripts|src)/`,
+        message: "Use `#/` to import from `/src`; `/content` must not import `/build` or `/scripts`.",
+      },
       SERVER_MODULE_IMPORT_RESTRICTION,
     ),
   },

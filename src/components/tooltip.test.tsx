@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { GRACE_PERIOD_MS, HIDE_DELAY_MS, resetTooltipState } from "#/lib/tooltip.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { HOVER_DELAY_MS, Tooltip } from "./tooltip.tsx";
 
@@ -108,14 +109,9 @@ function renderStateControls() {
 
 const tip = () => screen.queryByRole("tooltip");
 
-const advance = (ms: number) =>
-  act(() => {
-    vi.advanceTimersByTime(ms);
-  });
-
 function hoverTooltipUntilShown(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, MOUSE);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 }
 
 // The pointer event sequence iOS Safari dispatches for a tap, including its synthesized mouse event.
@@ -141,18 +137,18 @@ function tapWithLateMouseEvent(wrapper: Element) {
 function focusWithKeyboard(control: HTMLElement) {
   vi.spyOn(control, "matches").mockReturnValue(true);
   fireEvent.focus(control);
-  advance(0);
+  advanceTimersBy(0);
 }
 
 test("hovering shows the tooltip after the hover delay", () => {
   const { wrapper } = renderTooltip();
 
   fireEvent.pointerEnter(wrapper, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
 
   expect(tip()).toBeNull();
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(tip()?.textContent).toBe("Tip");
 });
@@ -165,7 +161,7 @@ test("a pointer leaving the control hides the tooltip after the hide delay", () 
 
   expect(tip()?.textContent).toBe("Tip");
 
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -190,6 +186,15 @@ test("a press does not hide the tooltip when `persistOnPress` is set", () => {
   expect(tip()?.textContent).toBe("Tip");
 });
 
+test("a press on the tooltip hides it when `persistOnPress` is set", () => {
+  const { wrapper } = renderTooltip({ persistOnPress: true });
+
+  hoverTooltipUntilShown(wrapper);
+  fireEvent.pointerDown(tip()!, MOUSE);
+
+  expect(tip()).toBeNull();
+});
+
 test("a persisted tooltip shows the updated label when the control is relabeled", () => {
   const { wrapper, relabel } = renderTooltip({ persistOnPress: true });
 
@@ -208,7 +213,7 @@ test("a persisted tooltip is hidden after the pointer moves outside the control"
   fireEvent.pointerDown(wrapper, MOUSE);
   fireEvent.click(wrapper);
   fireEvent.pointerLeave(wrapper, MOUSE);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -217,7 +222,7 @@ test("a tap does not show the tooltip", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   tap(wrapper);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -226,7 +231,7 @@ test("a synthesized mouse event after a tap does not show the tooltip", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   tapWithLateMouseEvent(wrapper);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -235,7 +240,7 @@ test("a canceled touch hides the tooltip", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   fireEvent.pointerEnter(wrapper, TOUCH);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 
   expect(tip()).not.toBeNull();
 
@@ -257,11 +262,82 @@ test("keyboard focus shows the tooltip without waiting for the hover delay, and 
   expect(tip()).toBeNull();
 });
 
+test("the Escape key hides a visible tooltip without moving the focus", () => {
+  renderTooltip();
+  const control = screen.getByRole("button", { name: "Control" });
+
+  control.focus();
+  focusWithKeyboard(control);
+  fireEvent.keyDown(document, { key: "Escape" });
+
+  expect(tip()).toBeNull();
+  expect(document.activeElement).toBe(control);
+});
+
+test("a pointer moving from the control onto the tooltip does not hide it", () => {
+  const { wrapper } = renderTooltip();
+
+  hoverTooltipUntilShown(wrapper);
+  fireEvent.pointerLeave(wrapper, MOUSE);
+  fireEvent.pointerEnter(tip()!, MOUSE);
+  advanceTimersBy(HIDE_DELAY_MS);
+
+  expect(tip()?.textContent).toBe("Tip");
+});
+
+test("a visible tooltip describes a control named by its text", () => {
+  const { wrapper } = renderTooltip();
+
+  hoverTooltipUntilShown(wrapper);
+
+  expect(screen.getByRole("button", { name: "Control" }).getAttribute("aria-describedby")).toBe(tip()!.id);
+});
+
+test("a visible tooltip does not describe a control whose `aria-label` attribute is its label", () => {
+  render(
+    <Tooltip label="Tip">
+      <button type="button" aria-label="Tip" />
+    </Tooltip>,
+  );
+
+  hoverTooltipUntilShown(screen.getByRole("button").parentElement!);
+
+  expect(tip()).not.toBeNull();
+  expect(screen.getByRole("button").hasAttribute("aria-describedby")).toBe(false);
+});
+
+test("a visible tooltip describes a control whose `aria-label` attribute differs from its label", () => {
+  render(
+    <Tooltip label="Tip">
+      <button type="button" aria-label="Control" />
+    </Tooltip>,
+  );
+
+  hoverTooltipUntilShown(screen.getByRole("button").parentElement!);
+
+  expect(screen.getByRole("button").getAttribute("aria-describedby")).toBe(tip()!.id);
+});
+
+test("a visible tooltip with the `childTextIncludesLabel` prop does not describe its control", () => {
+  render(
+    <Tooltip label="Tip" childTextIncludesLabel>
+      <span>Text including the tip</span>
+    </Tooltip>,
+  );
+
+  const control = screen.getByText("Text including the tip");
+
+  hoverTooltipUntilShown(control.parentElement!);
+
+  expect(tip()).not.toBeNull();
+  expect(control.hasAttribute("aria-describedby")).toBe(false);
+});
+
 test("a suppressed tooltip does not appear", () => {
   const { wrapper } = renderTooltip({ label: "Next", suppressed: true });
 
   fireEvent.pointerEnter(wrapper, MOUSE);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -302,7 +378,7 @@ test("a pointer leaving the control hides the tooltip while it is showing transi
   hoverTooltipUntilShown(wrapper);
   setShowsState(true);
   fireEvent.pointerLeave(wrapper, MOUSE);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()).toBeNull();
 });
@@ -331,7 +407,7 @@ test("`onDidHide` is called when a visible tooltip is hidden after the hide dela
 
   expect(onDidHide).not.toHaveBeenCalled(); // Still on screen for the hide delay.
 
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(onDidHide).toHaveBeenCalledOnce();
 });
@@ -341,9 +417,9 @@ test("`onDidHide` is not called for a tooltip that was never shown", () => {
   const { wrapper } = renderTooltip({ onDidHide });
 
   fireEvent.pointerEnter(wrapper, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
   fireEvent.pointerLeave(wrapper, MOUSE);
-  advance(HOVER_DELAY_MS + HIDE_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS + HIDE_DELAY_MS);
 
   expect(onDidHide).not.toHaveBeenCalled();
 });
@@ -374,7 +450,7 @@ test("a sibling control skips the hover delay within the group's grace period", 
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(second, MOUSE);
-  advance(0);
+  advanceTimersBy(0);
 
   expect(tip()?.textContent).toBe("Second");
 });
@@ -384,14 +460,14 @@ test("a sibling control does not skip the hover delay once the grace period has 
 
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
-  advance(HIDE_DELAY_MS);
-  advance(GRACE_PERIOD_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
+  advanceTimersBy(GRACE_PERIOD_MS);
   fireEvent.pointerEnter(second, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
 
   expect(tip()).toBeNull();
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(tip()?.textContent).toBe("Second");
 });
@@ -402,11 +478,11 @@ test("a control outside the group does not skip the hover delay", () => {
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(elsewhere, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
 
   expect(tip()).toBeNull();
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(tip()?.textContent).toBe("Outside the group");
 });
@@ -415,14 +491,14 @@ test("leaving a control before its tooltip is shown does not start a grace perio
   const { first, second } = renderTooltipGroup();
 
   fireEvent.pointerEnter(first, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(second, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
 
   expect(tip()).toBeNull();
 
-  advance(1);
+  advanceTimersBy(1);
 
   expect(tip()?.textContent).toBe("Second");
 });
@@ -432,18 +508,18 @@ test("a suppressed tooltip does not start a grace period", () => {
   const { wrapper: lone } = renderTooltip({ label: "Lone", suppressed: true });
 
   fireEvent.pointerEnter(lone, MOUSE);
-  advance(HOVER_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS);
   fireEvent.pointerLeave(lone, MOUSE);
   fireEvent.pointerEnter(first, MOUSE);
-  advance(HOVER_DELAY_MS - 1);
+  advanceTimersBy(HOVER_DELAY_MS - 1);
 
   expect(tip()).toBeNull();
 
-  advance(1);
+  advanceTimersBy(1);
 
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(second, MOUSE);
-  advance(0);
+  advanceTimersBy(0);
 
   expect(tip()?.textContent).toBe("Second");
 });
@@ -457,7 +533,7 @@ test("a tooltip stays on screen while the pointer crosses to a sibling, and the 
   expect(tip()?.textContent).toBe("First"); // Held over to cover the crossing.
 
   fireEvent.pointerEnter(second, MOUSE);
-  advance(0);
+  advanceTimersBy(0);
 
   expect(screen.getAllByRole("tooltip")).toHaveLength(1);
   expect(tip()?.textContent).toBe("Second");
@@ -469,7 +545,7 @@ test("a pointer leaving and returning to the same control does not hide its tool
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(first, MOUSE);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()?.textContent).toBe("First");
 });
@@ -480,11 +556,11 @@ test("crossing to a control outside the group hides the previous tooltip after t
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(elsewhere, MOUSE);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()).toBeNull(); // The hide delay is not extended by arriving from outside the group.
 
-  advance(HOVER_DELAY_MS - HIDE_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS - HIDE_DELAY_MS);
 
   expect(tip()?.textContent).toBe("Outside the group");
 });
@@ -495,11 +571,11 @@ test("a touch on a sibling control does not skip the hover delay within the grac
   hoverTooltipUntilShown(first);
   fireEvent.pointerLeave(first, MOUSE);
   fireEvent.pointerEnter(second, TOUCH);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()).toBeNull();
 
-  advance(HOVER_DELAY_MS - HIDE_DELAY_MS);
+  advanceTimersBy(HOVER_DELAY_MS - HIDE_DELAY_MS);
 
   expect(tip()?.textContent).toBe("Second");
 });
@@ -512,7 +588,7 @@ test("a tooltip shown during a tap remains visible after the touch ends", () => 
   fireEvent.pointerUp(wrapper, TOUCH);
   setShowsState(true);
   fireEvent.pointerLeave(wrapper, TOUCH);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   // A control that shows its state synchronously does so before the tap's trailing
   // pointer events arrive, unlike one that waits on a promise first.
@@ -529,7 +605,7 @@ test("a tooltip shown during a tap remains visible after the synthesized mouse e
   setShowsState(true);
   fireEvent.pointerEnter(wrapper, MOUSE);
   fireEvent.pointerLeave(wrapper, MOUSE);
-  advance(HIDE_DELAY_MS);
+  advanceTimersBy(HIDE_DELAY_MS);
 
   expect(tip()?.textContent).toBe("Tip");
 });

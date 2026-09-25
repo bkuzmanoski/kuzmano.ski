@@ -28,4 +28,4 @@ export function exceedsMaxLength(value: Request | string): boolean {
 export const isSameOrigin = (request: Request) => request.headers.get("origin") === new URL(request.url).origin;
 
 /** Returns whether a request was issued by a page on this site. */
-export const isSameSite = (request: Request) => request.headers.get("sec-fetch-site") === "same-origin";
+export const isSameOriginFetch = (request: Request) => request.headers.get("sec-fetch-site") === "same-origin";

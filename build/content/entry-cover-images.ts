@@ -1,27 +1,25 @@
-// Imports only types, so `/vitest.config.ts` can serve the module without reaching sharp through the
-// media index. `/src/entry-cover-images.d.ts` declares its export.
-
+// This module imports only types and `../json-value-module.ts`, which also imports only types, so
+// `/vitest.config.ts` can serve the module without reaching sharp through the media index.
 import type { EntryKey } from "#/lib/content/entry-file.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
+
+import { jsonValueModulePlugin, resolvedModuleIdOf } from "../json-value-module.ts";
 
 import type { Plugin } from "vite";
 
 const MODULE_ID = "virtual:entry-cover-images";
 
-export const RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID = `\0${MODULE_ID}`;
+export const RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID = resolvedModuleIdOf(MODULE_ID);
 
-/** Exposes entry cover images through `virtual:entry-cover-images`. */
-export function entryCoverImagesPlugin(loadCoverImages: () => Promise<Record<EntryKey, CoverImage>>): Plugin {
-  return {
+/**
+ * Exposes entry cover images through `virtual:entry-cover-images`.
+ *
+ * The media plugin invalidates the module when a rebuilt index changes the cover images.
+ */
+export const entryCoverImagesPlugin = (loadCoverImages: () => Promise<Record<EntryKey, CoverImage>>): Plugin =>
+  jsonValueModulePlugin({
     name: "kuzmano.ski:entry-cover-images",
-    enforce: "pre",
-    resolveId: (source) => (source === MODULE_ID ? RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID : null),
-    async load(id) {
-      if (id !== RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID) {
-        return null;
-      }
-
-      return `export const ENTRY_COVER_IMAGES = ${JSON.stringify(await loadCoverImages())};`;
-    },
-  };
-}
+    moduleId: MODULE_ID,
+    exportName: "ENTRY_COVER_IMAGES",
+    load: loadCoverImages,
+  });

@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
+import { jsonPostRequest } from "#/test-utils/requests.ts";
 
 import { Route } from "./client-errors.ts";
 
@@ -14,8 +15,7 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}${API_ROUTES.clientErrors}`;
+const URL = `https://example.com${API_ROUTES.clientErrors}`;
 const VALID_REPORT = {
   kind: "render",
   message: "Cannot read properties of null",
@@ -29,14 +29,8 @@ const { POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
 
-const post = (body: unknown, { origin = ORIGIN }: { origin?: string } = {}) =>
-  POST({
-    request: new Request(URL, {
-      method: "POST",
-      headers: { origin, "content-type": "application/json" },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    }),
-  });
+const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
+  POST({ request: jsonPostRequest(URL, body, options) });
 
 test("a well-formed report is logged as a client error", async () => {
   const response = await post(VALID_REPORT);

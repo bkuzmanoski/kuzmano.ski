@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
+import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
 
 import { CONTACT_EMAIL_ADDRESS_STORAGE_KEY, readContactEmailAddress, sendMessage } from "./client.ts";
 
@@ -19,15 +20,9 @@ beforeEach(() => {
   fetchMock.mockReset();
 });
 
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
-const respond = (status: number, body?: unknown) => {
-  fetchMock.mockResolvedValue(body === undefined ? new Response(null, { status }) : jsonResponse(body, status));
-};
-
 describe("readContactEmailAddress", () => {
   beforeEach(() => {
-    fetchMock.mockResolvedValue(jsonResponse({ emailAddress: EMAIL_ADDRESS }));
+    respondWith(fetchMock, 200, { emailAddress: EMAIL_ADDRESS });
   });
 
   test("the email address is read from the contact endpoint", async () => {
@@ -59,10 +54,10 @@ describe("readContactEmailAddress", () => {
 
   test.each([
     ["the request fails", () => fetchMock.mockRejectedValue(new Error("Offline."))],
-    ["the endpoint refuses the read", () => fetchMock.mockResolvedValue(new Response(null, { status: 403 }))],
+    ["the endpoint refuses the read", () => respondWith(fetchMock, 403)],
     ["the response is not JSON", () => fetchMock.mockResolvedValue(new Response("nope", { status: 200 }))],
-    ["the response has no email address", () => fetchMock.mockResolvedValue(jsonResponse({}))],
-    ["the email address is not a string", () => fetchMock.mockResolvedValue(jsonResponse({ emailAddress: 42 }))],
+    ["the response has no email address", () => respondWith(fetchMock, 200, {})],
+    ["the email address is not a string", () => respondWith(fetchMock, 200, { emailAddress: 42 })],
   ])("`null` is returned, and an email address is not stored for the session, when %s", async (_label, arrange) => {
     arrange();
 
@@ -86,18 +81,18 @@ describe("readContactEmailAddress", () => {
 
 describe("sendMessage", () => {
   test("the submission is posted as JSON to the endpoint", async () => {
-    respond(204);
+    respondWith(fetchMock, 204);
     await sendMessage(SUBMISSION);
 
     const [url, init] = fetchMock.mock.calls[0]!;
 
     expect(url).toBe(API_ROUTES.contact);
     expect(init?.method).toBe("POST");
-    expect(JSON.parse(init?.body as string)).toEqual(SUBMISSION);
+    expect(jsonBodyOfFirstRequest(fetchMock)).toEqual(SUBMISSION);
   });
 
   test.each([204, 200])("a %i response is treated as a successful send", async (status) => {
-    respond(status);
+    respondWith(fetchMock, status);
     await expect(sendMessage(SUBMISSION)).resolves.toEqual({ status: "sent" });
   });
 
@@ -107,7 +102,7 @@ describe("sendMessage", () => {
     [502, /couldn’t be sent/],
     [503, /couldn’t be sent/],
   ])("a %i response is treated as a failure with a message", async (status, message) => {
-    respond(status);
+    respondWith(fetchMock, status);
     await expect(sendMessage(SUBMISSION)).resolves.toMatchObject({ status: "failed", message });
   });
 
@@ -117,7 +112,7 @@ describe("sendMessage", () => {
   });
 
   test("a 400 response is treated as an invalid submission with the field errors returned by the endpoint", async () => {
-    respond(400, { errors: { from: "That doesn’t look like an email address." } });
+    respondWith(fetchMock, 400, { errors: { from: "That doesn’t look like an email address." } });
 
     await expect(sendMessage(SUBMISSION)).resolves.toEqual({
       status: "invalid",
@@ -126,7 +121,7 @@ describe("sendMessage", () => {
   });
 
   test("the abort signal is passed to the request", async () => {
-    respond(204);
+    respondWith(fetchMock, 204);
 
     const controller = new AbortController();
 

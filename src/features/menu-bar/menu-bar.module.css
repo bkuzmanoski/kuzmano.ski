@@ -61,6 +61,12 @@
   &.open {
     color: var(--color-highlight-foreground);
     background: var(--color-highlight-background);
+
+    @media (forced-colors: active) {
+      color: HighlightText;
+      forced-color-adjust: none;
+      background: Highlight;
+    }
   }
 
   /* An open title already reads as selected, so the focus frame stays off it. */
@@ -107,6 +113,10 @@
 .menuBarIcon {
   width: 22px;
   height: 22px;
+}
+
+.timeLocation {
+  composes: visuallyHidden from global;
 }
 
 /* A short viewport only means "no space" on a phone in landscape. `pointer` describes

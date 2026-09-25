@@ -19,24 +19,6 @@ function onInputFieldSurface<T extends SyntheticEvent>(handler: (event: T) => vo
   };
 }
 
-export function InputFieldValue({
-  label,
-  actions,
-  children,
-}: {
-  label: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className={styles.inputField}>
-      <span className={styles.label}>{label}</span>
-      <p className={styles.value}>{children}</p>
-      {actions}
-    </div>
-  );
-}
-
 export function InputField({
   label,
   binding,

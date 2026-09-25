@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { CHARACTER_COUNT_VISIBLE_FROM } from "#/lib/contact/character-count.ts";
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message.ts";
 import type { CloseGuard } from "#/lib/window-manager/close-guards.ts";
+import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 
 import { ContactBody, SENDING_MESSAGE } from "./contact-body.tsx";
 
@@ -89,7 +91,7 @@ afterEach(() => {
 
 const input = (label: string) => screen.getByLabelText(label);
 const button = (name: string) => screen.getByRole("button", { name });
-const alertButton = (name: string) => within(screen.getByRole("dialog")).getByRole("button", { name });
+const alertButton = (name: string) => within(screen.getByRole("alertdialog")).getByRole("button", { name });
 
 const fill = (label: string, value: string) => {
   fireEvent.change(input(label), { target: { value } });
@@ -102,11 +104,6 @@ function compose() {
 
 const loadingIndicator = () => screen.queryByRole("img", { name: SENDING_MESSAGE });
 const liveRegionsWithText = () => screen.getAllByRole("status").filter((region) => region.textContent !== "");
-
-function describedBy(label: string) {
-  const id = input(label).getAttribute("aria-describedby");
-  return id === null ? null : document.getElementById(id)?.textContent;
-}
 
 async function submit() {
   fireEvent.click(button("Send"));
@@ -180,19 +177,29 @@ test("sending an incomplete message shows an alert and does not submit", () => {
   expect(playError).toHaveBeenCalledOnce();
   expect(sendMessageCalls()).toHaveLength(0);
 
-  const alert = screen.getByRole("dialog");
+  const alert = screen.getByRole("alertdialog");
 
   expect(within(alert).getByText("Enter your email address.")).toBeDefined();
 });
 
-test("dismissing a validation alert focuses the first invalid field", () => {
+test("dismissing a validation alert focuses the first invalid field once the alert has closed", () => {
   render(<ContactBody />);
 
   fill("From:", "test@example.com");
   fireEvent.click(button("Send"));
+
+  const alert = screen.getByRole<HTMLDialogElement>("alertdialog");
+  const field = input("Message:");
+  const isAlertOpenWhenFocused: Array<boolean> = [];
+
+  vi.spyOn(field, "focus").mockImplementation(() => {
+    isAlertOpenWhenFocused.push(alert.open);
+    HTMLElement.prototype.focus.call(field);
+  });
   fireEvent.click(alertButton("OK"));
 
-  expect(document.activeElement).toBe(input("Message:"));
+  expect(isAlertOpenWhenFocused).toEqual([false]);
+  expect(document.activeElement).toBe(field);
 });
 
 test("dismissing a validation alert marks the invalid field with its field error and does not show the loading indicator", () => {
@@ -201,10 +208,10 @@ test("dismissing a validation alert marks the invalid field with its field error
   fireEvent.click(button("Send"));
   fireEvent.click(alertButton("OK"));
 
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(loadingIndicator()).toBeNull();
   expect(input("From:").getAttribute("aria-invalid")).toBe("true");
-  expect(describedBy("From:")).toBe("Enter your email address.");
+  expect(descriptionTextOf(input("From:"))).toBe("Enter your email address.");
 });
 
 test("an invalid email address is marked with its field error on blur, which clears when the address is corrected", () => {
@@ -217,12 +224,12 @@ test("an invalid email address is marked with its field error on blur, which cle
   fireEvent.blur(input("From:"));
 
   expect(input("From:").getAttribute("aria-invalid")).toBe("true");
-  expect(describedBy("From:")).toBe("That doesn’t look like an email address.");
+  expect(descriptionTextOf(input("From:"))).toBe("That doesn’t look like an email address.");
 
   fill("From:", "test@example.com");
 
   expect(input("From:").hasAttribute("aria-invalid")).toBe(false);
-  expect(describedBy("From:")).toBeNull();
+  expect(descriptionTextOf(input("From:"))).toBeNull();
 });
 
 test("the message character count appears once the remaining characters drop to the visibility threshold", () => {
@@ -249,17 +256,67 @@ test("a message that exceeds the length limit shows the excess character count a
 
   expect(sendMessageCalls()).toHaveLength(0);
   expect(
-    within(screen.getByRole("dialog")).getByText(
+    within(screen.getByRole("alertdialog")).getByText(
       `Keep the message under ${MESSAGE_MAX_LENGTH.toLocaleString()} characters.`,
     ),
   ).toBeDefined();
 });
 
-test("the message character count is not announced as a status update", () => {
+test("the message field is described by the character count while the count is visible", () => {
   render(<ContactBody />);
+
+  expect(descriptionTextOf(input("Message:"))).toBeNull();
+
   fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH - 10));
 
+  expect(descriptionTextOf(input("Message:"))).toBe("10 characters left");
+
+  fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH + 1));
+
+  expect(descriptionTextOf(input("Message:"))).toBe("1 character over the limit");
+});
+
+test("the message field is described by its field error and then the character count", () => {
+  render(<ContactBody />);
+
+  fill("From:", "test@example.com");
+  fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH + 1));
+  fireEvent.click(button("Send"));
+  fireEvent.click(alertButton("OK"));
+
+  expect(descriptionTextOf(input("Message:"))).toBe(
+    `Keep the message under ${MESSAGE_MAX_LENGTH.toLocaleString()} characters. 1 character over the limit`,
+  );
+});
+
+test("the message character count's status changes only when the count crosses the visibility threshold or the limit", () => {
+  render(<ContactBody />);
+  fill("Message:", "a".repeat(100));
+
   expect(liveRegionsWithText()).toEqual([]);
+
+  fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH - CHARACTER_COUNT_VISIBLE_FROM));
+
+  const [thresholdStatus] = liveRegionsWithText().map((region) => region.textContent);
+
+  fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH - 10));
+
+  expect(liveRegionsWithText().map((region) => region.textContent)).toEqual([thresholdStatus]);
+
+  fill("Message:", "a".repeat(MESSAGE_MAX_LENGTH + 1));
+
+  expect(liveRegionsWithText().map((region) => region.textContent)).not.toEqual([thresholdStatus]);
+});
+
+test("the `To:` field is a read-only input, out of the tab order, whose value is the email address", async () => {
+  render(<ContactBody />);
+  await readEmailAddress();
+
+  const toField = screen.getByLabelText<HTMLInputElement>("To:");
+
+  expect(toField.readOnly).toBe(true);
+  expect(toField.tabIndex).toBe(-1);
+  expect(toField.value).toBe(CONTACT_EMAIL_ADDRESS);
 });
 
 test("a successful submission shows a confirmation, plays the message sent sound, and clears the form", async () => {
@@ -275,7 +332,7 @@ test("a successful submission shows a confirmation, plays the message sent sound
     message: "Hello.",
   });
 
-  expect(await screen.findByRole("dialog")).toBeDefined();
+  expect(await screen.findByRole("alertdialog")).toBeDefined();
   expect(screen.getByText("Message sent!")).toBeDefined();
   expect(playSuccess).toHaveBeenCalledOnce();
 
@@ -289,10 +346,10 @@ test("dismissing the sent confirmation closes the window", async () => {
   render(<ContactBody />);
   compose();
   await submit();
-  await screen.findByRole("dialog");
+  await screen.findByRole("alertdialog");
   fireEvent.click(alertButton("OK"));
 
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(closeWindow).toHaveBeenCalledOnce();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
@@ -314,6 +371,19 @@ test("a failed submission shows an error and preserves the message", async () =>
   expect(playError).toHaveBeenCalledOnce();
   expect(playSuccess).not.toHaveBeenCalled();
   expect((input("Message:") as HTMLTextAreaElement).value).toBe("Hello.");
+});
+
+test("dismissing a failed submission's alert returns the focus to the field that submitted the form", async () => {
+  render(<ContactBody />);
+  respondToSendMessage(new Response(null, { status: 502 }));
+  compose();
+  input("From:").focus();
+  fireEvent.submit(input("From:").closest("form")!);
+
+  await screen.findByRole("alertdialog");
+  fireEvent.click(alertButton("OK"));
+
+  expect(document.activeElement).toBe(input("From:"));
 });
 
 function startPendingSubmission() {
@@ -369,7 +439,7 @@ test("canceling during submission aborts the request and ignores its result", as
   });
 
   expect(playSuccess).not.toHaveBeenCalled();
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 
@@ -396,7 +466,7 @@ test("confirming a discard closes the window", () => {
   fireEvent.click(button("Discard"));
   fireEvent.click(alertButton("Discard"));
 
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 
@@ -405,7 +475,7 @@ test("discarding an empty message closes the window without showing a confirmati
 
   fireEvent.click(button("Cancel"));
 
-  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(playError).not.toHaveBeenCalled();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });

@@ -7,6 +7,10 @@
 
   opacity: 0;
 
+  &:has(:focus-visible) {
+    z-index: var(--window-layer-z-above-windows);
+  }
+
   &.ready {
     opacity: 1;
     transition: opacity 0ms linear var(--duration-desktop-reveal-step); /* Follow menu bar reveal. */

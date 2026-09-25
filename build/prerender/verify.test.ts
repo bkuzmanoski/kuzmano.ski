@@ -10,8 +10,8 @@ import { verifyPrerenderedDocument } from "./verify.ts";
 // The parts of a prerendered document that the verifier checks, with `body` as the window content.
 const pageHtml = (body: string) => `<title>${documentTitle("Collection")}</title>
 <nav aria-label="Main menu"></nav>
-<section aria-labelledby="window-title">
-  <header><span id="window-title">Collection</span></header>
+<section aria-label="Collection">
+  <header><span>Collection</span></header>
   <div id="window-content">${body}</div>
 </section>
 `;
@@ -32,12 +32,12 @@ describe("verifyPrerenderedDocument", () => {
   });
 
   test("throws when the window title does not match the document title", () => {
-    const html = pageHtml("<p>Content</p>").replace(">Collection<", ">Something else<");
+    const html = pageHtml("<p>Content</p>").replace('aria-label="Collection"', 'aria-label="Something else"');
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 
-  test("throws when the element labeling the window is missing", () => {
-    const html = pageHtml("<p>Content</p>").replace('<header><span id="window-title">Collection</span></header>', "");
+  test("throws when the window has no `aria-label` attribute", () => {
+    const html = pageHtml("<p>Content</p>").replace(' aria-label="Collection"', "");
     expect(verify(html)).toThrow(/there is no window titled/);
   });
 
@@ -50,6 +50,31 @@ describe("verifyPrerenderedDocument", () => {
     expect(verify(pageHtml(loadingIndicator))).toThrow(/window body contains a loading indicator/);
   });
 
+  test("throws when a Suspense boundary rendered its fallback because a component threw", () => {
+    const html = pageHtml("<!--$!--><template></template><p>Fallback</p><!--/$-->");
+    expect(verify(html)).toThrow(/a component threw during the server render/);
+  });
+
+  test("throws when a Suspense boundary outside the window body rendered its fallback because a component threw", () => {
+    const html = `<!--$!--><template></template><!--/$-->${pageHtml("<p>Content</p>")}`;
+    expect(verify(html)).toThrow(/a component threw during the server render/);
+  });
+
+  test.each([
+    ["its content", '<div hidden id="S:0"><p>Content</p></div><script>$RC("B:0","S:0")</script>'],
+    ["its error", '<script>$RX("B:0","","Error")</script>'],
+  ])(
+    "throws when a Suspense boundary was still suspended when the shell was sent, and %s followed",
+    (_, streamedMarkup) => {
+      const html = `${pageHtml('<!--$?--><template id="B:0"></template><p>Fallback</p><!--/$-->')}${streamedMarkup}`;
+      expect(verify(html)).toThrow(/a Suspense boundary was still suspended when the shell was sent/);
+    },
+  );
+
+  test("accepts a Suspense boundary that rendered its content", () => {
+    expect(verify(pageHtml("<!--$--><p>Content</p><!--/$-->"))).not.toThrow();
+  });
+
   test("accepts a live region in the window body that is not a loading indicator", () => {
     expect(verify(pageHtml('<p>test@example.com</p><span role="status">Copied</span>'))).not.toThrow();
   });
@@ -58,8 +83,8 @@ describe("verifyPrerenderedDocument", () => {
     const html = `
       <title>${documentTitle("Q&amp;A&#x27;s")}</title>
       <nav aria-label="Main menu"></nav>
-      <section aria-labelledby="window-title">
-        <header><span id="window-title">Q&#38;A's</span></header>
+      <section aria-label="Q&#38;A's">
+        <header><span>Q&#38;A's</span></header>
         <div id="window-content"><p>Content</p></div>
       </section>
     `;

@@ -3,7 +3,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { PAGE_SLUGS } from "#/config/content.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
 
-import { contentRoute } from "./route-data.ts";
+import { contentHead, contentRoute } from "./route-data.ts";
 
 vi.mock("./catalog.ts", async () => {
   const { PAGES_DIRECTORY_NAME: pagesDirectoryName, PAGE_SLUGS: slugs } = await import("#/config/content.ts");
@@ -34,17 +34,26 @@ vi.mock("virtual:entry-cover-images", async () => {
   };
 });
 
-const REGISTERED_PAGE = PAGE_SLUGS[0];
+const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
+const ENTRY_PRELOADED_FONT_FILE_NAMES = [
+  "BricolageGrotesque-Variable.woff2",
+  "SourceSerif4-Variable.woff2",
+  "Silkscreen.woff2",
+];
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });
 const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } }); // A one-segment route: a page, or a collection listing.
+const preloadedFontFileNamesOf = (loaderData: ReturnType<typeof contentRoute.loader>) =>
+  contentHead(loaderData)
+    .links.filter((link) => link.rel === "preload" && "as" in link)
+    .map((link) => link.href.split("/").at(-1)?.split("?")[0]);
 
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
 test("a page exposes its cover image", () => {
-  expect(loadSegment(REGISTERED_PAGE).coverImage).toEqual(fakeCoverImage(REGISTERED_PAGE));
+  expect(loadSegment(DECLARED_PAGE_SLUG).coverImage).toEqual(fakeCoverImage(DECLARED_PAGE_SLUG));
 });
 
 test("a draft page does not expose a Markdown representation in production", () => {
@@ -53,7 +62,7 @@ test("a draft page does not expose a Markdown representation in production", () 
 });
 
 test("a page the site links to is not marked noindex", () => {
-  expect(loadSegment(REGISTERED_PAGE).noindex).toBeFalsy();
+  expect(loadSegment(DECLARED_PAGE_SLUG).noindex).toBeFalsy();
 });
 
 test("a page the site does not link to is marked noindex", () => {
@@ -95,4 +104,20 @@ test("a collection listing exposes a Markdown representation in production", () 
 
 test("a collection listing is not marked noindex", () => {
   expect(loadSegment("collection").noindex).toBeUndefined();
+});
+
+test("a page's head preloads the display, body, and bitmap faces", () => {
+  expect(preloadedFontFileNamesOf(loadSegment(DECLARED_PAGE_SLUG))).toEqual(ENTRY_PRELOADED_FONT_FILE_NAMES);
+});
+
+test("a collection entry's head preloads the display, body, and bitmap faces", () => {
+  expect(preloadedFontFileNamesOf(loadCollectionEntry("published"))).toEqual(ENTRY_PRELOADED_FONT_FILE_NAMES);
+});
+
+test("a collection listing's head does not preload a font", () => {
+  expect(preloadedFontFileNamesOf(loadSegment("collection"))).toEqual([]);
+});
+
+test("an entry's route data does not include the URLs of the fonts its head preloads", () => {
+  expect(JSON.stringify(loadCollectionEntry("published"))).not.toContain(".woff2");
 });

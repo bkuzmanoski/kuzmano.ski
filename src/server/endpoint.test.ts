@@ -1,7 +1,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { SEND_EMAIL_RATELIMIT_BINDING } from "./bindings.ts";
-import { readSubmission, refusalFor } from "./endpoint.ts";
+import { jsonPostRequest } from "#/test-utils/requests.ts";
+
+import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "./bindings.ts";
+import { readSubmission, refusalForGet, responseForRefusedSubmission } from "./endpoint.ts";
 import { MAX_BODY_LENGTH } from "./request.ts";
 
 import type { RateLimitBindingName } from "./bindings.ts";
@@ -15,39 +17,57 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}/api/endpoint`;
+const URL = "https://example.com/api/endpoint";
 const VALID_SUBMISSION = { field: "value" };
 
+const get = ({
+  headers = { "sec-fetch-site": "same-origin" },
+  rateLimit = CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING,
+}: { headers?: HeadersInit; rateLimit?: RateLimitBindingName | null } = {}) =>
+  refusalForGet(new Request(URL, { headers }), rateLimit ?? undefined);
 const read = (
   body: unknown,
   {
-    origin = ORIGIN,
-    headers = {},
     rateLimit = SEND_EMAIL_RATELIMIT_BINDING,
-  }: { origin?: string; headers?: HeadersInit; rateLimit?: RateLimitBindingName | null } = {},
-) =>
-  readSubmission(
-    new Request(URL, {
-      method: "POST",
-      headers: { origin, "content-type": "application/json", ...headers },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    }),
-    rateLimit ?? undefined,
-  );
-
+    ...options
+  }: Parameters<typeof jsonPostRequest>[2] & { rateLimit?: RateLimitBindingName | null } = {},
+) => readSubmission(jsonPostRequest(URL, body, options), rateLimit ?? undefined);
 const refusalStatus = (result: Awaited<ReturnType<typeof read>>) => (result.ok ? undefined : result.response.status);
+
+test("`refusalForGet` returns `null` for a same-origin GET within the rate limit", async () => {
+  await expect(get()).resolves.toBeNull();
+});
+
+test.each([
+  ["from another site", { "sec-fetch-site": "cross-site" }],
+  ["from the address bar or a bookmark", { "sec-fetch-site": "none" }],
+  ["without a `Sec-Fetch-Site` header", {}],
+])("a GET %s is refused before the rate limit is checked", async (_label, headers) => {
+  expect((await get({ headers }))?.status).toBe(403);
+  expect(isWithinRateLimit).not.toHaveBeenCalled();
+});
+
+test("a GET that exceeds the rate limit is refused", async () => {
+  isWithinRateLimit.mockResolvedValue(false);
+  expect((await get())?.status).toBe(429);
+});
+
+test("a GET is counted against the rate limit it is given, keyed by the sender's IP address", async () => {
+  await get({ headers: { "sec-fetch-site": "same-origin", "cf-connecting-ip": "203.0.113.7" } });
+  expect(isWithinRateLimit).toHaveBeenCalledWith(CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, "203.0.113.7");
+});
+
+test("`refusalForGet` returns `null` for a same-origin GET to an endpoint that has no rate limit of its own, without counting the sender", async () => {
+  await expect(get({ rateLimit: null })).resolves.toBeNull();
+  expect(isWithinRateLimit).not.toHaveBeenCalled();
+});
 
 test("a well-formed body is parsed into the submitted fields", async () => {
   await expect(read(VALID_SUBMISSION)).resolves.toEqual({ ok: true, fields: VALID_SUBMISSION });
 });
 
 test("a cross-origin request is refused before its body is read or the rate limit is checked", async () => {
-  const request = new Request(URL, {
-    method: "POST",
-    headers: { origin: "https://elsewhere.example", "content-type": "application/json" },
-    body: JSON.stringify(VALID_SUBMISSION),
-  });
+  const request = jsonPostRequest(URL, VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(refusalStatus(await readSubmission(request, SEND_EMAIL_RATELIMIT_BINDING))).toBe(403);
   expect(request.bodyUsed).toBe(false);
@@ -102,7 +122,7 @@ test.each([
 });
 
 test("a malformed submission is refused with an empty body", async () => {
-  const response = refusalFor({ ok: false, reason: "malformed" });
+  const response = responseForRefusedSubmission({ ok: false, reason: "malformed" });
 
   expect(response.status).toBe(400);
   expect(response.headers.get("content-type")).toBeNull();
@@ -110,7 +130,7 @@ test("a malformed submission is refused with an empty body", async () => {
 });
 
 test("a submission rejected by the schema returns its errors", async () => {
-  const response = refusalFor<{ from: string }>({
+  const response = responseForRefusedSubmission<{ from: string }>({
     ok: false,
     reason: "invalid",
     errors: { from: "Enter your email address." },

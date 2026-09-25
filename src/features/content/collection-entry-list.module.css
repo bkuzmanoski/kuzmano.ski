@@ -102,7 +102,7 @@
     font: var(--font-ui-bold);
 
     .listItem:focus & {
-      background: var(--dotted-frame);
+      background: var(--marching-ants-frame);
     }
   }
 

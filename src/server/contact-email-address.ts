@@ -1,19 +1,23 @@
 import { CONTACT_EMAIL_ADDRESS_BINDING } from "./bindings.ts";
-import { reportMissingBinding } from "./endpoint.ts";
 import { workerEnv } from "./env.ts";
+import { reportMissingBinding } from "./log.ts";
 
-export async function contactEmailAddress(): Promise<string | null> {
-  let emailAddress;
+const reportMissingContactBinding = (binding: string) => reportMissingBinding("contact_binding_missing", binding);
+
+export async function readContactEmailAddress(): Promise<string | null> {
+  let env;
 
   try {
-    emailAddress = (await workerEnv())[CONTACT_EMAIL_ADDRESS_BINDING];
+    env = await workerEnv();
   } catch {
-    emailAddress = undefined;
+    reportMissingContactBinding("the Workers environment");
+    return null;
   }
 
-  if (!emailAddress) {
-    reportMissingBinding("contact_binding_missing", CONTACT_EMAIL_ADDRESS_BINDING);
+  const emailAddress = env[CONTACT_EMAIL_ADDRESS_BINDING];
 
+  if (!emailAddress) {
+    reportMissingContactBinding(CONTACT_EMAIL_ADDRESS_BINDING);
     return null;
   }
 

@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { SOCIAL_IMAGE } from "#/config/site.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
 
-import { canonicalUrl, documentHead } from "./metadata.ts";
+import { LLMS_TXT_PATH, canonicalUrl, documentHead } from "./metadata.ts";
 
 import type { DocumentMetadata } from "./metadata.ts";
 
@@ -43,4 +43,29 @@ test("a document without a cover image emits the site image, without dimensions"
   expect(propertyContentsOf(DOCUMENT, "og:image")).toEqual([canonicalUrl(SOCIAL_IMAGE)]);
   expect(propertyContentsOf(DOCUMENT, "og:image:width")).toEqual([]);
   expect(propertyContentsOf(DOCUMENT, "og:image:height")).toEqual([]);
+});
+
+test("a document emits a `describedby` link to `/llms.txt`", () => {
+  const { links } = documentHead(DOCUMENT);
+  expect(links).toContainEqual({ rel: "describedby", href: canonicalUrl(LLMS_TXT_PATH) });
+});
+
+test("a document with body chunks links each of their stylesheets, at a precedence after the site's, and preloads each of their modules", () => {
+  const bodyChunks = {
+    moduleUrls: ["/assets/entry.js", "/assets/entry.module.js"],
+    stylesheetUrls: ["/assets/entry.css", "/assets/entry.module.css"],
+  };
+  const { links } = documentHead({ ...DOCUMENT, bodyChunks });
+
+  expect(links.filter((link) => link.rel === "stylesheet" || link.rel === "modulepreload")).toEqual([
+    { rel: "stylesheet", href: "/assets/entry.css", precedence: "entry" },
+    { rel: "stylesheet", href: "/assets/entry.module.css", precedence: "entry" },
+    { rel: "modulepreload", href: "/assets/entry.js" },
+    { rel: "modulepreload", href: "/assets/entry.module.js" },
+  ]);
+});
+
+test("a document without body chunks does not link a stylesheet or preload a module", () => {
+  const { links } = documentHead({ ...DOCUMENT, bodyChunks: null });
+  expect(links.filter((link) => link.rel === "stylesheet" || link.rel === "modulepreload")).toEqual([]);
 });

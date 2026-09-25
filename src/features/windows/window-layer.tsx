@@ -136,7 +136,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   // proposed position. The drag is stored here rather than in the window, so its update on
   // each pointer frame does not re-render every window.
   const [windowDrag, setWindowDrag] = useState<WindowDragState | null>(null);
-  const surfaceRef = useRef<HTMLDivElement>(null);
+  const surfaceRef = useRef<HTMLElement>(null);
 
   useElementResize(surfaceRef, measure);
 
@@ -145,7 +145,8 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const draggedGeometry = windowDrag ? geometry[windowDrag.id] : undefined;
 
   return (
-    <div
+    // The main landmark, since the desktop and its windows are the page's content.
+    <main
       ref={surfaceRef}
       className={styles.windowLayer}
       data-desktop=""
@@ -198,6 +199,6 @@ export function WindowLayer({ children }: { children: ReactNode }) {
         />
       )}
       {children}
-    </div>
+    </main>
   );
 }

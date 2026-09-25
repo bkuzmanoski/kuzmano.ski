@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { readSubmission } from "#/server/endpoint.ts";
+import { logServerEvent } from "#/server/log.ts";
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_ROUTE_LENGTH = 500;
@@ -30,8 +31,7 @@ export const Route = createFileRoute("/api/client-errors")({
           return new Response(null, { status: 400 });
         }
 
-        console.error({
-          event: "client_error",
+        logServerEvent("client_error", {
           kind: stringField(report, "kind", MAX_KIND_LENGTH) ?? "unknown",
           message,
           route,

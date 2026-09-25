@@ -1,13 +1,13 @@
 .waitlist {
   position: relative;
-  border: 1px solid var(--color-border-secondary);
+  border: 1px solid var(--color-border);
 
-  & .content {
+  & .body {
     display: flex;
     flex-direction: column;
   }
 
-  & .intro {
+  & .header {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -15,39 +15,16 @@
     padding: var(--layout-gutter);
 
     background: var(--color-background);
-
-    & .title {
-      font: var(--font-heading-3);
-    }
   }
 
-  & .slot {
-    position: relative;
+  & .title {
+    font: var(--font-heading-3);
+  }
 
-    display: grid;
-
-    padding: var(--layout-gutter);
-    border-block-start: 1px solid var(--color-border-secondary);
-
-    paint-order: stroke fill;
-
-    -webkit-text-stroke: 4px var(--color-background);
-
-    &::before {
-      content: "";
-
-      position: absolute;
-      inset: 1px 0.5px 0.5px 1px;
-
-      background: var(--color-border);
-
-      mask: url("../../assets/images/dither-pattern.svg") 0 0 / 4px 4px repeat;
-    }
-
-    & > * {
-      position: relative;
-      grid-area: 1 / 1;
-    }
+  & .description {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   & .form {
@@ -60,36 +37,39 @@
     }
   }
 
-  & .inputField {
+  & .emailAddressField {
     flex: 999 1 16ch;
   }
 
-  & .action {
+  & .submitButton {
     flex: 1 1 auto;
   }
 
-  & .inputFieldFrame,
-  & .action {
+  & .emailAddressFieldFrame,
+  & .submitButton {
     -webkit-text-stroke-width: 0;
-    box-shadow: 0 0 0 1px var(--color-background);
 
     &:focus-within {
-      box-shadow: 0 0 0 4px var(--color-background);
+      box-shadow: 0 0 0 1px var(--color-background);
     }
   }
 
-  & .status {
+  & .confirmation {
     display: flex;
     gap: 6px;
     align-items: flex-start;
     align-self: center;
 
     color: var(--color-foreground-secondary);
+
+    &:focus {
+      outline: none;
+    }
   }
 
   & .checkmark {
     flex: none;
-    margin-block-start: 2px; /* Centers the 20px mark on the message's first 26px line. */
+    margin-block-start: 3.5px; /* Aligns the checkmark with the message's first line. */
     filter: drop-shadow(1px 0 0 var(--color-background)) drop-shadow(-1px 0 0 var(--color-background))
       drop-shadow(0 1px 0 var(--color-background)) drop-shadow(0 -1px 0 var(--color-background));
     stroke-width: 1.75px;
@@ -110,17 +90,38 @@
     background: var(--color-scrim);
   }
 
-  &[data-joined] {
-    & .slot::before {
-      background: color-mix(in srgb, var(--color-success) 50%, var(--color-background));
-    }
-
-    & .status {
-      color: var(--color-success);
-    }
+  &[data-joined] .confirmation {
+    color: var(--color-success);
   }
 }
 
-.hidden {
+.formArea {
+  composes: ditherText from global;
+
+  position: relative;
+
+  display: grid;
+
+  padding: var(--layout-gutter);
+  border-block-start: 1px solid var(--color-border);
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    color: var(--dither-color-faint);
+
+    background: var(--dither-25);
+  }
+
+  & > * {
+    position: relative;
+    grid-area: 1 / 1;
+  }
+}
+
+.joiningStatus {
   composes: visuallyHidden from global;
 }

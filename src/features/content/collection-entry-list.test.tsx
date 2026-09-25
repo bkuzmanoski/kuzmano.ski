@@ -4,6 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { playClick } from "#/lib/audio/sounds.ts";
 import { EntryCoverImagesContext } from "#/lib/content/entry-cover-images.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
+import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 import { fakeCollection, fakeCollectionEntries, fakeCoverImage, fakeEntry } from "#/test-utils/collection.ts";
 
 import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list.tsx";
@@ -37,6 +38,21 @@ beforeEach(() => {
 function renderList(activeSlug: string | null) {
   render(<CollectionEntryList activeSlug={activeSlug} collection={collection} />);
   return screen.getAllByRole("link");
+}
+
+// The part of `Window` the list registers with, repeated here so the suite does not render the window's chrome.
+function renderListInWindow(activeSlug: string | null) {
+  const keyDownHandlers = createWindowKeyDownHandlers();
+
+  render(
+    <section tabIndex={0} aria-label="Window" onKeyDown={keyDownHandlers.handle}>
+      <WindowKeyDownContext value={keyDownHandlers}>
+        <CollectionEntryList activeSlug={activeSlug} collection={collection} />
+      </WindowKeyDownContext>
+    </section>,
+  );
+
+  return { windowRegion: screen.getByRole("region"), links: screen.getAllByRole("link") };
 }
 
 function renderEntryWithCoverImage(slug: string, coverImage: CoverImage) {
@@ -142,6 +158,16 @@ test("a key that does not move the focus at an end of the list does not play a d
   fireEvent.keyDown(links[0]!, { key: "Home" });
 
   expect(playHover).not.toHaveBeenCalled();
+});
+
+test("pressing the Down arrow key while the window itself has the focus focuses the first entry, plays the hover sound, and prevents the key's default action", () => {
+  const { windowRegion, links } = renderListInWindow(collectionEntries[lastIndex]!.slug);
+
+  windowRegion.focus();
+
+  expect(fireEvent.keyDown(windowRegion, { key: "ArrowDown" })).toBe(false);
+  expect(document.activeElement).toBe(links[0]);
+  expect(playHover).toHaveBeenCalledTimes(1);
 });
 
 test("moving the focus scrolls the focused entry into view silently", () => {

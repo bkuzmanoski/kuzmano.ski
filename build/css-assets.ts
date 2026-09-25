@@ -72,14 +72,14 @@ export function unresolvedUrlsIn(css: string, exists: (filePath: string) => bool
   return unresolvedReferences;
 }
 
-/** Returns stylesheets under `/src` and unresolved relative `url()` references in each. */
-export async function readStylesheets(): Promise<{ stylesheetAbsolutePaths: Array<string>; problems: Array<string> }> {
+/** Returns a problem for each relative `url()` reference in a stylesheet under `/src` that does not resolve. */
+export async function readStylesheetProblems(): Promise<Array<string>> {
   const entries = await readdir(fromRoot(SOURCE_DIRECTORY_PATH), { recursive: true, withFileTypes: true });
   const stylesheetAbsolutePaths = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".css"))
     .map((entry) => join(entry.parentPath, entry.name));
 
-  const problems = (
+  return (
     await Promise.all(
       stylesheetAbsolutePaths.map(async (stylesheetAbsolutePath) => {
         const css = await readFile(stylesheetAbsolutePath, "utf8");
@@ -89,8 +89,6 @@ export async function readStylesheets(): Promise<{ stylesheetAbsolutePaths: Arra
       }),
     )
   ).flat();
-
-  return { stylesheetAbsolutePaths, problems };
 }
 
 /** Fails client builds when a relative `url()` in `/src` CSS does not resolve. */
@@ -100,18 +98,13 @@ export function cssAssetsPlugin(): Plugin {
     apply: "build",
     applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
     async buildStart() {
-      let stylesheetAbsolutePaths: Array<string>;
       let problems: Array<string>;
 
       try {
-        ({ stylesheetAbsolutePaths, problems } = await readStylesheets());
+        problems = await readStylesheetProblems();
       } catch (cause) {
         const reason = cause instanceof Error ? cause.message : String(cause);
         return this.error(`Could not read the stylesheets under ${SOURCE_DIRECTORY_PATH}/: ${reason}`);
-      }
-
-      for (const stylesheetAbsolutePath of stylesheetAbsolutePaths) {
-        this.addWatchFile(stylesheetAbsolutePath);
       }
 
       if (problems.length > 0) {

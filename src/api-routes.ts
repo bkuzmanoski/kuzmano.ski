@@ -1,10 +1,14 @@
 import type { FileRouteTypes } from "#/routeTree.gen.ts";
 
-type ApiRoute = Extract<FileRouteTypes["fullPaths"], `/api/${string}`>;
+/** The path every API route starts with. */
+export const API_PATH_PREFIX = "/api/";
+
+type ApiRoute = Extract<FileRouteTypes["fullPaths"], `${typeof API_PATH_PREFIX}${string}`>;
 
 export const API_ROUTES = {
   clientErrors: "/api/client-errors",
   contact: "/api/contact",
+  githubContributions: "/api/github-contributions",
   waitlist: "/api/waitlist",
 } as const satisfies Record<string, ApiRoute>;
 

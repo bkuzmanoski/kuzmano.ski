@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { MARKDOWN_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { MARKDOWN_TOKEN_COUNT_HEADER } from "#/site/markdown-negotiation.ts";
+import { LLMS_TXT_LINK_HEADER } from "#/site/metadata.ts";
 
 import type { AssetsBinding, WorkerEnv } from "cloudflare:workers";
 
@@ -160,6 +161,11 @@ describe("handling a request that prefers Markdown", () => {
     expect(response.headers.get(MARKDOWN_TOKEN_COUNT_HEADER)).toBe(String(PAGE_TOKEN_COUNT));
   });
 
+  test("sets the `Link` header to the `llms.txt` index", async () => {
+    const response = await fetchPath("/page", { accept: "text/markdown" });
+    expect(response.headers.get("link")).toBe(LLMS_TXT_LINK_HEADER);
+  });
+
   test("sets the `Vary` header to `Accept`", async () => {
     const response = await fetchPath("/page", { accept: "text/markdown" });
     expect(response.headers.get("vary")).toBe("Accept");
@@ -290,7 +296,6 @@ describe("handling a request for a Markdown file by name", () => {
 
 describe("handling a request the Asset Worker does not have a file for", () => {
   test.each([
-    ["a path the build does not prerender", "/api/endpoint"],
     ["a path that does not exist", "/missing"],
     ["a Markdown file that does not exist", "/missing.md"],
   ])("renders the route for %s", async (_label, path) => {
@@ -310,17 +315,27 @@ describe("handling a request the Asset Worker does not have a file for", () => {
   });
 
   test("forwards the request's `Accept` header when it does not prefer Markdown", async () => {
-    const response = await fetchPath("/api/endpoint", { accept: "application/json, text/html" });
+    const response = await fetchPath("/missing", { accept: "application/json, text/html" });
     expect(response.headers.get(RENDERED_ACCEPT_HEADER)).toBe("application/json, text/html");
   });
 
   test("does not set the `Vary` header", async () => {
-    const response = await fetchPath("/api/endpoint", { accept: "application/json, text/html" });
+    const response = await fetchPath("/missing", { accept: "application/json, text/html" });
     expect(response.headers.get("vary")).toBeNull();
   });
 });
 
 describe("bypassing the Asset Worker", () => {
+  test.each(["GET", "HEAD"])(
+    "renders the route for a %s request to an API path, with its `Accept` header unchanged",
+    async (method) => {
+      const response = await fetchPath("/api/endpoint", { accept: "application/json, text/html", method });
+
+      expect(response.headers.get(RENDERED_ACCEPT_HEADER)).toBe("application/json, text/html");
+      expect(requestedPaths).toStrictEqual([]);
+    },
+  );
+
   test("renders the route for a method it does not serve", async () => {
     const response = await fetchPath("/api/endpoint", { accept: "text/html", method: "POST" });
 
