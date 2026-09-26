@@ -4,9 +4,11 @@ import { smoothstep } from "#/lib/math.ts";
 
 export type PicturePlacement = Rect;
 
-const PICTURE_MAXIMUM_WIDTH_FRACTION = 0.6; // The widest the picture may be, as a fraction of the dither field's width.
-const BACKDROP_TOP_DENSITY = 0.55; // The backdrop's density at the top edge of the dither field. It falls to 0 at the bottom edge.
+export const BACKDROP_TOP_DENSITY = 0.5; // The backdrop's density at the top edge of the dither field. It falls to 0 at the bottom edge.
+
 const BACKDROP_FALLOFF_EXPONENT = 1.5; // The exponent of the backdrop's falloff from top to bottom. Above 1, the backdrop thins fastest near the top.
+
+const PICTURE_MAXIMUM_WIDTH_FRACTION = 0.6; // The widest the picture may be, as a fraction of the dither field's width.
 const PICTURE_FEATHER_INLINE_FRACTION = 0.3; // How far into the picture its left edge fades into the backdrop, as a fraction of its width.
 const PICTURE_FEATHER_BLOCK_FRACTION = 0.12; // How far into the picture its top edge fades into the backdrop, as a fraction of its height.
 
@@ -27,7 +29,7 @@ export function picturePlacementFor(
   };
 }
 
-export function composeHeroDitherField(
+export function composeHeaderDitherField(
   width: number,
   height: number,
   picture: { density: Float32Array; placement: PicturePlacement } | null,

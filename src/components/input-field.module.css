@@ -17,5 +17,5 @@
 
 .hidden,
 .error {
-  composes: visuallyHidden from global;
+  @mixin visually-hidden;
 }

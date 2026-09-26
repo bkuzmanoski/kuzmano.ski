@@ -78,5 +78,5 @@
 }
 
 .hidden {
-  composes: visuallyHidden from global;
+  @mixin visually-hidden;
 }

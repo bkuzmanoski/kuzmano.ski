@@ -1,6 +1,6 @@
 import { createElement } from "react";
 
-import type { ContentSource, EntryBodyChunks } from "#/lib/content/catalog.ts";
+import type { ContentSource, EntryBodyChunks, EntryStylesheetClassNames } from "#/lib/content/catalog.ts";
 import { entryKey, stylesheetFilePathOf } from "#/lib/content/entry-file.ts";
 
 import type { MDXContent } from "mdx/types";
@@ -10,7 +10,7 @@ export const CONTENT_DIRECTORY_PATH = "/content";
 export interface FakeDocument {
   frontmatter?: unknown;
   body?: MDXContent;
-  styles?: { entry?: string };
+  styles?: EntryStylesheetClassNames;
   bodyChunks?: EntryBodyChunks;
 }
 

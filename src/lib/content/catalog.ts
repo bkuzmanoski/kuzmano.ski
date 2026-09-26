@@ -13,10 +13,18 @@ export interface Entry extends Frontmatter {
   slug: string;
 }
 
-/** A compiled MDX file and the optional class applied to the entry it renders. */
+/**
+ * The classes an entry's stylesheet (`<slug>.module.css`) can define: `entry` on the entry's
+ * `<article>`, and `title` on its `<h1>`.
+ */
+export interface EntryStylesheetClassNames {
+  entry?: string;
+  title?: string;
+}
+
 export interface MDXModule {
   default: MDXContent;
-  className?: string;
+  stylesheetClassNames?: EntryStylesheetClassNames; // Absent when the entry has no stylesheet.
 }
 
 /**
@@ -55,7 +63,7 @@ export interface ContentSource {
   rootDirectoryPath: string; // The directory the content glob read from, without a trailing slash.
   frontmatterModules: Record<string, { default: unknown }>;
   bodyModules: Record<string, () => Promise<{ default: MDXContent }>>;
-  stylesheetModules: Record<string, () => Promise<{ default: { entry?: string } }>>;
+  stylesheetModules: Record<string, () => Promise<{ default: EntryStylesheetClassNames }>>;
   bodyChunks: Record<EntryKey, EntryBodyChunks | undefined>;
 }
 
@@ -93,7 +101,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
     const modulePromise: Promise<MDXModule> = stylesheetImporter
       ? Promise.all([importBody(), stylesheetImporter()]).then(([bodyModule, stylesheetModule]) => ({
           ...bodyModule,
-          className: stylesheetModule.default.entry,
+          stylesheetClassNames: stylesheetModule.default,
         }))
       : importBody();
     const trackedPromise = trackPromise(modulePromise); // Tracked so an entry whose module has already loaded can render without suspending. This keeps hydration from discarding the server-rendered article (see `/src/client.tsx`).

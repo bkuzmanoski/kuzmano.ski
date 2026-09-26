@@ -7,7 +7,7 @@
 }
 
 .menu {
-  composes: panel from global;
+  @mixin panel;
 
   position: fixed;
   z-index: var(--layer-menu);
@@ -53,14 +53,7 @@
   background: transparent;
 
   &.active {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight-background);
-
-    @media (forced-colors: active) {
-      color: HighlightText;
-      forced-color-adjust: none;
-      background: Highlight;
-    }
+    @mixin highlight;
   }
 
   &.disabled {
@@ -86,7 +79,7 @@
     display: inline-block;
   }
 
-  @media not all and (any-hover: hover) and (any-pointer: fine) {
+  @mixin without-fine-pointer {
     display: none;
   }
 }

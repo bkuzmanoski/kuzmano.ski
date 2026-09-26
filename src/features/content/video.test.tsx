@@ -98,9 +98,7 @@ test("a video with the `controls` prop passes its other props to the `<video>`",
 });
 
 test.each([
-  { name: "data-content-wide", value: "" },
-  { name: "data-content-full-bleed", value: "" },
-  { name: "data-content-rail-span", value: "" },
+  { name: "data-content-span", value: "pane" },
   { name: "data-content-space", value: "loose" },
 ])(
   "a video with the `controls` prop sets the `$name` attribute on its container rather than its `<video>`",

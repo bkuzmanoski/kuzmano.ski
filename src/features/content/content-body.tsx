@@ -41,16 +41,17 @@ function revealInitialFragmentTarget(article: HTMLElement | null) {
 }
 
 export function ContentBody({ route, title, content }: { route: string; title: string; content: Promise<MDXModule> }) {
-  const { default: MDXContent, className } = use(content); // Read the module with `use()` rather than the route loader as loader data must be serializable.
-
+  const { default: MDXContent, stylesheetClassNames } = use(content); // Read the module with `use()` rather than the route loader as loader data must be serializable.
   return (
     <RenderedEntryContext value={{ route }}>
       <OpensInNewTabDescriptionProvider>
         <EntryClipboardProvider>
           <MDXProvider components={MDX_COMPONENTS}>
-            <article ref={revealInitialFragmentTarget} className={cx(styles.content, className)}>
+            <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames?.entry)}>
               <div data-content-body>
-                <h1 data-feed-omit>{title}</h1>
+                <h1 className={stylesheetClassNames?.title} data-feed-omit>
+                  {title}
+                </h1>
                 <MDXContent />
               </div>
             </article>

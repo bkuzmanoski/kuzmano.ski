@@ -1,7 +1,13 @@
 .video {
+  position: relative;
   border: 1px solid var(--color-border);
   background: var(--color-background);
   outline: none;
+
+  /* Before hydration, the native player receives focus. */
+  &:has(> video:focus-visible) {
+    @mixin focus-stroke -3px;
+  }
 
   & video {
     display: block;
@@ -44,9 +50,7 @@
 }
 
 .button {
-  --focus-frame-inset: 1px;
-
-  composes: focusFrame from global;
+  position: relative;
 
   display: flex;
   flex: none;
@@ -54,6 +58,10 @@
   justify-content: center;
 
   width: var(--control-height);
+
+  &:focus-visible {
+    @mixin focus-stroke 1px;
+  }
 
   &:disabled {
     --color-icon-foreground: var(--color-border-secondary);
@@ -94,6 +102,8 @@
   outline: none;
 
   &::before {
+    @mixin dither-13;
+
     content: "";
 
     position: absolute;
@@ -101,9 +111,11 @@
     right: 1px;
     left: calc(var(--progress) * (100% - var(--thumb-width)) + var(--thumb-width) / 2);
 
-    background: var(--color-border);
+    color: var(--color-border);
 
-    mask: url("../../assets/images/background-dither-pattern.svg") right top / 4px 4px repeat; /* Anchored to the fixed end, so the dots hold still as the thumb moves. */
+    background-position:
+      right top,
+      right calc(-1 * var(--dither-cell)) top var(--dither-cell);
   }
 }
 
@@ -119,14 +131,7 @@
 
   background: var(--color-background);
 
-  .track:focus-visible &::after {
-    content: "";
-
-    position: absolute;
-    inset: 1px;
-
-    color: var(--color-focus-ring);
-
-    background: var(--marching-ants-frame);
+  .track:focus-visible & {
+    @mixin focus-stroke 1px;
   }
 }

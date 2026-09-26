@@ -6,7 +6,7 @@ import postcss from "postcss";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { GITHUB_LOGIN, GITHUB_PROFILE_URL } from "#/config/site.ts";
-import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/windows/scroll-pane.tsx";
+import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import { CONTRIBUTION_LEVEL_COUNT } from "#/lib/github/contributions.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
 

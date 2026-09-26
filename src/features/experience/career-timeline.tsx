@@ -98,7 +98,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
     });
 
   return (
-    <section className={styles.careerTimeline} data-content-default-styles="off" data-content-rail-span>
+    <section className={styles.careerTimeline} data-content-default-styles="off" data-content-span="rail">
       <div className={styles.controls}>
         <div className={styles.filterGroup} role="group" aria-labelledby={filtersLabelId}>
           <p id={filtersLabelId} className={styles.controlsLabel}>

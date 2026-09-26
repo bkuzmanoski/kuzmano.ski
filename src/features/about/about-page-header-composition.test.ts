@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { composeHeroDitherField, picturePlacementFor } from "./dithered-portrait-hero-composition.ts";
+import {
+  BACKDROP_TOP_DENSITY,
+  composeHeaderDitherField,
+  picturePlacementFor,
+} from "./about-page-header-composition.ts";
 
 describe("picturePlacementFor", () => {
   test("places a picture as tall as the dither field against the column end and the bottom edge", () => {
@@ -16,11 +20,11 @@ describe("picturePlacementFor", () => {
   });
 });
 
-describe("composeHeroDitherField", () => {
+describe("composeHeaderDitherField", () => {
   test("returns a density that falls from the top edge to `0` at the bottom edge without a picture", () => {
-    const { density } = composeHeroDitherField(4, 10, null);
+    const { density } = composeHeaderDitherField(4, 10, null);
 
-    expect(density[0]).toBeGreaterThan(0.5);
+    expect(density[0]).toBeCloseTo(BACKDROP_TOP_DENSITY);
     expect(density[9 * 4]).toBe(0);
     expect(density[2 * 4]).toBeGreaterThan(density[6 * 4] ?? 1);
   });
@@ -32,7 +36,7 @@ describe("composeHeroDitherField", () => {
 
     pictureDensity[19 * 10 + 9] = 1;
 
-    const { density } = composeHeroDitherField(width, height, {
+    const { density } = composeHeaderDitherField(width, height, {
       density: pictureDensity,
       placement: { x: 10, y: 0, width: 10, height },
     });
@@ -43,8 +47,8 @@ describe("composeHeroDitherField", () => {
   test("leaves the backdrop density unchanged outside the picture", () => {
     const width = 20;
     const height = 20;
-    const backdropDensity = composeHeroDitherField(width, height, null).density;
-    const { density } = composeHeroDitherField(width, height, {
+    const backdropDensity = composeHeaderDitherField(width, height, null).density;
+    const { density } = composeHeaderDitherField(width, height, {
       density: new Float32Array(10 * height).fill(1),
       placement: { x: 10, y: 0, width: 10, height },
     });

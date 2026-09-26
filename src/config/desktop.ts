@@ -1,5 +1,5 @@
+import type { IconLayout } from "#/lib/desktop-icons/icon.ts";
 import type { Size } from "#/lib/geometry.ts";
-import type { IconLayout } from "#/lib/icons/icon.ts";
 import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
 export const WINDOW_SPECS: WindowLayout["windows"] = {

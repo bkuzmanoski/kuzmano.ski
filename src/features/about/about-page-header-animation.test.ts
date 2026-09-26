@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { applyTheme } from "#/lib/settings/theme.ts";
 
-import { startDitheredPortraitHeroAnimation } from "./dithered-portrait-hero-animation.ts";
+import { startAboutPageHeaderAnimation } from "./about-page-header-animation.ts";
 
 const prefersReducedMotion = vi.hoisted(() => ({
   matches: false,
@@ -33,8 +33,8 @@ const stopAnimationFunctions: Array<() => void> = [];
 
 let nextAnimationFrameId = 1;
 
-const startAnimation = (elements: ReturnType<typeof heroElements>) => {
-  const stopAnimation = startDitheredPortraitHeroAnimation(elements, "/image.png");
+const startAnimation = (elements: ReturnType<typeof headerElements>) => {
+  const stopAnimation = startAboutPageHeaderAnimation(elements, "/image.png");
 
   stopAnimationFunctions.push(stopAnimation);
   reportResize();
@@ -68,7 +68,7 @@ const fakeContext = () =>
     fillRect: vi.fn(),
     drawImage,
     getImageData: (_x: number, _y: number, width: number, height: number) => ({
-      data: new Uint8ClampedArray(width * height * 4).fill(255),
+      data: new Uint8ClampedArray(width * height * 4).map((_value, index) => (index % 4 === 3 ? 255 : 0)),
     }),
     createImageData: (width: number, height: number) => ({
       width,
@@ -78,22 +78,23 @@ const fakeContext = () =>
     putImageData,
   }) as unknown as CanvasRenderingContext2D;
 
-const setHeroSize = (hero: HTMLElement, width: number, height: number) => {
-  Object.defineProperty(hero, "clientWidth", { value: width, configurable: true });
-  Object.defineProperty(hero, "clientHeight", { value: height, configurable: true });
+const setHeaderSize = (header: HTMLElement, width: number, height: number) => {
+  Object.defineProperty(header, "clientWidth", { value: width, configurable: true });
+  Object.defineProperty(header, "clientHeight", { value: height, configurable: true });
 };
 
-const heroElements = () => {
-  const hero = document.createElement("section");
+const headerElements = () => {
+  const header = document.createElement("header");
   const canvas = document.createElement("canvas");
   const column = document.createElement("div");
 
-  hero.style.setProperty("--dither-cell", "4px");
-  setHeroSize(hero, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX);
-  hero.append(canvas, column);
-  document.body.append(hero);
+  vi.spyOn(column, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, COMPONENT_WIDTH_PX, 0));
+  header.style.setProperty("--dither-cell", "4px");
+  setHeaderSize(header, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX);
+  header.append(canvas, column);
+  document.body.append(header);
 
-  return { hero, canvas, column };
+  return { header, canvas, column };
 };
 
 const loadPicture = (naturalWidth: number, naturalHeight: number) => {
@@ -123,8 +124,8 @@ class FakeResizeObserver {
 
 const reportResize = () => resizeObserverCallbacks.forEach((report) => report());
 
-const resizeHero = (hero: HTMLElement, width: number, height: number) => {
-  setHeroSize(hero, width, height);
+const resizeHeader = (header: HTMLElement, width: number, height: number) => {
+  setHeaderSize(header, width, height);
   reportResize();
 };
 
@@ -143,8 +144,8 @@ const lastPutRegionCenterY = () => {
   return dirtyY + dirtyHeight / 2;
 };
 const hasFilledPixels = (rgba: Uint8ClampedArray) => filledPixelCountIn(rgba) > 0;
-const movePointer = (hero: HTMLElement, pointerType: string) => {
-  hero.dispatchEvent(new PointerEvent("pointermove", { pointerType, clientX: 400, clientY: 400 }));
+const movePointer = (header: HTMLElement, pointerType: string) => {
+  header.dispatchEvent(new PointerEvent("pointermove", { pointerType, clientX: 400, clientY: 400 }));
 };
 
 beforeEach(() => {
@@ -190,7 +191,7 @@ afterEach(() => {
 });
 
 test("starting the animation puts the dither field on the canvas without filled pixels before the picture loads", () => {
-  startAnimation(heroElements());
+  startAnimation(headerElements());
 
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(hasFilledPixels(lastPutPixels())).toBe(false);
@@ -198,16 +199,16 @@ test("starting the animation puts the dither field on the canvas without filled 
 
 test("starting the animation puts the dither field on the canvas with filled pixels before the picture loads when reduced motion is preferred", () => {
   prefersReducedMotion.matches = true;
-  startAnimation(heroElements());
+  startAnimation(headerElements());
 
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(hasFilledPixels(lastPutPixels())).toBe(true);
 });
 
 test("starting the animation does not put pixels on the canvas when `--dither-cell` is not a positive `px` length", () => {
-  const elements = heroElements();
+  const elements = headerElements();
 
-  elements.hero.style.setProperty("--dither-cell", "0px");
+  elements.header.style.setProperty("--dither-cell", "0px");
   startAnimation(elements);
 
   expect(putImageData).not.toHaveBeenCalled();
@@ -216,7 +217,7 @@ test("starting the animation does not put pixels on the canvas when `--dither-ce
 test("loading the picture reveals the dither field over successive animation frames, then stops requesting them", () => {
   const now = vi.spyOn(performance, "now").mockReturnValue(0);
 
-  startAnimation(heroElements());
+  startAnimation(headerElements());
   loadPicture(200, 100);
 
   const filledPixelCountAt = (timeMs: number) => {
@@ -237,7 +238,7 @@ test("loading the picture reveals the dither field over successive animation fra
 });
 
 test("loading the picture scales it once, to the size of its placement", () => {
-  startAnimation(heroElements());
+  startAnimation(headerElements());
   loadPicture(200, 100);
 
   expect(drawImage).toHaveBeenCalledTimes(1);
@@ -245,11 +246,11 @@ test("loading the picture scales it once, to the size of its placement", () => {
 });
 
 test("a resize that changes the width of the dither field puts the whole dither field on the canvas at the new width", () => {
-  const elements = heroElements();
+  const elements = headerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeHero(elements.hero, 1_000, COMPONENT_HEIGHT_PX);
+  resizeHeader(elements.header, 1_000, COMPONENT_HEIGHT_PX);
 
   expect(elements.canvas.width).toBe(250);
   expect(putImageData).toHaveBeenCalledTimes(1);
@@ -257,28 +258,28 @@ test("a resize that changes the width of the dither field puts the whole dither 
 });
 
 test("a resize that leaves the size of the dither field in dither pixels unchanged does not put pixels on the canvas", () => {
-  const elements = heroElements();
+  const elements = headerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeHero(elements.hero, COMPONENT_WIDTH_PX - 1, COMPONENT_HEIGHT_PX);
+  resizeHeader(elements.header, COMPONENT_WIDTH_PX - 1, COMPONENT_HEIGHT_PX);
 
   expect(putImageData).not.toHaveBeenCalled();
 });
 
 test("a resize that changes the height of the dither field but not the size of the picture's placement recomposes the dither field without scaling the picture again", () => {
-  const elements = heroElements();
+  const elements = headerElements();
 
   startAnimation(elements);
   loadPicture(200, 100);
-  resizeHero(elements.hero, COMPONENT_WIDTH_PX, 1_000);
+  resizeHeader(elements.header, COMPONENT_WIDTH_PX, 1_000);
 
   expect(elements.canvas.height).toBe(250);
   expect(drawImage).toHaveBeenCalledTimes(1);
 });
 
 test("a change to the device pixel ratio that changes the size of a dither pixel puts the dither field on the canvas at the new width", () => {
-  const elements = heroElements();
+  const elements = headerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
@@ -289,19 +290,19 @@ test("a change to the device pixel ratio that changes the size of a dither pixel
 });
 
 test("a change to the device pixel ratio that leaves the size of a dither pixel unchanged does not put pixels on the canvas", () => {
-  startAnimation(heroElements());
+  startAnimation(headerElements());
   putImageData.mockClear();
   changeDevicePixelRatio(2);
 
   expect(putImageData).not.toHaveBeenCalled();
 });
 
-test("moving a mouse pointer over the hero requests an animation frame that puts only the region changed by the pointer highlight on the canvas", () => {
-  const elements = heroElements();
+test("moving a mouse pointer over the header requests an animation frame that puts only the region changed by the pointer highlight on the canvas", () => {
+  const elements = headerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
 
   expect(runAnimationFrames()).toBe(1);
   expect(putImageData).toHaveBeenCalledTimes(1);
@@ -315,55 +316,55 @@ test("moving a mouse pointer over the hero requests an animation frame that puts
   expect(pendingAnimationFrames.size).toBe(1);
 });
 
-test("scrolling the hero under a stationary mouse pointer moves the pointer highlight down the hero by the distance scrolled", () => {
-  const elements = heroElements();
+test("scrolling the header under a stationary mouse pointer moves the pointer highlight down the header by the distance scrolled", () => {
+  const elements = headerElements();
 
-  let heroTopPx = 0;
+  let headerTopPx = 0;
   let timeMs = 0;
 
   vi.spyOn(performance, "now").mockImplementation(() => (timeMs += 16)); // Each frame runs 16ms after the one before, so the pointer highlight eases at its real rate.
-  vi.spyOn(elements.hero, "getBoundingClientRect").mockImplementation(() => new DOMRect(0, heroTopPx, 2_000, 800));
+  vi.spyOn(elements.header, "getBoundingClientRect").mockImplementation(() => new DOMRect(0, headerTopPx, 2_000, 800));
   startAnimation(elements);
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
 
   runAnimationFramesUntilIdle();
 
   const pointerHighlightCenterBeforeScroll = lastPutRegionCenterY();
 
-  heroTopPx = -100;
-  elements.hero.parentElement!.dispatchEvent(new Event("scroll"));
+  headerTopPx = -100;
+  elements.header.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 25 dither pixels down the hero. The region put on the canvas
+  // Scrolling by 100px moves the pointer 25 dither pixels down the header. The region put on the canvas
   // is rounded out to whole pixels, so its center can differ from the pointer highlight's by one.
   expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 25)).toBeLessThanOrEqual(1);
 });
 
-test("moving a touch pointer over the hero does not request an animation frame", () => {
-  const elements = heroElements();
+test("moving a touch pointer over the header does not request an animation frame", () => {
+  const elements = headerElements();
 
   startAnimation(elements);
-  movePointer(elements.hero, "touch");
+  movePointer(elements.header, "touch");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("moving a mouse pointer over the hero does not request an animation frame when reduced motion is preferred", () => {
+test("moving a mouse pointer over the header does not request an animation frame when reduced motion is preferred", () => {
   prefersReducedMotion.matches = true;
 
-  const elements = heroElements();
+  const elements = headerElements();
 
   startAnimation(elements);
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("moving a mouse pointer over the hero does not request an animation frame once reduced motion becomes preferred", () => {
-  const elements = heroElements();
+test("moving a mouse pointer over the header does not request an animation frame once reduced motion becomes preferred", () => {
+  const elements = headerElements();
 
   startAnimation(elements);
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
   runAnimationFrames();
 
   prefersReducedMotion.matches = true;
@@ -371,13 +372,13 @@ test("moving a mouse pointer over the hero does not request an animation frame o
 
   runAnimationFramesUntilIdle();
 
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
 test("applying a theme setting puts the whole dither field on the canvas again", () => {
-  startAnimation(heroElements());
+  startAnimation(headerElements());
   putImageData.mockClear();
   applyTheme("dark");
   runAnimationFrames();
@@ -387,22 +388,22 @@ test("applying a theme setting puts the whole dither field on the canvas again",
 });
 
 test("stopping the animation cancels the requested animation frame and stops listening for `pointermove` and `scroll` events", () => {
-  const elements = heroElements();
+  const elements = headerElements();
   const stopAnimation = startAnimation(elements);
 
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
   stopAnimation();
 
   expect(pendingAnimationFrames.size).toBe(0);
 
-  movePointer(elements.hero, "mouse");
+  movePointer(elements.header, "mouse");
   document.body.dispatchEvent(new Event("scroll"));
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
 test("stopping the animation stops listening for changes to the device pixel ratio, color scheme, theme setting, and reduced motion preference", () => {
-  const stopAnimation = startAnimation(heroElements());
+  const stopAnimation = startAnimation(headerElements());
 
   stopAnimation();
   applyTheme("dark");

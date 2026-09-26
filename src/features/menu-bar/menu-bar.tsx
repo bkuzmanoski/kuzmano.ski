@@ -68,11 +68,11 @@ function StatusButton({
       persistOnPress
       showsState={isShowingState}
       onDidHide={clearState}
-      className={styles.statusItemTooltipWrapper}
+      className={cx(styles.statusItemTooltipWrapper, className)}
     >
       <button
         type="button"
-        className={cx(styles.control, className)}
+        className={styles.control}
         aria-label={label}
         {...mergeHandlers(pressSoundHandlers, {
           onClick: () => {
@@ -96,7 +96,11 @@ function ThemeStatus() {
   const Icon = theme === "system" ? ToggleThemeSystemMenuBarIcon : ToggleThemeLightDarkMenuBarIcon;
 
   return (
-    <StatusButton label={`Appearance: ${THEME_LABEL[theme]}`} onClick={() => setTheme(nextTheme)}>
+    <StatusButton
+      label={`Appearance: ${THEME_LABEL[theme]}`}
+      className={styles.themeStatus}
+      onClick={() => setTheme(nextTheme)}
+    >
       <Icon className={styles.menuBarIcon} />
     </StatusButton>
   );

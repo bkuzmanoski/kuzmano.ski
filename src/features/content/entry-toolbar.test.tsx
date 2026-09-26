@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
-import { WindowToolbar } from "#/features/windows/window-toolbar.tsx";
+import { WindowToolbar } from "#/features/window-manager/window-toolbar.tsx";
 import { formatDate } from "#/lib/datetime.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";

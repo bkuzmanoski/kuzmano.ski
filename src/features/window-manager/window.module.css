@@ -4,7 +4,7 @@
   --window-safe-area-block-end: 0px;
   --window-focused: 1;
 
-  composes: panel from global;
+  @mixin panel;
 
   position: absolute;
 
@@ -115,7 +115,6 @@
 
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
 
-    /* Forced colors mode removes a gradient background, and the bars are what marks the focused window. */
     @media (forced-colors: active) {
       forced-color-adjust: none;
       background-image: repeating-linear-gradient(to bottom, CanvasText 0 1px, transparent 1px 3px);
@@ -149,10 +148,7 @@
 }
 
 .controlButton {
-  --focus-frame-inset: -2px;
-
   composes: filledControl;
-  composes: focusFrame from global;
 
   position: relative;
 
@@ -161,7 +157,6 @@
   width: var(--control-size);
   height: var(--control-size);
 
-  /* Extend the hit target to the height of the title bar. */
   &::before {
     content: "";
     position: absolute;
@@ -169,8 +164,13 @@
     inset-inline: -6px;
   }
 
-  /* Increase hit target for touch devices. */
-  @media not all and (any-hover: hover) and (any-pointer: fine) {
+  &:focus-visible {
+    @mixin focus-stroke -2px;
+
+    outline: 3px solid var(--color-background);
+  }
+
+  @mixin without-fine-pointer {
     &::before {
       inset-inline: -14px;
     }

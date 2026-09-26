@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { Icon } from "#/lib/icons/icon.ts";
+import type { Icon } from "#/lib/desktop-icons/icon.ts";
 
 import { DesktopIcon } from "./desktop-icon.tsx";
 

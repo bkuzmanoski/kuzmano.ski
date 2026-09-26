@@ -1,0 +1,24 @@
+.entry [data-content-body] {
+  padding-block-start: 0;
+}
+
+.entry [data-content-body] > h1 + * {
+  margin-block-start: 0;
+}
+
+.entry [data-content-body] > h1 + [data-content-span="pane"] + p {
+  margin-block-start: var(--layout-content-space-loose);
+  font: var(--font-lede);
+}
+
+.entry [data-content-body] > h2::before {
+  content: none;
+}
+
+.entry [data-image-grid] img {
+  image-rendering: pixelated;
+}
+
+.title {
+  @mixin visually-hidden;
+}

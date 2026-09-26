@@ -8,21 +8,40 @@
 }
 
 @font-face {
-  font-family: Lora;
-  font-weight: 400 700;
+  font-family: "Bricolage Grotesque";
+  font-weight: 200 800;
   font-style: normal;
 
   font-display: swap;
-  src: url("./assets/fonts/Lora-Variable.woff2") format("woff2");
+  font-stretch: 75% 100%;
+  src: url("./assets/fonts/BricolageGrotesque-Variable.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Inter Variable";
-  font-weight: 100 900;
+  font-family: "Source Serif 4";
+  font-weight: 200 900;
   font-style: normal;
 
   font-display: swap;
-  src: url("./assets/fonts/Inter-Variable.woff2") format("woff2");
+  src: url("./assets/fonts/SourceSerif4-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Source Serif 4";
+  font-weight: 200 900;
+  font-style: italic;
+
+  font-display: swap;
+  src: url("./assets/fonts/SourceSerif4-Variable-Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Silkscreen;
+  font-weight: 400;
+  font-style: normal;
+
+  font-display: swap;
+  src: url("./assets/fonts/Silkscreen.woff2") format("woff2");
 }
 
 @font-face {
@@ -64,12 +83,12 @@
   --duration-desktop-reveal-step: 0ms; /* Set from JS. */
 
   /* Typography */
-  --font-family-chrome: ChicagoFLF, ui-sans-serif, sans-serif;
-  --font-chrome: 400 16px/24px var(--font-family-chrome);
+  --font-chrome: 400 16px/24px ChicagoFLF, ui-sans-serif, sans-serif;
   --font-family-ui: Helvetica, Arial, ui-sans-serif, sans-serif;
   --font-ui: normal 15px/20px var(--font-family-ui);
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
+  --font-bitmap: 400 12px/16px Silkscreen, ui-sans-serif, sans-serif;
 
   /* Color primitives */
 
@@ -81,17 +100,16 @@
   --neutral-215: oklch(21.5% 0.0095 238deg);
   --neutral-280: oklch(28% 0.0128 238deg);
   --neutral-305: oklch(30.5% 0.014 238deg);
-  --neutral-325: oklch(32.5% 0.015 238deg);
   --neutral-330: oklch(33% 0.0152 238deg);
   --neutral-345: oklch(34.5% 0.0159 238deg);
   --neutral-390: oklch(39% 0.0177 238deg);
   --neutral-540: oklch(54% 0.0214 238deg);
   --neutral-565: oklch(56.5% 0.0215 238deg);
   --neutral-645: oklch(64.5% 0.0209 238deg);
+  --neutral-675: oklch(67.5% 0.0202 238deg);
   --neutral-790: oklch(79% 0.0154 238deg);
   --neutral-820: oklch(82% 0.0137 238deg);
   --neutral-925: oklch(92.5% 0.0062 238deg);
-  --neutral-945: oklch(94.5% 0.0046 238deg);
   --neutral-965: oklch(96.5% 0.0029 238deg);
   --neutral-990: oklch(99% 0.0008 238deg);
 
@@ -111,17 +129,17 @@
 
   /* Colors */
   --color-foreground: light-dark(var(--neutral-330), var(--neutral-925));
-  --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-645));
+  --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-675));
   --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
   --color-background: light-dark(var(--neutral-990), var(--neutral-280));
-  --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305)); /* Code blocks. */
-  --color-background-tertiary: light-dark(var(--neutral-945), var(--neutral-325)); /* Inline code. */
+  --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305));
   --color-background-active: light-dark(var(--neutral-925), var(--neutral-345));
-  --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent); /* Overlays. */
+  --color-background-dither: light-dark(var(--neutral-820), var(--neutral-390));
+  --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent);
   --color-border: var(--neutral-540);
   --color-border-secondary: light-dark(var(--neutral-820), var(--neutral-390));
   --color-shadow: light-dark(var(--neutral-820), /* The same step as `--color-border-secondary`. */ var(--neutral-190));
-  --color-focus-ring: var(--neutral-540);
+  --color-focus-ring: var(--color-border);
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
   --color-highlight-foreground: var(--color-background);
   --color-highlight-background: light-dark(var(--neutral-330), var(--neutral-790));
@@ -136,31 +154,45 @@
   --color-screensaver-backdrop: var(--neutral-215);
   --color-accent: var(--accent-blue);
   --color-success: var(--accent-green);
+  --color-warning: var(--accent-orange);
   --color-error: var(--accent-red);
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-background: var(--color-background-secondary);
   --color-syntax-punctuation: var(--color-foreground-secondary);
   --color-syntax-comment: var(--color-foreground-secondary);
+  --color-syntax-keyword: color-mix(in oklab, var(--accent-magenta) 92%, var(--color-foreground));
+  --color-syntax-function: color-mix(in oklab, var(--accent-blue) 92%, var(--color-foreground));
+  --color-syntax-property: color-mix(in oklab, var(--accent-violet) 92%, var(--color-foreground));
+  --color-syntax-type: color-mix(in oklab, var(--accent-teal) 92%, var(--color-foreground));
+  --color-syntax-constant: color-mix(in oklab, var(--accent-orange) 92%, var(--color-foreground));
+  --color-syntax-string: color-mix(in oklab, var(--accent-green) 92%, var(--color-foreground));
+  --color-syntax-invalid: color-mix(in oklab, var(--accent-red) 92%, var(--color-foreground));
 
   /* Shadows */
   --shadow: var(--layout-shadow-length) var(--layout-shadow-length) 0 var(--color-shadow);
 
-  /* Patterns */
-  --grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  --marching-ants-frame:
-    linear-gradient(90deg, currentColor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
-    linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
-    linear-gradient(180deg, currentColor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
-    linear-gradient(180deg, currentColor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
-
   color-scheme: light dark;
 
-  &[data-theme="light"] {
-    color-scheme: light;
-  }
+  @media not (forced-colors: active) {
+    &[data-theme="light"] {
+      color-scheme: light;
+    }
 
-  &[data-theme="dark"] {
-    color-scheme: dark;
+    &[data-theme="dark"] {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* Kept outside `:root` so `light-dark()` fallback tokens do not override these values. */
+@media (forced-colors: active) {
+  :root {
+    --color-foreground-secondary: CanvasText;
+    --color-background: Canvas;
+    --color-border: CanvasText;
+    --color-border-secondary: GrayText;
+    --color-pressed-foreground: Canvas;
+    --color-pressed-background: CanvasText;
   }
 }
 
@@ -240,60 +272,4 @@ hr {
 
 ::selection {
   background: var(--color-selection-background);
-}
-
-.panel {
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  box-shadow: var(--shadow);
-}
-
-.focusFrame:focus-visible,
-.focusFrameWithin:has(> :focus-visible) {
-  position: relative;
-
-  &::after {
-    pointer-events: none;
-    content: "";
-
-    position: absolute;
-    inset: var(--focus-frame-inset, 0);
-
-    color: var(--color-focus-ring);
-
-    background: var(--dotted-frame);
-
-    /* Forced colors remove a gradient background, so the frame is drawn as an outline instead. */
-    @media (forced-colors: active) {
-      outline: 1px dotted CanvasText;
-      outline-offset: -1px;
-    }
-  }
-}
-
-/* Fills a container in place of pending content (i.e. a loading indicator or empty state message). */
-.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  height: 100%;
-  padding: var(--layout-gutter);
-
-  color: var(--color-foreground-secondary);
-}
-
-/* Removed from view but retained in the accessibility tree. */
-.visuallyHidden {
-  position: absolute;
-
-  overflow: hidden;
-
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-
-  white-space: nowrap;
-
-  clip-path: inset(50%);
 }

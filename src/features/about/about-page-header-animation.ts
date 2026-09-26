@@ -10,10 +10,10 @@ import type { DitherField, PointerHighlight } from "#/lib/dither/dither-field.ts
 import { getPrefersReducedMotion, subscribeToPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import { subscribeToColorSchemeChange } from "#/lib/settings/theme.ts";
 
-import { composeHeroDitherField, picturePlacementFor } from "./dithered-portrait-hero-composition.ts";
+import { composeHeaderDitherField, picturePlacementFor } from "./about-page-header-composition.ts";
 
-export interface DitheredPortraitHeroElements {
-  hero: HTMLElement;
+export interface AboutPageHeaderElements {
+  header: HTMLElement;
   canvas: HTMLCanvasElement;
   column: HTMLElement; // The text column, whose right edge the picture is placed against.
 }
@@ -35,8 +35,8 @@ const FRAME_DURATION_AT_60HZ_MS = 1_000 / 60; // The frame duration `POINTER_HIG
 const POINTER_HIGHLIGHT_SETTLED_STRENGTH_DIFFERENCE = 0.002; // Within this difference from its target strength, the pointer highlight's strength is set to the target.
 const POINTER_HIGHLIGHT_SETTLED_DISTANCE_DITHER_PIXELS = 0.5; // Within this distance of the pointer, the pointer highlight is placed at the pointer, so the loop can stop.
 
-export function startDitheredPortraitHeroAnimation(
-  { hero, canvas, column }: DitheredPortraitHeroElements,
+export function startAboutPageHeaderAnimation(
+  { header, canvas, column }: AboutPageHeaderElements,
   src: string,
 ): () => void {
   const context = canvas.getContext("2d");
@@ -48,7 +48,7 @@ export function startDitheredPortraitHeroAnimation(
 
   // Round each dither cell to whole device pixels so its dots match the site's dither fills.
   // `parseFloat` only correctly reads pixel lengths, so `--dither-cell` must use px units.
-  const ditherCellPx = Number.parseFloat(getComputedStyle(hero).getPropertyValue("--dither-cell"));
+  const ditherCellPx = Number.parseFloat(getComputedStyle(header).getPropertyValue("--dither-cell"));
 
   if (!(ditherCellPx > 0)) {
     return () => undefined;
@@ -59,7 +59,6 @@ export function startDitheredPortraitHeroAnimation(
   let prefersReducedMotion = getPrefersReducedMotion();
   let ditherField: DitherField | null = null;
   let canvasPixels: ImageData | null = null;
-  let cssPixelsPerDitherPixel = ditherCellPx;
   let composedLayout: DitherFieldLayout | null = null; // `null` until the dither field is first composed.
   let scaledPicture: { width: number; height: number; density: Float32Array } | null = null; // Cached picture density for its most recently placed size. `null` until the picture is first placed.
   let animationFrameId = 0;
@@ -68,7 +67,7 @@ export function startDitheredPortraitHeroAnimation(
   let ditherColor = rgbOfCssColor(scratchContext, getComputedStyle(canvas).color);
   let renderedFrame: { revealProgress: number; pointerHighlight: PointerHighlight } | null = null;
 
-  const pointer = { clientX: 0, clientY: 0, x: 0, y: 0, isOverHero: false };
+  const pointer = { clientX: 0, clientY: 0, x: 0, y: 0, isOverHeader: false };
   const pointerHighlight: PointerHighlight = {
     x: 0,
     y: 0,
@@ -92,18 +91,18 @@ export function startDitheredPortraitHeroAnimation(
     return scaledPicture.density;
   };
 
-  // Rebuilds the dither field only when the hero's size or device pixel ratio changes its layout.
+  // Rebuilds the dither field only when the header's size or device pixel ratio changes its layout.
   // Returns `false` without clearing the canvas when a resize or zoom leaves the layout unchanged.
   const composeDitherField = (): boolean => {
     const devicePixelsPerDitherPixel = Math.max(1, Math.round(ditherCellPx * devicePixelRatio));
-    const layoutCssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
+    const cssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
     const isPictureLoaded = pictureImage.complete && pictureImage.naturalWidth > 0;
     const layout: DitherFieldLayout = {
-      width: Math.max(1, Math.ceil(hero.clientWidth / layoutCssPixelsPerDitherPixel)),
-      height: Math.max(1, Math.ceil(hero.clientHeight / layoutCssPixelsPerDitherPixel)),
-      cssPixelsPerDitherPixel: layoutCssPixelsPerDitherPixel,
+      width: Math.max(1, Math.ceil(header.clientWidth / cssPixelsPerDitherPixel)),
+      height: Math.max(1, Math.ceil(header.clientHeight / cssPixelsPerDitherPixel)),
+      cssPixelsPerDitherPixel,
       columnEnd: isPictureLoaded
-        ? (column.getBoundingClientRect().right - hero.getBoundingClientRect().left) / layoutCssPixelsPerDitherPixel
+        ? (column.getBoundingClientRect().right - header.getBoundingClientRect().left) / cssPixelsPerDitherPixel
         : null,
     };
 
@@ -121,7 +120,6 @@ export function startDitheredPortraitHeroAnimation(
 
     const { width, height, columnEnd } = layout;
 
-    cssPixelsPerDitherPixel = layoutCssPixelsPerDitherPixel;
     pointerHighlight.standardDeviation = POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX / cssPixelsPerDitherPixel;
 
     // Assigning either dimension clears the canvas, even when the value is unchanged.
@@ -143,7 +141,7 @@ export function startDitheredPortraitHeroAnimation(
         ? null
         : picturePlacementFor(pictureImage.naturalWidth / pictureImage.naturalHeight, width, height, columnEnd);
 
-    ditherField = composeHeroDitherField(
+    ditherField = composeHeaderDitherField(
       width,
       height,
       placement && placement.width >= 1 && placement.height >= 1
@@ -164,7 +162,7 @@ export function startDitheredPortraitHeroAnimation(
       : revealProgressAt(timeMs - revealStartTimeMs, REVEAL_DURATION_MS, REVEAL_STEP_COUNT);
   };
 
-  const pointerHighlightTargetStrength = () => (pointer.isOverHero ? POINTER_HIGHLIGHT_STRENGTH : 0);
+  const pointerHighlightTargetStrength = () => (pointer.isOverHeader ? POINTER_HIGHLIGHT_STRENGTH : 0);
 
   const easePointerHighlight = (elapsedMs: number) => {
     const easing = 1 - (1 - POINTER_HIGHLIGHT_EASING_PER_FRAME) ** (elapsedMs / FRAME_DURATION_AT_60HZ_MS);
@@ -222,18 +220,22 @@ export function startDitheredPortraitHeroAnimation(
     renderedFrame = { revealProgress, pointerHighlight: { ...pointerHighlight } };
   };
 
-  const placePointerOverHero = () => {
-    const heroRect = hero.getBoundingClientRect();
+  const placePointerOverHeader = () => {
+    if (!composedLayout) {
+      return;
+    }
 
-    pointer.x = (pointer.clientX - heroRect.left) / cssPixelsPerDitherPixel;
-    pointer.y = (pointer.clientY - heroRect.top) / cssPixelsPerDitherPixel;
+    const headerRect = header.getBoundingClientRect();
+
+    pointer.x = (pointer.clientX - headerRect.left) / composedLayout.cssPixelsPerDitherPixel;
+    pointer.y = (pointer.clientY - headerRect.top) / composedLayout.cssPixelsPerDitherPixel;
   };
 
   const onAnimationFrame = (timeMs: number) => {
     animationFrameId = 0;
 
-    if (pointer.isOverHero) {
-      placePointerOverHero();
+    if (pointer.isOverHeader) {
+      placePointerOverHeader();
     }
 
     easePointerHighlight(previousFrameTimeMs === null ? FRAME_DURATION_AT_60HZ_MS : timeMs - previousFrameTimeMs);
@@ -281,7 +283,7 @@ export function startDitheredPortraitHeroAnimation(
 
   const resizeObserver = new ResizeObserver(composeAndRender);
 
-  resizeObserver.observe(hero);
+  resizeObserver.observe(header);
 
   const unsubscribeFromDevicePixelRatioChange = subscribeToDevicePixelRatioChange(composeAndRender);
 
@@ -295,7 +297,7 @@ export function startDitheredPortraitHeroAnimation(
     prefersReducedMotion = getPrefersReducedMotion();
 
     if (prefersReducedMotion) {
-      pointer.isOverHero = false;
+      pointer.isOverHeader = false;
       pointerHighlight.strength = 0;
     }
 
@@ -310,29 +312,29 @@ export function startDitheredPortraitHeroAnimation(
     pointer.clientX = event.clientX;
     pointer.clientY = event.clientY;
 
-    if (!pointer.isOverHero) {
-      placePointerOverHero();
+    if (!pointer.isOverHeader) {
+      placePointerOverHeader();
       pointerHighlight.x = pointer.x;
       pointerHighlight.y = pointer.y;
-      pointer.isOverHero = true;
+      pointer.isOverHeader = true;
     }
 
     scheduleAnimationFrame();
   };
 
   const onPointerLeave = () => {
-    pointer.isOverHero = false;
+    pointer.isOverHeader = false;
     scheduleAnimationFrame();
   };
 
   const onScroll = () => {
-    if (pointer.isOverHero) {
+    if (pointer.isOverHeader) {
       scheduleAnimationFrame();
     }
   };
 
-  hero.addEventListener("pointermove", onPointerMove);
-  hero.addEventListener("pointerleave", onPointerLeave);
+  header.addEventListener("pointermove", onPointerMove);
+  header.addEventListener("pointerleave", onPointerLeave);
   document.addEventListener("scroll", onScroll, { capture: true, passive: true });
 
   return () => {
@@ -343,8 +345,8 @@ export function startDitheredPortraitHeroAnimation(
     unsubscribeFromDevicePixelRatioChange();
     unsubscribeFromColorSchemeChange();
     unsubscribeFromPrefersReducedMotion();
-    hero.removeEventListener("pointermove", onPointerMove);
-    hero.removeEventListener("pointerleave", onPointerLeave);
+    header.removeEventListener("pointermove", onPointerMove);
+    header.removeEventListener("pointerleave", onPointerLeave);
     document.removeEventListener("scroll", onScroll, { capture: true });
   };
 }

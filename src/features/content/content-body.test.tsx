@@ -79,19 +79,35 @@ const copyFrom = async (copyControl: HTMLElement) => {
   });
 };
 
-test("content is rendered into an article with the shared content class", async () => {
+function RemovableCodeBlock() {
+  const [isShown, setIsShown] = useState(true);
+  return (
+    <>
+      {isShown && (
+        <CodeBlock>
+          <code>const first = 1;</code>
+        </CodeBlock>
+      )}
+      <button type="button" onClick={() => setIsShown(false)}>
+        Remove
+      </button>
+    </>
+  );
+}
+
+test("the `<article>` contains the entry's content and has only the shared content class", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
 
   expect(screen.getByText("Body")).toBeDefined();
   expect(article.className).toBe(styles.content);
 });
 
-test("an entry's own class is applied alongside the shared one", async () => {
-  const article = await renderContent({ default: () => <p>Body</p>, className: "aboutEntry" });
+test("the `<article>` has the `entry` class of the entry's stylesheet alongside the shared content class", async () => {
+  const article = await renderContent({ default: () => <p>Body</p>, stylesheetClassNames: { entry: "aboutEntry" } });
   expect(article.className.split(" ")).toEqual([styles.content, "aboutEntry"]);
 });
 
-test("the article contains a single element with the `data-content-body` attribute", async () => {
+test("the `<article>` contains only an element with the `data-content-body` attribute, which contains the entry's content", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
   const body = article.querySelector("[data-content-body]");
 
@@ -100,7 +116,7 @@ test("the article contains a single element with the `data-content-body` attribu
   expect(screen.getByText("Body").closest("[data-content-body]")).toBe(body);
 });
 
-test("the content body begins a `<h1>` marked with the `data-feed-omit` attribute", async () => {
+test("the element with the `data-content-body` attribute begins with an `<h1>` of the entry's title, marked with the `data-feed-omit` attribute", async () => {
   const article = await renderContent({ default: () => <p>Body</p> });
   const heading = screen.getByRole("heading", { level: 1 });
 
@@ -109,7 +125,12 @@ test("the content body begins a `<h1>` marked with the `data-feed-omit` attribut
   expect(heading.hasAttribute("data-feed-omit")).toBe(true); // A feed reader renders the entry's title itself, so the body must not repeat it.
 });
 
-test("every heading is followed by a link to its own ID, named after the heading and outside any element with the `aria-hidden` attribute", async () => {
+test("the `<h1>` has the `title` class of the entry's stylesheet", async () => {
+  await renderContent({ default: () => <p>Body</p>, stylesheetClassNames: { title: "aboutTitle" } });
+  expect(screen.getByRole("heading", { level: 1 }).className).toBe("aboutTitle");
+});
+
+test("every section heading is followed by a heading link to its own ID, named after the heading and outside any element with the `aria-hidden` attribute", async () => {
   await renderContent(headingAnchorFixture);
 
   for (const { tagName, title, id } of HEADINGS) {
@@ -133,7 +154,7 @@ test("every heading is named by its text alone", async () => {
 
 test.each([
   {
-    description: "without the link the build appends",
+    description: "without the heading link the build appends",
     heading: (
       <EntrySectionHeading level={2} id="fixture-heading">
         Fixture Heading
@@ -149,17 +170,20 @@ test.each([
       </EntrySectionHeading>
     ),
   },
-])("a heading $description is rendered without a heading link, and can still be focused", async ({ heading }) => {
-  await renderContent({ default: () => heading });
+])(
+  "a section heading $description renders without a heading link, and is still programmatically focusable",
+  async ({ heading }) => {
+    await renderContent({ default: () => heading });
 
-  const renderedHeading = screen.getByRole("heading", { name: "Fixture Heading" });
+    const renderedHeading = screen.getByRole("heading", { name: "Fixture Heading" });
 
-  expect(screen.queryByRole("link", { name: headingLinkName("Fixture Heading") })).toBeNull();
-  expect(renderedHeading.getAttribute("tabindex")).toBe("-1");
-});
+    expect(screen.queryByRole("link", { name: headingLinkName("Fixture Heading") })).toBeNull();
+    expect(renderedHeading.getAttribute("tabindex")).toBe("-1");
+  },
+);
 
 test.each(HEADINGS)(
-  "an entry opened at a fragment scrolls to the $tagName it names and focuses it",
+  "opening an entry at a fragment scrolls to the `<$tagName>` it names and focuses it",
   async ({ title, id }) => {
     window.location.hash = `#${id}`;
 
@@ -172,7 +196,7 @@ test.each(HEADINGS)(
   },
 );
 
-test("an entry opened at a fragment that does not name a heading does not scroll", async () => {
+test("opening an entry at a fragment that does not name a heading does not scroll", async () => {
   window.location.hash = "#missing-heading";
 
   await renderContent(headingAnchorFixture);
@@ -180,12 +204,12 @@ test("an entry opened at a fragment that does not name a heading does not scroll
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("an entry opened without a fragment does not scroll", async () => {
+test("opening an entry without a fragment does not scroll", async () => {
   await renderContent(headingAnchorFixture);
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("clicking a heading link copies the heading's canonical URL, shows the confirmation, and plays a click sound", async () => {
+test("clicking a heading link copies the heading's canonical URL, shows a `Copied` tooltip, and plays a click sound", async () => {
   await renderContent(headingAnchorFixture);
 
   const link = screen.getByRole("link", { name: headingLinkName("Fixture Heading") });
@@ -200,7 +224,46 @@ test("clicking a heading link copies the heading's canonical URL, shows the conf
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test("a copied heading link is announced by the entry's one status region, outside the article", async () => {
+test("clicking a heading link does not scroll the heading into view", async () => {
+  await renderContent(headingAnchorFixture);
+
+  fireEvent.click(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }));
+
+  expect(scrollIntoViewSilently).not.toHaveBeenCalled();
+});
+
+test("clicking a heading link with a modifier key follows the link rather than copying the heading's canonical URL", async () => {
+  await renderContent(headingAnchorFixture);
+
+  const isDefaultAllowed = fireEvent.click(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }), {
+    metaKey: true,
+  });
+
+  expect(isDefaultAllowed).toBe(true);
+  expect(writeText).not.toHaveBeenCalled();
+});
+
+test("a failed copy from a heading link shows an alert that the link could not be copied instead of a `Copied` tooltip", async () => {
+  writeText.mockRejectedValue(new Error("Denied"));
+
+  await renderContent(headingAnchorFixture);
+
+  const link = screen.getByRole("link", { name: headingLinkName("Fixture Heading") });
+
+  await act(async () => {
+    fireEvent.click(link);
+    await Promise.resolve();
+  });
+
+  expect(screen.getByRole("alertdialog").textContent).toContain("The link couldn’t be copied."); // One alert shared by the article, not one per heading.
+  expect(screen.queryByRole("tooltip")).toBeNull(); // The tooltip only displays the successful-copy confirmation.
+
+  fireEvent.click(screen.getByRole("button", { name: "OK" }));
+
+  expect(screen.getByRole("alertdialog", { hidden: true }).hasAttribute("open")).toBe(false);
+});
+
+test("a copy from a heading link is announced by the entry's only status region, outside the `<article>`", async () => {
   const article = await renderContent(headingAnchorFixture);
 
   await act(async () => {
@@ -215,7 +278,7 @@ test("a copied heading link is announced by the entry's one status region, outsi
   expect(article.contains(statuses[0]!)).toBe(false);
 });
 
-test("a copied code block is announced by the entry's one status region, outside the article", async () => {
+test("a copy from a code block is announced by the entry's only status region, outside the `<article>`", async () => {
   const article = await renderContent(codeBlocksFixture);
   const [firstCopyControl] = await screen.findAllByRole("button", { name: "Copy to clipboard" });
 
@@ -231,7 +294,7 @@ test("a copied code block is announced by the entry's one status region, outside
   expect(article.contains(statuses[0]!)).toBe(false);
 });
 
-test("a copy from a second code block during the first's confirmation is announced until its own confirmation ends", async () => {
+test("a copy from a second code block during the first code block's confirmation is announced until the second's confirmation ends", async () => {
   await renderContent(codeBlocksFixture);
   vi.useFakeTimers();
 
@@ -250,7 +313,7 @@ test("a copy from a second code block during the first's confirmation is announc
   expect(status.textContent).toBe("");
 });
 
-test("a repeat copy from a code block during its confirmation inserts the confirmation into the status region again", async () => {
+test("a second copy from the same code block during its confirmation inserts a new confirmation element into the status region", async () => {
   await renderContent(codeBlocksFixture);
   vi.useFakeTimers();
 
@@ -268,23 +331,6 @@ test("a repeat copy from a code block during its confirmation inserts the confir
   expect(status.firstElementChild).not.toBe(firstConfirmation); // A screen reader announces an inserted node, not an unchanged one.
 });
 
-function RemovableCodeBlock() {
-  const [isShown, setIsShown] = useState(true);
-
-  return (
-    <>
-      {isShown && (
-        <CodeBlock>
-          <code>const first = 1;</code>
-        </CodeBlock>
-      )}
-      <button type="button" onClick={() => setIsShown(false)}>
-        Remove
-      </button>
-    </>
-  );
-}
-
 test("removing a code block during its confirmation clears the confirmation from the status region", async () => {
   await renderContent({ default: RemovableCodeBlock });
   vi.useFakeTimers();
@@ -301,7 +347,7 @@ test("removing a code block during its confirmation clears the confirmation from
   expect(status.textContent).toBe("");
 });
 
-test("a failed copy from a code block shows an alert naming the code", async () => {
+test("a failed copy from a code block shows an alert that the code could not be copied", async () => {
   writeText.mockRejectedValue(new Error("Denied"));
 
   await renderContent(codeBlocksFixture);
@@ -313,7 +359,7 @@ test("a failed copy from a code block shows an alert naming the code", async () 
   expect(screen.getByRole("alertdialog").textContent).toContain("The code couldn’t be copied.");
 });
 
-test("a write that succeeds after a copy from another code block has started does not confirm the later copy", async () => {
+test("a code block's clipboard write that succeeds after another code block's copy has started does not show a confirmation", async () => {
   await renderContent(codeBlocksFixture);
 
   const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
@@ -334,7 +380,7 @@ test("a write that succeeds after a copy from another code block has started doe
   expect(screen.getByRole("alertdialog").textContent).toContain("The code couldn’t be copied.");
 });
 
-test("a write that fails after a copy from another code block has started does not show the failure alert", async () => {
+test("a code block's clipboard write that fails after another code block's copy has started does not show the failure alert", async () => {
   await renderContent(codeBlocksFixture);
 
   const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
@@ -351,7 +397,7 @@ test("a write that fails after a copy from another code block has started does n
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
 });
 
-test("a code block's write that succeeds after a copy from a heading link has started does not confirm the heading link's copy", async () => {
+test("a code block's clipboard write that succeeds after a heading link's copy has started does not show a confirmation", async () => {
   await renderContent({
     default: () => (
       <>
@@ -381,46 +427,7 @@ test("a code block's write that succeeds after a copy from a heading link has st
   expect(writeText).toHaveBeenLastCalledWith(canonicalUrl(`${ROUTE}#fixture-heading`));
 });
 
-test("clicking a heading link does not scroll the heading into view", async () => {
-  await renderContent(headingAnchorFixture);
-
-  fireEvent.click(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }));
-
-  expect(scrollIntoViewSilently).not.toHaveBeenCalled();
-});
-
-test("clicking a heading link with a modifier key follows the link rather than copying the heading's canonical URL", async () => {
-  await renderContent(headingAnchorFixture);
-
-  const isDefaultAllowed = fireEvent.click(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }), {
-    metaKey: true,
-  });
-
-  expect(isDefaultAllowed).toBe(true);
-  expect(writeText).not.toHaveBeenCalled();
-});
-
-test("a failed copy from a heading link shows an alert and does not show the confirmation", async () => {
-  writeText.mockRejectedValue(new Error("Denied"));
-
-  await renderContent(headingAnchorFixture);
-
-  const link = screen.getByRole("link", { name: headingLinkName("Fixture Heading") });
-
-  await act(async () => {
-    fireEvent.click(link);
-    await Promise.resolve();
-  });
-
-  expect(screen.getByRole("alertdialog").textContent).toContain("The link couldn’t be copied."); // One alert shared by the article, not one per heading.
-  expect(screen.queryByRole("tooltip")).toBeNull(); // The tooltip only displays the successful-copy confirmation.
-
-  fireEvent.click(screen.getByRole("button", { name: "OK" }));
-
-  expect(screen.getByRole("alertdialog", { hidden: true }).hasAttribute("open")).toBe(false);
-});
-
-test.each(LINKS)("pressing on the %s plays a click sound", async (name) => {
+test.each(LINKS)("clicking the %s plays a click sound", async (name) => {
   await renderContent(linksFixture);
 
   fireEvent.click(screen.getByRole("link", { name }));
@@ -428,7 +435,7 @@ test.each(LINKS)("pressing on the %s plays a click sound", async (name) => {
   expect(playClick).toHaveBeenCalledTimes(1);
 });
 
-test.each(LINKS)("a press on the %s that is handled by the browser does not play a click sound", async (name) => {
+test.each(LINKS)("clicking the %s with a modifier key does not play a click sound", async (name) => {
   await renderContent(linksFixture);
 
   fireEvent.click(screen.getByRole("link", { name }), { metaKey: true });
@@ -447,7 +454,7 @@ test("clicking a fragment link scrolls to the heading it names and focuses it, i
   expect(document.activeElement).toBe(heading);
 });
 
-test("the external link is described as opening in a new tab, and the internal, fragment, and email links are not", async () => {
+test("the external link has the `Opens in a new tab` description, and the internal, fragment, and email links do not", async () => {
   await renderContent(linksFixture);
 
   const descriptionOf = (name: string) => descriptionTextOf(screen.getByRole("link", { name }));
@@ -458,7 +465,7 @@ test("the external link is described as opening in a new tab, and the internal, 
   expect(descriptionOf("email link")).toBeNull();
 });
 
-test("a callout renders its `label` prop as the label element inside its `<aside>`", async () => {
+test("a callout renders its `label` prop as the callout label inside its `<aside>`", async () => {
   await renderContent(contentElementsFixture);
   const callout = screen.getByText("Fixture note.").closest("aside")!;
 
@@ -471,14 +478,14 @@ test("a callout with the `label` prop is named by its label", async () => {
   expect(screen.getByRole("complementary", { name: "Fixture callout label" }).textContent).toContain("Fixture note.");
 });
 
-test("the `warning` value of the `variant` prop adds its own class alongside the callout class", async () => {
+test("a callout whose `variant` prop is `warning` has the warning class alongside the callout class", async () => {
   await renderContent(contentElementsFixture);
   const warning = screen.getByText("Fixture warning.").closest("aside")!;
 
   expect(warning.className.split(" ")).toEqual([calloutStyles.callout, calloutStyles.calloutWarning]);
 });
 
-test("a callout without the `label` prop renders no label element and has no `aria-labelledby` attribute", async () => {
+test("a callout without the `label` prop does not render a callout label or have an `aria-labelledby` attribute", async () => {
   await renderContent(contentElementsFixture);
   const callout = screen.getByText("Fixture callout without a label.").closest("aside")!;
 
@@ -495,7 +502,7 @@ test("a rail aside is wrapped in a rail anchor that is a direct child of the ele
   expect(rail.parentElement?.parentElement).toBe(article.querySelector("[data-content-body]"));
 });
 
-test("a rail aside renders its `label` prop as the rail label element", async () => {
+test("a rail aside renders its `label` prop as the rail label inside its `<aside>`", async () => {
   await renderContent(contentElementsFixture);
   const rail = screen.getByText(/Fixture rail note\./).closest("aside")!;
 
@@ -507,7 +514,7 @@ test("a rail aside with the `label` prop is named by its label", async () => {
   expect(screen.getByRole("complementary", { name: "Fixture rail label" }).textContent).toContain("Fixture rail note.");
 });
 
-test("a rail aside without the `label` prop renders no rail label element and has no `aria-labelledby` attribute", async () => {
+test("a rail aside without the `label` prop does not render a rail label or have an `aria-labelledby` attribute", async () => {
   await renderContent(contentElementsFixture);
   const rail = screen.getByText("Fixture rail note without a label.").closest("aside")!;
 

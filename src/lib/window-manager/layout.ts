@@ -19,7 +19,7 @@ export function defaultRect(layout: WindowLayout, surface: Size, id: WindowId): 
   const height = fitToSurface(defaultSize.height, surface.height, layout.padding);
 
   // The position is left unrounded so that it matches, to the pixel, where CSS centers a
-  // pre-rendered window (see `.unplaced` in `/src/features/windows/window.module.css`).
+  // pre-rendered window (see `.unplaced` in `/src/features/window-manager/window.module.css`).
   return { x: (surface.width - width) / 2, y: (surface.height - height) / 2, width, height };
 }
 

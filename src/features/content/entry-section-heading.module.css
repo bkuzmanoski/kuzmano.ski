@@ -1,0 +1,72 @@
+.headingLinkSlot {
+  anchor-name: var(--heading-link-anchor, --heading-link);
+
+  display: inline-block;
+
+  width: 1lh;
+  height: 1lh;
+
+  vertical-align: top;
+}
+
+.headingLinkPosition {
+  position: absolute;
+  inset-block-end: anchor(end);
+  inset-inline-start: anchor(start);
+  position-anchor: var(--heading-link-anchor, --heading-link);
+
+  /* Fallback position. */
+  @supports not (anchor-name: --heading-link) {
+    &[data-heading-level] {
+      position: static;
+
+      grid-column: text-end / wide-end;
+      place-self: baseline start;
+
+      margin-block-start: 0;
+      margin-inline-start: -1lh;
+    }
+  }
+}
+
+/* Reserves space for the fallback position and aligns the heading link with the heading's first baseline. */
+@supports not (anchor-name: --heading-link) {
+  :where(h2, h3):has(+ .headingLinkPosition) {
+    align-self: baseline;
+    padding-inline-end: 1lh;
+  }
+}
+
+.headingLinkPosition[data-heading-level="2"] {
+  font: var(--font-heading-2);
+}
+
+.headingLinkPosition[data-heading-level="3"] {
+  font: var(--font-heading-3);
+}
+
+.headingLink {
+  user-select: none;
+
+  position: relative;
+
+  display: inline-flex;
+  justify-content: center;
+
+  aspect-ratio: 1;
+  height: 1lh;
+
+  font-weight: normal;
+  color: var(--color-foreground-secondary);
+
+  opacity: 0;
+
+  &:focus-visible {
+    @mixin focus-stroke 4px;
+  }
+}
+
+.headingLinkPosition:where(:hover, :focus-within) .headingLink,
+:where(h2, h3):hover + .headingLinkPosition .headingLink {
+  opacity: 1;
+}

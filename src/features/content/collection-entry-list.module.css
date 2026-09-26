@@ -93,22 +93,28 @@
   gap: 4px;
   min-width: 0; /* A long title wraps rather than widening the row past the list. */
 
-  & .title {
-    width: fit-content;
-    margin-block: -1px;
-    padding-block: 2px;
-    padding-inline: var(--padding-inline-title);
-
-    font: var(--font-ui-bold);
-
-    .listItem:focus & {
-      background: var(--marching-ants-frame);
-    }
-  }
-
   & .date {
     display: block;
     padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
     color: var(--color-foreground-secondary);
+  }
+}
+
+.title {
+  position: relative;
+
+  width: fit-content;
+  margin-block: -1px;
+  padding-block: 2px;
+  padding-inline: var(--padding-inline-title);
+
+  font: var(--font-ui-bold);
+
+  .listItem:focus & {
+    @mixin focus-stroke;
+
+    &::after {
+      color: inherit;
+    }
   }
 }

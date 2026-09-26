@@ -1,145 +1,467 @@
 :where(.content) {
   /* Metrics */
-  --layout-content-inset-max-width: 640px;
+  --layout-content-measure: 616px; /* ~70 characters of the body face at 17px. */
+  --layout-content-rail-width: 120px;
+  --layout-content-rail-gap: 24px;
+  --layout-content-rail-track: calc(var(--layout-content-rail-width) + var(--layout-content-rail-gap));
   --layout-content-space: 20px;
   --layout-content-space-loose: 40px;
   --layout-content-space-x-loose: 64px;
 
   /* Typography */
-  --font-family-heading: "Lora", ui-serif, serif;
-  --font-heading-1: 525 40px/54px var(--font-family-heading);
-  --font-heading-2: 600 24px/34px var(--font-family-heading);
-  --font-heading-3: 600 19px/28px var(--font-family-heading);
-  --font-body: 500 16px/26px "Inter Variable", ui-sans-serif, sans-serif;
-  --font-code: 500 14px/22px "JetBrains Mono", ui-monospace, monospace;
+  --font-family-display: "Bricolage Grotesque", ui-sans-serif, sans-serif;
+  --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
+  --font-heading-2: 600 semi-condensed 25px/32px var(--font-family-display);
+  --font-heading-3: 600 semi-condensed 19px/26px var(--font-family-display);
+  --font-family-body: "Source Serif 4", ui-serif, serif;
+  --font-body: 400 17px/28px var(--font-family-body);
+  --font-lede: 500 20px/32px var(--font-family-body);
+  --font-caption: 400 14px/20px var(--font-family-body);
+  --font-code: 500 13px/20px "JetBrains Mono", ui-monospace, monospace;
+  --font-blockquote: 500 semi-condensed 25px/34px var(--font-family-display);
+  --font-text-ex-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
 
   font: var(--font-body);
   font-feature-settings:
     "liga" 1,
     "calt" 1;
+  font-variant-numeric: proportional-nums;
+  print-color-adjust: exact;
+}
+
+.railAnchor {
+  position: relative;
+  height: 0;
+}
+
+.rail {
+  position: absolute;
+  inset-inline-end: calc(100% + var(--layout-content-rail-gap));
+  top: 0;
+
+  width: var(--layout-content-rail-width);
+
+  font: var(--font-caption);
+  color: var(--color-foreground-secondary);
+}
+
+.railLabel {
+  @mixin bitmap-label;
+
+  color: var(--color-accent);
+}
+
+@mixin content-rail-collapsed {
+  .railAnchor {
+    height: auto;
+  }
+
+  .rail {
+    position: static;
+
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+
+    width: auto;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid var(--color-accent);
+
+    & .railLabel {
+      flex: none;
+    }
+  }
 }
 
 .content {
+  container: content / inline-size;
+
   & :where([data-content-body]) {
+    position: relative;
     display: grid;
     grid-template-columns:
-      [full-bleed-start] var(--layout-gutter)
+      [pane-start] var(--layout-gutter)
       [wide-start] minmax(0, 1fr)
-      [inset-start] minmax(0, var(--layout-content-inset-max-width)) [inset-end]
+      [rail-start] var(--layout-content-rail-track)
+      [text-start] minmax(0, var(--layout-content-measure)) [text-end]
       minmax(0, 1fr) [wide-end]
-      var(--layout-gutter) [full-bleed-end];
+      var(--layout-gutter) [pane-end];
     padding-block: clamp(
       var(--layout-content-space-loose),
-      (100% - var(--layout-content-inset-max-width)) / 2,
+      (100% - var(--layout-content-measure)) / 2,
       var(--layout-content-space-x-loose)
     );
 
     & > * {
-      grid-column: inset;
+      grid-column: text;
       margin-block: 0;
     }
 
-    & > :where([data-content-wide]) {
+    & > :where(h2) {
+      position: relative;
+      grid-column: rail-start / text-end;
+      padding-inline-start: var(--layout-content-rail-track);
+    }
+
+    & > :where([data-content-span="rail"]) {
+      grid-column: rail-start / text-end;
+    }
+
+    & > :where([data-content-span="wide"]) {
       grid-column: wide;
     }
 
-    & > :where([data-content-full-bleed]) {
-      grid-column: full-bleed;
+    & > :where([data-content-span="pane"]) {
+      grid-column: pane;
     }
 
     & > * + * {
       margin-block-start: var(--layout-content-space);
     }
 
-    & > :where(h1, hr, [data-content-space="loose"]) + *,
-    & > * + :where(h2, hr, [data-content-space="loose"]) {
+    & > :where(h1, blockquote, hr, figure, table, [data-content-space="loose"]) + *,
+    & > * + :where(h2, blockquote, hr, figure, table, [data-content-space="loose"]),
+    & > * + .railAnchor:has(+ :where(h2, blockquote, hr, figure, table, [data-content-space="loose"])) {
       margin-block-start: var(--layout-content-space-loose);
+    }
+
+    @mixin content-rail-expanded {
+      & > .railAnchor + * {
+        margin-block-start: 0;
+      }
     }
   }
 
-  & :where(ul, ol) {
-    padding-inline-start: 24px;
+  & :where([data-content-body]) > :where(h2) {
+    padding-block-start: 12px;
+    border-block-start: 1px solid var(--color-border);
   }
 
-  & :where(li + li) {
-    margin-block-start: 4px;
+  & :where([data-content-body]) > :where(figure, table) {
+    position: relative;
   }
 
-  & :where(h1, h2, h3, p, li) {
-    text-wrap: pretty;
+  & :where([data-content-body]) > :where(h2, figure, table)::before {
+    @mixin bitmap-label;
+
+    position: absolute;
+    top: 0;
+    display: block;
+    width: var(--layout-content-rail-width);
   }
 
-  & :where(h1, h2, h3) {
-    letter-spacing: -0.005em;
+  & :where([data-content-body]) > :where(h2[data-section-number])::before {
+    content: attr(data-section-number);
+    content: attr(data-section-number) / "";
+    inset-inline-start: 0;
+    top: 13px; /* Aligns the label's cap height with the heading's, across the border. */
+  }
 
-    &:focus {
+  & :where([data-content-body]) > :where(figure, table)::before {
+    inset-inline-end: calc(100% + var(--layout-content-rail-gap));
+  }
+
+  & :where([data-content-body]) > :where(figure[data-figure-number])::before {
+    content: "Fig. " attr(data-figure-number);
+    content: "Fig. " attr(data-figure-number) / "";
+  }
+
+  & :where([data-content-body]) > :where(table[data-table-number])::before {
+    content: "Table " attr(data-table-number);
+    content: "Table " attr(data-table-number) / "";
+    display: table-caption;
+  }
+
+  &
+    :where([data-content-body])
+    > :where(figure, table):where([data-content-span="wide"], [data-content-span="pane"])::before {
+    position: static;
+    width: auto;
+    padding-block-end: 4px;
+  }
+
+  & :where([data-content-body]) > :where(figure, table)[data-content-span="pane"]::before {
+    padding-inline: var(--layout-gutter);
+  }
+
+  & :where([data-content-body]) > :where(figure[data-content-span="pane"]) > :where(figcaption) {
+    margin-inline: var(--layout-gutter);
+  }
+
+  @mixin content-rail-collapsed {
+    & :where([data-content-body]) {
+      --layout-content-rail-track: 0px;
+
+      & > :where(h2) {
+        padding-inline-start: 0;
+      }
+    }
+
+    & :where([data-content-body]) > :where(h2, figure, table)::before {
+      position: static;
+      width: auto;
+      padding-block-end: 4px;
+    }
+
+    /* A full-width float rather than a block, so the heading's first baseline stays on its text, which
+    * the heading link fallback position aligns with (see `entry-section-heading.module.css`). */
+    & :where([data-content-body]) > :where(h2)::before {
+      float: inline-start;
+      width: 100%;
+    }
+  }
+
+  /* Element defaults. */
+  &
+    :not(
+      :where(
+        [data-content-default-styles="off"] :not([data-content-default-styles="on"] *),
+        [data-content-default-styles="on"] [data-content-default-styles="off"] *
+      )
+    ) {
+    &:where(h1, h2, h3, p, li, figcaption, dt, dd) {
+      text-wrap: pretty;
+    }
+
+    &:where(h1, h2, h3):focus {
       outline: none;
     }
 
-    & code {
+    &:where(h1, h2, h3, blockquote) {
+      --font-text-ex-height: 0.528;
+    }
+
+    &:where(h1) {
+      position: relative;
+      font: var(--font-heading-1);
+      letter-spacing: -0.024em;
+
+      &::before {
+        @mixin dither-50;
+
+        content: "";
+
+        position: absolute;
+        inset-inline-end: calc(100% + var(--layout-content-rail-gap));
+        top: 12px;
+
+        width: var(--layout-content-rail-width);
+        height: 12px;
+
+        color: var(--color-accent);
+
+        @mixin content-rail-collapsed {
+          display: none;
+        }
+      }
+    }
+
+    &:where(h1 + p, h1 + .railAnchor + p) {
+      font: var(--font-lede);
+    }
+
+    &:where(h2) {
+      font: var(--font-heading-2);
+      letter-spacing: -0.015em;
+    }
+
+    &:where(h3) {
+      font: var(--font-heading-3);
+      letter-spacing: -0.01em;
+    }
+
+    &:where(strong):not(:where(h1, h2, h3, blockquote) *) {
+      font-weight: 600;
+    }
+
+    &:where(a:not([data-heading-link])) {
+      margin-inline: -1px;
+      padding-block: 1px;
+      padding-inline: 1px;
+
+      color: var(--color-accent);
+      text-decoration: underline rgb(from var(--color-accent) r g b / 35%);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+
+      box-decoration-break: clone;
+
+      -webkit-touch-callout: default;
+
+      &:focus-visible {
+        @mixin dashed-stroke;
+      }
+    }
+
+    &:where(ul, ol) {
+      padding-inline-start: 24px;
+    }
+
+    &:where(li + li) {
+      margin-block-start: 8px;
+    }
+
+    &:where(ol) > li::marker {
+      @mixin bitmap-label;
+    }
+
+    &:where(dl) {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px 20px;
+    }
+
+    &:where(dt) {
+      @mixin bitmap-label;
+    }
+
+    &:where(blockquote) {
+      --blockquote-band-width: 4px;
+      --blockquote-band-gap: 16px;
+
+      position: relative;
+
+      padding-block: 4px;
+      padding-inline-start: calc(var(--blockquote-band-width) + var(--blockquote-band-gap));
+
+      font: var(--font-blockquote);
+      letter-spacing: -0.015em;
+
+      &::before {
+        @mixin dither-50;
+
+        content: "";
+
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+
+        width: var(--blockquote-band-width);
+
+        color: var(--color-border);
+      }
+    }
+
+    &:where(hr) {
+      @mixin dither-50;
+
+      height: 4px;
+      color: var(--color-border);
+    }
+
+    &:where(:not(pre) > code) {
+      @mixin dither-25 var(--color-background-dither);
+      @mixin dither-text;
+
       padding-block: 2px;
-      font-size: 0.875em;
+      padding-inline: 4px;
+
+      font: var(--font-code);
+      font-size: 1em;
+      font-size-adjust: ex-height var(--font-text-ex-height);
+      letter-spacing: -0.01em;
+
+      box-decoration-break: clone;
+    }
+
+    &:where(code[data-path]) {
+      padding-inline: 0;
+      text-decoration: underline dotted var(--color-border);
+      text-underline-offset: 3px;
+      background: none;
+    }
+
+    &:where(kbd) {
+      padding-block: 1px;
+      padding-inline: 5px;
+      border: 1px solid var(--color-border);
+
+      font: var(--font-code);
+      font-size: 1em;
+      font-size-adjust: ex-height var(--font-text-ex-height);
+
+      background: var(--color-background);
+      box-shadow: 1px 1px 0 var(--color-border);
+    }
+
+    &:where(figcaption) {
+      margin-block-start: 8px;
+      font: var(--font-caption);
+      font-style: italic;
+      color: var(--color-foreground-secondary);
+    }
+
+    &:where(table) {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    &:where(th) {
+      @mixin bitmap-label;
+
+      padding-block: 6px;
+      padding-inline: 0 16px;
+      border-block-end: 1px solid var(--color-foreground);
+      text-align: start;
+    }
+
+    &:where(td) {
+      padding-block: 8px;
+      padding-inline: 0 16px;
+      border-block-end: 1px solid var(--color-border-secondary);
+
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      line-height: 22px;
+      vertical-align: baseline;
+    }
+
+    &:where(th, td):last-child {
+      padding-inline-end: 0;
+    }
+
+    &:where(img, video) {
+      display: block;
+
+      /* Width and height reserve the image's space. Restating their ratio keeps lazy-loaded images
+       * sized in Chrome; browsers without typed `attr()`, or images missing either attribute, fall
+       * back to the default `auto` ratio. */
+      aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
+      width: 100%;
+      height: auto;
+    }
+
+    &:where(img) {
+      border: 1px solid var(--color-border);
+    }
+
+    &:is(img, [data-content-panel]):where([data-content-span="pane"], [data-content-span="pane"] *) {
+      border-inline: none;
     }
   }
 
-  & :where(h1) {
-    font: var(--font-heading-1);
+  & :where(th, td)[align="left"] {
+    text-align: left;
   }
 
-  & :where(h2) {
-    font: var(--font-heading-2);
+  & :where(th, td)[align="center"] {
+    text-align: center;
   }
 
-  & :where(h3) {
-    font: var(--font-heading-3);
+  & :where(th, td)[align="right"] {
+    text-align: right;
   }
 
-  & :where(strong) {
-    font-weight: 700;
-  }
+  @mixin content-rail-expanded {
+    & :where([data-content-body]) > :where(blockquote) {
+      --blockquote-band-width: var(--layout-content-rail-width);
+      --blockquote-band-gap: var(--layout-content-rail-gap);
 
-  & :where(a:not([data-heading-link])) {
-    color: var(--color-accent);
-    text-decoration: underline rgb(from var(--color-accent) r g b / 30%);
-    text-underline-offset: 2px;
-
-    -webkit-touch-callout: default;
-  }
-
-  & :where(hr) {
-    border-top: 1px solid var(--color-border-secondary);
-  }
-
-  & :where(:not(pre) > code) {
-    padding-block: 1px;
-    padding-inline: 4px;
-
-    font: var(--font-code);
-    font-size: 1em;
-
-    background: var(--color-background-tertiary);
-    box-decoration-break: clone;
-  }
-
-  & :where(img, video) {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  & :where(video):focus-visible {
-    outline: 1px dotted var(--color-focus-ring);
-    outline-offset: 1px;
+      grid-column: rail-start / text-end;
+    }
   }
 }
 
-.link {
-  margin-inline: -1px;
-  padding-block: 1px;
-  padding-inline: 1px;
-  box-decoration-break: clone;
-
-  &:focus-visible {
-    background: var(--dotted-frame);
-  }
+.entryCopyStatus {
+  @mixin visually-hidden;
 }

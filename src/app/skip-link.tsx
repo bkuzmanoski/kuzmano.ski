@@ -1,4 +1,4 @@
-import { FOCUSED_WINDOW_CONTENT_ID } from "#/features/windows/window.tsx";
+import { FOCUSED_WINDOW_CONTENT_ID } from "#/features/window-manager/window.tsx";
 import { isBrowserHandledClick } from "#/lib/link.ts";
 import { useFocusedWindow } from "#/lib/window-manager/context.ts";
 

@@ -1,0 +1,154 @@
+@define-mixin panel {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  box-shadow: var(--shadow);
+}
+
+/* Fills a container in place of pending content (i.e. a loading indicator or empty state message). */
+@define-mixin placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  padding: var(--layout-gutter);
+
+  color: var(--color-foreground-secondary);
+}
+
+/* The inverted fill of a selected item. */
+@define-mixin highlight {
+  color: var(--color-highlight-foreground);
+  background: var(--color-highlight-background);
+
+  @media (forced-colors: active) {
+    color: HighlightText;
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}
+
+@define-mixin dashed-stroke {
+  background:
+    linear-gradient(90deg, currentColor 50%, transparent 0) 0 0 / 2px 1px repeat-x,
+    linear-gradient(90deg, currentColor 50%, transparent 0) 0 100% / 2px 1px repeat-x,
+    linear-gradient(180deg, currentColor 50%, transparent 0) 0 0 / 1px 2px repeat-y,
+    linear-gradient(180deg, currentColor 50%, transparent 0) 100% 0 / 1px 2px repeat-y;
+
+  @media (forced-colors: active) {
+    outline: 1px dotted CanvasText;
+    outline-offset: -1px;
+  }
+}
+
+@define-mixin focus-stroke $inset: 0 {
+  &::after {
+    @mixin dashed-stroke;
+
+    pointer-events: none;
+    content: "";
+
+    position: absolute;
+    inset: $inset;
+
+    color: var(--color-focus-ring);
+  }
+}
+
+@define-mixin focus-ring {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+/* Below a content width of 800px, the rail collapses above the text (see `content-body.module.css`).
+ * A container query cannot read a custom property, so these mixins hold the width instead. */
+@define-mixin content-rail-collapsed {
+  @container content (width < 800px) {
+    @mixin-content;
+  }
+}
+
+@define-mixin content-rail-expanded {
+  @container content (width >= 800px) {
+    @mixin-content;
+  }
+}
+
+/* A label set in the bitmap face (see `--font-bitmap`). */
+@define-mixin bitmap-label {
+  font: var(--font-bitmap);
+  color: var(--color-foreground-secondary);
+  text-transform: uppercase;
+}
+
+@define-mixin dither-cell {
+  --dither-cell: 2px; /* Must be in px (see `about-page-header-animation.ts`). */
+}
+
+@define-mixin dither-06 $color: currentColor {
+  @mixin dither-cell;
+
+  background: conic-gradient(at calc(var(--dither-cell) / 2) calc(var(--dither-cell) / 2), transparent 0 75%, $color 0)
+    0 0 / calc(2 * var(--dither-cell)) calc(2 * var(--dither-cell));
+}
+
+@define-mixin dither-13 $color: currentColor {
+  @mixin dither-cell;
+
+  background:
+    conic-gradient(at calc(var(--dither-cell) / 2) calc(var(--dither-cell) / 2), transparent 0 75%, $color 0) 0 0 /
+      calc(2 * var(--dither-cell)) calc(2 * var(--dither-cell)),
+    conic-gradient(at calc(var(--dither-cell) / 2) calc(var(--dither-cell) / 2), transparent 0 75%, $color 0)
+      var(--dither-cell) var(--dither-cell) / calc(2 * var(--dither-cell)) calc(2 * var(--dither-cell));
+}
+
+@define-mixin dither-25 $color: currentColor {
+  @mixin dither-cell;
+
+  background: conic-gradient(transparent 0 75%, $color 0) 0 0 / var(--dither-cell) var(--dither-cell);
+}
+
+@define-mixin dither-50 $color: currentColor {
+  @mixin dither-cell;
+
+  background: repeating-conic-gradient(transparent 0 25%, $color 0 50%) 0 0 / var(--dither-cell) var(--dither-cell);
+}
+
+@define-mixin dither-75 $color: currentColor {
+  @mixin dither-cell;
+
+  background: conic-gradient($color 0 25%, transparent 0 50%, $color 0) 0 0 / var(--dither-cell) var(--dither-cell);
+}
+
+/* Clears a 1px gap around text set over a dither fill, so the pattern stops short of the letterforms. */
+@define-mixin dither-text {
+  paint-order: stroke fill;
+
+  -webkit-text-stroke: 2px var(--color-background);
+
+  @media (forced-colors: active) {
+    -webkit-text-stroke-width: 0;
+  }
+}
+
+/* Removed from view but retained in the accessibility tree. */
+@define-mixin visually-hidden {
+  position: absolute;
+
+  overflow: hidden;
+
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+
+  white-space: nowrap;
+
+  clip-path: inset(50%);
+}
+
+/* No input can both hover and point precisely (e.g., a phone or tablet without a mouse). */
+@define-mixin without-fine-pointer {
+  @media not all and (any-hover: hover) and (any-pointer: fine) {
+    @mixin-content;
+  }
+}

@@ -1,6 +1,7 @@
 import babel from "@rolldown/plugin-babel";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
+import postcssMixins from "postcss-mixins";
 import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
@@ -36,6 +37,7 @@ export default defineConfig(({ command }) => {
     css: {
       postcss: {
         plugins: [
+          postcssMixins({ mixinsFiles: "src/mixins.css" }),
           postcssPresetEnv({
             features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
           }),

@@ -96,24 +96,20 @@
 }
 
 .formArea {
-  composes: ditherText from global;
+  @mixin dither-text;
 
   position: relative;
-
   display: grid;
-
   padding: var(--layout-gutter);
   border-block-start: 1px solid var(--color-border);
 
   &::before {
-    content: "";
+    @mixin dither-25;
 
+    content: "";
     position: absolute;
     inset: 0;
-
-    color: var(--dither-color-faint);
-
-    background: var(--dither-25);
+    color: var(--color-background-dither);
   }
 
   & > * {
@@ -123,5 +119,5 @@
 }
 
 .joiningStatus {
-  composes: visuallyHidden from global;
+  @mixin visually-hidden;
 }

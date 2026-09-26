@@ -47,31 +47,17 @@
 }
 
 .title {
-  --focus-frame-inset: 2px;
-
-  composes: focusFrame from global;
-
   user-select: none;
-
   position: relative;
-
   height: 100%;
   padding: 0 var(--layout-gutter);
 
   &.open {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight-background);
-
-    @media (forced-colors: active) {
-      color: HighlightText;
-      forced-color-adjust: none;
-      background: Highlight;
-    }
+    @mixin highlight;
   }
 
-  /* An open title already reads as selected, so the focus frame stays off it. */
-  &.open:focus-visible::after {
-    content: none;
+  &:focus-visible:not(.open) {
+    @mixin focus-stroke 2px;
   }
 }
 
@@ -90,11 +76,9 @@
 }
 
 .control {
-  --focus-frame-inset: 2px;
-
-  composes: focusFrame from global;
-
   user-select: none;
+
+  position: relative;
 
   display: inline-flex;
   align-items: center;
@@ -104,9 +88,12 @@
 
   white-space: nowrap;
 
+  &:focus-visible {
+    @mixin focus-stroke 2px;
+  }
+
   &:active:not(.time) {
-    color: var(--color-highlight-foreground);
-    background: var(--color-highlight-background);
+    @mixin highlight;
   }
 }
 
@@ -116,7 +103,13 @@
 }
 
 .timeLocation {
-  composes: visuallyHidden from global;
+  @mixin visually-hidden;
+}
+
+@media (forced-colors: active) {
+  .themeStatus {
+    display: none;
+  }
 }
 
 /* A short viewport only means "no space" on a phone in landscape. `pointer` describes

@@ -48,7 +48,7 @@
 }
 
 .fill {
-  composes: placeholder from global;
+  @mixin placeholder;
 }
 
 @keyframes tick-watch-hand {

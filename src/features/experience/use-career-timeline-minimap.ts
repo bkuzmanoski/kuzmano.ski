@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/windows/scroll-pane.tsx";
+import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import { recordScrollAt, silenceScrollAt } from "#/lib/audio/scroll.ts";
 import { playClick } from "#/lib/audio/sounds.ts";
 import {

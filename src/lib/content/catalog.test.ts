@@ -112,15 +112,22 @@ describe("createCatalog", () => {
     const module = await catalogOf().collections.collection!.load("newest");
 
     expect(module).toHaveProperty("default");
-    expect(module.className).toBeUndefined(); // No stylesheet sits beside this entry.
+    expect(module.stylesheetClassNames).toBeUndefined();
   });
 
   test("a loaded entry with a stylesheet beside it resolves with that stylesheet's `entry` class", async () => {
     const catalog = catalogOf({ "collection/styled.mdx": { styles: { entry: "styledEntry" } } });
     const module = await catalog.collections.collection!.load("styled");
 
-    expect(module.className).toBe("styledEntry");
+    expect(module.stylesheetClassNames?.entry).toBe("styledEntry");
     expect(module).toHaveProperty("default");
+  });
+
+  test("a loaded entry with a stylesheet beside it resolves with that stylesheet's `title` class", async () => {
+    const catalog = catalogOf({ "collection/styled.mdx": { styles: { title: "styledTitle" } } });
+    const module = await catalog.collections.collection!.load("styled");
+
+    expect(module.stylesheetClassNames?.title).toBe("styledTitle");
   });
 
   test("loading an entry twice returns the same promise, settled after the first load", async () => {

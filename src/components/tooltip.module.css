@@ -20,7 +20,7 @@
 }
 
 .tip {
-  composes: panel from global;
+  @mixin panel;
 
   user-select: none;
 

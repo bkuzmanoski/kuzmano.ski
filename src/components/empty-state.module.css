@@ -1,4 +1,5 @@
 .emptyState {
-  composes: placeholder from global;
+  @mixin placeholder;
+
   font: var(--font-ui);
 }

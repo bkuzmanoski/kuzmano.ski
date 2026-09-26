@@ -5,6 +5,7 @@ import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 
 import { rehypeCalloutVariants } from "./markup/callout-variants.ts";
+import { rehypeContentSpans } from "./markup/content-spans.ts";
 import { remarkGfmSubset } from "./markup/gfm.ts";
 import { NO_MEDIA_FOR_ENTRY, rehypeMedia } from "./markup/media-rewrite.ts";
 import { rehypeNumberedElements } from "./markup/numbered-elements.ts";
@@ -31,6 +32,7 @@ export function mdxCompileOptionsFor({
     [rehypeMedia, mediaForEntry], // First, so the elements the other plugins see already name the files the site serves.
     [rehypeProvidedElements, ["video"]], // Renders videos with the site's playback controls (see `/src/features/content/video.tsx`).
     rehypeCalloutVariants,
+    rehypeContentSpans,
     rehypeNumberedElements,
     rehypeSlug,
     [

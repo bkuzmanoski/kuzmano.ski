@@ -13,8 +13,7 @@
   background: var(--color-background);
 
   &:focus {
-    outline: 2px solid var(--color-focus-ring);
-    outline-offset: 1px;
+    @mixin focus-ring;
   }
 
   &:disabled {

@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 
 import { GITHUB_LOGIN, GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, PRERENDER_LOCALE } from "#/config/site.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
-import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/windows/scroll-pane.tsx";
+import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import type { DateFormat } from "#/lib/datetime.ts";
 import { intersectionOf, intersectionRatioOf } from "#/lib/geometry.ts";
 import { busiestCountIn, contributionLevelOf, monthLabelsFor, weekdayOf } from "#/lib/github/contributions.ts";

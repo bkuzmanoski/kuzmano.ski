@@ -1,0 +1,32 @@
+.callout {
+  --callout-padding: var(--layout-gutter);
+  --callout-label-padding-inline: 8px;
+  --callout-color: var(--color-foreground-secondary);
+
+  position: relative;
+  padding: var(--callout-padding);
+  border: 1px solid var(--callout-color);
+
+  & > :not(.calloutLabel) + * {
+    margin-block-start: 12px;
+  }
+
+  &.calloutWarning {
+    --callout-color: var(--color-warning);
+  }
+}
+
+.calloutLabel {
+  @mixin bitmap-label;
+
+  position: absolute;
+  inset-inline-start: calc(var(--callout-padding) - var(--callout-label-padding-inline));
+  top: 0;
+  translate: 0 -50%;
+
+  padding-inline: var(--callout-label-padding-inline);
+
+  color: var(--callout-color);
+
+  background: var(--color-background);
+}

@@ -26,7 +26,7 @@
 
   position: absolute;
   inset: 0 calc(-1 * var(--spill));
-  mask-image: var(--grain-texture);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 
   &::before {
     --initial-transform: translate3d(0, -3%, 0) scale3d(0.86, 0.94, 1);

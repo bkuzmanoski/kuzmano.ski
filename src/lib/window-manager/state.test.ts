@@ -231,7 +231,7 @@ describe("measure", () => {
       y: WINDOW_LAYOUT.padding,
       width: 600 - 2 * WINDOW_LAYOUT.padding,
       height: 400 - 2 * WINDOW_LAYOUT.padding,
-    }); // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/windows/window.module.css`).
+    }); // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/window-manager/window.module.css`).
   });
 
   test("a subsequent measurement updates the surface without changing the window geometry", () => {

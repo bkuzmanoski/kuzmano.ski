@@ -1,22 +1,24 @@
 .codeBlock {
-  --focus-frame-inset: -3px;
-
-  composes: focusFrameWithin from global;
+  position: relative;
   border: 1px solid var(--color-border);
 
+  &:has(> :focus-visible) {
+    @mixin focus-stroke -3px;
+  }
+
   & .header {
+    @mixin dither-25;
+
     display: flex;
     gap: 8px;
     align-items: center;
     justify-content: space-between;
 
-    height: 28px;
+    height: 29px; /* Includes the bottom border. */
     padding-inline: var(--layout-gutter) 2px;
     border-block-end: 1px solid var(--color-border);
 
-    color: var(--dither-color-faint);
-
-    background: var(--dither-25);
+    color: var(--color-background-dither);
   }
 
   & pre {
@@ -31,5 +33,6 @@
 }
 
 .languageLabel {
-  composes: ditherText bitmapLabel from global;
+  @mixin bitmap-label;
+  @mixin dither-text;
 }

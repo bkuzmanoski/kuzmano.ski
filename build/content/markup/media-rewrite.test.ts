@@ -291,21 +291,21 @@ describe("rehypeMedia", () => {
 
   test("moves the `data-content-*` attributes of an authored `<img>` to the `<picture>` that wraps it", async () => {
     const tree = await compiledTree(
-      '<img src="./image.png" alt="An image" data-content-wide data-content-space="loose" data-other="value" />\n',
+      '<img src="./image.png" alt="An image" data-content-span="wide" data-content-space="loose" data-other="value" />\n',
     );
     const [picture] = elementsNamed(tree, "picture");
     const [image] = jsxElementsNamed(tree, "img");
 
-    expect(picture?.properties).toEqual({ "data-content-wide": "", "data-content-space": "loose" });
+    expect(picture?.properties).toEqual({ "data-content-span": "wide", "data-content-space": "loose" });
     expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt", "data-other", "width", "height"]);
   });
 
   test("preserves the `data-content-*` attributes of an authored `<img>` that is not wrapped in a `<picture>`", async () => {
     const [image] = jsxElementsNamed(
-      await compiledTree('<img src="./image.jpg" alt="An image" data-content-wide />\n'),
+      await compiledTree('<img src="./image.jpg" alt="An image" data-content-span="wide" />\n'),
       "img",
     );
-    expect(image?.attributes?.map(({ name }) => name)).toContain("data-content-wide");
+    expect(image?.attributes?.map(({ name }) => name)).toContain("data-content-span");
   });
 
   test("does not wrap an authored `<img>` with a `srcSet` attribute of its own in a `<picture>`", async () => {

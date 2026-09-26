@@ -1,0 +1,193 @@
+.graph {
+  --contribution-graph-cell: 13px;
+  --contribution-graph-gap: 3px;
+  --contribution-graph-draw-start: 0%; /* Set from JS. */
+}
+
+.scrollContainerFrame {
+  position: relative;
+
+  &:has(> :focus-visible) {
+    @mixin focus-stroke -2px;
+  }
+}
+
+.scrollContainer {
+  direction: rtl;
+  overflow-x: auto;
+  padding-block-end: 4px;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.track {
+  direction: ltr;
+  inline-size: max-content;
+  margin-inline-end: auto;
+}
+
+.plot {
+  --contribution-graph-week-count: 0; /* Set from JS. */
+
+  display: grid;
+  inline-size: max-content;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+}
+
+.placeholder,
+.grid {
+  display: flex;
+  gap: var(--contribution-graph-gap);
+}
+
+.week {
+  display: grid;
+  grid-template-rows: repeat(7, var(--contribution-graph-cell));
+  gap: var(--contribution-graph-gap);
+}
+
+.day {
+  width: var(--contribution-graph-cell);
+  height: var(--contribution-graph-cell);
+
+  &[data-level="0"] {
+    @mixin dither-06;
+
+    color: var(--color-background-dither);
+  }
+
+  &[data-level="1"] {
+    @mixin dither-25;
+
+    color: var(--color-accent);
+  }
+
+  &[data-level="2"] {
+    @mixin dither-50;
+
+    color: var(--color-accent);
+  }
+
+  &[data-level="3"] {
+    @mixin dither-75;
+
+    color: var(--color-accent);
+  }
+
+  &[data-level="4"] {
+    background-color: var(--color-accent);
+  }
+
+  @media (forced-colors: active) {
+    forced-color-adjust: none;
+
+    &[data-level="0"] {
+      color: GrayText;
+    }
+
+    &[data-level="1"],
+    &[data-level="2"],
+    &[data-level="3"] {
+      color: CanvasText;
+    }
+
+    &[data-level="4"] {
+      background-color: CanvasText;
+    }
+  }
+}
+
+.axis {
+  @mixin bitmap-label;
+
+  display: grid;
+  grid-auto-columns: var(--contribution-graph-cell);
+  grid-auto-flow: column;
+  grid-template-rows: 1lh;
+  gap: var(--contribution-graph-gap);
+
+  padding-block-start: 8px;
+}
+
+.month {
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+.graph[data-draw-timeline] .placeholder {
+  clip-path: inset(0 0 0 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .graph[data-draw-timeline] {
+    --contribution-graph-week-draw-duration: 20ms;
+  }
+
+  .graph[data-draw-timeline="document"] {
+    & .grid,
+    & .placeholder {
+      animation-duration: calc(var(--contribution-graph-week-count) * var(--contribution-graph-week-draw-duration));
+      animation-timing-function: steps(var(--contribution-graph-week-count), end);
+      animation-fill-mode: both;
+    }
+
+    & .grid {
+      animation-name: draw-weeks;
+    }
+
+    & .placeholder {
+      animation-name: clear-weeks;
+    }
+  }
+}
+
+@supports (view-timeline: --contribution-graph block) {
+  @media (prefers-reduced-motion: no-preference) {
+    .graph {
+      view-timeline: --contribution-graph block;
+    }
+
+    .graph[data-draw-timeline="view"] {
+      & .grid,
+      & .placeholder {
+        animation-timing-function: steps(var(--contribution-graph-week-count), end);
+        animation-fill-mode: both;
+        animation-timeline: --contribution-graph;
+        animation-range: entry var(--contribution-graph-draw-start) cover 45%;
+      }
+
+      & .grid {
+        animation-name: draw-weeks;
+      }
+
+      & .placeholder {
+        animation-name: clear-weeks;
+      }
+    }
+  }
+}
+
+@keyframes draw-weeks {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes clear-weeks {
+  from {
+    clip-path: inset(0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 100%);
+  }
+}

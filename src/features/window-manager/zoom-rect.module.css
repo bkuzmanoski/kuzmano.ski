@@ -1,6 +1,7 @@
 .zoomRect {
+  @mixin dashed-stroke;
+
   pointer-events: none;
   position: absolute;
   color: var(--color-border);
-  background: var(--marching-ants-frame);
 }

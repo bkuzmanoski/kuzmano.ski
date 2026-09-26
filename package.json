@@ -78,6 +78,7 @@
     "micromark-extension-gfm-table": "^2.1.2",
     "mp4box": "^2.4.1",
     "postcss": "^8.5.15",
+    "postcss-mixins": "^12.1.2",
     "postcss-preset-env": "^11.3.0",
     "postcss-value-parser": "^4.2.0",
     "prettier": "^3.8.1",
