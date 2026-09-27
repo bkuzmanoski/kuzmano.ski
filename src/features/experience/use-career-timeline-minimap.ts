@@ -75,11 +75,8 @@ export function useCareerTimelineMinimap(
       const visiblePlacement = layout && visibleCareerTimelinePlacementAt(layout.viewport, layout.viewport.scrollTop);
 
       if (visiblePlacement) {
-        visibleRangeFrameElement.style.setProperty(
-          "--career-timeline-placement-offset",
-          String(visiblePlacement.offset),
-        );
-        visibleRangeFrameElement.style.setProperty("--career-timeline-placement-size", String(visiblePlacement.size));
+        visibleRangeFrameElement.style.setProperty("--placement-offset", String(visiblePlacement.offset));
+        visibleRangeFrameElement.style.setProperty("--placement-size", String(visiblePlacement.size));
         visibleRangeFrameElement.setAttribute("data-visible", "");
       } else {
         visibleRangeFrameElement.removeAttribute("data-visible");

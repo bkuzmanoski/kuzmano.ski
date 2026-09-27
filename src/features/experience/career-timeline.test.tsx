@@ -179,8 +179,8 @@ function visibleRangeFramePlacementIn(root: HTMLElement) {
   const visibleRangeFrame = root.querySelector<HTMLElement>(`.${styles.visibleRangeFrame}`)!;
 
   return {
-    offset: Number(visibleRangeFrame.style.getPropertyValue("--career-timeline-placement-offset")),
-    size: Number(visibleRangeFrame.style.getPropertyValue("--career-timeline-placement-size")),
+    offset: Number(visibleRangeFrame.style.getPropertyValue("--placement-offset")),
+    size: Number(visibleRangeFrame.style.getPropertyValue("--placement-size")),
   };
 }
 

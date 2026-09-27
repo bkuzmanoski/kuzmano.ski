@@ -1,0 +1,353 @@
+.careerTimeline {
+  --discipline-accent-color: currentColor; /* Set from JS. */
+  --tick-offset: 0; /* Set from JS. */
+  --placement-offset: 0; /* Set from JS. */
+  --placement-size: 0; /* Set from JS. */
+  --year-label-width: 4ch;
+  --year-label-height: calc(1lh + 4px);
+
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: var(--layout-content-space-loose);
+}
+
+.controls {
+  display: flex;
+  grid-column: rail-start / text-end;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+
+  padding-block-end: 12px;
+  border-block-end: 1px solid var(--color-foreground);
+
+  & .filter,
+  & .directionButton {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+
+    min-width: 0;
+    padding-inline: 8px 10px;
+  }
+
+  & .filter {
+    border-color: var(--color-border-secondary);
+    color: var(--color-foreground-secondary);
+
+    &::before {
+      content: "";
+
+      flex: none;
+
+      width: 12px;
+      height: 12px;
+      border: 1px solid currentColor;
+    }
+
+    &[aria-pressed="true"] {
+      border-color: var(--discipline-accent-color);
+      color: var(--discipline-accent-color);
+
+      &::before {
+        @mixin dither-50;
+      }
+    }
+
+    @media (forced-colors: active) {
+      &[aria-pressed="true"]::before {
+        forced-color-adjust: none;
+        background: ButtonText;
+      }
+    }
+  }
+
+  & .directionButton {
+    margin-inline-start: auto;
+
+    &::before {
+      content: "";
+
+      flex: none;
+
+      width: 0;
+      height: 0;
+      border-block-start: 6px solid currentColor;
+      border-inline: 5px solid transparent;
+
+      forced-color-adjust: none; /* Keeps the transparent borders that shape the arrow. */
+    }
+
+    &[data-direction="oldest-first"]::before {
+      border-block-start: 0;
+      border-block-end: 6px solid currentColor;
+    }
+  }
+}
+
+.filterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.controlsLabel {
+  @mixin bitmap-label;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+/* Chart */
+
+.chartColumn {
+  position: sticky;
+  top: var(--layout-gutter);
+
+  grid-column: rail-start / text-start;
+  align-self: start;
+
+  padding-inline-end: var(--layout-content-rail-gap);
+}
+
+.chart {
+  touch-action: none; /* Dragging the chart scrolls the list, so the browser must not claim the gesture for panning. */
+  cursor: default;
+  user-select: none;
+
+  position: relative;
+
+  height: max(240px, 100cqh - 2 * var(--layout-gutter) - var(--year-label-height));
+  margin-block-end: var(--year-label-height);
+
+  font: var(--font-bitmap); /* Resolves the `ch` and `lh` units in the year label metrics. */
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.axis {
+  position: absolute;
+  inset: 0;
+}
+
+.tick {
+  @mixin bitmap-label;
+
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--tick-offset) * 100%);
+
+  padding-block-start: 4px;
+  border-block-start: 1px solid var(--color-border-secondary);
+}
+
+.lanes {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc(var(--year-label-width) + 8px) 0;
+
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+}
+
+.lane {
+  position: relative;
+  color: var(--discipline-accent-color);
+
+  &[data-hidden] {
+    color: var(--color-background-dither);
+  }
+
+  @media (forced-colors: active) {
+    color: CanvasText;
+    forced-color-adjust: none;
+
+    &[data-hidden] {
+      color: GrayText;
+    }
+  }
+}
+
+.spanBar {
+  @mixin dither-50;
+
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--placement-offset) * 100%);
+
+  height: calc(var(--placement-size) * 100%);
+  border: 1px solid currentColor;
+
+  .lane[data-hidden] & {
+    background-image: none;
+  }
+}
+
+.visibleRangeFrame {
+  position: absolute;
+  inset-inline: -3px;
+  top: calc(var(--placement-offset) * 100%);
+
+  height: calc(var(--placement-size) * 100%);
+  border: 1px solid var(--color-foreground);
+
+  &:not([data-visible]) {
+    visibility: hidden;
+  }
+}
+
+.roles {
+  display: flex;
+  grid-column: text;
+  flex-direction: column;
+  gap: var(--layout-content-space-loose);
+
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.role {
+  display: flex;
+  flex-direction: column;
+  padding-inline-start: 16px;
+  border-inline-start: 4px solid var(--discipline-accent-color);
+}
+
+.roleHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  order: -1;
+
+  padding-block-end: 8px;
+}
+
+.roleDisciplines {
+  @mixin bitmap-label;
+
+  color: var(--discipline-accent-color);
+}
+
+.roleDates {
+  @mixin bitmap-label;
+}
+
+.roleTitle {
+  font: var(--font-heading-3);
+  letter-spacing: -0.01em;
+}
+
+.roleOrganization {
+  padding-block-end: 8px;
+  font-style: italic;
+  color: var(--color-foreground-secondary);
+}
+
+.roleSummary {
+  text-wrap: pretty;
+}
+
+.highlights {
+  padding-block-start: 12px;
+  padding-inline-start: 20px;
+
+  & li::marker {
+    color: var(--discipline-accent-color);
+  }
+
+  & li + li {
+    margin-block-start: 8px;
+  }
+}
+
+.empty {
+  grid-column: text;
+  color: var(--color-foreground-secondary);
+}
+
+.hidden {
+  @mixin visually-hidden;
+}
+
+@mixin content-rail-collapsed {
+  .careerTimeline {
+    --horizontal-inset: calc(var(--year-label-width) / 2);
+  }
+
+  .chartColumn {
+    z-index: 1;
+    top: 0;
+
+    grid-column: rail-start / text-end;
+
+    padding-block: 8px;
+    padding-inline: 0;
+    border-block-end: 1px solid var(--color-border-secondary);
+
+    background: var(--color-background);
+  }
+
+  .chart {
+    height: auto;
+    padding-block-start: var(--year-label-height);
+  }
+
+  .axis {
+    inset-inline: var(--horizontal-inset);
+  }
+
+  .tick {
+    inset-block: 0 auto;
+    inset-inline: calc(var(--tick-offset) * 100%) auto;
+    translate: -50% 0;
+
+    padding-block-start: 0;
+    border-block-start: 0;
+  }
+
+  .lanes {
+    position: relative;
+    inset: auto;
+
+    grid-auto-flow: row;
+    grid-auto-rows: 8px;
+
+    margin-inline: var(--horizontal-inset);
+  }
+
+  .spanBar {
+    inset-block: 0;
+    inset-inline: calc(var(--placement-offset) * 100%) auto;
+    width: calc(var(--placement-size) * 100%);
+    height: auto;
+  }
+
+  .visibleRangeFrame {
+    inset-block: -3px;
+    inset-inline: calc(var(--placement-offset) * 100%) auto;
+    width: calc(var(--placement-size) * 100%);
+    height: auto;
+  }
+
+  .roles,
+  .empty {
+    grid-column: rail-start / text-end;
+  }
+}

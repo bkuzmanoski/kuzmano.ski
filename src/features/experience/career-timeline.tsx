@@ -44,11 +44,11 @@ const careerTimelinePlacementVariables = (
   direction: CareerTimelineDirection,
 ): StyleWithVars => {
   const { offset, size } = careerTimelinePlacementOf(span, range, direction);
-  return { "--career-timeline-placement-offset": offset, "--career-timeline-placement-size": size };
+  return { "--placement-offset": offset, "--placement-size": size };
 };
 
 const tickVariables = (year: number, range: MonthSpan, direction: CareerTimelineDirection): StyleWithVars => ({
-  "--tick-at": monthOffsetOf(firstMonthIndexOf(year), range, direction),
+  "--tick-offset": monthOffsetOf(firstMonthIndexOf(year), range, direction),
 });
 
 const labelFrom = (parts: ReadonlyArray<ReactNode>) =>

@@ -84,7 +84,7 @@
 
 .displayMask {
   --display-scale: 1; /* Set from JS. */
-  --screen-radius: 0px; /* Set from JS */
+  --screen-radius: 0px; /* Set from JS. */
   --inset: 0; /* Set from JS. */
 
   position: absolute;
