@@ -209,11 +209,18 @@ function BootSequenceContent() {
     return null;
   }
 
-  const { isLoadingCoverUp, isZoomedOut, isPreparingToZoom, isDisplayOn, isPreparingToLeave, isRevealingDesktop } =
-    phaseFlags(phase);
+  const {
+    isLoadingCoverUp,
+    isRevealingMacintosh,
+    isZoomedOut,
+    isPreparingToZoom,
+    isDisplayOn,
+    isPreparingToLeave,
+    isRevealingDesktop,
+  } = phaseFlags(phase);
   const hasZoom = hasStageZoom(motion);
   const containerStyle: StyleWithVars = {
-    "--loading-cover-fade-ms": `${motion.loadingCoverFade}ms`,
+    "--macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
     "--stage-zoom-ms": `${motion.stageZoom}ms`,
     "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
     "--logo-draw-ms": `${motion.logoDraw}ms`,
@@ -237,7 +244,11 @@ function BootSequenceContent() {
 
   return (
     <div
-      className={cx(styles.container, hasZoom && (isZoomedOut ? styles.zoomedOut : styles.zoomedIn))}
+      className={cx(
+        styles.container,
+        hasZoom && (isZoomedOut ? styles.zoomedOut : styles.zoomedIn),
+        isRevealingMacintosh && styles.revealingMacintosh,
+      )}
       style={containerStyle}
     >
       <div className={styles.glow} />
@@ -279,17 +290,22 @@ function BootSequenceContent() {
           </picture>
         </div>
       </div>
-      <div className={cx(styles.loadingCover, !isLoadingCoverUp && styles.leaving)} />
-      <div className={cx(styles.loadingContent, !isLoadingCoverUp && styles.leaving)}>
-        {coverContent === "loadingIndicator" ? (
-          <LoadingIndicator className={styles.loadingIndicator} />
-        ) : (
-          <div className={styles.prompt}>
-            {beginPrompt}
-            <span className={styles.block} aria-hidden />
+      {isRevealingMacintosh && <div className={styles.macintoshRevealShade} />}
+      {isLoadingCoverUp && (
+        <>
+          <div className={styles.loadingCover} />
+          <div className={styles.loadingContent}>
+            {coverContent === "loadingIndicator" ? (
+              <LoadingIndicator />
+            ) : (
+              <div className={styles.prompt}>
+                {beginPrompt}
+                <span className={styles.block} aria-hidden />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

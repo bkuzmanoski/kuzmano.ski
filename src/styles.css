@@ -64,7 +64,8 @@
 
   /* Layout metrics
    *
-   * `--layout-*` pixel values are exposed to TypeScript via `virtual:layout-metrics`. */
+   * `--layout-*` pixel values are exposed to TypeScript via `virtual:layout-metrics`.
+   */
   --layout-safe-area-top: env(safe-area-inset-top, 0px);
   --layout-safe-area-right: env(safe-area-inset-right, 0px);
   --layout-safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -95,7 +96,8 @@
   /* Neutral colors
    *
    * - Lightness values are intentionally unevenly spaced; each step exists because a role below needs it.
-   * - Chroma follows `0.0215 * sin(pi * L^1.25)`, peaking mid-ramp and tapering to near zero at both ends. */
+   * - Chroma follows `0.0215 * sin(pi * L^1.25)`, peaking mid-ramp and tapering to near zero at both ends.
+   */
   --neutral-190: oklch(19% 0.0083 238deg);
   --neutral-215: oklch(21.5% 0.0095 238deg);
   --neutral-280: oklch(28% 0.0128 238deg);
@@ -116,10 +118,8 @@
   /* Accent colors
    *
    * - Chroma is 0.105 by default, clamped to 85% of each hue's sRGB gamut (except for red which uses a higher chroma).
-   * - Blue is split into separate light and dark values, allowing the boot sequence to use them in the opposite order (see `--color-boot-sequence-accent`). */
-  --accent-blue-on-light: oklch(54% 0.102 238deg); /* #2776a3 */
-  --accent-blue-on-dark: oklch(71% 0.105 238deg); /* #5dabdb */
-  --accent-blue: light-dark(var(--accent-blue-on-light), var(--accent-blue-on-dark));
+   */
+  --accent-blue: light-dark(oklch(54% 0.102 238deg), oklch(71% 0.105 238deg));
   --accent-teal: light-dark(oklch(54% 0.078 205deg), oklch(71% 0.103 205deg)); /* #2a7c84 #40b4c0 */
   --accent-green: light-dark(oklch(54% 0.105 155deg), oklch(71% 0.105 155deg)); /* #328053 #68b585 */
   --accent-orange: light-dark(oklch(54% 0.105 46deg), oklch(71% 0.105 46deg)); /* #a05936 #d88c68 */
@@ -148,9 +148,9 @@
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
   --color-wallpaper: light-dark(var(--neutral-925), var(--neutral-215));
-  --color-boot-sequence-accent: light-dark(var(--accent-blue-on-dark), var(--accent-blue-on-light));
-  --color-boot-sequence-foreground: light-dark(var(--color-background), var(--color-foreground));
-  --color-boot-sequence-backdrop: light-dark(var(--color-foreground), var(--color-background));
+  --color-boot-sequence-accent: var(--neutral-390);
+  --color-boot-sequence-foreground: var(--neutral-925);
+  --color-boot-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
   --color-accent: var(--accent-blue);
   --color-success: var(--accent-green);

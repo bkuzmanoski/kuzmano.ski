@@ -204,7 +204,7 @@
     }
 
     /* A full-width float rather than a block, so the heading's first baseline stays on its text, which
-    * the heading link fallback position aligns with (see `entry-section-heading.module.css`). */
+     * the heading link fallback position aligns with (see `entry-section-heading.module.css`). */
     & :where([data-content-body]) > :where(h2)::before {
       float: inline-start;
       width: 100%;

@@ -5,7 +5,6 @@ const PHASES = [
   "loading",
   "waiting-for-input",
   "macintosh-reveal",
-  "stage-zoom",
   "display-on",
   "logo",
   "glass-fade",
@@ -17,7 +16,7 @@ export type Phase = (typeof PHASES)[number];
 
 // The motion the stylesheet animates over.
 export const MOTION_DURATION_MS = {
-  loadingCoverFade: 600,
+  macintoshReveal: 1100,
   stageZoom: 800,
   crtWarmUp: 500,
   logoDraw: 250,
@@ -36,8 +35,7 @@ export const REDUCED_MOTION_DURATION_MS: Motion = {
 };
 
 export const HOLD_DURATION_MS = {
-  illustrationReveal: 400,
-  stageZoom: 150,
+  macintoshReveal: 150,
   displayOn: 500,
   logo: 1400,
 };
@@ -51,7 +49,8 @@ export function phaseFlags(phase: Phase) {
 
   return {
     isLoadingCoverUp: isBefore("macintosh-reveal"),
-    isZoomedOut: isBefore("stage-zoom"),
+    isRevealingMacintosh: phase === "macintosh-reveal",
+    isZoomedOut: isBefore("macintosh-reveal"),
     isPreparingToZoom: isBefore("display-on"), // Used to apply `will-change` hints.
     isWarmingUp: phase === "display-on",
     isDisplayOn: isAtOrAfter("display-on"),
@@ -71,8 +70,10 @@ export interface Step {
 
 export const sequence = (motion: Motion) =>
   [
-    { phase: "macintosh-reveal", durationMs: motion.loadingCoverFade + HOLD_DURATION_MS.illustrationReveal },
-    { phase: "stage-zoom", durationMs: motion.stageZoom + HOLD_DURATION_MS.stageZoom },
+    {
+      phase: "macintosh-reveal",
+      durationMs: Math.max(motion.macintoshReveal, motion.stageZoom) + HOLD_DURATION_MS.macintoshReveal,
+    },
     { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_DURATION_MS.displayOn },
     { phase: "logo", durationMs: motion.logoDraw + HOLD_DURATION_MS.logo },
     { phase: "glass-fade", durationMs: motion.glassFade },
