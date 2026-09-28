@@ -8,6 +8,11 @@ import type { WindowId, WindowLayout } from "./window.ts";
 const fitToSurface = (defaultLength: number, surfaceLength: number, padding: number): number =>
   Math.max(0, Math.min(defaultLength, surfaceLength - 2 * padding));
 
+// Floors each half separately, as `.unplaced` in `/src/features/window-manager/window.module.css` does, so
+// both place a window on the same whole pixel, and a window fitted to the surface exactly at the padding.
+const centeredOffset = (surfaceLength: number, windowLength: number): number =>
+  Math.floor(surfaceLength / 2) - Math.floor(windowLength / 2);
+
 export function defaultRect(layout: WindowLayout, surface: Size, id: WindowId): Rect {
   const { defaultSize } = layout.windows[id];
 
@@ -18,9 +23,7 @@ export function defaultRect(layout: WindowLayout, surface: Size, id: WindowId): 
   const width = fitToSurface(defaultSize.width, surface.width, layout.padding);
   const height = fitToSurface(defaultSize.height, surface.height, layout.padding);
 
-  // The position is left unrounded so that it matches, to the pixel, where CSS centers a
-  // pre-rendered window (see `.unplaced` in `/src/features/window-manager/window.module.css`).
-  return { x: (surface.width - width) / 2, y: (surface.height - height) / 2, width, height };
+  return { x: centeredOffset(surface.width, width), y: centeredOffset(surface.height, height), width, height };
 }
 
 export type WindowPlacer = (geometry: Rect, surface: Size) => Rect;

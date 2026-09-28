@@ -222,17 +222,30 @@ describe("measure", () => {
     expect(measuredState.geometry.entry).toMatchObject({ ...CENTER_POSITION, ...DEFAULT_SIZE });
   });
 
-  test("the first measurement fits a pre-rendered window into the padded area", () => {
+  test("the first measurement centers a pre-rendered window on a whole pixel when the surface is an odd number of pixels wider and taller than it", () => {
     const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
-    const measuredState = reducer(preRendered, { type: "measure", surface: { width: 600, height: 400 } });
+    const measuredState = reducer(preRendered, { type: "measure", surface: { width: 1601, height: 1201 } });
 
-    expect(measuredState.geometry.entry).toMatchObject({
-      x: WINDOW_LAYOUT.padding,
-      y: WINDOW_LAYOUT.padding,
-      width: 600 - 2 * WINDOW_LAYOUT.padding,
-      height: 400 - 2 * WINDOW_LAYOUT.padding,
-    }); // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/window-manager/window.module.css`).
+    expect(measuredState.geometry.entry).toMatchObject({ x: 288, y: 88, ...DEFAULT_SIZE });
   });
+
+  test.each([
+    [600, 400],
+    [601, 401],
+  ])(
+    "the first measurement fits a pre-rendered window into the padded area of a surface of %i by %i pixels",
+    (width, height) => {
+      const preRendered = reducer(EMPTY_STATE, openAction("entry", "/entry"));
+      const measuredState = reducer(preRendered, { type: "measure", surface: { width, height } });
+
+      expect(measuredState.geometry.entry).toMatchObject({
+        x: WINDOW_LAYOUT.padding,
+        y: WINDOW_LAYOUT.padding,
+        width: width - 2 * WINDOW_LAYOUT.padding,
+        height: height - 2 * WINDOW_LAYOUT.padding,
+      }); // What CSS rendered before the desktop was measured (see `.unplaced` in `/src/features/window-manager/window.module.css`).
+    },
+  );
 
   test("a subsequent measurement updates the surface without changing the window geometry", () => {
     const movedState = reducer(opened("entry"), { type: "move", id: "entry", x: 10, y: 10 });

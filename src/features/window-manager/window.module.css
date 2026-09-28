@@ -39,13 +39,16 @@
     background: var(--color-scrim);
   }
 
-  /* A window the server rendered has no position as the window layer has not yet been
-   * measured. These values mirror the default position and size for the initial window
-   * placed by the window manager (see `/src/lib/window-manager/layout.ts`). */
+  /* A window the server rendered has no position as the window layer has not yet been measured.
+   * These values mirror the default position and size for the initial window placed by the
+   * window manager (see `defaultRect` in `/src/lib/window-manager/layout.ts`). */
   &.unplaced {
     top: 50%;
+    top: round(down, 50%, 1px);
     left: 50%;
+    left: round(down, 50%, 1px);
     translate: -50% -50%;
+    translate: round(up, -50%, 1px) round(up, -50%, 1px);
 
     max-width: calc(100% - 2 * var(--layout-window-layer-padding));
     max-height: calc(100% - 2 * var(--layout-window-layer-padding));

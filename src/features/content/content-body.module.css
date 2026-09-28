@@ -75,11 +75,16 @@
   container: content / inline-size;
 
   & :where([data-content-body]) {
+    --content-body-wide-start-track: minmax(
+      0,
+      1fr
+    ); /* The `@supports` rule below rounds this track to a whole pixel. */
+
     position: relative;
     display: grid;
     grid-template-columns:
       [pane-start] var(--layout-gutter)
-      [wide-start] minmax(0, 1fr)
+      [wide-start] var(--content-body-wide-start-track)
       [rail-start] var(--layout-content-rail-track)
       [text-start] minmax(0, var(--layout-content-measure)) [text-end]
       minmax(0, 1fr) [wide-end]
@@ -121,6 +126,19 @@
     & > * + :where(h2, blockquote, hr, figure, table, [data-content-space="loose"]),
     & > * + .railAnchor:has(+ :where(h2, blockquote, hr, figure, table, [data-content-space="loose"])) {
       margin-block-start: var(--layout-content-space-loose);
+    }
+
+    @supports (width: round(down, 1px, 1px)) {
+      /* Half the remaining width after the gutters, rail, and text column, rounded down
+       * to a whole pixel to ensure bitmap labels are pixel aligned on 1x displays. */
+      --content-body-wide-start-track: max(
+        0px,
+        round(
+          down,
+          (100% - 2 * var(--layout-gutter) - var(--layout-content-rail-track) - var(--layout-content-measure)) / 2,
+          1px
+        )
+      );
     }
 
     @mixin content-rail-expanded {
