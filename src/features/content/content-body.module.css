@@ -14,10 +14,10 @@
   --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
   --font-body: 400 17px/28px var(--font-family-body);
   --font-lede: 520 20px/32px var(--font-family-body);
+  --font-blockquote: 500 semi-condensed 25px/34px var(--font-family-display);
   --font-caption: 400 14px/20px var(--font-family-body);
   --font-code: 500 13px/20px var(--font-family-code);
-  --font-blockquote: 500 semi-condensed 25px/34px var(--font-family-display);
-  --font-text-ex-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
+  --font-text-x-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
 
   font: var(--font-body);
   font-feature-settings:
@@ -226,7 +226,7 @@
     }
 
     &:where(h1, h2, h3, blockquote) {
-      --font-text-ex-height: 0.526;
+      --font-text-x-height: 0.526;
     }
 
     &:where(h1) {
@@ -356,7 +356,7 @@
 
       font: var(--font-code);
       font-size: 1em;
-      font-size-adjust: ex-height var(--font-text-ex-height);
+      font-size-adjust: ex-height var(--font-text-x-height);
       letter-spacing: -0.01em;
 
       box-decoration-break: clone;
@@ -376,7 +376,7 @@
 
       font: var(--font-code);
       font-size: 1em;
-      font-size-adjust: ex-height var(--font-text-ex-height);
+      font-size-adjust: ex-height var(--font-text-x-height);
 
       background: var(--color-background);
       box-shadow: 1px 1px 0 var(--color-border);
