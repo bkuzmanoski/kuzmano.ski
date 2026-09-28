@@ -9,15 +9,13 @@
   --layout-content-space-x-loose: 64px;
 
   /* Typography */
-  --font-family-display: "Bricolage Grotesque", ui-sans-serif, sans-serif;
   --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
   --font-heading-2: 600 semi-condensed 25px/32px var(--font-family-display);
-  --font-heading-3: 600 semi-condensed 19px/26px var(--font-family-display);
-  --font-family-body: "Source Serif 4", ui-serif, serif;
+  --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
   --font-body: 400 17px/28px var(--font-family-body);
   --font-lede: 500 20px/32px var(--font-family-body);
   --font-caption: 400 14px/20px var(--font-family-body);
-  --font-code: 500 13px/20px "JetBrains Mono", ui-monospace, monospace;
+  --font-code: 500 13px/20px var(--font-family-code);
   --font-blockquote: 500 semi-condensed 25px/34px var(--font-family-display);
   --font-text-ex-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
 
@@ -154,7 +152,7 @@
     content: attr(data-section-number);
     content: attr(data-section-number) / "";
     inset-inline-start: 0;
-    top: 13px; /* Aligns the label's cap height with the heading's, across the border. */
+    top: 14px; /* Aligns the label's cap height with the heading's, across the border. */
   }
 
   & :where([data-content-body]) > :where(figure, table)::before {
@@ -228,13 +226,13 @@
     }
 
     &:where(h1, h2, h3, blockquote) {
-      --font-text-ex-height: 0.528;
+      --font-text-ex-height: 0.526;
     }
 
     &:where(h1) {
       position: relative;
       font: var(--font-heading-1);
-      letter-spacing: -0.024em;
+      letter-spacing: -0.02em;
 
       &::before {
         @mixin dither-50;
@@ -262,12 +260,12 @@
 
     &:where(h2) {
       font: var(--font-heading-2);
-      letter-spacing: -0.015em;
+      letter-spacing: -0.012em;
     }
 
     &:where(h3) {
       font: var(--font-heading-3);
-      letter-spacing: -0.01em;
+      letter-spacing: -0.006em;
     }
 
     &:where(strong):not(:where(h1, h2, h3, blockquote) *) {
@@ -325,7 +323,7 @@
       padding-inline-start: calc(var(--blockquote-band-width) + var(--blockquote-band-gap));
 
       font: var(--font-blockquote);
-      letter-spacing: -0.015em;
+      letter-spacing: -0.012em;
 
       &::before {
         @mixin dither-50;

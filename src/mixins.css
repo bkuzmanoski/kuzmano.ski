@@ -74,11 +74,11 @@
   }
 }
 
-/* A label set in the bitmap face (see `--font-bitmap`). */
 @define-mixin bitmap-label {
   font: var(--font-bitmap);
   color: var(--color-foreground-secondary);
   text-transform: uppercase;
+  letter-spacing: 1px; /* Use whole pixels so letters remain aligned to device pixels. */
 }
 
 @define-mixin dither-cell {

@@ -1,8 +1,8 @@
 import { notFound } from "@tanstack/react-router";
 import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 
-import displayFontUrl from "#/assets/fonts/BricolageGrotesque-Variable.woff2?url";
-import bitmapFontUrl from "#/assets/fonts/Silkscreen.woff2?url";
+import displayFontUrl from "#/assets/fonts/Archivo-Variable.woff2?url";
+import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
 import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable.woff2?url";
 
 import { pages } from "./catalog.ts";
@@ -14,16 +14,8 @@ import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./ro
 import type { Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
-// The metadata a content route's head is built from, and whether the head preloads `ENTRY_PRELOADED_FONT_URLS`.
-// The loader's data is serialized into the document, so it has the flag rather than the URLs, which are the
-// same for every entry.
 type ContentRouteData = DocumentMetadata & { preloadsEntryFonts: boolean };
 
-// The fonts a page or a collection entry sets text in on first paint, beyond the chrome face the
-// root route preloads.
-//
-// The body face's italic sets only an `<em>`, which a first paint may not contain, so it is left
-// to load on demand.
 const ENTRY_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
 
 const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>

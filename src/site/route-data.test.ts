@@ -36,9 +36,9 @@ vi.mock("virtual:entry-cover-images", async () => {
 
 const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
 const ENTRY_PRELOADED_FONT_FILE_NAMES = [
-  "BricolageGrotesque-Variable.woff2",
+  "Archivo-Variable.woff2",
   "SourceSerif4-Variable.woff2",
-  "Silkscreen.woff2",
+  "QuantaStrike12-Regular.woff2",
 ];
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });

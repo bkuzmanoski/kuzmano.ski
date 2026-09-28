@@ -34,11 +34,9 @@
 }
 
 .content {
-  @mixin dither-text;
-
   font: 800 64px/64px var(--font-family-display);
   text-wrap: balance;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 
   font-stretch: 82%;
 
