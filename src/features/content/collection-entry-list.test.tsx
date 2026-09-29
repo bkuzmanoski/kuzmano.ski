@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { EntryCoverImagesContext } from "#/lib/content/entry-cover-images.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
@@ -13,14 +13,14 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({ actions: { open } }),
 );
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHover }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound }),
 );
 vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
 
 const open = vi.hoisted(() => vi.fn());
-const playHover = vi.hoisted(() => vi.fn());
+const playHoverSound = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 
 const collectionEntries = fakeCollectionEntries("newest", "middle", "oldest");
@@ -30,9 +30,9 @@ const routeOf = (index: number) => collection.routeOf(collectionEntries[index]!.
 
 beforeEach(() => {
   open.mockClear();
-  playHover.mockClear();
+  playHoverSound.mockClear();
   scrollIntoViewSilently.mockClear();
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playClickSound).mockClear();
 });
 
 function renderList(activeSlug: string | null) {
@@ -144,11 +144,11 @@ test("a key that moves the focus plays a detent", () => {
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
-  expect(playHover).toHaveBeenCalledTimes(1);
+  expect(playHoverSound).toHaveBeenCalledTimes(1);
 
   fireEvent.keyDown(links[1]!, { key: "End" });
 
-  expect(playHover).toHaveBeenCalledTimes(2);
+  expect(playHoverSound).toHaveBeenCalledTimes(2);
 });
 
 test("a key that does not move the focus at an end of the list does not play a detent", () => {
@@ -157,7 +157,7 @@ test("a key that does not move the focus at an end of the list does not play a d
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
   fireEvent.keyDown(links[0]!, { key: "Home" });
 
-  expect(playHover).not.toHaveBeenCalled();
+  expect(playHoverSound).not.toHaveBeenCalled();
 });
 
 test("pressing the Down arrow key while the window itself has the focus focuses the first entry, plays the hover sound, and prevents the key's default action", () => {
@@ -167,7 +167,7 @@ test("pressing the Down arrow key while the window itself has the focus focuses 
 
   expect(fireEvent.keyDown(windowRegion, { key: "ArrowDown" })).toBe(false);
   expect(document.activeElement).toBe(links[0]);
-  expect(playHover).toHaveBeenCalledTimes(1);
+  expect(playHoverSound).toHaveBeenCalledTimes(1);
 });
 
 test("moving the focus scrolls the focused entry into view silently", () => {
@@ -203,7 +203,7 @@ test("pressing an entry with the mouse plays a click sound", () => {
 
   fireEvent.pointerDown(links[1]!, { pointerType: "mouse" });
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a tap plays a click sound on release, but not when it is canceled by scrolling", () => {
@@ -211,16 +211,16 @@ test("a tap plays a click sound on release, but not when it is canceled by scrol
 
   fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 
   fireEvent.pointerUp(links[1]!, { pointerType: "touch" });
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.pointerDown(links[2]!, { pointerType: "touch" });
   fireEvent.pointerCancel(links[2]!, { pointerType: "touch" });
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a press on an entry prevents the native focus, then focuses the entry and scrolls it into view silently", () => {

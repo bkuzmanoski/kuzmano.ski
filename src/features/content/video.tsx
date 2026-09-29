@@ -6,7 +6,7 @@ import PauseVideoIcon from "#/assets/images/video-icon-pause.svg?react";
 import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
 import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
 import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
@@ -73,7 +73,7 @@ function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: C
   const syncPosition = (video: HTMLVideoElement) => {
     const progress = Number.isFinite(video.duration) && video.duration > 0 ? video.currentTime / video.duration : 0;
 
-    trackRef.current?.style.setProperty("--progress", String(clamp(progress, 0, 1)));
+    trackRef.current?.style.setProperty("--video-progress", String(clamp(progress, 0, 1)));
     setCurrentSecond(Math.floor(video.currentTime));
   };
 
@@ -179,7 +179,7 @@ function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: C
     start: (event) => {
       const origin = { x: event.clientX, trackLeft: event.currentTarget.getBoundingClientRect().left };
 
-      playClick();
+      playClickSound();
       trackRef.current?.focus({ preventScroll: true });
       seekToPointer(origin.x, origin.trackLeft);
 
@@ -209,7 +209,7 @@ function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: C
 
     if (event.key === " " && !(event.target instanceof HTMLButtonElement)) {
       event.preventDefault();
-      playClick();
+      playClickSound();
       togglePlayback();
     } else if (seekTarget !== undefined && hasDuration) {
       event.preventDefault();

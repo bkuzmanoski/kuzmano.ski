@@ -7,6 +7,8 @@
   padding: var(--callout-padding);
   border: 1px solid var(--callout-color);
 
+  text-box: trim-both text;
+
   & > :not(.calloutLabel) + * {
     margin-block-start: 12px;
   }

@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { isActivationKey } from "../keys.ts";
 import { isPointerClick, isPrimaryPress } from "../press.ts";
 
-import { playClick } from "./sounds.ts";
+import { playClickSound } from "./sounds.ts";
 
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
@@ -43,12 +43,12 @@ export function usePressSound({
       pressPendingRef.current = true;
 
       if (!scrollSafe || event.pointerType !== "touch") {
-        playClick();
+        playClickSound();
       }
     },
     onPointerUp: (event: PointerEvent) => {
       if (scrollSafe && pressPendingRef.current && event.pointerType === "touch") {
-        playClick();
+        playClickSound();
       }
     },
     onPointerCancel: () => {
@@ -66,7 +66,7 @@ export function usePressSound({
       const isPointerActivation = isPointerClick(event);
 
       if (isPointerActivation ? playOnClickWithoutPress && !pressPendingRef.current : keyPendingRef.current) {
-        playClick();
+        playClickSound();
       }
 
       pressPendingRef.current = false;

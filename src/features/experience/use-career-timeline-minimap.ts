@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import { recordScrollAt, silenceScrollAt } from "#/lib/audio/scroll.ts";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import {
   careerTimelinePlacementCenterOf,
   scrollTopForVisibleCareerTimelineCenter,
@@ -75,8 +75,11 @@ export function useCareerTimelineMinimap(
       const visiblePlacement = layout && visibleCareerTimelinePlacementAt(layout.viewport, layout.viewport.scrollTop);
 
       if (visiblePlacement) {
-        visibleRangeFrameElement.style.setProperty("--placement-offset", String(visiblePlacement.offset));
-        visibleRangeFrameElement.style.setProperty("--placement-size", String(visiblePlacement.size));
+        visibleRangeFrameElement.style.setProperty(
+          "--career-timeline-placement-offset",
+          String(visiblePlacement.offset),
+        );
+        visibleRangeFrameElement.style.setProperty("--career-timeline-placement-size", String(visiblePlacement.size));
         visibleRangeFrameElement.setAttribute("data-visible", "");
       } else {
         visibleRangeFrameElement.removeAttribute("data-visible");
@@ -124,7 +127,7 @@ export function useCareerTimelineMinimap(
         pressFraction >= visiblePlacement.offset &&
         pressFraction <= visiblePlacement.offset + visiblePlacement.size;
 
-      playClick();
+      playClickSound();
 
       if (!isPressOnVisibleRangeFrame) {
         silenceScrollAt(layout.scrollPane);

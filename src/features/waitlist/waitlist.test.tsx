@@ -11,11 +11,11 @@ import { JOINING_MESSAGE, Waitlist } from "./waitlist.tsx";
 
 import type { ReactNode } from "react";
 
-const playError = vi.hoisted(() => vi.fn());
-const playSuccess = vi.hoisted(() => vi.fn());
+const playErrorSound = vi.hoisted(() => vi.fn());
+const playSuccessSound = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playError, playSuccess }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playErrorSound, playSuccessSound }),
 );
 
 const ROUTE = "/collection/entry";
@@ -36,8 +36,8 @@ beforeEach(() => {
 
   fetchMock.mockReset();
   fetchMock.mockImplementation(() => joinResponse);
-  playError.mockClear();
-  playSuccess.mockClear();
+  playErrorSound.mockClear();
+  playSuccessSound.mockClear();
 });
 
 afterEach(() => {
@@ -91,7 +91,7 @@ test("a successful submission is confirmed in place of the form", async () => {
 
   expect(await screen.findByText(/on the list/)).toBeDefined();
   expect(field().closest("[inert]")).not.toBeNull();
-  expect(playSuccess).toHaveBeenCalled();
+  expect(playSuccessSound).toHaveBeenCalled();
   expect(screen.queryByRole("alertdialog")).toBeNull();
 });
 
@@ -111,7 +111,7 @@ test("an invalid email address is not sent, and its field error is shown in an a
   await join("user@");
 
   expect(fetchMock).not.toHaveBeenCalled();
-  expect(playError).toHaveBeenCalled();
+  expect(playErrorSound).toHaveBeenCalled();
   await expect(alertMessage()).resolves.toMatch(/email address/);
 });
 
@@ -132,7 +132,7 @@ test("a failed submission shows an error in an alert and preserves the entered e
   await join();
 
   await expect(alertMessage()).resolves.toMatch(/couldn’t be joined/);
-  expect(playError).toHaveBeenCalled();
+  expect(playErrorSound).toHaveBeenCalled();
 
   dismissAlert();
 

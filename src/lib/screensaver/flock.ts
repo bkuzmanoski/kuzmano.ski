@@ -75,11 +75,11 @@ export const FLOCK: ReadonlyArray<Sprite> = SPRITE_FLIGHTS.map(({ start, speed, 
   return {
     image: isToaster ? "toaster" : TOAST_IMAGES[index % TOAST_IMAGES.length]!,
     style: {
-      "--start-top": `${top}%`,
-      "--start-right": `${right}%`,
-      "--flight-duration": `${FLIGHT_DURATION_S[speed]}s`,
-      "--flight-delay": `${delayS}s`,
-      "--flap-phase": index % FLAP_FRAMES,
+      "--screensaver-start-top": `${top}%`,
+      "--screensaver-start-right": `${right}%`,
+      "--screensaver-flight-duration": `${FLIGHT_DURATION_S[speed]}s`,
+      "--screensaver-flight-delay": `${delayS}s`,
+      "--screensaver-flap-phase": index % FLAP_FRAMES,
     },
   };
 });

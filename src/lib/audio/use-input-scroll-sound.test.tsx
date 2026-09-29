@@ -5,11 +5,11 @@ import { nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { useInputScrollSound } from "./use-input-scroll-sound.ts";
 
-const playInputScroll = vi.hoisted(() => vi.fn());
+const playInputScrollSound = vi.hoisted(() => vi.fn());
 const silenceScrollAt = vi.hoisted(() => vi.fn());
 
 vi.mock("./scroll.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playInputScroll, silenceScrollAt }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playInputScrollSound, silenceScrollAt }),
 );
 
 // A real control, so the handlers see the actual events React delivers.
@@ -24,7 +24,7 @@ function renderInput() {
 
 // Lets the frame that clears an unclaimed mark run.
 beforeEach(() => {
-  playInputScroll.mockClear();
+  playInputScrollSound.mockClear();
   silenceScrollAt.mockClear();
 });
 
@@ -33,7 +33,7 @@ test("a scroll without a preceding key press plays the scroll sound", () => {
 
   fireEvent.scroll(input);
 
-  expect(playInputScroll).toHaveBeenCalledWith(input);
+  expect(playInputScrollSound).toHaveBeenCalledWith(input);
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
@@ -46,7 +46,7 @@ test.each(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "Pa
     fireEvent.scroll(input);
 
     expect(silenceScrollAt).toHaveBeenCalledWith(input);
-    expect(playInputScroll).not.toHaveBeenCalled();
+    expect(playInputScrollSound).not.toHaveBeenCalled();
   },
 );
 
@@ -56,7 +56,7 @@ test("a scroll that follows a key press that cannot move the caret out of view p
   fireEvent.keyDown(input, { key: "a" });
   fireEvent.scroll(input);
 
-  expect(playInputScroll).toHaveBeenCalledWith(input);
+  expect(playInputScrollSound).toHaveBeenCalledWith(input);
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
@@ -68,7 +68,7 @@ test("a key press silences only the first scroll that follows it", () => {
   fireEvent.scroll(input);
 
   expect(silenceScrollAt).toHaveBeenCalledTimes(1);
-  expect(playInputScroll).toHaveBeenCalledTimes(1);
+  expect(playInputScrollSound).toHaveBeenCalledTimes(1);
 });
 
 test("a scroll a frame after a key press plays the scroll sound", async () => {
@@ -78,7 +78,7 @@ test("a scroll a frame after a key press plays the scroll sound", async () => {
   await nextAnimationFrame();
   fireEvent.scroll(input);
 
-  expect(playInputScroll).toHaveBeenCalledWith(input);
+  expect(playInputScrollSound).toHaveBeenCalledWith(input);
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
@@ -91,7 +91,7 @@ test("a scroll that follows a repeated key press does not play the scroll sound,
   fireEvent.scroll(input);
 
   expect(silenceScrollAt).toHaveBeenCalledWith(input);
-  expect(playInputScroll).not.toHaveBeenCalled();
+  expect(playInputScrollSound).not.toHaveBeenCalled();
 });
 
 test("unmounting before the scroll mark is cleared cancels the pending frame", () => {

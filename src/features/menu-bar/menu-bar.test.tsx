@@ -12,7 +12,7 @@ import { MenuBar } from "./menu-bar.tsx";
 let focusedWindow: WindowId | null = null;
 
 const open = vi.hoisted(() => vi.fn());
-const playHover = vi.hoisted(() => vi.fn());
+const playHoverSound = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
@@ -22,13 +22,13 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
 );
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHover }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound }),
 );
 
 beforeEach(() => {
   focusedWindow = null;
   open.mockClear();
-  playHover.mockClear();
+  playHoverSound.mockClear();
   resetTooltipState();
 });
 
@@ -76,12 +76,12 @@ describe("navigating the menu bar", () => {
     render(<MenuBar />);
     fireEvent.pointerOver(menuTitle("Go"));
 
-    expect(playHover).not.toHaveBeenCalled();
+    expect(playHoverSound).not.toHaveBeenCalled();
 
     openWithPointer("File");
     fireEvent.pointerOver(menuTitle("Go"), { buttons: 1 });
 
-    expect(playHover).toHaveBeenCalledTimes(1);
+    expect(playHoverSound).toHaveBeenCalledTimes(1);
   });
 
   test("pressing the Left and Right arrow keys across menu titles plays a hover sound when a menu is open", () => {
@@ -89,13 +89,13 @@ describe("navigating the menu bar", () => {
     menuTitle("File").focus();
     fireEvent.keyDown(menuTitle("File"), { key: "ArrowRight" });
 
-    expect(playHover).not.toHaveBeenCalled();
+    expect(playHoverSound).not.toHaveBeenCalled();
 
     openWithKeyboard("Go");
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
 
     expect(isExpanded("Special")).toBe(true);
-    expect(playHover).toHaveBeenCalledTimes(1);
+    expect(playHoverSound).toHaveBeenCalledTimes(1);
   });
 });
 

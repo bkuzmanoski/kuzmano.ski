@@ -5,10 +5,10 @@ import { DETENT_PX, IDLE_DURATION_MS } from "#/lib/audio/scroll.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
 
-const playScrollDetent = vi.hoisted(() => vi.fn());
+const playScrollDetentSound = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playScrollDetent }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playScrollDetentSound }),
 );
 
 let now = 0;
@@ -16,7 +16,7 @@ let now = 0;
 beforeEach(() => {
   now = 0;
   vi.spyOn(performance, "now").mockImplementation(() => now);
-  playScrollDetent.mockClear();
+  playScrollDetentSound.mockClear();
 });
 
 function renderPane() {
@@ -37,7 +37,7 @@ function renderPane() {
   return viewport;
 }
 
-const detents = () => playScrollDetent.mock.calls.length;
+const detents = () => playScrollDetentSound.mock.calls.length;
 
 test("focusing an element in the pane silences the scroll that brings it into view", () => {
   const viewport = renderPane();

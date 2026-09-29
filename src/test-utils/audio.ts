@@ -11,11 +11,6 @@ function stub(value: unknown): unknown {
 /**
  * Mocks an audio module by stubbing every export, then applying `overrides`.
  *
- * A mock that lists only the exports it needs can silently fall behind the module it replaces.
- * A newly added export becomes `undefined`, and code that calls it can fail later from an event
- * handler without failing the test. Stubbing every export keeps the mock in sync with the
- * module, while `overrides` lets each test provide the exports it needs to assert on.
- *
  * The factory has to reach the original module through a dynamic import because `vi.mock` is
  * hoisted above the file's own imports:
  *
@@ -30,6 +25,12 @@ export async function audioModuleMock<T extends object>(
   overrides: Partial<T> = {},
 ): Promise<T> {
   const actualModule = await importOriginal();
+  const unknownNames = Object.keys(overrides).filter((name) => !Object.hasOwn(actualModule, name));
+
+  if (unknownNames.length > 0) {
+    throw new Error(`The module does not export ${unknownNames.map((name) => `\`${name}\``).join(", ")}.`);
+  }
+
   const stubbedEntries = Object.entries(actualModule).map(([name, value]) => [name, stub(value)]);
 
   return { ...Object.fromEntries(stubbedEntries), ...overrides } as T;

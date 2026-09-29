@@ -1,39 +1,41 @@
 .loadingIndicator {
-  --hands: 8;
-  --step-ms: 100ms;
+  --loading-indicator-hands: 8;
+  --loading-indicator-step-ms: 100ms;
 
   & :global(.hand) path {
-    --hand-index: 0;
+    --loading-indicator-hand-index: 0;
 
-    animation: tick-watch-hand calc(var(--hands) * var(--step-ms)) step-end infinite;
-    animation-delay: calc((var(--hand-index) - var(--hands)) * var(--step-ms));
+    animation: tick-watch-hand calc(var(--loading-indicator-hands) * var(--loading-indicator-step-ms)) step-end infinite;
+    animation-delay: calc(
+      (var(--loading-indicator-hand-index) - var(--loading-indicator-hands)) * var(--loading-indicator-step-ms)
+    );
 
     &:nth-child(2) {
-      --hand-index: 1;
+      --loading-indicator-hand-index: 1;
     }
 
     &:nth-child(3) {
-      --hand-index: 2;
+      --loading-indicator-hand-index: 2;
     }
 
     &:nth-child(4) {
-      --hand-index: 3;
+      --loading-indicator-hand-index: 3;
     }
 
     &:nth-child(5) {
-      --hand-index: 4;
+      --loading-indicator-hand-index: 4;
     }
 
     &:nth-child(6) {
-      --hand-index: 5;
+      --loading-indicator-hand-index: 5;
     }
 
     &:nth-child(7) {
-      --hand-index: 6;
+      --loading-indicator-hand-index: 6;
     }
 
     &:nth-child(8) {
-      --hand-index: 7;
+      --loading-indicator-hand-index: 7;
     }
   }
 

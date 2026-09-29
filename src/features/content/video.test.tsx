@@ -3,7 +3,7 @@ import { createRef } from "react";
 import { renderToString } from "react-dom/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 
 import { Video } from "./video.tsx";
 
@@ -21,7 +21,7 @@ beforeEach(() => {
   playback = { paused: true, muted: false, currentTime: 0 };
   isFullScreen = false;
 
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playClickSound).mockClear();
   vi.spyOn(HTMLMediaElement.prototype, "duration", "get").mockReturnValue(DURATION_S);
   vi.spyOn(HTMLMediaElement.prototype, "paused", "get").mockImplementation(() => playback.paused);
   vi.spyOn(HTMLMediaElement.prototype, "muted", "get").mockImplementation(() => playback.muted);
@@ -235,7 +235,7 @@ test("the Space key toggles playback and plays a click sound while the focus is 
   fireEvent.keyDown(screen.getByRole("slider", { name: "Seek" }), { key: " " });
 
   expect(playback.paused).toBe(true);
-  expect(playClick).toHaveBeenCalledTimes(2);
+  expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
 test("the Space key does not toggle playback or prevent its default action while the focus is on a button", () => {
@@ -316,7 +316,7 @@ test("pressing an arrow key with a modifier key does not seek the video", () => 
   expect(playback.currentTime).toBe(0);
 });
 
-test("seeking sets the `--progress` custom property of the slider to the current time as a fraction of the duration", () => {
+test("seeking sets the `--video-progress` custom property of the slider to the current time as a fraction of the duration", () => {
   renderVideo();
 
   const slider = screen.getByRole("slider", { name: "Seek" });
@@ -325,5 +325,5 @@ test("seeking sets the `--progress` custom property of the slider to the current
   fireEvent.keyDown(slider, { key: "ArrowRight" });
   fireEvent.keyDown(slider, { key: "ArrowRight" });
 
-  expect(slider.style.getPropertyValue("--progress")).toBe("0.25");
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.25");
 });

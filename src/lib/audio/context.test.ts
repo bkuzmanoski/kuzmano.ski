@@ -29,14 +29,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("playSound", () => {
+describe("schedulePlayback", () => {
   test("does not play a sound or create an audio context when sound is turned off", async () => {
     settings.soundEffects = "off";
 
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
     const play = vi.fn();
 
-    playSound(play);
+    schedulePlayback(play);
 
     expect(play).not.toHaveBeenCalled();
     expect(FakeAudioContext.instances).toHaveLength(0);
@@ -45,10 +45,10 @@ describe("playSound", () => {
   test("does not play a sound or create an audio context before the document has had a user gesture", async () => {
     setUserActivation(false);
 
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
     const play = vi.fn();
 
-    playSound(play);
+    schedulePlayback(play);
 
     expect(play).not.toHaveBeenCalled();
     expect(FakeAudioContext.instances).toHaveLength(0);
@@ -57,19 +57,19 @@ describe("playSound", () => {
   test("plays immediately when the context is already running", async () => {
     FakeAudioContext.initialState = "running";
 
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
     const play = vi.fn();
 
-    playSound(play);
+    schedulePlayback(play);
 
     expect(play).toHaveBeenCalledOnce();
   });
 
   test("resumes a suspended context and plays when it starts running", async () => {
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
     const play = vi.fn();
 
-    playSound(play);
+    schedulePlayback(play);
 
     const context = FakeAudioContext.instances[0]!;
 
@@ -82,12 +82,12 @@ describe("playSound", () => {
   });
 
   test("plays every sound waiting for the same state change", async () => {
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
     const firstSound = vi.fn();
     const secondSound = vi.fn();
 
-    playSound(firstSound);
-    playSound(secondSound);
+    schedulePlayback(firstSound);
+    schedulePlayback(secondSound);
 
     FakeAudioContext.instances[0]!.transitionToRunning();
 
@@ -100,19 +100,19 @@ describe("playSound", () => {
   test("uses one context for the session", async () => {
     FakeAudioContext.initialState = "running";
 
-    const { playSound } = await loadContextModule();
+    const { schedulePlayback } = await loadContextModule();
 
-    playSound(vi.fn());
-    playSound(vi.fn());
+    schedulePlayback(vi.fn());
+    schedulePlayback(vi.fn());
 
     expect(FakeAudioContext.instances).toHaveLength(1);
   });
 
   test("plays once the context starts running, without waiting for a resume that never settles", async () => {
-    const { playSound, primeAudio } = await loadContextModule();
+    const { schedulePlayback, primeAudio } = await loadContextModule();
     const play = vi.fn();
 
-    primeAudio(); // Creates the context, so the resume below is the one `playSound` issues.
+    primeAudio(); // Creates the context, so the resume below is the one `schedulePlayback` issues.
 
     const context = FakeAudioContext.instances[0]!;
 
@@ -120,7 +120,7 @@ describe("playSound", () => {
     // can successfully start the context. Waiting for that promise would strand audio.
     context.resumeResult = new Promise<void>(() => undefined);
 
-    playSound(play);
+    schedulePlayback(play);
 
     expect(play).not.toHaveBeenCalled();
 
@@ -151,7 +151,7 @@ describe("primeAudio", () => {
   });
 
   test("ignores a rejected resume, and a later sound still plays once the context is running", async () => {
-    const { playSound, primeAudio } = await loadContextModule();
+    const { schedulePlayback, primeAudio } = await loadContextModule();
     const play = vi.fn();
 
     primeAudio();
@@ -163,7 +163,7 @@ describe("primeAudio", () => {
 
     context.resumeResult = Promise.resolve();
 
-    playSound(play);
+    schedulePlayback(play);
     context.transitionToRunning();
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());

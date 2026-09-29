@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import ArrowScrollbarIcon from "#/assets/images/scrollbar-icon-arrow.svg?react";
 import { recordScrollAt, silenceScrollAt, stepScrollForPress } from "#/lib/audio/scroll.ts";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
 import type { DragDelta } from "#/lib/hooks/use-pointer-drag.ts";
@@ -133,8 +133,8 @@ export function Scrollbar({
   const isAtBottom = metrics.top >= scrollRange - 0.5;
   const scrolledPercent = Math.round(scrollProgress * 100);
   const thumbStyle: StyleWithVars = {
-    "--thumb-proportion": hasOverflow ? metrics.clientHeight / metrics.scrollHeight : 1,
-    "--thumb-position": scrollProgress,
+    "--scrollbar-thumb-proportion": hasOverflow ? metrics.clientHeight / metrics.scrollHeight : 1,
+    "--scrollbar-thumb-position": scrollProgress,
     borderTopWidth: isAtTop ? 0 : undefined,
     borderBottomWidth: isAtBottom ? 0 : undefined,
   };
@@ -160,7 +160,7 @@ export function Scrollbar({
   const thumbHandlers = usePointerDrag({
     preventDefault: true,
     start: () => {
-      playClick();
+      playClickSound();
       return { top: metrics.top, travel: thumbTravel() };
     },
     onDragMove: dragScroll,
@@ -178,7 +178,7 @@ export function Scrollbar({
       const viewport = viewportRef.current;
       const travel = thumbTravel();
 
-      playClick();
+      playClickSound();
 
       if (!track || !thumb || !viewport || travel <= 0 || scrollRange <= 0) {
         return { top: metrics.top, travel };

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 
 import { Button } from "./button.tsx";
 
@@ -11,7 +11,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
-beforeEach(() => vi.mocked(playClick).mockClear());
+beforeEach(() => vi.mocked(playClickSound).mockClear());
 
 const MOUSE = { pointerType: "mouse" };
 const CLICK = { detail: 1 };
@@ -112,7 +112,7 @@ test("a press and the click that follows it play a single click sound", () => {
   fireEvent.pointerUp(button, MOUSE);
   fireEvent.click(button, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a tap whose touch pointer events do not reach the button still plays a click sound", () => {
@@ -120,7 +120,7 @@ test("a tap whose touch pointer events do not reach the button still plays a cli
 
   fireEvent.click(screen.getByRole("button", { name: "Press" }), CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a button and a link activated with the keyboard each play a click sound", () => {
@@ -138,7 +138,7 @@ test("a button and a link activated with the keyboard each play a click sound", 
   fireEvent.click(button);
   fireEvent.keyDown(link, { key: "Enter" });
 
-  expect(playClick).toHaveBeenCalledTimes(2);
+  expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
 test("a button with an `href` prop is activated with the Enter or Space key", () => {

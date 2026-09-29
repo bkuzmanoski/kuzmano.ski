@@ -1,10 +1,10 @@
 .careerTimeline {
-  --discipline-accent-color: currentColor; /* Set from JS. */
-  --tick-offset: 0; /* Set from JS. */
-  --placement-offset: 0; /* Set from JS. */
-  --placement-size: 0; /* Set from JS. */
-  --year-label-width: 4ch;
-  --year-label-height: calc(1lh + 4px);
+  --career-timeline-discipline-accent-color: currentColor; /* Set from JS. */
+  --career-timeline-tick-offset: 0; /* Set from JS. */
+  --career-timeline-placement-offset: 0; /* Set from JS. */
+  --career-timeline-placement-size: 0; /* Set from JS. */
+  --career-timeline-year-label-width: 4ch;
+  --career-timeline-year-label-height: calc(1lh + 4px);
 
   display: grid;
   grid-template-columns: subgrid;
@@ -46,8 +46,8 @@
     }
 
     &[aria-pressed="true"] {
-      border-color: var(--discipline-accent-color);
-      color: var(--discipline-accent-color);
+      border-color: var(--career-timeline-discipline-accent-color);
+      color: var(--career-timeline-discipline-accent-color);
 
       &::before {
         @mixin dither-50;
@@ -127,8 +127,8 @@
 
   position: relative;
 
-  height: max(240px, 100cqh - 2 * var(--layout-gutter) - var(--year-label-height));
-  margin-block-end: var(--year-label-height);
+  height: max(240px, 100cqh - 2 * var(--layout-gutter) - var(--career-timeline-year-label-height));
+  margin-block-end: var(--career-timeline-year-label-height);
 
   font: var(--font-bitmap); /* Resolves the `ch` and `lh` units in the year label metrics. */
 
@@ -145,7 +145,7 @@
 
   position: absolute;
   inset-inline: 0;
-  top: calc(var(--tick-offset) * 100%);
+  top: calc(var(--career-timeline-tick-offset) * 100%);
 
   padding-block-start: 4px;
   border-block-start: 1px solid var(--color-border-secondary);
@@ -154,7 +154,7 @@
 .lanes {
   position: absolute;
   inset-block: 0;
-  inset-inline: calc(var(--year-label-width) + 8px) 0;
+  inset-inline: calc(var(--career-timeline-year-label-width) + 8px) 0;
 
   display: grid;
   grid-auto-columns: minmax(0, 1fr);
@@ -164,7 +164,7 @@
 
 .lane {
   position: relative;
-  color: var(--discipline-accent-color);
+  color: var(--career-timeline-discipline-accent-color);
 
   &[data-hidden] {
     color: var(--color-background-dither);
@@ -185,9 +185,9 @@
 
   position: absolute;
   inset-inline: 0;
-  top: calc(var(--placement-offset) * 100%);
+  top: calc(var(--career-timeline-placement-offset) * 100%);
 
-  height: calc(var(--placement-size) * 100%);
+  height: calc(var(--career-timeline-placement-size) * 100%);
   border: 1px solid currentColor;
 
   .lane[data-hidden] & {
@@ -198,9 +198,9 @@
 .visibleRangeFrame {
   position: absolute;
   inset-inline: -3px;
-  top: calc(var(--placement-offset) * 100%);
+  top: calc(var(--career-timeline-placement-offset) * 100%);
 
-  height: calc(var(--placement-size) * 100%);
+  height: calc(var(--career-timeline-placement-size) * 100%);
   border: 1px solid var(--color-foreground);
 
   &:not([data-visible]) {
@@ -225,7 +225,7 @@
   display: flex;
   flex-direction: column;
   padding-inline-start: 16px;
-  border-inline-start: 4px solid var(--discipline-accent-color);
+  border-inline-start: 4px solid var(--career-timeline-discipline-accent-color);
 }
 
 .roleHeader {
@@ -242,7 +242,7 @@
 .roleDisciplines {
   @mixin bitmap-label;
 
-  color: var(--discipline-accent-color);
+  color: var(--career-timeline-discipline-accent-color);
 }
 
 .roleDates {
@@ -269,7 +269,7 @@
   padding-inline-start: 20px;
 
   & li::marker {
-    color: var(--discipline-accent-color);
+    color: var(--career-timeline-discipline-accent-color);
   }
 
   & li + li {
@@ -288,7 +288,7 @@
 
 @mixin content-rail-collapsed {
   .careerTimeline {
-    --horizontal-inset: calc(var(--year-label-width) / 2);
+    --career-timeline-horizontal-inset: calc(var(--career-timeline-year-label-width) / 2);
   }
 
   .chartColumn {
@@ -306,16 +306,16 @@
 
   .chart {
     height: auto;
-    padding-block-start: var(--year-label-height);
+    padding-block-start: var(--career-timeline-year-label-height);
   }
 
   .axis {
-    inset-inline: var(--horizontal-inset);
+    inset-inline: var(--career-timeline-horizontal-inset);
   }
 
   .tick {
     inset-block: 0 auto;
-    inset-inline: calc(var(--tick-offset) * 100%) auto;
+    inset-inline: calc(var(--career-timeline-tick-offset) * 100%) auto;
     translate: -50% 0;
 
     padding-block-start: 0;
@@ -329,20 +329,20 @@
     grid-auto-flow: row;
     grid-auto-rows: 8px;
 
-    margin-inline: var(--horizontal-inset);
+    margin-inline: var(--career-timeline-horizontal-inset);
   }
 
   .spanBar {
     inset-block: 0;
-    inset-inline: calc(var(--placement-offset) * 100%) auto;
-    width: calc(var(--placement-size) * 100%);
+    inset-inline: calc(var(--career-timeline-placement-offset) * 100%) auto;
+    width: calc(var(--career-timeline-placement-size) * 100%);
     height: auto;
   }
 
   .visibleRangeFrame {
     inset-block: -3px;
-    inset-inline: calc(var(--placement-offset) * 100%) auto;
-    width: calc(var(--placement-size) * 100%);
+    inset-inline: calc(var(--career-timeline-placement-offset) * 100%) auto;
+    width: calc(var(--career-timeline-placement-size) * 100%);
     height: auto;
   }
 

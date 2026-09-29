@@ -9,13 +9,13 @@ import { useListNavigation } from "./use-list-navigation.ts";
 import type { MouseEvent, ReactNode } from "react";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
-const playHover = vi.hoisted(() => vi.fn());
+const playHoverSound = vi.hoisted(() => vi.fn());
 
 vi.mock("../audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
 vi.mock("../audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHover }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound }),
 );
 
 function List({
@@ -65,7 +65,7 @@ function renderList(props: Parameters<typeof List>[0]) {
 
 beforeEach(() => {
   scrollIntoViewSilently.mockClear();
-  playHover.mockClear();
+  playHoverSound.mockClear();
 });
 
 test("the active item is scrolled into view silently on mount", () => {
@@ -85,7 +85,7 @@ test("a Down arrow key press focuses the next item without a native focus scroll
   expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   expect(document.activeElement).toBe(links[1]);
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
-  expect(playHover).toHaveBeenCalled();
+  expect(playHoverSound).toHaveBeenCalled();
 });
 
 test("a press on an item prevents its default behavior, focuses the item without a native focus scroll, and scrolls it into view silently", () => {
@@ -171,7 +171,7 @@ test.each([
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(document.activeElement).toBe(links[expectedIndex]);
     expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[expectedIndex]);
-    expect(playHover).toHaveBeenCalledTimes(1);
+    expect(playHoverSound).toHaveBeenCalledTimes(1);
   },
 );
 
@@ -184,7 +184,7 @@ test("pressing the Page Down key outside the list does not move the focus or pre
 
   expect(fireEvent.keyDown(outsideControl, { key: "PageDown" })).toBe(true);
   expect(document.activeElement).toBe(outsideControl);
-  expect(playHover).not.toHaveBeenCalled();
+  expect(playHoverSound).not.toHaveBeenCalled();
 });
 
 test("pressing the Down arrow key outside a list without items does not move the focus or prevent the key's default action", () => {
@@ -196,5 +196,5 @@ test("pressing the Down arrow key outside a list without items does not move the
 
   expect(fireEvent.keyDown(outsideControl, { key: "ArrowDown" })).toBe(true);
   expect(document.activeElement).toBe(outsideControl);
-  expect(playHover).not.toHaveBeenCalled();
+  expect(playHoverSound).not.toHaveBeenCalled();
 });

@@ -1,14 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "./sounds.ts";
+import { playClickSound } from "./sounds.ts";
 import { usePressSound } from "./use-press-sound.ts";
 
 vi.mock("./sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
-beforeEach(() => vi.mocked(playClick).mockClear());
+beforeEach(() => vi.mocked(playClickSound).mockClear());
 
 const CLICK = { detail: 1 }; // A pointer click, as opposed to keyboard activation.
 
@@ -30,17 +30,17 @@ test("a press plays a sound once on pointer down, and not again on pointer up or
 
   fireEvent.pointerDown(control);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.pointerUp(control);
   fireEvent.click(control, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a pointer click event without a preceding pointer down event plays a sound", () => {
   fireEvent.click(renderControl(), CLICK);
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a keyboard activation with Enter or Space plays a sound once", () => {
@@ -49,13 +49,13 @@ test("a keyboard activation with Enter or Space plays a sound once", () => {
   fireEvent.keyDown(control, { key: "Enter" });
   fireEvent.click(control);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.keyDown(control, { key: " " });
   fireEvent.keyUp(control, { key: " " });
   fireEvent.click(control);
 
-  expect(playClick).toHaveBeenCalledTimes(2);
+  expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
 test("a click event without a preceding pointer or activation key press does not play a sound", () => {
@@ -64,7 +64,7 @@ test("a click event without a preceding pointer or activation key press does not
   fireEvent.keyDown(control, { key: "a" });
   fireEvent.click(control);
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("an activation key pressed before the control loses focus does not play a sound on a later click event", () => {
@@ -74,7 +74,7 @@ test("an activation key pressed before the control loses focus does not play a s
   fireEvent.blur(control);
   fireEvent.click(control);
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("a canceled pointer down event lets the next pointer click event play a sound", () => {
@@ -83,17 +83,17 @@ test("a canceled pointer down event lets the next pointer click event play a sou
   fireEvent.pointerDown(control);
   fireEvent.pointerCancel(control);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.click(control, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(2);
+  expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
 test("a non-primary press does not play a sound", () => {
   fireEvent.pointerDown(renderControl(), { button: 2 });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("a scroll-safe control plays a sound for a touch press on pointer up", () => {
@@ -101,12 +101,12 @@ test("a scroll-safe control plays a sound for a touch press on pointer up", () =
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 
   fireEvent.pointerUp(control, { pointerType: "touch" });
   fireEvent.click(control, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a scroll-safe control does not play a sound for a canceled touch press", () => {
@@ -115,7 +115,7 @@ test("a scroll-safe control does not play a sound for a canceled touch press", (
   fireEvent.pointerDown(control, { pointerType: "touch" });
   fireEvent.pointerCancel(control, { pointerType: "touch" });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("a scroll-safe control plays a sound for a mouse press on pointer down", () => {
@@ -123,15 +123,15 @@ test("a scroll-safe control plays a sound for a mouse press on pointer down", ()
 
   fireEvent.pointerDown(control, { pointerType: "mouse" });
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.pointerUp(control, { pointerType: "mouse" });
   fireEvent.click(control, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a scroll-safe control plays a sound for a tap retargeted to it by iOS", () => {
   fireEvent.click(renderControl({ scrollSafe: true }), CLICK);
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });

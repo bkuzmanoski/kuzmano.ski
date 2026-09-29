@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, use, useId } from "react";
 
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
 import { isBrowserHandledClick, linkDestinationOf, sitePathPartsOf } from "#/lib/link.ts";
 
@@ -9,9 +9,9 @@ import type { ComponentProps, MouseEvent, ReactNode } from "react";
 
 const OpensInNewTabDescriptionIdContext = createContext<string | undefined>(undefined);
 
-function playContentLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+function playContentLinkClickSound(event: MouseEvent<HTMLAnchorElement>) {
   if (!isBrowserHandledClick(event)) {
-    playClick();
+    playClickSound();
   }
 }
 
@@ -20,7 +20,7 @@ function revealContentLinkTarget(event: MouseEvent<HTMLAnchorElement>, fragment:
     return;
   }
 
-  playClick();
+  playClickSound();
 
   const article = event.currentTarget.closest("article");
 
@@ -56,7 +56,7 @@ export function ContentLink({
           search={router.options.parseSearch(search)}
           hash={hash.slice(1)}
           {...props}
-          onClick={playContentLinkClick}
+          onClick={playContentLinkClickSound}
         >
           {children}
         </Link>
@@ -70,7 +70,7 @@ export function ContentLink({
           target="_blank"
           aria-describedby={opensInNewTabDescriptionId}
           {...props}
-          onClick={playContentLinkClick}
+          onClick={playContentLinkClickSound}
         >
           {children}
         </a>
@@ -78,7 +78,7 @@ export function ContentLink({
 
     case "other":
       return (
-        <a href={href} {...props} onClick={playContentLinkClick}>
+        <a href={href} {...props} onClick={playContentLinkClickSound}>
           {children}
         </a>
       );

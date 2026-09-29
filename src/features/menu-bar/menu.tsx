@@ -2,7 +2,7 @@ import { memo, useEffect, useEffectEvent, useId, useRef, useState } from "react"
 
 import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-download.svg?react";
 import ExternalLinkMenuItemIndicator from "#/assets/images/menu-item-indicator-external-link.svg?react";
-import { playClick, playHover } from "#/lib/audio/sounds.ts";
+import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos.ts";
@@ -182,7 +182,7 @@ export function Menu({
     setFocusedItemIndex(index);
 
     if (index >= 0) {
-      playHover();
+      playHoverSound();
     }
   }
 
@@ -230,7 +230,7 @@ export function Menu({
     focusedItemIndexRef.current = index;
 
     setFocusedItemIndex(index);
-    playClick();
+    playClickSound();
 
     flash.start(index, () => {
       if (item.action) {

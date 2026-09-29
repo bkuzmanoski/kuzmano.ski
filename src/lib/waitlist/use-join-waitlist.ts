@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { playSuccess } from "../audio/sounds.ts";
+import { playSuccessSound } from "../audio/sounds.ts";
 import { firstMessage } from "../forms/client.ts";
 
 import { joinWaitlist } from "./client.ts";
@@ -37,7 +37,7 @@ export function useJoinWaitlist({
     });
 
     if (joinResult.status === "joined") {
-      playSuccess();
+      playSuccessSound();
       setState("joined");
 
       return;

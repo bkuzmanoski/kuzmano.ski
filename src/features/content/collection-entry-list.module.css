@@ -1,5 +1,5 @@
 .list {
-  --padding-inline-title: 4px;
+  --collection-entry-list-title-padding-inline: 4px;
 
   display: flex;
   flex-direction: column;
@@ -23,10 +23,13 @@
   align-items: center;
 
   padding-block: 12px;
-  padding-inline: calc(var(--layout-gutter) - var(--padding-inline-title) + var(--window-safe-area-inline-start, 0px))
+  padding-inline: calc(
+      var(--layout-gutter) - var(--collection-entry-list-title-padding-inline) +
+        var(--window-safe-area-inline-start, 0px)
+    )
     calc(
-      var(--layout-gutter) - var(--padding-inline-title) + var(--reserved-scrollbar-width, 0px) +
-        var(--window-safe-area-inline-end, 0px)
+      var(--layout-gutter) - var(--collection-entry-list-title-padding-inline) +
+        var(--scroll-pane-reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px)
     ); /* Inset list content to clear the window safe area and reserved scrollbar width. */
 
   text-decoration: none;
@@ -95,7 +98,7 @@
 
   & .date {
     display: block;
-    padding-inline: var(--padding-inline-title); /* Line up with the title's inset. */
+    padding-inline: var(--collection-entry-list-title-padding-inline); /* Line up with the title's inset. */
     color: var(--color-foreground-secondary);
   }
 }
@@ -106,7 +109,7 @@
   width: fit-content;
   margin-block: -1px;
   padding-block: 2px;
-  padding-inline: var(--padding-inline-title);
+  padding-inline: var(--collection-entry-list-title-padding-inline);
 
   font: var(--font-ui-bold);
 

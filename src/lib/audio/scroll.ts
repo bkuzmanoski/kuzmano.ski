@@ -1,6 +1,6 @@
 import { clamp } from "../math.ts";
 
-import { playClick, playScrollDetent } from "./sounds.ts";
+import { playClickSound, playScrollDetentSound } from "./sounds.ts";
 
 export const IDLE_DURATION_MS = 250;
 export const DETENT_PX = 40; // Content distance between detents.
@@ -69,9 +69,9 @@ export function scrollIntoViewSilently(element: Element, options?: Omit<ScrollIn
   recordScrollIntoView(element);
 }
 
-export function playScrollStep(element: Element) {
+export function playScrollStepSound(element: Element) {
   recordScrollAt(element);
-  playScrollDetent(STEP_SPEED_PX_PER_S);
+  playScrollDetentSound(STEP_SPEED_PX_PER_S);
 }
 
 /** Scrolls `element` by `delta` and reports whether the viewport moved. */
@@ -84,7 +84,7 @@ export function stepScroll(element: Element, delta: number) {
     return false;
   }
 
-  playScrollStep(element);
+  playScrollStepSound(element);
 
   return true;
 }
@@ -95,11 +95,11 @@ export function stepScroll(element: Element, delta: number) {
  */
 export function stepScrollForPress(element: Element, delta: number, isRepeat: boolean) {
   if (!stepScroll(element, delta) && !isRepeat) {
-    playClick();
+    playClickSound();
   }
 }
 
-export function playScroll(element: Element) {
+export function playScrollSound(element: Element) {
   const now = performance.now();
   const top = getScrollTop(element);
   const gesture = gestures.get(element);
@@ -140,7 +140,7 @@ export function playScroll(element: Element) {
   // but never carry more than one detent into the next event.
   gesture.distance = Math.min(gesture.distance - DETENT_PX, DETENT_PX);
 
-  playScrollDetent(gesture.speed);
+  playScrollDetentSound(gesture.speed);
 }
 
 // Plays a scroll sound unless the element's height changed since its previous scroll.
@@ -148,7 +148,7 @@ export function playScroll(element: Element) {
 // A height change identifies a scroll caused by layout rather than user input. Such scrolls
 // are recorded without a sound. The caller supplies the height because the relevant
 // measurement differs by context.
-function playScrollUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
+function playScrollSoundUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
 
   heights.set(element, height);
@@ -158,7 +158,7 @@ function playScrollUnlessResized(element: Element, heights: WeakMap<Element, num
     return;
   }
 
-  playScroll(element);
+  playScrollSound(element);
 }
 
 /**
@@ -168,8 +168,8 @@ function playScrollUnlessResized(element: Element, heights: WeakMap<Element, num
  * The resulting scroll event occurs after the resize, with a different `clientHeight`, allowing
  * it to be identified as layout-driven and recorded without a sound.
  */
-export function playPaneScroll(element: Element) {
-  playScrollUnlessResized(element, viewportHeights, element.clientHeight);
+export function playPaneScrollSound(element: Element) {
+  playScrollSoundUnlessResized(element, viewportHeights, element.clientHeight);
 }
 
 /**
@@ -179,6 +179,6 @@ export function playPaneScroll(element: Element) {
  * The resulting scroll event occurs after the edit, with a different `scrollHeight`, allowing
  * it to be identified as layout-driven and recorded without a sound.
  */
-export function playInputScroll(element: Element) {
-  playScrollUnlessResized(element, contentHeights, element.scrollHeight);
+export function playInputScrollSound(element: Element) {
+  playScrollSoundUnlessResized(element, contentHeights, element.scrollHeight);
 }

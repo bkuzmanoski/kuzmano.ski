@@ -3,7 +3,7 @@ import { useRef } from "react";
 import DocumentDesktopIcon from "#/assets/images/desktop-icon-document.svg?react";
 import { EmptyState } from "#/components/empty-state.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useEntryCoverImage } from "#/lib/content/entry-cover-images.ts";
@@ -73,7 +73,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
       const entry = entries[index];
 
       if (entry) {
-        playClick();
+        playClickSound();
         openEntry(entry.slug);
       }
     },

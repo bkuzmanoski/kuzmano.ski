@@ -23,7 +23,7 @@ import { EntrySectionHeading } from "./entry-section-heading.tsx";
 import type { RenderOptions } from "@testing-library/react";
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
-const playClick = vi.hoisted(() => vi.fn());
+const playClickSound = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
 
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
@@ -32,7 +32,7 @@ vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
 );
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClick }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClickSound }),
 );
 
 const ROUTE = "/collection/fixture";
@@ -46,7 +46,7 @@ const LINKS = ["fragment link", "internal link", "external link", "email link"];
 beforeEach(() => {
   resetTooltipState();
   scrollIntoViewSilently.mockClear();
-  playClick.mockClear();
+  playClickSound.mockClear();
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
 });
@@ -221,7 +221,7 @@ test("clicking a heading link copies the heading's canonical URL, shows a `Copie
 
   expect(writeText).toHaveBeenCalledWith(canonicalUrl(`${ROUTE}#fixture-heading`));
   expect(screen.getByRole("tooltip").textContent).toBe("Copied");
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("clicking a heading link does not scroll the heading into view", async () => {
@@ -432,7 +432,7 @@ test.each(LINKS)("clicking the %s plays a click sound", async (name) => {
 
   fireEvent.click(screen.getByRole("link", { name }));
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test.each(LINKS)("clicking the %s with a modifier key does not play a click sound", async (name) => {
@@ -440,7 +440,7 @@ test.each(LINKS)("clicking the %s with a modifier key does not play a click soun
 
   fireEvent.click(screen.getByRole("link", { name }), { metaKey: true });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("clicking a fragment link scrolls to the heading it names and focuses it, in place of the browser's navigation", async () => {

@@ -146,12 +146,12 @@ export function useAudioUnlock() {
 }
 
 /**
- * Plays a sound once the audio context is running.
+ * Calls `play` with the audio context once the context is running, when sound effects are on.
  *
- * Playback is synchronous when the context is already running. Otherwise the
- * context is resumed and playback waits for its `running` state.
+ * `play` runs synchronously when the context is already running. Otherwise the context is
+ * resumed and `play` waits for its `running` state.
  */
-export function playSound(play: (context: AudioContext) => void) {
+export function schedulePlayback(play: (context: AudioContext) => void) {
   if (getSettings().soundEffects !== "on") {
     return;
   }

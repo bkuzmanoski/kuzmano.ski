@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
 
-import { playSuccess } from "../audio/sounds.ts";
+import { playSuccessSound } from "../audio/sounds.ts";
 
 import { useJoinWaitlist } from "./use-join-waitlist.ts";
 
@@ -26,7 +26,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   respondWith(fetchMock, 204);
   onFailure.mockReset();
-  vi.mocked(playSuccess).mockClear();
+  vi.mocked(playSuccessSound).mockClear();
 });
 
 afterEach(() => {
@@ -78,7 +78,7 @@ test("a successful submission changes the state to `joined` and plays the succes
   await waitlist.join();
 
   expect(waitlist.state).toBe("joined");
-  expect(playSuccess).toHaveBeenCalled();
+  expect(playSuccessSound).toHaveBeenCalled();
   expect(onFailure).not.toHaveBeenCalled();
 });
 

@@ -31,20 +31,20 @@
 }
 
 .controls {
-  --control-height: 24px;
-  --thumb-width: 16px;
+  --video-control-height: 24px;
+  --video-thumb-width: 16px;
 
   user-select: none;
 
   display: flex;
 
-  height: calc(var(--control-height) + 1px); /* Includes the top border. */
+  height: calc(var(--video-control-height) + 1px); /* Includes the top border. */
   border-top: 1px solid var(--color-border);
 
   background: var(--color-background);
 
   .video:fullscreen & {
-    height: calc(var(--control-height) + 2px);
+    height: calc(var(--video-control-height) + 2px);
     border: 1px solid var(--color-border);
   }
 }
@@ -57,7 +57,7 @@
   align-items: center;
   justify-content: center;
 
-  width: var(--control-height);
+  width: var(--video-control-height);
 
   &:focus-visible {
     @mixin focus-stroke 1px;
@@ -88,7 +88,7 @@
 }
 
 .track {
-  --progress: 0; /* Set from JS. */
+  --video-progress: 0; /* Set from JS. */
 
   touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
 
@@ -96,7 +96,7 @@
 
   flex: 1;
 
-  min-width: calc(var(--thumb-width) * 2);
+  min-width: calc(var(--video-thumb-width) * 2);
   margin-inline: -1px;
 
   outline: none;
@@ -109,7 +109,7 @@
     position: absolute;
     inset-block: 0;
     right: 1px;
-    left: calc(var(--progress) * (100% - var(--thumb-width)) + var(--thumb-width) / 2);
+    left: calc(var(--video-progress) * (100% - var(--video-thumb-width)) + var(--video-thumb-width) / 2);
 
     color: var(--color-border);
 
@@ -124,9 +124,9 @@
 
   position: absolute;
   inset-block: 0;
-  left: calc(var(--progress) * (100% - var(--thumb-width)));
+  left: calc(var(--video-progress) * (100% - var(--video-thumb-width)));
 
-  width: var(--thumb-width);
+  width: var(--video-thumb-width);
   border-inline: 1px solid var(--color-border);
 
   background: var(--color-background);

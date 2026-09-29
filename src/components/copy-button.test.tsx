@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { playError } from "#/lib/audio/sounds.ts";
+import { playErrorSound } from "#/lib/audio/sounds.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import { deferWrite } from "#/test-utils/clipboard.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
@@ -102,7 +102,7 @@ test("a failed copy shows an alert and does not show the confirmation or leave t
   expect(screen.getByRole("button", { name: "Copy to clipboard" }).className).not.toContain("pressed");
   expect(screen.getByRole("status").textContent).toBe("");
   expect(screen.getByRole("alertdialog").textContent).toContain("The email address couldn’t be copied.");
-  expect(playError).toHaveBeenCalledOnce();
+  expect(playErrorSound).toHaveBeenCalledOnce();
 
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 

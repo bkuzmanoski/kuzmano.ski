@@ -1,7 +1,7 @@
 import { Children, isValidElement, useId } from "react";
 
 import { CopyTooltip } from "#/components/copy-tooltip.tsx";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
@@ -58,7 +58,7 @@ function HeadingLink({
             }
 
             event.preventDefault();
-            playClick();
+            playClickSound();
             entryClipboard.copyToClipboard(fragment, canonicalUrl(renderedEntry.route) + fragment, "link");
           }}
         >

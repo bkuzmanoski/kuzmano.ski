@@ -1,7 +1,7 @@
 import { useRef } from "react";
 
 import { Scrollbar } from "#/components/scrollbar.tsx";
-import { playPaneScroll, silenceScrollIntoView } from "#/lib/audio/scroll.ts";
+import { playPaneScrollSound, silenceScrollIntoView } from "#/lib/audio/scroll.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
 
@@ -47,7 +47,7 @@ export function ScrollPane({
         onFocus={(event) => silenceScrollIntoView(event.target)}
         onScroll={(event) => {
           measure();
-          playPaneScroll(event.currentTarget);
+          playPaneScrollSound(event.currentTarget);
         }}
       >
         {children}

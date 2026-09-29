@@ -44,11 +44,11 @@ const careerTimelinePlacementVariables = (
   direction: CareerTimelineDirection,
 ): StyleWithVars => {
   const { offset, size } = careerTimelinePlacementOf(span, range, direction);
-  return { "--placement-offset": offset, "--placement-size": size };
+  return { "--career-timeline-placement-offset": offset, "--career-timeline-placement-size": size };
 };
 
 const tickVariables = (year: number, range: MonthSpan, direction: CareerTimelineDirection): StyleWithVars => ({
-  "--tick-offset": monthOffsetOf(firstMonthIndexOf(year), range, direction),
+  "--career-timeline-tick-offset": monthOffsetOf(firstMonthIndexOf(year), range, direction),
 });
 
 const labelFrom = (parts: ReadonlyArray<ReactNode>) =>
@@ -110,7 +110,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                 <Button
                   aria-pressed={!hiddenDisciplineIds.has(id)}
                   className={styles.filter}
-                  style={accentColorVariable("--discipline-accent-color", accentColor)}
+                  style={accentColorVariable("--career-timeline-discipline-accent-color", accentColor)}
                   onClick={() => toggleDiscipline(id)}
                 >
                   {name}
@@ -146,7 +146,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                 key={discipline.id}
                 className={styles.lane}
                 data-hidden={hiddenDisciplineIds.has(discipline.id) || undefined}
-                style={accentColorVariable("--discipline-accent-color", discipline.accentColor)}
+                style={accentColorVariable("--career-timeline-discipline-accent-color", discipline.accentColor)}
               >
                 {spans.map((span) => (
                   <span
@@ -172,7 +172,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
               <li
                 key={roleKeyOf(role)}
                 className={styles.role}
-                style={accentColorVariable("--discipline-accent-color", shownDiscipline.accentColor)}
+                style={accentColorVariable("--career-timeline-discipline-accent-color", shownDiscipline.accentColor)}
                 {...careerTimelinePlacementAttributesOf(careerTimelinePlacementOf(span, range, direction))}
               >
                 <h2 className={styles.roleTitle}>{role.title}</h2>

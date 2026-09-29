@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 
 import { scrollIntoViewSilently } from "../audio/scroll.ts";
-import { playHover } from "../audio/sounds.ts";
+import { playHoverSound } from "../audio/sounds.ts";
 import { activateOnKeyPress } from "../keys.ts";
 import { clamp } from "../math.ts";
 
@@ -123,7 +123,7 @@ export function useListNavigation(
         }
 
         focusItem(item);
-        playHover();
+        playHoverSound();
       },
     };
   }
@@ -141,7 +141,7 @@ export function useListNavigation(
 
     event.preventDefault();
     focusItem(item);
-    playHover();
+    playHoverSound();
   }
 
   return { itemProps, onKeyDownOutsideList };

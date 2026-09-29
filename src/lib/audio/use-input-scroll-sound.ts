@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { playInputScroll, silenceScrollAt } from "./scroll.ts";
+import { playInputScrollSound, silenceScrollAt } from "./scroll.ts";
 
 import type { KeyboardEvent, UIEvent } from "react";
 
@@ -24,8 +24,8 @@ const CARET_SCROLL_KEYS = new Set([
  * scroll sound until scrolling settles. If no scroll occurs, the mark is cleared on the
  * next frame.
  *
- * This is separate from `playInputScroll` because it correlates key and scroll events;
- * `playInputScroll` handles each scroll event independently.
+ * This is separate from `playInputScrollSound` because it correlates key and scroll events;
+ * `playInputScrollSound` handles each scroll event independently.
  */
 export function useInputScrollSound<T extends HTMLElement>() {
   const caretScrollRef = useRef(false);
@@ -65,7 +65,7 @@ export function useInputScrollSound<T extends HTMLElement>() {
         return;
       }
 
-      playInputScroll(event.currentTarget);
+      playInputScrollSound(event.currentTarget);
     },
   };
 }

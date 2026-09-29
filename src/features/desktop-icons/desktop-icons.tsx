@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { ICON_LAYOUT } from "#/config/desktop.ts";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { Icon, IconPlacement } from "#/lib/desktop-icons/icon.ts";
@@ -165,7 +165,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
     if (isEnterOrSpace || isAltO) {
       event.preventDefault();
-      playClick();
+      playClickSound();
       openIcon(iconDefinition);
     }
   }

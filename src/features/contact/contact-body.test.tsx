@@ -8,9 +8,9 @@ import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 
 import { ContactBody, SENDING_MESSAGE } from "./contact-body.tsx";
 
-const playError = vi.hoisted(() => vi.fn());
-const playSuccess = vi.hoisted(() => vi.fn());
-const playInputScroll = vi.hoisted(() => vi.fn());
+const playErrorSound = vi.hoisted(() => vi.fn());
+const playSuccessSound = vi.hoisted(() => vi.fn());
+const playInputScrollSound = vi.hoisted(() => vi.fn());
 const silenceScrollAt = vi.hoisted(() => vi.fn());
 const closeWindow = vi.hoisted(() => vi.fn());
 const forceCloseWindow = vi.hoisted(() => vi.fn());
@@ -26,12 +26,12 @@ vi.mock("#/lib/window-manager/use-close-window.ts", () => ({
 
 vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {
-    playInputScroll,
+    playInputScrollSound,
     silenceScrollAt,
   }),
 );
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playError, playSuccess }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playErrorSound, playSuccessSound }),
 );
 
 const CONTACT_EMAIL_ADDRESS = "inbox@example.com";
@@ -69,9 +69,9 @@ beforeEach(() => {
   fetchMock.mockReset();
   fetchMock.mockImplementation((_input, request) => (request?.method === "POST" ? sendResponse : emailAddressResponse));
 
-  playError.mockClear();
-  playSuccess.mockClear();
-  playInputScroll.mockClear();
+  playErrorSound.mockClear();
+  playSuccessSound.mockClear();
+  playInputScrollSound.mockClear();
   silenceScrollAt.mockClear();
 
   closeWindow.mockReset();
@@ -156,7 +156,7 @@ test("a scroll that follows a caret-moving key does not play the scroll sound", 
   fireEvent.scroll(field);
 
   expect(silenceScrollAt).toHaveBeenCalledWith(field);
-  expect(playInputScroll).not.toHaveBeenCalled();
+  expect(playInputScrollSound).not.toHaveBeenCalled();
 });
 
 test("a scroll that does not follow a caret-moving key plays the scroll sound", () => {
@@ -165,7 +165,7 @@ test("a scroll that does not follow a caret-moving key plays the scroll sound", 
 
   fireEvent.scroll(field);
 
-  expect(playInputScroll).toHaveBeenCalledWith(field);
+  expect(playInputScrollSound).toHaveBeenCalledWith(field);
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
@@ -174,7 +174,7 @@ test("sending an incomplete message shows an alert and does not submit", () => {
 
   fireEvent.click(button("Send"));
 
-  expect(playError).toHaveBeenCalledOnce();
+  expect(playErrorSound).toHaveBeenCalledOnce();
   expect(sendMessageCalls()).toHaveLength(0);
 
   const alert = screen.getByRole("alertdialog");
@@ -334,7 +334,7 @@ test("a successful submission shows a confirmation, plays the message sent sound
 
   expect(await screen.findByRole("alertdialog")).toBeDefined();
   expect(screen.getByText("Message sent!")).toBeDefined();
-  expect(playSuccess).toHaveBeenCalledOnce();
+  expect(playSuccessSound).toHaveBeenCalledOnce();
 
   fireEvent.click(alertButton("OK"));
 
@@ -368,8 +368,8 @@ test("a failed submission shows an error and preserves the message", async () =>
       `The message couldn’t be sent. Try again, or write directly instead. You can write directly to ${CONTACT_EMAIL_ADDRESS} instead.`,
     ),
   ).toBeDefined();
-  expect(playError).toHaveBeenCalledOnce();
-  expect(playSuccess).not.toHaveBeenCalled();
+  expect(playErrorSound).toHaveBeenCalledOnce();
+  expect(playSuccessSound).not.toHaveBeenCalled();
   expect((input("Message:") as HTMLTextAreaElement).value).toBe("Hello.");
 });
 
@@ -438,7 +438,7 @@ test("canceling during submission aborts the request and ignores its result", as
     await Promise.resolve();
   });
 
-  expect(playSuccess).not.toHaveBeenCalled();
+  expect(playSuccessSound).not.toHaveBeenCalled();
   expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
@@ -450,7 +450,7 @@ test("discarding a written message shows a confirmation alert and preserves the 
   fireEvent.click(button("Discard"));
 
   expect(screen.getByText("Discard this message?")).toBeDefined();
-  expect(playError).toHaveBeenCalledOnce();
+  expect(playErrorSound).toHaveBeenCalledOnce();
   expect(forceCloseWindow).not.toHaveBeenCalled();
 
   fireEvent.click(alertButton("Cancel"));
@@ -476,7 +476,7 @@ test("discarding an empty message closes the window without showing a confirmati
   fireEvent.click(button("Cancel"));
 
   expect(screen.queryByRole("alertdialog")).toBeNull();
-  expect(playError).not.toHaveBeenCalled();
+  expect(playErrorSound).not.toHaveBeenCalled();
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 

@@ -179,8 +179,8 @@ function visibleRangeFramePlacementIn(root: HTMLElement) {
   const visibleRangeFrame = root.querySelector<HTMLElement>(`.${styles.visibleRangeFrame}`)!;
 
   return {
-    offset: Number(visibleRangeFrame.style.getPropertyValue("--placement-offset")),
-    size: Number(visibleRangeFrame.style.getPropertyValue("--placement-size")),
+    offset: Number(visibleRangeFrame.style.getPropertyValue("--career-timeline-placement-offset")),
+    size: Number(visibleRangeFrame.style.getPropertyValue("--career-timeline-placement-size")),
   };
 }
 
@@ -313,7 +313,8 @@ describe("CareerTimeline", () => {
   test("colors a listed role with the accent color of the first discipline it lists whose filter is pressed", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
 
-    const accentColorOfMiddleRole = () => roleNamed("Middle Role")?.style.getPropertyValue("--discipline-accent-color");
+    const accentColorOfMiddleRole = () =>
+      roleNamed("Middle Role")?.style.getPropertyValue("--career-timeline-discipline-accent-color");
 
     expect(accentColorOfMiddleRole()).toBe("var(--accent-magenta)");
 

@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useRef } from "react";
 
-import { playError, playSuccess } from "#/lib/audio/sounds.ts";
+import { playErrorSound, playSuccessSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { containsPoint } from "#/lib/geometry.ts";
 
@@ -77,7 +77,7 @@ export function Alert(
       primaryActionRef.current?.focus(); // `showModal()` may focus the dialog itself.
 
       if (sound !== "none") {
-        (sound === "success" ? playSuccess : playError)();
+        (sound === "success" ? playSuccessSound : playErrorSound)();
       }
     } else if (!open && dialog.open) {
       dialog.close();
@@ -95,7 +95,7 @@ export function Alert(
       aria-describedby={label === undefined ? undefined : messageId}
       onPointerDown={(event) => {
         if (isPressOutside(event)) {
-          playError();
+          playErrorSound();
         }
       }}
       onCancel={(event) => {

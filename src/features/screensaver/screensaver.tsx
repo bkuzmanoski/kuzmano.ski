@@ -13,7 +13,7 @@ import styles from "./screensaver.module.css";
 
 import type { PointerEvent } from "react";
 
-const SCREENSAVER_STYLE: StyleWithVars = { "--fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
+const SCREENSAVER_STYLE: StyleWithVars = { "--screensaver-fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
 
 function wakeOnMovement(event: PointerEvent<HTMLDivElement>) {
   if (event.buttons === 0) {

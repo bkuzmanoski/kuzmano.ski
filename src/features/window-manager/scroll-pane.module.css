@@ -6,11 +6,11 @@
 
   /* Children read this value so the content width does not change as the scrollbar appears and disappears. */
   &:has(> [data-collapsed]) {
-    --reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
+    --scroll-pane-reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
 
     /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
     @container not style(--window-safe-area-inline-end: 0px) {
-      --reserved-scrollbar-width: 0px; /* The scrollbar is hidden when there is a safe-area inset (see below). */
+      --scroll-pane-reserved-scrollbar-width: 0px; /* The scrollbar is hidden when there is a safe-area inset (see below). */
     }
   }
 }

@@ -10,7 +10,7 @@ import keyboardMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illu
 import keyboardMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-keyboard.webp";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context.ts";
-import { playBootChime } from "#/lib/audio/sounds.ts";
+import { playBootChimeSound, playKeyDownSound, playKeyPressSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect.ts";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle.ts";
 import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay.ts";
@@ -25,6 +25,7 @@ import {
   startOfPhaseMs,
   whenFontReady,
   whenIllustrationReady,
+  whenKeySoundsReady,
 } from "#/lib/boot-sequence/phases.ts";
 import type { Motion, Phase } from "#/lib/boot-sequence/phases.ts";
 import { shouldRunBootSequence } from "#/lib/boot-sequence/session.ts";
@@ -70,9 +71,9 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
     top: display.y,
     width: display.width,
     height: display.height,
-    "--display-scale": scale,
-    "--screen-radius": `${screenParameters.radius}px`,
-    "--inset": cssInset(isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset),
+    "--boot-sequence-display-scale": scale,
+    "--boot-sequence-screen-radius": `${screenParameters.radius}px`,
+    "--boot-sequence-inset": cssInset(isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset),
   };
   const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
 
@@ -136,7 +137,7 @@ function BootSequenceContent() {
     const steps = sequence(motion);
 
     setPhase(steps[0].phase);
-    playBootChime({ delaySeconds: startOfPhaseMs(steps, "display-on") / 1000 });
+    playBootChimeSound({ delaySeconds: startOfPhaseMs(steps, "display-on") / 1000 });
 
     let elapsedTimeMs = 0;
 
@@ -163,6 +164,7 @@ function BootSequenceContent() {
 
     const readinessPromises = [
       whenFontReady(),
+      whenKeySoundsReady(),
       whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
       new Promise((resolve) => timers.push(setTimeout(resolve, MIN_LOADING_DURATION_MS))),
     ];
@@ -183,17 +185,54 @@ function BootSequenceContent() {
       const eventListenerOptions = { capture: true, signal: controller.signal };
 
       document.addEventListener("keydown", onKeyDown, eventListenerOptions);
-      document.addEventListener("pointerup", runSequence, eventListenerOptions);
+      document.addEventListener("keyup", onKeyUp, eventListenerOptions);
+      document.addEventListener("pointerdown", onPointerDown, eventListenerOptions);
+      document.addEventListener("pointerup", onPointerUp, eventListenerOptions);
     });
 
-    function onKeyDown(event: KeyboardEvent) {
-      if (isBeginKey(event)) {
+    let pressedInput: string | null = null;
+
+    function press(input: string) {
+      pressedInput = input;
+      primeAudio();
+      playKeyDownSound();
+    }
+
+    function release(input: string) {
+      if (input === pressedInput) {
+        playKeyUpSound();
         runSequence();
       }
     }
 
-    function runSequence() {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!event.repeat && isBeginKey(event)) {
+        press(event.code);
+      }
+    }
+
+    function onKeyUp(event: KeyboardEvent) {
+      release(event.code);
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (event.pointerType === "mouse") {
+        press("mouse");
+      }
+    }
+
+    function onPointerUp(event: PointerEvent) {
+      if (event.pointerType === "mouse") {
+        release("mouse");
+        return;
+      }
+
       primeAudio();
+      playKeyPressSound();
+      runSequence();
+    }
+
+    function runSequence() {
       controller.abort();
       timers.push(...schedulePhaseExecution());
     }
@@ -220,20 +259,20 @@ function BootSequenceContent() {
   } = phaseFlags(phase);
   const hasZoom = hasStageZoom(motion);
   const containerStyle: StyleWithVars = {
-    "--macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
-    "--stage-zoom-ms": `${motion.stageZoom}ms`,
-    "--crt-warm-up-ms": `${motion.crtWarmUp}ms`,
-    "--logo-draw-ms": `${motion.logoDraw}ms`,
-    "--glass-fade-ms": `${motion.glassFade}ms`,
-    "--desktop-reveal-ms": `${motion.desktopReveal}ms`,
-    "--glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,
-    "--glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
-    "--focal-point-x": `${FOCAL_POINT.x * 100}%`,
-    "--focal-point-y": `${FOCAL_POINT.y * 100}%`,
+    "--boot-sequence-macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
+    "--boot-sequence-stage-zoom-ms": `${motion.stageZoom}ms`,
+    "--boot-sequence-crt-warm-up-ms": `${motion.crtWarmUp}ms`,
+    "--boot-sequence-logo-draw-ms": `${motion.logoDraw}ms`,
+    "--boot-sequence-glass-fade-ms": `${motion.glassFade}ms`,
+    "--boot-sequence-desktop-reveal-ms": `${motion.desktopReveal}ms`,
+    "--boot-sequence-glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,
+    "--boot-sequence-glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
+    "--boot-sequence-focal-point-x": `${FOCAL_POINT.x * 100}%`,
+    "--boot-sequence-focal-point-y": `${FOCAL_POINT.y * 100}%`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
   const stageStyle: StyleWithVars = {
-    "--zoom-out": cssTransform(metrics.zoomOut),
+    "--boot-sequence-zoom-out": cssTransform(metrics.zoomOut),
   };
   const illustrationStyle = {
     left: metrics.illustration.x,

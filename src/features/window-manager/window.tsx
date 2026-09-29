@@ -7,7 +7,7 @@ import ZoomWindowControl from "#/assets/images/window-control-zoom.svg?react";
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { stepScrollForPress } from "#/lib/audio/scroll.ts";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -176,7 +176,7 @@ export function Window({
     threshold: DRAG_THRESHOLD_PX, // The title bar also responds to a double click, which must survive the jitter of a press.
     canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
     start: () => {
-      playClick();
+      playClickSound();
       hasMovedWindowRef.current = false;
 
       return { x, y };
@@ -200,7 +200,7 @@ export function Window({
       }
 
       if (maximized) {
-        playClick();
+        playClickSound();
         onZoom();
       } else if (!hasMovedWindowRef.current) {
         onZoom();
@@ -210,7 +210,7 @@ export function Window({
 
   const resizeHandlers = usePointerDrag({
     start: (event) => {
-      playClick();
+      playClickSound();
       setIsResizing(true);
       setIsResizePressed(true);
 

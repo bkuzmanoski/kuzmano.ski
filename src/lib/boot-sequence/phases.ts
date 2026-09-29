@@ -1,4 +1,5 @@
-import { NON_GESTURE_KEYS } from "../audio/context.ts";
+import { NON_GESTURE_KEYS, needsAudioPriming } from "../audio/context.ts";
+import { loadKeySounds } from "../audio/sounds.ts";
 
 // Note: `phaseFlags` derives its flags from a phase's position. Phases must be defined in sequence order.
 const PHASES = [
@@ -116,6 +117,9 @@ export async function whenFontReady(): Promise<void> {
     // Ignored.
   }
 }
+
+// Keypress sounds play only from the begin prompt, which only appears if audio needs priming.
+export const whenKeySoundsReady = (): Promise<unknown> => (needsAudioPriming() ? loadKeySounds() : Promise.resolve());
 
 export function whenIllustrationReady(...images: Array<HTMLImageElement | null>): Promise<unknown> {
   return Promise.all(

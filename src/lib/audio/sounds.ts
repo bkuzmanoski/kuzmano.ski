@@ -1,4 +1,8 @@
-import { LEAD_TIME_S, playSound } from "./context.ts";
+import keyDownRecordingUrl from "#/assets/sounds/key-down.wav";
+import keyUpRecordingUrl from "#/assets/sounds/key-up.wav";
+
+import { LEAD_TIME_S, schedulePlayback } from "./context.ts";
+import { loadRecording, playRecording } from "./recording.ts";
 import { playStrike } from "./strike.ts";
 import { playTone } from "./tone.ts";
 
@@ -66,14 +70,18 @@ const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000; // The speed, in pixels per seco
 const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.2 };
 const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
 
+const KEY_LEVEL = 1.25;
+const KEY_UP_MIN_DELAY_S = 0.04; // Ensures key up follows key down, even when both wait for the same audio resume.
+const KEY_UP_TAP_DELAY_S = 0.1175; // Timing of the key-up sound within the original keypress recording.
+
 const BOOT_CHIME_LEVEL = 0.5;
 const ERROR_LEVEL = 0.5;
 const SUCCESS_LEVEL = 0.4;
 
 let lastClickAt = 0;
 
-export function playClick() {
-  playSound((context) => {
+export function playClickSound() {
+  schedulePlayback((context) => {
     const at = Math.max(context.currentTime + LEAD_TIME_S, lastClickAt + CLICK.durationSeconds);
 
     playStrike(context, CLICK, { at, level: 1, rate: 1 });
@@ -83,8 +91,8 @@ export function playClick() {
 
 let lastHoverAt = 0;
 
-export function playHover() {
-  playSound((context) => {
+export function playHoverSound() {
+  schedulePlayback((context) => {
     const at = context.currentTime + LEAD_TIME_S;
 
     if (at < lastHoverAt + HOVER_INTERVAL_S) {
@@ -98,8 +106,8 @@ export function playHover() {
 
 let lastDetentAt = 0;
 
-export function playScrollDetent(speed: number) {
-  playSound((context) => {
+export function playScrollDetentSound(speed: number) {
+  schedulePlayback((context) => {
     const at = context.currentTime + LEAD_TIME_S;
 
     if (at < lastDetentAt + SCROLL_DETENT_INTERVAL_S) {
@@ -118,17 +126,52 @@ export function playScrollDetent(speed: number) {
   });
 }
 
-/** The startup chime, scheduled ahead to synchronize with the animation timing. */
-export function playBootChime({ delaySeconds }: { delaySeconds: number }) {
-  playSound((context) =>
+export function loadKeySounds(): Promise<unknown> {
+  return Promise.all([loadRecording(keyDownRecordingUrl), loadRecording(keyUpRecordingUrl)]);
+}
+
+let lastKeyDownAt = 0;
+
+export function playKeyDownSound() {
+  schedulePlayback((context) => {
+    const at = context.currentTime + LEAD_TIME_S;
+
+    playRecording(context, keyDownRecordingUrl, { at, level: KEY_LEVEL });
+    lastKeyDownAt = at;
+  });
+}
+
+export function playKeyUpSound() {
+  schedulePlayback((context) => {
+    const at = Math.max(context.currentTime + LEAD_TIME_S, lastKeyDownAt + KEY_UP_MIN_DELAY_S);
+
+    playRecording(context, keyUpRecordingUrl, { at, level: KEY_LEVEL });
+  });
+}
+
+export function playKeyPressSound() {
+  schedulePlayback((context) => {
+    const at = context.currentTime + LEAD_TIME_S;
+
+    playRecording(context, keyDownRecordingUrl, { at, level: KEY_LEVEL });
+    playRecording(context, keyUpRecordingUrl, { at: at + KEY_UP_TAP_DELAY_S, level: KEY_LEVEL });
+  });
+}
+
+export function playBootChimeSound({ delaySeconds }: { delaySeconds: number }) {
+  schedulePlayback((context) =>
     playTone(context, BOOT_CHIME, { at: context.currentTime + LEAD_TIME_S + delaySeconds, level: BOOT_CHIME_LEVEL }),
   );
 }
 
-export function playError() {
-  playSound((context) => playTone(context, ERROR, { at: context.currentTime + LEAD_TIME_S, level: ERROR_LEVEL }));
+export function playErrorSound() {
+  schedulePlayback((context) =>
+    playTone(context, ERROR, { at: context.currentTime + LEAD_TIME_S, level: ERROR_LEVEL }),
+  );
 }
 
-export function playSuccess() {
-  playSound((context) => playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME_S, level: SUCCESS_LEVEL }));
+export function playSuccessSound() {
+  schedulePlayback((context) =>
+    playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME_S, level: SUCCESS_LEVEL }),
+  );
 }

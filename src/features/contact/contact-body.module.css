@@ -28,7 +28,7 @@
   & .message {
     /* The width the field reserves for the scrollbar. Declared here rather than only
      * under the collapsed state so the parent pane's own reservation is not inherited. */
-    --reserved-scrollbar-width: 0px;
+    --scroll-pane-reserved-scrollbar-width: 0px;
 
     flex: 1;
     gap: 0;
@@ -36,7 +36,7 @@
     border-top: 1px solid var(--color-border);
 
     &:has(> [data-collapsed]) {
-      --reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
+      --scroll-pane-reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
     }
   }
 

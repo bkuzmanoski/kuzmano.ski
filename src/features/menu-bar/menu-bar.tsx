@@ -9,7 +9,7 @@ import { Tooltip } from "#/components/tooltip.tsx";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
 import { SITE_SOURCE_URL } from "#/config/site.ts";
-import { playClick, playHover } from "#/lib/audio/sounds.ts";
+import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { restart, useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -117,7 +117,7 @@ function SoundStatus() {
         setSoundEffects(sound === "on" ? "off" : "on");
 
         if (sound === "off") {
-          playClick(); // The press itself was gated by the setting being enabled.
+          playClickSound(); // The press itself was gated by the setting being enabled.
         }
       }}
     >
@@ -290,7 +290,7 @@ export function MenuBar() {
     }
 
     if (openMenu) {
-      playHover();
+      playHoverSound();
       openMenuAt(label, anchor, { focusesFirstItem: true });
     } else {
       anchor.focus();
@@ -315,7 +315,7 @@ export function MenuBar() {
       anchor.releasePointerCapture(event.pointerId);
     }
 
-    playClick();
+    playClickSound();
     anchor.focus();
     setIsPointerHeld(true);
     setOpenMenu((current) => (current?.label === label ? null : { label, anchor, focusesFirstItem: false }));
@@ -327,7 +327,7 @@ export function MenuBar() {
       case "Enter":
       case " ":
         event.preventDefault();
-        playClick();
+        playClickSound();
         openMenuAt(label, event.currentTarget, { focusesFirstItem: true });
 
         break;
@@ -368,7 +368,7 @@ export function MenuBar() {
               onPointerDown={(event) => onTitlePointerDown(event, label)}
               onPointerEnter={(event) => {
                 if (openMenu !== null && openMenu.label !== label) {
-                  playHover();
+                  playHoverSound();
                   openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
               }}

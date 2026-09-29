@@ -5,10 +5,10 @@ import { fakeScrollViewport } from "#/test-utils/audio.ts";
 import {
   DETENT_PX,
   IDLE_DURATION_MS,
-  playInputScroll,
-  playPaneScroll,
-  playScroll,
-  playScrollStep,
+  playInputScrollSound,
+  playPaneScrollSound,
+  playScrollSound,
+  playScrollStepSound,
   recordScrollAt,
   recordScrollIntoView,
   scrollIntoViewSilently,
@@ -16,7 +16,7 @@ import {
   stepScroll,
   stepScrollForPress,
 } from "./scroll.ts";
-import { playClick, playScrollDetent } from "./sounds.ts";
+import { playClickSound, playScrollDetentSound } from "./sounds.ts";
 
 vi.mock("./sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
@@ -27,27 +27,27 @@ let now = 0;
 beforeEach(() => {
   now = 0;
   vi.spyOn(performance, "now").mockImplementation(() => now);
-  vi.mocked(playScrollDetent).mockClear();
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playScrollDetentSound).mockClear();
+  vi.mocked(playClickSound).mockClear();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const detents = () => vi.mocked(playScrollDetent).mock.calls.length;
+const detents = () => vi.mocked(playScrollDetentSound).mock.calls.length;
 
 function scrollTo(element: Element & { scrollTop: number }, top: number, elapsedTimeMs = 16) {
   now += elapsedTimeMs;
   element.scrollTop = top;
-  playScroll(element);
+  playScrollSound(element);
 }
 
-describe("playScroll", () => {
+describe("playScrollSound", () => {
   test("opens a gesture without playing a detent", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
 
     expect(detents()).toBe(0);
   });
@@ -55,7 +55,7 @@ describe("playScroll", () => {
   test("plays a detent once the element has scrolled `DETENT_PX`", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     scrollTo(element, DETENT_PX);
 
     expect(detents()).toBe(1);
@@ -64,9 +64,9 @@ describe("playScroll", () => {
   test("does not play another detent until the element has scrolled another `DETENT_PX`", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     scrollTo(element, 2);
-    vi.mocked(playScrollDetent).mockClear();
+    vi.mocked(playScrollDetentSound).mockClear();
     scrollTo(element, 3); // 3px of credit: still short of a notch.
 
     expect(detents()).toBe(0);
@@ -76,7 +76,7 @@ describe("playScroll", () => {
     const element = fakeScrollViewport();
     const move = DETENT_PX / 4; // Four events to the notch, so one per event would play eight.
 
-    playScroll(element);
+    playScrollSound(element);
 
     for (let event = 1; event <= 8; event += 1) {
       scrollTo(element, move * event);
@@ -88,7 +88,7 @@ describe("playScroll", () => {
   test("starts a new gesture after a pause longer than `IDLE_DURATION_MS`", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     scrollTo(element, 500, IDLE_DURATION_MS + 1);
 
     expect(detents()).toBe(0);
@@ -98,7 +98,7 @@ describe("playScroll", () => {
     const element = fakeScrollViewport({ scrollHeight: 1000, clientHeight: 100 });
 
     element.scrollTop = 900; // The maximum.
-    playScroll(element);
+    playScrollSound(element);
     scrollTo(element, 1200); // Rubber-banding beyond it.
 
     expect(detents()).toBe(0);
@@ -108,12 +108,12 @@ describe("playScroll", () => {
     const slowViewport = fakeScrollViewport();
     const fastViewport = fakeScrollViewport();
 
-    playScroll(slowViewport);
+    playScrollSound(slowViewport);
     scrollTo(slowViewport, 40, 200);
-    playScroll(fastViewport);
+    playScrollSound(fastViewport);
     scrollTo(fastViewport, 40, 4);
 
-    const [slowDetent, fastDetent] = vi.mocked(playScrollDetent).mock.calls;
+    const [slowDetent, fastDetent] = vi.mocked(playScrollDetentSound).mock.calls;
 
     expect(fastDetent![0]).toBeGreaterThan(slowDetent![0]);
   });
@@ -123,7 +123,7 @@ describe("recordScrollAt", () => {
   test("records a position without playing a detent", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     element.scrollTop = 500;
     recordScrollAt(element);
 
@@ -142,7 +142,7 @@ describe("recordScrollIntoView", () => {
 
     Object.defineProperty(child, "parentElement", { value: parent });
 
-    playScroll(parent);
+    playScrollSound(parent);
     parent.scrollTop = 500;
     recordScrollIntoView(child);
     scrollTo(parent, 500);
@@ -168,7 +168,7 @@ describe("recordScrollIntoView", () => {
 
     Object.defineProperty(child, "parentElement", { value: parent });
 
-    playScroll(parent);
+    playScrollSound(parent);
     parent.scrollTop = 500;
     recordScrollIntoView(child);
     scrollTo(parent, 500 + DETENT_PX);
@@ -184,7 +184,7 @@ describe("silenceScrollIntoView", () => {
 
     Object.defineProperty(child, "parentElement", { value: parent });
 
-    playScroll(parent);
+    playScrollSound(parent);
     silenceScrollIntoView(child); // The ancestor has not moved yet.
 
     for (let frame = 1; frame <= 6; frame += 1) {
@@ -202,7 +202,7 @@ describe("silenceScrollIntoView", () => {
 
     Object.defineProperty(child, "parentElement", { value: parent });
 
-    playScroll(parent);
+    playScrollSound(parent);
     silenceScrollIntoView(child);
     scrollTo(parent, DETENT_PX * 4);
 
@@ -244,7 +244,7 @@ describe("stepScroll", () => {
   test("ignores the scroll the step causes", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     stepScroll(element, 40);
     scrollTo(element, 40);
 
@@ -256,16 +256,16 @@ describe("stepScrollForPress", () => {
   test("plays a detent for a single press after a pause longer than `IDLE_DURATION_MS`", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
 
     now += IDLE_DURATION_MS + 1;
 
     stepScrollForPress(element, 40, false);
-    playScroll(element);
+    playScrollSound(element);
 
     expect(element.scrollTop).toBe(40);
     expect(detents()).toBe(1);
-    expect(playClick).not.toHaveBeenCalled();
+    expect(playClickSound).not.toHaveBeenCalled();
   });
 
   test("plays a click sound, and not a detent, for a press at the scroll boundary", () => {
@@ -273,7 +273,7 @@ describe("stepScrollForPress", () => {
 
     stepScrollForPress(element, -40, false);
 
-    expect(playClick).toHaveBeenCalledTimes(1);
+    expect(playClickSound).toHaveBeenCalledTimes(1);
     expect(detents()).toBe(0);
   });
 
@@ -282,7 +282,7 @@ describe("stepScrollForPress", () => {
 
     stepScrollForPress(element, -40, true);
 
-    expect(playClick).not.toHaveBeenCalled();
+    expect(playClickSound).not.toHaveBeenCalled();
     expect(detents()).toBe(0);
   });
 });
@@ -316,7 +316,7 @@ describe("scrollIntoViewSilently", () => {
     const viewport = fakeScrollViewport();
     const { item, scrollIntoView } = fakeItem(viewport);
 
-    playScroll(viewport); // Opens a gesture at 0.
+    playScrollSound(viewport); // Opens a gesture at 0.
     scrollIntoView.mockImplementation(() => {
       viewport.scrollTop = 500; // `scrollIntoView` moves the viewport before it returns.
     });
@@ -328,13 +328,13 @@ describe("scrollIntoViewSilently", () => {
   });
 });
 
-describe("playScrollStep", () => {
+describe("playScrollStepSound", () => {
   test("plays a detent and ignores a later scroll event at the same position", () => {
     const element = fakeScrollViewport();
 
-    playScroll(element);
+    playScrollSound(element);
     element.scrollTop = 40;
-    playScrollStep(element);
+    playScrollStepSound(element);
 
     expect(detents()).toBe(1);
 
@@ -346,24 +346,24 @@ describe("playScrollStep", () => {
   test("uses the same speed for every step", () => {
     const element = fakeScrollViewport();
 
-    playScrollStep(element);
+    playScrollStepSound(element);
     now += 200;
-    playScrollStep(element);
+    playScrollStepSound(element);
 
-    const [first, second] = vi.mocked(playScrollDetent).mock.calls;
+    const [first, second] = vi.mocked(playScrollDetentSound).mock.calls;
 
     expect(first![0]).toBe(second![0]);
   });
 });
 
-describe("playPaneScroll", () => {
+describe("playPaneScrollSound", () => {
   test("plays a detent when the viewport height has not changed", () => {
     const element = fakeScrollViewport();
 
-    playPaneScroll(element);
+    playPaneScrollSound(element);
     now += 16;
     element.scrollTop = DETENT_PX;
-    playPaneScroll(element);
+    playPaneScrollSound(element);
 
     expect(detents()).toBe(1);
   });
@@ -371,11 +371,11 @@ describe("playPaneScroll", () => {
   test("records the scroll a resize causes without playing a detent", () => {
     const element = fakeScrollViewport();
 
-    playPaneScroll(element);
+    playPaneScrollSound(element);
     now += 16;
     element.clientHeight += 40; // The window the pane sits in was made taller.
     element.scrollTop = 40;
-    playPaneScroll(element);
+    playPaneScrollSound(element);
 
     expect(detents()).toBe(0);
   });
@@ -383,26 +383,26 @@ describe("playPaneScroll", () => {
   test("plays a detent for the scroll after the one a resize causes", () => {
     const element = fakeScrollViewport();
 
-    playPaneScroll(element);
+    playPaneScrollSound(element);
     element.clientHeight += 40;
     element.scrollTop = 40;
-    playPaneScroll(element);
+    playPaneScrollSound(element);
     now += 16;
     element.scrollTop = 40 + DETENT_PX;
-    playPaneScroll(element);
+    playPaneScrollSound(element);
 
     expect(detents()).toBe(1);
   });
 });
 
-describe("playInputScroll", () => {
+describe("playInputScrollSound", () => {
   test("plays a detent when the content height has not changed", () => {
     const element = fakeScrollViewport();
 
-    playInputScroll(element);
+    playInputScrollSound(element);
     now += 16;
     element.scrollTop = DETENT_PX;
-    playInputScroll(element);
+    playInputScrollSound(element);
 
     expect(detents()).toBe(1);
   });
@@ -410,11 +410,11 @@ describe("playInputScroll", () => {
   test("records the scroll an edit causes without playing a detent", () => {
     const element = fakeScrollViewport();
 
-    playInputScroll(element);
+    playInputScrollSound(element);
     now += 16;
     element.scrollHeight += 20; // A line the edit added.
     element.scrollTop = 20;
-    playInputScroll(element);
+    playInputScrollSound(element);
 
     expect(detents()).toBe(0);
   });
@@ -422,13 +422,13 @@ describe("playInputScroll", () => {
   test("plays a detent for the scroll after the one an edit causes", () => {
     const element = fakeScrollViewport();
 
-    playInputScroll(element);
+    playInputScrollSound(element);
     element.scrollHeight += 20;
     element.scrollTop = 20;
-    playInputScroll(element);
+    playInputScrollSound(element);
     now += 16;
     element.scrollTop = 20 + DETENT_PX;
-    playInputScroll(element);
+    playInputScrollSound(element);
 
     expect(detents()).toBe(1);
   });

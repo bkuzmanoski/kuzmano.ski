@@ -9,7 +9,7 @@ import FolderOpenDesktopIcon from "#/assets/images/desktop-icon-folder-open.svg?
 import FolderSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-selected.svg?react";
 import FolderDesktopIcon from "#/assets/images/desktop-icon-folder.svg?react";
 import DownloadDesktopIconIndicator from "#/assets/images/desktop-icon-indicator-download.svg?react";
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { iconHref } from "#/lib/desktop-icons/icon.ts";
 import type { Icon as IconDefinition, IconKind } from "#/lib/desktop-icons/icon.ts";
@@ -97,7 +97,7 @@ export const DesktopIcon = memo(function Icon({
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD_PX,
     start: () => {
-      playClick();
+      playClickSound();
       onSelect(iconDefinition);
       hasMovedRef.current = false;
 
@@ -108,7 +108,7 @@ export const DesktopIcon = memo(function Icon({
       hasMovedRef.current = moved;
 
       if (moved) {
-        playClick();
+        playClickSound();
         onMoveEnd();
       }
     },

@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { DETENT_PX, playPaneScroll } from "#/lib/audio/scroll.ts";
+import { DETENT_PX, playPaneScrollSound } from "#/lib/audio/scroll.ts";
 import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
@@ -10,11 +10,11 @@ import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS, Scrollbar } from "./scrollbar.tsx";
 
-const playClick = vi.hoisted(() => vi.fn());
-const playScrollDetent = vi.hoisted(() => vi.fn());
+const playClickSound = vi.hoisted(() => vi.fn());
+const playScrollDetentSound = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClick, playScrollDetent }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClickSound, playScrollDetentSound }),
 );
 
 const VIEWPORT_ID = "viewport";
@@ -29,8 +29,8 @@ const FRAME_MS = 16; // A drag reports its move on the frame that follows the po
 
 beforeEach(() => {
   vi.useFakeTimers();
-  playClick.mockClear();
-  playScrollDetent.mockClear();
+  playClickSound.mockClear();
+  playScrollDetentSound.mockClear();
 });
 
 afterEach(() => vi.useRealTimers());
@@ -47,7 +47,7 @@ function Harness() {
         id={VIEWPORT_ID}
         onScroll={(event) => {
           measure();
-          playPaneScroll(event.currentTarget);
+          playPaneScrollSound(event.currentTarget);
         }}
       >
         <p>Content</p>
@@ -156,7 +156,7 @@ test("a step at the scroll boundary still plays a click sound", () => {
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a tap whose touch pointer events do not reach the arrow still plays a click sound at the scroll boundary", () => {
@@ -165,7 +165,7 @@ test("a tap whose touch pointer events do not reach the arrow still plays a clic
   viewport.scrollTop = MAX_SCROLL_TOP;
   fireEvent.click(scrollDownButton, { detail: 1 }); // The press landed outside, so only the click arrives.
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a keyboard activation steps the viewport", () => {
@@ -235,7 +235,7 @@ test("a press on the track scrolls to the pressed point and plays a click sound"
   pressTrackAt(track, 0.5);
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP / 2);
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a press past either end of the thumb's travel scrolls to that end", () => {
@@ -256,7 +256,7 @@ test("a press on the thumb does not scroll the viewport", () => {
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
 
   expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and initiates its own drag, whose press bubbles through the track.
-  expect(playClick).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
+  expect(playClickSound).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
 });
 
 test("a secondary press on the track is ignored", () => {
@@ -265,7 +265,7 @@ test("a secondary press on the track is ignored", () => {
   fireEvent.pointerDown(track, { button: 2, clientY: TRACK_TOP + TRACK_HEIGHT / 2 });
 
   expect(viewport.scrollTop).toBe(0);
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("the scroll a track press causes does not play a scroll sound", () => {
@@ -275,14 +275,14 @@ test("the scroll a track press causes does not play a scroll sound", () => {
   viewport.scrollTop = DETENT_PX * 2;
   fireEvent.scroll(viewport);
 
-  expect(playScrollDetent).toHaveBeenCalledTimes(1);
+  expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
 
   advanceTimersBy(1);
   pressTrackAt(track, 1);
   fireEvent.scroll(viewport);
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
-  expect(playScrollDetent).toHaveBeenCalledTimes(1);
+  expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
 });
 
 test("a track press transitions into a thumb drag from the point it jumped to", () => {
@@ -320,12 +320,12 @@ test("the scrolling that follows the jump from a track press plays scroll sounds
   fireEvent.scroll(viewport);
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
-  expect(playScrollDetent).not.toHaveBeenCalled();
+  expect(playScrollDetentSound).not.toHaveBeenCalled();
 
   dragTrackTo(track, 0);
   advanceTimersBy(1);
   fireEvent.scroll(viewport);
 
   expect(viewport.scrollTop).toBe(0);
-  expect(playScrollDetent).toHaveBeenCalledTimes(1);
+  expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
 });

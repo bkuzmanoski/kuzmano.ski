@@ -3,7 +3,7 @@ import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import type * as Scroll from "#/lib/audio/scroll.ts";
-import { playClick, playScrollDetent } from "#/lib/audio/sounds.ts";
+import { playClickSound, playScrollDetentSound } from "#/lib/audio/sounds.ts";
 import type * as BootSequenceLifecycle from "#/lib/boot-sequence/lifecycle.ts";
 import { isTouchOnly } from "#/lib/device.ts";
 import { clamp } from "#/lib/math.ts";
@@ -246,24 +246,24 @@ test.each([
   ["the End key", "End"],
 ])("a single press of %s while the window itself has the focus plays one scroll detent", (_label, key) => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
-  vi.mocked(playScrollDetent).mockClear();
+  vi.mocked(playScrollDetentSound).mockClear();
 
   fireEvent.keyDown(screen.getByRole("region"), { key });
 
-  expect(playScrollDetent).toHaveBeenCalledTimes(1);
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("each repeat of a held Down arrow key plays a scroll detent", () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
-  vi.mocked(playScrollDetent).mockClear();
+  vi.mocked(playScrollDetentSound).mockClear();
 
   fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown" });
   fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", repeat: true });
   fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", repeat: true });
 
   expect(scrollPane().scrollTop).toBe(ARROW_STEP_PX * 3);
-  expect(playScrollDetent).toHaveBeenCalledTimes(3);
+  expect(playScrollDetentSound).toHaveBeenCalledTimes(3);
 });
 
 test.each([
@@ -273,38 +273,38 @@ test.each([
 ])("a press of %s at the end of the content plays a click sound and does not play a scroll detent", (_label, key) => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
   scrollPane().scrollTop = 700;
-  vi.mocked(playClick).mockClear();
-  vi.mocked(playScrollDetent).mockClear();
+  vi.mocked(playClickSound).mockClear();
+  vi.mocked(playScrollDetentSound).mockClear();
 
   fireEvent.keyDown(screen.getByRole("region"), { key });
 
   expect(scrollPane().scrollTop).toBe(700);
-  expect(playClick).toHaveBeenCalledTimes(1);
-  expect(playScrollDetent).not.toHaveBeenCalled();
+  expect(playClickSound).toHaveBeenCalledTimes(1);
+  expect(playScrollDetentSound).not.toHaveBeenCalled();
 });
 
 test("a repeat of a held Down arrow key at the end of the content does not play a click sound", () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
   scrollPane().scrollTop = 700;
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playClickSound).mockClear();
 
   fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", repeat: true });
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("pressing a key claimed by a handler the window's content registered does not scroll the content or play a sound", () => {
   render(windowShowing("tall", <ContentClaimingKey claimedKey="ArrowDown" />));
   scrollPane().scrollTop = INITIAL_SCROLL_TOP;
-  vi.mocked(playClick).mockClear();
-  vi.mocked(playScrollDetent).mockClear();
+  vi.mocked(playClickSound).mockClear();
+  vi.mocked(playScrollDetentSound).mockClear();
 
   const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown" });
 
   expect(isDefaultAllowed).toBe(false);
   expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP);
-  expect(playClick).not.toHaveBeenCalled();
-  expect(playScrollDetent).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(playScrollDetentSound).not.toHaveBeenCalled();
 });
 
 test("pressing a key not claimed by a handler the window's content registered still scrolls the content", () => {
@@ -665,7 +665,7 @@ test("a resize drag commits and clears its preview on a `pointermove` without pr
 test("a tap retargeted from the title bar to a control plays the press sound once", () => {
   render(windowShowing("press-sound", BUTTON_ELEMENT));
 
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playClickSound).mockClear();
 
   fireEvent.pointerDown(windowTitleBar(), { clientX: 0, clientY: 0, button: 0 }); // The touch press.
   fireEvent.pointerUp(windowTitleBar(), { clientX: 0, clientY: 0 });
@@ -673,7 +673,7 @@ test("a tap retargeted from the title bar to a control plays the press sound onc
 
   // iOS can retarget a tap near a control to the control, but only the click event follows. The
   // touch pointer events stay with the element under the finger, which plays the press sound.
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a press on a title bar control plays the press sound once", () => {
@@ -681,11 +681,11 @@ test("a press on a title bar control plays the press sound once", () => {
 
   const close = screen.getByRole("button", { name: "Close" });
 
-  vi.mocked(playClick).mockClear();
+  vi.mocked(playClickSound).mockClear();
 
   fireEvent.pointerDown(close, { clientX: 0, clientY: 0, button: 0 });
   fireEvent.pointerUp(close, { clientX: 0, clientY: 0 });
   fireEvent.click(close, { detail: 1 });
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });

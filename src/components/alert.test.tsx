@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { playError, playSuccess } from "#/lib/audio/sounds.ts";
+import { playErrorSound, playSuccessSound } from "#/lib/audio/sounds.ts";
 
 import { Alert } from "./alert.tsx";
 
@@ -164,10 +164,10 @@ test("pressing outside a modal alert plays the error sound", () => {
     />,
   );
   stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
-  vi.mocked(playError).mockClear();
+  vi.mocked(playErrorSound).mockClear();
   fireEvent.pointerDown(screen.getByRole("alertdialog"), { clientX: 40, clientY: 320 });
 
-  expect(playError).toHaveBeenCalledOnce();
+  expect(playErrorSound).toHaveBeenCalledOnce();
 });
 
 test("pressing within the alert, including its padding, does not play the error sound", () => {
@@ -180,36 +180,36 @@ test("pressing within the alert, including its padding, does not play the error 
     />,
   );
   stubDialogBox({ x: 100, y: 100, width: 400, height: 200 });
-  vi.mocked(playError).mockClear();
+  vi.mocked(playErrorSound).mockClear();
   fireEvent.pointerDown(screen.getByRole("alertdialog"), { clientX: 110, clientY: 110 });
 
-  expect(playError).not.toHaveBeenCalled();
+  expect(playErrorSound).not.toHaveBeenCalled();
 });
 
 test("a modal alert plays an error sound when it opens", () => {
   const { rerender } = render(<Alert {...CONTENT} open={false} primaryAction={PRIMARY_ACTION} />);
 
-  vi.mocked(playError).mockClear();
+  vi.mocked(playErrorSound).mockClear();
   rerender(<Alert {...CONTENT} open primaryAction={PRIMARY_ACTION} />);
 
-  expect(playError).toHaveBeenCalledOnce();
+  expect(playErrorSound).toHaveBeenCalledOnce();
 });
 
 test("an alert with a success sound plays it when it opens", () => {
   const { rerender } = render(<Alert {...CONTENT} sound="success" open={false} primaryAction={PRIMARY_ACTION} />);
 
-  vi.mocked(playSuccess).mockClear();
+  vi.mocked(playSuccessSound).mockClear();
   rerender(<Alert {...CONTENT} sound="success" open primaryAction={PRIMARY_ACTION} />);
 
-  expect(playSuccess).toHaveBeenCalledOnce();
+  expect(playSuccessSound).toHaveBeenCalledOnce();
 });
 
 test("a silenced or page-level alert opens without playing a sound", () => {
   const { rerender } = render(<Alert {...CONTENT} sound="none" open={false} primaryAction={PRIMARY_ACTION} />);
 
-  vi.mocked(playError).mockClear();
+  vi.mocked(playErrorSound).mockClear();
   rerender(<Alert {...CONTENT} sound="none" open primaryAction={PRIMARY_ACTION} />);
   render(<Alert {...CONTENT} modal={false} primaryAction={PRIMARY_ACTION} />);
 
-  expect(playError).not.toHaveBeenCalled();
+  expect(playErrorSound).not.toHaveBeenCalled();
 });

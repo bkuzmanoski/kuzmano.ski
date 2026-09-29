@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { playClick } from "#/lib/audio/sounds.ts";
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
 import type { InputFieldControl } from "#/lib/forms/use-input-field.ts";
 
@@ -13,7 +13,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
-beforeEach(() => vi.mocked(playClick).mockClear());
+beforeEach(() => vi.mocked(playClickSound).mockClear());
 
 const CLICK = { detail: 1 }; // A pointer click, as opposed to keyboard activation.
 const FORWARDED_CLICK = { detail: 0 }; // The click a label sends to the control it names.
@@ -93,7 +93,7 @@ test("a press on the control plays one click sound", () => {
   fireEvent.pointerUp(control);
   fireEvent.click(control, CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a press on the label plays one click sound, and the click it forwards does not play another", () => {
@@ -101,11 +101,11 @@ test("a press on the label plays one click sound, and the click it forwards does
 
   fireEvent.pointerDown(screen.getByText("From:"));
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 
   fireEvent.click(screen.getByLabelText("From:"), FORWARDED_CLICK);
 
-  expect(playClick).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a press on a control that plays its own press sound does not play the input field's click sound", () => {
@@ -127,5 +127,5 @@ test("a press on a control that plays its own press sound does not play the inpu
   fireEvent.pointerUp(scrollbar);
   fireEvent.click(scrollbar, CLICK);
 
-  expect(playClick).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
 });
