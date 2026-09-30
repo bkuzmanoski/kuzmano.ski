@@ -86,24 +86,27 @@ describe("observeRailClearances", () => {
     expect(railClearanceOf(heading)).toBe(`${250 - (120 - SPACE_BEFORE_PX)}px`);
   });
 
-  test("sets `--content-body-rail-clearance` on an element with a `data-content-span` attribute, and not on an element in the text column", () => {
+  test("sets `--content-body-rail-clearance` on an element whose `data-content-span` attribute is `wide`, and not on an element in the text column", () => {
     const body = createBody(`
       <p>A paragraph.</p>
       <div data-rail-asides><aside>An aside.</aside></div>
       <p>A second paragraph.</p>
+      <figure data-content-span="text">A figure in the text column.</figure>
       <figure data-content-span="wide">A wide figure.</figure>
     `);
-    const [paragraph, group, secondParagraph, figure] = body.children as unknown as Array<HTMLElement>;
+    const [paragraph, group, secondParagraph, textFigure, wideFigure] = body.children as unknown as Array<HTMLElement>;
 
     placeElement(body, 0, 500);
     placeElement(paragraph!, 0, 100);
     placeElement(group!.firstElementChild!, 0, 250);
-    placeElement(secondParagraph!, 120, 160);
-    placeElement(figure!, 180, 300);
+    placeElement(secondParagraph!, 120, 140);
+    placeElement(textFigure!, 150, 170);
+    placeElement(wideFigure!, 180, 300);
     observeRailClearances(body);
 
     expect(railClearanceOf(secondParagraph!)).toBe("");
-    expect(railClearanceOf(figure!)).toBe(`${250 - (180 - SPACE_BEFORE_PX)}px`);
+    expect(railClearanceOf(textFigure!)).toBe("");
+    expect(railClearanceOf(wideFigure!)).toBe(`${250 - (180 - SPACE_BEFORE_PX)}px`);
   });
 
   test("does not set `--content-body-rail-clearance` on an element when every rail item ends above its row", () => {

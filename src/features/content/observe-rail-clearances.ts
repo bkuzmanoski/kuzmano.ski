@@ -3,7 +3,7 @@ import { railClearanceOf } from "#/lib/content/rail-clearance.ts";
 const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
 const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
 const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote"; // The elements whose `::before` `content-body.module.css` places in the rail.
-const RAIL_SPANNING_ELEMENT_SELECTOR = "h2, [data-content-span]";
+const RAIL_SPANNING_ELEMENT_SELECTOR = 'h2, [data-content-span]:not([data-content-span="text"])';
 
 const paddingBoxTopOf = (element: Element) =>
   element.getBoundingClientRect().top + parseFloat(getComputedStyle(element).borderTopWidth);

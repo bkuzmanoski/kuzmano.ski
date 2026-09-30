@@ -172,8 +172,8 @@
     }
 
     /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
-     * `--content-body-rail-clearance` is set from JS for section headings and `data-content-span` elements
-     * (see `observe-rail-clearances.ts`). */
+     * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span`
+     * of `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). */
     & > * + * {
       margin-block-start: calc(var(--layout-content-space) + var(--content-body-rail-clearance, 0px));
     }
