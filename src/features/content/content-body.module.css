@@ -26,7 +26,7 @@
   --layout-content-rail-gap: 24px;
   --layout-content-rail-track: calc(var(--layout-content-rail-width) + var(--layout-content-rail-gap));
   --layout-content-space: 20px;
-  --layout-content-space-subsection: 32px;
+  --layout-content-space-relaxed: 32px;
   --layout-content-space-loose: 44px;
   --layout-content-space-x-loose: 68px;
   --layout-content-label-offset: 5px; /* Lowers a bitmap label beside body text from the top of its box to the text's cap line. */
@@ -55,7 +55,7 @@
 
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px 0;
+  gap: 4px 0;
   align-items: baseline;
 
   padding-inline-start: 12px;
@@ -154,7 +154,7 @@
 
       grid-column: rail-start / text-end;
 
-      padding-block-start: var(--layout-content-space-subsection);
+      padding-block-start: var(--layout-content-space-relaxed);
       padding-inline-start: var(--layout-content-rail-track);
       border-block-start: 1px solid var(--color-border-secondary);
     }
@@ -177,38 +177,28 @@
 
     /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
      * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span`
-     * of `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). */
+     * of `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). The rules run from the smallest space
+     * to the largest, so where the space after one element and before the next differ, the larger applies. */
     & > * + * {
       margin-block-start: calc(var(--layout-content-space) + var(--content-body-rail-clearance, 0px));
     }
 
-    & > * + :where(h3) {
-      margin-block-start: calc(var(--layout-content-space-subsection) + var(--content-body-rail-clearance, 0px));
+    & > :where(figure, table, blockquote, [data-callout]) + *,
+    & > :where(figure, table, blockquote, [data-callout]) + :where([data-rail-asides]) + *,
+    & > * + :where(h3, figure, table, blockquote, [data-callout]) {
+      margin-block-start: calc(var(--layout-content-space-relaxed) + var(--content-body-rail-clearance, 0px));
     }
 
     & > * + :where(h2) {
       margin-block-start: calc(
-        var(--layout-content-space-subsection) + 4px + var(--content-body-rail-clearance, 0px)
+        var(--layout-content-space-relaxed) + 4px + var(--content-body-rail-clearance, 0px)
       ); /* 4px more than the space below the border for optical balance. */
     }
 
-    & > * + :where(hr, figure, table, [data-content-space="loose"]) {
+    & > * + :where(hr, [data-content-space="loose"]),
+    & > :where(h1, h1 + p, hr, [data-content-space="loose"]) + *,
+    & > :where(h1 + p, hr, [data-content-space="loose"]) + :where([data-rail-asides]) + * {
       margin-block-start: calc(var(--layout-content-space-loose) + var(--content-body-rail-clearance, 0px));
-    }
-
-    & > :where(h1, h1 + p, hr, figure, table, [data-content-space="loose"]) + *,
-    & > :where(h1 + p, hr, figure, table, [data-content-space="loose"]) + [data-rail-asides] + * {
-      margin-block-start: calc(
-        var(--layout-content-space-loose) + var(--content-body-rail-clearance, 0px)
-      ); /* Overrides the rules above. */
-    }
-
-    & > :where(h2, h3, [data-heading-level]) + :where(figure, table, [data-content-space="loose"]),
-    &
-      > :where(h2, h3, [data-heading-level])
-      + [data-rail-asides]
-      + :where(figure, table, [data-content-space="loose"]) {
-      margin-block-start: calc(var(--layout-content-space) + var(--content-body-rail-clearance, 0px));
     }
 
     & > * + [data-rail-asides] {
@@ -221,7 +211,7 @@
 
     & > :where(h2),
     & > :where(h2, h2 + [data-heading-level]) + [data-rail-asides] {
-      --content-body-first-line-offset: calc(var(--layout-content-space-subsection) + 3px);
+      --content-body-first-line-offset: calc(var(--layout-content-space-relaxed) + 3px);
     }
 
     & > :where(h3, h3 + [data-heading-level]) + [data-rail-asides] {
@@ -292,7 +282,7 @@
     & > :where(figure, table):where([data-content-span="wide"], [data-content-span="pane"])::before {
       position: static;
       width: auto;
-      padding-block-end: 4px;
+      padding-block-end: 8px;
     }
 
     & > :where(figure, table)[data-content-span="pane"]::before {
@@ -378,7 +368,7 @@
             }
 
             & > :not(.railLabel) + * {
-              margin-block-start: 8px;
+              margin-block-start: 4px;
             }
           }
         }
@@ -393,16 +383,7 @@
       }
 
       & > :where(h2, figure, table)::before {
-        position: static;
-        width: auto;
-        padding-block-end: 4px;
-      }
-
-      /* A full-width float rather than a block keeps the heading's first baseline on its text, which the
-       * heading link's fallback position aligns with (see `entry-section-heading.module.css`). */
-      & > :where(h2)::before {
-        float: inline-start;
-        width: 100%;
+        display: none;
       }
     }
   }
@@ -542,13 +523,13 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       gap: 8px 20px;
+      align-items: baseline;
     }
 
     &:where(dt) {
       @mixin bitmap-label;
 
       width: var(--layout-content-rail-width);
-      margin-block-start: var(--layout-content-label-offset);
     }
 
     &:where(blockquote) {
@@ -579,7 +560,7 @@
       @mixin bitmap-label;
 
       display: block;
-      margin-block-start: 8px;
+      margin-block-start: 12px;
     }
 
     &:where(hr) {
@@ -662,6 +643,10 @@
       margin-block-start: 8px;
     }
 
+    &:where(blockquote + figcaption) {
+      margin-block-start: 12px; /* Matches the spacing of a blockquote `<cite>`. */
+    }
+
     &:where(table) {
       border-collapse: collapse;
       width: 100%;
@@ -683,7 +668,7 @@
     }
 
     &:where(td) {
-      padding-block: 8px;
+      padding-block: 6px;
       padding-inline: 0 16px;
       border-block-end: 1px solid var(--color-border-secondary);
 
