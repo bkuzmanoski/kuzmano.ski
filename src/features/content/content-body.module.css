@@ -4,14 +4,18 @@
 }
 
 @counter-style content-body-unordered-list-level-1 {
-  suffix: " ";
   symbols: "\25AB";
   system: cyclic;
 }
 
 @counter-style content-body-unordered-list-level-2 {
-  suffix: " ";
   symbols: "\25AA";
+  system: cyclic;
+}
+
+@counter-style content-body-hidden {
+  suffix: "";
+  symbols: "";
   system: cyclic;
 }
 
@@ -36,7 +40,7 @@
   --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display);
   --font-caption: 400 14px/20px var(--font-family-body);
   --font-code: 500 13px/20px var(--font-family-code);
-  --font-text-x-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
+  --font-inline-code-x-height: 0.485; /* Matches character width of `--font-code` to `--font-body` (JetBrains Mono x-height (0.550) × Source Serif 4 average lowercase advance (0.529) / JetBrains Mono advance (0.600) */
 
   font: var(--font-body);
   font-feature-settings:
@@ -303,71 +307,79 @@
      * previous rail item where that is lower. An aside that follows another in its group sits
      * `--content-body-rail-aside-gap` below it. All rail items share the anchor name
      * `--content-body-rail-item`, which resolves for each to the rail item before it. Asides stay in the
-     * flow beside wide and pane elements, which cover the rail, and in browsers without `anchor-scope`. */
+     * flow beside wide and pane elements, which cover the rail, in browsers without `anchor-scope`, and
+     * without scripting. */
     @supports (anchor-scope: all) {
-      @mixin content-rail-expanded {
-        & > :where([style*="--content-body-rail-subject"]:not([data-rail-asides])) {
-          anchor-name: var(--content-body-rail-subject, none);
-        }
-
-        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"]) {
-          position: static;
-          anchor-name: --content-body-labeled-element, var(--content-body-rail-subject, --content-body-labeled-element);
-          anchor-scope: --content-body-labeled-element;
-        }
-
-        & > :where(h2)::before {
-          inset-inline-start: anchor(start);
-        }
-
-        & > :where(figure, table)::before {
-          inset-inline-end: calc(anchor(start) + var(--layout-content-rail-gap));
-        }
-
-        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before,
-        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
-          top: max(
-            anchor(top) + var(--content-body-first-line-offset, 0px),
-            anchor(--content-body-rail-item bottom, 0px) + var(--layout-content-space)
-          );
-          anchor-name: --content-body-rail-item;
-        }
-
-        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before {
-          position-anchor: --content-body-labeled-element;
-        }
-
-        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] {
-          display: contents;
-        }
-
-        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
-          position: absolute;
-          inset-inline-start: 0;
-          position-anchor: var(--content-body-rail-subject, auto);
-
-          grid-column: rail-start / text-start;
-
-          width: var(--layout-content-rail-width);
-        }
-
-        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * + * {
-          top: calc(anchor(--content-body-rail-item bottom) + var(--content-body-rail-aside-gap));
-          margin-block-start: 0;
-        }
-
-        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > .railAside {
-          display: block;
-          padding-inline-start: 0;
-          border-inline-start: none;
-
-          & > .railLabel {
-            margin-block-end: 4px;
-            margin-inline-end: 0;
+      @media (scripting: enabled) {
+        @mixin content-rail-expanded {
+          & > :where([style*="--content-body-rail-subject"]:not([data-rail-asides])) {
+            anchor-name: var(--content-body-rail-subject, none);
           }
 
-          & > :not(.railLabel) + * {
-            margin-block-start: 8px;
+          & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"]) {
+            position: static;
+            anchor-name:
+              --content-body-labeled-element, var(--content-body-rail-subject, --content-body-labeled-element);
+            anchor-scope: --content-body-labeled-element;
+          }
+
+          & > :where(h2)::before {
+            inset-inline-start: anchor(start);
+          }
+
+          & > :where(figure, table)::before {
+            inset-inline-end: calc(anchor(start) + var(--layout-content-rail-gap));
+          }
+
+          & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before,
+          & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
+            top: max(
+              anchor(top) + var(--content-body-first-line-offset, 0px),
+              anchor(--content-body-rail-item bottom, 0px) + var(--layout-content-space)
+            );
+            anchor-name: --content-body-rail-item;
+          }
+
+          &
+            > :where(h2, figure, table, blockquote):not(
+              [data-content-span="wide"],
+              [data-content-span="pane"]
+            )::before {
+            position-anchor: --content-body-labeled-element;
+          }
+
+          & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] {
+            display: contents;
+          }
+
+          & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
+            position: absolute;
+            inset-inline-start: 0;
+            position-anchor: var(--content-body-rail-subject, auto);
+
+            grid-column: rail-start / text-start;
+
+            width: var(--layout-content-rail-width);
+          }
+
+          & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * + * {
+            top: calc(anchor(--content-body-rail-item bottom) + var(--content-body-rail-aside-gap));
+            margin-block-start: 0;
+          }
+
+          & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > .railAside {
+            display: block;
+            padding-inline-start: 0;
+            border-inline-start: none;
+
+            & > .railLabel {
+              margin-block-end: 4px;
+              margin-inline-end: 0;
+            }
+
+            & > :not(.railLabel) + * {
+              margin-block-start: 8px;
+            }
           }
         }
       }
@@ -413,7 +425,7 @@
     }
 
     &:where(h1, h2, h3, blockquote) {
-      --font-text-x-height: 0.526;
+      --font-inline-code-x-height: 0.463; /* Matches character width of `--font-code` to `--font-body` (JetBrains Mono x-height (0.550) × Archivo average lowercase advance (0.529) / JetBrains Mono advance (0.600) */
     }
 
     &:where(h1) {
@@ -493,19 +505,36 @@
       padding-inline-start: 24px;
     }
 
+    &:where(ul) {
+      list-style-type: content-body-hidden; /* Avoid `list-style: none;` to preserve accessibility in Safari. */
+    }
+
+    &:where(ul) > li {
+      position: relative;
+    }
+
+    &:where(ul) > li::before {
+      @mixin bitmap-label;
+
+      content: counter(list-item, content-body-unordered-list-level-1);
+      content: counter(list-item, content-body-unordered-list-level-1) / "";
+
+      position: absolute;
+      inset-inline-start: -16px;
+
+      line-height: inherit;
+    }
+
+    &:where(ul ul) > li::before {
+      content: counter(list-item, content-body-unordered-list-level-2);
+      content: counter(list-item, content-body-unordered-list-level-2) / "";
+    }
+
     &:where(ol) {
       list-style-type: content-body-ordered-list;
     }
 
-    &:where(ul) {
-      list-style-type: content-body-unordered-list-level-1;
-    }
-
-    &:where(ul ul) {
-      list-style-type: content-body-unordered-list-level-2;
-    }
-
-    &:where(ul, ol) > li::marker {
+    &:where(ol) > li::marker {
       @mixin bitmap-label;
     }
 
@@ -577,9 +606,12 @@
         forced-color-adjust: none;
       }
 
-      /* Rounds down to a whole dither cell, so each square starts on the same phase of the pattern. */
       @supports (width: round(down, 1px, 1px)) {
-        --content-body-hr-middle-square-position: round(down, 50%, var(--dither-cell));
+        --content-body-hr-middle-square-position: round(
+          down,
+          50%,
+          var(--dither-cell)
+        ); /* Rounds down to a whole dither cell, so each square starts on the same phase of the pattern. */
       }
     }
 
@@ -589,7 +621,7 @@
 
       font: var(--font-code);
       font-size: 1em;
-      font-size-adjust: ex-height var(--font-text-x-height);
+      font-size-adjust: ex-height var(--font-inline-code-x-height);
       letter-spacing: -0.01em;
       overflow-wrap: break-word;
 
@@ -614,7 +646,7 @@
 
       font: var(--font-code);
       font-size: 1em;
-      font-size-adjust: ex-height var(--font-text-x-height);
+      font-size-adjust: ex-height var(--font-inline-code-x-height);
 
       background: var(--color-background);
       box-shadow: 1px 1px 0 var(--color-border);
@@ -740,7 +772,9 @@
 
         /* A rail item (see the rail items above). */
         @supports (anchor-scope: all) {
-          inset-inline-start: anchor(start);
+          @media (scripting: enabled) {
+            inset-inline-start: anchor(start);
+          }
         }
 
         @media (forced-colors: active) {
