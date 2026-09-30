@@ -22,6 +22,7 @@ export function Callout({
       label={label}
       labelClassName={styles.calloutLabel}
       className={cx(styles.callout, CALLOUT_VARIANT_CLASS_NAMES[variant], className)}
+      data-callout
       data-content-panel
       {...props}
     />

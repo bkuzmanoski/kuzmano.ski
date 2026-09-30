@@ -50,7 +50,7 @@
   }
 
   /* Bottom border on overscroll only where the list's own is out of view. */
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
   @container style(--window-safe-area-block-end: 0px) {
     [data-overscrolled="end"] .list {
       box-shadow: none;

@@ -2,9 +2,7 @@ import { visit } from "unist-util-visit";
 
 import { CONTENT_SPANS } from "#/lib/content/content-spans.ts";
 
-import { toRootRelative } from "../../paths.ts";
-
-import { elementNameOf } from "./tree.ts";
+import { elementNameOf, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
@@ -42,14 +40,15 @@ export function rehypeContentSpans() {
       const { value } = spanAttribute;
 
       if (typeof value !== "string" || !CONTENT_SPAN_NAMES.has(value)) {
-        const entryPath = file.path ? `"${toRootRelative(file.path)}"` : "An entry without a path";
         const elementName = elementNameOf(node);
         const writtenElement =
           typeof value === "string"
             ? `\`<${elementName} ${SPAN_ATTRIBUTE_NAME}="${value}">\``
-            : `\`<${elementName}>\` with a \`${SPAN_ATTRIBUTE_NAME}\` attribute ${value === null || value === undefined ? "without a value" : "written as an expression"}`;
+            : `\`<${elementName}>\` with a \`${SPAN_ATTRIBUTE_NAME}\` attribute ${value === null || value === undefined ? "without a value" : "authored as an expression"}`;
 
-        throw new Error(`${entryPath} renders ${writtenElement}. Expected one of: ${CONTENT_SPANS.join(", ")}.`);
+        throw new Error(
+          `${quotedEntryPathOf(file)} renders ${writtenElement}. Expected one of: ${CONTENT_SPANS.join(", ")}.`,
+        );
       }
     });
   };

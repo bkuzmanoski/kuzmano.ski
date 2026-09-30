@@ -2,9 +2,7 @@ import { visit } from "unist-util-visit";
 
 import { CALLOUT_VARIANTS } from "#/lib/content/callout-variants.ts";
 
-import { toRootRelative } from "../../paths.ts";
-
-import { elementNameOf, isJsxElement } from "./tree.ts";
+import { elementNameOf, isJsxElement, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
@@ -30,14 +28,12 @@ export function rehypeCalloutVariants() {
       const { value } = variantAttribute;
 
       if (typeof value !== "string" || !CALLOUT_VARIANT_NAMES.has(value)) {
-        const entryPath = file.path ? `"${toRootRelative(file.path)}"` : "An entry without a path";
         const writtenVariant =
           typeof value === "string"
             ? `the variant "${value}"`
-            : `a \`variant\` attribute ${value === null || value === undefined ? "without a value" : "written as an expression"}`;
-
+            : `a \`variant\` attribute ${value === null || value === undefined ? "without a value" : "authored as an expression"}`;
         throw new Error(
-          `${entryPath} renders a \`Callout\` with ${writtenVariant}. Expected one of: ${CALLOUT_VARIANTS.join(", ")}.`,
+          `${quotedEntryPathOf(file)} renders a \`Callout\` with ${writtenVariant}. Expected one of: ${CALLOUT_VARIANTS.join(", ")}.`,
         );
       }
     });

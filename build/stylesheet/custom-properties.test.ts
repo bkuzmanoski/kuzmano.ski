@@ -14,7 +14,7 @@ describe("rootCustomPropertiesIn", () => {
     );
   });
 
-  test("returns the last value written for a property declared twice", () => {
+  test("returns the last value authored for a property declared twice", () => {
     expect(read(":root { --layout-gutter: 16px; --layout-gutter: 20px; }").get("--layout-gutter")).toBe("20px");
   });
 

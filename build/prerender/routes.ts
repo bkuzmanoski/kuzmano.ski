@@ -19,7 +19,7 @@ interface PrerenderRoute {
 
 // A route claimed by content.
 interface ContentRoute {
-  name: string; // The file or directory name, which becomes a URL segment as written.
+  name: string; // The file or directory name, which becomes a URL segment as authored.
   path: string;
   sourcePath: string; // Authored content file or directory, used in validation errors.
 }

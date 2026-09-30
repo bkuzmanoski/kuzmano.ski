@@ -11,7 +11,7 @@ const CORRECT_NAMESPACE = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
 /**
  * Corrects the namespace on the generated sitemap.
  *
- * TanStack Start writes the urlset as `https://www.sitemaps.org/schemas/sitemap/0.9`
+ * TanStack Start emits the urlset as `https://www.sitemaps.org/schemas/sitemap/0.9`
  * (hardcoded in `start-plugin-core/src/build-sitemap.ts`), but the sitemap protocol's
  * namespace is the `http://` spelling. XML namespaces compare as literal strings, so the
  * two are different namespaces and a validator reads the document as holding no sitemap

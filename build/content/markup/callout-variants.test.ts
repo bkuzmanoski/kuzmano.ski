@@ -31,9 +31,9 @@ describe("rehypeCalloutVariants", () => {
     );
   });
 
-  test("throws for a `Callout` whose variant is written as an expression", async () => {
+  test("throws for a `Callout` whose variant is authored as an expression", async () => {
     await expect(compile(`<Callout variant={"note"}>A note.</Callout>`)).rejects.toThrow(
-      "a `variant` attribute written as an expression",
+      "a `variant` attribute authored as an expression",
     );
   });
 

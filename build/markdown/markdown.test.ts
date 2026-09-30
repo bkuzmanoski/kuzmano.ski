@@ -167,7 +167,7 @@ describe("markdownFor", () => {
     expect(markdown).toContain(fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`));
   });
 
-  test("replaces a component nested inside another, written inside a sentence, with its children", async () => {
+  test("replaces a component nested inside another, authored inside a sentence, with its children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       A <Emphasis>phrase <Strong>within</Strong> a phrase</Emphasis>.
     `);
@@ -212,7 +212,19 @@ describe("markdownFor", () => {
     expect(markdown).toContain("Body.");
   });
 
-  test("throws when a component whose fallback Markdown is a block is written inside a sentence, naming the file by its repository-relative path and the component", async () => {
+  test("replaces a `Waitlist` authored on one line with its children and its fallback Markdown", async () => {
+    const markdown = await markdownFor(
+      `${FRONTMATTER}
+      <Waitlist list="List">Description.</Waitlist>
+    `,
+      { url: ENTRY_URL },
+    );
+    expect(markdown).toContain(`Description.
+
+${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
+  });
+
+  test("throws when a component whose fallback Markdown is a block is authored inside a sentence, naming the file by its repository-relative path and the component", async () => {
     const source = `${FRONTMATTER}
       A sentence with <Waitlist list="List">a phrase</Waitlist> inside it.
     `;
@@ -236,38 +248,87 @@ describe("markdownFor", () => {
   });
 
   test.each(["Callout", "Rail"])(
-    "renders the `label` attribute of a `%s` as bold text above its children",
+    "renders a `%s` of one paragraph as a blockquote that starts with its `label` attribute in bold text and a colon",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
       <${name} label="Label">
         A labeled paragraph.
       </${name}>
     `);
-      expect(markdown).toContain(`**Label**
-
-A labeled paragraph.`);
+      expect(markdown).toContain("> **Label:** A labeled paragraph.");
     },
   );
 
   test.each(["Callout", "Rail"])(
-    "renders the `label` attribute of a `%s` written on one line as bold text at the start of its sentence",
+    "renders a `%s` authored on one line as a blockquote that starts with its `label` attribute in bold text and a colon",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
         <${name} label="Label">A labeled sentence.</${name}>
       `);
-      expect(markdown).toContain("**Label** A labeled sentence.");
+      expect(markdown).toContain("> **Label:** A labeled sentence.");
     },
   );
 
-  test("replaces a `Callout` without a `label` attribute with its children", async () => {
-    const markdown = await markdownFor(`${FRONTMATTER}
-      <Callout>
+  test.each(["Callout", "Rail"])(
+    "renders a `%s` of several paragraphs as a blockquote with its `label` attribute in bold text above its children",
+    async (name) => {
+      const markdown = await markdownFor(`${FRONTMATTER}
+      <${name} label="Label">
+
+      A first paragraph.
+
+      A second paragraph.
+
+      </${name}>
+    `);
+      expect(markdown).toContain(`> **Label**
+>
+> A first paragraph.
+>
+> A second paragraph.`);
+    },
+  );
+
+  test.each(["Callout", "Rail"])(
+    "renders a `%s` without a `label` attribute as a blockquote of its children",
+    async (name) => {
+      const markdown = await markdownFor(`${FRONTMATTER}
+      <${name}>
         An unlabeled paragraph.
-      </Callout>
+      </${name}>
     `);
 
-    expect(markdown).not.toContain("**");
-    expect(markdown).toContain("An unlabeled paragraph.");
+      expect(markdown).not.toContain("**");
+      expect(markdown).toContain("> An unlabeled paragraph.");
+    },
+  );
+
+  test("omits the colon after a `label` attribute that ends in punctuation", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      <Rail label="Label?">A labeled sentence.</Rail>
+    `);
+    expect(markdown).toContain("> **Label?** A labeled sentence.");
+  });
+
+  test("renders consecutive `Rail` elements as separate blockquotes", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      A paragraph.
+
+      <Rail label="Label">A first aside.</Rail>
+
+      <Rail label="Label">A second aside.</Rail>
+    `);
+    expect(markdown).toContain(`> **Label:** A first aside.
+
+> **Label:** A second aside.`);
+  });
+
+  test("throws when a `Rail` is authored inside a sentence, naming the component", async () => {
+    await expect(
+      markdownFor(`${FRONTMATTER}
+      A sentence with <Rail label="Label">an aside</Rail> inside it.
+    `),
+    ).rejects.toThrow("writes components inline whose fallback Markdown is a block: Rail");
   });
 
   test("replaces an `ImageGrid` with its children, then the paragraph of its `caption` attribute", async () => {
@@ -280,6 +341,15 @@ A labeled paragraph.`);
     expect(markdown).toContain(`![First](https://example.com/first.png)
 
 ![Second](https://example.com/second.png)
+
+A caption.`);
+  });
+
+  test("replaces an `ImageGrid` authored on one line with its children, then the paragraph of its `caption` attribute", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      <ImageGrid caption="A caption.">![An image](https://example.com/image.png)</ImageGrid>
+    `);
+    expect(markdown).toContain(`![An image](https://example.com/image.png)
 
 A caption.`);
   });
@@ -374,7 +444,7 @@ A paragraph.
     expect(readEntryDataModule).not.toHaveBeenCalled();
   });
 
-  test("throws when an `CareerTimeline` is written inside a sentence, naming the component", async () => {
+  test("throws when an `CareerTimeline` is authored inside a sentence, naming the component", async () => {
     await expect(
       entryDataMarkdownFor(`
 import { RECORD } from "./entry.data.ts";
@@ -439,7 +509,7 @@ line two
 \`\`\``);
   });
 
-  test("renders a `<pre>` written across lines as a fenced code block", async () => {
+  test("renders a `<pre>` authored across lines as a fenced code block", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
 <pre>
   <code>
@@ -463,7 +533,7 @@ const value = 1;
 \`\`\``);
   });
 
-  test("preserves the blank line between two paragraphs of a `<pre>` written across lines", async () => {
+  test("preserves the blank line between two paragraphs of a `<pre>` authored across lines", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
 <pre>
   <code>
@@ -480,7 +550,7 @@ line two
 \`\`\``);
   });
 
-  test("renders the text of the literal expressions in a `<pre>` written on one line", async () => {
+  test("renders the text of the literal expressions in a `<pre>` authored on one line", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
 <pre><code>if (value) {"{"} return; {"}"}</code></pre>
 `);
@@ -489,7 +559,7 @@ if (value) { return; }
 \`\`\``);
   });
 
-  test("renders a literal expression written on a line of its own in a `<pre>` as a line of its text", async () => {
+  test("renders a literal expression authored on a line of its own in a `<pre>` as a line of its text", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
 <pre>
   <code>
@@ -598,7 +668,7 @@ if (value) {
     expect(markdown).toContain(String.raw`| \<value> |`);
   });
 
-  test("renders a `<table>` cell whose paragraph is written across lines on the line of its row", async () => {
+  test("renders a `<table>` cell whose paragraph is authored across lines on the line of its row", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <table>
         <tr>
@@ -606,14 +676,14 @@ if (value) {
         </tr>
         <tr>
           <td>
-            A paragraph written
+            A paragraph authored
             across lines,\\
             with a hard line break.
           </td>
         </tr>
       </table>
     `);
-    expect(markdown).toContain("| A paragraph written across lines, with a hard line break. |");
+    expect(markdown).toContain("| A paragraph authored across lines, with a hard line break. |");
   });
 
   test("escapes a `|` in a `<table>` cell", async () => {
@@ -662,7 +732,7 @@ if (value) {
 A caption.`);
   });
 
-  test("renders a `<table>` written on one line as a GFM table", async () => {
+  test("renders a `<table>` authored on one line as a GFM table", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <table><tr><th>Column</th></tr><tr><td>First</td></tr></table>
     `);
@@ -725,7 +795,7 @@ A caption.`);
 - Second`);
   });
 
-  test("renders an `<ol>` written on one line as a numbered list with one item per `<li>`", async () => {
+  test("renders an `<ol>` authored on one line as a numbered list with one item per `<li>`", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <ol><li>First</li><li>Second</li></ol>
     `);
@@ -756,13 +826,13 @@ A caption.`);
         <dd>A description.</dd>
         <dt>Second term</dt>
         <dd>
-          A description written
+          A description authored
           across lines.
         </dd>
       </dl>
     `);
     expect(markdown).toContain(`- **First term**: A description.
-- **Second term**: A description written
+- **Second term**: A description authored
   across lines.`);
   });
 
@@ -831,15 +901,19 @@ From ~1 to ~2, or ~one~.
     expect(markdown).toContain(String.raw`From \~1 to \~2, or \~one\~.`);
   });
 
-  test("preserves footnote syntax as escaped prose", async () => {
+  test("preserves a footnote's reference and definition as authored", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
-A sentence.[^1]
+A sentence.[^note]
 
-[^1]: A note.
+A second paragraph.
+
+[^note]: A note.
 `);
-    expect(markdown).toContain(String.raw`A sentence.\[^1]
+    expect(markdown).toContain(`A sentence.[^note]
 
-\[^1]: A note.`);
+A second paragraph.
+
+[^note]: A note.`);
   });
 
   test("preserves task list syntax as a list whose items begin with escaped brackets", async () => {
@@ -853,14 +927,14 @@ A sentence.[^1]
 
   test.each([
     [
-      "written on one line",
+      "authored on one line",
       `<figure>
         <blockquote>A quotation.</blockquote>
         <figcaption>A caption.</figcaption>
       </figure>`,
     ],
     [
-      "written across lines",
+      "authored across lines",
       `<figure>
         <blockquote>
           A quotation.
@@ -881,7 +955,7 @@ A caption.`);
     },
   );
 
-  test("splits a paragraph at a `<blockquote>` written inside a sentence", async () => {
+  test("splits a paragraph at a `<blockquote>` authored inside a sentence", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       Before <blockquote>A quotation.</blockquote> after.
     `);
@@ -933,7 +1007,7 @@ after.`);
     expect(markdown).toContain(`![An image](${SITE_URL}${IMAGE.src})`);
   });
 
-  test("preserves the blank lines around an `<img>` written as a block", async () => {
+  test("preserves the blank lines around an `<img>` authored as a block", async () => {
     const source = `${FRONTMATTER}
       Before.
 

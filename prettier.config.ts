@@ -6,5 +6,6 @@ export default {
     { files: "*.jsonc", options: { trailingComma: "none" } },
     { files: "*.svg", options: { parser: "html" } },
   ],
+  plugins: ["./prettier.mdx-inline-elements.ts"],
   printWidth: 120,
 } satisfies Config;

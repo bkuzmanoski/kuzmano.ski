@@ -1,13 +1,7 @@
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 
-import { toRootRelative } from "../paths.ts";
-
-import type { ContentNode, EntryVFile } from "../content/markup/tree.ts";
-
-/** Names an entry by its repository-relative path, quoted, for a problem message. */
-export const quotedEntryPathOf = ({ path }: EntryVFile) =>
-  path ? `"${toRootRelative(path)}"` : "an entry without a path";
+import type { ContentNode } from "../content/markup/tree.ts";
 
 /** An mdast `text` node. */
 export const textNode = (value: string): ContentNode => ({ type: "text", value });
@@ -30,8 +24,8 @@ export const listOf = (
 });
 
 /**
- * The blocks an authored element contains. MDX parses an element written on one line as phrasing,
- * which this wraps in a paragraph, and one written across lines as blocks.
+ * The blocks an authored element contains. MDX parses an element authored on one line as phrasing,
+ * which this wraps in a paragraph, and one authored across lines as blocks.
  */
 export function blocksIn(element: ContentNode): Array<ContentNode> {
   const children = element.children ?? [];
@@ -43,7 +37,7 @@ export function blocksIn(element: ContentNode): Array<ContentNode> {
   return children;
 }
 
-/** Collapses text written over several lines onto the one line a list item or table row occupies. */
+/** Collapses text authored over several lines onto the one line a list item or table row occupies. */
 export const asOneLine = (value: string) => value.replace(/\s+/g, " ").trim();
 
 export const MARKDOWN_SERIALIZER_OPTIONS = {

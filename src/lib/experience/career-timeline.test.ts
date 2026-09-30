@@ -69,7 +69,7 @@ describe("monthIndexOf", () => {
     expect(monthIndexOf("2020-12")).toBe(2020 * 12 + 11);
   });
 
-  test("throws when the month is not written as `YYYY-MM`, naming the value", () => {
+  test("throws when the month is not authored as `YYYY-MM`, naming the value", () => {
     expect(() => monthIndexOf("2020")).toThrow('Expected a month as "YYYY-MM", but received "2020".');
     expect(() => monthIndexOf("2020-13")).toThrow('"2020-13"');
     expect(() => monthIndexOf("2020-1")).toThrow('"2020-1"');

@@ -8,7 +8,7 @@
   &:has(> [data-collapsed]) {
     --scroll-pane-reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
 
-    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
     @container not style(--window-safe-area-inline-end: 0px) {
       --scroll-pane-reserved-scrollbar-width: 0px; /* The scrollbar is hidden when there is a safe-area inset (see below). */
     }
@@ -18,7 +18,7 @@
 /* On maximized windows, the inline-end inset places the scrollbar under the display cutout.
  * Touch devices scroll the pane directly, so remove the scrollbar instead. */
 .scrollbar {
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as written. */
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
   @container not style(--window-safe-area-inline-end: 0px) {
     display: none;
   }

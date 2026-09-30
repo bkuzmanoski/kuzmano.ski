@@ -29,7 +29,7 @@ function languageOf(children: ReactNode): string | null {
  * prop. The highlighter has already split it into styled spans (see `/build/content/mdx.ts`), so a
  * prop would render every block's text in the document twice.
  */
-export function CodeBlock(props: ComponentProps<"pre">) {
+export function CodeBlock({ style, ...props }: ComponentProps<"pre">) {
   const preRef = useRef<HTMLPreElement>(null);
   const copyControlId = useId();
   const entryClipboard = useEntryClipboard();
@@ -37,7 +37,7 @@ export function CodeBlock(props: ComponentProps<"pre">) {
   const language = languageOf(props.children);
 
   return (
-    <div className={styles.codeBlock} data-content-panel>
+    <div className={styles.codeBlock} style={style} data-content-panel>
       <div className={styles.header} data-feed-omit>
         <span className={styles.languageLabel}>{language}</span>
         <ControlledCopyButton

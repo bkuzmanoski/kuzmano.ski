@@ -368,7 +368,7 @@ describe("mediaReferenceProblems", () => {
     expect(referenceProblemsIn(withMdxSyntaxInTitle, entry)).toEqual([]);
   });
 
-  test("ignores a Markdown image written in the frontmatter", () => {
+  test("ignores a Markdown image authored in the frontmatter", () => {
     const withImageInDescription = `---\ndescription: "![An image](./missing.png)"\n---\n\n${ENTRY_SOURCE}`;
     expect(referenceProblemsIn(withImageInDescription, entry)).toEqual([]);
   });
@@ -397,7 +397,7 @@ describe("mediaReferenceProblems", () => {
     ]);
   });
 
-  test("resolves a reference written without a leading `./` to the same file", () => {
+  test("resolves a reference authored without a leading `./` to the same file", () => {
     const source = `
       ![An image](image.png)
 

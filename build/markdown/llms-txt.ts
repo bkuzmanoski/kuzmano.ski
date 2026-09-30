@@ -97,14 +97,14 @@ export function llmsTxtFor({ pages, collections }: AuthoredContent, tokenCounts:
 }
 
 const LLMS_TXT_HEADERS_RULE: HeadersRule = {
-  description: "The index written for agents declares how the content it lists may be used.",
+  description: "The index for agents declares how the content it lists may be used.",
   pathPatterns: [LLMS_TXT_PATH],
   headers: { "Content-Signal": CONTENT_SIGNAL },
 };
 
 export interface LlmsTxtPluginOptions {
-  loadForBuild: () => Promise<string>; // Written from the render the build emits the Markdown files from.
-  loadForDevRequest: (server: ViteDevServer) => Promise<string>; // Written from a fresh render, so a request reflects the content on disk.
+  loadForBuild: () => Promise<string>; // Emitted from the render the build emits the Markdown files from.
+  loadForDevRequest: (server: ViteDevServer) => Promise<string>; // Served from a fresh render, so a request reflects the content on disk.
   addHeadersRules: AddHeadersRules;
 }
 

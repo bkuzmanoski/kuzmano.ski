@@ -2,7 +2,7 @@ import { CopyButton } from "#/components/copy-button.tsx";
 import { ShareButton } from "#/components/share-button.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { NavigationButton } from "#/features/window-manager/navigation-button.tsx";
-import { entrySiblings } from "#/lib/content/siblings.ts";
+import { entrySiblings } from "#/lib/content/entry-siblings.ts";
 import { formatDate } from "#/lib/datetime.ts";
 import { useCanShare } from "#/lib/hooks/use-can-share.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";

@@ -188,12 +188,12 @@ describe("rehypeMedia", () => {
     });
   });
 
-  test("leaves a Markdown image with an unresolved reference as written", async () => {
+  test("leaves a Markdown image with an unresolved reference as authored", async () => {
     const tree = await compiledTree("![An image](./missing-image.png)\n");
     expect(elementsNamed(tree, "img")[0]?.properties).toEqual({ src: "./missing-image.png", alt: "An image" });
   });
 
-  test("leaves a Markdown image with a root-relative or external URL as written", async () => {
+  test("leaves a Markdown image with a root-relative or external URL as authored", async () => {
     const tree = await compiledTree(`
       ![First image](/absolute.png)
 
@@ -230,7 +230,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(image, "height")).toBe("500");
   });
 
-  test("sets the `width` and `height` attributes of an authored `<img>` written inside a sentence", async () => {
+  test("sets the `width` and `height` attributes of an authored `<img>` authored inside a sentence", async () => {
     const [image] = jsxElementsNamed(
       await compiledTree('Text with an <img src="./image.jpg" alt="An image" /> in it.\n'),
       "img",
@@ -240,7 +240,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(image, "height")).toBe("800");
   });
 
-  test("preserves the `width` attribute written on an authored `<img>`, and does not set a `height` attribute", async () => {
+  test("preserves the `width` attribute of an authored `<img>`, and does not set a `height` attribute", async () => {
     const [image] = jsxElementsNamed(
       await compiledTree('<img src="./image.png" alt="An image" width="450" />\n'),
       "img",
@@ -250,7 +250,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(image, "height")).toBeUndefined();
   });
 
-  test("preserves the `height` attribute written on an authored `<img>`, and does not set a `width` attribute", async () => {
+  test("preserves the `height` attribute of an authored `<img>`, and does not set a `width` attribute", async () => {
     const [image] = jsxElementsNamed(
       await compiledTree('<img src="./image.png" alt="An image" height="250" />\n'),
       "img",
@@ -373,7 +373,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(video, "height")).toBe("720");
   });
 
-  test("preserves the `width` attribute written on a `<video>`, and does not set a `height` attribute", async () => {
+  test("preserves the authored `width` attribute of a `<video>`, and does not set a `height` attribute", async () => {
     const [video] = jsxElementsNamed(await compiledTree('<video src="./video.mp4" width="480" />\n'), "video");
 
     expect(attributeOf(video, "width")).toBe("480");
@@ -401,26 +401,26 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "source")[0], "src")).toBe(VIDEO.src);
   });
 
-  test("leaves a `<video>` with an unresolved reference as written", async () => {
+  test("leaves a `<video>` with an unresolved reference as authored", async () => {
     const tree = await compiledTree('<video src="./missing-video.mp4" />\n');
 
     expect(attributeOf(jsxElementsNamed(tree, "video")[0], "src")).toBe("./missing-video.mp4");
     expect(attributeOf(jsxElementsNamed(tree, "video")[0], "poster")).toBeUndefined();
   });
 
-  test("leaves a Markdown image whose destination references a video as written", async () => {
+  test("leaves a Markdown image whose destination references a video as authored", async () => {
     const [image] = elementsNamed(await compiledTree("![A video](./video.mp4)\n"), "img");
 
     expect(image?.properties?.src).toBe("./video.mp4");
     expect(image?.properties?.width).toBeUndefined();
   });
 
-  test("leaves an authored `<img>` whose `src` attribute references a video as written", async () => {
+  test("leaves an authored `<img>` whose `src` attribute references a video as authored", async () => {
     const tree = await compiledTree('<img src="./video.mp4" alt="A video" />\n');
     expect(attributeOf(jsxElementsNamed(tree, "img")[0], "src")).toBe("./video.mp4");
   });
 
-  test("leaves a `<video>` whose `<source>` references an image as written", async () => {
+  test("leaves a `<video>` whose `<source>` references an image as authored", async () => {
     const tree = await compiledTree(`
       <video controls>
         <source src="./image.png" type="video/mp4" />
@@ -431,7 +431,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(jsxElementsNamed(tree, "video")[0], "poster")).toBeUndefined();
   });
 
-  test("rewrites an authored `<img>` written inside a sentence, and wraps it in a `<picture>` inside the paragraph", async () => {
+  test("rewrites an `<img>` authored inside a sentence, and wraps it in a `<picture>` inside the paragraph", async () => {
     const tree = await compiledTree('Text with an <img src="./image.png" alt="An image" /> in it.\n');
 
     expect(jsxElementsNamed(tree, "img")[0]?.type).toBe("mdxJsxTextElement");

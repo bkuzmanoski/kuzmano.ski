@@ -52,7 +52,7 @@ export function Video({ controls, ...props }: ComponentProps<"video">) {
   return controls ? <ControlledVideo {...props} /> : <video {...props} />;
 }
 
-function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: ControlledVideoProps) {
+function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...props }: ControlledVideoProps) {
   const { layoutAttributes, videoProps } = partitionLayoutAttributes(props);
   const [isPaused, setIsPaused] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -221,6 +221,7 @@ function ControlledVideo({ className, onClick, onPointerDown, ref, ...props }: C
     <div
       ref={containerRef}
       className={cx(styles.video, className)}
+      style={style}
       tabIndex={-1}
       data-content-panel
       {...layoutAttributes}

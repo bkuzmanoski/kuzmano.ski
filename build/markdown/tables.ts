@@ -6,7 +6,7 @@ import { blocksIn, listOf, textNode } from "./nodes.ts";
 
 import type { ContentNode, ContentParent } from "../content/markup/tree.ts";
 
-// Writes the tables in an entry as GFM tables in its Markdown representation.
+// Emits the tables in an entry as GFM tables in its Markdown representation.
 
 const TABLE_SECTION_NAMES = ["thead", "tbody", "tfoot"] as const;
 
@@ -22,7 +22,7 @@ interface AuthoredTable {
 
 const TABLE_CELL_NAMES = new Set(["td", "th"]);
 
-// MDX parses an element written on one line as phrasing inside a paragraph, so the rows and cells of a
+// MDX parses an element authored on one line as phrasing inside a paragraph, so the rows and cells of a
 // table are found through the paragraphs between them.
 function cellsIn(row: ContentNode): Array<ContentNode> {
   return (row.children ?? []).flatMap((child) => {
@@ -136,7 +136,7 @@ function tableMarkdownNodesFrom(table: ContentNode): Array<ContentNode> {
 }
 
 /**
- * Replaces each `<table>` written as a block with its Markdown nodes. This must run before the MDX
+ * Replaces each `<table>` authored as a block with its Markdown nodes. This must run before the MDX
  * is stripped, which replaces a table's children before the table itself and so would remove the
  * `<tr>`, `<td>`, and `<th>` elements the rows and cells are read from.
  */

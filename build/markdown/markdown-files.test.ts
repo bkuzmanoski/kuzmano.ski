@@ -84,7 +84,7 @@ describe("markdownFilesFor", () => {
     expect(index.indexOf("newer")).toBeLessThan(index.indexOf("older"));
   });
 
-  test("writes a title containing Markdown syntax as the literal text of its link", async () => {
+  test("emits a title containing Markdown syntax as the literal text of its link", async () => {
     const index = await collectionIndexMarkdown({
       ...content,
       collections: [
@@ -98,7 +98,7 @@ describe("markdownFilesFor", () => {
     expect(linkTextsIn(index)).toStrictEqual([MARKDOWN_SYNTAX_TITLE]);
   });
 
-  test("collapses a description written over several lines onto the line below its link", async () => {
+  test("collapses a description authored over several lines onto the line below its link", async () => {
     const index = await collectionIndexMarkdown({
       ...content,
       collections: [

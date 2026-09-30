@@ -14,7 +14,7 @@ describe("unresolvedUrlsIn", () => {
     expect(unresolvedUrlsIn(cssRule("../assets/images/image.svg"), () => true)).toEqual([]);
   });
 
-  test("returns a relative `url()` without a file at its path, as written", () => {
+  test("returns a relative `url()` without a file at its path, as authored", () => {
     expect(unresolvedUrlsIn(cssRule("../assets/images/image.svg"), noFile)).toEqual(["../assets/images/image.svg"]);
   });
 
@@ -31,7 +31,7 @@ describe("unresolvedUrlsIn", () => {
     expect(unresolvedUrlsIn(cssRule("/image.svg"), noFile)).toEqual([]);
   });
 
-  test("returns a quoted `url()` whose path contains a bracket, as written", () => {
+  test("returns a quoted `url()` whose path contains a bracket, as authored", () => {
     expect(unresolvedUrlsIn(cssRule("../assets/images/image (1).svg"), noFile)).toEqual([
       "../assets/images/image (1).svg",
     ]);
@@ -68,7 +68,7 @@ describe("unresolvedUrlsIn", () => {
     expect(unresolvedUrlsIn(css, (filePath) => filePath === "./image1.svg")).toEqual([]);
   });
 
-  test("returns an escaped `url()` without a file at its path, as written", () => {
+  test("returns an escaped `url()` without a file at its path, as authored", () => {
     const css = String.raw`.a { background-image: url(./image\ 1.svg); }`;
     expect(unresolvedUrlsIn(css, noFile)).toEqual([String.raw`./image\ 1.svg`]);
   });
@@ -84,7 +84,7 @@ describe("unresolvedUrlsIn", () => {
 });
 
 describe("urlsIn", () => {
-  test("returns every `url()` reference in a value, as written and in source order", () => {
+  test("returns every `url()` reference in a value, as authored and in source order", () => {
     expect(urlsIn('url("./a.svg") no-repeat, url(./b.svg)')).toEqual(["./a.svg", "./b.svg"]);
   });
 

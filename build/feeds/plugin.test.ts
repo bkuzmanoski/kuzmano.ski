@@ -91,7 +91,7 @@ describe("feedXmlFor", () => {
   });
 
   test("throws the document source's error when the document source rejects", async () => {
-    const rejectingDocumentSource = () => Promise.reject(new Error("No prerendered document was captured.")); // Unlike a missing document, a rejection propagates, so a feed is not written with an empty entry.
+    const rejectingDocumentSource = () => Promise.reject(new Error("No prerendered document was captured.")); // Unlike a missing document, a rejection propagates, so a feed is not emitted with an empty entry.
     await expect(feedXmlFor(feedMetadata(), content(), rejectingDocumentSource)).rejects.toThrow(
       "No prerendered document was captured.",
     );

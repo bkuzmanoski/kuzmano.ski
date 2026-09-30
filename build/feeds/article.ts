@@ -75,6 +75,33 @@ function replaceUIMarkup(article: Element) {
   });
 }
 
+function moveFootnotesToEndnotes(article: Element) {
+  const endnotes: Array<Element> = [];
+
+  visit(article, "element", (element, index, parent) => {
+    if (!parent || index === undefined || !("dataFootnote" in element.properties)) {
+      return CONTINUE;
+    }
+
+    parent.children.splice(index, 1);
+    endnotes.push({
+      type: "element",
+      tagName: "li",
+      properties: { id: element.properties.id },
+      children: element.children,
+    });
+
+    return index; // Continues at the sibling that took the removed footnote's place.
+  });
+
+  if (endnotes.length > 0) {
+    article.children.push(
+      { type: "element", tagName: "hr", properties: {}, children: [] },
+      { type: "element", tagName: "ol", properties: {}, children: endnotes },
+    );
+  }
+}
+
 // Sanitizing removes the attributes from the wrappers used for syntax highlighting
 // and UI, leaving elements that contain nothing but their children.
 //
@@ -135,7 +162,7 @@ function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
   }
 }
 
-// A heading's ID is a fragment a reader can link to from outside the feed, so it is preserved. Any other
+// A heading's ID is a fragment a user can link to from outside the feed, so it is preserved. Any other
 // ID is preserved only when an element in the article references it: a link names it as its fragment, or
 // a table cell lists it in its `headers` attribute. An ID a component generates for an attribute the
 // sanitizer removes, such as `aria-labelledby`, is not referenced by any element in the feed.
@@ -182,6 +209,7 @@ export function articleContentOf(html: string, url: string): string {
   const article = articles[0]!;
 
   replaceUIMarkup(article);
+  moveFootnotesToEndnotes(article);
   resolveRelativeUrls(article, url);
 
   const sanitizedArticle = sanitize(article, FEED_SCHEMA) as Element;

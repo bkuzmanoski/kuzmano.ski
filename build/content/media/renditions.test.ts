@@ -24,7 +24,7 @@ describe("authoredRendition", () => {
     });
   });
 
-  test("preserves the extension a file is written with after its hash", () => {
+  test("preserves the extension a file is authored with after its hash", () => {
     expect(authoredRendition(resolvedImage({ path: "collection/entry.cover.jpg" })).url).toBe(
       mediaRoute(`collection/entry.cover.${MEDIA_FILE_HASH}.jpg`),
     );

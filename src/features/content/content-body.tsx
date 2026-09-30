@@ -13,7 +13,9 @@ import styles from "./content-body.module.css";
 import { ContentLink, OpensInNewTabDescriptionProvider } from "./content-link.tsx";
 import { EntryClipboardProvider } from "./entry-clipboard-provider.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
+import { Footnote } from "./footnote.tsx";
 import { ImageGrid } from "./image-grid.tsx";
+import { observeRailClearances } from "./observe-rail-clearances.ts";
 import { Rail } from "./rail.tsx";
 import { Video } from "./video.tsx";
 
@@ -30,10 +32,13 @@ const MDX_COMPONENTS: MDXComponents = {
   video: Video,
   Callout,
   Rail,
+  Footnote, // Emitted by the build for each footnote definition (see `/build/content/markup/footnote-asides.ts`).
   ImageGrid,
   Waitlist,
 };
 
+// React calls the body's ref callback before this one, so the rail clearances, which
+// move the elements after them, are set before the fragment target is scrolled to.
 function revealInitialFragmentTarget(article: HTMLElement | null) {
   if (article) {
     revealFragmentTarget(article, window.location.hash);
@@ -48,7 +53,7 @@ export function ContentBody({ route, title, content }: { route: string; title: s
         <EntryClipboardProvider>
           <MDXProvider components={MDX_COMPONENTS}>
             <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames?.entry)}>
-              <div data-content-body>
+              <div ref={observeRailClearances} data-content-body>
                 <h1 className={stylesheetClassNames?.title} data-feed-omit>
                   {title}
                 </h1>

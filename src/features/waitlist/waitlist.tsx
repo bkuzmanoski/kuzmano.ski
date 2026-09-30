@@ -17,7 +17,7 @@ import { JOIN_FAILED_MESSAGE, useJoinWaitlist } from "#/lib/waitlist/use-join-wa
 
 import styles from "./waitlist.module.css";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 interface Prompt {
   kind: "incomplete" | "failed";
@@ -33,12 +33,14 @@ export function Waitlist({
   title = "Get notified",
   action = "Join waitlist",
   confirmation = "You’re on the list. I’ll email you when there’s news.",
+  style,
   children,
 }: {
   list: string;
   title?: string;
   action?: string;
   confirmation?: string;
+  style?: CSSProperties;
   children?: ReactNode;
 }) {
   const titleId = useId();
@@ -85,12 +87,14 @@ export function Waitlist({
   return (
     <aside
       className={styles.waitlist}
+      style={style}
       aria-labelledby={titleId}
       data-content-default-styles="off"
       data-content-panel
       data-content-space="loose"
       data-feed-text={fallbackText(`${SITE_URL}${entryRoute}`)}
       data-joined={hasJoined || undefined}
+      data-waitlist
     >
       <div className={styles.body} inert={isJoining}>
         <div className={styles.header}>

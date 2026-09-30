@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { Suspense, useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { RAIL_SUBJECT_COMPONENT_NAMES } from "#/lib/content/rail-subjects.ts";
 import { STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { MDXModule } from "#/site/catalog.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
@@ -9,8 +10,10 @@ import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { deferWrite } from "#/test-utils/clipboard.ts";
 import * as codeBlocksFixture from "#/test-utils/fixtures/code-blocks.mdx";
 import * as contentElementsFixture from "#/test-utils/fixtures/content-elements.mdx";
+import * as footnotesFixture from "#/test-utils/fixtures/footnotes.mdx";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 import * as linksFixture from "#/test-utils/fixtures/links.mdx";
+import * as railSubjectsFixture from "#/test-utils/fixtures/rail-subjects.mdx";
 import { RouterContext } from "#/test-utils/router-context.tsx";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
@@ -53,6 +56,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   window.location.hash = "";
 });
 
@@ -195,6 +199,33 @@ test.each(HEADINGS)(
     expect(document.activeElement).toBe(heading);
   },
 );
+
+test("opening an entry at a fragment sets the rail clearance of the heading it names before scrolling to it", async () => {
+  const railAsideBottom = 400;
+
+  let railClearanceAtScroll: string | undefined;
+
+  vi.stubGlobal("CSS", { supports: (condition: string) => condition === "anchor-scope: all" });
+  Object.defineProperty(document, "fonts", { configurable: true, value: { ready: new Promise(() => undefined) } });
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function boxOf(this: Element) {
+    return DOMRect.fromRect({ height: this.matches("[data-rail-asides] > *") ? railAsideBottom : 0 });
+  });
+  vi.spyOn(window, "getComputedStyle").mockReturnValue({
+    position: "static",
+    borderTopWidth: "0px",
+    borderBlockEndWidth: "0px",
+    marginBlockStart: "0px",
+    paddingBlockEnd: "0px",
+  } as CSSStyleDeclaration);
+  scrollIntoViewSilently.mockImplementation((element: HTMLElement) => {
+    railClearanceAtScroll = element.style.getPropertyValue("--content-body-rail-clearance");
+  });
+  window.location.hash = "#fixture-heading";
+
+  await renderContent(railSubjectsFixture);
+
+  expect(railClearanceAtScroll).toBe(`${railAsideBottom}px`);
+});
 
 test("opening an entry at a fragment that does not name a heading does not scroll", async () => {
   window.location.hash = "#missing-heading";
@@ -485,6 +516,11 @@ test("a callout whose `variant` prop is `warning` has the warning class alongsid
   expect(warning.className.split(" ")).toEqual([calloutStyles.callout, calloutStyles.calloutWarning]);
 });
 
+test("a callout is marked with the `data-callout` attribute", async () => {
+  await renderContent(contentElementsFixture);
+  expect(screen.getByText("Fixture note.").closest("aside")!.hasAttribute("data-callout")).toBe(true);
+});
+
 test("a callout without the `label` prop does not render a callout label or have an `aria-labelledby` attribute", async () => {
   await renderContent(contentElementsFixture);
   const callout = screen.getByText("Fixture callout without a label.").closest("aside")!;
@@ -493,14 +529,57 @@ test("a callout without the `label` prop does not render a callout label or have
   expect(callout.hasAttribute("aria-labelledby")).toBe(false);
 });
 
-test("a rail aside is wrapped in a rail anchor that is a direct child of the element with the `data-content-body` attribute", async () => {
+test("a rail aside is grouped in an element with the `data-rail-asides` attribute directly after its rail subject, with the same rail subject anchor name as the subject", async () => {
   const article = await renderContent(contentElementsFixture);
-  const rail = screen.getByText(/Fixture rail note\./).closest("aside")!;
+  const railAside = screen.getByText(/Fixture rail note\./).closest("aside")!;
+  const group = railAside.parentElement!;
+  const subject = group.previousElementSibling as HTMLElement;
 
-  expect(rail.className.split(" ")).toContain(styles.rail);
-  expect(rail.parentElement?.className).toBe(styles.railAnchor);
-  expect(rail.parentElement?.parentElement).toBe(article.querySelector("[data-content-body]"));
+  expect(railAside.className.split(" ")).toContain(styles.railAside);
+  expect(group.hasAttribute("data-rail-asides")).toBe(true);
+  expect(group.parentElement).toBe(article.querySelector("[data-content-body]"));
+  expect(subject.textContent).toBe("Fixture paragraph.");
+  expect(subject.style.getPropertyValue("--content-body-rail-subject")).toBe("--content-body-rail-subject-1");
+  expect(group.style.getPropertyValue("--content-body-rail-subject")).toBe("--content-body-rail-subject-1");
 });
+
+test.each([
+  ...RAIL_SUBJECT_COMPONENT_NAMES.map((name): [string, string] => [`\`${name}\``, name]),
+  ["`<pre>`", "pre"],
+  ["`<video>`", "video"],
+])(
+  "the %s before a rail aside renders the rail subject anchor name on its root element, directly before the aside's group",
+  async (_displayName, name) => {
+    await renderContent(railSubjectsFixture);
+
+    const group = screen.getByRole("complementary", { name }).parentElement!;
+    const subject = group.previousElementSibling as HTMLElement;
+    const anchorName = group.style.getPropertyValue("--content-body-rail-subject");
+
+    expect(anchorName).toMatch(/^--content-body-rail-subject-\d+$/);
+    expect(subject.style.getPropertyValue("--content-body-rail-subject")).toBe(anchorName);
+  },
+);
+
+test.each([
+  ["h2", "Fixture Heading"],
+  ["h3", "Fixture Subheading"],
+])(
+  "a heading before a rail aside renders the rail subject anchor name on its `<%s>`, rather than on the heading link after it",
+  async (name, title) => {
+    await renderContent(railSubjectsFixture);
+
+    const group = screen.getByRole("complementary", { name }).parentElement!;
+    const heading = screen.getByRole("heading", { name: title });
+    const headingLink = group.previousElementSibling as HTMLElement;
+    const anchorName = group.style.getPropertyValue("--content-body-rail-subject");
+
+    expect(anchorName).toMatch(/^--content-body-rail-subject-\d+$/);
+    expect(heading.style.getPropertyValue("--content-body-rail-subject")).toBe(anchorName);
+    expect(headingLink.hasAttribute("data-heading-level")).toBe(true);
+    expect(headingLink.style.getPropertyValue("--content-body-rail-subject")).toBe("");
+  },
+);
 
 test("a rail aside renders its `label` prop as the rail label inside its `<aside>`", async () => {
   await renderContent(contentElementsFixture);
@@ -520,4 +599,65 @@ test("a rail aside without the `label` prop does not render a rail label or have
 
   expect(rail.querySelector(`.${styles.railLabel}`)).toBeNull();
   expect(rail.hasAttribute("aria-labelledby")).toBe(false);
+});
+
+test("a footnote reference is a link to its footnote named by the footnote's number, and each repeated reference has an ID of its own", async () => {
+  await renderContent(footnotesFixture);
+
+  const references = screen.getAllByRole("link", { name: "Footnote 1" });
+
+  expect(references.map((reference) => [reference.getAttribute("href"), reference.id])).toEqual([
+    ["#fn-fixture", "fnref-fixture"],
+    ["#fn-fixture", "fnref-fixture-2"],
+  ]);
+});
+
+test("a footnote is a `doc-footnote` named by its number rather than a complementary landmark, and its rail label is hidden from assistive technology", async () => {
+  await renderContent(footnotesFixture);
+
+  const footnote = screen.getByRole("doc-footnote", { name: "Footnote 1" });
+  const railLabel = footnote.querySelector(`.${styles.railLabel}`)!;
+
+  expect(screen.queryByRole("complementary")).toBeNull();
+  expect(footnote.id).toBe("fn-fixture");
+  expect(railLabel.textContent).toBe("1");
+  expect(railLabel.getAttribute("aria-hidden")).toBe("true");
+  expect(railLabel.hasAttribute("data-feed-omit")).toBe(true);
+});
+
+test("a footnote has a link back to each reference to it", async () => {
+  await renderContent(footnotesFixture);
+
+  const footnote = screen.getByRole("doc-footnote", { name: "Footnote 1" });
+
+  expect(
+    within(footnote)
+      .getAllByRole("link")
+      .map((link) => [link.getAttribute("aria-label"), link.getAttribute("href")]),
+  ).toEqual([
+    ["Back to reference 1", "#fnref-fixture"],
+    ["Back to reference 1-2", "#fnref-fixture-2"],
+  ]);
+});
+
+test("clicking a footnote reference scrolls its footnote only as far as it takes to bring it into view, and focuses it", async () => {
+  await renderContent(footnotesFixture);
+
+  fireEvent.click(screen.getAllByRole("link", { name: "Footnote 1" })[0]!);
+
+  const footnote = screen.getByRole("doc-footnote", { name: "Footnote 1" });
+
+  expect(scrollIntoViewSilently).toHaveBeenCalledWith(footnote, { block: "nearest" });
+  expect(document.activeElement).toBe(footnote);
+});
+
+test("clicking a footnote's back link scrolls its reference only as far as it takes to bring it into view, and focuses it", async () => {
+  await renderContent(footnotesFixture);
+
+  fireEvent.click(screen.getByRole("link", { name: "Back to reference 1-2" }));
+
+  const reference = screen.getAllByRole("link", { name: "Footnote 1" })[1]!;
+
+  expect(scrollIntoViewSilently).toHaveBeenCalledWith(reference, { block: "nearest" });
+  expect(document.activeElement).toBe(reference);
 });

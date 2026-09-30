@@ -38,7 +38,7 @@ describe("mdxCompileOptionsFor", () => {
     );
   });
 
-  test("writes the alignment of a pipe table's columns as the `align` attribute of each cell", async () => {
+  test("emits the alignment of a pipe table's columns as the `align` attribute of each cell", async () => {
     const markup = await renderedMarkupOf(`
 | Start | Center | End | Unaligned |
 | :---- | :----: | --: | --------- |
@@ -53,7 +53,7 @@ describe("mdxCompileOptionsFor", () => {
     expect(markup).not.toContain("style=");
   });
 
-  test("writes the number of a section to the `data-section-number` attribute of its `<h2>`", async () => {
+  test("emits the number of a section as the `data-section-number` attribute of its `<h2>`", async () => {
     const markup = await renderedMarkupOf(`
 ## Section
 `);
@@ -66,6 +66,68 @@ describe("mdxCompileOptionsFor", () => {
 ### Subsection
 `),
     ).toBe('<h3 id="subsection">Subsection<a data-heading-link="" href="#subsection"></a></h3>');
+  });
+
+  test("compiles a highlighted code block to a `<pre>` without the `style` attribute the highlighter emits", async () => {
+    const { default: MDXContent } = await evaluate(
+      `
+\`\`\`ts
+const value = 1;
+\`\`\`
+`,
+      { ...mdxCompileOptionsFor(), ...runtime, useMDXComponents },
+    );
+    expect(renderToStaticMarkup(createElement(MDXContent))).toMatch(
+      /^<pre class="shiki [^"]*" tabindex="0"><code class="language-ts">/,
+    );
+  });
+
+  test("marks a highlighted code block before a `Rail` as its rail subject", async () => {
+    const { default: MDXContent } = await evaluate(
+      `
+\`\`\`ts
+const value = 1;
+\`\`\`
+
+<Rail>A note.</Rail>
+`,
+      { ...mdxCompileOptionsFor(), ...runtime, useMDXComponents },
+    );
+    const markup = renderToStaticMarkup(
+      createElement(MDXContent, { components: { Rail: (properties) => createElement("aside", properties) } }),
+    );
+
+    expect(markup).toMatch(
+      /^<pre class="shiki [^"]*" tabindex="0" style="--content-body-rail-subject:--content-body-rail-subject-1">/,
+    );
+  });
+
+  test.each(["h2", "h3"])("marks an `<%s>` section heading before a `Rail` as its rail subject", async (tagName) => {
+    const markup = await renderedMarkupOf(
+      `
+${tagName === "h2" ? "##" : "###"} A heading
+
+<Rail>A note.</Rail>
+`,
+      { Rail: (properties) => createElement("aside", properties) },
+    );
+    expect(markup).toMatch(
+      new RegExp(
+        `^<${tagName} [^>]*style="--content-body-rail-subject:--content-body-rail-subject-1">A heading<a data-heading-link=""`,
+      ),
+    );
+  });
+
+  test("checks the ID emitted for each heading against the other IDs in the entry", async () => {
+    await expect(
+      renderedMarkupOf(`
+## fn-1
+
+A sentence.[^1]
+
+[^1]: A note.
+`),
+    ).rejects.toThrow('has more than one element with the ID "fn-1".');
   });
 
   test("parses a line of pipes without a delimiter row as a paragraph", async () => {
@@ -115,15 +177,37 @@ From ~1 to ~2, or ~one~.
     ).toBe("<p>From ~1 to ~2, or ~one~.</p>");
   });
 
-  test("parses footnote syntax as prose", async () => {
-    expect(
-      await renderedMarkupOf(`
+  test("compiles a footnote to a reference in its paragraph and a `Footnote` in the group of rail asides after it", async () => {
+    const markup = await renderedMarkupOf(
+      `
 A sentence.[^1]
 
 [^1]: A note.
-`),
-    ).toBe(`<p>A sentence.[^1]</p>
-<p>[^1]: A note.</p>`);
+`,
+      { Footnote: ({ number: _number, ...properties }) => createElement("aside", properties) },
+    );
+    expect(markup)
+      .toBe(`<p style="--content-body-rail-subject:--content-body-rail-subject-1">A sentence.<sup><a href="#fn-1" id="fnref-1" aria-label="Footnote 1" data-footnote-reference="">1</a></sup></p>
+<div data-rail-asides="" style="--content-body-rail-subject:--content-body-rail-subject-1"><aside id="fn-1"><p>A note. <a href="#fnref-1" aria-label="Back to reference 1">↩︎</a></p></aside></div>`);
+  });
+
+  test("groups a footnote referenced inside a `Rail` with that `Rail`", async () => {
+    const markup = await renderedMarkupOf(
+      `
+A paragraph.
+
+<Rail>An aside.[^1]</Rail>
+
+[^1]: A note.
+`,
+      {
+        Rail: (properties) => createElement("aside", properties),
+        Footnote: ({ number: _number, ...properties }) => createElement("aside", properties),
+      },
+    );
+    expect(markup).toMatch(
+      /<div data-rail-asides="" style="[^"]*"><aside>An aside\.<sup>.*<\/sup><\/aside><aside id="fn-1">.*<\/aside><\/div>$/,
+    );
   });
 
   test("parses task list syntax as a list whose items begin with their brackets", async () => {

@@ -1,4 +1,4 @@
-/* Markdown wraps images written on consecutive lines in one paragraph, so the paragraph generates no
+/* Markdown wraps images authored on consecutive lines in one paragraph, so the paragraph generates no
  * box and each image is a flex item of its own. The white space between them is not rendered. */
 .images {
   display: flex;

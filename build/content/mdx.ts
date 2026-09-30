@@ -6,17 +6,29 @@ import remarkFrontmatter from "remark-frontmatter";
 
 import { rehypeCalloutVariants } from "./markup/callout-variants.ts";
 import { rehypeContentSpans } from "./markup/content-spans.ts";
+import { rehypeElementIds } from "./markup/element-ids.ts";
+import { remarkFootnoteAsides } from "./markup/footnote-asides.ts";
 import { remarkGfmSubset } from "./markup/gfm.ts";
 import { NO_MEDIA_FOR_ENTRY, rehypeMedia } from "./markup/media-rewrite.ts";
 import { rehypeNumberedElements } from "./markup/numbered-elements.ts";
 import { rehypeProvidedElements } from "./markup/provided-elements.ts";
+import { rehypeRailAsides } from "./markup/rail-asides.ts";
 import { shikiTheme } from "./shiki-theme.ts";
 
 import type { MediaForEntry } from "./markup/media-rewrite.ts";
 import type { CompileOptions } from "@mdx-js/mdx";
+import type { RehypeShikiOptions } from "@shikijs/rehype";
 import type { Options as AutolinkOptions } from "rehype-autolink-headings";
 import type { PluggableList } from "unified";
 import type { Plugin } from "vite";
+
+type ShikiTransformer = NonNullable<RehypeShikiOptions["transformers"]>[number];
+
+const PRE_STYLE_REMOVAL_TRANSFORMER: ShikiTransformer = {
+  pre(node) {
+    delete node.properties.style; // Remove Shiki's inline `<pre>` colors so the stylesheet can control them.
+  },
+};
 
 interface MDXOptions {
   syntaxHighlight?: boolean;
@@ -43,6 +55,7 @@ export function mdxCompileOptionsFor({
         content: [], // The link is empty because `EntrySectionHeading` reads only its `href` attribute and renders its own link in its place (see `/src/features/content/entry-section-heading.tsx`).
       } as AutolinkOptions,
     ],
+    rehypeElementIds,
     ...(syntaxHighlight
       ? ([
           [
@@ -54,16 +67,18 @@ export function mdxCompileOptionsFor({
               // `addLanguageClass` adds a `language-<name>` class to the highlighted `<code>`, which `CodeBlock`
               // reads for its label (see `/src/features/content/code-block.tsx`).
               addLanguageClass: true,
+              transformers: [PRE_STYLE_REMOVAL_TRANSFORMER],
             },
           ],
         ] as PluggableList)
       : []),
+    rehypeRailAsides,
   ];
   return {
     providerImportSource: "@mdx-js/react",
-    remarkPlugins: [remarkFrontmatter, remarkGfmSubset],
+    remarkPlugins: [remarkFrontmatter, remarkGfmSubset, remarkFootnoteAsides],
     rehypePlugins,
-    tableCellAlignToStyle: false, // A pipe table's column alignment is written as an `align` attribute, which a stylesheet can select on and override, rather than as an inline style.
+    tableCellAlignToStyle: false, // A pipe table's column alignment is emitted as an `align` attribute, which a stylesheet can select on and override, rather than as an inline style.
   };
 }
 

@@ -41,7 +41,7 @@ const definitionsFrom = (define: Record<string, unknown> | undefined) =>
  * Exposes `<name>.ts?inline-script` as a module. The default export is the bundled
  * and minified source of that entry for inlining in a `<script>` tag.
  *
- * The plugin bundles the entry instead of reading it as written, so a pre-hydration
+ * The plugin bundles the entry instead of reading it as authored, so a pre-hydration
  * script can reuse constants and helpers from the app.
  *
  * Warning: A script can safely reach leaf modules only. Tree-shaking cannot remove

@@ -3,18 +3,16 @@ import { dirname, resolve } from "node:path";
 import { visit } from "unist-util-visit";
 import { isRunnableDevEnvironment, runnerImport } from "vite";
 
-import { estreeOf } from "../content/markup/tree.ts";
+import { estreeOf, quotedEntryPathOf } from "../content/markup/tree.ts";
 import { SERVER_ENVIRONMENT } from "../environments.ts";
-import { fromRoot, toRootRelative } from "../paths.ts";
-
-import { quotedEntryPathOf } from "./nodes.ts";
+import { fromRoot, toQuotedRootRelative } from "../paths.ts";
 
 import type { ContentNode, EntryVFile, EstreeNode } from "../content/markup/tree.ts";
 import type { ViteDevServer } from "vite";
 
 // A component rendered from entry data is given its record as `{...NAME}`, where `NAME` is imported
-// from the entry's data file. The Markdown pass reads the export that import names from the same file,
-// so it writes the record the page renders.
+// from the entry's data file. The Markdown pass reads the export that import names from the same
+// file, so it emits the record the page renders.
 
 /** The exports of an entry data module, keyed by export name. */
 export type EntryDataModule = Record<string, unknown>;
@@ -161,14 +159,14 @@ export async function readEntryDataExports(
     }
 
     const dataFileAbsolutePath = resolve(dirname(entryPath), entryImport.source);
-    const quotedDataFilePath = `"${toRootRelative(dataFileAbsolutePath)}"`;
+    const quotedDataFilePath = toQuotedRootRelative(dataFileAbsolutePath);
     const exportedValue = (await readDataModule(element, dataFileAbsolutePath, quotedDataFilePath))[
       entryImport.exportName
     ];
 
     if (exportedValue === undefined) {
       throw new Error(
-        `${quotedDataFilePath} does not export \`${entryImport.exportName}\`, which ${quotedEntryPathOf(file)} spreads into \`${element.name}\`.`,
+        `${quotedEntryPathOf(file)} spreads \`${identifier}\` into \`${element.name}\`, but its data file ${quotedDataFilePath} does not export \`${entryImport.exportName}\`.`,
       );
     }
 

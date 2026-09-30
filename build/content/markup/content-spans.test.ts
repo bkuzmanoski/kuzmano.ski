@@ -42,9 +42,9 @@ describe("rehypeContentSpans", () => {
     ).rejects.toThrow('`<span data-content-span="full">`');
   });
 
-  test("throws for an element whose span is written as an expression", async () => {
+  test("throws for an element whose span is authored as an expression", async () => {
     await expect(compile(`<figure data-content-span={"wide"}>A figure.</figure>`)).rejects.toThrow(
-      "`<figure>` with a `data-content-span` attribute written as an expression",
+      "`<figure>` with a `data-content-span` attribute authored as an expression",
     );
   });
 

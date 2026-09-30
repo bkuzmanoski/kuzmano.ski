@@ -111,7 +111,7 @@ export async function feedXmlFor(
   });
 }
 
-/** Writes an Atom feed for the site and for each collection from prerendered content. */
+/** Emits an Atom feed for the site and for each collection from prerendered content. */
 export function feedsPlugin({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): Plugin {
   return {
     name: "kuzmano.ski:feeds",
@@ -137,7 +137,7 @@ export function feedsPlugin({ addHeadersRules }: { addHeadersRules: AddHeadersRu
         const authoredContent = readAuthoredContent();
 
         // Every published entry was prerendered, so a route with no document means the build
-        // lost one. Writing the feed without it would publish an entry whose body is empty.
+        // lost one. Emitting the feed without it would publish an entry whose body is empty.
         const documentOf: DocumentSource = (route) =>
           prerenderedDocuments.has(route)
             ? Promise.resolve(prerenderedDocuments.get(route))

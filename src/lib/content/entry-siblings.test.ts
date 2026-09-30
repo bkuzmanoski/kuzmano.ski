@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { fakeCollection, fakeCollectionEntries } from "#/test-utils/collection.ts";
 
-import { entrySiblings } from "./siblings.ts";
+import { entrySiblings } from "./entry-siblings.ts";
 
 const collectionEntries = fakeCollectionEntries("newest", "middle", "oldest");
 const collection = fakeCollection(collectionEntries);

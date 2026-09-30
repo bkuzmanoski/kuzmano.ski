@@ -6,11 +6,11 @@ import { blocksIn, listOf, paragraphOf, textNode } from "./nodes.ts";
 
 import type { ContentNode, ContentParent } from "../content/markup/tree.ts";
 
-// Writes the `<ul>`, `<ol>`, and `<dl>` elements in an entry as Markdown lists in its Markdown
-// representation.
+// Emits the `<ul>`, `<ol>`, and `<dl>` elements in an entry as Markdown lists in
+// its Markdown representation.
 
-// MDX parses an element written on one line as phrasing inside a paragraph, so the items of a list
-// are found through the paragraphs between them.
+// MDX parses an element authored on one line as phrasing inside a paragraph, so the
+// items of a list are found through the paragraphs between them.
 function listChildrenIn(list: ContentNode, names: ReadonlySet<string>): Array<ContentNode> {
   return (list.children ?? []).flatMap((child) => {
     if (child.type === "paragraph") {
@@ -88,7 +88,7 @@ function listMarkdownNodeFrom(list: ContentNode): ContentNode {
 const LIST_NAMES = new Set(["ul", "ol", "dl"]);
 
 /**
- * Replaces each `<ul>`, `<ol>`, and `<dl>` written as a block with a Markdown list: one item per
+ * Replaces each `<ul>`, `<ol>`, and `<dl>` authored as a block with a Markdown list: one item per
  * `<li>`, or per group of `<dt>` elements and the `<dd>` elements after them.
  */
 export function remarkAuthoredLists() {

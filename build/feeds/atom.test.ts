@@ -15,8 +15,8 @@ const EMOJI = "\u{1F5FA}\u{FE0F}"; // A surrogate pair followed by a variation s
 
 const feed = (entries: Array<FeedEntry>) => atomFeed(feedDocument({ entries }));
 
-// A feed is read by an XML parser, so the assertions below read it back through one rather than
-// matching the character references the serializer happens to write.
+// A feed is read by an XML parser, so the assertions below read it back through one
+// rather than matching the character references the serializer happens to emit.
 const parseXml = (xml: string) => {
   const document = new DOMParser().parseFromString(xml, "text/xml");
 
@@ -47,7 +47,7 @@ describe("atomFeed", () => {
     expect(element?.getAttribute("type")).toBe("html");
     expect(element?.textContent).toBe(content);
     expect(element?.children).toHaveLength(0);
-    expect(xml).not.toContain("<![CDATA["); // A CDATA section round-trips as the same text, but changes the bytes a reader is given.
+    expect(xml).not.toContain("<![CDATA["); // A CDATA section round-trips as the same text, but changes the bytes a feed reader receives.
   });
 
   test("escapes the `]]>` that XML does not allow in character data", () => {
@@ -81,7 +81,7 @@ describe("atomFeed", () => {
     expect(document.querySelector("entry > content")?.textContent).toBe("<p>Text.</p>");
   });
 
-  test("preserves an emoji written as a surrogate pair in every field of an entry", () => {
+  test("preserves an emoji authored as a surrogate pair in every field of an entry", () => {
     const document = parseXml(
       feed([
         feedEntry({
@@ -99,7 +99,7 @@ describe("atomFeed", () => {
     expect(document.querySelector("entry > content")?.textContent).toBe(`<p>${EMOJI}</p>`);
   });
 
-  test("writes well-formed XML when every field contains markup, quotes, `]]>`, control characters, and a lone surrogate", () => {
+  test("emits well-formed XML when every field contains markup, quotes, `]]>`, control characters, and a lone surrogate", () => {
     const hostileText = `& < > " ' ]]> ${NULL}${FORM_FEED}${LONE_SURROGATE} <b onclick="x">`;
     const document = parseXml(
       atomFeed(
@@ -125,7 +125,7 @@ describe("atomFeed", () => {
     expect(document.querySelector("entry > content")?.children).toHaveLength(0);
   });
 
-  test("writes a feed without entries", () => {
+  test("emits a feed without entries", () => {
     const xml = feed([]);
 
     expect(xml).toContain("<updated>2026-07-19T00:00:00Z</updated>");

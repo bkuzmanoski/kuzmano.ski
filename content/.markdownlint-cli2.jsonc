@@ -5,5 +5,5 @@
     "heading-levels": { "minimum": 2, "maximum": 3 } // The document renders the entry's title as its `h1`.
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
-  "customRules": ["../markdownlint.rules.ts"]
+  "customRules": ["../markdownlint.heading-levels.ts"]
 }

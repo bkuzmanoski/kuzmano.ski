@@ -1,10 +1,18 @@
 import styles from "./image-grid.module.css";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-export function ImageGrid({ caption, children }: { caption?: string; children: ReactNode }) {
+export function ImageGrid({
+  caption,
+  style,
+  children,
+}: {
+  caption?: string;
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
   return (
-    <figure data-image-grid>
+    <figure style={style} data-image-grid>
       <div className={styles.images} data-content-default-styles="off">
         {children}
       </div>

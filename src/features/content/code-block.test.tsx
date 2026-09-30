@@ -52,13 +52,19 @@ test("the control is disabled outside an entry", () => {
   expect(screen.getByRole("button", { name: "Copy to clipboard" }).hasAttribute("disabled")).toBe(true);
 });
 
-test("the code block preserves the attributes set by the syntax highlighter", () => {
-  const { container } = render(<CodeBlock className="shiki" style={{ color: "red" }} tabIndex={0} />);
+test("the code block preserves the attributes set by the syntax highlighter on its `<pre>`", () => {
+  const { container } = render(<CodeBlock className="shiki" tabIndex={0} />);
   const block = container.querySelector("pre")!;
 
   expect(block.className).toBe("shiki");
-  expect(block.style.color).toBe("red");
   expect(block.getAttribute("tabindex")).toBe("0");
+});
+
+test("the code block renders its `style` prop on its frame rather than its `<pre>`", () => {
+  const { container } = render(<CodeBlock style={{ color: "red" }} />);
+
+  expect((container.firstElementChild as HTMLElement).style.color).toBe("red");
+  expect(container.querySelector("pre")!.hasAttribute("style")).toBe(false);
 });
 
 test("the header of a code block names the language from the `language-` class of its `<code>`", () => {

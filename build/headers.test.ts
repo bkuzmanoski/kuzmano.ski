@@ -85,17 +85,17 @@ function emittedHeadersFileText(plugin: ReturnType<typeof headersFile>["plugin"]
 }
 
 describe("headersRuleText", () => {
-  test("writes each path pattern with every header, under the rule's description", () => {
+  test("emits each path pattern with every header, under the rule's description", () => {
     expect(headersRuleText(TYPED_RULE)).toBe(TYPED_RULE_TEXT);
   });
 });
 
 describe("headersFileTextFrom", () => {
-  test("writes the rules sorted by their first path pattern, separated by a blank line", () => {
+  test("emits the rules sorted by their first path pattern, separated by a blank line", () => {
     expect(headersFileTextFrom([TYPED_RULE, SIGNALED_RULE, CACHE_RULE])).toBe(HEADERS_FILE_TEXT);
   });
 
-  test("writes the same text whatever order the rules are given in", () => {
+  test("emits the same text whatever order the rules are given in", () => {
     expect(headersFileTextFrom([SIGNALED_RULE, CACHE_RULE, TYPED_RULE])).toBe(
       headersFileTextFrom([CACHE_RULE, TYPED_RULE, SIGNALED_RULE]),
     );

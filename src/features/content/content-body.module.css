@@ -1,3 +1,20 @@
+@counter-style content-body-ordered-list {
+  suffix: " ";
+  system: extends decimal-leading-zero;
+}
+
+@counter-style content-body-unordered-list-level-1 {
+  suffix: " ";
+  symbols: "\25AB";
+  system: cyclic;
+}
+
+@counter-style content-body-unordered-list-level-2 {
+  suffix: " ";
+  symbols: "\25AA";
+  system: cyclic;
+}
+
 :where(.content) {
   /* Metrics */
   --layout-content-measure: 616px; /* ~70 characters of the body face at 17px. */
@@ -16,7 +33,7 @@
   --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
   --font-body: 400 17px/28px var(--font-family-body);
   --font-lede: 400 20px/32px var(--font-family-body);
-  --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display); /* Italic, so it is not read as an `h2`, which is the same size. */
+  --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display);
   --font-caption: 400 14px/20px var(--font-family-body);
   --font-code: 500 13px/20px var(--font-family-code);
   --font-text-x-height: 0.492; /* The x-height of the face the text is set in, as a fraction of its em. */
@@ -29,50 +46,58 @@
   print-color-adjust: exact;
 }
 
-.railAnchor {
+.railAside {
   position: relative;
-  height: 0;
-}
 
-.rail {
-  position: absolute;
-  inset-inline-end: calc(100% + var(--layout-content-rail-gap));
-  top: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 0;
+  align-items: baseline;
 
-  width: var(--layout-content-rail-width);
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--color-accent);
 
   font: var(--font-caption);
   color: var(--color-foreground-secondary);
+
+  & > * {
+    grid-column: 2;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &[data-footnote]:focus {
+    animation: footnote-highlight 900ms steps(3, jump-end);
+
+    @media (prefers-reduced-motion: reduce) {
+      animation-timing-function: steps(1, jump-end);
+    }
+
+    @media (forced-colors: active) {
+      @mixin focus-stroke -4px;
+    }
+  }
+
+  &[data-footnote]:focus-visible {
+    @mixin focus-stroke -4px;
+  }
+}
+
+@keyframes footnote-highlight {
+  from {
+    background-color: var(--color-selection-background);
+    box-shadow: 0 0 0 4px var(--color-selection-background);
+  }
 }
 
 .railLabel {
   @mixin bitmap-label;
 
-  margin-block-end: 4px;
+  grid-column: 1;
+  margin-inline-end: 8px;
   color: var(--color-accent);
-}
-
-@mixin content-rail-collapsed {
-  .railAnchor {
-    height: auto;
-  }
-
-  .rail {
-    position: static;
-
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-
-    width: auto;
-    padding-inline-start: 12px;
-    border-inline-start: 1px solid var(--color-accent);
-
-    & .railLabel {
-      flex: none;
-      margin-block-end: 0;
-    }
-  }
 }
 
 .content {
@@ -80,6 +105,12 @@
 
   & :where([data-content-body]) {
     --content-body-wide-start-track: minmax(0, 1fr); /* Rounded to a whole pixel where supported (see below). */
+    --content-body-rail-aside-gap: 12px;
+    --content-body-padding-block: clamp(
+      var(--layout-content-space-loose),
+      (100% - var(--layout-content-measure)) / 2,
+      var(--layout-content-space-x-loose)
+    );
 
     position: relative;
     display: grid;
@@ -90,14 +121,14 @@
       [text-start] minmax(0, var(--layout-content-measure)) [text-end]
       minmax(0, 1fr) [wide-end]
       var(--layout-gutter) [pane-end];
-    padding-block: clamp(
-      var(--layout-content-space-loose),
-      (100% - var(--layout-content-measure)) / 2,
-      var(--layout-content-space-x-loose)
-    );
 
-    /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel so
-     * bitmap labels stay pixel aligned on 1x displays. */
+    /* `--content-body-end-rail-clearance` is set from JS when a rail item extends past the last
+     * element (see `observe-rail-clearances.ts`). */
+    padding-block: var(--content-body-padding-block)
+      calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
+
+    /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel
+     * so bitmap labels stay pixel aligned on 1x displays. */
     @supports (width: round(down, 1px, 1px)) {
       --content-body-wide-start-track: max(
         0px,
@@ -119,9 +150,9 @@
 
       grid-column: rail-start / text-end;
 
-      padding-block-start: var(--layout-content-space);
+      padding-block-start: var(--layout-content-space-subsection);
       padding-inline-start: var(--layout-content-rail-track);
-      border-block-start: 1px solid var(--color-border);
+      border-block-start: 1px solid var(--color-border-secondary);
     }
 
     & > :where(figure, table) {
@@ -140,51 +171,94 @@
       grid-column: pane;
     }
 
+    /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
+     * `--content-body-rail-clearance` is set from JS for section headings and `data-content-span` elements
+     * (see `observe-rail-clearances.ts`). */
     & > * + * {
-      margin-block-start: var(--layout-content-space);
+      margin-block-start: calc(var(--layout-content-space) + var(--content-body-rail-clearance, 0px));
     }
 
-    & > * + :where(h3, .railAnchor:has(+ h3)) {
-      margin-block-start: var(--layout-content-space-subsection);
+    & > * + :where(h3) {
+      margin-block-start: calc(var(--layout-content-space-subsection) + var(--content-body-rail-clearance, 0px));
     }
 
-    & > :where(h1, hr, figure, table, [data-content-space="loose"]) + *,
-    & > * + :where(h2, hr, figure, table, [data-content-space="loose"]),
-    & > * + :where(.railAnchor:has(+ :where(h2, hr, figure, table, [data-content-space="loose"]))) {
-      margin-block-start: var(--layout-content-space-loose);
+    & > * + :where(h2) {
+      margin-block-start: calc(
+        var(--layout-content-space-subsection) + 4px + var(--content-body-rail-clearance, 0px)
+      ); /* 4px more than the space below the border for optical balance. */
     }
 
-    /* A subsection heading introduces the figure or table it heads, so the two keep the regular space. */
+    & > * + :where(hr, figure, table, [data-content-space="loose"]) {
+      margin-block-start: calc(var(--layout-content-space-loose) + var(--content-body-rail-clearance, 0px));
+    }
+
+    & > :where(h1, h1 + p, hr, figure, table, [data-content-space="loose"]) + *,
+    & > :where(h1 + p, hr, figure, table, [data-content-space="loose"]) + [data-rail-asides] + * {
+      margin-block-start: calc(
+        var(--layout-content-space-loose) + var(--content-body-rail-clearance, 0px)
+      ); /* Overrides the rules above. */
+    }
+
+    & > :where(h2, h3, [data-heading-level]) + :where(figure, table, [data-content-space="loose"]),
     &
-      > :where(h3, h3 + [data-heading-level])
-      + :where(figure, table, [data-content-space="loose"], .railAnchor:has(+ :where(figure, table))) {
+      > :where(h2, h3, [data-heading-level])
+      + [data-rail-asides]
+      + :where(figure, table, [data-content-space="loose"]) {
+      margin-block-start: calc(var(--layout-content-space) + var(--content-body-rail-clearance, 0px));
+    }
+
+    & > * + [data-rail-asides] {
       margin-block-start: var(--layout-content-space);
     }
 
-    /* Lowers a rail aside from the top of the element beside it to that element's cap line. */
-    & > .railAnchor > .rail {
-      top: var(--layout-content-label-offset);
+    & > [data-rail-asides] > * + * {
+      margin-block-start: var(--content-body-rail-aside-gap);
     }
 
-    & > .railAnchor:has(+ :where(figure, [data-content-panel])) > .rail {
-      top: 0;
+    & > :where(h2),
+    & > :where(h2, h2 + [data-heading-level]) + [data-rail-asides] {
+      --content-body-first-line-offset: calc(var(--layout-content-space-subsection) + 3px);
     }
 
-    & > .railAnchor:has(+ h3) > .rail {
-      top: 1px;
+    & > :where(h3, h3 + [data-heading-level]) + [data-rail-asides] {
+      --content-body-first-line-offset: 1px;
     }
 
-    & > .railAnchor:has(+ table) > .rail {
-      top: 6px; /* The padding above a header cell. */
+    & > :where(p, ul, ol, dl) + [data-rail-asides] {
+      --content-body-first-line-offset: var(--layout-content-label-offset);
     }
 
-    /* Section, figure, and table labels */
+    & > :where(h1 + p) + [data-rail-asides] {
+      --content-body-first-line-offset: 6px;
+    }
+
+    & > :where(table, figure:has(> table:first-child)),
+    & > :where(table, figure:has(> table:first-child)) + [data-rail-asides] {
+      --content-body-first-line-offset: 6px;
+    }
+
+    & > :where(figure:has(> :first-child > pre)),
+    & > :where(figure:has(> :first-child > pre), [data-content-panel]:has(> pre)) + [data-rail-asides] {
+      --content-body-first-line-offset: 7px;
+    }
+
+    & > :where([data-callout]) + [data-rail-asides] {
+      --content-body-first-line-offset: calc(var(--layout-gutter) + 3px);
+    }
+
+    & > :where([data-waitlist]) + [data-rail-asides] {
+      --content-body-first-line-offset: calc(var(--layout-gutter) + 2px);
+    }
+
+    & > :where([data-callout][aria-labelledby]) + [data-rail-asides] {
+      --content-body-first-line-offset: -7px;
+    }
 
     & > :where(h2, figure, table)::before {
       @mixin bitmap-label;
 
       position: absolute;
-      top: 0;
+      top: var(--content-body-first-line-offset, 0);
       display: block;
       width: var(--layout-content-rail-width);
     }
@@ -193,15 +267,11 @@
       content: attr(data-section-number);
       content: attr(data-section-number) / "";
       inset-inline-start: 0;
-      top: 22px; /* Aligns the label's cap height with the heading's, across the border. */
+      top: calc(var(--content-body-first-line-offset) - 1px); /* From inside the border. */
     }
 
     & > :where(figure, table)::before {
       inset-inline-end: calc(100% + var(--layout-content-rail-gap));
-    }
-
-    & > :where(table)::before {
-      top: 6px; /* The padding above a header cell. */
     }
 
     & > :where(figure[data-figure-number])::before {
@@ -229,9 +299,77 @@
       margin-inline: var(--layout-gutter);
     }
 
-    @mixin content-rail-expanded {
-      & > .railAnchor + * {
-        margin-block-start: 0;
+    /* Each rail item sits level with its subject's first line, or `--layout-content-space` below the
+     * previous rail item where that is lower. An aside that follows another in its group sits
+     * `--content-body-rail-aside-gap` below it. All rail items share the anchor name
+     * `--content-body-rail-item`, which resolves for each to the rail item before it. Asides stay in the
+     * flow beside wide and pane elements, which cover the rail, and in browsers without `anchor-scope`. */
+    @supports (anchor-scope: all) {
+      @mixin content-rail-expanded {
+        & > :where([style*="--content-body-rail-subject"]:not([data-rail-asides])) {
+          anchor-name: var(--content-body-rail-subject, none);
+        }
+
+        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"]) {
+          position: static;
+          anchor-name: --content-body-labeled-element, var(--content-body-rail-subject, --content-body-labeled-element);
+          anchor-scope: --content-body-labeled-element;
+        }
+
+        & > :where(h2)::before {
+          inset-inline-start: anchor(start);
+        }
+
+        & > :where(figure, table)::before {
+          inset-inline-end: calc(anchor(start) + var(--layout-content-rail-gap));
+        }
+
+        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before,
+        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
+          top: max(
+            anchor(top) + var(--content-body-first-line-offset, 0px),
+            anchor(--content-body-rail-item bottom, 0px) + var(--layout-content-space)
+          );
+          anchor-name: --content-body-rail-item;
+        }
+
+        & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before {
+          position-anchor: --content-body-labeled-element;
+        }
+
+        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] {
+          display: contents;
+        }
+
+        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
+          position: absolute;
+          inset-inline-start: 0;
+          position-anchor: var(--content-body-rail-subject, auto);
+
+          grid-column: rail-start / text-start;
+
+          width: var(--layout-content-rail-width);
+        }
+
+        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * + * {
+          top: calc(anchor(--content-body-rail-item bottom) + var(--content-body-rail-aside-gap));
+          margin-block-start: 0;
+        }
+
+        & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > .railAside {
+          display: block;
+          padding-inline-start: 0;
+          border-inline-start: none;
+
+          & > .railLabel {
+            margin-block-end: 4px;
+            margin-inline-end: 0;
+          }
+
+          & > :not(.railLabel) + * {
+            margin-block-start: 8px;
+          }
+        }
       }
     }
 
@@ -303,7 +441,7 @@
       }
     }
 
-    &:where(h1 + p, h1 + .railAnchor + p) {
+    &:where(h1 + p) {
       font: var(--font-lede);
     }
 
@@ -315,6 +453,10 @@
     &:where(h3) {
       font: var(--font-heading-3);
       letter-spacing: -0.006em;
+    }
+
+    &:where(sup) {
+      line-height: 0; /* Keeps a superscript, such as a footnote reference, from adding to the height of its line. */
     }
 
     &:where(strong):not(:where(h1, h2, h3, blockquote) *) {
@@ -341,17 +483,29 @@
     }
 
     &:where(a[target="_blank"])::after {
-      content: "\2060\2197";
-      content: "\2060\2197" / "";
-      margin-inline-start: 2px;
+      content: "\202F\2197";
+      content: "\202F\2197" / "";
       font-size: 0.75em;
+      line-height: 0; /* The fallback font of the arrow would otherwise add to the line's height. */
     }
 
     &:where(ul, ol) {
       padding-inline-start: 24px;
     }
 
-    &:where(ol) > li::marker {
+    &:where(ol) {
+      list-style-type: content-body-ordered-list;
+    }
+
+    &:where(ul) {
+      list-style-type: content-body-unordered-list-level-1;
+    }
+
+    &:where(ul ul) {
+      list-style-type: content-body-unordered-list-level-2;
+    }
+
+    &:where(ul, ol) > li::marker {
       @mixin bitmap-label;
     }
 
@@ -364,18 +518,18 @@
     &:where(dt) {
       @mixin bitmap-label;
 
+      width: var(--layout-content-rail-width);
       margin-block-start: var(--layout-content-label-offset);
     }
 
     &:where(blockquote) {
-      --blockquote-band-width: 4px;
-      --blockquote-band-gap: 16px;
-      --blockquote-mark-color: var(--accent-magenta);
+      --content-body-blockquote-band-width: 4px;
+      --content-body-blockquote-band-gap: 16px;
+      --content-body-blockquote-mark-color: var(--accent-magenta);
 
       position: relative;
-      padding-inline-start: calc(var(--blockquote-band-width) + var(--blockquote-band-gap));
+      padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));
       font: var(--font-blockquote);
-      letter-spacing: -0.012em;
 
       &::before {
         @mixin dither-50;
@@ -386,9 +540,9 @@
         inset-block: 0;
         inset-inline-start: 0;
 
-        width: var(--blockquote-band-width);
+        width: var(--content-body-blockquote-band-width);
 
-        color: var(--color-border);
+        color: var(--color-foreground-secondary);
       }
     }
 
@@ -400,24 +554,24 @@
     }
 
     &:where(hr) {
-      --hr-square-size: 8px;
-      --hr-square-gap: 12px;
-      --hr-square-step: calc(var(--hr-square-size) + var(--hr-square-gap));
-      --hr-middle-square-position: 50%;
+      --content-body-hr-square-size: 8px;
+      --content-body-hr-square-gap: 12px;
+      --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
+      --content-body-hr-middle-square-position: 50%;
 
       @mixin dither-50;
 
-      height: var(--hr-square-size);
+      height: var(--content-body-hr-square-size);
 
-      color: var(--color-border);
+      color: var(--color-foreground-secondary);
 
       mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0), linear-gradient(#000 0 0);
       mask-repeat: no-repeat;
       mask-position:
-        calc(var(--hr-middle-square-position) - var(--hr-square-step)) 0,
-        var(--hr-middle-square-position) 0,
-        calc(var(--hr-middle-square-position) + var(--hr-square-step)) 0;
-      mask-size: var(--hr-square-size) var(--hr-square-size);
+        calc(var(--content-body-hr-middle-square-position) - var(--content-body-hr-square-step)) 0,
+        var(--content-body-hr-middle-square-position) 0,
+        calc(var(--content-body-hr-middle-square-position) + var(--content-body-hr-square-step)) 0;
+      mask-size: var(--content-body-hr-square-size) var(--content-body-hr-square-size);
 
       @media (forced-colors: active) {
         forced-color-adjust: none;
@@ -425,12 +579,11 @@
 
       /* Rounds down to a whole dither cell, so each square starts on the same phase of the pattern. */
       @supports (width: round(down, 1px, 1px)) {
-        --hr-middle-square-position: round(down, 50%, var(--dither-cell));
+        --content-body-hr-middle-square-position: round(down, 50%, var(--dither-cell));
       }
     }
 
     &:where(:not(pre) > code) {
-      padding-block: 1px;
       padding-inline: 3px;
       border: 1px solid var(--color-border-secondary);
 
@@ -449,14 +602,14 @@
       border: none;
 
       text-decoration: underline dotted var(--color-border);
+      text-decoration-thickness: 1px;
       text-underline-offset: 3px;
 
       background: none;
     }
 
     &:where(kbd) {
-      padding-block: 1px;
-      padding-inline: 5px;
+      padding-inline: 4px;
       border: 1px solid var(--color-border);
 
       font: var(--font-code);
@@ -493,7 +646,7 @@
 
       padding-block: 6px;
       padding-inline: 0 16px;
-      border-block-end: 1px solid var(--color-foreground);
+      border-block-end: 1px solid var(--color-foreground-secondary);
       text-align: start;
     }
 
@@ -515,17 +668,21 @@
     &:where(img, video) {
       /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned.
        * Without `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
-      --image-max-width: round(down, 80cqh * attr(width type(<number>)) / attr(height type(<number>)), 1px);
+      --content-body-image-max-width: round(
+        down,
+        80cqh * attr(width type(<number>)) / attr(height type(<number>)),
+        1px
+      );
 
       display: block;
 
-      /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome. Without or
-       * typed `attr()` the ratio falls back to `auto`. */
+      /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome.
+       * Without typed `attr()` the ratio falls back to `auto`. */
       aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
       width: 100%;
-      max-width: var(--image-max-width);
+      max-width: var(--content-body-image-max-width);
       height: auto;
-      margin-inline-start: max(0px, round(down, (100% - var(--image-max-width)) / 2, 1px));
+      margin-inline-start: max(0px, round(down, (100% - var(--content-body-image-max-width)) / 2, 1px));
     }
 
     &:where(img, video):where([data-content-span="pane"], [data-content-span="pane"] *) {
@@ -557,8 +714,9 @@
   /* After the element defaults, whose band metrics it overrides at the same specificity. */
   @mixin content-rail-expanded {
     & :where([data-content-body]) > :where(blockquote) {
-      --blockquote-band-width: var(--layout-content-rail-width);
-      --blockquote-band-gap: var(--layout-content-rail-gap);
+      --content-body-blockquote-band-width: var(--layout-content-rail-width);
+      --content-body-blockquote-band-gap: var(--layout-content-rail-gap);
+      --content-body-first-line-offset: -13px; /* Aligns the quotation mark with the quotation's cap line. */
 
       grid-column: rail-start / text-end;
       min-height: calc(2lh + 8px); /* Clear the height of the quotation mark. */
@@ -568,15 +726,22 @@
         content: "\201C";
         content: "\201C" / "";
 
-        inset-block: -13px auto; /* Aligns the quotation mark with the quotation's cap line. */
+        inset-block: var(--content-body-first-line-offset) auto;
+
+        height: 75px; /* To the bottom of the mark rather than its line, which a rail item after it is placed below. */
 
         font: 800 156px/1 var(--font-family-display);
-        color: var(--blockquote-mark-color);
+        color: var(--content-body-blockquote-mark-color);
         text-align: end;
 
         background-clip: text;
 
         -webkit-text-fill-color: transparent;
+
+        /* A rail item (see the rail items above). */
+        @supports (anchor-scope: all) {
+          inset-inline-start: anchor(start);
+        }
 
         @media (forced-colors: active) {
           -webkit-text-fill-color: GrayText;

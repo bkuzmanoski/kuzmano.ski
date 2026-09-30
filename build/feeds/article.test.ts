@@ -88,6 +88,20 @@ describe("articleContentOf", () => {
     expect(body).toBe(`<p>A body.</p><p>Join the waitlist at ${ENTRY_URL}</p>`);
   });
 
+  test("moves each footnote into an `<li>` with its ID, in an `<ol>` after an `<hr>` at the end of the article, without its rail label", () => {
+    const body = articleContentOf(
+      articleDocument(`<p>A sentence.<sup><a href="#fn-1" id="fnref-1" aria-label="Footnote 1">1</a></sup></p>
+<div data-rail-asides style="--content-body-rail-subject:--content-body-rail-subject-1"><aside id="fn-1" role="doc-footnote" tabindex="-1" aria-label="Footnote 1" data-footnote><p aria-hidden="true" data-feed-omit>1</p><p>A note. <a href="#fnref-1" aria-label="Back to reference 1">↩︎</a></p></aside></div>
+<p>A second paragraph.</p>`),
+      ENTRY_URL,
+    );
+
+    expect(body)
+      .toBe(`<p>A sentence.<sup><a href="${ENTRY_URL}#fn-1" id="fnref-1" aria-label="Footnote 1">1</a></sup></p>
+
+<p>A second paragraph.</p><hr><ol><li id="fn-1"><p>A note. <a href="${ENTRY_URL}#fnref-1" aria-label="Back to reference 1">↩︎</a></p></li></ol>`);
+  });
+
   test("unwraps every `<span>` left without attributes by sanitizing, preserving a code block's line breaks", () => {
     const code =
       '<pre><code><span class="line"><span style="color:red">token</span></span>\n<span class="line"></span>\ntoken</code></pre>';

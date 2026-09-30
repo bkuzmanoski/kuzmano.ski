@@ -7,7 +7,7 @@ import { robotsText } from "./robots.ts";
 describe("robotsText", () => {
   const robots = robotsText();
 
-  test("begins with the Content Signals Policy, written as comments", () => {
+  test("begins with the Content Signals Policy, emitted as comments", () => {
     const policy = robots.slice(0, robots.indexOf("\nUser-Agent:"));
 
     expect(policy).toContain("# As a condition of accessing this website");

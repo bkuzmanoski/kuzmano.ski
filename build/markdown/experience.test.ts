@@ -34,7 +34,7 @@ const QUOTED_DATA_FILE_PATH = '"entry.data.ts"';
 const markdownOf = (value: unknown) => markdownFrom(experienceMarkdownNodesFrom(value, QUOTED_DATA_FILE_PATH));
 
 describe("experienceMarkdownNodesFrom", () => {
-  test("writes each role newest first under a second-level heading", () => {
+  test("emits each role newest first under a second-level heading", () => {
     expect(markdownOf(EXPERIENCE)).toBe(`## Newest Role, Newest Organization
 
 _Mar 2024–Present_
@@ -54,7 +54,7 @@ A summary of the oldest role.
 `);
   });
 
-  test("throws when the `asOf` month is not written as `YYYY-MM`, naming the file and the value", () => {
+  test("throws when the `asOf` month is not authored as `YYYY-MM`, naming the file and the value", () => {
     expect(() => markdownOf({ ...EXPERIENCE, asOf: "soon" })).toThrow(
       '"entry.data.ts" is not a valid experience record: Expected a month as "YYYY-MM", but received "soon".',
     );

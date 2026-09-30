@@ -108,7 +108,7 @@ describe("llmsTxtFor", () => {
     expect(() => llmsTxtFor(content, incompleteTokenCounts)).toThrow('"/collection/newer-entry.md"');
   });
 
-  test("writes a title containing Markdown syntax as the literal text of its link", () => {
+  test("emits a title containing Markdown syntax as the literal text of its link", () => {
     const title = "A *title* with _emphasis_, `code`, <html>, and [brackets]";
     const contentWithMarkdownSyntaxTitle = authoredContent({
       pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -119,7 +119,7 @@ describe("llmsTxtFor", () => {
     expect(linkTextsIn(llmsTxtFor(contentWithMarkdownSyntaxTitle, TOKEN_COUNTS))).toContain(title);
   });
 
-  test("collapses a description written over several lines onto the line of its list item", () => {
+  test("collapses a description authored over several lines onto the line of its list item", () => {
     const multiLineContent = authoredContent({
       pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
         authoredEntry("page-1", {

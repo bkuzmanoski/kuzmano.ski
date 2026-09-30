@@ -16,20 +16,21 @@ import {
   elementNameOf,
   estreeOf,
   isJsxElement,
+  quotedEntryPathOf,
   stringAttributeOf,
 } from "../content/markup/tree.ts";
 
 import { readEntryDataExports } from "./entry-data.ts";
 import { experienceMarkdownNodesFrom } from "./experience.ts";
 import { remarkAuthoredLists } from "./lists.ts";
-import { MARKDOWN_SERIALIZER_OPTIONS, paragraphOf, quotedEntryPathOf, textNode, textParagraph } from "./nodes.ts";
+import { MARKDOWN_SERIALIZER_OPTIONS, paragraphOf, textNode, textParagraph } from "./nodes.ts";
 import { remarkAuthoredTables } from "./tables.ts";
 
 import type { EntryDataExport, EntryDataModuleReader } from "./entry-data.ts";
 import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
 import type { ContentNode, ContentParent, EntryVFile } from "../content/markup/tree.ts";
 
-// Converts an entry's MDX source to the Markdown representation a reader is served at its `.md` URL.
+// Converts an entry's MDX source to the Markdown representation a user is served at its `.md` URL.
 
 export interface MarkdownEntry {
   path?: string;
@@ -60,19 +61,31 @@ type ComponentMarkdown = (
   { block: ComponentReplacement; inline?: ComponentReplacement } | { block?: undefined; inline: ComponentReplacement }
 ) & { isRenderedFromEntryData?: boolean };
 
-const strongLabelOf = (node: ContentNode): ContentNode | null => {
-  const label = stringAttributeOf(node, "label");
-  return label ? { type: "strong", children: [textNode(label)] } : null;
-};
+const strongTextOf = (value: string): ContentNode => ({ type: "strong", children: [textNode(value)] });
 
-const LABELED_ASIDE_MARKDOWN: ComponentMarkdown = {
+const TRAILING_PUNCTUATION_PATTERN = /[.:;?!…]$/;
+const ASIDE_MARKDOWN: ComponentMarkdown = {
   block: (node) => {
-    const strongLabel = strongLabelOf(node);
-    return [...(strongLabel ? [paragraphOf([strongLabel])] : []), ...(node.children ?? [])];
-  },
-  inline: (node) => {
-    const strongLabel = strongLabelOf(node);
-    return [...(strongLabel ? [strongLabel, textNode(" ")] : []), ...(node.children ?? [])];
+    const label = stringAttributeOf(node, "label");
+    const children = node.children ?? [];
+
+    if (!label) {
+      return [{ type: "blockquote", children }];
+    }
+
+    const [firstChild, ...otherChildren] = children;
+
+    if (firstChild?.type === "paragraph" && otherChildren.length === 0) {
+      const runInLabel = TRAILING_PUNCTUATION_PATTERN.test(label) ? label : `${label}:`;
+      return [
+        {
+          type: "blockquote",
+          children: [paragraphOf([strongTextOf(runInLabel), textNode(" "), ...(firstChild.children ?? [])])],
+        },
+      ];
+    }
+
+    return [{ type: "blockquote", children: [paragraphOf([strongTextOf(label)]), ...children] }];
   },
 };
 
@@ -91,7 +104,7 @@ const waitlistFallbackParagraphFor = (url: string): ContentNode =>
 // Fallback Markdown for React components embedded in the content, keyed by element name.
 // A component without fallback Markdown is replaced by its children.
 const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
-  Callout: LABELED_ASIDE_MARKDOWN,
+  Callout: ASIDE_MARKDOWN,
   ContributionGraph: {
     // The graph is drawn from data fetched in the browser, so in Markdown it becomes a GitHub profile link.
     block: () => [
@@ -111,7 +124,7 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
       return [...(node.children ?? []), ...(caption ? [textParagraph(caption)] : [])];
     },
   },
-  Rail: LABELED_ASIDE_MARKDOWN,
+  Rail: ASIDE_MARKDOWN,
   Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },
   blockquote: {
     // Markdown cannot quote inside a sentence, so a quotation is replaced by its children.
@@ -183,6 +196,25 @@ const BLOCK_ELEMENT_NAMES = new Set([
 const isBlockElementInParagraph = (node: ContentNode) =>
   node.type === "mdxJsxTextElement" && BLOCK_ELEMENT_NAMES.has(node.name ?? "");
 
+// MDX unwraps paragraphs that contain only a JSX element. This makes a component with block fallback
+// Markdown on its own line, such as `<Rail label="Aside">An aside.</Rail>`, render as a block.
+function soleBlockComponentIn(paragraph: ContentNode): ContentNode | undefined {
+  const renderedChildren = (paragraph.children ?? []).filter((child) => child.type !== "text" || child.value?.trim());
+  const [onlyChild, ...otherChildren] = renderedChildren;
+
+  return onlyChild?.type === "mdxJsxTextElement" &&
+    otherChildren.length === 0 &&
+    componentMarkdownOf(onlyChild)?.block !== undefined
+    ? onlyChild
+    : undefined;
+}
+
+const flowElementOf = (textElement: ContentNode): ContentNode => ({
+  ...textElement,
+  type: "mdxJsxFlowElement",
+  children: trimmedParagraphsOf(textElement.children ?? []),
+});
+
 function trimmedParagraphsOf(phrasing: Array<ContentNode>): Array<ContentNode> {
   const children = phrasing
     .map((node, index) => {
@@ -205,11 +237,7 @@ function paragraphSplitAtBlockElements(paragraph: ContentNode): Array<ContentNod
 
   for (const child of paragraph.children ?? []) {
     if (isBlockElementInParagraph(child)) {
-      blocks.push(...trimmedParagraphsOf(phrasing), {
-        ...child,
-        type: "mdxJsxFlowElement",
-        children: trimmedParagraphsOf(child.children ?? []),
-      });
+      blocks.push(...trimmedParagraphsOf(phrasing), flowElementOf(child));
       phrasing = [];
     } else {
       phrasing.push(child);
@@ -235,7 +263,7 @@ function literalTextOf(expression: ContentNode): string | null {
 
 // Replaces each literal `{expression}` with the text it renders, such as `{"⌘"}` in a `<kbd>` or
 // `{"{"}` in a table cell, where MDX would otherwise parse the character itself as syntax. An
-// expression written as a block becomes a paragraph. This runs before the transforms that read the
+// expression authored as a block becomes a paragraph. This runs before the transforms that read the
 // text of an inline code element or a table cell, and after `replacePreformattedElements`, which
 // reads the text of the expressions in a `<pre>` itself so that it can separate them by lines rather
 // than paragraphs.
@@ -328,23 +356,26 @@ function replacePreformattedElements() {
 function splitBlockElements() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
-      if (
-        node.type !== "paragraph" ||
-        !parent ||
-        index === undefined ||
-        !node.children?.some(isBlockElementInParagraph)
-      ) {
+      if (node.type !== "paragraph" || !parent || index === undefined) {
         return undefined;
       }
 
-      parent.children.splice(index, 1, ...paragraphSplitAtBlockElements(node));
+      const blockFallback = soleBlockComponentIn(node);
+
+      if (blockFallback) {
+        parent.children.splice(index, 1, flowElementOf(blockFallback));
+      } else if (node.children?.some(isBlockElementInParagraph)) {
+        parent.children.splice(index, 1, ...paragraphSplitAtBlockElements(node));
+      } else {
+        return undefined;
+      }
 
       return index;
     });
   };
 }
 
-/** The name of every component with block fallback Markdown that is written inside a sentence in `tree`. */
+/** The name of every component with block fallback Markdown that is authored inside a sentence in `tree`. */
 function blockFallbacksWrittenInlineIn(tree: ContentNode): Set<string> {
   const componentNames = new Set<string>();
 
@@ -363,7 +394,7 @@ function blockFallbacksWrittenInlineIn(tree: ContentNode): Set<string> {
   return componentNames;
 }
 
-// Ensures no component whose fallback Markdown is a block was written inside a sentence, where its
+// Ensures no component whose fallback Markdown is a block was authored inside a sentence, where its
 // replacement would be serialized into the prose around it rather than as a block of its own.
 function assertBlockFallbacks() {
   return function assert(tree: ContentNode, file: EntryVFile) {
@@ -397,7 +428,7 @@ function replacementsFor(node: ContentNode, context: MarkdownContext): Array<Con
       return componentMarkdown.block(node, context);
     }
 
-    // A component written as a block with only an inline fallback produces phrasing where a block is
+    // A component authored as a block with only an inline fallback produces phrasing where a block is
     // expected. `remark-stringify` cannot separate it from the following block, collapsing the
     // document onto one line, so it is wrapped in a paragraph.
     return [paragraphOf(componentMarkdown.inline(node, context))];
@@ -477,7 +508,7 @@ function assertMarkdownOnly() {
 
     if (remainingMdxNodeTypes.size > 0) {
       throw new Error(
-        `${quotedEntryPathOf(file)} still contains MDX that cannot be written as Markdown: ${[...remainingMdxNodeTypes].join(", ")}.`,
+        `${quotedEntryPathOf(file)} still contains MDX that cannot be emitted as Markdown: ${[...remainingMdxNodeTypes].join(", ")}.`,
       );
     }
   };

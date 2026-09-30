@@ -23,8 +23,13 @@
 
   & pre {
     overflow-x: auto;
+
     padding: var(--layout-gutter);
+
     font: var(--font-code);
+    color: var(--color-syntax-foreground);
+
+    background: var(--color-syntax-background);
 
     &:focus-visible {
       outline: none;

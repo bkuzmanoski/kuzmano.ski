@@ -6,9 +6,9 @@ import { requestPathOf } from "./paths.ts";
 
 import type { Plugin } from "vite";
 
-// Cloudflare applies the rules in `_headers` to the static assets it serves.
-// Each plugin declares the rules for the files it emits, and `headersFile` writes them all at once. The
-// dev server applies the same rules to its responses, since it does not read `_headers`.
+// Cloudflare applies the rules in `_headers` to static assets. Each plugin declares the rules for
+// the files it emits, and `headersFile` emits them all at once. The dev server applies the same
+// rules to its responses, since it does not read `_headers`.
 
 export const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
@@ -131,13 +131,13 @@ const isServedFileStatusCode = (statusCode: number) => (statusCode >= 200 && sta
  * into the client build and applies the rules to the dev server's responses.
  *
  * A plugin registers its rules from the client environment's `buildStart`, which the build finishes
- * for every plugin before any `generateBundle` runs, so the file is written once and includes every
+ * for every plugin before any `generateBundle` runs, so the file is emitted once and includes every
  * rule whatever order the plugins are listed in. `vite dev` calls `buildStart` for the client
  * environment as well, before the server listens. A rule registered twice is kept once, and a rule
  * `headersMatchingPathIn` cannot match is refused when it is registered, so the dev server sets the
  * headers Cloudflare sets on every path.
  *
- * The plugin registers the rule for the hashed files Vite writes to `build.assetsDir` itself.
+ * The plugin registers the rule for the hashed files Vite emits to `build.assetsDir` itself.
  */
 export function headersFile(): { addHeadersRules: AddHeadersRules; plugin: Plugin } {
   const registeredRulesByText = new Map<string, MatchableHeadersRule>(); // Keyed by the rule's text, which is what `_headers` would repeat.

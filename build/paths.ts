@@ -15,6 +15,9 @@ export const fromRoot = (rootRelativePath: string) => join(ROOT_DIRECTORY_ABSOLU
 /** Reduces an absolute path to a repository-relative one, for display. */
 export const toRootRelative = (absolutePath: string) => relative(ROOT_DIRECTORY_ABSOLUTE_PATH, absolutePath);
 
+/** Reduces an absolute path to a repository-relative one in double quotes. */
+export const toQuotedRootRelative = (absolutePath: string) => `"${toRootRelative(absolutePath)}"`;
+
 /** Resolves a path relative to the content directory against the root. */
 export const fromContent = (...segments: Array<string>) => fromRoot(join(CONTENT_DIRECTORY_PATH, ...segments));
 

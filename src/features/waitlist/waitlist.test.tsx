@@ -203,6 +203,11 @@ test("the waitlist renders its children inside an element whose `data-content-de
   expect(screen.getByText("Message.").parentElement?.getAttribute("data-content-default-styles")).toBe("on"); // The content element defaults apply to the author's children again inside it.
 });
 
+test("the waitlist is marked with the `data-waitlist` attribute", () => {
+  renderWaitlist();
+  expect(screen.getByRole("complementary").hasAttribute("data-waitlist")).toBe(true);
+});
+
 test("the waitlist provides text for the feed", () => {
   renderWaitlist();
   expect(screen.getByRole("complementary").getAttribute("data-feed-text")).toBe(fallbackText(`${SITE_URL}${ROUTE}`));

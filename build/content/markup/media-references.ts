@@ -12,7 +12,7 @@ import { elementNameOf, hasAttribute, hasSpreadAttribute, isJsxElement } from ".
 import type { ContentNode } from "./tree.ts";
 
 const URL_ATTRIBUTES = new Set(["src", "poster"]);
-const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]); // MDX keeps an authored attribute as written, so either spelling can appear.
+const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]); // MDX keeps an attribute name as authored, so either spelling can appear.
 const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
 
 const isRelativeReference = (reference: string) => reference.length > 0 && !NON_FILE_REFERENCE.test(reference);

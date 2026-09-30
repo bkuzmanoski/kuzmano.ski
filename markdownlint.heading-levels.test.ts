@@ -2,7 +2,7 @@
 import { lint } from "markdownlint/promise";
 import { describe, expect, test } from "vitest";
 
-import headingLevelsRule from "./markdownlint.rules.ts";
+import headingLevelsRule from "./markdownlint.heading-levels.ts";
 
 // Lints the source with only the rule under test, and returns the line and detail of each error.
 async function headingLevelErrorsIn(source: string) {
@@ -65,7 +65,7 @@ A sentence with <h5>a heading</h5> inside it.
     ]);
   });
 
-  test("ignores a heading written in a code fence or in inline code", async () => {
+  test("ignores a heading authored in a code fence or in inline code", async () => {
     expect(
       await headingLevelErrorsIn(`\`\`\`md
 # A title

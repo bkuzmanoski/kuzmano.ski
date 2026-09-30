@@ -1,3 +1,5 @@
+import { toQuotedRootRelative } from "../../paths.ts";
+
 /** `remark-mdx` node types for authored JSX. */
 export const JSX_ELEMENT_NODE_TYPES = new Set(["mdxJsxFlowElement", "mdxJsxTextElement"]);
 
@@ -39,6 +41,10 @@ export interface ContentParent extends ContentNode {
 export interface EntryVFile {
   path?: string | undefined;
 }
+
+/** Names an entry by its repository-relative path, quoted, at the start of a problem message. */
+export const quotedEntryPathOf = ({ path }: EntryVFile) =>
+  path ? toQuotedRootRelative(path) : "An entry without a path";
 
 export const isJsxElement = (node: ContentNode) => JSX_ELEMENT_NODE_TYPES.has(node.type);
 
@@ -107,3 +113,7 @@ export interface EstreeNode {
 // `ContentNode` does not declare `data`, which mdast declares differently for each node type.
 export const estreeOf = (node: object): EstreeNode | null =>
   (node as { data?: { estree?: EstreeNode | null } }).data?.estree ?? null;
+
+export const isWhitespaceOrComment = (node: ContentNode) =>
+  (node.type === "text" && !node.value?.trim()) ||
+  (node.type === "mdxFlowExpression" && estreeOf(node)?.body?.length === 0);

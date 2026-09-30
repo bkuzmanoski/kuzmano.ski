@@ -13,7 +13,7 @@ const PAGE_TOKEN_COUNT = 607;
 const COLLECTION_TOKEN_COUNT = 145;
 const STALE_TOKEN_COUNT = 42;
 
-// The build writes a count for each Markdown file it emits, so the paths in this map are also
+// The build emits a count for each Markdown file, so the paths in this map are also
 // the documents that have a Markdown representation (see `/build/markdown/plugin.ts`).
 vi.mock("virtual:markdown-token-counts", () => ({
   MARKDOWN_TOKEN_COUNTS: {
