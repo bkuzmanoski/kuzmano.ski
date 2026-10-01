@@ -207,19 +207,22 @@ export function MenuBar() {
   const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titleElementsRef = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const hasWindow = focusedWindow !== null;
+  const isWindowFocused = focusedWindow !== null;
 
+  const printWindow = () => requestAnimationFrame(() => requestAnimationFrame(() => print())); // Two frames: the menu closes after the action runs, and must paint closed before `print()` blocks rendering.
   const closeWindow = () => focusedWindow && close(focusedWindow);
 
   const menus: Array<{ label: string; items: Array<MenuItem> }> = [
     {
       label: "File",
       items: [
+        { kind: "action", label: "Print…", disabled: !isWindowFocused, action: printWindow },
+        { kind: "separator" },
         {
           kind: "action",
           label: "Close",
           shortcut: { code: "KeyW", label: "W" },
-          disabled: !hasWindow,
+          disabled: !isWindowFocused,
           action: closeWindow,
         },
       ],

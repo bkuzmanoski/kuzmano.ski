@@ -438,22 +438,9 @@
     }
 
     &:where(a:not([data-heading-link])) {
-      margin-inline: -1px;
-      padding-block: 1px;
-      padding-inline: 1px;
-
-      color: var(--color-accent);
-      text-decoration: underline rgb(from var(--color-accent) r g b / 35%);
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
-
-      box-decoration-break: clone;
+      @mixin content-link;
 
       -webkit-touch-callout: default;
-
-      &:focus-visible {
-        @mixin dashed-stroke;
-      }
     }
 
     &:where(a[target="_blank"])::after {
@@ -753,4 +740,22 @@
 
 .entryCopyStatus {
   @mixin visually-hidden;
+}
+
+@media print {
+  .content :where([data-content-body]) {
+    padding-block: 0;
+
+    & > * {
+      --content-body-rail-clearance: 0px !important;
+    }
+
+    & > :where(h2, h3) {
+      break-after: avoid;
+    }
+
+    & > :where(figure, [data-content-panel]) {
+      break-inside: avoid;
+    }
+  }
 }

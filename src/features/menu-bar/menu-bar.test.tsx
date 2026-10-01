@@ -5,7 +5,7 @@ import { SITE_SOURCE_URL } from "#/config/site.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
-import { advanceTimersBy } from "#/test-utils/timers.ts";
+import { advanceTimersBy, nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
 
@@ -336,7 +336,7 @@ describe("disabled items", () => {
     render(<MenuBar />);
     openWithKeyboard("File");
 
-    const disabledItem = screen.getByRole("menuitem");
+    const disabledItem = screen.getByRole("menuitem", { name: "Close" });
     const initialClassName = disabledItem.className;
 
     Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => disabledItem });
@@ -344,6 +344,40 @@ describe("disabled items", () => {
 
     expect(disabledItem.getAttribute("aria-disabled")).toBe("true");
     expect(disabledItem.className).toBe(initialClassName);
+  });
+});
+
+describe("printing", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('the "Print…" menu item is disabled without a focused window', () => {
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(menuItem("Print…").getAttribute("aria-disabled")).toBe("true");
+  });
+
+  test('the "Print…" menu item opens the browser\'s print dialog two animation frames after the menu closes', async () => {
+    const print = vi.fn();
+
+    vi.stubGlobal("print", print);
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] }); // Leaves animation frames real, so the menu renders closed between them.
+    focusedWindow = "entry";
+    render(<MenuBar />);
+    openWithPointer("File");
+    releasePointerOver(menuItem("Print…"));
+    runActivationFlash();
+
+    expect(menu()).toBeNull();
+    expect(print).not.toHaveBeenCalled();
+
+    await nextAnimationFrame();
+
+    expect(print).not.toHaveBeenCalled();
+
+    await nextAnimationFrame();
+
+    expect(print).toHaveBeenCalledOnce();
   });
 });
 

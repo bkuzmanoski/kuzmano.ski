@@ -116,3 +116,9 @@
     translate: calc(-1 * var(--screensaver-fly-distance)) var(--screensaver-fly-distance);
   }
 }
+
+@media print {
+  .screensaver {
+    display: none;
+  }
+}

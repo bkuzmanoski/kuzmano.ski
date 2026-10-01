@@ -44,3 +44,18 @@
 
   outline: none;
 }
+
+@media print {
+  .scrollPane {
+    display: block;
+  }
+
+  .contentContainer {
+    container-type: normal;
+    overflow: visible;
+  }
+
+  .scrollbar {
+    display: none;
+  }
+}

@@ -295,3 +295,21 @@ hr {
 ::selection {
   background: var(--color-selection-background);
 }
+
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    overflow: visible;
+    height: auto;
+    background: none;
+  }
+}
+
+@page {
+  margin: 25mm 0;
+}

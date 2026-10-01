@@ -135,3 +135,9 @@
     @mixin focus-stroke 1px;
   }
 }
+
+@media print {
+  .controls {
+    display: none;
+  }
+}

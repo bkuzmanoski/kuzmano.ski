@@ -77,6 +77,35 @@ describe("articleContentOf", () => {
     expect(body).toBe("<p>A body.</p>");
   });
 
+  test("removes an `<aside>` left with only its label once its elements with a `data-feed-omit` attribute are removed", () => {
+    const body = articleContentOf(
+      articleDocument(`<p>A body.</p><aside aria-labelledby="label">
+  <p id="label">Label</p>
+  <button data-feed-omit>Print</button>
+</aside>`),
+      ENTRY_URL,
+    );
+    expect(body).toBe("<p>A body.</p>");
+  });
+
+  test("removes an unlabeled `<aside>` left empty once its elements with a `data-feed-omit` attribute are removed", () => {
+    const body = articleContentOf(
+      articleDocument("<p>A body.</p><aside><button data-feed-omit>Print</button></aside>"),
+      ENTRY_URL,
+    );
+    expect(body).toBe("<p>A body.</p>");
+  });
+
+  test("preserves the contents of an `<aside>` left with more than its label once its elements with a `data-feed-omit` attribute are removed", () => {
+    const body = articleContentOf(
+      articleDocument(
+        '<aside aria-labelledby="label"><p id="label">Label</p><p>A note.</p><button data-feed-omit>Print</button></aside>',
+      ),
+      ENTRY_URL,
+    );
+    expect(body).toBe("<p>Label</p><p>A note.</p>");
+  });
+
   test("replaces an element that has a `data-feed-text` attribute with a paragraph containing the attribute's value", () => {
     const body = articleContentOf(
       articleDocument(

@@ -70,3 +70,9 @@
 :where(h2, h3):hover + .headingLinkPosition .headingLink {
   opacity: 1;
 }
+
+@media print {
+  .headingLinkPosition {
+    display: none;
+  }
+}

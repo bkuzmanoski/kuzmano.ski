@@ -351,3 +351,25 @@
     grid-column: rail-start / text-end;
   }
 }
+
+@media print {
+  .controls,
+  .chartColumn {
+    display: none;
+  }
+
+  .careerTimeline {
+    display: block;
+  }
+
+  .roleHeader,
+  .roleTitle,
+  .roleOrganization {
+    break-after: avoid;
+  }
+
+  .roleSummary,
+  .highlights li {
+    break-inside: avoid;
+  }
+}

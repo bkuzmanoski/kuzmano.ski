@@ -41,3 +41,15 @@
   @mixin bitmap-label;
   @mixin dither-text;
 }
+
+@media print {
+  .codeBlock .header > :not(.languageLabel) {
+    display: none;
+  }
+
+  .codeBlock pre {
+    overflow-x: visible;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+}

@@ -69,6 +69,10 @@ const ASIDE_MARKDOWN: ComponentMarkdown = {
     const label = stringAttributeOf(node, "label");
     const children = node.children ?? [];
 
+    if (children.length === 0) {
+      return []; // An aside whose children were all omitted is omitted too.
+    }
+
     if (!label) {
       return [{ type: "blockquote", children }];
     }
@@ -124,6 +128,7 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
       return [...(node.children ?? []), ...(caption ? [textParagraph(caption)] : [])];
     },
   },
+  PrintLink: { block: () => [] }, // Omitted.
   Rail: ASIDE_MARKDOWN,
   Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },
   blockquote: {

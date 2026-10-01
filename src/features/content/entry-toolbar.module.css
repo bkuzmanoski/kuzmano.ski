@@ -44,3 +44,9 @@
   grid-column: 3; /* Placed manually, so an entry without a date does not bring the button into the center track. */
   justify-self: end;
 }
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+}

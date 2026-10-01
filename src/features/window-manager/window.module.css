@@ -203,3 +203,26 @@
     background: var(--color-pressed-background);
   }
 }
+
+@media print {
+  .window:not(.focused) {
+    display: none;
+  }
+
+  .window.focused {
+    position: static;
+    translate: none;
+
+    width: auto !important;
+    height: auto !important;
+    border: 0;
+
+    opacity: 1;
+    background: none;
+    box-shadow: none;
+  }
+
+  .titleBar {
+    display: none;
+  }
+}

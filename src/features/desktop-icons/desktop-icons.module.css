@@ -16,3 +16,9 @@
     transition: opacity 0ms linear var(--duration-desktop-reveal-step); /* Follow menu bar reveal. */
   }
 }
+
+@media print {
+  .layer {
+    display: none;
+  }
+}

@@ -11,3 +11,10 @@
   min-height: 0;
   margin: 0 var(--layout-safe-area-right) var(--layout-safe-area-bottom) var(--layout-safe-area-left);
 }
+
+@media print {
+  .windowLayer {
+    position: static;
+    margin: 0;
+  }
+}

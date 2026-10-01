@@ -15,3 +15,13 @@
     border-bottom: 1px solid var(--color-border);
   }
 }
+
+@media print {
+  .desktop,
+  .desktop:has([data-maximized]) {
+    overflow: visible;
+    display: block;
+    height: auto;
+    border: 0;
+  }
+}

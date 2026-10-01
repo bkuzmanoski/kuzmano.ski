@@ -1,0 +1,14 @@
+.printLink {
+  @mixin content-link;
+
+  cursor: pointer;
+  text-align: start;
+}
+
+@media print {
+  .printLink,
+  :global(aside):has(.printLink),
+  :global([data-rail-asides]):has(> :only-child > .printLink) {
+    display: none;
+  }
+}

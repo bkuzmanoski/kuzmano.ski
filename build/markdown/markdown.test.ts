@@ -323,6 +323,27 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
 > **Label:** A second aside.`);
   });
 
+  test.each(["Callout", "Rail"])("omits a `%s` that contains only a `PrintLink`", async (name) => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      A paragraph.
+
+      <${name} label="Label">
+        <PrintLink>Print</PrintLink>
+      </${name}>
+    `);
+
+    expect(markdown).not.toContain("Label");
+    expect(markdown).not.toContain("Print");
+  });
+
+  test("throws when a `PrintLink` is authored inside a sentence, naming the component", async () => {
+    await expect(
+      markdownFor(`${FRONTMATTER}
+      A sentence with <PrintLink>a print link</PrintLink> inside it.
+    `),
+    ).rejects.toThrow("writes components inline whose fallback Markdown is a block: PrintLink");
+  });
+
   test("throws when a `Rail` is authored inside a sentence, naming the component", async () => {
     await expect(
       markdownFor(`${FRONTMATTER}

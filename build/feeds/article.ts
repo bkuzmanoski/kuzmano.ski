@@ -75,6 +75,28 @@ function replaceUIMarkup(article: Element) {
   });
 }
 
+const isBlankText = (node: ElementContent) => node.type === "text" && node.value.trim() === "";
+
+function removeLabelOnlyAsides(article: Element) {
+  visit(article, "element", (element, index, parent) => {
+    if (!parent || index === undefined || element.tagName !== "aside") {
+      return CONTINUE;
+    }
+
+    const { ariaLabelledBy } = element.properties;
+    const labelIds = Array.isArray(ariaLabelledBy) ? ariaLabelledBy.map(String) : [];
+    const isLabel = (node: ElementContent) =>
+      node.type === "element" && typeof node.properties.id === "string" && labelIds.includes(node.properties.id);
+
+    if (element.children.every((child) => isBlankText(child) || isLabel(child))) {
+      parent.children.splice(index, 1);
+      return index; // Continues at the sibling that took the removed aside's place.
+    }
+
+    return CONTINUE;
+  });
+}
+
 function moveFootnotesToEndnotes(article: Element) {
   const endnotes: Array<Element> = [];
 
@@ -209,6 +231,7 @@ export function articleContentOf(html: string, url: string): string {
   const article = articles[0]!;
 
   replaceUIMarkup(article);
+  removeLabelOnlyAsides(article);
   moveFootnotesToEndnotes(article);
   resolveRelativeUrls(article, url);
 

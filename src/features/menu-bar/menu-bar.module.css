@@ -122,3 +122,9 @@
     display: none;
   }
 }
+
+@media print {
+  .menuBar {
+    display: none;
+  }
+}
