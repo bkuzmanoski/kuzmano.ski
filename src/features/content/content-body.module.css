@@ -73,26 +73,7 @@
   }
 
   &[data-footnote]:focus {
-    animation: footnote-highlight 900ms steps(3, jump-end);
-
-    @media (prefers-reduced-motion: reduce) {
-      animation-timing-function: steps(1, jump-end);
-    }
-
-    @media (forced-colors: active) {
-      @mixin focus-stroke -4px;
-    }
-  }
-
-  &[data-footnote]:focus-visible {
     @mixin focus-stroke -4px;
-  }
-}
-
-@keyframes footnote-highlight {
-  from {
-    background-color: var(--color-selection-background);
-    box-shadow: 0 0 0 4px var(--color-selection-background);
   }
 }
 
