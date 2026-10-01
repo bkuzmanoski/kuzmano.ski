@@ -1,0 +1,102 @@
+.button,
+.options {
+  --popup-menu-padding-inline-start: 10px;
+}
+
+.button {
+  touch-action: none; /* A touch dragged from the button into the options chooses the option it is released over, so the browser must not claim the gesture for panning and cancel it. */
+  cursor: default;
+  user-select: none;
+
+  position: relative;
+
+  height: 26px;
+  padding-block: 0 1px; /* Offsets ChicagoFLF's text to appear optically centered. */
+  padding-inline: var(--popup-menu-padding-inline-start) 30px;
+  border: 1px solid var(--color-border);
+
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+  white-space: nowrap;
+
+  background: var(--color-background);
+  box-shadow: 1px 1px 0 var(--color-border);
+
+  &::before {
+    pointer-events: none;
+    content: "";
+
+    position: absolute;
+    inset-inline-end: 10px;
+    top: 50%;
+    translate: 0 -50%;
+
+    width: 0;
+    height: 0;
+    border-block-start: 6px solid currentColor;
+    border-inline: 5px solid transparent;
+
+    forced-color-adjust: none;
+  }
+
+  &:focus-visible {
+    @mixin focus-stroke 1px;
+  }
+
+  &:active {
+    color: var(--color-pressed-foreground);
+    background: var(--color-pressed-background);
+  }
+}
+
+.options {
+  --popup-menu-button-top: 0px; /* Set from JS. */
+  --popup-menu-button-left: 0px; /* Set from JS. */
+  --popup-menu-button-width: 0px; /* Set from JS. */
+  --popup-menu-button-height: 0px; /* Set from JS. */
+  --popup-menu-chosen-option-index: 0; /* Set from JS. */
+  --popup-menu-option-count: 0; /* Set from JS. */
+  --popup-menu-option-padding-inline-start: 32px; /* Leaves room for the checkmark before the chosen option's label. */
+
+  @mixin menu;
+
+  touch-action: none; /* A touch dragged between options chooses the option it is released over, so the browser must not claim the gesture for panning and cancel it. */
+
+  position: fixed;
+  z-index: var(--layer-menu);
+  top: clamp(
+    var(--layout-gutter),
+    var(--popup-menu-button-top) + (var(--popup-menu-button-height) - 32px) / 2 - 1px - 4px -
+      var(--popup-menu-chosen-option-index) * 32px,
+    100dvh - var(--layout-gutter) - (var(--popup-menu-option-count) * 32px + 2 * (1px + 4px))
+  );
+  left: calc(
+    var(--popup-menu-button-left) + var(--popup-menu-padding-inline-start) -
+      var(--popup-menu-option-padding-inline-start)
+  );
+
+  min-width: calc(
+    var(--popup-menu-button-width) + var(--popup-menu-option-padding-inline-start) -
+      var(--popup-menu-padding-inline-start)
+  );
+
+  outline: none;
+}
+
+.option {
+  @mixin menu-item;
+
+  position: relative;
+  padding-block: 0 1px; /* Offsets ChicagoFLF's text to appear optically centered. */
+  padding-inline-start: var(--popup-menu-option-padding-inline-start);
+
+  &.active {
+    @mixin highlight;
+  }
+
+  &[aria-selected="true"]::before {
+    content: "\2713" / "";
+    position: absolute;
+    inset-inline-start: 10px;
+  }
+}

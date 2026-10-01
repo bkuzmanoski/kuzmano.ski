@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { Experience } from "#/lib/experience/career-timeline.ts";
+import { runActivationFlash } from "#/test-utils/menu.ts";
 import { RouterContext } from "#/test-utils/router-context.tsx";
 
 import styles from "./career-timeline.module.css";
@@ -75,7 +76,19 @@ const renderInScrollPane = () => render(careerTimelineInScrollPane(), { wrapper:
 
 const roleTitles = () => screen.queryAllByRole("heading").map((heading) => heading.textContent);
 const roleNamed = (title: string) => screen.getByRole("heading", { name: title }).closest("li");
-const pressedFilterNamed = (name: string) => screen.getByRole("button", { name, pressed: true });
+const checkedFilterNamed = (name: string) => screen.getByRole("checkbox", { name, checked: true });
+
+function chooseOrder(label: string) {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  fireEvent.click(screen.getByRole("button", { name: /^Order / }));
+
+  const options = screen.getByRole("listbox", { name: "Order" });
+
+  fireEvent.keyDown(options, { key: label[0]!.toLowerCase() });
+  fireEvent.keyDown(options, { key: "Enter" });
+  void runActivationFlash();
+}
+
 const paragraphWithText = (text: string) => (_content: string, element: Element | null) =>
   element?.tagName === "P" && element.textContent === text;
 const rectOf = (left: number, top: number, width: number, height: number): DOMRect => ({
@@ -285,32 +298,32 @@ describe("CareerTimeline", () => {
     ).toBeTruthy();
   });
 
-  test("renders a pressed filter for every discipline, in a group labeled `Show`", () => {
+  test("renders a checked filter for every discipline, in a list labeled `Disciplines`", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
 
-    const group = screen.getByRole("group", { name: "Show" });
+    const list = screen.getByRole("list", { name: "Disciplines" });
 
-    expect(within(group).getByRole("button", { name: "First", pressed: true })).toBeTruthy();
-    expect(within(group).getByRole("button", { name: "Second", pressed: true })).toBeTruthy();
+    expect(within(list).getByRole("checkbox", { name: "First", checked: true })).toBeTruthy();
+    expect(within(list).getByRole("checkbox", { name: "Second", checked: true })).toBeTruthy();
   });
 
-  test("omits a role from the list once the filter for every discipline it lists is toggled off", () => {
+  test("omits a role from the list once the filter for every discipline it lists is unchecked", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-    fireEvent.click(pressedFilterNamed("Second"));
+    fireEvent.click(checkedFilterNamed("Second"));
 
     expect(roleTitles()).toEqual(["Newest Role", "Middle Role"]);
-    expect(screen.getByRole("button", { name: "Second", pressed: false })).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: "Second", checked: false })).toBeTruthy();
   });
 
-  test("lists a discipline's roles again when its filter is toggled back on", () => {
+  test("lists a discipline's roles again when its filter is checked again", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-    fireEvent.click(pressedFilterNamed("Second"));
-    fireEvent.click(screen.getByRole("button", { name: "Second", pressed: false }));
+    fireEvent.click(checkedFilterNamed("Second"));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Second", checked: false }));
 
     expect(roleTitles()).toHaveLength(3);
   });
 
-  test("colors a listed role with the accent color of the first discipline it lists whose filter is pressed", () => {
+  test("colors a listed role with the accent color of the first discipline it lists whose filter is checked", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
 
     const accentColorOfMiddleRole = () =>
@@ -318,39 +331,37 @@ describe("CareerTimeline", () => {
 
     expect(accentColorOfMiddleRole()).toBe("var(--accent-magenta)");
 
-    fireEvent.click(pressedFilterNamed("Second"));
+    fireEvent.click(checkedFilterNamed("Second"));
 
     expect(accentColorOfMiddleRole()).toBe("var(--accent-blue)");
   });
 
-  test("renders the empty-state message when every filter is toggled off", () => {
+  test("renders the empty-state message when every filter is unchecked", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
 
     expect(screen.getByRole("status").textContent).toBe("");
 
-    fireEvent.click(pressedFilterNamed("First"));
-    fireEvent.click(pressedFilterNamed("Second"));
+    fireEvent.click(checkedFilterNamed("First"));
+    fireEvent.click(checkedFilterNamed("Second"));
 
     expect(screen.getByRole("status").textContent).toBe("No roles match the selected disciplines.");
   });
 
-  test("reverses the order of the roles when the direction button is pressed", () => {
+  test("lists the roles newest first by default, with `Newest first` chosen in the order menu", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
 
-    fireEvent.click(screen.getByRole("button", { name: "Newest first" }));
+    expect(roleTitles()).toEqual(["Newest Role", "Middle Role", "Oldest Role"]);
+    expect(screen.getByRole("button", { name: "Order Newest first" })).toBeTruthy();
+  });
+
+  test("reverses the order of the roles when `Oldest first` is chosen from the order menu", () => {
+    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    chooseOrder("Oldest first");
 
     expect(roleTitles()).toEqual(["Oldest Role", "Middle Role", "Newest Role"]);
   });
 
-  test("names the direction button after the order the roles are listed in once it is pressed", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-
-    fireEvent.click(screen.getByRole("button", { name: "Newest first" }));
-
-    expect(screen.getByRole("button", { name: "Oldest first", description: "Orders the roles by date" })).toBeTruthy();
-  });
-
-  test("stops marking the visible-range frame with the `data-visible` attribute when every filter is toggled off", () => {
+  test("stops marking the visible-range frame with the `data-visible` attribute when every filter is unchecked", () => {
     layOutRolesInView();
 
     const { container } = renderInScrollPane();
@@ -358,18 +369,18 @@ describe("CareerTimeline", () => {
 
     expect(visibleRangeFrame?.hasAttribute("data-visible")).toBe(true);
 
-    fireEvent.click(pressedFilterNamed("First"));
-    fireEvent.click(pressedFilterNamed("Second"));
+    fireEvent.click(checkedFilterNamed("First"));
+    fireEvent.click(checkedFilterNamed("Second"));
 
     expect(visibleRangeFrame?.hasAttribute("data-visible")).toBe(false);
   });
 
-  test("measures the visible-range frame again when the direction button is pressed", () => {
+  test("measures the visible-range frame again when another order is chosen", () => {
     const { container } = renderInScrollPane();
     const scrollPane = container.firstElementChild as HTMLElement;
 
     layOutChartAboveList(scrollPane);
-    fireEvent.click(screen.getByRole("button", { name: "Newest first" }));
+    chooseOrder("Oldest first");
 
     expect(visibleRangeFramePlacementIn(container).offset).toBe(0);
   });

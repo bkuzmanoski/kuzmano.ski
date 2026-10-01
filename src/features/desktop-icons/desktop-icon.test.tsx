@@ -73,7 +73,7 @@ test("a secondary press does not select the icon", () => {
   expect(fireEvent.mouseDown(icon)).toBe(true); // The default behavior is not prevented for a primary press.
 });
 
-test("a modified press is left for the browser to handle, and does not open the icon in place", () => {
+test("a modified press follows the link rather than opening the icon in place", () => {
   const icon = renderIcon();
 
   expect(fireEvent.click(icon, { detail: 1, metaKey: true })).toBe(true); // The default behavior was not prevented.

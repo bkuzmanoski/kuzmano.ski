@@ -1,10 +1,11 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SITE_SOURCE_URL } from "#/config/site.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import { releasePointerOver, runActivationFlash, stubElementFromPoint } from "#/test-utils/menu.ts";
 import { advanceTimersBy, nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
@@ -54,14 +55,6 @@ function openWithKeyboard(label: string) {
   fireEvent.keyDown(menuTitle(label), { key: "Enter" });
 }
 
-// Releases the pointer over an item, which `Menu` hit-tests for from its document `pointerup`.
-function releasePointerOver(element: Element, init: MouseEventInit = {}) {
-  Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => element });
-  fireEvent(document, new MouseEvent("pointerup", { bubbles: true, ...init }));
-}
-
-const runActivationFlash = () => void act(() => vi.advanceTimersByTime(1000)); // Long enough for an item's highlight to play out.
-
 describe("navigating the menu bar", () => {
   test("the Left and Right arrow keys move the focus between menu titles without opening their menus", () => {
     render(<MenuBar />);
@@ -104,6 +97,15 @@ describe("holding the pointer across the menu bar", () => {
     render(<MenuBar />);
     openWithPointer("File");
     fireEvent.pointerOver(menuTitle("Go"), { buttons: 1 });
+
+    expect(isExpanded("File")).toBe(false);
+    expect(isExpanded("Go")).toBe(true);
+  });
+
+  test("sliding a held touch onto another title opens its menu in place of the open one", () => {
+    render(<MenuBar />);
+    fireEvent.pointerDown(menuTitle("File"), { pointerId: 1, pointerType: "touch" });
+    fireEvent.pointerEnter(menuTitle("Go"), { pointerId: 1, pointerType: "touch", buttons: 1 });
 
     expect(isExpanded("File")).toBe(false);
     expect(isExpanded("Go")).toBe(true);
@@ -161,6 +163,17 @@ describe("opening a menu", () => {
     fireEvent(menuTitle("File"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, as a touch tap does.
     fireEvent.pointerDown(menuTitle("Go"));
     fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }));
+
+    expect(isExpanded("File")).toBe(false);
+    expect(isExpanded("Go")).toBe(true);
+  });
+
+  test("a tap on another title while a menu is open opens its menu", () => {
+    render(<MenuBar />);
+    fireEvent.pointerDown(menuTitle("File"), { pointerId: 1, pointerType: "touch" });
+    fireEvent(menuTitle("File"), new MouseEvent("pointerup", { bubbles: true }));
+    fireEvent.pointerEnter(menuTitle("Go"), { pointerId: 2, pointerType: "touch", buttons: 1 }); // A touch fires `pointerenter` before its `pointerdown`.
+    fireEvent.pointerDown(menuTitle("Go"), { pointerId: 2, pointerType: "touch" });
 
     expect(isExpanded("File")).toBe(false);
     expect(isExpanded("Go")).toBe(true);
@@ -229,6 +242,18 @@ describe("navigating an open menu", () => {
     fireEvent.keyDown(menu()!, { key: "ArrowUp" });
 
     expect(highlightedMenuItem()).toBe("About");
+  });
+
+  test("typing a letter highlights the next enabled item that starts with it, and typing on to text that does not start an item leaves the highlight in place", () => {
+    render(<MenuBar />);
+    openWithPointer("Special");
+    fireEvent.keyDown(menu()!, { key: "s" });
+
+    expect(highlightedMenuItem()).toBe("Sleep");
+
+    fireEvent.keyDown(menu()!, { key: "r" });
+
+    expect(highlightedMenuItem()).toBe("Sleep");
   });
 
   test("the Up arrow key highlights the last item when no item is highlighted", () => {
@@ -339,7 +364,7 @@ describe("disabled items", () => {
     const disabledItem = screen.getByRole("menuitem", { name: "Close" });
     const initialClassName = disabledItem.className;
 
-    Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => disabledItem });
+    stubElementFromPoint(disabledItem);
     fireEvent(document, new MouseEvent("pointermove", { bubbles: true }));
 
     expect(disabledItem.getAttribute("aria-disabled")).toBe("true");
@@ -424,7 +449,7 @@ describe("items that open a destination", () => {
     ["Shift", { shiftKey: true }],
     ["Alt", { altKey: true }],
   ] as const)(
-    "clicking an item with the %s key held is handled by the browser, and the menu stays open",
+    "clicking an item with the %s key held follows its link rather than opening the destination in the page, and the menu stays open",
     (_modifier, init) => {
       render(<MenuBar />);
       openWithPointer("Go");
@@ -438,6 +463,16 @@ describe("items that open a destination", () => {
       expect(menu()).not.toBeNull();
     },
   );
+
+  test("a click on an item without a pointer press, as an assistive technology sends, opens its destination", () => {
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    openWithKeyboard("Go");
+    fireEvent.click(menuItem("About"));
+    runActivationFlash();
+
+    expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+  });
 
   test("a secondary pointer up event does not activate the menu item", () => {
     vi.useFakeTimers();

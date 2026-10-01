@@ -1,18 +1,15 @@
-import { memo, useEffect, useEffectEvent, useId, useRef, useState } from "react";
+import { memo, useId, useRef } from "react";
 
 import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-download.svg?react";
 import ExternalLinkMenuItemIndicator from "#/assets/images/menu-item-indicator-external-link.svg?react";
-import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
-import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos.ts";
+import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.ts";
-import { cycle } from "#/lib/math.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
 
 import styles from "./menu.module.css";
 
-import type { KeyboardEvent, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 const CHAR_OPTION_KEY = "⌥";
 const CHAR_NBSP = "\u00A0";
@@ -44,32 +41,12 @@ type MenuItemAccessory = "download" | "external-link";
 type MenuAction = Extract<MenuItem, { kind: "action" }>;
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
-const firstEnabledIndex = (items: Array<MenuItem>) => items.findIndex(isEnabled);
-
-function lastEnabledIndex(items: Array<MenuItem>): number {
-  for (let index = items.length - 1; index >= 0; index--) {
-    if (isEnabled(items[index])) {
-      return index;
-    }
-  }
-
-  return -1;
-}
-
 const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
 
-// The index of the item under a point, or -1 if the point is not over one.
-function indexAt(x: number, y: number): number {
-  const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
-  return element ? Number(element.dataset.index) : -1;
-}
-
-// Items activate from the document-level `pointerup` handler in `Menu`: `select` waits for the
-// activation flash effect to finish, then runs the action or follows the link. A plain click is
-// suppressed here so the anchor cannot navigate before that.
-//
-// A modified or non-primary click is left for the browser to handle.
 function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
+  // Items activate from the document-level `pointerup` handler in `useMenuInteraction`, which
+  // waits for the activation flash effect to finish before running the action or following the link.
+  // A modified or non-primary click keeps its default behavior.
   if (!isFollowingLink(event.currentTarget) && !isBrowserHandledClick(event)) {
     event.preventDefault();
   }
@@ -166,204 +143,36 @@ export function Menu({
 }) {
   const itemIdPrefix = useId();
   const isMacOS = useIsMacOS();
-  const flash = useActivationFlash<number>();
-  const [focusedItemIndex, setFocusedItemIndex] = useState(() => (focusesFirstItem ? firstEnabledIndex(items) : -1));
   const menuRef = useRef<HTMLDivElement>(null);
-  const isStickyRef = useRef(!isPointerHeld);
-  const focusedItemIndexRef = useRef(focusedItemIndex);
 
-  function focusItem(index: number) {
-    if (index === focusedItemIndexRef.current) {
-      return;
-    }
+  const menuInteractionItems = items.map((item) => ({
+    label: item.kind === "action" ? item.label : "",
+    isEnabled: isEnabled(item),
+  }));
 
-    focusedItemIndexRef.current = index;
+  const { focusedItemIndex, isHighlighted, onClick, onKeyDown } = useMenuInteraction({
+    items: menuInteractionItems,
+    anchor,
+    listRef: menuRef,
+    isPointerHeld,
+    pressOrigin: null, // The menu opens below its title rather than over the point pressed.
+    initialFocusedItemIndex: focusesFirstItem ? menuInteractionItems.findIndex((item) => item.isEnabled) : -1,
+    isBrowserHandledRelease: (index, event) => isLink(items[index]) && isBrowserHandledClick(event),
+    onActivate: (index) => {
+      const item = items[index];
 
-    setFocusedItemIndex(index);
-
-    if (index >= 0) {
-      playHoverSound();
-    }
-  }
-
-  function focusEdgeMenuItem(edge: "first" | "last") {
-    const index = edge === "first" ? firstEnabledIndex(items) : lastEnabledIndex(items);
-
-    if (index >= 0) {
-      focusItem(index);
-    }
-  }
-
-  function focusAdjacentMenuItem(direction: 1 | -1) {
-    let nextIndex = focusedItemIndexRef.current;
-    let remaining = items.length;
-
-    while (remaining-- > 0) {
-      nextIndex = cycle(items.length, nextIndex, direction);
-
-      if (isEnabled(items[nextIndex])) {
-        focusItem(nextIndex);
+      if (item?.kind !== "action") {
         return;
       }
-    }
-  }
 
-  function returnFocusToTitle() {
-    // Choosing an item whose action does not move the focus, such as one that opens a new tab, would
-    // leave the focus on the body once the focused menu unmounts, so it returns to the title that
-    // opened the menu instead. A press outside the menu that closes it leaves the focus where it landed.
-    if (menuRef.current?.contains(document.activeElement)) {
-      anchor?.focus({ preventScroll: true });
-    }
-  }
-
-  // A plain function, not an Effect Event as the keyboard path calls it straight
-  // from `onKeyDown`. The pointer handlers below are Effect Events, so they
-  // always close over the latest render's copy of this.
-  function select(index: number) {
-    const item = items[index];
-
-    if (item?.kind !== "action" || item.disabled || flash.isRunning()) {
-      return;
-    }
-
-    focusedItemIndexRef.current = index;
-
-    setFocusedItemIndex(index);
-    playClickSound();
-
-    flash.start(index, () => {
       if (item.action) {
         item.action();
       } else {
         followLink(menuRef.current?.querySelector<HTMLAnchorElement>(`a[data-index="${index}"]`));
       }
-
-      returnFocusToTitle();
-      onClose();
-    });
-  }
-
-  const onPointerMove = useEffectEvent((event: PointerEvent) => {
-    if (flash.isRunning()) {
-      return;
-    }
-
-    const index = indexAt(event.clientX, event.clientY);
-
-    focusItem(isEnabled(items[index]) ? index : -1);
+    },
+    onClose,
   });
-
-  const onPointerUp = useEffectEvent((event: PointerEvent) => {
-    const index = indexAt(event.clientX, event.clientY);
-    const wasSticky = isStickyRef.current;
-
-    isStickyRef.current = true;
-
-    if (index >= 0) {
-      if (!isPrimaryPress(event)) {
-        return;
-      }
-
-      if (isLink(items[index]) && isBrowserHandledClick(event)) {
-        return; // The browser acts on a modified release itself, so the anchor navigates instead of the menu selecting.
-      }
-
-      select(index);
-    } else if (!wasSticky && !anchor?.contains(event.target as Node)) {
-      onClose();
-    }
-  });
-
-  // A canceled gesture never delivers its `pointerup`, so the hold ends here instead:
-  // the menu turns sticky and waits for a press, rather than reading a later unrelated
-  // release as the end of a hold that is long over.
-  const onPointerCancel = useEffectEvent(() => {
-    isStickyRef.current = true;
-
-    if (!flash.isRunning()) {
-      focusItem(-1);
-    }
-  });
-
-  const onPointerDown = useEffectEvent((event: PointerEvent) => {
-    const isInside = menuRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
-
-    if (isStickyRef.current && !isInside) {
-      onClose();
-    }
-  });
-
-  useEffect(() => {
-    menuRef.current?.focus();
-
-    const controller = new AbortController();
-    const options = { signal: controller.signal };
-
-    document.addEventListener("pointermove", onPointerMove, options);
-    document.addEventListener("pointerup", onPointerUp, options);
-    document.addEventListener("pointercancel", onPointerCancel, options);
-    document.addEventListener("pointerdown", onPointerDown, options);
-
-    return () => controller.abort();
-  }, []);
-
-  function onKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "ArrowDown":
-        event.preventDefault();
-        focusAdjacentMenuItem(1);
-
-        break;
-
-      case "ArrowUp":
-        event.preventDefault();
-        focusAdjacentMenuItem(-1);
-
-        break;
-
-      case "Home":
-        event.preventDefault();
-        focusEdgeMenuItem("first");
-
-        break;
-
-      case "End":
-        event.preventDefault();
-        focusEdgeMenuItem("last");
-
-        break;
-
-      case "ArrowRight":
-        event.preventDefault();
-        onOpenAdjacentMenu(1);
-
-        break;
-      case "ArrowLeft":
-        event.preventDefault();
-        onOpenAdjacentMenu(-1);
-
-        break;
-
-      case "Enter":
-      case " ":
-        event.preventDefault();
-
-        if (focusedItemIndex >= 0) {
-          select(focusedItemIndex);
-        }
-
-        break;
-
-      case "Escape":
-      case "Tab":
-        event.preventDefault();
-        anchor?.focus(); // Return the focus to the title so the menu bar stays navigable by keyboard.
-        onClose();
-
-        break;
-    }
-  }
 
   return (
     <div
@@ -373,7 +182,15 @@ export function Menu({
       className={styles.menu}
       aria-labelledby={labelledBy}
       aria-activedescendant={focusedItemIndex >= 0 ? `${itemIdPrefix}-${focusedItemIndex}` : undefined}
-      onKeyDown={onKeyDown}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          onOpenAdjacentMenu(event.key === "ArrowRight" ? 1 : -1);
+        } else {
+          onKeyDown(event);
+        }
+      }}
     >
       {items.map((item, index) =>
         item.kind === "separator" ? (
@@ -384,7 +201,7 @@ export function Menu({
             item={item}
             index={index}
             id={`${itemIdPrefix}-${index}`}
-            isActive={flash.isHighlighted(index, focusedItemIndex === index)}
+            isActive={isHighlighted(index)}
             isMacOS={isMacOS}
           />
         ),

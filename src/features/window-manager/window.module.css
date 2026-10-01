@@ -79,7 +79,7 @@
 .titleBar {
   --window-control-size: 16px;
 
-  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+  touch-action: none; /* A touch dragged from the title bar moves the window's outline, so the browser must not claim the gesture for panning and cancel it. */
   user-select: none;
 
   position: relative;
@@ -183,7 +183,7 @@
 .controlResize {
   composes: filledControl;
 
-  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+  touch-action: none; /* A touch dragged from the resize control resizes the window's outline, so the browser must not claim the gesture for panning and cancel it. */
 
   width: var(--layout-scrollbar-width);
   height: var(--layout-scrollbar-gutter-width);

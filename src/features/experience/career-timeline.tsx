@@ -1,6 +1,8 @@
-import { Fragment, useId, useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 
-import { Button } from "#/components/button.tsx";
+import { Checkbox } from "#/components/checkbox.tsx";
+import { PopupMenu } from "#/components/popup-menu.tsx";
+import type { PopupMenuOption } from "#/components/popup-menu.tsx";
 import { EXPERIENCE_MONTH_FORMAT } from "#/config/content.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
 import { accentColorVariable } from "#/lib/accent-colors.ts";
@@ -30,13 +32,10 @@ import { useCareerTimelineMinimap } from "./use-career-timeline-minimap.ts";
 import type { ReactNode } from "react";
 
 const TICK_INTERVAL_YEARS = 4;
-const CAREER_TIMELINE_DIRECTION_LABELS: Record<CareerTimelineDirection, string> = {
-  "newest-first": "Newest first",
-  "oldest-first": "Oldest first",
-};
-
-const oppositeDirectionOf = (direction: CareerTimelineDirection): CareerTimelineDirection =>
-  direction === "newest-first" ? "oldest-first" : "newest-first";
+const CAREER_TIMELINE_DIRECTION_OPTIONS: ReadonlyArray<PopupMenuOption<CareerTimelineDirection>> = [
+  { value: "newest-first", label: "Newest first" },
+  { value: "oldest-first", label: "Oldest first" },
+];
 
 const careerTimelinePlacementVariables = (
   span: MonthSpan,
@@ -55,8 +54,6 @@ const labelFrom = (parts: ReadonlyArray<ReactNode>) =>
   parts.map((part, index) => <Fragment key={index}>{part}</Fragment>);
 
 export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
-  const filtersLabelId = useId();
-  const directionDescriptionId = useId();
   const [hiddenDisciplineIds, setHiddenDisciplineIds] = useState<ReadonlySet<string>>(() => new Set());
   const [direction, setDirection] = useState<CareerTimelineDirection>(DEFAULT_CAREER_TIMELINE_DIRECTION);
   const monthFormat = useDateFormat(EXPERIENCE_MONTH_FORMAT);
@@ -100,36 +97,22 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
   return (
     <section className={styles.careerTimeline} data-content-default-styles="off" data-content-span="rail">
       <div className={styles.controls}>
-        <div className={styles.filterGroup} role="group" aria-labelledby={filtersLabelId}>
-          <p id={filtersLabelId} className={styles.controlsLabel}>
-            Show
-          </p>
-          <ul className={styles.filters}>
-            {disciplines.map(({ id, name, accentColor }) => (
-              <li key={id}>
-                <Button
-                  aria-pressed={!hiddenDisciplineIds.has(id)}
-                  className={styles.filter}
-                  style={accentColorVariable("--career-timeline-discipline-accent-color", accentColor)}
-                  onClick={() => toggleDiscipline(id)}
-                >
-                  {name}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Button
-          className={styles.directionButton}
-          data-direction={direction}
-          aria-describedby={directionDescriptionId}
-          onClick={() => setDirection(oppositeDirectionOf)}
-        >
-          {CAREER_TIMELINE_DIRECTION_LABELS[direction]}
-        </Button>
-        <span id={directionDescriptionId} hidden>
-          Orders the roles by date
-        </span>
+        <ul className={styles.filters} aria-label="Disciplines">
+          {disciplines.map(({ id, name }) => (
+            <li key={id}>
+              <Checkbox checked={!hiddenDisciplineIds.has(id)} onChange={() => toggleDiscipline(id)}>
+                {name}
+              </Checkbox>
+            </li>
+          ))}
+        </ul>
+        <PopupMenu
+          className={styles.directionMenu}
+          value={direction}
+          options={CAREER_TIMELINE_DIRECTION_OPTIONS}
+          aria-label="Order"
+          onChange={setDirection}
+        />
       </div>
       <div ref={chartColumnRef} className={styles.chartColumn}>
         <div aria-hidden="true" className={styles.chart} {...chartDragHandlers}>

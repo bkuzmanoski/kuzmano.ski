@@ -237,7 +237,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           y={y}
           cellSize={ICON_LAYOUT.cellSize}
           open={iconDefinition.kind === "collection" && isDestinationOpen(iconDefinition.route, openWindowRoutes)}
-          selected={flash.isHighlighted(id, focusedWindow === null && selectedIconId === id)}
+          selected={flash.highlightOf(id) ?? (focusedWindow === null && selectedIconId === id)}
           tabIndex={tabStop === id ? 0 : -1}
           onSelect={selectIcon}
           onOpen={openIcon}

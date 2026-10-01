@@ -20,86 +20,12 @@
 
   padding-block-end: 12px;
   border-block-end: 1px solid var(--color-foreground);
-
-  & .filter,
-  & .directionButton {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-
-    min-width: 0;
-    padding-inline: 8px 10px;
-  }
-
-  & .filter {
-    border-color: var(--color-border-secondary);
-    color: var(--color-foreground-secondary);
-
-    &::before {
-      content: "";
-
-      flex: none;
-
-      width: 12px;
-      height: 12px;
-      border: 1px solid currentColor;
-    }
-
-    &[aria-pressed="true"] {
-      border-color: var(--career-timeline-discipline-accent-color);
-      color: var(--career-timeline-discipline-accent-color);
-
-      &::before {
-        @mixin dither-50;
-      }
-    }
-
-    @media (forced-colors: active) {
-      &[aria-pressed="true"]::before {
-        forced-color-adjust: none;
-        background: ButtonText;
-      }
-    }
-  }
-
-  & .directionButton {
-    margin-inline-start: auto;
-
-    &::before {
-      content: "";
-
-      flex: none;
-
-      width: 0;
-      height: 0;
-      border-block-start: 6px solid currentColor;
-      border-inline: 5px solid transparent;
-
-      forced-color-adjust: none; /* Keeps the transparent borders that shape the arrow. */
-    }
-
-    &[data-direction="oldest-first"]::before {
-      border-block-start: 0;
-      border-block-end: 6px solid currentColor;
-    }
-  }
-}
-
-.filterGroup {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: center;
-}
-
-.controlsLabel {
-  @mixin bitmap-label;
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 8px 16px;
   align-items: center;
 
   margin: 0;
@@ -108,7 +34,9 @@
   list-style: none;
 }
 
-/* Chart */
+.directionMenu {
+  margin-inline-start: auto;
+}
 
 .chartColumn {
   position: sticky;
@@ -121,7 +49,7 @@
 }
 
 .chart {
-  touch-action: none; /* Dragging the chart scrolls the list, so the browser must not claim the gesture for panning. */
+  touch-action: none; /* A touch dragged across the chart scrolls the list, so the browser must not claim the gesture for panning and cancel it. */
   cursor: default;
   user-select: none;
 

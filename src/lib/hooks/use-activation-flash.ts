@@ -2,12 +2,15 @@ import { useState } from "react";
 
 import { useTimers } from "./use-timer.ts";
 
-const DEFAULT_FLASH_COUNT = 2;
-const DEFAULT_FLASH_INTERVAL_MS = 80;
+const DEFAULT_ACTIVATION_FLASH_COUNT = 2;
+const DEFAULT_ACTIVATION_FLASH_INTERVAL_MS = 80;
+
+export const DEFAULT_ACTIVATION_FLASH_DURATION_MS =
+  DEFAULT_ACTIVATION_FLASH_INTERVAL_MS * DEFAULT_ACTIVATION_FLASH_COUNT * 2;
 
 export function useActivationFlash<T>({
-  count = DEFAULT_FLASH_COUNT,
-  intervalMs = DEFAULT_FLASH_INTERVAL_MS,
+  count = DEFAULT_ACTIVATION_FLASH_COUNT,
+  intervalMs = DEFAULT_ACTIVATION_FLASH_INTERVAL_MS,
 }: { count?: number; intervalMs?: number } = {}) {
   const [flash, setFlash] = useState<{ target: T; isOn: boolean } | null>(null);
   const timers = useTimers();
@@ -40,9 +43,10 @@ export function useActivationFlash<T>({
     );
   }
 
-  function isHighlighted(target: T, whenIdle: boolean) {
-    return flash !== null && flash.target === target ? flash.isOn : whenIdle;
+  // Returns `null` when `target` is not flashing, so a caller can fall back to its own highlight state.
+  function highlightOf(target: T): boolean | null {
+    return flash !== null && flash.target === target ? flash.isOn : null;
   }
 
-  return { start, isRunning, isHighlighted };
+  return { start, isRunning, highlightOf };
 }

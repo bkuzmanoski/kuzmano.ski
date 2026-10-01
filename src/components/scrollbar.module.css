@@ -51,7 +51,7 @@
 }
 
 .track {
-  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+  touch-action: none; /* A touch dragged along the track scrolls the content, so the browser must not claim the gesture for panning and cancel it. */
   position: relative;
   flex: 1;
 
@@ -80,7 +80,7 @@
     max(var(--scrollbar-thumb-min-height), calc(var(--scrollbar-thumb-proportion) * 100%))
   );
 
-  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+  touch-action: none; /* A touch dragged from the thumb scrolls the content, so the browser must not claim the gesture for panning and cancel it. */
 
   position: absolute;
   top: calc(var(--scrollbar-thumb-position) * (100% - var(--scrollbar-thumb-height)));

@@ -90,7 +90,7 @@
 .track {
   --video-progress: 0; /* Set from JS. */
 
-  touch-action: none; /* The drag captures the pointer, so the browser must not claim the gesture for panning and cancel it. */
+  touch-action: none; /* A touch dragged along the track seeks the video, so the browser must not claim the gesture for panning and cancel it. */
 
   position: relative;
 

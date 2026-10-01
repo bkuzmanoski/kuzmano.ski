@@ -206,6 +206,7 @@ export function MenuBar() {
   const titleIdPrefix = useId();
   const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titleElementsRef = useRef<Record<string, HTMLButtonElement | null>>({});
+  const titlePressPointerIdRef = useRef<number | null>(null);
 
   const isWindowFocused = focusedWindow !== null;
 
@@ -254,7 +255,6 @@ export function MenuBar() {
   ];
 
   useGlobalShortcuts([
-    // Derived from the menu items so the key an item shows and the key that runs it cannot differ.
     ...menus.flatMap(({ items }) =>
       items.flatMap((item): Array<KeyboardShortcut> =>
         item.kind === "action" && item.shortcut
@@ -314,12 +314,14 @@ export function MenuBar() {
 
     const anchor = event.currentTarget;
 
+    titlePressPointerIdRef.current = event.pointerId;
+
     if (anchor.hasPointerCapture(event.pointerId)) {
       anchor.releasePointerCapture(event.pointerId);
     }
 
     playClickSound();
-    anchor.focus();
+    anchor.focus({ focusVisible: false });
     setIsPointerHeld(true);
     setOpenMenu((current) => (current?.label === label ? null : { label, anchor, focusesFirstItem: false }));
   }
@@ -370,7 +372,13 @@ export function MenuBar() {
               onMouseDown={(event) => event.preventDefault()}
               onPointerDown={(event) => onTitlePointerDown(event, label)}
               onPointerEnter={(event) => {
-                if (openMenu !== null && openMenu.label !== label) {
+                // Touch emits `pointerenter` before `pointerdown`; ignore it unless it belongs to a touch drag
+                // that began on a menu title, preventing the newly opened menu from immediately closing.
+                if (
+                  openMenu !== null &&
+                  openMenu.label !== label &&
+                  (event.pointerType !== "touch" || event.pointerId === titlePressPointerIdRef.current)
+                ) {
                   playHoverSound();
                   openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
                 }
