@@ -21,7 +21,7 @@
 
 :where(.content) {
   /* Metrics */
-  --layout-content-measure: 616px; /* ~70 characters of the body face at 17px. */
+  --layout-content-measure: 616px; /* ~70 characters of the body face. */
   --layout-content-rail-width: 120px;
   --layout-content-rail-gap: 24px;
   --layout-content-rail-track: calc(var(--layout-content-rail-width) + var(--layout-content-rail-gap));

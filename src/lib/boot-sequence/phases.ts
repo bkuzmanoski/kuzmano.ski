@@ -20,7 +20,7 @@ export const MOTION_DURATION_MS = {
   macintoshReveal: 1100,
   stageZoom: 800,
   crtWarmUp: 500,
-  logoDraw: 250,
+  logoReveal: 250,
   glassFade: 150,
   desktopReveal: 350, // Set as `--duration-desktop-reveal-step` by `/src/app/desktop.tsx`.
 };
@@ -76,7 +76,7 @@ export const sequence = (motion: Motion) =>
       durationMs: Math.max(motion.macintoshReveal, motion.stageZoom) + HOLD_DURATION_MS.macintoshReveal,
     },
     { phase: "display-on", durationMs: motion.crtWarmUp + HOLD_DURATION_MS.displayOn },
-    { phase: "logo", durationMs: motion.logoDraw + HOLD_DURATION_MS.logo },
+    { phase: "logo", durationMs: motion.logoReveal + HOLD_DURATION_MS.logo },
     { phase: "glass-fade", durationMs: motion.glassFade },
     { phase: "desktop-reveal", durationMs: motion.desktopReveal },
   ] as const satisfies ReadonlyArray<Step>;

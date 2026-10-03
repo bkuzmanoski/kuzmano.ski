@@ -124,7 +124,6 @@ export function authoredMediaIn(directoryListing: ContentDirectoryListing): Auth
   const { directoryName, fileNames, fileNamesBySubdirectoryName } = directoryListing;
   const coverImageFileNames = fileNames.filter(isCoverImageFileName);
   const listedEntries = listedEntriesIn(directoryListing);
-
   const entries = listedEntries.map((listedEntry) => {
     const { slug, mediaDirectoryPath } = listedEntry;
     const mediaFileNames = fileNamesBySubdirectoryName[slug] ?? [];
@@ -153,7 +152,6 @@ export function authoredMediaIn(directoryListing: ContentDirectoryListing): Auth
 
     return { entryMedia, problems };
   });
-
   const orphanCoverImageFileNames = coverImageFileNames.filter(
     (fileName) => !listedEntries.some(({ slug }) => isNamedAfter(fileName, coverImageStemOf(slug))),
   );

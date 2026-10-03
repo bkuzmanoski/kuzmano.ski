@@ -101,7 +101,7 @@ test("`favicon.svg` fills the monogram with the palette's light foreground, and 
   expect(insideQuery).toContain(palette.foreground.dark);
 });
 
-test('the maskable icon draws the committed monogram inside the safe radius `purpose: "maskable"` requires', async () => {
+test('the committed monogram in the maskable icon fits inside the safe radius `purpose: "maskable"` requires', async () => {
   const committedIcons = await iconFilesFrom(palette, await readArtwork());
   const radius = await monogramRadiusIn(rasterContentsIn(committedIcons, "logo-maskable-512.png"));
 

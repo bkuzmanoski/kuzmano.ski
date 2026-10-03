@@ -94,7 +94,7 @@ function resizeScrollContainer(scrollWidth: number, clientWidth: number) {
 }
 
 describe("ContributionGraph", () => {
-  test("draws a placeholder grid of 53 weeks of 7 days, every day at level 0, while the calendar is being read", () => {
+  test("renders a placeholder grid of 53 weeks of 7 days, every day at level 0, while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container } = render(<ContributionGraph />);
@@ -148,7 +148,7 @@ describe("ContributionGraph", () => {
     expect(document.activeElement).toBe(link);
   });
 
-  test("draws a cell for every day in the calendar", () => {
+  test("renders a cell for every day in the calendar", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
     const { container } = render(<ContributionGraph />);
@@ -156,7 +156,7 @@ describe("ContributionGraph", () => {
     expect(cellsIn(container)).toHaveLength(WEEKS.flat().length);
   });
 
-  test("draws the placeholder grid with the calendar's week count once the calendar is read", () => {
+  test("renders the placeholder grid with the calendar's week count once the calendar is read", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
     const { container } = render(<ContributionGraph />);
@@ -286,23 +286,23 @@ describe("ContributionGraph", () => {
     expect(screen.getByRole("img", { name: "Contributions by day" }).hasAttribute("tabindex")).toBe(false);
   });
 
-  test("sets the `--contribution-graph-draw-start` custom property of the `<figure>` to `20%`", () => {
+  test("sets the `--contribution-graph-reveal-start` custom property of the `<figure>` to `20%`", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
     const { container } = render(<ContributionGraph />);
 
-    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-draw-start")).toBe("20%");
+    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-start")).toBe("20%");
   });
 
-  test("does not set the `data-draw-timeline` attribute while the calendar is being read", () => {
+  test("does not set the `data-reveal-timeline` attribute while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container } = render(<ContributionGraph />);
 
-    expect(container.querySelector("figure")?.hasAttribute("data-draw-timeline")).toBe(false);
+    expect(container.querySelector("figure")?.hasAttribute("data-reveal-timeline")).toBe(false);
   });
 
-  test("sets the `data-draw-timeline` attribute to `view` when less than 20% of the figure is in view as the calendar arrives", () => {
+  test("sets the `data-reveal-timeline` attribute to `view` when less than 20% of the figure is in view as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container, rerender } = render(contributionGraphInScrollPane());
@@ -311,10 +311,10 @@ describe("ContributionGraph", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
     rerender(contributionGraphInScrollPane());
 
-    expect(container.querySelector("figure")?.getAttribute("data-draw-timeline")).toBe("view");
+    expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("view");
   });
 
-  test("sets the `data-draw-timeline` attribute to `document` when 20% or more of the figure is in view as the calendar arrives", () => {
+  test("sets the `data-reveal-timeline` attribute to `document` when 20% or more of the figure is in view as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container, rerender } = render(contributionGraphInScrollPane());
@@ -323,19 +323,19 @@ describe("ContributionGraph", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
     rerender(contributionGraphInScrollPane());
 
-    expect(container.querySelector("figure")?.getAttribute("data-draw-timeline")).toBe("document");
+    expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("document");
   });
 
-  test("sets the `data-draw-timeline` attribute to `document` when the figure mounts in view with the calendar already read", () => {
+  test("sets the `data-reveal-timeline` attribute to `document` when the figure mounts in view with the calendar already read", () => {
     placeFigure(0);
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
     const { container } = render(contributionGraphInScrollPane());
 
-    expect(container.querySelector("figure")?.getAttribute("data-draw-timeline")).toBe("document");
+    expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("document");
   });
 
-  test("sets the `data-draw-timeline` attribute to `view` when the figure is within the viewport but below the scroll pane as the calendar arrives", () => {
+  test("sets the `data-reveal-timeline` attribute to `view` when the figure is within the viewport but below the scroll pane as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container, rerender } = render(contributionGraphInScrollPane());
@@ -344,10 +344,10 @@ describe("ContributionGraph", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
     rerender(contributionGraphInScrollPane());
 
-    expect(container.querySelector("figure")?.getAttribute("data-draw-timeline")).toBe("view");
+    expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("view");
   });
 
-  test("leaves the `data-draw-timeline` attribute at `view` when the figure scrolls into view after the calendar arrives", () => {
+  test("leaves the `data-reveal-timeline` attribute at `view` when the figure scrolls into view after the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container, rerender } = render(contributionGraphInScrollPane());
@@ -358,7 +358,7 @@ describe("ContributionGraph", () => {
     placeFigure(0);
     rerender(contributionGraphInScrollPane());
 
-    expect(container.querySelector("figure")?.getAttribute("data-draw-timeline")).toBe("view");
+    expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("view");
   });
 });
 

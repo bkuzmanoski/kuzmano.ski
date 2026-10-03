@@ -10,7 +10,7 @@ const ZOOM_RECT_HOLD_INTERVAL_MS = 260;
 /**
  * The zoom-rect that grows from an icon to the window it opened. It is a sibling of the windows, not
  * part of the icon layer, so it shares their stacking context. Its z-index is the new window's level;
- * being earlier in the DOM, it paints below that window but above every other window.
+ * being earlier in the DOM, it stacks below that window but above every other window.
  *
  * The target box is the window's own geometry, fitted to the same desktop rect the window layer uses,
  * so the outline lands exactly on the window.

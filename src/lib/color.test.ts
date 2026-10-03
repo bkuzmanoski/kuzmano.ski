@@ -2,7 +2,6 @@ import { describe, expect, test, vi } from "vitest";
 
 import { rgbOfCssColor } from "./color.ts";
 
-// jsdom does not implement a 2D canvas context, so the stub reads back the bytes the browser would resolve each painted color to.
 const RESOLVED_BYTES: Record<string, Array<number>> = {
   "oklch(0.2 0 0)": [22, 22, 22, 255],
   "rgb(255 0 0 / 50%)": [255, 0, 0, 128],
@@ -36,7 +35,7 @@ describe("rgbOfCssColor", () => {
     expect(rgbOfCssColor(fakeContext(), "rgb(255 0 0 / 50%)")).toEqual([255, 0, 0]);
   });
 
-  test("clears the pixel before painting the color", () => {
+  test("clears the pixel before filling it with the color", () => {
     const context = fakeContext();
 
     rgbOfCssColor(context, "oklch(0.2 0 0)");

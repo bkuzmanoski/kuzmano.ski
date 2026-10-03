@@ -107,7 +107,7 @@ describe("sequence", () => {
     const steps = sequence(MOTION_DURATION_MS);
 
     expect(steps[1].durationMs).toBe(MOTION_DURATION_MS.crtWarmUp + HOLD_DURATION_MS.displayOn);
-    expect(steps[2].durationMs).toBe(MOTION_DURATION_MS.logoDraw + HOLD_DURATION_MS.logo);
+    expect(steps[2].durationMs).toBe(MOTION_DURATION_MS.logoReveal + HOLD_DURATION_MS.logo);
   });
 
   test("gives the `display-on` step only its hold duration and the `desktop-reveal` step a duration of `0` with the reduced motion durations", () => {

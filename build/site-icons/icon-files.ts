@@ -84,19 +84,19 @@ export async function iconFilesFrom(palette: Palette, artwork: Artwork): Promise
 
   const pngIcon = async ({
     fileName,
-    drawing,
+    svg,
     size,
     purpose,
   }: {
     fileName: string;
-    drawing: string;
+    svg: string;
     size: number;
     purpose: ManifestIcon["purpose"] | null;
   }): Promise<IconFile> => ({
     fileName,
     mediaType: PNG_MEDIA_TYPE,
     manifestIcon: purpose ? { sizes: square(size), purpose } : null,
-    contents: await rasterize(drawing, size, { indexed: true }),
+    contents: await rasterize(svg, size, { indexed: true }),
   });
 
   return [
@@ -113,10 +113,10 @@ export async function iconFilesFrom(palette: Palette, artwork: Artwork): Promise
       contents: ico.encode(await Promise.all(ICO_SIZES.map((size) => rasterize(glyph, size, { indexed: false })))),
     },
     ...(await Promise.all([
-      pngIcon({ fileName: "apple-touch-icon.png", drawing: appIcon, size: 180, purpose: null }),
-      pngIcon({ fileName: "logo192.png", drawing: appIcon, size: 192, purpose: "any" }),
-      pngIcon({ fileName: "logo512.png", drawing: appIcon, size: 512, purpose: "any" }),
-      pngIcon({ fileName: "logo-maskable-512.png", drawing: maskableIcon, size: 512, purpose: "maskable" }),
+      pngIcon({ fileName: "apple-touch-icon.png", svg: appIcon, size: 180, purpose: null }),
+      pngIcon({ fileName: "logo192.png", svg: appIcon, size: 192, purpose: "any" }),
+      pngIcon({ fileName: "logo512.png", svg: appIcon, size: 512, purpose: "any" }),
+      pngIcon({ fileName: "logo-maskable-512.png", svg: maskableIcon, size: 512, purpose: "maskable" }),
     ])),
   ];
 }

@@ -68,7 +68,7 @@ describe("renderDitherField", () => {
     expect(filledFraction(render(ditherFieldOf(16, 16, 0.5)))).toBe(0.5);
   });
 
-  test("paints filled pixels in the given color, and leaves the other pixels transparent", () => {
+  test("renders filled pixels in the given color, and leaves the other pixels transparent", () => {
     const rgba = render(ditherFieldOf(8, 8, 0.5));
     const pixels = Array.from({ length: 64 }, (_, index) => [...rgba.slice(index * 4, index * 4 + 4)]);
 

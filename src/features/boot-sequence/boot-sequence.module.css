@@ -2,7 +2,7 @@
   --boot-sequence-macintosh-reveal-ms: 0ms; /* Set from JS. */
   --boot-sequence-stage-zoom-ms: 0ms; /* Set from JS. */
   --boot-sequence-crt-warm-up-ms: 0ms; /* Set from JS. */
-  --boot-sequence-logo-draw-ms: 0ms; /* Set from JS. */
+  --boot-sequence-logo-reveal-ms: 0ms; /* Set from JS. */
   --boot-sequence-glass-fade-ms: 0ms; /* Set from JS. */
   --boot-sequence-desktop-reveal-ms: 0ms; /* Set from JS. */
   --boot-sequence-glow-origin-x: 0%; /* Set from JS. */
@@ -176,7 +176,7 @@
       & .logo {
         width: calc(108px * var(--boot-sequence-display-scale));
         height: auto;
-        animation: draw-logo var(--boot-sequence-logo-draw-ms) steps(10, jump-start) both;
+        animation: reveal-logo var(--boot-sequence-logo-reveal-ms) steps(10, jump-start) both;
 
         & :global(.foreground) {
           opacity: 1;
@@ -218,7 +218,7 @@
   }
 }
 
-@keyframes draw-logo {
+@keyframes reveal-logo {
   from {
     clip-path: inset(0 0 100% 0);
   }

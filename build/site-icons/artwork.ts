@@ -11,7 +11,7 @@ export interface Artwork {
   path: string;
 }
 
-const MONOGRAM_SELECTOR = "path.background"; // The path drawing the monogram in `ICON_ARTWORK_FILE_PATH`.
+const MONOGRAM_SELECTOR = "path.background"; // The monogram's path in `ICON_ARTWORK_FILE_PATH`.
 
 function boundsIn(viewBox: string): { width: number; height: number } {
   const viewBoxNumbers = viewBox

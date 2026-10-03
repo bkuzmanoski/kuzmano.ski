@@ -1,7 +1,7 @@
 import { formatDate, isIsoDate } from "../datetime.ts";
 import { isRecord } from "../guards.ts";
 
-/** The number of levels a count is drawn at, from no contributions to the busiest day. */
+/** The number of levels a count is rendered at, from no contributions to the busiest day. */
 export const CONTRIBUTION_LEVEL_COUNT = 5;
 
 const MINIMUM_WEEKS_BETWEEN_MONTH_LABELS = 3; // A leading label for the first, partial month overlaps the next label when it is closer than this.

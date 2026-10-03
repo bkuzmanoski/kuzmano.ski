@@ -262,7 +262,7 @@ function BootSequenceContent() {
     "--boot-sequence-macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
     "--boot-sequence-stage-zoom-ms": `${motion.stageZoom}ms`,
     "--boot-sequence-crt-warm-up-ms": `${motion.crtWarmUp}ms`,
-    "--boot-sequence-logo-draw-ms": `${motion.logoDraw}ms`,
+    "--boot-sequence-logo-reveal-ms": `${motion.logoReveal}ms`,
     "--boot-sequence-glass-fade-ms": `${motion.glassFade}ms`,
     "--boot-sequence-desktop-reveal-ms": `${motion.desktopReveal}ms`,
     "--boot-sequence-glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,

@@ -161,7 +161,7 @@ export function careerTimelineModelFrom({ asOf, disciplines, roles }: Experience
   }
 
   if (roles.length === 0) {
-    throw new Error("The record names no roles, so the chart has no range to draw.");
+    throw new Error("The record names no roles, so the chart has no range to render.");
   }
 
   const rolesByKey = new Map<string, Role>();

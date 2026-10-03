@@ -1,7 +1,7 @@
 .graph {
   --contribution-graph-cell: 13px;
   --contribution-graph-gap: 3px;
-  --contribution-graph-draw-start: 0%; /* Set from JS. */
+  --contribution-graph-reveal-start: 0%; /* Set from JS. */
 }
 
 .scrollContainerFrame {
@@ -119,25 +119,25 @@
   white-space: nowrap;
 }
 
-.graph[data-draw-timeline] .placeholder {
+.graph[data-reveal-timeline] .placeholder {
   clip-path: inset(0 0 0 100%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .graph[data-draw-timeline] {
-    --contribution-graph-week-draw-duration: 20ms;
+  .graph[data-reveal-timeline] {
+    --contribution-graph-week-reveal-duration: 20ms;
   }
 
-  .graph[data-draw-timeline="document"] {
+  .graph[data-reveal-timeline="document"] {
     & .grid,
     & .placeholder {
-      animation-duration: calc(var(--contribution-graph-week-count) * var(--contribution-graph-week-draw-duration));
+      animation-duration: calc(var(--contribution-graph-week-count) * var(--contribution-graph-week-reveal-duration));
       animation-timing-function: steps(var(--contribution-graph-week-count), end);
       animation-fill-mode: both;
     }
 
     & .grid {
-      animation-name: draw-weeks;
+      animation-name: reveal-weeks;
     }
 
     & .placeholder {
@@ -152,17 +152,17 @@
       view-timeline: --contribution-graph block;
     }
 
-    .graph[data-draw-timeline="view"] {
+    .graph[data-reveal-timeline="view"] {
       & .grid,
       & .placeholder {
         animation-timing-function: steps(var(--contribution-graph-week-count), end);
         animation-fill-mode: both;
         animation-timeline: --contribution-graph;
-        animation-range: entry var(--contribution-graph-draw-start) cover 45%;
+        animation-range: entry var(--contribution-graph-reveal-start) cover 45%;
       }
 
       & .grid {
-        animation-name: draw-weeks;
+        animation-name: reveal-weeks;
       }
 
       & .placeholder {
@@ -172,7 +172,7 @@
   }
 }
 
-@keyframes draw-weeks {
+@keyframes reveal-weeks {
   from {
     clip-path: inset(0 100% 0 0);
   }
