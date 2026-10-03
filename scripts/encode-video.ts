@@ -22,11 +22,11 @@ const POSTER_EXTENSION = ".png";
 const USAGE = `Usage: node scripts/encode-video.ts [OPTIONS] <video|directory>...
 
 Options:
-  --crf <n>            Constant rate factor, 0-51; lower is larger (default: ${DEFAULT_CRF})
-  --width <n>          Scale to this width, preserving the aspect ratio
-  --poster-time <n>    Seconds into the video to take the poster from (default: ${DEFAULT_POSTER_SECONDS})
-  -r, --recursive      Include videos in the subdirectories of a directory
-  -h, --help           Show this message`;
+  --crf <n>          Constant rate factor, 0-51; lower is larger (default: ${DEFAULT_CRF})
+  --width <n>        Scale to this width, preserving the aspect ratio
+  --poster-time <n>  Seconds into the video to take the poster from (default: ${DEFAULT_POSTER_SECONDS})
+  -r, --recursive    Include videos in the subdirectories of a directory
+  -h, --help         Show this message`;
 
 interface EncodingOptions {
   crf: number;

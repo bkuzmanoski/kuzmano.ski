@@ -20,9 +20,9 @@ import type { ImageDerivative, ImageDerivativeFormat } from "../build/content/me
 const USAGE = `Usage: node scripts/convert-image.ts [OPTIONS] <image.{png,jpg}>...
 
 Options:
-  --avif-quality <n>    AVIF quality, 0-100 (default: ${IMAGE_ENCODING_OPTIONS.avif.quality})
-  --webp-quality <n>    WebP quality, 0-100 (default: ${IMAGE_ENCODING_OPTIONS.webp.quality})
-  -h, --help            Show this message`;
+  --avif-quality <n>  AVIF quality, 0-100 (default: ${IMAGE_ENCODING_OPTIONS.avif.quality})
+  --webp-quality <n>  WebP quality, 0-100 (default: ${IMAGE_ENCODING_OPTIONS.webp.quality})
+  -h, --help          Show this message`;
 
 interface Arguments {
   inputFilePaths: Array<string>;

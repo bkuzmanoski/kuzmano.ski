@@ -16,10 +16,10 @@ import { inputFilePathsOf } from "./helpers/files.ts";
 const USAGE = `Usage: node scripts/optimize-image.ts [OPTIONS] <image.{png,jpg}|directory>...
 
 Options:
-  --jpeg-quality <n>    Re-encode JPEGs above this quality, 0-100; lower is smaller (default: lossless)
-  --zopfli              Compress PNGs with Zopfli, which is slower but smaller
-  -r, --recursive       Include images in the subdirectories of a directory
-  -h, --help            Show this message`;
+  --jpeg-quality <n>  Re-encode JPEGs above this quality, 0-100; lower is smaller (default: lossless)
+  --zopfli            Compress PNGs with Zopfli, which is slower but smaller
+  -r, --recursive     Include images in the subdirectories of a directory
+  -h, --help          Show this message`;
 
 type ImageFormat = "jpeg" | "png";
 
