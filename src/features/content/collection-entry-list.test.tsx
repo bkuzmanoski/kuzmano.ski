@@ -79,7 +79,7 @@ test("the cover image thumbnail does not contribute to the entry link's accessib
   const { container } = renderEntryWithCoverImage("newest", fakeCoverImage("newest"));
 
   expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
-  expect(screen.getByRole("link").getAttribute("aria-label")).toBe("newest");
+  expect(screen.getByRole("link", { name: "newest" })).toBeDefined();
 });
 
 test("an entry without a cover image shows the placeholder glyph in place of a thumbnail", () => {
@@ -89,6 +89,37 @@ test("an entry without a cover image shows the placeholder glyph in place of a t
 
   expect(container.querySelector("img")).toBeNull();
   expect(container.querySelector("svg")).not.toBeNull();
+});
+
+test("an entry shows its description, and its category when its frontmatter specifies one", () => {
+  const categorizedCollection = fakeCollection([
+    fakeEntry("categorized", { description: "A description.", category: "Category" }),
+    fakeEntry("uncategorized", { description: "Another description." }),
+  ]);
+
+  render(<CollectionEntryList activeSlug={null} collection={categorizedCollection} />);
+
+  const [categorizedRow, uncategorizedRow] = screen.getAllByRole("link");
+
+  expect(categorizedRow?.textContent).toContain("A description.");
+  expect(categorizedRow?.textContent).toContain("Category");
+  expect(uncategorizedRow?.textContent).toContain("Another description.");
+  expect(uncategorizedRow?.textContent).not.toContain("Category");
+});
+
+test("an entry's link is named by its title and described by its description, category, and date", () => {
+  render(
+    <CollectionEntryList
+      activeSlug={null}
+      collection={fakeCollection([fakeEntry("entry", { description: "A description.", category: "Category" })])}
+    />,
+  );
+  expect(screen.getByRole("link", { name: "entry", description: /^A description\. Category \S/ })).toBeDefined();
+});
+
+test("the column headings are hidden from assistive technology", () => {
+  render(<CollectionEntryList activeSlug={null} collection={collection} />);
+  expect(screen.getByText("Name").closest("[aria-hidden='true']")).not.toBeNull();
 });
 
 test("a collection without entries shows the empty collection message instead of a list", () => {

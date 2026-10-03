@@ -32,9 +32,6 @@ export function ScrollPane({
   const contentContainerRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(contentContainerRef);
 
-  const overscrolledEnd =
-    metrics.top < -1 ? "start" : metrics.top + metrics.clientHeight > metrics.scrollHeight + 1 ? "end" : undefined; // A pixel of slack keeps a rounded height from reading as an overscroll at rest.
-
   return (
     <div className={styles.scrollPane}>
       <div
@@ -43,7 +40,6 @@ export function ScrollPane({
         tabIndex={-1}
         className={styles.contentContainer}
         data-scroll-pane-viewport
-        data-overscrolled={overscrolledEnd}
         onFocus={(event) => silenceScrollIntoView(event.target)}
         onScroll={(event) => {
           measure();

@@ -109,9 +109,17 @@
   --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
   --font-family-display: Archivo, ui-sans-serif, sans-serif;
+  --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
+  --font-heading-2: 600 semi-condensed 25px/32px var(--font-family-display);
+  --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
+  --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display);
   --font-family-body: "Source Serif 4", ui-serif, serif;
-  --font-family-code: "JetBrains Mono", ui-monospace, monospace;
+  --font-lede: 400 20px/32px var(--font-family-body);
+  --font-body: 400 17px/28px var(--font-family-body);
+  --font-body-small: 400 15px/22px var(--font-family-body);
+  --font-caption: 400 14px/20px var(--font-family-body);
   --font-bitmap: 400 12px/16px "Quanta Strike 12", ui-sans-serif, sans-serif;
+  --font-code: 500 13px/20px "JetBrains Mono", ui-monospace, monospace;
 
   /* Color primitives */
 
@@ -152,6 +160,7 @@
   /* Colors */
   --color-foreground: light-dark(var(--neutral-330), var(--neutral-925));
   --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-675));
+  --color-foreground-secondary-active: light-dark(var(--neutral-390), var(--neutral-790));
   --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
   --color-background: light-dark(var(--neutral-990), var(--neutral-280));
   --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305));
@@ -210,6 +219,7 @@
 @media (forced-colors: active) {
   :root {
     --color-foreground-secondary: CanvasText;
+    --color-foreground-secondary-active: CanvasText;
     --color-background: Canvas;
     --color-border: CanvasText;
     --color-border-secondary: GrayText;

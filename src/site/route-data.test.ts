@@ -35,7 +35,7 @@ vi.mock("virtual:entry-cover-images", async () => {
 });
 
 const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
-const ENTRY_PRELOADED_FONT_FILE_NAMES = [
+const CONTENT_PRELOADED_FONT_FILE_NAMES = [
   "Archivo-Variable.woff2",
   "SourceSerif4-Variable.woff2",
   "QuantaStrike12-Regular.woff2",
@@ -106,16 +106,12 @@ test("a collection listing is not marked noindex", () => {
   expect(loadSegment("collection").noindex).toBeUndefined();
 });
 
-test("a page's head preloads the display, body, and bitmap faces", () => {
-  expect(preloadedFontFileNamesOf(loadSegment(DECLARED_PAGE_SLUG))).toEqual(ENTRY_PRELOADED_FONT_FILE_NAMES);
-});
-
-test("a collection entry's head preloads the display, body, and bitmap faces", () => {
-  expect(preloadedFontFileNamesOf(loadCollectionEntry("published"))).toEqual(ENTRY_PRELOADED_FONT_FILE_NAMES);
-});
-
-test("a collection listing's head does not preload a font", () => {
-  expect(preloadedFontFileNamesOf(loadSegment("collection"))).toEqual([]);
+test.each([
+  ["a page", () => loadSegment(DECLARED_PAGE_SLUG)],
+  ["a collection entry", () => loadCollectionEntry("published")],
+  ["a collection listing", () => loadSegment("collection")],
+])("%s's head preloads the display, body, and bitmap faces", (_kind, load) => {
+  expect(preloadedFontFileNamesOf(load())).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
 });
 
 test("an entry's route data does not include the URLs of the fonts its head preloads", () => {

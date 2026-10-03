@@ -20,7 +20,6 @@
 }
 
 :where(.content) {
-  /* Metrics */
   --layout-content-measure: 616px; /* ~70 characters of the body face. */
   --layout-content-rail-width: 120px;
   --layout-content-rail-gap: 24px;
@@ -30,16 +29,6 @@
   --layout-content-space-loose: 44px;
   --layout-content-space-x-loose: 68px;
   --layout-content-label-offset: 5px; /* Lowers a bitmap label beside body text from the top of its box to the text's cap line. */
-
-  /* Typography */
-  --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
-  --font-heading-2: 600 semi-condensed 25px/32px var(--font-family-display);
-  --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
-  --font-body: 400 17px/28px var(--font-family-body);
-  --font-lede: 400 20px/32px var(--font-family-body);
-  --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display);
-  --font-caption: 400 14px/20px var(--font-family-body);
-  --font-code: 500 13px/20px var(--font-family-code);
   --font-inline-code-x-height: 0.485; /* Matches character width of `--font-code` to `--font-body` (JetBrains Mono x-height (0.550) × Source Serif 4 average lowercase advance (0.529) / JetBrains Mono advance (0.600) */
 
   font: var(--font-body);
@@ -393,7 +382,7 @@
     &:where(h1) {
       position: relative;
       font: var(--font-heading-1);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
 
       &::before {
         @mixin dither-50;
@@ -421,12 +410,10 @@
 
     &:where(h2) {
       font: var(--font-heading-2);
-      letter-spacing: -0.012em;
     }
 
     &:where(h3) {
       font: var(--font-heading-3);
-      letter-spacing: -0.006em;
     }
 
     &:where(sup) {
@@ -640,9 +627,8 @@
       padding-inline: 0 16px;
       border-block-end: 1px solid var(--color-border-secondary);
 
-      font-size: 15px;
+      font: var(--font-body-small);
       font-variant-numeric: tabular-nums;
-      line-height: 22px;
       vertical-align: baseline;
     }
 

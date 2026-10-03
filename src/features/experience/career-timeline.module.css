@@ -173,13 +173,12 @@
   color: var(--career-timeline-discipline-accent-color);
 }
 
-.roleDates {
-  @mixin bitmap-label;
-}
-
 .roleTitle {
   font: var(--font-heading-3);
-  letter-spacing: -0.01em;
+}
+
+.roleDates {
+  @mixin bitmap-label;
 }
 
 .roleOrganization {

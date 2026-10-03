@@ -34,9 +34,9 @@
 }
 
 .content {
-  font: 800 64px/64px var(--font-family-display);
+  font: 800 64px/68px var(--font-family-display);
   text-wrap: balance;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 
   font-stretch: 82%;
 

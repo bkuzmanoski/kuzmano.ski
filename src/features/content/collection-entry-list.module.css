@@ -1,6 +1,90 @@
-.list {
+.listView {
+  --collection-entry-list-default-window-width: 0px; /* Set from JS. */
+  --collection-entry-list-max-width: calc(
+    var(--collection-entry-list-default-window-width) - 2px - var(--layout-scrollbar-gutter-width)
+  );
+  --collection-entry-list-centering-inset: max(
+    0px,
+    (100cqi - var(--scroll-pane-reserved-scrollbar-width, 0px) - var(--collection-entry-list-max-width)) / 2
+  );
+  --collection-entry-list-padding-inline: calc(
+      var(--window-safe-area-inline-start, 0px) + var(--layout-gutter) + var(--collection-entry-list-centering-inset)
+    )
+    calc(
+      var(--window-safe-area-inline-end, 0px) + var(--layout-gutter) +
+        var(--scroll-pane-reserved-scrollbar-width, 0px) + var(--collection-entry-list-centering-inset)
+    ); /* Clears the window safe area and reserved scrollbar width, and centers the list in a wider window. */
+
+  --collection-entry-list-columns: var(--layout-cover-image-size) minmax(0, 1fr) 112px 112px;
+  --collection-entry-list-column-gap: 16px;
+  --collection-entry-list-column-headings-height: 32px; /* 28px, +1px per rule, +2px between them. */
+  --collection-entry-list-name-column-max-width: 544px;
   --collection-entry-list-title-padding-inline: 4px;
 
+  container: collection-entry-list / inline-size;
+
+  @supports (width: round(down, 1px, 1px)) {
+    --collection-entry-list-centering-inset: max(
+      0px,
+      round(
+        down,
+        (100cqi - var(--scroll-pane-reserved-scrollbar-width, 0px) - var(--collection-entry-list-max-width)) / 2,
+        1px
+      )
+    ); /* Rounded down to a whole pixel so bitmap labels stay pixel aligned on 1x displays. */
+  }
+}
+
+.columnHeadings {
+  user-select: none;
+
+  position: sticky;
+  z-index: 1;
+  top: 0;
+
+  display: grid;
+  grid-template-columns: var(--collection-entry-list-columns);
+  column-gap: var(--collection-entry-list-column-gap);
+  align-items: center;
+
+  height: var(--collection-entry-list-column-headings-height);
+  margin-inline: calc(-1 * var(--window-safe-area-inline-start, 0px)) calc(-1 * var(--window-safe-area-inline-end, 0px));
+  padding-block-end: 3px;
+  padding-inline: var(--collection-entry-list-padding-inline);
+  border-block-end: 1px solid var(--color-border);
+
+  font: var(--font-ui);
+  color: var(--color-foreground);
+
+  background: var(--color-background);
+
+  &::after {
+    pointer-events: none;
+    content: "";
+
+    position: absolute;
+    inset-block-end: 2px;
+    inset-inline: 0;
+
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  & > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  & .nameColumnHeading {
+    grid-column: 2;
+  }
+
+  @container collection-entry-list (width < 620px) {
+    display: none;
+  }
+}
+
+.list {
   display: flex;
   flex-direction: column;
 
@@ -8,63 +92,65 @@
   margin-inline: calc(-1 * var(--window-safe-area-inline-start, 0px)) calc(-1 * var(--window-safe-area-inline-end, 0px)); /* Extend into the safe-area inset padding in maximized window. */
   padding: 0;
 
-  font: var(--font-ui);
   list-style: none;
 
-  box-shadow: 0 1px 0 var(--color-border); /* Bottom border when the list does overflow. */
+  outline: 1px solid var(--color-border); /* Renders the bottom border beyond the scrollable area; `box-shadow` is removed when using forced colors. */
 }
 
 .listItem {
   cursor: default;
   user-select: none;
+  scroll-margin-block: calc(var(--collection-entry-list-column-headings-height) - var(--layout-gutter))
+    calc(-1 * var(--layout-gutter));
 
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  position: relative;
 
-  padding-block: 12px;
-  padding-inline: calc(
-      var(--layout-gutter) - var(--collection-entry-list-title-padding-inline) +
-        var(--window-safe-area-inline-start, 0px)
-    )
-    calc(
-      var(--layout-gutter) - var(--collection-entry-list-title-padding-inline) +
-        var(--scroll-pane-reserved-scrollbar-width, 0px) + var(--window-safe-area-inline-end, 0px)
-    ); /* Inset list content to clear the window safe area and reserved scrollbar width. */
+  display: grid;
+  grid-template-columns: var(--collection-entry-list-columns);
+  column-gap: var(--collection-entry-list-column-gap);
+  align-items: start;
+
+  padding-block: var(--layout-gutter);
+  padding-inline: var(--collection-entry-list-padding-inline);
 
   text-decoration: none;
 
   outline: none;
 
   &.active {
+    --color-foreground-secondary: var(--color-foreground-secondary-active);
+
     background: var(--color-background-active);
+
+    @media (forced-colors: active) {
+      &::before {
+        pointer-events: none;
+        content: "";
+
+        position: absolute;
+        inset: 0;
+
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
+    }
   }
 
   .list > li:not(:last-child) & {
+    scroll-margin-block-end: calc(-1 * var(--layout-gutter) - 1px); /* Excludes the bottom border. */
     border-block-end: 1px solid var(--color-border);
   }
 
-  /* Top border on overscroll. */
-  &[data-overscrolled="start"] .list > li:first-child & {
-    box-shadow: inset 0 1px 0 var(--color-border);
-  }
-
-  /* Bottom border on overscroll only where the list's own is out of view. */
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
-  @container style(--window-safe-area-block-end: 0px) {
-    [data-overscrolled="end"] .list {
-      box-shadow: none;
-    }
-
-    [data-overscrolled="end"] .list > li:last-child .listItem {
-      box-shadow: inset 0 -1px 0 var(--color-border);
-    }
+  @container collection-entry-list (width < 620px) {
+    scroll-margin-block-start: calc(-1 * var(--layout-gutter));
+    grid-template-columns: var(--layout-cover-image-size) minmax(0, 1fr) minmax(0, auto);
+    row-gap: 8px;
   }
 }
 
 .coverImage {
   display: grid;
-  flex: none;
+  grid-row: span 2;
   place-items: center;
 
   width: var(--layout-cover-image-size);
@@ -92,26 +178,27 @@
 
 .details {
   display: flex;
+  grid-column: 2;
   flex-direction: column;
   gap: 4px;
-  min-width: 0; /* A long title wraps rather than widening the row past the list. */
 
-  & .date {
-    display: block;
-    padding-inline: var(--collection-entry-list-title-padding-inline); /* Line up with the title's inset. */
-    color: var(--color-foreground-secondary);
-  }
+  max-width: calc(
+    var(--collection-entry-list-name-column-max-width) + 2 * var(--collection-entry-list-title-padding-inline)
+  );
+  margin-block: -1px; /* A title and one-line description (50px) fit the 48px cover image, overhanging into their half-leading. */
+  margin-inline: calc(-1 * var(--collection-entry-list-title-padding-inline));
 }
 
 .title {
   position: relative;
 
   width: fit-content;
-  margin-block: -1px;
-  padding-block: 2px;
+  margin-block-start: -1px;
+  padding-block-start: 1px; /* Balances the focus stroke's space above the title with the space below it. */
   padding-inline: var(--collection-entry-list-title-padding-inline);
 
-  font: var(--font-ui-bold);
+  font: var(--font-heading-3);
+  text-wrap: pretty;
 
   .listItem:focus & {
     @mixin focus-stroke;
@@ -119,5 +206,50 @@
     &::after {
       color: inherit;
     }
+  }
+}
+
+.description {
+  padding-inline: var(--collection-entry-list-title-padding-inline);
+  font: var(--font-body-small);
+  color: var(--color-foreground-secondary);
+  text-wrap: pretty;
+}
+
+.category,
+.date {
+  @mixin bitmap-label;
+
+  padding-block-start: 4px; /* Level with the x-height of the title's first line. */
+  font-variant-numeric: tabular-nums;
+}
+
+.category {
+  grid-column: 3;
+}
+
+.date {
+  grid-column: 4;
+}
+
+@container collection-entry-list (width < 620px) {
+  .details {
+    grid-column: 2 / -1;
+  }
+
+  .category,
+  .date {
+    grid-row: 2;
+    padding-block-start: 0;
+  }
+
+  .date {
+    grid-column: 2;
+  }
+
+  .category {
+    grid-column: 3;
+    text-align: end;
+    overflow-wrap: anywhere;
   }
 }

@@ -14,17 +14,15 @@ import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./ro
 import type { Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
-type ContentRouteData = DocumentMetadata & { preloadsEntryFonts: boolean };
-
-const ENTRY_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
+const CONTENT_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
 
 const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>
   frontmatter?.draft !== true || import.meta.env.DEV;
 
-function entryDocumentData(
+function entryDocumentMetadata(
   frontmatter: Frontmatter | null,
   data: Omit<DocumentMetadata, "title" | "description">,
-): ContentRouteData {
+): DocumentMetadata {
   if (!frontmatter) {
     throw notFound();
   }
@@ -33,25 +31,22 @@ function entryDocumentData(
     title: frontmatter.title,
     description: frontmatter.description,
     ...data,
-    preloadsEntryFonts: true,
   };
 }
 
-export function contentHead({ preloadsEntryFonts, ...metadata }: ContentRouteData) {
+export function contentHead(metadata: DocumentMetadata) {
   const head = documentHead(metadata);
-  const fontPreloadLinks = preloadsEntryFonts ? ENTRY_PRELOADED_FONT_URLS.map(fontPreloadLinkFor) : [];
-
-  return { ...head, links: [...head.links, ...fontPreloadLinks] };
+  return { ...head, links: [...head.links, ...CONTENT_PRELOADED_FONT_URLS.map(fontPreloadLinkFor)] };
 }
 
 export const contentRoute = {
-  loader: ({ params }: { params: { segment: string; slug?: string } }): ContentRouteData => {
+  loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
     const content = resolveContent(params.segment, params.slug);
     const feed = collectionFeed(params.segment);
 
     switch (content.kind) {
       case "page":
-        return entryDocumentData(content.frontmatter, {
+        return entryDocumentMetadata(content.frontmatter, {
           path: pageRoute(content.slug),
           bodyChunks: pages.bodyChunksOf(content.slug),
           coverImage: ENTRY_COVER_IMAGES[pages.entryKeyOf(content.slug)] ?? null,
@@ -60,7 +55,7 @@ export const contentRoute = {
         });
 
       case "collectionEntry":
-        return entryDocumentData(content.frontmatter, {
+        return entryDocumentMetadata(content.frontmatter, {
           path: entryRoute(params.segment, content.slug),
           kind: "article",
           bodyChunks: content.collection.bodyChunksOf(content.slug),
@@ -77,12 +72,11 @@ export const contentRoute = {
           path: collectionRoute(params.segment),
           markdown: true,
           feed,
-          preloadsEntryFonts: false,
         };
 
       default:
         throw notFound(); // Not found, or a feature route that renders its own head tags.
     }
   },
-  head: ({ loaderData }: { loaderData?: ContentRouteData }) => (loaderData ? contentHead(loaderData) : {}),
+  head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? contentHead(loaderData) : {}),
 };
