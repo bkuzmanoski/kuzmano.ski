@@ -10,6 +10,7 @@ import keyboardMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illu
 import keyboardMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-keyboard.webp";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context.ts";
+import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { playBootChimeSound, playKeyDownSound, playKeyPressSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect.ts";
 import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle.ts";
@@ -185,45 +186,34 @@ function BootSequenceContent() {
       const eventListenerOptions = { capture: true, signal: controller.signal };
 
       document.addEventListener("keydown", onKeyDown, eventListenerOptions);
-      document.addEventListener("keyup", onKeyUp, eventListenerOptions);
       document.addEventListener("pointerdown", onPointerDown, eventListenerOptions);
       document.addEventListener("pointerup", onPointerUp, eventListenerOptions);
     });
 
-    let pressedInput: string | null = null;
-
-    function press(input: string) {
-      pressedInput = input;
-      primeAudio();
-      playKeyDownSound();
-    }
-
-    function release(input: string) {
-      if (input === pressedInput) {
-        playKeyUpSound();
-        runSequence();
-      }
-    }
+    let isMouseButtonPressed = false;
 
     function onKeyDown(event: KeyboardEvent) {
       if (!event.repeat && isBeginKey(event)) {
-        press(event.code);
+        primeAudio();
+        playKeyPressSounds(event, { onRelease: runSequence, signal: controller.signal });
       }
-    }
-
-    function onKeyUp(event: KeyboardEvent) {
-      release(event.code);
     }
 
     function onPointerDown(event: PointerEvent) {
       if (event.pointerType === "mouse") {
-        press("mouse");
+        isMouseButtonPressed = true;
+        primeAudio();
+        playKeyDownSound();
       }
     }
 
     function onPointerUp(event: PointerEvent) {
       if (event.pointerType === "mouse") {
-        release("mouse");
+        if (isMouseButtonPressed) {
+          playKeyUpSound();
+          runSequence();
+        }
+
         return;
       }
 

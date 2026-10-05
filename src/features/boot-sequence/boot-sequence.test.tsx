@@ -1,29 +1,23 @@
 import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import type * as AudioContext from "#/lib/audio/context.ts";
 import { playBootChimeSound, playKeyDownSound, playKeyPressSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
-import type * as AudioSounds from "#/lib/audio/sounds.ts";
 import { MIN_LOADING_DURATION_MS } from "#/lib/boot-sequence/phases.ts";
 
 import { BootSequence } from "./boot-sequence.tsx";
 
 const { primeAudio } = vi.hoisted(() => ({ primeAudio: vi.fn() }));
 
-vi.mock("#/lib/audio/context.ts", async (importActual) => ({
-  ...(await importActual<typeof AudioContext>()),
-  needsAudioPriming: () => true,
-  primeAudio,
-}));
+vi.mock("#/lib/audio/context.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {
+    needsAudioPriming: () => true,
+    primeAudio,
+  }),
+);
 
-vi.mock("#/lib/audio/sounds.ts", async (importActual) => ({
-  ...(await importActual<typeof AudioSounds>()),
-  loadKeySounds: () => Promise.resolve(),
-  playKeyDownSound: vi.fn(),
-  playKeyUpSound: vi.fn(),
-  playKeyPressSound: vi.fn(),
-  playBootChimeSound: vi.fn(),
-}));
+vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal),
+);
 
 beforeEach(() => {
   primeAudio.mockClear();

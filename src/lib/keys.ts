@@ -6,6 +6,11 @@ export type ArrowKey = (typeof ARROW_KEYS)[number];
 
 export const isArrowKey = (key: string): key is ArrowKey => ARROW_KEYS.includes(key as ArrowKey);
 
+const FUNCTION_KEY = /^F\d{1,2}$/;
+
+export const isBrowserShortcut = (event: { key: string; metaKey: boolean; ctrlKey: boolean }) =>
+  event.metaKey || event.ctrlKey || FUNCTION_KEY.test(event.key);
+
 /** The keys that activate the control holding the focus. */
 export const isActivationKey = (key: string) => key === "Enter" || key === " ";
 
