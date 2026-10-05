@@ -10,21 +10,18 @@ import type { ResolvedContent } from "./resolve-content.ts";
 
 type WindowTarget = {
   [K in WindowId]: { id: K; title: string } & {
-    entry: { slug: string } & (
-      { collectionRoute: null; contentIndex: ContentIndex } | { collectionRoute: string; contentIndex: Collection }
-    );
-    collection: { collection: Collection; collectionRoute: string };
+    entry: { slug: string } & ({ collection: null } | { collection: Collection });
+    collection: { collection: Collection };
     contact: Record<never, never>;
   }[K];
 }[WindowId];
 
-/** A window that shows one entry, read from a content index. */
 export type EntryTarget = Extract<WindowTarget, { id: "entry" }>;
-
-/** A window that lists collection entries. */
+export type CollectionEntryTarget = Extract<EntryTarget, { collection: Collection }>;
 export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
-
 export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" };
+
+export const contentIndexOf = (entry: EntryTarget): ContentIndex => entry.collection ?? pages;
 
 export function resolveRoute(route: string): ResolvedRoute {
   if (isRootPath(route)) {
@@ -42,8 +39,7 @@ export function resolveRoute(route: string): ResolvedRoute {
         id: "entry",
         title: content.frontmatter?.title ?? content.slug,
         slug: content.slug,
-        collectionRoute: null,
-        contentIndex: pages,
+        collection: null,
       };
 
     case "collectionEntry":
@@ -51,8 +47,7 @@ export function resolveRoute(route: string): ResolvedRoute {
         id: "entry",
         title: content.frontmatter?.title ?? content.slug,
         slug: content.slug,
-        collectionRoute: content.collection.route,
-        contentIndex: content.collection,
+        collection: content.collection,
       };
 
     case "collection":
@@ -60,7 +55,6 @@ export function resolveRoute(route: string): ResolvedRoute {
         id: "collection",
         title: content.collection.title,
         collection: content.collection,
-        collectionRoute: content.collection.route,
       };
 
     case "feature":
@@ -85,7 +79,7 @@ function destinationShownBy(windowRoute: string): string | null {
       return windowRoute;
 
     case "collection":
-      return windowTarget.collectionRoute;
+      return windowTarget.collection.route;
 
     default:
       return null;

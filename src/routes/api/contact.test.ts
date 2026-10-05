@@ -26,7 +26,7 @@ beforeEach(() => {
   readContactEmailAddress.mockResolvedValue(EMAIL_ADDRESS);
 });
 
-const URL = `https://example.com${API_ROUTES.contact}`;
+const ENDPOINT_URL = `https://example.com${API_ROUTES.contact}`;
 const VALID_SUBMISSION = {
   from: "test@example.com",
   message: "Hello.",
@@ -39,10 +39,11 @@ const { GET, POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
 
-const get = (options?: Parameters<typeof getRequestFromSite>[1]) => GET({ request: getRequestFromSite(URL, options) });
+const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
+  GET({ request: getRequestFromSite(ENDPOINT_URL, options) });
 
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
-  POST({ request: jsonPostRequest(URL, body, options) });
+  POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
 test("the contact email address is served to a same-origin request", async () => {
   const response = await get();

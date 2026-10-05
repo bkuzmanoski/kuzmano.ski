@@ -20,7 +20,7 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const URL = `https://example.com${API_ROUTES.waitlist}`;
+const ENDPOINT_URL = `https://example.com${API_ROUTES.waitlist}`;
 const VALID_SUBMISSION = {
   emailAddress: "user@example.com",
   list: "List",
@@ -34,7 +34,7 @@ const { POST } = Route.options.server!.handlers as unknown as {
 };
 
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
-  POST({ request: jsonPostRequest(URL, body, options) });
+  POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
 test("a well-formed submission is recorded, with its email address, list, and source route", async () => {
   const response = await post(VALID_SUBMISSION);

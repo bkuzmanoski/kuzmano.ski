@@ -2,8 +2,10 @@ import { join } from "node:path";
 
 import { CONTACT_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGES_DIRECTORY_NAME, PAGE_SLUGS } from "#/config/content.ts";
+import { SITE_TIME_ZONE } from "#/config/site.ts";
 import { entryFileName } from "#/lib/content/entry-file.ts";
 import { MEDIA_SEGMENT } from "#/lib/content/paths.ts";
+import { calendarDateIn } from "#/lib/datetime.ts";
 import { FEATURE_ROUTES, collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "#/site/routes.ts";
 
 import { newestDate, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
@@ -63,7 +65,10 @@ function rejectAny(offendingPaths: Array<string>, message: (offendingPaths: stri
  * `autoStaticPathsDiscovery` misses dynamic routes, while `crawlLinks` misses
  * unlinked routes. Using both emits index routes twice.
  */
-export function routesFor(content: AuthoredContent): Array<PrerenderRoute> {
+export function routesFor(
+  content: AuthoredContent,
+  today: string, // `YYYY-MM-DD`
+): Array<PrerenderRoute> {
   const { pages, collections } = content;
   const claimedRoutes = contentRoutes(content);
 
@@ -122,10 +127,16 @@ export function routesFor(content: AuthoredContent): Array<PrerenderRoute> {
 
   const publishedPages = publishedEntries(pages.entries);
   const publishedCollections = collections.map(({ name, entries }) => ({ name, entries: publishedEntries(entries) }));
-  const siteLastModifiedDate = newestDate([
-    ...publishedPages,
-    ...publishedCollections.flatMap(({ entries }) => entries),
-  ]);
+  const allPublishedEntries = [...publishedPages, ...publishedCollections.flatMap(({ entries }) => entries)];
+
+  rejectAny(
+    allPublishedEntries
+      .filter(({ date }) => date !== undefined && date > today)
+      .map(({ entryFilePath, date }) => `${join(CONTENT_DIRECTORY_PATH, entryFilePath)} (${date})`),
+    (offendingPaths) => `Published entr(ies) dated after today: ${offendingPaths}.`,
+  );
+
+  const siteLastModifiedDate = newestDate(allPublishedEntries);
 
   // The sitemap lists its URLs in this order.
   return [
@@ -142,4 +153,5 @@ export function routesFor(content: AuthoredContent): Array<PrerenderRoute> {
 }
 
 /** The routes to prerender, read from the content on disk. */
-export const prerenderRoutes = (): Array<PrerenderRoute> => routesFor(readAuthoredContent());
+export const prerenderRoutes = (): Array<PrerenderRoute> =>
+  routesFor(readAuthoredContent(), calendarDateIn(SITE_TIME_ZONE, new Date()));

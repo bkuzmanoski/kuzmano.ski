@@ -16,11 +16,12 @@ import {
 import { articleDocument, documentSource, feedMetadata, missingDocumentSource } from "../test-utils/feeds.ts";
 import { headersRulesAddedAtBuildStartBy } from "../test-utils/headers.ts";
 
-import { feedXmlFor, feedsPlugin } from "./plugin.ts";
+import { atomFeeds, feedXmlFor } from "./plugin.ts";
 
 import type { AuthoredContent } from "../content/authored-content.ts";
+import type { AddHeadersRules } from "../headers.ts";
 
-const oneCollectionFeed = feedMetadata({ collections: ["collection-1"] });
+const COLLECTION_1_FEED_METADATA = feedMetadata({ collections: ["collection-1"] });
 
 const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
   authoredContent({
@@ -30,6 +31,7 @@ const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
     ],
     ...overrides,
   });
+const feedsPluginFor = (options: { addHeadersRules: AddHeadersRules }) => atomFeeds(options).plugin;
 
 describe("feedXmlFor", () => {
   test("includes every entry in the feed's collections, newest first", async () => {
@@ -40,7 +42,7 @@ describe("feedXmlFor", () => {
   });
 
   test("excludes an entry from a collection the feed does not list", async () => {
-    const xml = await feedXmlFor(oneCollectionFeed, content(), documentSource);
+    const xml = await feedXmlFor(COLLECTION_1_FEED_METADATA, content(), documentSource);
 
     expect(xml).toContain("older-entry");
     expect(xml).not.toContain("newer-entry");
@@ -55,7 +57,9 @@ describe("feedXmlFor", () => {
     const withDraft = content({
       collections: [authoredCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })])],
     });
-    await expect(feedXmlFor(oneCollectionFeed, withDraft, documentSource)).resolves.not.toContain("unpublished");
+    await expect(feedXmlFor(COLLECTION_1_FEED_METADATA, withDraft, documentSource)).resolves.not.toContain(
+      "unpublished",
+    );
   });
 
   test("includes only the 20 newest entries", async () => {
@@ -63,7 +67,7 @@ describe("feedXmlFor", () => {
       authoredEntry(`entry-${index}`, { date: `2026-01-${String(index + 1).padStart(2, "0")}` }),
     );
     const xml = await feedXmlFor(
-      oneCollectionFeed,
+      COLLECTION_1_FEED_METADATA,
       content({ collections: [authoredCollection("collection-1", manyEntries)] }),
       documentSource,
     );
@@ -102,7 +106,12 @@ describe("feedXmlFor", () => {
     const articleContents = new Map<string, Promise<string>>();
 
     await feedXmlFor(feedMetadata(), content(), countingDocumentSource, articleContents);
-    const collectionFeedXml = await feedXmlFor(oneCollectionFeed, content(), countingDocumentSource, articleContents);
+    const collectionFeedXml = await feedXmlFor(
+      COLLECTION_1_FEED_METADATA,
+      content(),
+      countingDocumentSource,
+      articleContents,
+    );
 
     expect(countingDocumentSource.mock.calls.map(([route]) => route)).toStrictEqual([
       "/collection-2/newer-entry",
@@ -113,7 +122,7 @@ describe("feedXmlFor", () => {
 
   test("outputs the newest entry's date as the feed's `<updated>` date", async () => {
     await expect(feedXmlFor(feedMetadata(), content(), documentSource)).resolves.toContain(
-      "<updated>2026-03-04T00:00:00Z</updated>",
+      "<updated>2026-03-04T00:00:00+11:00</updated>",
     );
   });
 
@@ -124,23 +133,28 @@ describe("feedXmlFor", () => {
         authoredCollection("collection-2", [authoredEntry("newer-entry", { date: "2026-03-04" })]),
       ],
     });
-    await expect(feedXmlFor(oneCollectionFeed, contentWithoutFeedEntries, documentSource)).resolves.toContain(
-      "<updated>1970-01-01T00:00:00Z</updated>",
+    await expect(feedXmlFor(COLLECTION_1_FEED_METADATA, contentWithoutFeedEntries, documentSource)).resolves.toContain(
+      "<updated>1970-01-01T00:00:00+10:00</updated>",
     );
   });
 });
 
-describe("feedsPlugin", () => {
-  test("adds a `Content-Type` and `Content-Signal` rule for every feed path to `_headers` when the client build starts", () => {
-    expect(headersRulesAddedAtBuildStartBy(feedsPlugin, CLIENT_ENVIRONMENT)).toStrictEqual([
+describe("atomFeeds", () => {
+  test("adds a `Content-Type`, `Cache-Control`, `Access-Control-Allow-Origin`, and `Content-Signal` rule for every feed path to `_headers` when the client build starts", () => {
+    expect(headersRulesAddedAtBuildStartBy(feedsPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
       expect.objectContaining({
         pathPatterns: FEEDS.map(({ path }) => path),
-        headers: { "Content-Type": FEED_CONTENT_TYPE, "Content-Signal": CONTENT_SIGNAL },
+        headers: {
+          "Content-Type": FEED_CONTENT_TYPE,
+          "Cache-Control": "public, max-age=3600",
+          "Access-Control-Allow-Origin": "*",
+          "Content-Signal": CONTENT_SIGNAL,
+        },
       }),
     ]);
   });
 
   test("adds rules to `_headers` from the client build only", () => {
-    expect(headersRulesAddedAtBuildStartBy(feedsPlugin, SERVER_ENVIRONMENT)).toStrictEqual([]);
+    expect(headersRulesAddedAtBuildStartBy(feedsPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
   });
 });

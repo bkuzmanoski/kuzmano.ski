@@ -38,7 +38,7 @@ const TOKEN_COUNTS: MarkdownTokenCounts = {
   "/collection/newer-entry.md": 98,
 };
 
-const content = authoredContent({
+const AUTHORED_CONTENT = authoredContent({
   pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
     authoredEntry("page-1"),
     authoredEntry("page-2"),
@@ -73,7 +73,7 @@ function pluginWithLoaders({ addHeadersRules = () => undefined }: { addHeadersRu
 }
 
 describe("llmsTxtFor", () => {
-  const llmsTxt = llmsTxtFor(content, TOKEN_COUNTS);
+  const llmsTxt = llmsTxtFor(AUTHORED_CONTENT, TOKEN_COUNTS);
 
   test("opens with the site's name as the only H1", () => {
     // The specification allows one H1, so a second heading at that level would invalidate the file.
@@ -105,7 +105,7 @@ describe("llmsTxtFor", () => {
 
   test("throws when a listed entry has no token count, naming its path", () => {
     const { "/collection/newer-entry.md": _omittedTokenCount, ...incompleteTokenCounts } = TOKEN_COUNTS;
-    expect(() => llmsTxtFor(content, incompleteTokenCounts)).toThrow('"/collection/newer-entry.md"');
+    expect(() => llmsTxtFor(AUTHORED_CONTENT, incompleteTokenCounts)).toThrow('"/collection/newer-entry.md"');
   });
 
   test("emits a title containing Markdown syntax as the literal text of its link", () => {

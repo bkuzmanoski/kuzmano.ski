@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 
-import { GITHUB_LOGIN, GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, PRERENDER_LOCALE } from "#/config/site.ts";
+import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, GITHUB_USERNAME, SITE_LOCALE } from "#/config/site.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import type { DateFormat } from "#/lib/datetime.ts";
@@ -18,7 +18,7 @@ import styles from "./contribution-graph.module.css";
 const PLACEHOLDER_WEEK_COUNT = 53; // The number of weeks GitHub's calendar spans in most years, rendered by the placeholder grid.
 const DAYS_PER_WEEK = 7;
 const MONTH_FORMAT: DateFormat = {
-  locale: PRERENDER_LOCALE,
+  locale: SITE_LOCALE,
   options: { month: "short", timeZone: "UTC" },
 };
 const REVEAL_START_VISIBLE_FRACTION = 0.2;
@@ -37,7 +37,7 @@ function visibleFractionOf(figure: HTMLElement): number {
 export function ContributionGraph() {
   const contributionCalendar = useContributionCalendar();
   const monthFormat = useDateFormat(MONTH_FORMAT);
-  const totalFormat = useNumberFormat(PRERENDER_LOCALE);
+  const totalFormat = useNumberFormat(SITE_LOCALE);
   const captionId = useId();
   const [isFigureInView, setIsFigureInView] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -128,7 +128,7 @@ export function ContributionGraph() {
           </>
         )}
         <ContentLink href={GITHUB_PROFILE_URL}>
-          {contributionCalendar ? `@${GITHUB_LOGIN}` : GITHUB_PROFILE_LINK_TEXT}
+          {contributionCalendar ? `@${GITHUB_USERNAME}` : GITHUB_PROFILE_LINK_TEXT}
         </ContentLink>
         {contributionCalendar && "."}
       </figcaption>

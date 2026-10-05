@@ -16,30 +16,30 @@ vi.mock("#/site/catalog.ts", async () => {
   });
 });
 
-const [collection] = Object.values(configuredCollections);
-const initialPage = configuredPages[INITIAL_WINDOW_ROUTE.slice(1)];
+const [COLLECTION] = Object.values(configuredCollections);
+const INITIAL_PAGE = configuredPages[INITIAL_WINDOW_ROUTE.slice(1)];
 
-if (!collection || !initialPage) {
+if (!COLLECTION || !INITIAL_PAGE) {
   throw new Error("This suite expects a configured collection and a configured page at the initial window route.");
 }
 
-const collectionEntry = collection.list()[0]!;
-const collectionEntryRoute = collection.routeOf(collectionEntry.slug);
+const COLLECTION_ENTRY = COLLECTION.list()[0]!;
+const COLLECTION_ENTRY_ROUTE = COLLECTION.routeOf(COLLECTION_ENTRY.slug);
 
 const openWindows = () => screen.queryAllByRole("region");
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // Title bar controls are rendered only for the focused window.
 
 test("a collection entry route opens a window titled by its frontmatter, containing its compiled MDX body", async () => {
-  const { container } = renderRoute(collectionEntryRoute);
+  const { container } = renderRoute(COLLECTION_ENTRY_ROUTE);
 
-  expect(await screen.findByRole("region", { name: collectionEntry.title })).toBeDefined();
+  expect(await screen.findByRole("region", { name: COLLECTION_ENTRY.title })).toBeDefined();
   await waitFor(() => expect(container.querySelector("article p")).not.toBeNull());
 });
 
 test("the menu bar is a `<header>` outside the main landmark, and the windows are inside it", async () => {
-  renderRoute(collection.route);
+  renderRoute(COLLECTION.route);
 
-  const window = await screen.findByRole("region", { name: collection.title });
+  const window = await screen.findByRole("region", { name: COLLECTION.title });
   const main = screen.getByRole("main");
 
   // Testing Library maps every `<header>` to the banner role, including a window's title bar, which
@@ -52,48 +52,48 @@ test("the menu bar is a `<header>` outside the main landmark, and the windows ar
 });
 
 test("a collection route opens a window with the collection title and its entry list", async () => {
-  const { history } = renderRoute(collection.route);
-  const window = await screen.findByRole("region", { name: collection.title });
+  const { history } = renderRoute(COLLECTION.route);
+  const window = await screen.findByRole("region", { name: COLLECTION.title });
 
-  expect(history.location.pathname).toBe(collection.route);
+  expect(history.location.pathname).toBe(COLLECTION.route);
   expect(openWindows()).toHaveLength(1);
-  expect(within(window).getByRole("link", { name: collectionEntry.title }).getAttribute("href")).toBe(
-    collectionEntryRoute,
+  expect(within(window).getByRole("link", { name: COLLECTION_ENTRY.title }).getAttribute("href")).toBe(
+    COLLECTION_ENTRY_ROUTE,
   );
 });
 
 test("a collection entry link opens a new window and sets the link's `aria-current` attribute", async () => {
-  const { history } = renderRoute(collection.route);
-  const window = await screen.findByRole("region", { name: collection.title });
+  const { history } = renderRoute(COLLECTION.route);
+  const window = await screen.findByRole("region", { name: COLLECTION.title });
 
-  fireEvent.click(within(window).getByRole("link", { name: collectionEntry.title }));
+  fireEvent.click(within(window).getByRole("link", { name: COLLECTION_ENTRY.title }));
 
-  await waitFor(() => expect(history.location.pathname).toBe(collectionEntryRoute));
+  await waitFor(() => expect(history.location.pathname).toBe(COLLECTION_ENTRY_ROUTE));
   expect(history.length).toBe(2);
   expect(openWindows()).toHaveLength(2);
-  expect(within(window).getByRole("link", { name: collectionEntry.title }).getAttribute("aria-current")).toBe("true");
+  expect(within(window).getByRole("link", { name: COLLECTION_ENTRY.title }).getAttribute("aria-current")).toBe("true");
 });
 
 test("closing a collection entry window focuses the collection window behind it and removes the `aria-current` attribute from its links", async () => {
-  const { history } = renderRoute(collection.route);
-  const collectionWindow = await screen.findByRole("region", { name: collection.title });
+  const { history } = renderRoute(COLLECTION.route);
+  const collectionWindow = await screen.findByRole("region", { name: COLLECTION.title });
 
-  fireEvent.click(within(collectionWindow).getByRole("link", { name: collectionEntry.title }));
+  fireEvent.click(within(collectionWindow).getByRole("link", { name: COLLECTION_ENTRY.title }));
 
-  const entryWindow = await screen.findByRole("region", { name: collectionEntry.title });
+  const entryWindow = await screen.findByRole("region", { name: COLLECTION_ENTRY.title });
 
   fireEvent.click(within(entryWindow).getByRole("button", { name: "Close" }));
 
-  await waitFor(() => expect(history.location.pathname).toBe(collection.route));
+  await waitFor(() => expect(history.location.pathname).toBe(COLLECTION.route));
   await waitFor(() => expect(isFocused(collectionWindow)).toBe(true));
   expect(collectionWindow.querySelector("[aria-current]")).toBeNull();
   expect(openWindows()).toHaveLength(1);
 });
 
 test("navigating to a second collection reuses the collection window", async () => {
-  const { history } = renderRoute(collection.route);
+  const { history } = renderRoute(COLLECTION.route);
 
-  await screen.findByRole("region", { name: collection.title });
+  await screen.findByRole("region", { name: COLLECTION.title });
   history.push(otherCollection.route);
 
   await screen.findByRole("region", { name: otherCollection.title });
@@ -116,14 +116,14 @@ test("loading the root path opens the initial window, replacing the root path in
 
   // A push would leave an entry that reopens the window as soon as Back reached it,
   // which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`).
-  expect(await screen.findByRole("region", { name: initialPage.title })).toBeDefined();
+  expect(await screen.findByRole("region", { name: INITIAL_PAGE.title })).toBeDefined();
   expect(history.location.pathname).toBe(INITIAL_WINDOW_ROUTE);
   expect(history.length).toBe(1);
 });
 
 test("stepping back and forward over the root path focuses and unfocuses the window", async () => {
-  const { history } = renderRoute(collectionEntryRoute);
-  const window = await screen.findByRole("region", { name: collectionEntry.title });
+  const { history } = renderRoute(COLLECTION_ENTRY_ROUTE);
+  const window = await screen.findByRole("region", { name: COLLECTION_ENTRY.title });
 
   history.push("/"); // A click on the desktop unfocuses the window and pushes "/".
 
@@ -132,7 +132,7 @@ test("stepping back and forward over the root path focuses and unfocuses the win
   history.back();
 
   await waitFor(() => expect(isFocused(window)).toBe(true));
-  expect(history.location.pathname).toBe(collectionEntryRoute);
+  expect(history.location.pathname).toBe(COLLECTION_ENTRY_ROUTE);
 
   history.forward();
 
@@ -148,7 +148,7 @@ test("an unknown path opens the not-found alert instead of a window", async () =
 });
 
 test("an unknown entry in a collection opens the not-found alert", async () => {
-  renderRoute(collection.routeOf("does-not-exist"));
+  renderRoute(COLLECTION.routeOf("does-not-exist"));
   expect(await screen.findByRole("alertdialog", { name: NOT_FOUND_DOCUMENT_TITLE })).toBeDefined();
 });
 
@@ -163,13 +163,13 @@ test("dismissing a deep-linked not-found alert returns to the desktop", async ()
 });
 
 test("dismissing a not-found alert reached from a window returns to that window", async () => {
-  const { history } = renderRoute(collection.route);
-  const window = await screen.findByRole("region", { name: collection.title });
+  const { history } = renderRoute(COLLECTION.route);
+  const window = await screen.findByRole("region", { name: COLLECTION.title });
 
   history.push("/non-existent-page");
   fireEvent.click(await screen.findByRole("button", { name: "OK" }));
 
-  await waitFor(() => expect(history.location.pathname).toBe(collection.route));
+  await waitFor(() => expect(history.location.pathname).toBe(COLLECTION.route));
   expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(isFocused(window)).toBe(true);
   expect(openWindows()).toHaveLength(1);

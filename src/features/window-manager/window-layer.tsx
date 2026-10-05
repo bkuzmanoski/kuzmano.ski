@@ -21,7 +21,6 @@ import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 import { DragOutline } from "./drag-outline.tsx";
 import { WindowBody } from "./window-body.tsx";
 import styles from "./window-layer.module.css";
-import { WindowToolbar } from "./window-toolbar.tsx";
 import { Window } from "./window.tsx";
 import { ZoomRect } from "./zoom-rect.tsx";
 
@@ -106,7 +105,6 @@ const DesktopWindow = memo(function OpenWindow({
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
       onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
       onDrag={(drag) => onDrag(drag && { id, drag })}
-      toolbar={<WindowToolbar route={route} />}
     >
       <WindowCloseContext value={windowClose}>
         <WindowBody route={route} />

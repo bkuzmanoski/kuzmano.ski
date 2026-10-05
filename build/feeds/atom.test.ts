@@ -34,6 +34,32 @@ describe("atomFeed", () => {
     expect(feed([feedEntry()])).toContain("<published>2026-07-19T00:00:00Z</published>");
   });
 
+  test("timestamps each calendar date at midnight in the feed's time zone", () => {
+    const xml = atomFeed(
+      feedDocument({
+        timeZone: "Australia/Sydney",
+        updated: "2026-10-04",
+        entries: [feedEntry({ date: "2026-01-15" })],
+      }),
+    );
+
+    expect(xml).toContain("<updated>2026-10-04T00:00:00+10:00</updated>");
+    expect(xml).toContain("<published>2026-01-15T00:00:00+11:00</published>");
+    expect(xml).toContain("<updated>2026-01-15T00:00:00+11:00</updated>");
+  });
+
+  test("emits the feed's author with their name and URL", () => {
+    const document = parseXml(feed([]));
+
+    expect(document.querySelector("feed > author > name")?.textContent).toBe("Author Name");
+    expect(document.querySelector("feed > author > uri")?.textContent).toBe(`${SITE_URL}/`);
+  });
+
+  test("emits a subtitle only when the feed has one", () => {
+    expect(feed([])).toContain("<subtitle>Feed subtitle.</subtitle>");
+    expect(atomFeed(feedDocument({ subtitle: "" }))).not.toContain("<subtitle");
+  });
+
   test("escapes the markup and quotes in a title", () => {
     const title = "A & B <C> \"D\" 'E'";
     expect(parseXml(feed([feedEntry({ title })])).querySelector("entry > title")?.textContent).toBe(title);

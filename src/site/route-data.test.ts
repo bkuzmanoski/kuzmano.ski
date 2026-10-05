@@ -61,7 +61,7 @@ test("a draft page does not expose a Markdown representation in production", () 
   expect(loadSegment("draft-page").markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
 });
 
-test("a page the site links to is not marked noindex", () => {
+test("a page the site links to is indexable", () => {
   expect(loadSegment(DECLARED_PAGE_SLUG).noindex).toBeFalsy();
 });
 
@@ -89,7 +89,7 @@ test("a draft entry exposes a Markdown representation in development", () => {
   expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The dev server renders the Markdown representation of a draft.
 });
 
-test("an entry the site publishes is not marked noindex", () => {
+test("an entry the site publishes is indexable", () => {
   expect(loadCollectionEntry("published").noindex).toBeFalsy();
 });
 
@@ -102,7 +102,7 @@ test("a collection listing exposes a Markdown representation in production", () 
   expect(loadSegment("collection").markdown).toBe(true);
 });
 
-test("a collection listing is not marked noindex", () => {
+test("a collection listing is indexable", () => {
   expect(loadSegment("collection").noindex).toBeUndefined();
 });
 

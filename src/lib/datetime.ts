@@ -29,6 +29,42 @@ export function isIsoDate(value: unknown): value is string {
   return !Number.isNaN(timestamp) && new Date(timestamp).toISOString().startsWith(value);
 }
 
+/** The calendar date of `instant` in `timeZone`, as `YYYY-MM-DD`. */
+export function calendarDateIn(timeZone: string, instant: Date): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" })
+      .formatToParts(instant)
+      .map(({ type, value }) => [type, value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+// The offset from UTC that `timeZone` observes at `instant`, as `Z` or `±hh:mm`.
+function utcOffsetIn(timeZone: string, instant: number): string {
+  const offsetName = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
+    .formatToParts(instant)
+    .find(({ type }) => type === "timeZoneName")?.value;
+  const offset = offsetName?.slice("GMT".length) ?? "";
+
+  return offset === "" || offset === "+00:00" ? "Z" : offset; // `longOffset` names a zero offset "GMT" or "GMT+00:00".
+}
+
+const offsetMilliseconds = (offset: string) =>
+  offset === "Z"
+    ? 0
+    : (offset.startsWith("-") ? -1 : 1) * (Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6))) * 60_000;
+
+/** The RFC 3339 timestamp of midnight at the start of a `YYYY-MM-DD` date in `timeZone`. */
+export function midnightTimestampIn(timeZone: string, date: string): string {
+  const utcMidnight = Date.parse(`${date}T00:00:00Z`);
+
+  // A daylight saving transition between midnight UTC and local midnight changes the offset,
+  // so the offset is read again at the local midnight the first reading implies.
+  const offset = utcOffsetIn(timeZone, utcMidnight - offsetMilliseconds(utcOffsetIn(timeZone, utcMidnight)));
+
+  return `${date}T00:00:00${offset}`;
+}
+
 export const byNewestDate = (a: string | undefined, b: string | undefined) => (b ?? "").localeCompare(a ?? "");
 
 /** Formats a media playback position as `m:ss` or `h:mm:ss`. */

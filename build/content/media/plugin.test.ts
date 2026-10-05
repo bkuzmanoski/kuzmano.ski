@@ -10,8 +10,8 @@ import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { STYLESHEET_FILE_PATH, fromContent, fromRoot } from "../../paths.ts";
 import { devServerMiddlewareOf } from "../../test-utils/dev-server.ts";
 import { headersRulesAddedAtBuildStartBy } from "../../test-utils/headers.ts";
-import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID } from "../entry-cover-images.ts";
 
+import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID } from "./entry-cover-images.ts";
 import { contentMedia } from "./plugin.ts";
 
 import type * as mediaIndexModule from "./media-index.ts";
@@ -40,7 +40,7 @@ const ENTRY_STYLESHEET_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/colle
 const SECOND_ENTRY_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/second-entry.mdx`;
 const STYLESHEET_ABSOLUTE_PATH = fromRoot(STYLESHEET_FILE_PATH);
 
-const COVER_IMAGE_SIZE = 64;
+const COVER_IMAGE_SIZE_PX = 64;
 const COVER_IMAGE: CoverImage = {
   social: { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 },
   thumbnail: { kind: "image", src: mediaRoute("collection/entry.cover.webp"), width: 128, height: 128, alternates: [] },
@@ -73,7 +73,7 @@ type HotUpdate = (
 ) => Promise<Array<{ id: string }> | undefined>;
 
 const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
-  coverImageSize: COVER_IMAGE_SIZE,
+  coverImageSize: COVER_IMAGE_SIZE_PX,
   coverImages: {},
   renditionsByUrl: new Map(),
   entryAbsolutePathsByMediaDirectoryPath: new Map([
@@ -280,7 +280,7 @@ describe("contentMedia", () => {
 
   test("rebuilds the index when an update to the site stylesheet changes the cover image size", async () => {
     const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
-    const changedCoverImageSize = COVER_IMAGE_SIZE + 8;
+    const changedCoverImageSize = COVER_IMAGE_SIZE_PX + 8;
 
     await buildInitialIndex();
 
@@ -300,7 +300,7 @@ describe("contentMedia", () => {
     await buildInitialIndex();
     await updateFile({
       file: STYLESHEET_ABSOLUTE_PATH,
-      source: stylesheetDeclaringCoverImageSize(COVER_IMAGE_SIZE),
+      source: stylesheetDeclaringCoverImageSize(COVER_IMAGE_SIZE_PX),
     });
 
     expect(indexBuilds).toHaveLength(1);

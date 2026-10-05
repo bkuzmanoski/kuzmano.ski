@@ -95,7 +95,7 @@ const MenuItemRow = memo(function MenuRow({
   };
   const itemContent = (
     <>
-      <span className={styles.label}>{item.label}</span>
+      <span>{item.label}</span>
       {item.accessory && (
         <span id={`${id}-description`} hidden>
           {ACCESSORY_DESCRIPTIONS[item.accessory]}

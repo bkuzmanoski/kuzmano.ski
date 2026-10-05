@@ -5,6 +5,23 @@ import { observeRailClearances } from "./observe-rail-clearances.ts";
 const SPACE_BEFORE_PX = 20;
 const BODY_PADDING_BLOCK_END_PX = 44;
 
+const fakeComputedStyleOf = (element: Element, pseudoElement?: string | null) =>
+  ({
+    position: pseudoElement ? "static" : "relative",
+    borderTopWidth: "0px",
+    borderBlockEndWidth: "0px",
+    marginBlockStart: `${SPACE_BEFORE_PX}px`,
+    paddingBlockEnd: element.hasAttribute("data-content-body") ? `${BODY_PADDING_BLOCK_END_PX}px` : "0px",
+  }) as CSSStyleDeclaration;
+
+function positionMastheadInRail(masthead: Element) {
+  vi.spyOn(window, "getComputedStyle").mockImplementation((element, pseudoElement) =>
+    element === masthead
+      ? { ...fakeComputedStyleOf(element, pseudoElement), position: "absolute" }
+      : fakeComputedStyleOf(element, pseudoElement),
+  );
+}
+
 let resizeCallbacks: Array<() => void>;
 let frameCallbacks: Array<() => void>;
 
@@ -27,18 +44,7 @@ beforeEach(() => {
   vi.stubGlobal("requestAnimationFrame", (callback: () => void) => frameCallbacks.push(callback));
   vi.stubGlobal("cancelAnimationFrame", vi.fn());
   Object.defineProperty(document, "fonts", { configurable: true, value: { ready: new Promise(() => undefined) } });
-  vi.spyOn(window, "getComputedStyle").mockImplementation(
-    (element, pseudoElement) =>
-      ({
-        position: pseudoElement ? "static" : "relative",
-        borderTopWidth: "0px",
-        borderBlockEndWidth: "0px",
-        marginBlockStart: `${SPACE_BEFORE_PX}px`,
-        paddingBlockEnd: (element as HTMLElement).hasAttribute("data-content-body")
-          ? `${BODY_PADDING_BLOCK_END_PX}px`
-          : "0px",
-      }) as CSSStyleDeclaration,
-  );
+  vi.spyOn(window, "getComputedStyle").mockImplementation(fakeComputedStyleOf);
 });
 
 afterEach(() => {
@@ -120,6 +126,74 @@ describe("observeRailClearances", () => {
     placeElement(body, 0, 500);
     placeElement(paragraph, 0, 100);
     placeElement(group.firstElementChild!, 0, 60);
+    placeElement(heading, 120, 160);
+    observeRailClearances(body);
+
+    expect(railClearanceOf(heading)).toBe("");
+  });
+
+  test("sets `--content-body-rail-clearance` on a section heading to how far a masthead placed in the rail extends past the top of its row", () => {
+    const body = createBody(`
+      <div data-entry-masthead>A masthead.</div>
+      <h1>A title</h1>
+      <p>A lede.</p>
+      <h2>A heading</h2>
+    `);
+    const [masthead, title, lede, heading] = body.children as unknown as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ];
+
+    placeElement(body, 0, 500);
+    placeElement(masthead, 72, 200);
+    placeElement(title, 0, 48);
+    placeElement(lede, 68, 100);
+    placeElement(heading, 120, 160);
+    positionMastheadInRail(masthead);
+    observeRailClearances(body);
+
+    expect(railClearanceOf(heading)).toBe(`${200 - (120 - SPACE_BEFORE_PX)}px`);
+  });
+
+  test("leaves `--content-body-rail-clearance` unset on a heading directly after the title, which the masthead is placed beside", () => {
+    const body = createBody(`
+      <div data-entry-masthead>A masthead.</div>
+      <h1>A title</h1>
+      <h2>A heading</h2>
+      <h2>Another heading</h2>
+    `);
+    const [masthead, title, heading, nextHeading] = body.children as unknown as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ];
+
+    placeElement(body, 0, 500);
+    placeElement(masthead, 72, 200); // Ends below the top of the heading's row, so counting it would set a rail clearance.
+    placeElement(title, 0, 48);
+    placeElement(heading, 68, 100);
+    placeElement(nextHeading, 150, 190);
+    positionMastheadInRail(masthead);
+    observeRailClearances(body);
+
+    expect(railClearanceOf(heading)).toBe("");
+    expect(railClearanceOf(nextHeading)).toBe(`${200 - (150 - SPACE_BEFORE_PX)}px`);
+  });
+
+  test("ignores a masthead in the normal flow rather than in the rail", () => {
+    const body = createBody(`
+      <div data-entry-masthead>A masthead.</div>
+      <h1>A title</h1>
+      <h2>A heading</h2>
+    `);
+    const [masthead, title, heading] = body.children as unknown as [HTMLElement, HTMLElement, HTMLElement];
+
+    placeElement(body, 0, 500);
+    placeElement(masthead, 0, 200); // Ends below the top of the heading's row, so counting it would set a rail clearance.
+    placeElement(title, 60, 108);
     placeElement(heading, 120, 160);
     observeRailClearances(body);
 

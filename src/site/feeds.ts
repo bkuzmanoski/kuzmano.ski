@@ -32,9 +32,9 @@ const COLLECTION_FEEDS: Array<FeedMetadata> = Object.entries(COLLECTIONS).map(([
   collections: [segment as CollectionSegment],
 }));
 
-/** The feed carrying a collection's entries. Returns nothing for a segment that is not a collection. */
-export const collectionFeed = (segment: string): FeedMetadata | undefined =>
-  COLLECTION_FEEDS.find((feed) => feed.route === collectionRoute(segment));
+/** The feed of the collection at `route`, or `undefined` for a route that is not a collection's. */
+export const collectionFeedOf = (route: string): FeedMetadata | undefined =>
+  COLLECTION_FEEDS.find((feed) => feed.route === route);
 
 /** Every feed the site publishes. */
 export const FEEDS: Array<FeedMetadata> = [SITE_FEED, ...COLLECTION_FEEDS];

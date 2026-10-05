@@ -4,7 +4,10 @@
   font-style: normal;
 
   font-display: block;
-  src: url("./assets/fonts/ChicagoFLF.woff2") format("woff2");
+
+  /* The font file's ascent is lowered from 988 to 950 units, so ascent less descent equals the cap height
+   * and the caps are centered in a line box of any height. (`ascent-override` is not supported by Safari). */
+  src: url("./assets/fonts/ChicagoFLF-Adjusted.woff2") format("woff2");
 }
 
 @font-face {
@@ -106,7 +109,6 @@
   --font-chrome: 400 16px/24px ChicagoFLF, ui-sans-serif, sans-serif;
   --font-family-ui: Helvetica, Arial, ui-sans-serif, sans-serif;
   --font-ui: normal 15px/20px var(--font-family-ui);
-  --font-ui-bold: bold 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
   --font-family-display: Archivo, ui-sans-serif, sans-serif;
   --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
@@ -321,5 +323,5 @@ hr {
 }
 
 @page {
-  margin: 25mm 0;
+  margin: 25mm 8mm;
 }

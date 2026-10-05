@@ -42,7 +42,6 @@ function pressButton(pointerType = "mouse") {
 test("a pop-up menu renders a collapsed button with a `listbox` popup, named by its `aria-label` prop followed by the chosen option", () => {
   renderPopupMenu();
 
-  expect(button().textContent).toBe("Second");
   expect(screen.getByRole("button", { name: "A menu Second" }).getAttribute("aria-haspopup")).toBe("listbox");
   expect(button().getAttribute("aria-expanded")).toBe("false");
   expect(listbox()).toBeNull();

@@ -55,6 +55,7 @@ export function ContentLink({
           to={pathname}
           search={router.options.parseSearch(search)}
           hash={hash.slice(1)}
+          activeOptions={{ exact: true }}
           {...props}
           onClick={playContentLinkClickSound}
         >
@@ -63,6 +64,7 @@ export function ContentLink({
       );
     }
 
+    case "file":
     case "external":
       return (
         <a
@@ -87,7 +89,7 @@ export function ContentLink({
 
 /**
  * Renders a shared "Opens in a new tab" description, which every `ContentLink` to another
- * site references through `aria-describedby`.
+ * site or to a file references through `aria-describedby`.
  */
 export function OpensInNewTabDescriptionProvider({ children }: { children: ReactNode }) {
   const id = useId();

@@ -7,14 +7,14 @@ import { LIST_MAX_LENGTH, SOURCE_MAX_LENGTH } from "#/lib/waitlist/membership.ts
 import { MAX_BODY_LENGTH, exceedsMaxLength, isSameOrigin, isSameOriginFetch } from "./request.ts";
 
 const ORIGIN = "https://example.com";
-const URL = `${ORIGIN}/api/endpoint`;
+const ENDPOINT_URL = `${ORIGIN}/api/endpoint`;
 
 // This character maximizes UTF-8 bytes within the form field limits: it uses one UTF-16 code unit
 // (the unit the limits count) and three UTF-8 bytes (the unit the body guard counts). Four-byte
 // characters use two UTF-16 code units, so they produce fewer bytes per allowed code unit.
 const WIDEST_CHARACTER = "\u6f22";
 
-const post = (headers: HeadersInit = {}) => new Request(URL, { method: "POST", headers });
+const post = (headers: HeadersInit = {}) => new Request(ENDPOINT_URL, { method: "POST", headers });
 
 const byteLength = (value: string) => new TextEncoder().encode(value).length;
 const fieldOfMaximumLength = (limit: number) => WIDEST_CHARACTER.repeat(limit);

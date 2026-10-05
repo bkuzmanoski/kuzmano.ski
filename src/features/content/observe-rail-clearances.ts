@@ -2,7 +2,10 @@ import { railClearanceOf } from "#/lib/content/rail-clearance.ts";
 
 const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
 const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
-const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote"; // The elements whose `::before` `content-body.module.css` places in the rail.
+const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote";
+const MASTHEAD_SELECTOR = "[data-entry-masthead]";
+const MASTHEAD_SUBJECT_SELECTOR =
+  '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])';
 const RAIL_SPANNING_ELEMENT_SELECTOR = 'h2, [data-content-span]:not([data-content-span="text"])';
 
 const paddingBoxTopOf = (element: Element) =>
@@ -11,6 +14,10 @@ const paddingBoxTopOf = (element: Element) =>
 function railItemBottomsIn(element: Element, body: Element): Array<number> {
   if (element.hasAttribute("data-rail-asides")) {
     return [...element.children].map((aside) => aside.getBoundingClientRect().bottom);
+  }
+
+  if (element.matches(MASTHEAD_SELECTOR)) {
+    return getComputedStyle(element).position === "absolute" ? [element.getBoundingClientRect().bottom] : [];
   }
 
   if (!element.matches(LABELED_ELEMENT_SELECTOR)) {
@@ -40,6 +47,8 @@ function setRailClearance(element: HTMLElement, property: string, clearance: num
 function updateRailClearances(body: HTMLElement) {
   const railItemBottoms: Array<number> = [];
 
+  let mastheadBottoms: Array<number> = [];
+
   for (const element of body.children) {
     if (element instanceof HTMLElement && element.matches(RAIL_SPANNING_ELEMENT_SELECTOR)) {
       const spaceBefore = parseFloat(getComputedStyle(element).marginBlockStart);
@@ -48,7 +57,16 @@ function updateRailClearances(body: HTMLElement) {
       setRailClearance(element, RAIL_CLEARANCE_PROPERTY, clearance);
     }
 
+    if (element.matches(MASTHEAD_SELECTOR)) {
+      mastheadBottoms = railItemBottomsIn(element, body);
+      continue;
+    }
+
     railItemBottoms.push(...railItemBottomsIn(element, body));
+
+    if (element.matches(MASTHEAD_SUBJECT_SELECTOR)) {
+      railItemBottoms.push(...mastheadBottoms);
+    }
   }
 
   const bodyStyle = getComputedStyle(body);

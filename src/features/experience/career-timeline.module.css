@@ -3,39 +3,39 @@
   --career-timeline-tick-offset: 0; /* Set from JS. */
   --career-timeline-placement-offset: 0; /* Set from JS. */
   --career-timeline-placement-size: 0; /* Set from JS. */
+  --career-timeline-last-role-height: 0px; /* Set from JS. */
   --career-timeline-year-label-width: 4ch;
-  --career-timeline-year-label-height: calc(1lh + 4px);
+  --career-timeline-year-label-height: 20px; /* The bitmap face's 16px line, plus the 4px gap to its tick. */
+  --career-timeline-visible-range-frame-overhang: 5px; /* Includes the border on one side. */
+  --career-timeline-role-rule-width: 1px;
 
   display: grid;
   grid-template-columns: subgrid;
-  row-gap: var(--layout-content-space-loose);
+  row-gap: var(--content-body-layout-space-relaxed);
 }
 
 .controls {
   display: flex;
-  grid-column: rail-start / text-end;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  align-items: center;
-
-  padding-block-end: 12px;
-  border-block-end: 1px solid var(--color-foreground);
+  grid-column: text;
+  gap: 16px;
+  align-items: baseline;
 }
 
 .filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, max-content));
+  flex: 1;
+  gap: 4px 16px;
   align-items: center;
 
   margin: 0;
   padding: 0;
 
   list-style: none;
-}
 
-.directionMenu {
-  margin-inline-start: auto;
+  & > li {
+    display: flex;
+  }
 }
 
 .chartColumn {
@@ -45,7 +45,7 @@
   grid-column: rail-start / text-start;
   align-self: start;
 
-  padding-inline-end: var(--layout-content-rail-gap);
+  padding-inline-end: var(--content-body-layout-rail-gap);
 }
 
 .chart {
@@ -58,7 +58,7 @@
   height: max(240px, 100cqh - 2 * var(--layout-gutter) - var(--career-timeline-year-label-height));
   margin-block-end: var(--career-timeline-year-label-height);
 
-  font: var(--font-bitmap); /* Resolves the `ch` and `lh` units in the year label metrics. */
+  font: var(--font-bitmap); /* Resolves the `ch` unit in the year label width. */
 
   -webkit-tap-highlight-color: transparent;
 }
@@ -82,7 +82,10 @@
 .lanes {
   position: absolute;
   inset-block: 0;
-  inset-inline: calc(var(--career-timeline-year-label-width) + 8px) 0;
+  inset-inline: calc(
+      var(--career-timeline-year-label-width) + 8px + var(--career-timeline-visible-range-frame-overhang)
+    )
+    var(--career-timeline-visible-range-frame-overhang);
 
   display: grid;
   grid-auto-columns: minmax(0, 1fr);
@@ -115,8 +118,11 @@
   inset-inline: 0;
   top: calc(var(--career-timeline-placement-offset) * 100%);
 
-  height: calc(var(--career-timeline-placement-size) * 100%);
+  height: calc(var(--career-timeline-placement-size) * 100% + 1px); /* Also covers the tick line at its end. */
   border: 1px solid currentColor;
+
+  background-color: var(--color-background);
+  box-shadow: 0 0 0 1px var(--color-background);
 
   .lane[data-hidden] & {
     background-image: none;
@@ -125,11 +131,15 @@
 
 .visibleRangeFrame {
   position: absolute;
-  inset-inline: -3px;
+  inset-inline: calc(-1 * var(--career-timeline-visible-range-frame-overhang));
   top: calc(var(--career-timeline-placement-offset) * 100%);
 
-  height: calc(var(--career-timeline-placement-size) * 100%);
-  border: 1px solid var(--color-foreground);
+  height: max(3px, calc(var(--career-timeline-placement-size) * 100%));
+  border: 1px solid var(--color-border);
+
+  box-shadow:
+    0 0 0 1px var(--color-background),
+    inset 0 0 0 1px var(--color-background);
 
   &:not([data-visible]) {
     visibility: hidden;
@@ -140,11 +150,12 @@
   display: flex;
   grid-column: text;
   flex-direction: column;
-  gap: var(--layout-content-space-loose);
+  gap: var(--content-body-layout-space-relaxed);
 
   min-width: 0;
   margin: 0;
   padding: 0;
+  padding-block-end: var(--career-timeline-year-label-height);
 
   list-style: none;
 }
@@ -152,8 +163,8 @@
 .role {
   display: flex;
   flex-direction: column;
-  padding-inline-start: 16px;
-  border-inline-start: 4px solid var(--career-timeline-discipline-accent-color);
+  padding-block-start: 8px;
+  border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
 }
 
 .roleHeader {
@@ -164,7 +175,7 @@
   justify-content: space-between;
   order: -1;
 
-  padding-block-end: 8px;
+  padding-block-end: var(--content-body-layout-space);
 }
 
 .roleDisciplines {
@@ -173,38 +184,25 @@
   color: var(--career-timeline-discipline-accent-color);
 }
 
-.roleTitle {
-  font: var(--font-heading-3);
-}
-
 .roleDates {
   @mixin bitmap-label;
 }
 
 .roleOrganization {
-  padding-block-end: 8px;
   font-style: italic;
   color: var(--color-foreground-secondary);
 }
 
-.roleSummary {
-  text-wrap: pretty;
+.roleOrganization ~ * {
+  margin-block-start: var(--content-body-layout-space);
 }
 
-.highlights {
-  padding-block-start: 12px;
-  padding-inline-start: 20px;
-
-  & li::marker {
-    color: var(--career-timeline-discipline-accent-color);
-  }
-
-  & li + li {
-    margin-block-start: 8px;
-  }
+/* Qualified by `.role` to outrank the content element defaults. */
+.role .highlights > li::before {
+  color: var(--career-timeline-discipline-accent-color);
 }
 
-.empty {
+.emptyState {
   grid-column: text;
   color: var(--color-foreground-secondary);
 }
@@ -224,16 +222,20 @@
 
     grid-column: rail-start / text-end;
 
-    padding-block: 8px;
+    /* Begin scrolling out of view along with the last role. `.roles` offsets this with a negative margin (see below). */
+    margin-block-end: max(0px, var(--career-timeline-last-role-height) - var(--career-timeline-role-rule-width));
+    padding-block: var(--layout-gutter);
     padding-inline: 0;
     border-block-end: 1px solid var(--color-border-secondary);
+    border-image: linear-gradient(to top, var(--color-border) 1px, var(--color-background) 1px) fill 0 / 0 / 0 100cqi;
 
     background: var(--color-background);
   }
 
   .chart {
     height: auto;
-    padding-block-start: var(--career-timeline-year-label-height);
+    margin-block-end: 8px;
+    padding-block-start: calc(var(--career-timeline-year-label-height) + 12px);
   }
 
   .axis {
@@ -267,15 +269,20 @@
   }
 
   .visibleRangeFrame {
-    inset-block: -3px;
+    inset-block: calc(-1 * var(--career-timeline-visible-range-frame-overhang));
     inset-inline: calc(var(--career-timeline-placement-offset) * 100%) auto;
-    width: calc(var(--career-timeline-placement-size) * 100%);
+    width: max(3px, calc(var(--career-timeline-placement-size) * 100%));
     height: auto;
   }
 
   .roles,
-  .empty {
+  .emptyState {
     grid-column: rail-start / text-end;
+  }
+
+  .roles {
+    margin-block-start: min(0px, var(--career-timeline-role-rule-width) - var(--career-timeline-last-role-height));
+    padding-block-end: 0;
   }
 }
 
@@ -289,9 +296,7 @@
     display: block;
   }
 
-  .roleHeader,
-  .roleTitle,
-  .roleOrganization {
+  .role > * {
     break-after: avoid;
   }
 

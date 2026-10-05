@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
-import { GITHUB_LOGIN } from "#/config/site.ts";
+import { GITHUB_USERNAME } from "#/config/site.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
 import { getRequestFromSite } from "#/test-utils/requests.ts";
 
@@ -39,13 +39,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const URL = `https://example.com${API_ROUTES.githubContributions}`;
+const ENDPOINT_URL = `https://example.com${API_ROUTES.githubContributions}`;
 
 const { GET } = Route.options.server!.handlers as unknown as {
   GET: (context: { request: Request }) => Promise<Response>;
 };
 
-const get = (options?: Parameters<typeof getRequestFromSite>[1]) => GET({ request: getRequestFromSite(URL, options) });
+const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
+  GET({ request: getRequestFromSite(ENDPOINT_URL, options) });
 
 test("the calendar is served to a same-origin request as JSON", async () => {
   const response = await get();
@@ -53,7 +54,7 @@ test("the calendar is served to a same-origin request as JSON", async () => {
   expect(response.status).toBe(200);
   expect(response.headers.get("content-type")).toBe("application/json");
   await expect(response.json()).resolves.toEqual(CALENDAR);
-  expect(fetchGitHubContributionCalendar).toHaveBeenCalledWith(GITHUB_LOGIN);
+  expect(fetchGitHubContributionCalendar).toHaveBeenCalledWith(GITHUB_USERNAME);
 });
 
 test("a request from another site is refused before the cache or the calendar is read", async () => {

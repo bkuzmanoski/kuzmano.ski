@@ -6,7 +6,8 @@ import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
 import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable.woff2?url";
 
 import { pages } from "./catalog.ts";
-import { collectionFeed } from "./feeds.ts";
+import { collectionFeedOf } from "./feeds.ts";
+import { hasMarkdownRepresentation } from "./markdown-negotiation.ts";
 import { documentHead, fontPreloadLinkFor } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
 import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./routes.ts";
@@ -15,9 +16,6 @@ import type { Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
 const CONTENT_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
-
-const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>
-  frontmatter?.draft !== true || import.meta.env.DEV;
 
 function entryDocumentMetadata(
   frontmatter: Frontmatter | null,
@@ -42,7 +40,7 @@ export function contentHead(metadata: DocumentMetadata) {
 export const contentRoute = {
   loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
     const content = resolveContent(params.segment, params.slug);
-    const feed = collectionFeed(params.segment);
+    const feed = collectionFeedOf(collectionRoute(params.segment));
 
     switch (content.kind) {
       case "page":

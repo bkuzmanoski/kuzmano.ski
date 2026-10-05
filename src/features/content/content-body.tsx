@@ -5,13 +5,16 @@ import { Waitlist } from "#/features/waitlist/waitlist.tsx";
 import { cx } from "#/lib/class-names.ts";
 import { RenderedEntryContext } from "#/lib/content/rendered-entry.ts";
 import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
-import type { MDXModule } from "#/site/catalog.ts";
+import { contentIndexOf } from "#/site/windows.ts";
+import type { EntryTarget } from "#/site/windows.ts";
 
 import { Callout } from "./callout.tsx";
 import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
 import { ContentLink, OpensInNewTabDescriptionProvider } from "./content-link.tsx";
 import { EntryClipboardProvider } from "./entry-clipboard-provider.tsx";
+import { EntryColophon } from "./entry-colophon.tsx";
+import { EntryMasthead } from "./entry-masthead.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 import { Footnote } from "./footnote.tsx";
 import { ImageGrid } from "./image-grid.tsx";
@@ -45,8 +48,11 @@ function revealInitialFragmentTarget(article: HTMLElement | null) {
   }
 }
 
-export function ContentBody({ route, title, content }: { route: string; title: string; content: Promise<MDXModule> }) {
-  const { default: MDXContent, stylesheetClassNames } = use(content); // Read the module with `use()` rather than the route loader as loader data must be serializable.
+export function ContentBody({ route, target }: { route: string; target: EntryTarget }) {
+  // Read the module with `use()` rather than the route loader, as loader data must be serializable.
+  // The content index memoizes the promise `load` returns, so each render reads the same one.
+  const { default: MDXContent, stylesheetClassNames } = use(contentIndexOf(target).load(target.slug));
+
   return (
     <RenderedEntryContext value={{ route }}>
       <OpensInNewTabDescriptionProvider>
@@ -54,10 +60,12 @@ export function ContentBody({ route, title, content }: { route: string; title: s
           <MDXProvider components={MDX_COMPONENTS}>
             <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames?.entry)}>
               <div ref={observeRailClearances} data-content-body>
+                {target.collection !== null && <EntryMasthead target={target} />}
                 <h1 className={stylesheetClassNames?.title} data-feed-omit>
-                  {title}
+                  {target.title}
                 </h1>
                 <MDXContent />
+                {target.collection !== null && <EntryColophon target={target} />}
               </div>
             </article>
           </MDXProvider>

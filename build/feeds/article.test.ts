@@ -159,6 +159,42 @@ describe("articleContentOf", () => {
     expect(body).toContain(`poster="${SITE_URL}/video-poster.png"`);
   });
 
+  test("adds the `controls` attribute to a `<video>` or an `<audio>` that do not have it", () => {
+    const body = articleContentOf(
+      articleDocument('<video src="/video.mp4" muted loop></video><audio src="/audio.mp3"></audio>'),
+      ENTRY_URL,
+    );
+
+    expect(body).toMatch(/<video [^>]*controls/);
+    expect(body).toMatch(/<audio [^>]*controls/);
+  });
+
+  test("adds a link to the file of a `<video>` or an `<audio>` as their fallback content", () => {
+    const body = articleContentOf(
+      articleDocument('<video src="/video.mp4"></video><audio><source src="/audio.mp3" type="audio/mpeg"></audio>'),
+      ENTRY_URL,
+    );
+
+    expect(body).toContain(`<a href="${SITE_URL}/video.mp4">Watch the video</a></video>`);
+    expect(body).toContain(`<a href="${SITE_URL}/audio.mp3">Listen to the audio</a></audio>`);
+  });
+
+  test("uses the `aria-label` attribute of a `<video>` as the text of its fallback link", () => {
+    const body = articleContentOf(
+      articleDocument('<video src="/video.mp4" aria-label="A video description"></video>'),
+      ENTRY_URL,
+    );
+    expect(body).toContain(`<a href="${SITE_URL}/video.mp4">A video description</a></video>`);
+  });
+
+  test("resolves the `cite` attribute of a `<blockquote>` against the entry's URL", () => {
+    const body = articleContentOf(
+      articleDocument('<blockquote cite="/source"><p>A quotation.</p></blockquote>'),
+      ENTRY_URL,
+    );
+    expect(body).toContain(`cite="${SITE_URL}/source"`);
+  });
+
   test("unwraps a `<div>` left without attributes by sanitizing", () => {
     const body = articleContentOf(articleDocument('<div class="_container_1a2b"><p>A body.</p></div>'), ENTRY_URL);
     expect(body).toBe("<p>A body.</p>");

@@ -4,7 +4,7 @@ import { Desktop } from "#/app/desktop.tsx";
 import { ErrorPage } from "#/app/error-page.tsx";
 import { NotFound } from "#/app/not-found.tsx";
 import { RootDocument } from "#/app/root-document.tsx";
-import chromeFont from "#/assets/fonts/ChicagoFLF.woff2?url";
+import chromeFont from "#/assets/fonts/ChicagoFLF-Adjusted.woff2?url";
 import { FEED_MEDIA_TYPE } from "#/config/media-types.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
 import { fontPreloadLinkFor } from "#/site/metadata.ts";

@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { useLocale } from "./use-locale.ts";
 
-const PRERENDER_LOCALE = "en-AU";
+const SITE_LOCALE = "en-AU";
 
-const LocaleProbe = () => <output>{useLocale(PRERENDER_LOCALE)}</output>;
+const LocaleProbe = () => <output>{useLocale(SITE_LOCALE)}</output>;
 
 beforeEach(() => {
   vi.spyOn(navigator, "language", "get").mockReturnValue("fr-FR");

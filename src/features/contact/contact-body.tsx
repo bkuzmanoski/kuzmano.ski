@@ -9,7 +9,7 @@ import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { Scrollbar } from "#/components/scrollbar.tsx";
 import { TextArea, TextInput } from "#/components/text-input.tsx";
 import { CONTACT_DISPLAY_NAME } from "#/config/contact.ts";
-import { DOCUMENT_LANGUAGE, PRERENDER_LOCALE } from "#/config/site.ts";
+import { DOCUMENT_LANGUAGE, SITE_LOCALE } from "#/config/site.ts";
 import { useInputScrollSound } from "#/lib/audio/use-input-scroll-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import {
@@ -57,7 +57,7 @@ export function ContactBody() {
   const messageFieldScrollSound = useInputScrollSound<HTMLTextAreaElement>();
   const sendAttemptRef = useRef<AbortController | null>(null);
   const elementFocusedAtSendRef = useRef<HTMLElement | null>(null);
-  const visibleNumberFormat = new Intl.NumberFormat(useLocale(PRERENDER_LOCALE));
+  const visibleNumberFormat = new Intl.NumberFormat(useLocale(SITE_LOCALE));
 
   const hasUnsavedInput = form.isDirty;
   const promptAlert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;

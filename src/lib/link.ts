@@ -59,27 +59,19 @@ export function sitePathPartsOf(sitePath: string): { pathname: string; search: s
   return { pathname, search, hash };
 }
 
-/**
- * Where an `href` leads: an element in the same document, a path on this site, a page on another
- * site, or anything else, such as a `mailto:` or `tel:` URL, which the browser hands to another
- * application rather than loading as a page.
- */
-export type LinkDestination = "fragment" | "site" | "external" | "other";
+export type LinkDestination = "fragment" | "site" | "file" | "external" | "other";
 
 const WEB_PROTOCOLS = new Set(["http:", "https:"]);
 
-/**
- * Classifies an `href` by the URL a browser resolves it to, so an `href` the parser resolves to
- * another host, such as `/\host`, is `external` rather than a path. A relative path, such as
- * `entry`, is `other`, since it resolves against the document rather than naming a route.
- */
+const hasFileExtension = (pathname: string) => /\.[^/]+$/.test(pathname);
+
 export function linkDestinationOf(href: string): LinkDestination {
   if (href.startsWith("#")) {
     return "fragment";
   }
 
   if (isSitePath(href)) {
-    return "site";
+    return hasFileExtension(sitePathPartsOf(href).pathname) ? "file" : "site";
   }
 
   const url = resolvedAgainstSiteOrigin(href);

@@ -30,7 +30,7 @@
   grid-row: 1;
   align-self: end;
 
-  padding-block-end: var(--layout-content-space-loose);
+  padding-block-end: var(--content-body-layout-space-loose);
 }
 
 .content {

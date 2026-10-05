@@ -7,7 +7,7 @@ interface Fields {
   message: string;
 }
 
-const FALLBACK = "The message couldn’t be sent.";
+const FALLBACK_MESSAGE = "The message couldn’t be sent.";
 
 describe("invalidResult", () => {
   test("the field errors returned by the endpoint are preserved", () => {
@@ -30,10 +30,10 @@ describe("invalidResult", () => {
 describe("firstMessage", () => {
   test("the message for the first field with an error is returned", () => {
     const errors = { from: "Enter your email address.", message: "Write a message to send." };
-    expect(firstMessage<Fields>(errors, FALLBACK)).toBe("Enter your email address.");
+    expect(firstMessage<Fields>(errors, FALLBACK_MESSAGE)).toBe("Enter your email address.");
   });
 
   test("`fallback` is returned when there are no field errors", () => {
-    expect(firstMessage<Fields>({}, FALLBACK)).toBe(FALLBACK);
+    expect(firstMessage<Fields>({}, FALLBACK_MESSAGE)).toBe(FALLBACK_MESSAGE);
   });
 });

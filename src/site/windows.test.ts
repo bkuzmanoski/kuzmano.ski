@@ -3,30 +3,38 @@ import { describe, expect, test, vi } from "vitest";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 
 import { pages } from "./catalog.ts";
-import { isDestinationOpen, resolveRoute, resolveWindow } from "./windows.ts";
+import { contentIndexOf, isDestinationOpen, resolveRoute, resolveWindow } from "./windows.ts";
 
 vi.mock("./catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
 
-const collectionEntry = collectionEntries[0]!;
+const COLLECTION_ENTRY = collectionEntries[0]!;
+
+describe("contentIndexOf", () => {
+  test("returns the pages index for a page, and the collection for a collection entry", () => {
+    const page = resolveWindow("/page");
+    const entry = resolveWindow(`/collection/${COLLECTION_ENTRY.slug}`);
+
+    expect(page?.id === "entry" && contentIndexOf(page)).toBe(pages);
+    expect(entry?.id === "entry" && contentIndexOf(entry)).toBe(collection);
+  });
+});
 
 describe("resolveRoute", () => {
-  test("a top-level entry route resolves to an entry window backed by the pages index", () => {
+  test("a top-level entry route resolves to an entry window without a collection", () => {
     expect(resolveRoute("/page")).toMatchObject({
       id: "entry",
       title: "Page",
       slug: "page",
-      collectionRoute: null,
-      contentIndex: pages,
+      collection: null,
     });
   });
 
-  test("a collection entry route resolves to an entry window backed by its collection", () => {
-    expect(resolveRoute(`/collection/${collectionEntry.slug}`)).toMatchObject({
+  test("a collection entry route resolves to an entry window with its collection", () => {
+    expect(resolveRoute(`/collection/${COLLECTION_ENTRY.slug}`)).toMatchObject({
       id: "entry",
-      title: collectionEntry.title,
-      slug: collectionEntry.slug,
-      collectionRoute: "/collection",
-      contentIndex: collection,
+      title: COLLECTION_ENTRY.title,
+      slug: COLLECTION_ENTRY.slug,
+      collection,
     });
   });
 
@@ -34,7 +42,7 @@ describe("resolveRoute", () => {
     expect(resolveRoute("/collection")).toMatchObject({
       id: "collection",
       title: "Collection",
-      collectionRoute: "/collection",
+      collection,
     });
   });
 
@@ -63,14 +71,14 @@ describe("resolveRoute", () => {
   test("leading and trailing slashes are ignored", () => {
     expect(resolveRoute("/collection/")).toMatchObject({ id: "collection" });
     expect(resolveRoute("//page//")).toMatchObject({ id: "entry" });
-    expect(resolveRoute(`/collection/${collectionEntry.slug}/`)).toMatchObject({
+    expect(resolveRoute(`/collection/${COLLECTION_ENTRY.slug}/`)).toMatchObject({
       id: "entry",
-      slug: collectionEntry.slug,
+      slug: COLLECTION_ENTRY.slug,
     });
   });
 
   test("a route deeper than a collection entry resolves to the not-found window", () => {
-    expect(resolveRoute(`/collection/${collectionEntry.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
+    expect(resolveRoute(`/collection/${COLLECTION_ENTRY.slug}/invalid-route`)).toMatchObject({ id: "notFound" });
   });
 });
 
@@ -97,11 +105,11 @@ describe("isDestinationOpen", () => {
   });
 
   test("a collection destination is closed when only one of its entries is open", () => {
-    expect(isDestinationOpen("/collection", [`/collection/${collectionEntry.slug}`])).toBe(false);
+    expect(isDestinationOpen("/collection", [`/collection/${COLLECTION_ENTRY.slug}`])).toBe(false);
   });
 
   test("a destination is open when any of several open windows is at its route", () => {
-    expect(isDestinationOpen("/collection", ["/page", `/collection/${collectionEntry.slug}`, "/collection"])).toBe(
+    expect(isDestinationOpen("/collection", ["/page", `/collection/${COLLECTION_ENTRY.slug}`, "/collection"])).toBe(
       true,
     );
   });

@@ -21,6 +21,26 @@ test("a link to a path on this site does not have the `target` attribute", () =>
   expect(link.hasAttribute("target")).toBe(false);
 });
 
+test("a link to a path on this site that the current path is nested under omits the `aria-current` attribute", async () => {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: "/collection" }),
+      createRoute({ getParentRoute: () => rootRoute, path: "/collection/$slug" }),
+    ]),
+    history: createMemoryHistory({ initialEntries: ["/collection/entry"] }),
+  });
+
+  await router.load();
+  render(
+    <RouterContextProvider router={router}>
+      <ContentLink href="/collection">Fixture link</ContentLink>
+    </RouterContextProvider>,
+  );
+
+  expect(screen.getByRole("link", { name: "Fixture link" }).hasAttribute("aria-current")).toBe(false);
+});
+
 test("hovering a link to a path with a query string and a fragment preloads the route its pathname matches, with the parameters of its pathname", async () => {
   const loadEntry = vi.fn();
   const rootRoute = createRootRoute();
@@ -79,6 +99,19 @@ test("a link to another site in an entry is described as opening in a new tab", 
     { wrapper: RouterContext },
   );
   expect(screen.getByRole("link", { name: "Fixture link", description: "Opens in a new tab" })).toBeDefined();
+});
+
+test("a link to a file on this site has the `target` attribute `_blank` and is described as opening in a new tab", () => {
+  render(
+    <OpensInNewTabDescriptionProvider>
+      <ContentLink href="/collection/entry.md">Fixture link</ContentLink>
+    </OpensInNewTabDescriptionProvider>,
+  );
+
+  const link = screen.getByRole("link", { name: "Fixture link", description: "Opens in a new tab" });
+
+  expect(link.getAttribute("href")).toBe("/collection/entry.md");
+  expect(link.getAttribute("target")).toBe("_blank");
 });
 
 test("a link to another site outside an entry does not have the `aria-describedby` attribute", () => {

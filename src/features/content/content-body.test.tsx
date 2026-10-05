@@ -4,10 +4,12 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { RAIL_SUBJECT_COMPONENT_NAMES } from "#/lib/content/rail-subjects.ts";
 import { STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
-import type { MDXModule } from "#/site/catalog.ts";
+import type { Collection, MDXModule } from "#/site/catalog.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
+import type { EntryTarget } from "#/site/windows.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { deferWrite } from "#/test-utils/clipboard.ts";
+import { fakeCollection, fakeCollectionEntries } from "#/test-utils/collection.ts";
 import * as codeBlocksFixture from "#/test-utils/fixtures/code-blocks.mdx";
 import * as contentElementsFixture from "#/test-utils/fixtures/content-elements.mdx";
 import * as footnotesFixture from "#/test-utils/fixtures/footnotes.mdx";
@@ -16,6 +18,7 @@ import * as linksFixture from "#/test-utils/fixtures/links.mdx";
 import * as railSubjectsFixture from "#/test-utils/fixtures/rail-subjects.mdx";
 import { RouterContext } from "#/test-utils/router-context.tsx";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
+import { collectionEntryTargetOf, pageTargetOf } from "#/test-utils/windows.ts";
 
 import calloutStyles from "./callout.module.css";
 import { CodeBlock } from "./code-block.tsx";
@@ -25,11 +28,19 @@ import { EntrySectionHeading } from "./entry-section-heading.tsx";
 
 import type { RenderOptions } from "@testing-library/react";
 
+const pageContent = vi.hoisted(() => ({ module: Promise.resolve({}) as Promise<MDXModule> })); // The body the pages index loads for a page.
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const playClickSound = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
 
 Object.defineProperty(navigator, "clipboard", { value: { writeText } });
+
+vi.mock("#/site/catalog.ts", async () => {
+  const { siteCatalogMock } = await import("#/test-utils/catalog.ts");
+  const { fakeContentIndex } = await import("#/test-utils/collection.ts");
+
+  return siteCatalogMock({ pages: { ...fakeContentIndex([]), load: () => pageContent.module } });
+});
 
 vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { scrollIntoViewSilently }),
@@ -38,7 +49,8 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playClickSound }),
 );
 
-const ROUTE = "/collection/fixture";
+const SLUG = "fixture";
+const ROUTE = `/collection/${SLUG}`;
 const TITLE = "Fixture Title";
 const HEADINGS = [
   { tagName: "h2", title: "Fixture Heading", id: "fixture-heading" },
@@ -62,11 +74,18 @@ afterEach(() => {
 
 const RENDER_OPTIONS: RenderOptions = { wrapper: RouterContext };
 
-const renderContent = async (module: MDXModule) => {
+// Renders `module` as the body of an entry titled `TITLE`: a collection entry in `collection`, or a page.
+const renderContent = async (module: MDXModule, collection: Collection | null = null) => {
+  const content = Promise.resolve(module); // One promise for every render, as `load` memoizes.
+  const target: EntryTarget = collection
+    ? { ...collectionEntryTargetOf({ ...collection, load: () => content }, SLUG), title: TITLE }
+    : pageTargetOf(SLUG, TITLE);
+
+  pageContent.module = content;
   const { container } = await act(() =>
     render(
       <Suspense>
-        <ContentBody route={ROUTE} title={TITLE} content={Promise.resolve(module)} />
+        <ContentBody route={ROUTE} target={target} />
       </Suspense>,
       RENDER_OPTIONS,
     ),
@@ -127,6 +146,22 @@ test("the element with the `data-content-body` attribute begins with an `<h1>` o
   expect(heading.textContent).toBe(TITLE);
   expect(article.querySelector("[data-content-body]")?.firstElementChild).toBe(heading);
   expect(heading.hasAttribute("data-feed-omit")).toBe(true); // A feed reader renders the entry's title itself, so the body must not repeat it.
+});
+
+test("in a collection entry, the element with the `data-content-body` attribute begins with the entry's masthead and then the `<h1>`, and ends with its colophon", async () => {
+  const article = await renderContent({ default: () => <p>Body</p> }, fakeCollection(fakeCollectionEntries(SLUG)));
+  const body = article.querySelector("[data-content-body]")!;
+
+  expect(body.firstElementChild?.hasAttribute("data-entry-masthead")).toBe(true);
+  expect(body.firstElementChild?.nextElementSibling).toBe(screen.getByRole("heading", { level: 1 }));
+  expect(body.lastElementChild?.hasAttribute("data-entry-colophon")).toBe(true);
+});
+
+test("in a page, the element with the `data-content-body` attribute omits the masthead and the colophon", async () => {
+  const article = await renderContent({ default: () => <p>Body</p> });
+
+  expect(article.querySelector("[data-entry-masthead]")).toBeNull();
+  expect(article.querySelector("[data-entry-colophon]")).toBeNull();
 });
 
 test("the `<h1>` has the `title` class of the entry's stylesheet", async () => {

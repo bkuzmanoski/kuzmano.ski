@@ -202,7 +202,17 @@ export function PopupMenu<TValue extends string>({
           }
         }}
       >
-        {options[chosenOptionIndex]?.label}
+        <span className={styles.label}>
+          {options.map((option, index) =>
+            index === chosenOptionIndex ? (
+              <span key={option.value}>{option.label}</span>
+            ) : (
+              <span key={option.value} className={styles.widthReservingLabel} aria-hidden="true">
+                {option.label}
+              </span>
+            ),
+          )}
+        </span>
       </button>
       {openState && (
         <PopupMenuOptions

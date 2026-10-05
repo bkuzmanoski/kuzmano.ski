@@ -12,7 +12,7 @@ The project requires the Node version specified in `.nvmrc`.
 
 ## Content
 
-Content is written in MDX and must contain the following frontmatter:
+Content is authored in MDX and must contain the following frontmatter:
 
 ```yaml
 title: Entry Title

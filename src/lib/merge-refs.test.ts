@@ -4,17 +4,17 @@ import { mergeRefs } from "./merge-refs.ts";
 
 import type { RefObject } from "react";
 
-const node = { id: "node" };
+const NODE = { id: "node" };
 
 describe("mergeRefs", () => {
   test("attaches a ref object and a callback ref in argument order", () => {
     const callOrder: Array<string> = [];
-    let current: typeof node | null = null;
-    const refObject: RefObject<typeof node | null> = {
+    let current: typeof NODE | null = null;
+    const refObject: RefObject<typeof NODE | null> = {
       get current() {
         return current;
       },
-      set current(value: typeof node | null) {
+      set current(value: typeof NODE | null) {
         callOrder.push("ref object");
         current = value;
       },
@@ -22,17 +22,17 @@ describe("mergeRefs", () => {
 
     mergeRefs(refObject, () => {
       callOrder.push("callback ref");
-    })(node);
+    })(NODE);
 
-    expect(refObject.current).toBe(node);
+    expect(refObject.current).toBe(NODE);
     expect(callOrder).toEqual(["ref object", "callback ref"]);
   });
 
   test("clears a ref object and calls a cleanup-less callback ref with `null` on detach", () => {
-    const refObject: RefObject<typeof node | null> = { current: null };
+    const refObject: RefObject<typeof NODE | null> = { current: null };
     const callback = vi.fn();
 
-    mergeRefs(refObject, callback)(node)();
+    mergeRefs(refObject, callback)(NODE)();
 
     expect(refObject.current).toBeNull();
     expect(callback).toHaveBeenLastCalledWith(null);
@@ -42,18 +42,18 @@ describe("mergeRefs", () => {
     const cleanup = vi.fn();
     const callback = vi.fn(() => cleanup);
 
-    mergeRefs(undefined, callback)(node)();
+    mergeRefs(undefined, callback)(NODE)();
 
     expect(cleanup).toHaveBeenCalledOnce();
-    expect(callback).toHaveBeenCalledExactlyOnceWith(node);
+    expect(callback).toHaveBeenCalledExactlyOnceWith(NODE);
   });
 
   test("ignores a `null` or `undefined` ref", () => {
-    const refObject: RefObject<typeof node | null> = { current: null };
+    const refObject: RefObject<typeof NODE | null> = { current: null };
 
-    expect(() => mergeRefs(null, undefined)(node)()).not.toThrow();
+    expect(() => mergeRefs(null, undefined)(NODE)()).not.toThrow();
 
-    mergeRefs(refObject, undefined)(node);
-    expect(refObject.current).toBe(node);
+    mergeRefs(refObject, undefined)(NODE);
+    expect(refObject.current).toBe(NODE);
   });
 });

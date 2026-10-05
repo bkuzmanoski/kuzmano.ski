@@ -5,7 +5,7 @@ import { act, render, screen } from "@testing-library/react";
 import postcss from "postcss";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { GITHUB_LOGIN, GITHUB_PROFILE_URL } from "#/config/site.ts";
+import { GITHUB_PROFILE_URL, GITHUB_USERNAME } from "#/config/site.ts";
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import { CONTRIBUTION_LEVEL_COUNT } from "#/lib/github/contributions.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
@@ -181,7 +181,7 @@ describe("ContributionGraph", () => {
     const { container } = render(<ContributionGraph />);
 
     expect(container.querySelector("figcaption")?.textContent).toBe(
-      `2.850 contributions in the last year, as @${GITHUB_LOGIN}.`,
+      `2.850 contributions in the last year, as @${GITHUB_USERNAME}.`,
     );
     expect(screen.getByText("2.850").getAttribute("lang")).toBe("de-DE");
   });
@@ -241,7 +241,7 @@ describe("ContributionGraph", () => {
     expect(
       screen.getByRole("img", {
         name: "Contributions by day",
-        description: `1,234 contributions in the last year, as @${GITHUB_LOGIN}.`,
+        description: `1,234 contributions in the last year, as @${GITHUB_USERNAME}.`,
       }),
     ).toBeTruthy();
   });

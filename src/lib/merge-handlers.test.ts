@@ -4,7 +4,7 @@ import { mergeHandlers } from "./merge-handlers.ts";
 
 import type { SyntheticEvent } from "react";
 
-const event = { type: "pointerup" } as SyntheticEvent;
+const POINTER_UP_EVENT = { type: "pointerup" } as SyntheticEvent;
 
 describe("mergeHandlers", () => {
   test("runs a shared handler from both bags, in the order the bags are given", () => {
@@ -22,7 +22,7 @@ describe("mergeHandlers", () => {
       },
     );
 
-    merged.onPointerUp(event);
+    merged.onPointerUp(POINTER_UP_EVENT);
 
     expect(callOrder).toEqual(["first", "second"]);
   });
@@ -32,29 +32,29 @@ describe("mergeHandlers", () => {
     const onDoubleClick = vi.fn();
     const merged = mergeHandlers({ onPointerDown }, { onDoubleClick });
 
-    merged.onPointerDown(event);
-    merged.onDoubleClick(event);
+    merged.onPointerDown(POINTER_UP_EVENT);
+    merged.onDoubleClick(POINTER_UP_EVENT);
 
-    expect(onPointerDown).toHaveBeenCalledWith(event);
-    expect(onDoubleClick).toHaveBeenCalledWith(event);
+    expect(onPointerDown).toHaveBeenCalledWith(POINTER_UP_EVENT);
+    expect(onDoubleClick).toHaveBeenCalledWith(POINTER_UP_EVENT);
   });
 
   test("passes the event to every handler", () => {
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
 
-    mergeHandlers({ onPointerUp: firstHandler }, { onPointerUp: secondHandler }).onPointerUp(event);
+    mergeHandlers({ onPointerUp: firstHandler }, { onPointerUp: secondHandler }).onPointerUp(POINTER_UP_EVENT);
 
-    expect(firstHandler).toHaveBeenCalledWith(event);
-    expect(secondHandler).toHaveBeenCalledWith(event);
+    expect(firstHandler).toHaveBeenCalledWith(POINTER_UP_EVENT);
+    expect(secondHandler).toHaveBeenCalledWith(POINTER_UP_EVENT);
   });
 
   test("calls the handler from the other bag when either bag is empty", () => {
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
 
-    mergeHandlers({ onPointerUp: firstHandler }, {}).onPointerUp(event);
-    mergeHandlers({}, { onPointerUp: secondHandler }).onPointerUp(event);
+    mergeHandlers({ onPointerUp: firstHandler }, {}).onPointerUp(POINTER_UP_EVENT);
+    mergeHandlers({}, { onPointerUp: secondHandler }).onPointerUp(POINTER_UP_EVENT);
 
     expect(firstHandler).toHaveBeenCalledTimes(1);
     expect(secondHandler).toHaveBeenCalledTimes(1);

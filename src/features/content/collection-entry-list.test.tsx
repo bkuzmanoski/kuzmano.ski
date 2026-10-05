@@ -23,10 +23,10 @@ const open = vi.hoisted(() => vi.fn());
 const playHoverSound = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 
-const collectionEntries = fakeCollectionEntries("newest", "middle", "oldest");
-const collection = fakeCollection(collectionEntries);
-const lastIndex = collectionEntries.length - 1;
-const routeOf = (index: number) => collection.routeOf(collectionEntries[index]!.slug);
+const COLLECTION_ENTRIES = fakeCollectionEntries("newest", "middle", "oldest");
+const COLLECTION = fakeCollection(COLLECTION_ENTRIES);
+const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
+const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
 
 beforeEach(() => {
   open.mockClear();
@@ -36,7 +36,7 @@ beforeEach(() => {
 });
 
 function renderList(activeSlug: string | null) {
-  render(<CollectionEntryList activeSlug={activeSlug} collection={collection} />);
+  render(<CollectionEntryList activeSlug={activeSlug} collection={COLLECTION} />);
   return screen.getAllByRole("link");
 }
 
@@ -47,7 +47,7 @@ function renderListInWindow(activeSlug: string | null) {
   render(
     <section tabIndex={0} aria-label="Window" onKeyDown={keyDownHandlers.handle}>
       <WindowKeyDownContext value={keyDownHandlers}>
-        <CollectionEntryList activeSlug={activeSlug} collection={collection} />
+        <CollectionEntryList activeSlug={activeSlug} collection={COLLECTION} />
       </WindowKeyDownContext>
     </section>,
   );
@@ -118,19 +118,19 @@ test("an entry's link is named by its title and described by its description, ca
 });
 
 test("the column headings are hidden from assistive technology", () => {
-  render(<CollectionEntryList activeSlug={null} collection={collection} />);
+  render(<CollectionEntryList activeSlug={null} collection={COLLECTION} />);
   expect(screen.getByText("Name").closest("[aria-hidden='true']")).not.toBeNull();
 });
 
 test("a collection without entries shows the empty collection message instead of a list", () => {
-  render(<CollectionEntryList activeSlug={null} collection={{ ...collection, list: () => [] }} />);
+  render(<CollectionEntryList activeSlug={null} collection={{ ...COLLECTION, list: () => [] }} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
   expect(screen.queryByRole("list")).toBeNull();
 });
 
 test("the list is a single tab stop, on the active entry", () => {
-  const links = renderList(collectionEntries[lastIndex]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[LAST_INDEX]!.slug);
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
@@ -140,7 +140,7 @@ test("the tab stop falls on the first entry when none is active", () => {
 });
 
 test("the arrow keys move the focus along the list", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   links[0]!.focus();
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
@@ -151,7 +151,7 @@ test("the arrow keys move the focus along the list", () => {
 });
 
 test("the Home and End keys move the focus to the ends of the list, and the arrow keys stop there", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "End" });
 
@@ -171,7 +171,7 @@ test("the Home and End keys move the focus to the ends of the list, and the arro
 });
 
 test("a key that moves the focus plays a detent", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
@@ -183,7 +183,7 @@ test("a key that moves the focus plays a detent", () => {
 });
 
 test("a key that does not move the focus at an end of the list does not play a detent", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowUp" });
   fireEvent.keyDown(links[0]!, { key: "Home" });
@@ -192,7 +192,7 @@ test("a key that does not move the focus at an end of the list does not play a d
 });
 
 test("pressing the Down arrow key while the window itself has the focus focuses the first entry, plays the hover sound, and prevents the key's default action", () => {
-  const { windowRegion, links } = renderListInWindow(collectionEntries[lastIndex]!.slug);
+  const { windowRegion, links } = renderListInWindow(COLLECTION_ENTRIES[LAST_INDEX]!.slug);
 
   windowRegion.focus();
 
@@ -202,7 +202,7 @@ test("pressing the Down arrow key while the window itself has the focus focuses 
 });
 
 test("moving the focus scrolls the focused entry into view silently", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
@@ -210,7 +210,7 @@ test("moving the focus scrolls the focused entry into view silently", () => {
 });
 
 test("focusing an entry makes it the tab stop", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.focus(links.at(-1)!);
 
@@ -218,7 +218,7 @@ test("focusing an entry makes it the tab stop", () => {
 });
 
 test("the Enter and Space keys open the focused entry", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.keyDown(links[1]!, { key: "Enter" });
 
@@ -226,11 +226,11 @@ test("the Enter and Space keys open the focused entry", () => {
 
   fireEvent.keyDown(links.at(-1)!, { key: " " });
 
-  expect(open).toHaveBeenLastCalledWith(routeOf(lastIndex));
+  expect(open).toHaveBeenLastCalledWith(routeOf(LAST_INDEX));
 });
 
 test("pressing an entry with the mouse plays a click sound", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.pointerDown(links[1]!, { pointerType: "mouse" });
 
@@ -238,7 +238,7 @@ test("pressing an entry with the mouse plays a click sound", () => {
 });
 
 test("a tap plays a click sound on release, but not when it is canceled by scrolling", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
 
@@ -255,7 +255,7 @@ test("a tap plays a click sound on release, but not when it is canceled by scrol
 });
 
 test("a press on an entry prevents the native focus, then focuses the entry and scrolls it into view silently", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
 
@@ -271,7 +271,7 @@ test.each([
   ["a press with the Option key", { altKey: true }],
   ["a middle press", { button: 1 }],
 ])("%s does not change the list's focus or scroll", (_name, press) => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
   const focus = vi.spyOn(links[1]!, "focus");
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
@@ -283,7 +283,7 @@ test.each([
 });
 
 test("a press opens the entry rather than following the link", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
   const click = fireEvent.click(links[1]!);
 
   expect(click).toBe(false); // The default behavior was prevented.
@@ -291,7 +291,7 @@ test("a press opens the entry rather than following the link", () => {
 });
 
 test("a modified or middle press follows the link rather than opening the entry", () => {
-  const links = renderList(collectionEntries[0]!.slug);
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   for (const modifier of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }]) {
     expect(fireEvent.click(links[1]!, modifier)).toBe(true);

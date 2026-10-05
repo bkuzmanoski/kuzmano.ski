@@ -18,13 +18,13 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 );
 
 const VIEWPORT_ID = "viewport";
-const SCROLL_HEIGHT = 1_000;
-const CLIENT_HEIGHT = 100;
-const MAX_SCROLL_TOP = SCROLL_HEIGHT - CLIENT_HEIGHT;
-const TRACK_TOP = 50;
-const TRACK_HEIGHT = 200;
-const THUMB_HEIGHT = 20;
-const THUMB_TRAVEL = TRACK_HEIGHT - THUMB_HEIGHT;
+const SCROLL_HEIGHT_PX = 1_000;
+const CLIENT_HEIGHT_PX = 100;
+const MAX_SCROLL_TOP_PX = SCROLL_HEIGHT_PX - CLIENT_HEIGHT_PX;
+const TRACK_TOP_PX = 50;
+const TRACK_HEIGHT_PX = 200;
+const THUMB_HEIGHT_PX = 20;
+const THUMB_TRAVEL_PX = TRACK_HEIGHT_PX - THUMB_HEIGHT_PX;
 const FRAME_MS = 16; // A drag reports its move on the frame that follows the pointer.
 
 beforeEach(() => {
@@ -63,26 +63,26 @@ function renderScrollbar() {
   const viewport = document.getElementById(VIEWPORT_ID)!;
   const track = screen.getByRole("scrollbar");
 
-  Object.defineProperty(viewport, "scrollHeight", { value: SCROLL_HEIGHT, configurable: true });
-  Object.defineProperty(viewport, "clientHeight", { value: CLIENT_HEIGHT, configurable: true });
+  Object.defineProperty(viewport, "scrollHeight", { value: SCROLL_HEIGHT_PX, configurable: true });
+  Object.defineProperty(viewport, "clientHeight", { value: CLIENT_HEIGHT_PX, configurable: true });
 
   viewport.scrollBy = ((options: ScrollToOptions = {}) => {
-    viewport.scrollTop = clamp(viewport.scrollTop + (options.top ?? 0), 0, MAX_SCROLL_TOP);
+    viewport.scrollTop = clamp(viewport.scrollTop + (options.top ?? 0), 0, MAX_SCROLL_TOP_PX);
   }) as typeof viewport.scrollBy;
 
   fireEvent.scroll(viewport); // Report the metrics, so the scrollbar sees the overflow.
 
   const thumb = track.firstElementChild as HTMLElement; // The thumb only renders once the reported metrics show the overflow; query after the scroll.
 
-  Object.defineProperty(track, "clientHeight", { value: TRACK_HEIGHT, configurable: true });
-  Object.defineProperty(thumb, "clientHeight", { value: THUMB_HEIGHT, configurable: true });
+  Object.defineProperty(track, "clientHeight", { value: TRACK_HEIGHT_PX, configurable: true });
+  Object.defineProperty(thumb, "clientHeight", { value: THUMB_HEIGHT_PX, configurable: true });
 
-  track.getBoundingClientRect = () => new DOMRect(0, TRACK_TOP, 15, TRACK_HEIGHT);
+  track.getBoundingClientRect = () => new DOMRect(0, TRACK_TOP_PX, 15, TRACK_HEIGHT_PX);
 
   return { viewport, track, thumb, scrollDownButton: screen.getByRole("button", { name: "Scroll down" }) };
 }
 
-const thumbCenterAt = (position: number) => TRACK_TOP + THUMB_HEIGHT / 2 + position * THUMB_TRAVEL;
+const thumbCenterAt = (position: number) => TRACK_TOP_PX + THUMB_HEIGHT_PX / 2 + position * THUMB_TRAVEL_PX;
 
 function pressTrackAt(track: HTMLElement, position: number) {
   fireEvent.pointerDown(track, { button: 0, clientY: thumbCenterAt(position) });
@@ -152,17 +152,17 @@ test("a browser-canceled press scrolls once, and the following click scrolls aga
 test("a step at the scroll boundary still plays a click sound", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
-  viewport.scrollTop = MAX_SCROLL_TOP;
+  viewport.scrollTop = MAX_SCROLL_TOP_PX;
   fireEvent.pointerDown(scrollDownButton, { button: 0 });
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX);
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
 test("a tap whose touch pointer events do not reach the arrow still plays a click sound at the scroll boundary", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
-  viewport.scrollTop = MAX_SCROLL_TOP;
+  viewport.scrollTop = MAX_SCROLL_TOP_PX;
   fireEvent.click(scrollDownButton, { detail: 1 }); // The press landed outside, so only the click arrives.
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
@@ -234,7 +234,7 @@ test("a press on the track scrolls to the pressed point and plays a click sound"
 
   pressTrackAt(track, 0.5);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP / 2);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX / 2);
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
@@ -243,7 +243,7 @@ test("a press past either end of the thumb's travel scrolls to that end", () => 
 
   pressTrackAt(track, 2);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX);
 
   pressTrackAt(track, -2);
 
@@ -253,7 +253,7 @@ test("a press past either end of the thumb's travel scrolls to that end", () => 
 test("a press on the thumb does not scroll the viewport", () => {
   const { viewport, thumb } = renderScrollbar();
 
-  fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP + TRACK_HEIGHT });
+  fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP_PX + TRACK_HEIGHT_PX });
 
   expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and initiates its own drag, whose press bubbles through the track.
   expect(playClickSound).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
@@ -262,7 +262,7 @@ test("a press on the thumb does not scroll the viewport", () => {
 test("a secondary press on the track is ignored", () => {
   const { viewport, track } = renderScrollbar();
 
-  fireEvent.pointerDown(track, { button: 2, clientY: TRACK_TOP + TRACK_HEIGHT / 2 });
+  fireEvent.pointerDown(track, { button: 2, clientY: TRACK_TOP_PX + TRACK_HEIGHT_PX / 2 });
 
   expect(viewport.scrollTop).toBe(0);
   expect(playClickSound).not.toHaveBeenCalled();
@@ -281,7 +281,7 @@ test("the scroll a track press causes does not play a scroll sound", () => {
   pressTrackAt(track, 1);
   fireEvent.scroll(viewport);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX);
   expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
 });
 
@@ -290,16 +290,16 @@ test("a track press transitions into a thumb drag from the point it jumped to", 
 
   pressTrackAt(track, 0.25);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.25);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX * 0.25);
 
   dragTrackTo(track, 0.75);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.75);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX * 0.75);
 
   fireEvent.pointerUp(track);
   dragTrackTo(track, 0.25); // The release ended the drag, so the pointer no longer scrolls.
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.75);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX * 0.75);
 });
 
 test("a pointer that moves within the drag threshold after a track press does not begin a thumb drag", () => {
@@ -309,7 +309,7 @@ test("a pointer that moves within the drag threshold after a track press does no
   fireEvent.pointerMove(track, { buttons: 1, clientY: thumbCenterAt(0.5) + DRAG_THRESHOLD_PX });
   advanceTimersBy(FRAME_MS);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP * 0.5); // The press jumps on its own, so pointer jitter must not drag the jump off its mark.
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX * 0.5); // The press jumps on its own, so pointer jitter must not drag the jump off its mark.
 });
 
 test("the scrolling that follows the jump from a track press plays scroll sounds", () => {
@@ -319,7 +319,7 @@ test("the scrolling that follows the jump from a track press plays scroll sounds
   advanceTimersBy(1);
   fireEvent.scroll(viewport);
 
-  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP);
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX);
   expect(playScrollDetentSound).not.toHaveBeenCalled();
 
   dragTrackTo(track, 0);

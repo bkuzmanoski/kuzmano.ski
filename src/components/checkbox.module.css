@@ -6,7 +6,7 @@
 
   display: inline-flex;
   gap: 8px;
-  align-items: center;
+  align-items: baseline;
 
   font: var(--font-chrome);
   color: var(--color-foreground);
@@ -31,6 +31,7 @@
   position: relative;
 
   flex: none;
+  align-self: center;
 
   width: 12px;
   height: 12px;

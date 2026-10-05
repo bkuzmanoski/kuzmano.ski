@@ -8,7 +8,7 @@ import ToggleThemeSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-t
 import { Tooltip } from "#/components/tooltip.tsx";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
-import { SITE_SOURCE_URL } from "#/config/site.ts";
+import { SITE_LOCALE, SITE_LOCATION, SITE_SOURCE_URL, SITE_TIME_ZONE } from "#/config/site.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { restart, useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
@@ -126,23 +126,21 @@ function SoundStatus() {
   );
 }
 
-const TIME_LOCATION = "Sydney, Australia";
-
-interface SydneyTime {
+interface SiteTime {
   dateTime: string; // The displayed minute as a valid global date and time string, in UTC.
   timeText: string; // The hour, minute, and day period, without the time zone.
   timeZoneName: string;
 }
 
-const TIME_FORMAT = new Intl.DateTimeFormat("en-AU", {
-  timeZone: "Australia/Sydney",
+const TIME_FORMAT = new Intl.DateTimeFormat(SITE_LOCALE, {
+  timeZone: SITE_TIME_ZONE,
   hour: "numeric",
   minute: "2-digit",
   hour12: true,
   timeZoneName: "short",
 });
 
-function sydneyTime(): SydneyTime {
+function currentSiteTime(): SiteTime {
   const now = new Date();
   const timeParts = TIME_FORMAT.formatToParts(now);
 
@@ -156,13 +154,13 @@ function sydneyTime(): SydneyTime {
 }
 
 function TimeStatus() {
-  const [clockTime, setClockTime] = useState<SydneyTime | null>(null);
+  const [clockTime, setClockTime] = useState<SiteTime | null>(null);
 
   useEffect(() => {
     let tickTimer: ReturnType<typeof setTimeout>;
 
     const tick = () => {
-      setClockTime(sydneyTime());
+      setClockTime(currentSiteTime());
 
       const now = new Date();
       const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
@@ -180,14 +178,14 @@ function TimeStatus() {
   }
 
   return (
-    <Tooltip label={TIME_LOCATION} childTextIncludesLabel>
+    <Tooltip label={SITE_LOCATION} childTextIncludesLabel>
       <time dateTime={clockTime.dateTime} className={cx(styles.control, styles.time, styles.wideOnly)}>
         <span>
           {clockTime.timeText}
           {/* Hidden from assistive technology, which reads the location instead of an abbreviation that VoiceOver pronounces as a word. */}
           <span aria-hidden>{` (${clockTime.timeZoneName})`}</span>
           {/* One text node, so a screen reader reads the location as one phrase. */}
-          <span className={styles.timeLocation}>{` in ${TIME_LOCATION}`}</span>
+          <span className={styles.timeLocation}>{` in ${SITE_LOCATION}`}</span>
         </span>
       </time>
     </Tooltip>

@@ -11,7 +11,7 @@ import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
 import { contentMedia } from "./build/content/media/plugin.ts";
 import { cssAssetsPlugin } from "./build/css-assets.ts";
-import { captureDocument, feedsPlugin } from "./build/feeds/plugin.ts";
+import { atomFeeds } from "./build/feeds/plugin.ts";
 import { headersFile } from "./build/headers.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownPlugin } from "./build/markdown/plugin.ts";
@@ -31,6 +31,7 @@ export default defineConfig(({ command }) => {
   const optimizationFailures = reactCompilerOptimizationFailures();
   const { plugin: headersPlugin, addHeadersRules } = headersFile();
   const { plugins: mediaPlugins, mediaForEntry } = contentMedia({ addHeadersRules });
+  const { plugin: feedsPlugin, captureDocument } = atomFeeds({ addHeadersRules });
 
   return {
     resolve: { tsconfigPaths: true },
@@ -75,7 +76,7 @@ export default defineConfig(({ command }) => {
         },
       }),
       sitemapNamespacePlugin(),
-      feedsPlugin({ addHeadersRules }),
+      feedsPlugin,
       viteReact({ include: /\.(tsx?|mdx)$/ }),
       babel({ presets: [reactCompilerPreset({ logger: optimizationFailures.logger })] }),
       optimizationFailures.plugin,

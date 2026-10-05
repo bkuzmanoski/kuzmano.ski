@@ -12,12 +12,13 @@ vi.mock("./buffer.ts", async (importOriginal) => ({
   playBuffer: vi.fn(),
 }));
 
-const decodedRecording = { id: "decoded recording" } as unknown as AudioBuffer;
+const DECODED_RECORDING = { id: "decoded recording" } as unknown as AudioBuffer;
+
 const decodeAudioData = vi.fn();
 
 beforeEach(() => {
   vi.mocked(playBuffer).mockClear();
-  decodeAudioData.mockReset().mockResolvedValue(decodedRecording);
+  decodeAudioData.mockReset().mockResolvedValue(DECODED_RECORDING);
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) }));
   vi.stubGlobal(
     "OfflineAudioContext",
@@ -56,7 +57,7 @@ describe("playRecording", () => {
     await loadRecording("/sounds/loaded.wav");
     playRecording(fakeAudioContext(), "/sounds/loaded.wav", { at: 1.25, level: 0.4 });
 
-    expect(vi.mocked(playBuffer).mock.lastCall!.slice(1)).toEqual([decodedRecording, { at: 1.25, level: 0.4 }]);
+    expect(vi.mocked(playBuffer).mock.lastCall!.slice(1)).toEqual([DECODED_RECORDING, { at: 1.25, level: 0.4 }]);
   });
 
   test("does not play a recording before it loads", () => {

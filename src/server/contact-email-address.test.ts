@@ -9,11 +9,11 @@ vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 
-const ADDRESS = "inbox@example.com";
+const EMAIL_ADDRESS = "inbox@example.com";
 
 beforeEach(() => {
   env.fails = false;
-  env.current = { [CONTACT_EMAIL_ADDRESS_BINDING]: ADDRESS };
+  env.current = { [CONTACT_EMAIL_ADDRESS_BINDING]: EMAIL_ADDRESS };
   vi.spyOn(console, "error").mockReturnValue();
 });
 
@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 test("`readContactEmailAddress` returns the configured email address", async () => {
-  await expect(readContactEmailAddress()).resolves.toBe(ADDRESS);
+  await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
   expect(console.error).not.toHaveBeenCalled();
 });
 

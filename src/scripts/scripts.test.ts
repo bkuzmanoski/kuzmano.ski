@@ -4,6 +4,7 @@ import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } f
 import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
+import webShareScript from "#/scripts/web-share.ts?inline-script";
 import { runScript } from "#/test-utils/script.ts";
 
 // These tests evaluate the bundled scripts exactly as the browser receives them, covering the
@@ -43,6 +44,7 @@ function bootThemeColors() {
 beforeEach(() => {
   document.documentElement.removeAttribute("data-theme");
   document.documentElement.removeAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE);
+  document.documentElement.removeAttribute("data-web-share");
   sessionStorage.removeItem(BOOT_SEQUENCE_STORAGE_KEY);
   localStorage.clear();
   document.head.replaceChildren();
@@ -101,6 +103,24 @@ describe("boot sequence theme colors", () => {
 
     expect(bootThemeColors()).toHaveLength(0);
     expect(document.querySelectorAll('meta[name="theme-color"]')).toHaveLength(2);
+  });
+});
+
+describe("Web Share support", () => {
+  test("marks `<html>` with the `data-web-share` attribute when the browser supports the Web Share API", () => {
+    Object.defineProperty(navigator, "share", { value: () => Promise.resolve(), configurable: true });
+
+    try {
+      runScript(webShareScript);
+      expect(document.documentElement.hasAttribute("data-web-share")).toBe(true);
+    } finally {
+      Reflect.deleteProperty(navigator, "share");
+    }
+  });
+
+  test("leaves the `data-web-share` attribute unset when the browser does not support the Web Share API", () => {
+    runScript(webShareScript);
+    expect(document.documentElement.hasAttribute("data-web-share")).toBe(false);
   });
 });
 

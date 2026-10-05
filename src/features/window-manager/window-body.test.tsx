@@ -24,7 +24,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const collectionEntry = collectionEntries[0]!;
+const COLLECTION_ENTRY = collectionEntries[0]!;
 
 const renderBody = (route: string) => render(<WindowBody route={route} />, { wrapper: RouterContext });
 
@@ -32,17 +32,17 @@ test("a collection route renders a link for every entry in the collection", () =
   renderBody("/collection");
 
   expect(screen.getAllByRole("link")).toHaveLength(collectionEntries.length);
-  expect(screen.getByRole("link", { name: collectionEntry.title })).toBeDefined();
+  expect(screen.getByRole("link", { name: COLLECTION_ENTRY.title })).toBeDefined();
 });
 
 test("the entry list marks the entry the window is showing, and only in the collection it belongs to", () => {
   openWindows.mockReturnValue({
-    entry: { route: `/collection/${collectionEntry.slug}`, title: collectionEntry.title },
+    entry: { route: `/collection/${COLLECTION_ENTRY.slug}`, title: COLLECTION_ENTRY.title },
   });
 
   const { container, rerender } = renderBody("/collection");
 
-  expect(screen.getByRole("link", { name: collectionEntry.title }).getAttribute("aria-current")).toBe("true");
+  expect(screen.getByRole("link", { name: COLLECTION_ENTRY.title }).getAttribute("aria-current")).toBe("true");
 
   rerender(<WindowBody route="/other-collection" />);
 
@@ -50,7 +50,7 @@ test("the entry list marks the entry the window is showing, and only in the coll
 });
 
 test("an entry route suspends on its body chunk, from a collection or the top-level pages", async () => {
-  const mounting = act(() => renderBody(`/collection/${collectionEntry.slug}`));
+  const mounting = act(() => renderBody(`/collection/${COLLECTION_ENTRY.slug}`));
 
   expect(screen.getByRole("status", { name: "Loading" })).toBeDefined(); // The body arrives in a chunk of its own.
 

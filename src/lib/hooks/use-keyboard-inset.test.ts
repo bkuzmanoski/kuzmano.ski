@@ -3,9 +3,9 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { useKeyboardInset } from "./use-keyboard-inset.ts";
 
-const LAYOUT_HEIGHT = 800;
+const LAYOUT_HEIGHT_PX = 800;
 
-function stubViewport({ height = LAYOUT_HEIGHT, scale = 1 } = {}) {
+function stubViewport({ height = LAYOUT_HEIGHT_PX, scale = 1 } = {}) {
   const listeners = new Map<string, () => void>();
   const viewport = {
     height,
@@ -19,7 +19,7 @@ function stubViewport({ height = LAYOUT_HEIGHT, scale = 1 } = {}) {
 
   const scrollTo = vi.fn();
 
-  vi.stubGlobal("innerHeight", LAYOUT_HEIGHT);
+  vi.stubGlobal("innerHeight", LAYOUT_HEIGHT_PX);
   vi.stubGlobal("scrollTo", scrollTo);
   vi.stubGlobal("visualViewport", viewport);
 
@@ -48,11 +48,11 @@ test("`--keyboard-inset` is set to the gap between the layout and visual viewpor
 
   expect(inset()).toBe("0px");
 
-  viewport.resizeTo(LAYOUT_HEIGHT - 300);
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
 
   expect(inset()).toBe("300px");
 
-  viewport.resizeTo(LAYOUT_HEIGHT);
+  viewport.resizeTo(LAYOUT_HEIGHT_PX);
 
   expect(inset()).toBe("0px");
 });
@@ -61,7 +61,7 @@ test("`--keyboard-inset` is set to `0px` when the gap is below the keyboard thre
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
-  viewport.resizeTo(LAYOUT_HEIGHT - 1);
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 1);
 
   expect(inset()).toBe("0px");
 });
@@ -70,7 +70,7 @@ test("`--keyboard-inset` is removed while the page is zoomed in", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
-  viewport.resizeTo(LAYOUT_HEIGHT - 300, 2);
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300, 2);
 
   expect(inset()).toBe("");
 });
@@ -89,7 +89,7 @@ test("unmounting removes `--keyboard-inset`", () => {
   const viewport = stubViewport();
   const { unmount } = renderHook(() => useKeyboardInset());
 
-  viewport.resizeTo(LAYOUT_HEIGHT - 300);
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
   unmount();
 
   expect(inset()).toBe("");

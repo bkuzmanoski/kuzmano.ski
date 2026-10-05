@@ -3,6 +3,8 @@ import { markdownPath } from "#/lib/content/paths.ts";
 
 import { isRootPath } from "./routes.ts";
 
+import type { Frontmatter } from "./catalog.ts";
+
 // Content negotiation for the Markdown representation each document links as its `text/markdown` alternate.
 
 export const MARKDOWN_TOKEN_COUNT_HEADER = "x-markdown-tokens";
@@ -41,6 +43,9 @@ export function prefersMarkdown(acceptHeader: string | null | undefined): boolea
 
   return markdownQuality > 0 && markdownQuality >= qualityFor(HTML_MEDIA_TYPE, acceptHeader);
 }
+
+export const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>
+  frontmatter?.draft !== true || import.meta.env.DEV;
 
 export function markdownRepresentationPathFor(pathname: string): string | null {
   if (isRootPath(pathname) || TRAILING_SLASH.test(pathname) || FILE_NAME_EXTENSION.test(pathname)) {

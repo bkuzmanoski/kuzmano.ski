@@ -38,9 +38,9 @@ vi.mock("./authored-media.ts", async (importOriginal) => ({
 vi.mock("../../stylesheet/layout-metrics.ts", () => ({ readLayoutMetrics }));
 vi.mock("node:fs/promises", () => ({ default: { readFile }, readFile }));
 
-const ENTRY = authoredEntryMedia();
+const ENTRY_MEDIA = authoredEntryMedia();
 const AUTHORED_COVER_IMAGE_DIMENSIONS = { width: 1200, height: 630 };
-const RENDERED_COVER_IMAGE_SIZE = 64;
+const RENDERED_COVER_IMAGE_SIZE_PX = 64;
 const SOURCE_WITH_IMAGE_IN_PICTURE = `<picture>
   <img src="./image.png" alt="An image" />
 </picture>
@@ -61,8 +61,8 @@ interface ContentFixture {
 }
 
 function indexOf({
-  coverImageSize = RENDERED_COVER_IMAGE_SIZE,
-  entryMedia = [ENTRY],
+  coverImageSize = RENDERED_COVER_IMAGE_SIZE_PX,
+  entryMedia = [ENTRY_MEDIA],
   problems = [],
   source = ENTRY_SOURCE,
   images = {},
@@ -97,12 +97,12 @@ const mediaFor = (index: Awaited<ReturnType<typeof buildMediaIndex>>, reference:
 describe("buildMediaIndex", () => {
   test("returns the layout metrics' cover image size", async () => {
     const { coverImageSize } = await indexOf();
-    expect(coverImageSize).toBe(RENDERED_COVER_IMAGE_SIZE);
+    expect(coverImageSize).toBe(RENDERED_COVER_IMAGE_SIZE_PX);
   });
 
   test("resolves a cover image to a social image at its authored URL and a WebP thumbnail whose shortest side is twice the cover image size with an AVIF alternate", async () => {
     const { coverImages } = await indexOf();
-    const coverImage = coverImages[ENTRY.key]!;
+    const coverImage = coverImages[ENTRY_MEDIA.key]!;
 
     expect(coverImage.social).toEqual({
       src: mediaRoute(`collection/entry.cover.${MEDIA_FILE_HASH}.png`),
@@ -111,7 +111,7 @@ describe("buildMediaIndex", () => {
     expect(coverImage.thumbnail).toMatchObject({
       kind: "image",
       width: 244, // The landscape cover image's width at twice the cover image size, rather than its shortest side.
-      height: RENDERED_COVER_IMAGE_SIZE * 2,
+      height: RENDERED_COVER_IMAGE_SIZE_PX * 2,
     });
     expect(coverImage.thumbnail.src).toContain(mediaRoute("collection/entry.cover."));
     expect(coverImage.thumbnail.src).toMatch(/\.thumbnail\.webp$/);
@@ -140,14 +140,17 @@ describe("buildMediaIndex", () => {
     const portraitCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 630, height: 1200 } });
     const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: portraitCoverImage } });
 
-    expect(coverImages[ENTRY.key]?.thumbnail).toMatchObject({ width: RENDERED_COVER_IMAGE_SIZE * 2, height: 244 });
+    expect(coverImages[ENTRY_MEDIA.key]?.thumbnail).toMatchObject({
+      width: RENDERED_COVER_IMAGE_SIZE_PX * 2,
+      height: 244,
+    });
   });
 
   test("resolves a cover image whose shortest side is below twice the cover image size to a thumbnail at its authored dimensions", async () => {
     const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 200, height: 100 } });
     const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
 
-    expect(coverImages[ENTRY.key]?.thumbnail).toMatchObject({ width: 200, height: 100 });
+    expect(coverImages[ENTRY_MEDIA.key]?.thumbnail).toMatchObject({ width: 200, height: 100 });
   });
 
   test("resolves a body image reference to its authored URL with AVIF and WebP alternates", async () => {
@@ -168,7 +171,7 @@ describe("buildMediaIndex", () => {
   test("resolves a body image reference to its authored URL without alternates when its format is not encodable", async () => {
     const animationFilePath = "collection/entry/animation.gif";
     const index = await indexOf({
-      entryMedia: [{ ...ENTRY, bodyImageFileNames: ["animation.gif"] }],
+      entryMedia: [{ ...ENTRY_MEDIA, bodyImageFileNames: ["animation.gif"] }],
       images: { [animationFilePath]: resolvedImage({ path: animationFilePath }) },
       source: "![An animation](./animation.gif)\n",
     });
@@ -253,7 +256,7 @@ describe("buildMediaIndex", () => {
   });
 
   test("maps the URL of a video without a poster image to a rendition, and resolves the video reference to `null`", async () => {
-    const index = await indexOf({ entryMedia: [{ ...ENTRY, videos: [VIDEO_WITHOUT_POSTER_IMAGE] }] });
+    const index = await indexOf({ entryMedia: [{ ...ENTRY_MEDIA, videos: [VIDEO_WITHOUT_POSTER_IMAGE] }] });
 
     expect(index.renditionsByUrl.has(mediaRoute(`collection/entry/video.${MEDIA_FILE_HASH}.mp4`))).toBe(true);
     expect(mediaFor(index, "./video.mp4")).toBeNull();
@@ -261,7 +264,7 @@ describe("buildMediaIndex", () => {
 
   test("lists a problem for a video without a poster image that is not an MP4", async () => {
     const index = await indexOf({
-      entryMedia: [{ ...ENTRY, videos: [VIDEO_WITHOUT_POSTER_IMAGE] }],
+      entryMedia: [{ ...ENTRY_MEDIA, videos: [VIDEO_WITHOUT_POSTER_IMAGE] }],
       video: resolvedVideo({ mp4Metadata: null }),
     });
 
@@ -283,7 +286,7 @@ describe("buildMediaIndex", () => {
     const index = await indexOf();
     const bodyImage = mediaFor(index, "./image.png");
     const video = mediaFor(index, "./video.mp4");
-    const coverImage = index.coverImages[ENTRY.key]!;
+    const coverImage = index.coverImages[ENTRY_MEDIA.key]!;
     const urls = [
       coverImage.social.src,
       coverImage.thumbnail.src,
@@ -315,7 +318,7 @@ describe("buildMediaIndex", () => {
   test("resolves a reference to a body image the indexed source does not reference, and lists a problem that the image is not referenced", async () => {
     const unusedImageFilePath = "collection/entry/unused.png";
     const index = await indexOf({
-      entryMedia: [{ ...ENTRY, bodyImageFileNames: ["image.png", "unused.png"] }],
+      entryMedia: [{ ...ENTRY_MEDIA, bodyImageFileNames: ["image.png", "unused.png"] }],
       images: { [unusedImageFilePath]: resolvedImage({ path: unusedImageFilePath }) },
     });
 
@@ -361,7 +364,9 @@ describe("buildMediaIndex", () => {
 
   test("maps each entry's media directory path to the entry's absolute path", async () => {
     const { entryAbsolutePathsByMediaDirectoryPath } = await indexOf();
-    expect(entryAbsolutePathsByMediaDirectoryPath).toEqual(new Map([[ENTRY.mediaDirectoryPath, ENTRY_ABSOLUTE_PATH]]));
+    expect(entryAbsolutePathsByMediaDirectoryPath).toEqual(
+      new Map([[ENTRY_MEDIA.mediaDirectoryPath, ENTRY_ABSOLUTE_PATH]]),
+    );
   });
 
   test("lists the authored media problems before each entry's problems", async () => {

@@ -6,6 +6,7 @@ import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
+import webShareScript from "#/scripts/web-share.ts?inline-script";
 
 import type { ReactNode } from "react";
 
@@ -13,8 +14,8 @@ export function RootDocument({ children }: { children: ReactNode }) {
   useEffect(watchFaviconColorScheme, []);
 
   return (
-    // suppressHydrationWarning: `themeScript` and `bootSequenceScript` set attributes on
-    // `<html>` before hydration, so the client `<html>` differs from the one the server sent.
+    // suppressHydrationWarning: `themeScript`, `bootSequenceScript`, and `webShareScript` set attributes
+    // on `<html>` before hydration, so the client `<html>` differs from the one the server sent.
     <html lang={DOCUMENT_LANGUAGE} suppressHydrationWarning>
       <head>
         <HeadContent />
@@ -37,6 +38,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content={THEME_COLORS.wallpaper.dark} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: bootSequenceScript }} />
+        <script dangerouslySetInnerHTML={{ __html: webShareScript }} />
       </head>
       <body>
         {children}

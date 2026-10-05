@@ -30,8 +30,8 @@ vi.mock("#/lib/boot-sequence/lifecycle.ts", async (importOriginal) => ({
 }));
 vi.mock("#/lib/device.ts", () => ({ isTouchOnly: vi.fn() }));
 
-const BASE_PANE_HEIGHT = 100;
-const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT - ARROW_STEP_PX; // A page overlaps the previous one by one arrow step.
+const BASE_PANE_HEIGHT_PX = 100;
+const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX; // A page overlaps the previous one by one arrow step.
 
 const scrollTops = new WeakMap<Element, number>();
 const replacedProperties: Array<[string, PropertyDescriptor | undefined]> = [];
@@ -42,7 +42,7 @@ function replaceElementProperty(property: string, descriptor: PropertyDescriptor
 }
 
 beforeAll(() => {
-  replaceElementProperty("clientHeight", { get: () => BASE_PANE_HEIGHT });
+  replaceElementProperty("clientHeight", { get: () => BASE_PANE_HEIGHT_PX });
   replaceElementProperty("scrollHeight", {
     get(this: HTMLElement) {
       return [...this.children].reduce((total, child) => total + Number((child as HTMLElement).dataset.height ?? 0), 0);
@@ -71,9 +71,9 @@ afterAll(() => {
   }
 });
 
-const INITIAL_SCROLL_TOP = 240;
-const TALL_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT * 8} />;
-const SHORT_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT / 4} />;
+const INITIAL_SCROLL_TOP_PX = 240;
+const TALL_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT_PX * 8} />;
+const SHORT_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT_PX / 4} />;
 const BUTTON_ELEMENT = <button type="button">Button</button>;
 
 const windowShowing = (
@@ -206,17 +206,17 @@ test("the scroll position is maintained when the content does not change", () =>
 });
 
 test.each([
-  ["the Down arrow key", INITIAL_SCROLL_TOP + ARROW_STEP_PX, { key: "ArrowDown" }],
-  ["the Up arrow key", INITIAL_SCROLL_TOP - ARROW_STEP_PX, { key: "ArrowUp" }],
-  ["the Page Down key", INITIAL_SCROLL_TOP + PAGE_SCROLL_DISTANCE_PX, { key: "PageDown" }],
-  ["the Page Up key", INITIAL_SCROLL_TOP - PAGE_SCROLL_DISTANCE_PX, { key: "PageUp" }],
-  ["the Space key", INITIAL_SCROLL_TOP + PAGE_SCROLL_DISTANCE_PX, { key: " " }],
-  ["the Space key with the Shift key", INITIAL_SCROLL_TOP - PAGE_SCROLL_DISTANCE_PX, { key: " ", shiftKey: true }],
+  ["the Down arrow key", INITIAL_SCROLL_TOP_PX + ARROW_STEP_PX, { key: "ArrowDown" }],
+  ["the Up arrow key", INITIAL_SCROLL_TOP_PX - ARROW_STEP_PX, { key: "ArrowUp" }],
+  ["the Page Down key", INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX, { key: "PageDown" }],
+  ["the Page Up key", INITIAL_SCROLL_TOP_PX - PAGE_SCROLL_DISTANCE_PX, { key: "PageUp" }],
+  ["the Space key", INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX, { key: " " }],
+  ["the Space key with the Shift key", INITIAL_SCROLL_TOP_PX - PAGE_SCROLL_DISTANCE_PX, { key: " ", shiftKey: true }],
   ["the Home key", 0, { key: "Home" }],
   ["the End key", 700, { key: "End" }],
 ])("pressing %s while the window itself has the focus scrolls its content to %i", (_label, expectedTop, init) => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
-  scrollPane().scrollTop = INITIAL_SCROLL_TOP;
+  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
   const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), init);
 
@@ -225,14 +225,14 @@ test.each([
 });
 
 test.each([
-  ["the Page Down key", INITIAL_SCROLL_TOP + ARROW_STEP_PX, "PageDown"],
-  ["the Page Up key", INITIAL_SCROLL_TOP - ARROW_STEP_PX, "PageUp"],
+  ["the Page Down key", INITIAL_SCROLL_TOP_PX + ARROW_STEP_PX, "PageDown"],
+  ["the Page Up key", INITIAL_SCROLL_TOP_PX - ARROW_STEP_PX, "PageUp"],
 ])(
   "pressing %s while the window itself has the focus scrolls a viewport shorter than `ARROW_STEP_PX` to %i",
   (_label, expectedTop, key) => {
     render(windowShowing("tall", TALL_PANE_ELEMENT));
     Object.defineProperty(scrollPane(), "clientHeight", { configurable: true, get: () => ARROW_STEP_PX / 2 });
-    scrollPane().scrollTop = INITIAL_SCROLL_TOP;
+    scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
     fireEvent.keyDown(screen.getByRole("region"), { key });
 
@@ -295,25 +295,25 @@ test("a repeat of a held Down arrow key at the end of the content does not play 
 
 test("pressing a key claimed by a handler the window's content registered does not scroll the content or play a sound", () => {
   render(windowShowing("tall", <ContentClaimingKey claimedKey="ArrowDown" />));
-  scrollPane().scrollTop = INITIAL_SCROLL_TOP;
+  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
   vi.mocked(playClickSound).mockClear();
   vi.mocked(playScrollDetentSound).mockClear();
 
   const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown" });
 
   expect(isDefaultAllowed).toBe(false);
-  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP);
+  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX);
   expect(playClickSound).not.toHaveBeenCalled();
   expect(playScrollDetentSound).not.toHaveBeenCalled();
 });
 
 test("pressing a key not claimed by a handler the window's content registered still scrolls the content", () => {
   render(windowShowing("tall", <ContentClaimingKey claimedKey="ArrowDown" />));
-  scrollPane().scrollTop = INITIAL_SCROLL_TOP;
+  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
   fireEvent.keyDown(screen.getByRole("region"), { key: "PageDown" });
 
-  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP + PAGE_SCROLL_DISTANCE_PX);
+  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX);
 });
 
 test("the window scrolls its content for a key again once the content whose handler claimed it is replaced", () => {
@@ -337,11 +337,11 @@ test("pressing a key that scrolls while an element in the window's content has t
 
 test("pressing a key that scrolls with the Alt key does not scroll the window's content", () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
-  scrollPane().scrollTop = INITIAL_SCROLL_TOP;
+  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
   fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", altKey: true });
 
-  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP);
+  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX);
 });
 
 test("the window restores focus to its last focused element when it is activated again", () => {

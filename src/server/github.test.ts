@@ -12,7 +12,7 @@ vi.mock("./env.ts", () => ({
 }));
 
 const GITHUB_TOKEN = "token";
-const LOGIN = "login";
+const USERNAME = "login";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -48,7 +48,7 @@ afterEach(() => {
 
 describe("fetchGitHubContributionCalendar", () => {
   test("returns the total and GitHub's weeks, with a partial first week preserved", async () => {
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toEqual({
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toEqual({
       total: 5,
       weeks: [[{ date: "2026-01-07", count: 3 }], [{ date: "2026-01-11", count: 2 }]],
     });
@@ -56,18 +56,18 @@ describe("fetchGitHubContributionCalendar", () => {
   });
 
   test("sends the token as a `Bearer` credential, the site name as the `User-Agent` header, and the login as a variable", async () => {
-    await fetchGitHubContributionCalendar(LOGIN);
+    await fetchGitHubContributionCalendar(USERNAME);
 
     const init = fetchMock.mock.calls[0]?.[1];
     const headers = new Headers(init?.headers);
 
     expect(headers.get("authorization")).toBe(`Bearer ${GITHUB_TOKEN}`);
     expect(headers.get("user-agent")).toBe(SITE_NAME);
-    expect(JSON.parse(init?.body as string)).toMatchObject({ variables: { login: LOGIN } });
+    expect(JSON.parse(init?.body as string)).toMatchObject({ variables: { login: USERNAME } });
   });
 
   test("requests the total, each week's days, and each day's count under the aliases the response is parsed with", async () => {
-    await fetchGitHubContributionCalendar(LOGIN);
+    await fetchGitHubContributionCalendar(USERNAME);
 
     const { query } = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as { query: string };
 
@@ -82,7 +82,7 @@ describe("fetchGitHubContributionCalendar", () => {
   ])("returns `null` without sending a request, and logs the missing binding, when %s", async (_label, arrange) => {
     arrange();
 
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toBeNull();
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ event: "github_binding_missing" }));
   });
@@ -90,14 +90,14 @@ describe("fetchGitHubContributionCalendar", () => {
   test("returns `null` and logs the error message when `fetch` rejects", async () => {
     fetchMock.mockRejectedValue(new Error("Timed out."));
 
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toBeNull();
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ message: "Timed out." }));
   });
 
   test("returns `null` and logs the status code and body when the API responds with a 401 status code", async () => {
     fetchMock.mockResolvedValue(new Response("Bad credentials", { status: 401 }));
 
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toBeNull();
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ status: 401, body: "Bad credentials" }));
   });
 
@@ -105,7 +105,7 @@ describe("fetchGitHubContributionCalendar", () => {
     const errors = [{ type: "NOT_FOUND", message: "Could not resolve to a User." }];
     fetchMock.mockResolvedValue(Response.json({ data: { user: null }, errors }));
 
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toBeNull();
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ status: 200, errors }));
   });
 
@@ -115,7 +115,7 @@ describe("fetchGitHubContributionCalendar", () => {
   ])("returns `null` and logs the failure when %s", async (_label, days) => {
     fetchMock.mockResolvedValue(graphQlResponse(days));
 
-    await expect(fetchGitHubContributionCalendar(LOGIN)).resolves.toBeNull();
+    await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ event: "github_contributions_failed" }));
   });
 });

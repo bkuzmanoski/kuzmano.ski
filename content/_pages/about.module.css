@@ -7,7 +7,7 @@
 }
 
 .entry [data-content-body] > h1 + [data-content-span="pane"] + p {
-  margin-block-start: var(--layout-content-space-loose);
+  margin-block-start: var(--content-body-layout-space-loose);
   font: var(--font-lede);
 }
 

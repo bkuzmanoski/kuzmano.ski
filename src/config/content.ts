@@ -1,15 +1,15 @@
 import type { DateFormat } from "#/lib/datetime.ts";
 
-import { PRERENDER_LOCALE } from "./site.ts";
+import { SITE_LOCALE } from "./site.ts";
 
 export const PAGES_DIRECTORY_NAME = "_pages";
 
 export const ENTRY_DATE_FORMAT: DateFormat = {
-  locale: PRERENDER_LOCALE,
+  locale: SITE_LOCALE,
   options: { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" },
 };
 export const EXPERIENCE_MONTH_FORMAT: DateFormat = {
-  locale: PRERENDER_LOCALE,
+  locale: SITE_LOCALE,
   options: { year: "numeric", month: "short", timeZone: "UTC" },
 };
 

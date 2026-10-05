@@ -21,7 +21,7 @@ export function WindowBody({ route }: { route: string }) {
     case "entry":
       return (
         <Suspense fallback={<LoadingIndicator layout="fill" />}>
-          <ContentBody route={route} title={target.title} content={target.contentIndex.load(target.slug)} />
+          <ContentBody route={route} target={target} />
         </Suspense>
       );
 

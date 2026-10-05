@@ -32,11 +32,13 @@ export const feedDocument = (overrides: Partial<Feed> = {}): Feed => ({
   title: "Feed title",
   subtitle: "Feed subtitle.",
   author: "Author Name",
+  authorUrl: `${SITE_URL}/`,
   icon: `${SITE_URL}/logo192.png`,
   logo: `${SITE_URL}/logo512.png`,
   url: `${SITE_URL}/collection`,
   selfUrl: `${SITE_URL}/collection/${FEED_FILE_NAME}`,
   updated: "2026-07-19",
+  timeZone: "UTC",
   entries: [],
   ...overrides,
 });

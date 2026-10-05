@@ -12,7 +12,7 @@ vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 
-const TOKEN = "notion-token";
+const NOTION_TOKEN = "notion-token";
 const DATA_SOURCE_ID = "data-source-id";
 const MEMBERSHIP: Membership = { emailAddress: "user@example.com", list: "List", source: "/collection/entry" };
 
@@ -36,7 +36,7 @@ beforeEach(() => {
   respondToLookup([]);
   respondToWrite(200);
   env.fails = false;
-  env.current = { [NOTION_TOKEN_BINDING]: TOKEN, [WAITLIST_DATA_SOURCE_BINDING]: DATA_SOURCE_ID };
+  env.current = { [NOTION_TOKEN_BINDING]: NOTION_TOKEN, [WAITLIST_DATA_SOURCE_BINDING]: DATA_SOURCE_ID };
   vi.spyOn(console, "error").mockReturnValue();
 });
 
@@ -67,7 +67,7 @@ test("every request includes the token and the pinned API version", async () => 
 
   for (const [, request] of fetchMock.mock.calls) {
     expect(request?.headers).toMatchObject({
-      authorization: `Bearer ${TOKEN}`,
+      authorization: `Bearer ${NOTION_TOKEN}`,
       "content-type": "application/json",
       "notion-version": expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
     });
@@ -137,7 +137,7 @@ test("a write that throws produces `unavailable`", async () => {
 
 test.each([
   ["token", { [WAITLIST_DATA_SOURCE_BINDING]: DATA_SOURCE_ID }, NOTION_TOKEN_BINDING],
-  ["data source", { [NOTION_TOKEN_BINDING]: TOKEN }, WAITLIST_DATA_SOURCE_BINDING],
+  ["data source", { [NOTION_TOKEN_BINDING]: NOTION_TOKEN }, WAITLIST_DATA_SOURCE_BINDING],
 ])("a missing %s binding is reported without a request to Notion", async (_label, partial, binding) => {
   env.current = partial;
 

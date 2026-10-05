@@ -27,14 +27,15 @@ vi.mock("#/config/content.ts", async (importOriginal) => ({
   PAGE_SLUGS: ["page-1", "page-2"],
 }));
 
-const undatedEntry = { date: undefined };
+const TODAY = "2026-07-19";
+const UNDATED_ENTRY_OVERRIDES = { date: undefined };
 
 // A valid tree that each test can modify to exercise one condition.
 const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
   authoredContent({
     pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
       authoredEntry("page-1", { date: "2026-02-03" }),
-      authoredEntry("page-2", undatedEntry),
+      authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
     ]),
     collections: [
       authoredCollection("collection-1", [authoredEntry("entry-1", { date: "2026-01-02" })]),
@@ -44,10 +45,13 @@ const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
     ...overrides,
   });
 
-const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides));
+const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides), TODAY);
 const paths = (overrides?: Partial<AuthoredContent>) => routes(overrides).map(({ path }) => path);
 const pagesWith = (slug: string) =>
-  authoredContentDirectory(PAGES_DIRECTORY_NAME, [...content().pages.entries, authoredEntry(slug, undatedEntry)]);
+  authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+    ...content().pages.entries,
+    authoredEntry(slug, UNDATED_ENTRY_OVERRIDES),
+  ]);
 
 describe("routesFor", () => {
   test("includes the root, page, collection, collection entry, and contact routes in order", () => {
@@ -97,9 +101,9 @@ describe("routesFor", () => {
     const pathsWithDrafts = routesFor(
       content({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
-          authoredEntry("page-1", undatedEntry),
-          authoredEntry("page-2", undatedEntry),
-          draftEntry("secret", undatedEntry),
+          authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES),
+          authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
+          draftEntry("secret", UNDATED_ENTRY_OVERRIDES),
         ]),
         collections: [
           authoredCollection("collection-1", [draftEntry("unpublished", { date: "2026-09-09" })]),
@@ -107,6 +111,7 @@ describe("routesFor", () => {
           authoredCollection("collection-3"),
         ],
       }),
+      TODAY,
     ).map(({ path }) => path);
 
     expect(pathsWithDrafts).not.toContain("/collection-1/unpublished");
@@ -118,7 +123,7 @@ describe("routesFor", () => {
     const routesWithUnregisteredPage = routes({
       pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
         authoredEntry("page-1", { date: "2026-02-03" }),
-        authoredEntry("page-2", undatedEntry),
+        authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
         authoredEntry("unlisted", { date: "2026-01-01" }),
       ]),
     });
@@ -131,7 +136,7 @@ describe("routesFor", () => {
     expect(
       paths({
         collections: [
-          authoredCollection("collection-1", [authoredEntry("entry-1", undatedEntry)], ["entry-1"]),
+          authoredCollection("collection-1", [authoredEntry("entry-1", UNDATED_ENTRY_OVERRIDES)], ["entry-1"]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
@@ -156,7 +161,7 @@ describe("routesFor", () => {
     expect(() =>
       paths({
         collections: [
-          authoredCollection("collection-1", [authoredEntry("Not A Slug", undatedEntry)]),
+          authoredCollection("collection-1", [authoredEntry("Not A Slug", UNDATED_ENTRY_OVERRIDES)]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
@@ -168,9 +173,9 @@ describe("routesFor", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
-          authoredEntry("page-1", undatedEntry),
-          authoredEntry("page-2", undatedEntry),
-          authoredEntry("Read Me", undatedEntry),
+          authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES),
+          authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
+          authoredEntry("Read Me", UNDATED_ENTRY_OVERRIDES),
         ]),
       }),
     ).toThrow(/URL-unsafe.*Read Me/s);
@@ -178,7 +183,9 @@ describe("routesFor", () => {
 
   test("throws for a declared page without a corresponding file", () => {
     expect(() =>
-      paths({ pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [authoredEntry("page-1", undatedEntry)]) }),
+      paths({
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES)]),
+      }),
     ).toThrow(/declared with no corresponding content file.*page-2/s);
   });
 
@@ -186,9 +193,9 @@ describe("routesFor", () => {
     expect(() =>
       paths({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
-          authoredEntry("page-1", undatedEntry),
-          authoredEntry("page-2", undatedEntry),
-          authoredEntry("collection-1", undatedEntry),
+          authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES),
+          authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
+          authoredEntry("collection-1", UNDATED_ENTRY_OVERRIDES),
         ]),
       }),
     ).toThrow(/shadowed by a collection.*collection-1/s);
@@ -230,7 +237,7 @@ describe("routesFor", () => {
     expect(() =>
       paths({
         collections: [
-          authoredCollection("collection-1", [authoredEntry("entry-1", undatedEntry)], ["archive"]),
+          authoredCollection("collection-1", [authoredEntry("entry-1", UNDATED_ENTRY_OVERRIDES)], ["archive"]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
@@ -243,10 +250,52 @@ describe("routesFor", () => {
       paths({
         pages: authoredContentDirectory(
           PAGES_DIRECTORY_NAME,
-          [authoredEntry("page-1", undatedEntry), authoredEntry("page-2", undatedEntry)],
+          [authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES), authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES)],
           ["drafts"],
         ),
       }),
     ).toThrow(/no matching entry.*drafts/s);
+  });
+
+  test("includes a published entry dated today", () => {
+    expect(
+      paths({
+        collections: [
+          authoredCollection("collection-1", [authoredEntry("entry-1", { date: TODAY })]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
+        ],
+      }),
+    ).toContain("/collection-1/entry-1");
+  });
+
+  test("accepts a draft entry dated after today", () => {
+    expect(() =>
+      paths({
+        collections: [
+          authoredCollection("collection-1", [draftEntry("entry-1", { date: "2026-07-20" })]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
+        ],
+      }),
+    ).not.toThrow();
+  });
+
+  test("throws for every published page and collection entry dated after today, naming the source path and date of each", () => {
+    expect(() =>
+      paths({
+        pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
+          authoredEntry("page-1", { date: "2026-07-20" }),
+          authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
+        ]),
+        collections: [
+          authoredCollection("collection-1", [authoredEntry("entry-1", { date: "2026-08-01" })]),
+          authoredCollection("collection-2"),
+          authoredCollection("collection-3"),
+        ],
+      }),
+    ).toThrow(
+      `${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/page-1.mdx (2026-07-20), ${CONTENT_DIRECTORY_PATH}/collection-1/entry-1.mdx (2026-08-01)`,
+    );
   });
 });

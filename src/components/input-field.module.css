@@ -4,13 +4,8 @@
 
   & .label {
     user-select: none;
-
-    transform: translateY(-0.5px); /* ChicagoFLF baseline alignment. */
-
     flex: none;
-
     width: 64px;
-
     font: var(--font-chrome);
   }
 }

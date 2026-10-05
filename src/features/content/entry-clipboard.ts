@@ -3,12 +3,13 @@ import { createContext, use } from "react";
 import type { ClipboardCopyStatus } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
 /**
- * The clipboard every heading link and code block in an entry copies through, which the entry owns, so
- * it confirms one copy at a time and announces it from one status region rather than one per control
- * (see `EntryClipboardProvider`). A control identifies itself by an ID unique among the entry's copy
- * controls.
+ * Shared clipboard state for heading links, code blocks, and the entry copy control.
  *
- * Only the copy controls read it, so a copy re-renders them and not the rest of the entry.
+ * Tracks and announces a single copy confirmation at a time through the shared status
+ * region (`EntryClipboardProvider`). Each control supplies an ID unique within the entry.
+ *
+ * Because only copy controls consume this context, copying avoids re-rendering the rest
+ * of the entry.
  */
 export interface EntryClipboard {
   copyStatusOf: (copyControlId: string) => ClipboardCopyStatus | null; // `null` for every control but the one that made the latest copy.

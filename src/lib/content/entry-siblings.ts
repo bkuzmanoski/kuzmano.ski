@@ -1,12 +1,12 @@
-import type { Collection } from "./catalog.ts";
+import type { Collection, Entry } from "./catalog.ts";
 
-/** The routes of the entries either side of one in the collection that holds it, in listing order (newest first). */
+/** Adjacent newer and older entries in a collection ordered newest first. */
 export interface EntrySiblings {
-  previous: string | null;
-  next: string | null;
+  newer: Entry | null;
+  older: Entry | null;
 }
 
-const NO_SIBLINGS: EntrySiblings = { previous: null, next: null };
+const NO_SIBLINGS: EntrySiblings = { newer: null, older: null };
 
 export function entrySiblings(collection: Collection, slug: string): EntrySiblings {
   const entries = collection.list();
@@ -16,10 +16,5 @@ export function entrySiblings(collection: Collection, slug: string): EntrySiblin
     return NO_SIBLINGS;
   }
 
-  const routeAt = (position: number) => {
-    const entry = entries[position];
-    return entry ? collection.routeOf(entry.slug) : null;
-  };
-
-  return { previous: routeAt(index - 1), next: routeAt(index + 1) };
+  return { newer: entries[index - 1] ?? null, older: entries[index + 1] ?? null };
 }

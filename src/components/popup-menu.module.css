@@ -11,7 +11,6 @@
   position: relative;
 
   height: 26px;
-  padding-block: 0 1px; /* Offsets ChicagoFLF's text to appear optically centered. */
   padding-inline: var(--popup-menu-padding-inline-start) 30px;
   border: 1px solid var(--color-border);
 
@@ -28,7 +27,7 @@
 
     position: absolute;
     inset-inline-end: 10px;
-    top: 50%;
+    top: calc(50% + 0.5px); /* Optical alignment. */
     translate: 0 -50%;
 
     width: 0;
@@ -46,6 +45,19 @@
   &:active {
     color: var(--color-pressed-foreground);
     background: var(--color-pressed-background);
+  }
+
+  & .label {
+    display: inline-grid;
+    text-align: start;
+
+    & > * {
+      grid-area: 1 / 1;
+    }
+  }
+
+  & .widthReservingLabel {
+    visibility: hidden;
   }
 }
 
@@ -87,7 +99,6 @@
   @mixin menu-item;
 
   position: relative;
-  padding-block: 0 1px; /* Offsets ChicagoFLF's text to appear optically centered. */
   padding-inline-start: var(--popup-menu-option-padding-inline-start);
 
   &.active {

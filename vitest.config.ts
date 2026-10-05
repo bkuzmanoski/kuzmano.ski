@@ -4,9 +4,9 @@ import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
 import { entryBodyChunksPlugin } from "./build/content/entry-body-chunks.ts";
-import { entryCoverImagesPlugin } from "./build/content/entry-cover-images.ts";
 import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
+import { entryCoverImagesPlugin } from "./build/content/media/entry-cover-images.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
 import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";

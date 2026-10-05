@@ -120,7 +120,6 @@ export function Window({
   onMove,
   onResize,
   onDrag,
-  toolbar,
   children,
 }: {
   contentKey: string; // Used to invalidate scroll position when the content changes.
@@ -140,7 +139,6 @@ export function Window({
   onMove: (x: number, y: number) => void;
   onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which also hides the resize control from its scrollbar.
   onDrag: (drag: WindowDrag | null) => void;
-  toolbar?: ReactNode;
   children: ReactNode;
 }) {
   const inactiveDescriptionId = useId();
@@ -331,7 +329,6 @@ export function Window({
             </>
           )}
         </header>
-        {toolbar}
         <ScrollPane key={contentKey} id={contentId} viewportRef={viewportRef} resizeControl={resizeControl}>
           <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
         </ScrollPane>

@@ -9,11 +9,13 @@ export function ShareButton({
   url,
   title,
   label = "Share",
+  disabled = false,
   className,
 }: {
   url: string;
   title?: string;
   label?: string;
+  disabled?: boolean;
   className?: string;
 }) {
   const [isSharing, setIsSharing] = useState(false);
@@ -35,9 +37,10 @@ export function ShareButton({
   }
 
   return (
-    <Tooltip label={label} className={className}>
+    <Tooltip label={label} suppressed={disabled} className={className}>
       <Button
         variant="icon"
+        disabled={disabled}
         holdPressed={isSharing}
         aria-label={label}
         onClick={() => {

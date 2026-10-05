@@ -110,7 +110,7 @@ function layOutRolesInView() {
     }
 
     if (this.tagName === "LI") {
-      return rectOf(200, 0, 400, 100);
+      return rectOf(200, 0, 400, this === this.parentElement?.lastElementChild ? 80 : 100); // The last role is shorter, so its height differs from every other role's.
     }
 
     return rectOf(0, 0, 100, 1000);
@@ -344,7 +344,7 @@ describe("CareerTimeline", () => {
     fireEvent.click(checkedFilterNamed("First"));
     fireEvent.click(checkedFilterNamed("Second"));
 
-    expect(screen.getByRole("status").textContent).toBe("No roles match the selected disciplines.");
+    expect(screen.getByRole("status").textContent).toBe("Select a discipline to view roles.");
   });
 
   test("lists the roles newest first by default, with `Newest first` chosen in the order menu", () => {
@@ -359,6 +359,32 @@ describe("CareerTimeline", () => {
     chooseOrder("Oldest first");
 
     expect(roleTitles()).toEqual(["Oldest Role", "Middle Role", "Newest Role"]);
+  });
+
+  test("sets the `--career-timeline-last-role-height` custom property of the career timeline to the last role's height", () => {
+    layOutRolesInView();
+
+    const { container } = renderInScrollPane();
+
+    expect(
+      container
+        .querySelector<HTMLElement>(`.${styles.careerTimeline}`)
+        ?.style.getPropertyValue("--career-timeline-last-role-height"),
+    ).toBe("80px");
+  });
+
+  test("removes the `--career-timeline-last-role-height` custom property from the career timeline when every filter is unchecked", () => {
+    layOutRolesInView();
+
+    const { container } = renderInScrollPane();
+    const careerTimeline = container.querySelector<HTMLElement>(`.${styles.careerTimeline}`);
+
+    expect(careerTimeline?.style.getPropertyValue("--career-timeline-last-role-height")).toBe("80px");
+
+    fireEvent.click(checkedFilterNamed("First"));
+    fireEvent.click(checkedFilterNamed("Second"));
+
+    expect(careerTimeline?.style.getPropertyValue("--career-timeline-last-role-height")).toBe("");
   });
 
   test("stops marking the visible-range frame with the `data-visible` attribute when every filter is unchecked", () => {

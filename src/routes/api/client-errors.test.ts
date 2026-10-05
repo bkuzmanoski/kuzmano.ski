@@ -15,7 +15,7 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const URL = `https://example.com${API_ROUTES.clientErrors}`;
+const ENDPOINT_URL = `https://example.com${API_ROUTES.clientErrors}`;
 const VALID_REPORT = {
   kind: "render",
   message: "Cannot read properties of null",
@@ -30,7 +30,7 @@ const { POST } = Route.options.server!.handlers as unknown as {
 };
 
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
-  POST({ request: jsonPostRequest(URL, body, options) });
+  POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
 test("a well-formed report is logged as a client error", async () => {
   const response = await post(VALID_REPORT);

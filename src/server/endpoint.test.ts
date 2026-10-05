@@ -17,21 +17,21 @@ beforeEach(() => {
   isWithinRateLimit.mockResolvedValue(true);
 });
 
-const URL = "https://example.com/api/endpoint";
+const ENDPOINT_URL = "https://example.com/api/endpoint";
 const VALID_SUBMISSION = { field: "value" };
 
 const get = ({
   headers = { "sec-fetch-site": "same-origin" },
   rateLimit = CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING,
 }: { headers?: HeadersInit; rateLimit?: RateLimitBindingName | null } = {}) =>
-  refusalForGet(new Request(URL, { headers }), rateLimit ?? undefined);
+  refusalForGet(new Request(ENDPOINT_URL, { headers }), rateLimit ?? undefined);
 const read = (
   body: unknown,
   {
     rateLimit = SEND_EMAIL_RATELIMIT_BINDING,
     ...options
   }: Parameters<typeof jsonPostRequest>[2] & { rateLimit?: RateLimitBindingName | null } = {},
-) => readSubmission(jsonPostRequest(URL, body, options), rateLimit ?? undefined);
+) => readSubmission(jsonPostRequest(ENDPOINT_URL, body, options), rateLimit ?? undefined);
 const refusalStatus = (result: Awaited<ReturnType<typeof read>>) => (result.ok ? undefined : result.response.status);
 
 test("`refusalForGet` returns `null` for a same-origin GET within the rate limit", async () => {
@@ -67,7 +67,7 @@ test("a well-formed body is parsed into the submitted fields", async () => {
 });
 
 test("a cross-origin request is refused before its body is read or the rate limit is checked", async () => {
-  const request = jsonPostRequest(URL, VALID_SUBMISSION, { origin: "https://elsewhere.example" });
+  const request = jsonPostRequest(ENDPOINT_URL, VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(refusalStatus(await readSubmission(request, SEND_EMAIL_RATELIMIT_BINDING))).toBe(403);
   expect(request.bodyUsed).toBe(false);

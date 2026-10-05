@@ -10,9 +10,9 @@ import { CLIENT_ENVIRONMENT } from "../../environments.ts";
 import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { MEDIA_DIRECTORY_PATH, STYLESHEET_FILE_PATH, fromContent, fromRoot, requestPathOf } from "../../paths.ts";
 import { layoutMetricsFrom } from "../../stylesheet/layout-metrics.ts";
-import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "../entry-cover-images.ts";
 
 import { createImageDerivativeStore, imageDerivativeAuditBetween } from "./derivative-store.ts";
+import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
 import { isContentMedia } from "./formats.ts";
 import { buildMediaIndex, coverImageSizeIn } from "./media-index.ts";
 import { contentMediaProblemReport, renditionSizeProblems } from "./problems.ts";

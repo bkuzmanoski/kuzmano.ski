@@ -90,11 +90,35 @@
   @container content (width < 800px) {
     @mixin-content;
   }
+
+  @media print {
+    @mixin-content;
+  }
 }
 
 @define-mixin content-rail-expanded {
-  @container content (width >= 800px) {
-    @mixin-content;
+  @media not print {
+    @container content (width >= 800px) {
+      @mixin-content;
+    }
+  }
+}
+
+@define-mixin content-rail-anchored {
+  @supports (anchor-scope: all) {
+    @media (scripting: enabled) {
+      @mixin content-rail-expanded {
+        @mixin-content;
+      }
+    }
+  }
+}
+
+@define-mixin entry-masthead-in-rail {
+  @mixin content-rail-anchored {
+    &:where(:has(+ h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"]))) {
+      @mixin-content;
+    }
   }
 }
 

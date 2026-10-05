@@ -4,27 +4,27 @@ import { fakeCollection, fakeCollectionEntries } from "#/test-utils/collection.t
 
 import { entrySiblings } from "./entry-siblings.ts";
 
-const collectionEntries = fakeCollectionEntries("newest", "middle", "oldest");
-const collection = fakeCollection(collectionEntries);
-const routeOf = (slug: string) => collection.routeOf(slug);
+const COLLECTION_ENTRIES = fakeCollectionEntries("newest", "middle", "oldest");
+const COLLECTION = fakeCollection(COLLECTION_ENTRIES);
+const [NEWEST_ENTRY, MIDDLE_ENTRY, OLDEST_ENTRY] = COLLECTION_ENTRIES;
 
-test("the newest entry does not have a previous entry", () => {
-  expect(entrySiblings(collection, "newest")).toEqual({ previous: null, next: routeOf("middle") });
+test("the newest entry has only an older entry", () => {
+  expect(entrySiblings(COLLECTION, "newest")).toEqual({ newer: null, older: MIDDLE_ENTRY });
 });
 
-test("the oldest entry does not have a next entry", () => {
-  expect(entrySiblings(collection, "oldest")).toEqual({ previous: routeOf("middle"), next: null });
+test("the oldest entry has only a newer entry", () => {
+  expect(entrySiblings(COLLECTION, "oldest")).toEqual({ newer: MIDDLE_ENTRY, older: null });
 });
 
-test("an entry in the middle has the entries either side of it in the listing", () => {
-  expect(entrySiblings(collection, "middle")).toEqual({ previous: routeOf("newest"), next: routeOf("oldest") });
+test("an entry in the middle has the entries either side of it in the collection", () => {
+  expect(entrySiblings(COLLECTION, "middle")).toEqual({ newer: NEWEST_ENTRY, older: OLDEST_ENTRY });
 });
 
-test("an entry the listing does not contain has no siblings", () => {
-  expect(entrySiblings(collection, "not-in-the-listing")).toEqual({ previous: null, next: null });
+test("an entry outside the collection has no siblings", () => {
+  expect(entrySiblings(COLLECTION, "outside-the-collection")).toEqual({ newer: null, older: null });
 });
 
 test("the only entry in a collection has no siblings", () => {
-  const single = fakeCollection([collectionEntries[0]!]);
-  expect(entrySiblings(single, "newest")).toEqual({ previous: null, next: null });
+  const single = fakeCollection([COLLECTION_ENTRIES[0]!]);
+  expect(entrySiblings(single, "newest")).toEqual({ newer: null, older: null });
 });

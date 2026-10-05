@@ -1,6 +1,6 @@
 import { fromHtml } from "hast-util-from-html";
 import { defaultSchema, sanitize } from "hast-util-sanitize";
-import { selectAll } from "hast-util-select";
+import { select, selectAll } from "hast-util-select";
 import { toHtml } from "hast-util-to-html";
 import { parseSrcset, stringifySrcset } from "srcset";
 import { CONTINUE, SKIP, visit } from "unist-util-visit";
@@ -37,8 +37,9 @@ const FEED_SCHEMA: Schema = {
 };
 const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 const WRAPPER_TAGS = new Set(["span", "div"]);
-const URL_PROPERTIES = ["src", "poster", "href"];
+const URL_PROPERTIES = ["src", "poster", "href", "cite", "longDesc"];
 const URL_LIST_PROPERTIES = ["srcSet"];
+const MEDIA_FALLBACK_TEXT: Record<string, string> = { video: "Watch the video", audio: "Listen to the audio" };
 
 const paragraph = (value: string): Element => ({
   type: "element",
@@ -122,6 +123,32 @@ function moveFootnotesToEndnotes(article: Element) {
       { type: "element", tagName: "ol", properties: {}, children: endnotes },
     );
   }
+}
+
+function prepareMediaForReaders(article: Element) {
+  visit(article, "element", (element) => {
+    const fallbackText = MEDIA_FALLBACK_TEXT[element.tagName];
+
+    if (fallbackText === undefined) {
+      return CONTINUE;
+    }
+
+    const src = element.properties.src ?? select("source[src]", element)?.properties.src;
+    const { ariaLabel } = element.properties;
+
+    element.properties.controls = true;
+
+    if (typeof src === "string") {
+      element.children.push({
+        type: "element",
+        tagName: "a",
+        properties: { href: src },
+        children: [{ type: "text", value: typeof ariaLabel === "string" ? ariaLabel : fallbackText }],
+      });
+    }
+
+    return SKIP; // The element's children are its sources, tracks, and the link added here.
+  });
 }
 
 // Sanitizing removes the attributes from the wrappers used for syntax highlighting
@@ -233,6 +260,7 @@ export function articleContentOf(html: string, url: string): string {
   replaceUIMarkup(article);
   removeLabelOnlyAsides(article);
   moveFootnotesToEndnotes(article);
+  prepareMediaForReaders(article);
   resolveRelativeUrls(article, url);
 
   const sanitizedArticle = sanitize(article, FEED_SCHEMA) as Element;

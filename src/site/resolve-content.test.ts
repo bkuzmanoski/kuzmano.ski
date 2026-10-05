@@ -7,7 +7,7 @@ import { resolveContent } from "./resolve-content.ts";
 
 vi.mock("./catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
 
-const collectionEntry = collectionEntries[0]!;
+const COLLECTION_ENTRY = collectionEntries[0]!;
 
 test("a segment corresponding to a page resolves to that page, with its frontmatter", () => {
   expect(resolveContent("page")).toMatchObject({
@@ -18,11 +18,11 @@ test("a segment corresponding to a page resolves to that page, with its frontmat
 });
 
 test("a slug belonging to a collection resolves to a collection entry, with its frontmatter", () => {
-  expect(resolveContent("collection", collectionEntry.slug)).toMatchObject({
+  expect(resolveContent("collection", COLLECTION_ENTRY.slug)).toMatchObject({
     kind: "collectionEntry",
     collection,
-    slug: collectionEntry.slug,
-    frontmatter: { title: collectionEntry.title },
+    slug: COLLECTION_ENTRY.slug,
+    frontmatter: { title: COLLECTION_ENTRY.title },
   });
 });
 

@@ -71,7 +71,7 @@
   }
 }
 
-/* Wraps the title bar, toolbar, and pane only so an inactive window can make them inert. */
+/* Wraps the title bar and pane only so an inactive window can make them inert. */
 .contents {
   display: contents;
 }

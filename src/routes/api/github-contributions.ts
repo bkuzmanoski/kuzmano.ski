@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { GITHUB_LOGIN } from "#/config/site.ts";
+import { GITHUB_USERNAME } from "#/config/site.ts";
 import { edgeCached } from "#/server/edge-cache.ts";
 import { refusalForGet } from "#/server/endpoint.ts";
 import { fetchGitHubContributionCalendar } from "#/server/github.ts";
@@ -18,8 +18,7 @@ export const Route = createFileRoute("/api/github-contributions")({
         }
 
         return edgeCached(request, EDGE_CACHE_LIFETIMES, async () => {
-          const calendar = await fetchGitHubContributionCalendar(GITHUB_LOGIN);
-
+          const calendar = await fetchGitHubContributionCalendar(GITHUB_USERNAME);
           return calendar === null ? new Response(null, { status: 502 }) : Response.json(calendar);
         });
       },

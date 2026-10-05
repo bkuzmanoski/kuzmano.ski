@@ -27,6 +27,7 @@ import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import { careerTimelinePlacementAttributesOf } from "./career-timeline-layout.ts";
 import styles from "./career-timeline.module.css";
+import { useCareerTimelineLastRoleHeight } from "./use-career-timeline-last-role-height.ts";
 import { useCareerTimelineMinimap } from "./use-career-timeline-minimap.ts";
 
 import type { ReactNode } from "react";
@@ -46,8 +47,8 @@ const careerTimelinePlacementVariables = (
   return { "--career-timeline-placement-offset": offset, "--career-timeline-placement-size": size };
 };
 
-const tickVariables = (year: number, range: MonthSpan, direction: CareerTimelineDirection): StyleWithVars => ({
-  "--career-timeline-tick-offset": monthOffsetOf(firstMonthIndexOf(year), range, direction),
+const tickVariables = (monthIndex: number, range: MonthSpan, direction: CareerTimelineDirection): StyleWithVars => ({
+  "--career-timeline-tick-offset": monthOffsetOf(monthIndex, range, direction),
 });
 
 const labelFrom = (parts: ReadonlyArray<ReactNode>) =>
@@ -58,12 +59,18 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
   const [direction, setDirection] = useState<CareerTimelineDirection>(DEFAULT_CAREER_TIMELINE_DIRECTION);
   const monthFormat = useDateFormat(EXPERIENCE_MONTH_FORMAT);
   const chartColumnRef = useRef<HTMLDivElement>(null);
+  const careerTimelineRef = useRef<HTMLElement>(null);
   const lanesRef = useRef<HTMLDivElement>(null);
   const visibleRangeFrameRef = useRef<HTMLSpanElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
   const chartDragHandlers = useCareerTimelineMinimap(
     { chartColumn: chartColumnRef, lanes: lanesRef, visibleRangeFrame: visibleRangeFrameRef, list: listRef },
+    { direction, hiddenDisciplineIds },
+  );
+
+  useCareerTimelineLastRoleHeight(
+    { careerTimeline: careerTimelineRef, list: listRef },
     { direction, hiddenDisciplineIds },
   );
 
@@ -95,7 +102,13 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
     });
 
   return (
-    <section className={styles.careerTimeline} data-content-default-styles="off" data-content-span="rail">
+    <section
+      ref={careerTimelineRef}
+      className={styles.careerTimeline}
+      data-content-default-styles="off"
+      data-content-span="rail"
+      data-content-space="relaxed"
+    >
       <div className={styles.controls}>
         <ul className={styles.filters} aria-label="Disciplines">
           {disciplines.map(({ id, name }) => (
@@ -107,7 +120,6 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
           ))}
         </ul>
         <PopupMenu
-          className={styles.directionMenu}
           value={direction}
           options={CAREER_TIMELINE_DIRECTION_OPTIONS}
           aria-label="Order"
@@ -118,10 +130,13 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
         <div aria-hidden="true" className={styles.chart} {...chartDragHandlers}>
           <div className={styles.axis}>
             {years.map((year) => (
-              <span key={year} className={styles.tick} style={tickVariables(year, range, direction)}>
+              <span key={year} className={styles.tick} style={tickVariables(firstMonthIndexOf(year), range, direction)}>
                 {year}
               </span>
             ))}
+            <span className={styles.tick} style={tickVariables(range.end, range, direction)}>
+              Now
+            </span>
           </div>
           <div ref={lanesRef} className={styles.lanes}>
             {lanes.map(({ discipline, spans }) => (
@@ -144,8 +159,8 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
           </div>
         </div>
       </div>
-      <p className={cx(styles.empty, hasVisibleRoles && styles.hidden)} role="status">
-        {hasVisibleRoles ? null : "No roles match the selected disciplines."}
+      <p className={cx(styles.emptyState, hasVisibleRoles && styles.hidden)} role="status">
+        {hasVisibleRoles ? null : "Select a discipline to view roles."}
       </p>
       {hasVisibleRoles && (
         <ol ref={listRef} className={styles.roles}>
@@ -157,8 +172,9 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                 className={styles.role}
                 style={accentColorVariable("--career-timeline-discipline-accent-color", shownDiscipline.accentColor)}
                 {...careerTimelinePlacementAttributesOf(careerTimelinePlacementOf(span, range, direction))}
+                data-content-default-styles="on"
               >
-                <h2 className={styles.roleTitle}>{role.title}</h2>
+                <h3>{role.title}</h3>
                 <div className={styles.roleHeader}>
                   <p className={styles.roleDisciplines}>{roleDisciplinesLabelOf(careerTimelineRole)}</p>
                   <p className={styles.roleDates}>{labelFrom(roleDatesLabelPartsOf(role, monthTimeElementOf))}</p>
@@ -172,11 +188,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                     ))}
                   </ul>
                 )}
-                {role.link && (
-                  <p data-content-default-styles="on">
-                    <ContentLink href={role.link.href}>{role.link.label}</ContentLink>
-                  </p>
-                )}
+                {role.link && <ContentLink href={role.link.href}>{role.link.label}</ContentLink>}
               </li>
             );
           })}

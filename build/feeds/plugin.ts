@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
 import { FEED_CONTENT_TYPE } from "#/config/media-types.ts";
-import { CONTENT_SIGNAL, FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_NAME } from "#/config/site.ts";
+import { AUTHOR_NAME, CONTENT_SIGNAL, FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_TIME_ZONE } from "#/config/site.ts";
 import { parseFrontmatter } from "#/lib/content/frontmatter.ts";
 import { FEEDS } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
@@ -24,23 +24,18 @@ import type { Plugin } from "vite";
 export type DocumentSource = (route: string) => Promise<string | undefined>;
 export type ArticleContentCache = Map<string, Promise<string>>;
 
+type CaptureDocument = (result: { page: { path: string }; html: string }) => void;
+
 const FEED_HEADERS_RULE: HeadersRule = {
-  description: "Atom is served from a .xml path, which would otherwise be typed as generic XML.",
+  description: "Feeds are typed as Atom rather than as the generic XML of their .xml paths.",
   pathPatterns: FEEDS.map(({ path }) => path),
-  headers: { "Content-Type": FEED_CONTENT_TYPE, "Content-Signal": CONTENT_SIGNAL },
+  headers: {
+    "Content-Type": FEED_CONTENT_TYPE,
+    "Cache-Control": "public, max-age=3600",
+    "Access-Control-Allow-Origin": "*",
+    "Content-Signal": CONTENT_SIGNAL,
+  },
 };
-
-const prerenderedDocuments = new Map<string, string>(); // Prerendered document HTML, keyed by route path.
-
-/**
- * Records a prerendered document so its body can be included in a feed.
- *
- * Called from the prerenderer's `onSuccess` in `/vite.config.ts`, which runs before this plugin's
- * `buildApp` handler reads what it collected.
- */
-export function captureDocument({ page, html }: { page: { path: string }; html: string }) {
-  prerenderedDocuments.set(page.path, html);
-}
 
 const articleContentFor = async (route: string, url: string, documentOf: DocumentSource) => {
   const html = await documentOf(route);
@@ -101,19 +96,36 @@ export async function feedXmlFor(
   return atomFeed({
     title: feed.title,
     subtitle: feed.description,
-    author: SITE_NAME,
+    author: AUTHOR_NAME,
+    authorUrl: canonicalUrl("/"),
     icon: canonicalUrl(FEED_ICON),
     logo: canonicalUrl(FEED_LOGO),
     url: canonicalUrl(feed.route),
     selfUrl: canonicalUrl(feed.path),
     updated: updatedDate,
+    timeZone: SITE_TIME_ZONE,
     entries,
   });
 }
 
-/** Emits an Atom feed for the site and for each collection from prerendered content. */
-export function feedsPlugin({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): Plugin {
-  return {
+/**
+ * Creates the plugin that emits an Atom feed for the site and for each collection from prerendered
+ * content, and the `captureDocument` callback that records each prerendered document for it.
+ *
+ * `captureDocument` is called from the prerenderer's `onSuccess`, which runs before the plugin's
+ * `buildApp` handler reads what it recorded.
+ */
+export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): {
+  plugin: Plugin;
+  captureDocument: CaptureDocument;
+} {
+  const prerenderedDocuments = new Map<string, string>(); // Prerendered document HTML, keyed by route path.
+
+  const captureDocument: CaptureDocument = ({ page, html }) => {
+    prerenderedDocuments.set(page.path, html);
+  };
+
+  const plugin: Plugin = {
     name: "kuzmano.ski:feeds",
     enforce: "post",
     buildStart() {
@@ -182,4 +194,6 @@ export function feedsPlugin({ addHeadersRules }: { addHeadersRules: AddHeadersRu
       });
     },
   };
+
+  return { plugin, captureDocument };
 }

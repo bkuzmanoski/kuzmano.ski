@@ -14,7 +14,7 @@ vi.mock("./env.ts", () => ({
 }));
 
 const SENDER: EmailAddress = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
-const DESTINATION = "inbox@example.com";
+const DESTINATION_EMAIL_ADDRESS = "inbox@example.com";
 const MESSAGE = {
   replyTo: "sender@example.com",
   subject: "Message from sender@example.com",
@@ -31,7 +31,7 @@ beforeEach(() => {
   send.mockReset();
   send.mockResolvedValue({ messageId: "1" });
   env.fails = false;
-  env.current = { [SEND_EMAIL_BINDING]: { send }, [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION };
+  env.current = { [SEND_EMAIL_BINDING]: { send }, [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION_EMAIL_ADDRESS };
   vi.spyOn(console, "error").mockReturnValue();
 });
 
@@ -43,7 +43,7 @@ test("a message is addressed to the configured destination email address, with i
   await expect(deliverMessage(MESSAGE)).resolves.toBe("sent");
   expect(send).toHaveBeenCalledWith({
     from: SENDER,
-    to: DESTINATION,
+    to: DESTINATION_EMAIL_ADDRESS,
     replyTo: MESSAGE.replyTo,
     subject: MESSAGE.subject,
     text: MESSAGE.text,
@@ -52,7 +52,7 @@ test("a message is addressed to the configured destination email address, with i
 
 describe("expected bindings", () => {
   test.each([
-    ["send email", { [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION }, SEND_EMAIL_BINDING],
+    ["send email", { [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION_EMAIL_ADDRESS }, SEND_EMAIL_BINDING],
     ["destination email address", { [SEND_EMAIL_BINDING]: { send } }, CONTACT_EMAIL_ADDRESS_BINDING],
   ])("a missing %s binding is reported without sending a message", async (_label, partial, binding) => {
     env.current = partial;
@@ -86,7 +86,7 @@ test("a rejection logs the sender, recipient, and code", async () => {
   await deliverMessage(MESSAGE);
 
   expect(console.error).toHaveBeenCalledWith(
-    expect.objectContaining({ from: SENDER.email, to: DESTINATION, code: "E_RECIPIENT_NOT_ALLOWED" }),
+    expect.objectContaining({ from: SENDER.email, to: DESTINATION_EMAIL_ADDRESS, code: "E_RECIPIENT_NOT_ALLOWED" }),
   );
 });
 
