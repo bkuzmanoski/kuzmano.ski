@@ -1,13 +1,22 @@
 .graph {
   --contribution-graph-reveal-start: 0%; /* Set from JS. */
   --contribution-graph-reveal-end-max: 0%; /* Set from JS. */
-  --contribution-graph-cell: 13px;
-  --contribution-graph-gap: 3px;
+  --contribution-graph-cell: calc(13 * var(--dither-dot));
+  --contribution-graph-gap: calc(3 * var(--dither-dot));
+  --contribution-graph-step: calc(
+    var(--contribution-graph-cell) + var(--contribution-graph-gap)
+  ); /* Includes the gap after the day cell. */
+
+  @mixin dither-dot;
 }
 
 .scrollContainerFrame {
   position: relative;
-  border: 1px solid var(--color-border);
+
+  @supports (width: round(down, 1px, 1px)) {
+    /* A width of 4n + 1 dots starts and ends the field on a column of dots. */
+    inline-size: calc(round(down, 100% - var(--dither-dot), 4 * var(--dither-dot)) + var(--dither-dot));
+  }
 
   &:has(> :focus-visible) {
     @mixin focus-stroke -2px;
@@ -15,13 +24,12 @@
 }
 
 .scrollContainer {
+  --contribution-graph-padding-block-end: calc(var(--contribution-graph-step) - 8 * var(--dither-dot));
+
   direction: rtl;
   overflow-x: auto;
-
-  padding-block: var(--layout-gutter) calc(var(--layout-gutter) - 6px);
-  padding-inline: var(--layout-gutter);
-
-  background: var(--color-syntax-background);
+  padding: var(--contribution-graph-step);
+  padding-block-end: var(--contribution-graph-padding-block-end);
 
   &:focus-visible {
     outline: none;
@@ -29,20 +37,43 @@
 }
 
 .track {
+  isolation: isolate;
+  position: relative;
+
   direction: ltr;
+
   inline-size: max-content;
+  min-inline-size: 100%;
   margin-inline-end: auto;
+
+  &::before {
+    @mixin dither-06;
+
+    content: "";
+
+    position: absolute;
+    z-index: -1;
+    inset: calc(-1 * var(--contribution-graph-step));
+
+    /* Ends at the padding box, which a field that extended past it would scroll vertically. */
+    inset-block-end: calc(-1 * var(--contribution-graph-padding-block-end));
+
+    color: var(--color-background-dither);
+
+    @media (forced-colors: active) {
+      color: GrayText;
+      forced-color-adjust: none;
+    }
+  }
 }
 
 .plot {
   --contribution-graph-week-count: 0; /* Set from JS. */
 
-  display: grid;
-  inline-size: max-content;
-
-  & > * {
-    grid-area: 1 / 1;
-  }
+  inline-size: calc(
+    var(--contribution-graph-week-count) * var(--contribution-graph-step) - var(--contribution-graph-gap)
+  );
+  block-size: calc(7 * var(--contribution-graph-step) - var(--contribution-graph-gap));
 }
 
 .weeks {
@@ -60,12 +91,6 @@
 .day {
   width: var(--contribution-graph-cell);
   height: var(--contribution-graph-cell);
-
-  &[data-level="0"] {
-    @mixin dither-06;
-
-    color: var(--color-background-dither);
-  }
 
   &[data-level="1"] {
     @mixin dither-25;
@@ -92,10 +117,6 @@
   @media (forced-colors: active) {
     forced-color-adjust: none;
 
-    &[data-level="0"] {
-      color: GrayText;
-    }
-
     &[data-level="1"],
     &[data-level="2"],
     &[data-level="3"] {
@@ -117,7 +138,7 @@
   grid-template-rows: 1lh;
   gap: var(--contribution-graph-gap);
 
-  padding-block-start: 12px;
+  padding-block-start: calc(12 * var(--dither-dot));
 }
 
 .month {
@@ -132,8 +153,10 @@
   }
 }
 
-.graph[data-reveal-timeline] .placeholder {
-  clip-path: inset(0 0 0 100%);
+.monthLabel {
+  block-size: calc(15 * var(--dither-dot));
+  margin-inline-end: var(--dither-dot);
+  background: var(--color-background);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -142,19 +165,11 @@
   }
 
   .graph[data-reveal-timeline="document"] {
-    & .grid,
-    & .placeholder {
+    & .grid {
+      animation-name: reveal-weeks;
       animation-duration: calc(var(--contribution-graph-week-count) * var(--contribution-graph-week-reveal-duration));
       animation-timing-function: steps(var(--contribution-graph-week-count), end);
       animation-fill-mode: both;
-    }
-
-    & .grid {
-      animation-name: reveal-weeks;
-    }
-
-    & .placeholder {
-      animation-name: clear-weeks;
     }
   }
 }
@@ -166,21 +181,13 @@
     }
 
     .graph[data-reveal-timeline="view"] {
-      & .grid,
-      & .placeholder {
+      & .grid {
+        animation-name: reveal-weeks;
         animation-timing-function: steps(var(--contribution-graph-week-count), end);
         animation-fill-mode: both;
         animation-timeline: --contribution-graph;
         animation-range: entry var(--contribution-graph-reveal-start) cover
           min(45%, var(--contribution-graph-reveal-end-max));
-      }
-
-      & .grid {
-        animation-name: reveal-weeks;
-      }
-
-      & .placeholder {
-        animation-name: clear-weeks;
       }
     }
   }
@@ -193,15 +200,5 @@
 
   to {
     clip-path: inset(0);
-  }
-}
-
-@keyframes clear-weeks {
-  from {
-    clip-path: inset(0);
-  }
-
-  to {
-    clip-path: inset(0 0 0 100%);
   }
 }

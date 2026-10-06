@@ -88,11 +88,8 @@ const contributionCalendar = (overrides: Partial<ContributionCalendar> = {}): Co
 const cellsIn = (container: HTMLElement) => [
   ...container.querySelectorAll<HTMLElement>(`.${styles.grid} [data-level]`),
 ];
-const placeholderCellsIn = (container: HTMLElement) => [
-  ...container.querySelectorAll<HTMLElement>(`.${styles.placeholder} [data-level]`),
-];
-const placeholderWeeksIn = (container: HTMLElement) =>
-  container.querySelectorAll(`.${styles.placeholder} .${styles.week}`);
+const plotWeekCountIn = (container: HTMLElement) =>
+  container.querySelector<HTMLElement>(`.${styles.plot}`)?.style.getPropertyValue("--contribution-graph-week-count");
 
 function placeFigure(topPx: number) {
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
@@ -126,14 +123,12 @@ function layOutScrollPane({ scrollTop, scrollHeight }: { scrollTop: number; scro
 }
 
 describe("ContributionGraph", () => {
-  test("renders a placeholder grid of 53 weeks of 7 days, every day at level 0, while the calendar is being read", () => {
+  test("sizes the plot to 53 weeks, with no days, while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     const { container } = render(<ContributionGraph />);
-    const placeholderLevels = placeholderCellsIn(container).map((cell) => cell.getAttribute("data-level"));
 
-    expect(placeholderWeeksIn(container)).toHaveLength(53);
-    expect(placeholderLevels).toEqual(Array.from({ length: 53 * 7 }, () => "0"));
+    expect(plotWeekCountIn(container)).toBe("53");
     expect(cellsIn(container)).toHaveLength(0);
   });
 
@@ -146,7 +141,7 @@ describe("ContributionGraph", () => {
     expect(screen.getByRole("link").closest("figcaption")).toBeTruthy();
   });
 
-  test("does not expose the placeholder grid as an image while the calendar is being read", () => {
+  test("does not expose the plot as an image while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
     render(<ContributionGraph />);
@@ -172,12 +167,12 @@ describe("ContributionGraph", () => {
     expect(cellsIn(container)).toHaveLength(WEEKS.flat().length);
   });
 
-  test("renders the placeholder grid with the calendar's week count once the calendar is read", () => {
+  test("sizes the plot to the calendar's week count once the calendar is read", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
     const { container } = render(<ContributionGraph />);
 
-    expect(placeholderWeeksIn(container)).toHaveLength(WEEKS.length);
+    expect(plotWeekCountIn(container)).toBe(String(WEEKS.length));
   });
 
   test("places each day in the grid row of its weekday, counting from Sunday", () => {
@@ -479,13 +474,13 @@ describe("contribution-graph.module.css", () => {
 
     return levels;
   };
-  const everyLevel = Array.from({ length: CONTRIBUTION_LEVEL_COUNT }, (_, level) => level);
+  const everyLevelAbove0 = Array.from({ length: CONTRIBUTION_LEVEL_COUNT - 1 }, (_, index) => index + 1);
 
-  test("names each contribution level once in the rules outside `forced-colors` queries", () => {
-    expect(levelsInRules(false)).toEqual(everyLevel);
+  test("names each contribution level above 0 once in the rules outside `forced-colors` queries, leaving level 0 blank", () => {
+    expect(levelsInRules(false)).toEqual(everyLevelAbove0);
   });
 
-  test("names each contribution level once in the rules inside `forced-colors` queries", () => {
-    expect(levelsInRules(true)).toEqual(everyLevel);
+  test("names each contribution level above 0 once in the rules inside `forced-colors` queries, leaving level 0 blank", () => {
+    expect(levelsInRules(true)).toEqual(everyLevelAbove0);
   });
 });

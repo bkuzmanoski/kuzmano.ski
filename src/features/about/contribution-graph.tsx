@@ -16,8 +16,7 @@ import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import styles from "./contribution-graph.module.css";
 
-const PLACEHOLDER_WEEK_COUNT = 53; // The number of weeks GitHub's calendar spans in most years, rendered by the placeholder grid.
-const DAYS_PER_WEEK = 7;
+const PENDING_CALENDAR_WEEK_COUNT = 53; // The number of weeks GitHub's calendar spans in most years, which sizes the graph while the calendar is being read.
 const MONTH_FORMAT: DateFormat = {
   locale: SITE_LOCALE,
   options: { month: "short", timeZone: "UTC" },
@@ -108,7 +107,7 @@ export function ContributionGraph() {
     );
   }
 
-  const weekCount = contributionCalendar?.weeks.length ?? PLACEHOLDER_WEEK_COUNT;
+  const weekCount = contributionCalendar?.weeks.length ?? PENDING_CALENDAR_WEEK_COUNT;
   const graphStyle: StyleWithVars = { "--contribution-graph-reveal-start": `${REVEAL_START_VISIBLE_FRACTION * 100}%` };
   const plotStyle: StyleWithVars = { "--contribution-graph-week-count": weekCount };
   const revealTimeline = contributionCalendar && (isFigureInView ? "document" : "view");
@@ -129,18 +128,6 @@ export function ContributionGraph() {
         >
           <div className={styles.track}>
             <div className={styles.plot} style={plotStyle}>
-              <div aria-hidden="true" className={styles.placeholder}>
-                <div className={styles.weeks}>
-                  {/* Match the calendar's week count so both animate in sync. */}
-                  {Array.from({ length: weekCount }, (_week, weekIndex) => (
-                    <div key={weekIndex} className={styles.week}>
-                      {Array.from({ length: DAYS_PER_WEEK }, (_day, weekday) => (
-                        <span key={weekday} className={styles.day} data-level={0} />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
               {contributionCalendar && (
                 <div aria-hidden="true" className={styles.grid}>
                   <div className={styles.weeks}>
@@ -167,7 +154,7 @@ export function ContributionGraph() {
                   className={styles.month}
                   style={{ gridColumn: `${weekIndex + 1} / ${weekCount + 1}` }}
                 >
-                  {label}
+                  <span className={styles.monthLabel}>{label}</span>
                 </span>
               ))}
             </div>
