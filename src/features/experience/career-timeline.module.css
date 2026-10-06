@@ -220,7 +220,7 @@
 }
 
 .roleOrganization {
-  font: var(--font-caption);
+  font: var(--font-body-small);
   color: var(--color-foreground-secondary);
 }
 

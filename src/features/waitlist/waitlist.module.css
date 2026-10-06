@@ -25,6 +25,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    font: var(--font-body-small);
     color: var(--color-foreground-secondary);
   }
 
