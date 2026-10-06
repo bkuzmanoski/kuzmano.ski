@@ -143,17 +143,21 @@ export function playScrollSound(element: Element) {
   playScrollDetentSound(gesture.speed);
 }
 
-// Plays a scroll sound unless the element's height changed since its previous scroll.
-//
-// A height change identifies a scroll caused by layout rather than user input. Such scrolls
-// are recorded without a sound. The caller supplies the height because the relevant
-// measurement differs by context.
-function playScrollSoundUnlessResized(element: Element, heights: WeakMap<Element, number>, height: number) {
+// Records `height` and reports whether it differs from the element's previous height in `heights`.
+function recordHeight(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
 
   heights.set(element, height);
 
-  if (previousHeight !== undefined && previousHeight !== height) {
+  return previousHeight !== undefined && previousHeight !== height;
+}
+
+// Plays a scroll sound unless the caller found that the element's size changed since its previous scroll.
+//
+// A size change identifies a scroll caused by layout rather than user input. Such scrolls are recorded
+// without a sound. The caller supplies the result because the relevant measurements differ by context.
+function playScrollSoundUnlessResized(element: Element, isResized: boolean) {
+  if (isResized) {
     recordScrollAt(element);
     return;
   }
@@ -162,14 +166,17 @@ function playScrollSoundUnlessResized(element: Element, heights: WeakMap<Element
 }
 
 /**
- * Plays a sound for user scrolling in a viewport that can also be resized.
+ * Plays a sound for user scrolling in a viewport with resizable dimensions and content.
  *
- * Resizing a viewport can change its scroll position, particularly when it becomes shorter.
- * The resulting scroll event occurs after the resize, with a different `clientHeight`, allowing
- * it to be identified as layout-driven and recorded without a sound.
+ * Viewport resizing, content changes, scroll anchoring, and clamping can all move the viewport
+ * without user input. When a scroll event follows a change to `clientHeight` or `scrollHeight`, it
+ * is treated as layout-driven and recorded without playing a sound.
  */
 export function playPaneScrollSound(element: Element) {
-  playScrollSoundUnlessResized(element, viewportHeights, element.clientHeight);
+  const isViewportResized = recordHeight(element, viewportHeights, element.clientHeight);
+  const isContentResized = recordHeight(element, contentHeights, element.scrollHeight);
+
+  playScrollSoundUnlessResized(element, isViewportResized || isContentResized);
 }
 
 /**
@@ -180,5 +187,5 @@ export function playPaneScrollSound(element: Element) {
  * it to be identified as layout-driven and recorded without a sound.
  */
 export function playInputScrollSound(element: Element) {
-  playScrollSoundUnlessResized(element, contentHeights, element.scrollHeight);
+  playScrollSoundUnlessResized(element, recordHeight(element, contentHeights, element.scrollHeight));
 }

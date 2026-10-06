@@ -357,7 +357,7 @@ describe("playScrollStepSound", () => {
 });
 
 describe("playPaneScrollSound", () => {
-  test("plays a detent when the viewport height has not changed", () => {
+  test("plays a detent when the viewport height and the content height are unchanged", () => {
     const element = fakeScrollViewport();
 
     playPaneScrollSound(element);
@@ -368,7 +368,7 @@ describe("playPaneScrollSound", () => {
     expect(detents()).toBe(1);
   });
 
-  test("records the scroll a resize causes without playing a detent", () => {
+  test("records the scroll a change in viewport height causes without playing a detent", () => {
     const element = fakeScrollViewport();
 
     playPaneScrollSound(element);
@@ -380,11 +380,38 @@ describe("playPaneScrollSound", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays a detent for the scroll after the one a resize causes", () => {
+  test("plays a detent for the scroll after the one a change in viewport height causes", () => {
     const element = fakeScrollViewport();
 
     playPaneScrollSound(element);
     element.clientHeight += 40;
+    element.scrollTop = 40;
+    playPaneScrollSound(element);
+    now += 16;
+    element.scrollTop = 40 + DETENT_PX;
+    playPaneScrollSound(element);
+
+    expect(detents()).toBe(1);
+  });
+
+  test("records the scroll a change in content height causes without playing a detent", () => {
+    const element = fakeScrollViewport();
+
+    playPaneScrollSound(element);
+    now += 16;
+    element.scrollHeight += 40; // An element returned to the flow, e.g. a video exiting full screen.
+    element.scrollTop = 40;
+    playPaneScrollSound(element);
+
+    expect(detents()).toBe(0);
+  });
+
+  test("plays a detent for the scroll after one that changes both the viewport height and the content height", () => {
+    const element = fakeScrollViewport();
+
+    playPaneScrollSound(element);
+    element.clientHeight += 40;
+    element.scrollHeight += 40;
     element.scrollTop = 40;
     playPaneScrollSound(element);
     now += 16;
