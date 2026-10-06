@@ -17,8 +17,11 @@
 .scrollContainer {
   direction: rtl;
   overflow-x: auto;
-  padding-block: var(--layout-gutter) calc(var(--layout-gutter) - 4px);
+
+  padding-block: var(--layout-gutter) calc(var(--layout-gutter) - 6px);
   padding-inline: var(--layout-gutter);
+
+  background: var(--color-syntax-background);
 
   &:focus-visible {
     outline: none;
@@ -114,7 +117,7 @@
   grid-template-rows: 1lh;
   gap: var(--contribution-graph-gap);
 
-  padding-block-start: 8px;
+  padding-block-start: 12px;
 }
 
 .month {

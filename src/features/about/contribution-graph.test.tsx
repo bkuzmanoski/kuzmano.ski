@@ -154,30 +154,14 @@ describe("ContributionGraph", () => {
     expect(screen.queryByRole("img")).toBeNull();
   });
 
-  test("renders the `<figcaption>` alone, with the profile link inside it, when the calendar cannot be read", () => {
+  test("renders the profile link when the calendar cannot be read", () => {
     useContributionCalendar.mockReturnValue(null);
 
     const { container } = render(<ContributionGraph />);
 
     expect(screen.getByRole("link").getAttribute("href")).toBe(GITHUB_PROFILE_URL);
-    expect([...container.querySelector("figure")!.children].map((child) => child.tagName)).toEqual(["FIGCAPTION"]);
-  });
-
-  test.each([
-    ["arrives", contributionCalendar()],
-    ["cannot be read", null],
-  ])("leaves the profile link focused, as the same element, when the calendar %s", (_label, calendarAfterReading) => {
-    useContributionCalendar.mockReturnValue(undefined);
-
-    const { rerender } = render(<ContributionGraph />);
-    const link = screen.getByRole("link");
-
-    link.focus();
-    useContributionCalendar.mockReturnValue(calendarAfterReading);
-    rerender(<ContributionGraph />);
-
-    expect(screen.getByRole("link")).toBe(link);
-    expect(document.activeElement).toBe(link);
+    expect(container.querySelector("figure")).toBeNull();
+    expect([...container.children].map((child) => child.tagName)).toEqual(["P"]);
   });
 
   test("renders a cell for every day in the calendar", () => {

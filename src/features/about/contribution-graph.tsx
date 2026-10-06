@@ -100,6 +100,14 @@ export function ContributionGraph() {
     return () => resizeObserver.disconnect();
   }, [prefersReducedMotion]);
 
+  if (contributionCalendar === null) {
+    return (
+      <p>
+        <ContentLink href={GITHUB_PROFILE_URL}>{GITHUB_PROFILE_LINK_TEXT}</ContentLink>
+      </p>
+    );
+  }
+
   const weekCount = contributionCalendar?.weeks.length ?? PLACEHOLDER_WEEK_COUNT;
   const graphStyle: StyleWithVars = { "--contribution-graph-reveal-start": `${REVEAL_START_VISIBLE_FRACTION * 100}%` };
   const plotStyle: StyleWithVars = { "--contribution-graph-week-count": weekCount };
@@ -109,65 +117,63 @@ export function ContributionGraph() {
 
   return (
     <figure ref={figureRef} className={styles.graph} style={graphStyle} data-reveal-timeline={revealTimeline}>
-      {contributionCalendar !== null && (
-        <div className={styles.scrollContainerFrame}>
-          {/* A keyboard scrolls the year only through a focusable scroll container, which needs a role and a name. */}
-          <div
-            ref={scrollContainerRef}
-            className={styles.scrollContainer}
-            tabIndex={contributionCalendar && isOverflowing ? 0 : undefined}
-            role={contributionCalendar ? "img" : undefined}
-            aria-label={contributionCalendar ? "Contributions by day" : undefined}
-            aria-describedby={contributionCalendar ? captionId : undefined}
-          >
-            <div className={styles.track}>
-              <div className={styles.plot} style={plotStyle}>
-                <div aria-hidden="true" className={styles.placeholder}>
+      <div className={styles.scrollContainerFrame}>
+        {/* A keyboard scrolls the year only through a focusable scroll container, which needs a role and a name. */}
+        <div
+          ref={scrollContainerRef}
+          className={styles.scrollContainer}
+          tabIndex={contributionCalendar && isOverflowing ? 0 : undefined}
+          role={contributionCalendar ? "img" : undefined}
+          aria-label={contributionCalendar ? "Contributions by day" : undefined}
+          aria-describedby={contributionCalendar ? captionId : undefined}
+        >
+          <div className={styles.track}>
+            <div className={styles.plot} style={plotStyle}>
+              <div aria-hidden="true" className={styles.placeholder}>
+                <div className={styles.weeks}>
+                  {/* Match the calendar's week count so both animate in sync. */}
+                  {Array.from({ length: weekCount }, (_week, weekIndex) => (
+                    <div key={weekIndex} className={styles.week}>
+                      {Array.from({ length: DAYS_PER_WEEK }, (_day, weekday) => (
+                        <span key={weekday} className={styles.day} data-level={0} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {contributionCalendar && (
+                <div aria-hidden="true" className={styles.grid}>
                   <div className={styles.weeks}>
-                    {/* Match the calendar's week count so both animate in sync. */}
-                    {Array.from({ length: weekCount }, (_week, weekIndex) => (
+                    {contributionCalendar.weeks.map((week, weekIndex) => (
                       <div key={weekIndex} className={styles.week}>
-                        {Array.from({ length: DAYS_PER_WEEK }, (_day, weekday) => (
-                          <span key={weekday} className={styles.day} data-level={0} />
+                        {week.map(({ date, count }) => (
+                          <span
+                            key={date}
+                            className={styles.day}
+                            style={{ gridRow: weekdayOf(date) + 1 }}
+                            data-level={contributionLevelOf(count, busiestCount)}
+                          />
                         ))}
                       </div>
                     ))}
                   </div>
                 </div>
-                {contributionCalendar && (
-                  <div aria-hidden="true" className={styles.grid}>
-                    <div className={styles.weeks}>
-                      {contributionCalendar.weeks.map((week, weekIndex) => (
-                        <div key={weekIndex} className={styles.week}>
-                          {week.map(({ date, count }) => (
-                            <span
-                              key={date}
-                              className={styles.day}
-                              style={{ gridRow: weekdayOf(date) + 1 }}
-                              data-level={contributionLevelOf(count, busiestCount)}
-                            />
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div aria-hidden="true" className={styles.axis} lang={languageAttributeInDocumentFor(monthFormat)}>
-                {monthLabels.map(({ weekIndex, label }) => (
-                  <span
-                    key={weekIndex}
-                    className={styles.month}
-                    style={{ gridColumn: `${weekIndex + 1} / ${weekCount + 1}` }}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
+              )}
+            </div>
+            <div aria-hidden="true" className={styles.axis} lang={languageAttributeInDocumentFor(monthFormat)}>
+              {monthLabels.map(({ weekIndex, label }) => (
+                <span
+                  key={weekIndex}
+                  className={styles.month}
+                  style={{ gridColumn: `${weekIndex + 1} / ${weekCount + 1}` }}
+                >
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         </div>
-      )}
+      </div>
       <figcaption id={captionId}>
         {contributionCalendar && (
           <>
