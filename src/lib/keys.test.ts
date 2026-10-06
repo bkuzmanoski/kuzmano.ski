@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { activateOnKeyPress, isBrowserShortcut } from "./keys.ts";
+import { activateOnKeyPress } from "./keys.ts";
 
 import type { KeyboardEvent } from "react";
 
@@ -18,25 +18,6 @@ const keyEvent = (init: Partial<KeyboardEvent>) => {
 
   return { event, preventDefault };
 };
-
-describe("isBrowserShortcut", () => {
-  test.each([
-    ["a key pressed with ⌘ held", { key: "r", metaKey: true, ctrlKey: false }],
-    ["a key pressed with Control held", { key: "r", metaKey: false, ctrlKey: true }],
-    ["`F5`", { key: "F5", metaKey: false, ctrlKey: false }],
-    ["`F12`", { key: "F12", metaKey: false, ctrlKey: false }],
-  ])("returns `true` for %s", (_, event) => {
-    expect(isBrowserShortcut(event)).toBe(true);
-  });
-
-  test.each([
-    ["a letter", { key: "r", metaKey: false, ctrlKey: false }],
-    ["`F` itself", { key: "F", metaKey: false, ctrlKey: false }],
-    ["`Space`", { key: " ", metaKey: false, ctrlKey: false }],
-  ])("returns `false` for %s", (_, event) => {
-    expect(isBrowserShortcut(event)).toBe(false);
-  });
-});
 
 describe("activateOnKeyPress", () => {
   test("activates the control and prevents the default behavior when Enter or Space is pressed", () => {

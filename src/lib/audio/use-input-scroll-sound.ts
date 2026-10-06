@@ -1,19 +1,10 @@
 import { useEffect, useRef } from "react";
 
+import { isCaretScrollKey } from "../keys.ts";
+
 import { playInputScrollSound, silenceScrollAt } from "./scroll.ts";
 
 import type { KeyboardEvent, UIEvent } from "react";
-
-const CARET_SCROLL_KEYS = new Set([
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "Home",
-  "End",
-  "PageUp",
-  "PageDown",
-]); // Keys whose default action can move the caret out of view, scrolling the input.
 
 /**
  * Plays a sound for user scrolling in an input without playing one for scrolling caused
@@ -43,7 +34,7 @@ export function useInputScrollSound<T extends HTMLElement>() {
 
   return {
     onKeyDown: (event: KeyboardEvent<T>) => {
-      if (!CARET_SCROLL_KEYS.has(event.key)) {
+      if (!isCaretScrollKey(event.key)) {
         return;
       }
 

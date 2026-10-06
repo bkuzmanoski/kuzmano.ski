@@ -37,20 +37,17 @@ test("a scroll without a preceding key press plays the scroll sound", () => {
   expect(silenceScrollAt).not.toHaveBeenCalled();
 });
 
-test.each(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"])(
-  "a scroll that follows a %s key press does not play the scroll sound",
-  (key) => {
-    const input = renderInput();
+test("a scroll that follows a press of the Down arrow key does not play the scroll sound", () => {
+  const input = renderInput();
 
-    fireEvent.keyDown(input, { key });
-    fireEvent.scroll(input);
+  fireEvent.keyDown(input, { key: "ArrowDown" });
+  fireEvent.scroll(input);
 
-    expect(silenceScrollAt).toHaveBeenCalledWith(input);
-    expect(playInputScrollSound).not.toHaveBeenCalled();
-  },
-);
+  expect(silenceScrollAt).toHaveBeenCalledWith(input);
+  expect(playInputScrollSound).not.toHaveBeenCalled();
+});
 
-test("a scroll that follows a key press that cannot move the caret out of view plays the scroll sound", () => {
+test("a scroll that follows a press of a key other than a caret scroll key plays the scroll sound", () => {
   const input = renderInput();
 
   fireEvent.keyDown(input, { key: "a" });

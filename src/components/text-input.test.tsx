@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { expect, test, vi } from "vitest";
 
 import { TextArea, TextInput, TextInputFrame } from "./text-input.tsx";
 
@@ -38,4 +38,49 @@ test("a text input frame applies a caller's class alongside its own, on the elem
 
   expect(frame?.className).toContain("caller");
   expect(frame?.className.split(" ").length).toBeGreaterThan(1);
+});
+
+test("a text area calls the caller's `onInput`, `onKeyDown`, and `onScroll` props", () => {
+  const onInput = vi.fn();
+  const onKeyDown = vi.fn();
+  const onScroll = vi.fn();
+
+  render(<TextArea aria-label="Field" onInput={onInput} onKeyDown={onKeyDown} onScroll={onScroll} />);
+
+  const field = screen.getByLabelText("Field");
+
+  fireEvent.input(field);
+  fireEvent.keyDown(field, { key: "ArrowDown" });
+  fireEvent.scroll(field);
+
+  expect(onInput).toHaveBeenCalledOnce();
+  expect(onKeyDown).toHaveBeenCalledOnce();
+  expect(onScroll).toHaveBeenCalledOnce();
+});
+
+test("a text area extends a scroll that follows an edit by its bottom padding before calling the `onScroll` prop", () => {
+  const scrollTopsSeen: Array<number> = [];
+
+  render(
+    <TextArea
+      aria-label="Field"
+      style={{ paddingBottom: 20, lineHeight: "24px" }}
+      onScroll={(event) => scrollTopsSeen.push(event.currentTarget.scrollTop)}
+    />,
+  );
+
+  const field = screen.getByLabelText<HTMLTextAreaElement>("Field");
+
+  let top = 0;
+
+  Object.defineProperties(field, {
+    scrollHeight: { get: () => 500 },
+    clientHeight: { get: () => 100 },
+    scrollTop: { get: () => top, set: (value: number) => (top = value) },
+  });
+  fireEvent.input(field);
+  field.scrollTop = 200;
+  fireEvent.scroll(field);
+
+  expect(scrollTopsSeen).toEqual([220]);
 });
