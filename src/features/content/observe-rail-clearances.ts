@@ -5,7 +5,7 @@ const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
 const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote";
 const MASTHEAD_SELECTOR = "[data-entry-masthead]";
 const MASTHEAD_SUBJECT_SELECTOR =
-  '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])';
+  '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])'; // Matches the element `content-body.module.css` anchors the masthead to, including that rule's `:not()`.
 const RAIL_SPANNING_ELEMENT_SELECTOR = 'h2, [data-content-span]:not([data-content-span="text"])';
 
 const paddingBoxTopOf = (element: Element) =>
@@ -58,6 +58,8 @@ function updateRailClearances(body: HTMLElement) {
     }
 
     if (element.matches(MASTHEAD_SELECTOR)) {
+      // The masthead moves with its subject, so it counts only toward the elements after the subject
+      // (clearing the subject of the masthead would move both down on every update).
       mastheadBottoms = railItemBottomsIn(element, body);
       continue;
     }

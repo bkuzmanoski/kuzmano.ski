@@ -375,14 +375,14 @@ describe("disabled items", () => {
 describe("printing", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  test('the "Print…" menu item is disabled without a focused window', () => {
+  test("the `Print…` menu item is disabled without a focused window", () => {
     render(<MenuBar />);
     openWithPointer("File");
 
     expect(menuItem("Print…").getAttribute("aria-disabled")).toBe("true");
   });
 
-  test('the "Print…" menu item opens the browser\'s print dialog two animation frames after the menu closes', async () => {
+  test("the `Print…` menu item opens the browser's print dialog two animation frames after the menu closes", async () => {
     const print = vi.fn();
 
     vi.stubGlobal("print", print);
@@ -522,7 +522,7 @@ describe("items that open a destination", () => {
     expect(document.activeElement).toBe(menuTitle("Special"));
   });
 
-  test('the "View Source" menu item is described as opening in a new tab', () => {
+  test("the `View Source` menu item is described as opening in a new tab", () => {
     render(<MenuBar />);
     openWithPointer("Special");
 
@@ -541,7 +541,7 @@ describe("items that open a destination", () => {
     expect(item.querySelector('[aria-hidden="true"]')?.textContent).toContain("1");
   });
 
-  test('the "View Source" menu item links to the site source URL with a `target` attribute of `_blank`', () => {
+  test("the `View Source` menu item links to the site source URL with a `target` attribute of `_blank`", () => {
     render(<MenuBar />);
     openWithPointer("Special");
 

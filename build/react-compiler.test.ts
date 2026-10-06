@@ -52,7 +52,7 @@ describe("optimizationFailureFrom", () => {
     });
   });
 
-  test('returns "unknown file" as the file path for a `null` absolute path', () => {
+  test("returns `unknown file` as the file path for a `null` absolute path", () => {
     expect(optimizationFailureFrom(null, compileError("Todo", null, 1))?.filePath).toBe("unknown file");
   });
 
