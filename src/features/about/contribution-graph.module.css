@@ -7,6 +7,7 @@
 
 .scrollContainerFrame {
   position: relative;
+  border: 1px solid var(--color-border);
 
   &:has(> :focus-visible) {
     @mixin focus-stroke -2px;
@@ -16,7 +17,8 @@
 .scrollContainer {
   direction: rtl;
   overflow-x: auto;
-  padding-block-end: 4px;
+  padding-block: var(--layout-gutter) calc(var(--layout-gutter) - 4px);
+  padding-inline: var(--layout-gutter);
 
   &:focus-visible {
     outline: none;
