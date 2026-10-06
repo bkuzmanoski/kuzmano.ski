@@ -15,15 +15,40 @@
 }
 
 .controls {
+  @mixin dither-dot;
+
+  isolation: isolate;
+  position: relative;
+
   display: flex;
   grid-column: text;
   gap: 16px;
   align-items: baseline;
+  justify-self: start;
+
+  padding: calc(16 * var(--dither-dot));
+
+  @supports (width: round(down, 1px, 1px)) {
+    /* A width of 4n + 1 dots starts and ends the field on a column of dots. */
+    inline-size: calc(round(down, 100% - var(--dither-dot), 4 * var(--dither-dot)) + var(--dither-dot));
+  }
+
+  &::before {
+    @mixin dither-06;
+
+    content: "";
+
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+
+    color: var(--color-background-dither);
+  }
 }
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(124px, max-content));
+  grid-template-columns: repeat(auto-fill, minmax(max(124px, (100% - 16px) / 2), 1fr));
   flex: 1;
   gap: 4px 16px;
   align-items: center;
@@ -169,8 +194,12 @@
 .role {
   display: flex;
   flex-direction: column;
-  padding-block-start: 8px;
+  padding-block: 8px;
   border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
+
+  &:last-child {
+    padding-block-end: 0;
+  }
 }
 
 .roleHeader {
@@ -181,7 +210,7 @@
   justify-content: space-between;
   order: -1;
 
-  padding-block-end: var(--content-body-layout-space);
+  padding-block-end: var(--content-body-layout-space-relaxed);
 }
 
 .roleDisciplines {
@@ -195,7 +224,7 @@
 }
 
 .roleOrganization {
-  font-style: italic;
+  font: var(--font-caption);
   color: var(--color-foreground-secondary);
 }
 
@@ -220,6 +249,10 @@
 @mixin content-rail-collapsed {
   .careerTimeline {
     --career-timeline-horizontal-inset: calc(var(--career-timeline-year-label-width) / 2);
+  }
+
+  .controls {
+    margin-block-end: calc(-1 * var(--layout-gutter));
   }
 
   .chartColumn {

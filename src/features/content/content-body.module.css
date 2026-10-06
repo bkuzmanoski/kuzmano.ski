@@ -457,6 +457,10 @@
       padding-inline-start: 24px;
     }
 
+    &:where(:is(ul, ol) > li + li) {
+      margin-block-start: 8px;
+    }
+
     &:where(ul) {
       list-style-type: content-body-hidden; /* Avoid `list-style: none;` to preserve accessibility in Safari. */
     }
@@ -495,12 +499,27 @@
       grid-template-columns: auto minmax(0, 1fr);
       gap: 8px 20px;
       align-items: baseline;
+
+      @container content (width < 480px) {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 4px;
+      }
     }
 
     &:where(dt) {
       @mixin bitmap-label;
 
       width: var(--content-body-layout-rail-width);
+
+      @container content (width < 480px) {
+        width: auto;
+      }
+    }
+
+    &:where(dd + dt) {
+      @container content (width < 480px) {
+        margin-block-start: calc(var(--content-body-layout-space) - 4px);
+      }
     }
 
     &:where(blockquote) {

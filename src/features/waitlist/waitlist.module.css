@@ -46,15 +46,6 @@
     flex: 1 1 auto;
   }
 
-  & .emailAddressFieldFrame,
-  & .submitButton {
-    -webkit-text-stroke-width: 0;
-
-    &:focus-within {
-      box-shadow: 0 0 0 1px var(--color-background);
-    }
-  }
-
   & .confirmation {
     display: flex;
     gap: 6px;

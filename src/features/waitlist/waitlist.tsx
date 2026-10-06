@@ -123,7 +123,7 @@ export function Waitlist({
               labelHidden
               className={styles.emailAddressField}
             >
-              <TextInputFrame className={styles.emailAddressFieldFrame}>
+              <TextInputFrame>
                 <TextInput
                   {...emailAddressField.control}
                   {...form.handlers.emailAddress}

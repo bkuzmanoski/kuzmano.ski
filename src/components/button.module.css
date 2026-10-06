@@ -9,11 +9,14 @@
 
   font: var(--font-chrome);
   text-align: center;
+  -webkit-text-stroke-width: 0; /* Clears the stroke `dither-text` sets around text. */
 
   background: var(--color-background);
 
   &:focus {
     @mixin focus-ring;
+
+    box-shadow: 0 0 0 1px var(--color-background);
   }
 
   &:disabled {
@@ -46,6 +49,7 @@
 
     &:focus {
       outline: none;
+      box-shadow: none;
     }
 
     &:focus-visible {
