@@ -1,7 +1,7 @@
 .callout {
   --callout-padding: var(--layout-gutter);
   --callout-label-padding-inline: 8px;
-  --callout-color: var(--color-foreground-secondary);
+  --callout-color: var(--color-border);
 
   position: relative;
   padding: var(--callout-padding);
