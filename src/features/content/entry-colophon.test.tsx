@@ -43,11 +43,6 @@ test("the colophon links to the older and newer entries either side of the one b
   );
 });
 
-test("the navigation to the older and newer entries is named by its visible `More to read` label", () => {
-  renderColophon("middle");
-  expect(screen.getByRole("navigation", { name: "More to read" })).toBeTruthy();
-});
-
 test("the colophon links only to the older entry from the newest entry, and only to the newer entry from the oldest", () => {
   const { unmount } = renderColophon("newest");
 

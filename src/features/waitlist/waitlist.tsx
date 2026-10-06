@@ -91,7 +91,6 @@ export function Waitlist({
       aria-labelledby={titleId}
       data-content-default-styles="off"
       data-content-panel
-      data-content-space="loose"
       data-feed-text={fallbackText(`${SITE_URL}${entryRoute}`)}
       data-joined={hasJoined || undefined}
       data-waitlist

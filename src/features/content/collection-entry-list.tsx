@@ -1,14 +1,11 @@
 import { useId, useRef } from "react";
 
-import DocumentDesktopIcon from "#/assets/images/desktop-icon-document.svg?react";
 import { EmptyState } from "#/components/empty-state.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { WINDOW_SPECS } from "#/config/desktop.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
-import { useEntryCoverImage } from "#/lib/content/entry-cover-images.ts";
-import type { EntryKey } from "#/lib/content/entry-file.ts";
 import { formatDate } from "#/lib/datetime.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation.ts";
@@ -21,6 +18,7 @@ import type { Collection } from "#/site/catalog.ts";
 import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import styles from "./collection-entry-list.module.css";
+import { EntryCoverImage } from "./entry-cover-image.tsx";
 
 import type { MouseEvent } from "react";
 
@@ -29,38 +27,6 @@ export const EMPTY_COLLECTION_MESSAGE = "There are no entries in this collection
 const LIST_VIEW_STYLE: StyleWithVars = {
   "--collection-entry-list-default-window-width": `${WINDOW_SPECS.collection.defaultSize.width}px`,
 };
-
-function EntryCoverImage({ entryKey }: { entryKey: EntryKey }) {
-  const coverImage = useEntryCoverImage(entryKey);
-
-  if (!coverImage) {
-    return (
-      <span className={styles.coverImage}>
-        <DocumentDesktopIcon className={styles.documentDesktopIcon} />
-      </span>
-    );
-  }
-
-  const { thumbnail } = coverImage;
-
-  return (
-    <span className={styles.coverImage}>
-      <picture>
-        {thumbnail.alternates.map(({ srcSet, type }) => (
-          <source key={type} srcSet={srcSet} type={type} />
-        ))}
-        <img
-          src={thumbnail.src}
-          alt=""
-          width={thumbnail.width}
-          height={thumbnail.height}
-          loading="lazy"
-          decoding="async"
-        />
-      </picture>
-    </span>
-  );
-}
 
 export function CollectionEntryList({ collection, activeSlug }: { collection: Collection; activeSlug: string | null }) {
   const entryIdPrefix = useId();
@@ -133,7 +99,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
                 aria-current={isActive || undefined}
                 {...mergeHandlers(entryEventHandlers, itemProps(index))}
               >
-                <EntryCoverImage entryKey={collection.entryKeyOf(entry.slug)} />
+                <EntryCoverImage entryKey={collection.entryKeyOf(entry.slug)} className={styles.coverImage} />
                 <span className={styles.details}>
                   <span id={`${entryId}-title`} className={styles.title}>
                     {entry.title}

@@ -33,6 +33,7 @@ export const shikiTheme: ThemeRegistration = {
         "keyword.operator.expression",
         "support.other",
         "punctuation.definition.keyword",
+        "punctuation.definition.attribute",
       ],
       settings: { foreground: syntax("keyword") },
     },

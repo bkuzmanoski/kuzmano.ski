@@ -118,6 +118,14 @@
       );
     }
 
+    &:where(:has(> [data-entry-masthead])) {
+      --content-body-padding-block: clamp(
+        var(--layout-gutter),
+        (100% - var(--content-body-layout-measure)) / 2,
+        var(--content-body-layout-space-x-loose)
+      );
+    }
+
     & > * {
       grid-column: text;
       margin-block: 0;
@@ -162,7 +170,7 @@
       margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
     }
 
-    & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) + *,
+    & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"], [data-entry-masthead]) + *,
     &
       > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"])
       + :where([data-rail-asides])

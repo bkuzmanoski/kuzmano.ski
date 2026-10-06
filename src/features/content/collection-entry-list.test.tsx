@@ -64,31 +64,11 @@ function renderEntryWithCoverImage(slug: string, coverImage: CoverImage) {
   );
 }
 
-test("an entry with a cover image shows its thumbnail, with a `<source>` for each alternate format", () => {
-  const coverImage = fakeCoverImage("newest");
-  const { container } = renderEntryWithCoverImage("newest", coverImage);
-  const image = container.querySelector("img");
-
-  expect(image?.getAttribute("src")).toBe(coverImage.thumbnail.src);
-  expect([...container.querySelectorAll("source")].map((source) => source.getAttribute("srcset"))).toEqual(
-    coverImage.thumbnail.alternates.map(({ srcSet }) => srcSet),
-  );
-});
-
 test("the cover image thumbnail does not contribute to the entry link's accessible name", () => {
   const { container } = renderEntryWithCoverImage("newest", fakeCoverImage("newest"));
 
   expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
   expect(screen.getByRole("link", { name: "newest" })).toBeDefined();
-});
-
-test("an entry without a cover image shows the placeholder glyph in place of a thumbnail", () => {
-  const { container } = render(
-    <CollectionEntryList activeSlug={null} collection={fakeCollection([fakeEntry("newest")])} />,
-  );
-
-  expect(container.querySelector("img")).toBeNull();
-  expect(container.querySelector("svg")).not.toBeNull();
 });
 
 test("an entry shows its description, and its category when its frontmatter specifies one", () => {

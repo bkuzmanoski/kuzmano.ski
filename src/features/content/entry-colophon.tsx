@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { cx } from "#/lib/class-names.ts";
 import { entrySiblings } from "#/lib/content/entry-siblings.ts";
@@ -45,8 +43,6 @@ function SiblingLink({
 }
 
 export function EntryColophon({ target: { collection, slug } }: { target: CollectionEntryTarget }) {
-  const siblingsLabelId = useId();
-
   const { newer, older } = entrySiblings(collection, slug);
   const feed = collectionFeedOf(collection.route);
   const hasMarkdown = hasMarkdownRepresentation(collection.frontmatterOf(slug));
@@ -60,17 +56,6 @@ export function EntryColophon({ target: { collection, slug } }: { target: Collec
       data-content-space="loose"
       data-feed-omit
     >
-      {(older !== null || newer !== null) && (
-        <>
-          <p id={siblingsLabelId} className={styles.label}>
-            More to read
-          </p>
-          <nav className={styles.siblings} aria-labelledby={siblingsLabelId}>
-            {older && <SiblingLink collection={collection} entry={older} direction="older" />}
-            {newer && <SiblingLink collection={collection} entry={newer} direction="newer" />}
-          </nav>
-        </>
-      )}
       {(hasMarkdown || feed) && (
         <>
           <p className={styles.label}>Formats</p>
@@ -79,6 +64,12 @@ export function EntryColophon({ target: { collection, slug } }: { target: Collec
             {feed && <ContentLink href={feed.path}>Atom feed</ContentLink>}
           </p>
         </>
+      )}
+      {(older !== null || newer !== null) && (
+        <nav className={styles.siblings} aria-label="More entries">
+          {older && <SiblingLink collection={collection} entry={older} direction="older" />}
+          {newer && <SiblingLink collection={collection} entry={newer} direction="newer" />}
+        </nav>
       )}
     </footer>
   );

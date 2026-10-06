@@ -1,63 +1,10 @@
 .colophon {
   display: grid;
   grid-template-columns: subgrid;
-  row-gap: var(--content-body-layout-space);
+  row-gap: var(--content-body-layout-space-relaxed);
 
   padding-block-start: var(--content-body-layout-space-relaxed);
   border-block-start: 1px solid var(--color-border-secondary);
-}
-
-.label {
-  @mixin bitmap-label;
-
-  grid-column: rail-start / text-start;
-  align-self: baseline;
-  width: var(--content-body-layout-rail-width);
-}
-
-.siblings {
-  display: grid;
-  grid-column: text;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--layout-gutter);
-}
-
-.siblingLink {
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  padding: var(--layout-gutter);
-  border: 1px solid var(--color-border-secondary);
-
-  &:active {
-    box-shadow: inset 0 0 0 1px var(--color-border-secondary);
-  }
-
-  &:focus-visible {
-    @mixin focus-stroke -3px;
-  }
-
-  &.newer {
-    grid-column: 2;
-    text-align: end;
-  }
-}
-
-.siblingDirection {
-  @mixin visually-hidden;
-}
-
-.siblingTitle {
-  font: var(--font-heading-3);
-  text-wrap: pretty;
-}
-
-.siblingDate {
-  font: var(--font-caption);
-  color: var(--color-foreground-secondary);
 }
 
 .formats {
@@ -70,6 +17,107 @@
   font: var(--font-caption);
 }
 
+.label {
+  @mixin bitmap-label;
+
+  grid-column: rail-start / text-start;
+  align-self: baseline;
+  width: var(--content-body-layout-rail-width);
+}
+
+.siblings {
+  display: grid;
+  grid-column: rail-start / text-end;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--layout-gutter);
+
+  padding-block-start: var(--content-body-layout-space-relaxed);
+  padding-inline-start: var(--content-body-layout-rail-track);
+  border-block-start: 1px solid var(--color-border-secondary);
+}
+
+.siblingLink {
+  --entry-colophon-caret-width: 16px;
+  --entry-colophon-caret-stroke-width: 6px;
+
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: var(--layout-gutter);
+  padding-inline-start: calc(2 * var(--layout-gutter) + var(--entry-colophon-caret-width));
+  border: 1px solid var(--color-border-secondary);
+
+  &::before {
+    @mixin dither-50;
+
+    content: "";
+
+    position: absolute;
+    inset-block: var(--layout-gutter);
+    inset-inline-start: var(--layout-gutter);
+
+    width: var(--entry-colophon-caret-width);
+
+    color: var(--color-border);
+
+    clip-path: polygon(
+      calc(100% - var(--entry-colophon-caret-stroke-width)) 0,
+      100% 0,
+      var(--entry-colophon-caret-stroke-width) 50%,
+      100% 100%,
+      calc(100% - var(--entry-colophon-caret-stroke-width)) 100%,
+      0 50%
+    );
+
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+    }
+  }
+
+  &:active {
+    box-shadow: inset 0 0 0 1px var(--color-border-secondary);
+  }
+
+  &:focus-visible {
+    @mixin focus-stroke -3px;
+  }
+
+  &.newer {
+    grid-column: 2;
+    padding-inline: var(--layout-gutter) calc(2 * var(--layout-gutter) + var(--entry-colophon-caret-width));
+    text-align: end;
+
+    &::before {
+      inset-inline: auto var(--layout-gutter);
+      scale: -1 1;
+    }
+  }
+}
+
+.siblingDirection {
+  @mixin visually-hidden;
+}
+
+.siblingTitle,
+.siblingDate {
+  text-box: trim-both text;
+}
+
+.siblingTitle {
+  overflow: hidden;
+  font: var(--font-heading-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.siblingDate {
+  font: var(--font-caption);
+  color: var(--color-foreground-secondary);
+}
+
 @mixin content-rail-collapsed {
   .colophon {
     row-gap: 8px;
@@ -78,14 +126,11 @@
   .label {
     grid-column: text;
     width: auto;
-
-    &:not(:first-child) {
-      margin-block-start: 12px;
-    }
   }
 
   .siblings {
     grid-template-columns: minmax(0, 1fr);
+    margin-block-start: calc(var(--content-body-layout-space-relaxed) - 8px);
   }
 
   .siblingLink.newer {
