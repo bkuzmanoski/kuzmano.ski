@@ -67,8 +67,16 @@ export function EntryColophon({ target: { collection, slug } }: { target: Collec
       )}
       {(older !== null || newer !== null) && (
         <nav className={styles.siblings} aria-label="More entries">
-          {older && <SiblingLink collection={collection} entry={older} direction="older" />}
-          {newer && <SiblingLink collection={collection} entry={newer} direction="newer" />}
+          {older ? (
+            <SiblingLink collection={collection} entry={older} direction="older" />
+          ) : (
+            <div className={styles.siblingPlaceholder} aria-hidden />
+          )}
+          {newer ? (
+            <SiblingLink collection={collection} entry={newer} direction="newer" />
+          ) : (
+            <div className={styles.siblingPlaceholder} aria-hidden />
+          )}
         </nav>
       )}
     </footer>

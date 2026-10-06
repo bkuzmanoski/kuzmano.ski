@@ -97,6 +97,10 @@
   }
 }
 
+.siblingPlaceholder {
+  @mixin dither-25 var(--color-background-dither);
+}
+
 .siblingDirection {
   @mixin visually-hidden;
 }
@@ -135,6 +139,10 @@
 
   .siblingLink.newer {
     grid-column: 1;
+  }
+
+  .siblingPlaceholder {
+    display: none;
   }
 }
 
