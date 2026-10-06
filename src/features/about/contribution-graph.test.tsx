@@ -19,7 +19,13 @@ const useContributionCalendar = vi.hoisted(() => vi.fn<() => ContributionCalenda
 
 vi.mock("#/lib/github/use-contribution-calendar.ts", () => ({ useContributionCalendar }));
 
-let resizeObserverCallbacks: Set<() => void>;
+const prefersReducedMotion = vi.hoisted(() => ({ matches: false }));
+
+vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
+  usePrefersReducedMotion: () => prefersReducedMotion.matches,
+}));
+
+let resizeObserverTargets: Map<() => void, Set<Element>>;
 
 class FakeResizeObserver {
   readonly #report: () => void;
@@ -28,19 +34,21 @@ class FakeResizeObserver {
     this.#report = () => callback([], this as never);
   }
 
-  observe() {
-    resizeObserverCallbacks.add(this.#report);
+  observe(target: Element) {
+    resizeObserverTargets.set(this.#report, (resizeObserverTargets.get(this.#report) ?? new Set()).add(target));
   }
 
   disconnect() {
-    resizeObserverCallbacks.delete(this.#report);
+    resizeObserverTargets.delete(this.#report);
   }
 }
 
 beforeEach(() => {
   useContributionCalendar.mockReset();
-  resizeObserverCallbacks = new Set();
+  resizeObserverTargets = new Map();
   vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+  vi.stubGlobal("CSS", { supports: (condition: string) => condition === "view-timeline: --contribution-graph block" });
+  prefersReducedMotion.matches = false;
 });
 
 afterEach(() => {
@@ -57,11 +65,19 @@ const WEEKS = [
   Array.from({ length: 7 }, (_, index) => ({ date: `2026-01-${String(index + 11)}`, count: index + 4 })),
 ]; // A partial first week that starts on a Wednesday, then a whole week from Sunday.
 const SCROLL_PANE_HEIGHT_PX = 600;
+const SCROLL_PANE_SCROLL_PADDING_BOTTOM_PX = 16;
 const FIGURE_HEIGHT_PX = 200;
 
 const contributionGraphInScrollPane = () => (
   <div data-scroll-pane-viewport>
     <ContributionGraph />
+  </div>
+);
+const contributionGraphInScrollPaneContent = () => (
+  <div data-scroll-pane-viewport style={{ scrollPaddingBottom: `${SCROLL_PANE_SCROLL_PADDING_BOTTOM_PX}px` }}>
+    <article>
+      <ContributionGraph />
+    </article>
   </div>
 );
 const contributionCalendar = (overrides: Partial<ContributionCalendar> = {}): ContributionCalendar => ({
@@ -75,7 +91,8 @@ const cellsIn = (container: HTMLElement) => [
 const placeholderCellsIn = (container: HTMLElement) => [
   ...container.querySelectorAll<HTMLElement>(`.${styles.placeholder} [data-level]`),
 ];
-const placeholderWeeksIn = (container: HTMLElement) => container.querySelector(`.${styles.placeholder}`)!.children;
+const placeholderWeeksIn = (container: HTMLElement) =>
+  container.querySelectorAll(`.${styles.placeholder} .${styles.week}`);
 
 function placeFigure(topPx: number) {
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
@@ -87,10 +104,25 @@ function placeFigure(topPx: number) {
   });
 }
 
+function reportResize(target?: Element) {
+  act(() =>
+    resizeObserverTargets.forEach((targets, report) => {
+      if (!target || targets.has(target)) {
+        report();
+      }
+    }),
+  );
+}
+
 function resizeScrollContainer(scrollWidth: number, clientWidth: number) {
   vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(scrollWidth);
   vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(clientWidth);
-  act(() => resizeObserverCallbacks.forEach((report) => report()));
+  reportResize();
+}
+
+function layOutScrollPane({ scrollTop, scrollHeight }: { scrollTop: number; scrollHeight: number }) {
+  vi.spyOn(Element.prototype, "scrollTop", "get").mockReturnValue(scrollTop);
+  vi.spyOn(Element.prototype, "scrollHeight", "get").mockReturnValue(scrollHeight);
 }
 
 describe("ContributionGraph", () => {
@@ -197,6 +229,15 @@ describe("ContributionGraph", () => {
     expect(axis?.getAttribute("lang")).toBe("fr-FR");
   });
 
+  test("spans each month label from its week to the last week", () => {
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(<ContributionGraph />);
+    const label = container.querySelector<HTMLElement>(`.${styles.month}`);
+
+    expect(label?.style.gridColumn).toBe(`1 / ${WEEKS.length + 1}`);
+  });
+
   test("does not set a `lang` attribute on the total or the month labels when the browser's locale is in the document's language", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("en-US");
     useContributionCalendar.mockReturnValue(contributionCalendar());
@@ -292,6 +333,79 @@ describe("ContributionGraph", () => {
     const { container } = render(<ContributionGraph />);
 
     expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-start")).toBe("20%");
+  });
+
+  test("sets the `--contribution-graph-reveal-end-max` custom property of the `<figure>` to the distance from its top to the end of the scroll pane's content, less the scroll pane's bottom scroll padding and 1px", () => {
+    placeFigure(400);
+    layOutScrollPane({ scrollTop: 300, scrollHeight: 1500 });
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(contributionGraphInScrollPaneContent());
+
+    reportResize(container.querySelector("[data-scroll-pane-viewport]")!);
+
+    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-end-max")).toBe(
+      `${1500 - SCROLL_PANE_SCROLL_PADDING_BOTTOM_PX - (300 + 400) - 1}px`,
+    );
+  });
+
+  test("updates the `--contribution-graph-reveal-end-max` custom property of the `<figure>` when the scroll pane's content resizes", () => {
+    placeFigure(400);
+    layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(contributionGraphInScrollPaneContent());
+
+    reportResize(container.querySelector("article")!);
+    layOutScrollPane({ scrollTop: 0, scrollHeight: 900 });
+    reportResize(container.querySelector("article")!);
+
+    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-end-max")).toBe(
+      `${900 - SCROLL_PANE_SCROLL_PADDING_BOTTOM_PX - 400 - 1}px`,
+    );
+  });
+
+  test("sets the `--contribution-graph-reveal-end-max` custom property only when its value changes", () => {
+    placeFigure(400);
+    layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(contributionGraphInScrollPaneContent());
+    const figureStyle = container.querySelector("figure")!.style;
+    const setProperty = vi.spyOn(figureStyle, "setProperty");
+
+    reportResize(container.querySelector("article")!);
+    reportResize(container.querySelector("article")!);
+
+    expect(
+      setProperty.mock.calls.filter(([property]) => property === "--contribution-graph-reveal-end-max"),
+    ).toHaveLength(1);
+  });
+
+  test.each([
+    ["the browser does not support view timelines", () => vi.stubGlobal("CSS", { supports: () => false })],
+    ["reduced motion is preferred", () => (prefersReducedMotion.matches = true)],
+  ])("leaves the `--contribution-graph-reveal-end-max` custom property unset when %s", (_, setUp) => {
+    setUp();
+    placeFigure(400);
+    layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(contributionGraphInScrollPaneContent());
+
+    reportResize();
+
+    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-end-max")).toBe("");
+  });
+
+  test("leaves the `--contribution-graph-reveal-end-max` custom property unset outside a scroll pane", () => {
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+
+    const { container } = render(<ContributionGraph />);
+
+    reportResize();
+
+    expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-end-max")).toBe("");
   });
 
   test("does not set the `data-reveal-timeline` attribute while the calendar is being read", () => {

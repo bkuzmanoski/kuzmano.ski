@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay.ts";
 import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
+import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
+import { stubMatchMedia } from "#/test-utils/match-media.ts";
 import { runScript } from "#/test-utils/script.ts";
 
 // These tests evaluate the bundled scripts exactly as the browser receives them, covering the
@@ -45,6 +47,7 @@ beforeEach(() => {
   document.documentElement.removeAttribute("data-theme");
   document.documentElement.removeAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE);
   document.documentElement.removeAttribute("data-web-share");
+  document.documentElement.style.removeProperty("--device-pixel-ratio");
   sessionStorage.removeItem(BOOT_SEQUENCE_STORAGE_KEY);
   localStorage.clear();
   document.head.replaceChildren();
@@ -121,6 +124,42 @@ describe("Web Share support", () => {
   test("leaves the `data-web-share` attribute unset when the browser does not support the Web Share API", () => {
     runScript(webShareScript);
     expect(document.documentElement.hasAttribute("data-web-share")).toBe(false);
+  });
+});
+
+describe("device pixel ratio", () => {
+  const devicePixelRatioProperty = () => document.documentElement.style.getPropertyValue("--device-pixel-ratio");
+
+  test("sets the `--device-pixel-ratio` custom property of `<html>` to the device pixel ratio", () => {
+    stubMatchMedia();
+    vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1.1);
+    runScript(devicePixelRatioScript);
+
+    expect(devicePixelRatioProperty()).toBe("1.1");
+  });
+
+  test("updates the `--device-pixel-ratio` custom property when the device pixel ratio changes", () => {
+    const changeResolution = stubMatchMedia();
+    const devicePixelRatio = vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1);
+
+    runScript(devicePixelRatioScript);
+    devicePixelRatio.mockReturnValue(2);
+    changeResolution(false);
+
+    expect(devicePixelRatioProperty()).toBe("2");
+  });
+
+  test("updates the `--device-pixel-ratio` custom property on a second change of the device pixel ratio", () => {
+    const changeResolution = stubMatchMedia();
+    const devicePixelRatio = vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1);
+
+    runScript(devicePixelRatioScript);
+    devicePixelRatio.mockReturnValue(2);
+    changeResolution(false);
+    devicePixelRatio.mockReturnValue(3);
+    changeResolution(false);
+
+    expect(devicePixelRatioProperty()).toBe("3");
   });
 });
 

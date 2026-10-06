@@ -113,9 +113,7 @@
 
     color: var(--color-border);
 
-    background-position:
-      right top,
-      right calc(-1 * var(--dither-cell)) top var(--dither-cell);
+    mask-position: right top;
   }
 }
 

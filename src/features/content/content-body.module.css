@@ -527,12 +527,12 @@
     }
 
     &:where(hr) {
-      --content-body-hr-square-size: 8px;
-      --content-body-hr-square-gap: 12px;
+      --content-body-hr-square-size: calc(8 * var(--dither-dot));
+      --content-body-hr-square-gap: calc(12 * var(--dither-dot));
       --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
       --content-body-hr-middle-square-position: 50%;
 
-      @mixin dither-50;
+      @mixin dither-dot;
 
       height: var(--content-body-hr-square-size);
 
@@ -546,16 +546,20 @@
         calc(var(--content-body-hr-middle-square-position) + var(--content-body-hr-square-step)) 0;
       mask-size: var(--content-body-hr-square-size) var(--content-body-hr-square-size);
 
+      &::before {
+        @mixin dither-50;
+
+        content: "";
+        display: block;
+        height: 100%;
+      }
+
       @media (forced-colors: active) {
         forced-color-adjust: none;
       }
 
       @supports (width: round(down, 1px, 1px)) {
-        --content-body-hr-middle-square-position: round(
-          down,
-          50%,
-          var(--dither-cell)
-        ); /* Rounds down to a whole dither cell, so each square starts on the same phase of the pattern. */
+        --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--dither-dot)));
       }
     }
 

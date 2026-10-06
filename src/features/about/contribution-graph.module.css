@@ -1,7 +1,8 @@
 .graph {
+  --contribution-graph-reveal-start: 0%; /* Set from JS. */
+  --contribution-graph-reveal-end-max: 0%; /* Set from JS. */
   --contribution-graph-cell: 13px;
   --contribution-graph-gap: 3px;
-  --contribution-graph-reveal-start: 0%; /* Set from JS. */
 }
 
 .scrollContainerFrame {
@@ -39,8 +40,8 @@
   }
 }
 
-.placeholder,
-.grid {
+.weeks {
+  will-change: transform; /* Without the layer, Chrome re-rasterizes the mask of every day on each step. */
   display: flex;
   gap: var(--contribution-graph-gap);
 }
@@ -115,8 +116,15 @@
 }
 
 .month {
+  display: flex;
   grid-row: 1;
+  justify-content: flex-end;
   white-space: nowrap;
+
+  &::after {
+    content: "";
+    flex: 1;
+  }
 }
 
 .graph[data-reveal-timeline] .placeholder {
@@ -158,7 +166,8 @@
         animation-timing-function: steps(var(--contribution-graph-week-count), end);
         animation-fill-mode: both;
         animation-timeline: --contribution-graph;
-        animation-range: entry var(--contribution-graph-reveal-start) cover 45%;
+        animation-range: entry var(--contribution-graph-reveal-start) cover
+          min(45%, var(--contribution-graph-reveal-end-max));
       }
 
       & .grid {

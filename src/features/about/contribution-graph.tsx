@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, GITHUB_USERNAME, SITE_LOCALE } from "#/config/site.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
@@ -10,6 +10,7 @@ import { useContributionCalendar } from "#/lib/github/use-contribution-calendar.
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
 import { useNumberFormat } from "#/lib/hooks/use-number-format.ts";
+import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
@@ -22,6 +23,9 @@ const MONTH_FORMAT: DateFormat = {
   options: { month: "short", timeZone: "UTC" },
 };
 const REVEAL_START_VISIBLE_FRACTION = 0.2;
+const REVEAL_END_ROUNDING_ALLOWANCE_PX = 1;
+const REVEAL_END_MAX_PROPERTY = "--contribution-graph-reveal-end-max";
+const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block"; // The condition of the `@supports` rule that reveals the weeks on scroll.
 
 const doesOverflow = (scrollContainer: HTMLElement | null) =>
   scrollContainer !== null && scrollContainer.scrollWidth > scrollContainer.clientWidth;
@@ -34,11 +38,23 @@ function visibleFractionOf(figure: HTMLElement): number {
   return visibleRect ? intersectionRatioOf(figure.getBoundingClientRect(), visibleRect) : 0;
 }
 
+function reachableCoverOffsetOf(figure: HTMLElement, scrollPane: HTMLElement): number {
+  const figureTopInContent =
+    figure.getBoundingClientRect().top -
+    scrollPane.getBoundingClientRect().top -
+    scrollPane.clientTop +
+    scrollPane.scrollTop;
+  const scrollPaddingBottom = Number.parseFloat(getComputedStyle(scrollPane).scrollPaddingBottom) || 0;
+
+  return scrollPane.scrollHeight - scrollPaddingBottom - figureTopInContent;
+}
+
 export function ContributionGraph() {
+  const captionId = useId();
   const contributionCalendar = useContributionCalendar();
   const monthFormat = useDateFormat(MONTH_FORMAT);
   const totalFormat = useNumberFormat(SITE_LOCALE);
-  const captionId = useId();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [isFigureInView, setIsFigureInView] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +73,32 @@ export function ContributionGraph() {
       setIsFigureInView(visibleFractionOf(figure) >= REVEAL_START_VISIBLE_FRACTION);
     }
   }, [isCalendarPending]);
+
+  useEffect(() => {
+    const figure = figureRef.current;
+    const scrollPane = figure?.closest<HTMLElement>(SCROLL_PANE_VIEWPORT_SELECTOR);
+
+    if (!figure || !scrollPane || prefersReducedMotion || !CSS.supports(VIEW_TIMELINE_CONDITION)) {
+      return;
+    }
+
+    const limitRevealEnd = () => {
+      const revealEndMax = `${reachableCoverOffsetOf(figure, scrollPane) - REVEAL_END_ROUNDING_ALLOWANCE_PX}px`;
+
+      if (figure.style.getPropertyValue(REVEAL_END_MAX_PROPERTY) !== revealEndMax) {
+        figure.style.setProperty(REVEAL_END_MAX_PROPERTY, revealEndMax);
+      }
+    };
+    const resizeObserver = new ResizeObserver(limitRevealEnd);
+
+    resizeObserver.observe(scrollPane);
+
+    for (const child of scrollPane.children) {
+      resizeObserver.observe(child);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [prefersReducedMotion]);
 
   const weekCount = contributionCalendar?.weeks.length ?? PLACEHOLDER_WEEK_COUNT;
   const graphStyle: StyleWithVars = { "--contribution-graph-reveal-start": `${REVEAL_START_VISIBLE_FRACTION * 100}%` };
@@ -81,35 +123,43 @@ export function ContributionGraph() {
             <div className={styles.track}>
               <div className={styles.plot} style={plotStyle}>
                 <div aria-hidden="true" className={styles.placeholder}>
-                  {/* Match the calendar's week count so both animate in sync. */}
-                  {Array.from({ length: weekCount }, (_week, weekIndex) => (
-                    <div key={weekIndex} className={styles.week}>
-                      {Array.from({ length: DAYS_PER_WEEK }, (_day, weekday) => (
-                        <span key={weekday} className={styles.day} data-level={0} />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                {contributionCalendar && (
-                  <div aria-hidden="true" className={styles.grid}>
-                    {contributionCalendar.weeks.map((week, weekIndex) => (
+                  <div className={styles.weeks}>
+                    {/* Match the calendar's week count so both animate in sync. */}
+                    {Array.from({ length: weekCount }, (_week, weekIndex) => (
                       <div key={weekIndex} className={styles.week}>
-                        {week.map(({ date, count }) => (
-                          <span
-                            key={date}
-                            className={styles.day}
-                            style={{ gridRow: weekdayOf(date) + 1 }}
-                            data-level={contributionLevelOf(count, busiestCount)}
-                          />
+                        {Array.from({ length: DAYS_PER_WEEK }, (_day, weekday) => (
+                          <span key={weekday} className={styles.day} data-level={0} />
                         ))}
                       </div>
                     ))}
+                  </div>
+                </div>
+                {contributionCalendar && (
+                  <div aria-hidden="true" className={styles.grid}>
+                    <div className={styles.weeks}>
+                      {contributionCalendar.weeks.map((week, weekIndex) => (
+                        <div key={weekIndex} className={styles.week}>
+                          {week.map(({ date, count }) => (
+                            <span
+                              key={date}
+                              className={styles.day}
+                              style={{ gridRow: weekdayOf(date) + 1 }}
+                              data-level={contributionLevelOf(count, busiestCount)}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
               <div aria-hidden="true" className={styles.axis} lang={languageAttributeInDocumentFor(monthFormat)}>
                 {monthLabels.map(({ weekIndex, label }) => (
-                  <span key={weekIndex} className={styles.month} style={{ gridColumn: weekIndex + 1 }}>
+                  <span
+                    key={weekIndex}
+                    className={styles.month}
+                    style={{ gridColumn: `${weekIndex + 1} / ${weekCount + 1}` }}
+                  >
                     {label}
                   </span>
                 ))}

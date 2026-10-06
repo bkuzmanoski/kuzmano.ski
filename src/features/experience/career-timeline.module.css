@@ -112,8 +112,6 @@
 }
 
 .spanBar {
-  @mixin dither-50;
-
   position: absolute;
   inset-inline: 0;
   top: calc(var(--career-timeline-placement-offset) * 100%);
@@ -124,8 +122,16 @@
   background-color: var(--color-background);
   box-shadow: 0 0 0 1px var(--color-background);
 
-  .lane[data-hidden] & {
-    background-image: none;
+  &::before {
+    @mixin dither-50;
+
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .lane[data-hidden] &::before {
+    content: none;
   }
 }
 

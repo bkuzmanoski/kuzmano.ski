@@ -5,6 +5,7 @@ import { THEME_COLORS } from "virtual:theme-colors";
 import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
+import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
 
@@ -14,8 +15,8 @@ export function RootDocument({ children }: { children: ReactNode }) {
   useEffect(watchFaviconColorScheme, []);
 
   return (
-    // suppressHydrationWarning: `themeScript`, `bootSequenceScript`, and `webShareScript` set attributes
-    // on `<html>` before hydration, so the client `<html>` differs from the one the server sent.
+    // suppressHydrationWarning: `themeScript`, `bootSequenceScript`, `webShareScript`, and `devicePixelRatioScript`
+    // set attributes on `<html>` before hydration, so the client `<html>` differs from the one the server sent.
     <html lang={DOCUMENT_LANGUAGE} suppressHydrationWarning>
       <head>
         <HeadContent />
@@ -39,6 +40,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: bootSequenceScript }} />
         <script dangerouslySetInnerHTML={{ __html: webShareScript }} />
+        <script dangerouslySetInnerHTML={{ __html: devicePixelRatioScript }} />
       </head>
       <body>
         {children}
