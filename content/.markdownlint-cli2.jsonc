@@ -2,8 +2,9 @@
   "config": {
     "MD033": false,
     "MD034": false, // The site links a bare URL or email address as a GFM autolink literal.
-    "heading-levels": { "minimum": 2, "maximum": 3 } // The document renders the entry's title as its `h1`.
+    "heading-levels": { "minimum": 2, "maximum": 3 }, // The document renders the entry's title as its `h1`.
+    "typographic-quotes": true
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
-  "customRules": ["../markdownlint.heading-levels.ts"]
+  "customRules": ["../markdownlint.heading-levels.ts", "../markdownlint.typographic-quotes.ts"]
 }

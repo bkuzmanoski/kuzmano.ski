@@ -28,8 +28,27 @@ export interface ContentNode {
   ordered?: boolean | null; // Whether an mdast `list` node is numbered.
   spread?: boolean | null; // Whether an mdast `list` or `listItem` node separates its children with blank lines.
   properties?: Record<string, unknown>;
-  attributes?: Array<{ type?: string; name?: string | null; value?: unknown }>;
+  attributes?: Array<ContentNodeAttribute>;
   children?: Array<ContentNode>;
+  position?: SourcePosition; // Absent from a node created by a transform.
+}
+
+export interface ContentNodeAttribute {
+  type?: string;
+  name?: string | null;
+  value?: unknown;
+  position?: SourcePosition; // Absent from an attribute created by a transform.
+}
+
+export interface SourcePosition {
+  start: SourcePoint;
+  end: SourcePoint;
+}
+
+interface SourcePoint {
+  line: number;
+  column: number;
+  offset?: number | undefined; // In UTF-16 code units.
 }
 
 /** A tree root with required children, enabling `unist-util-visit` transforms to replace nodes. */

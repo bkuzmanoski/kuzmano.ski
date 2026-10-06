@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies -- Provided by `markdownlint-cli2`
+// eslint-disable-next-line import/no-extraneous-dependencies -- Provided by `markdownlint-cli2`.
 import { lint } from "markdownlint/promise";
 import { describe, expect, test } from "vitest";
 

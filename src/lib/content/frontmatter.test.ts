@@ -43,6 +43,27 @@ describe("parseFrontmatter", () => {
     expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, description: undefined }, "path")).toThrow(/description/);
   });
 
+  test("throws for a straight quote in the title, description, or category, naming the field", () => {
+    expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, title: `A title's` }, "path")).toThrow(
+      /straight quote in its title/,
+    );
+    expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, description: `A "description"` }, "path")).toThrow(
+      /straight quote in its description/,
+    );
+    expect(() => parseFrontmatter({ ...VALID_FRONTMATTER, category: `A category's` }, "path")).toThrow(
+      /straight quote in its category/,
+    );
+  });
+
+  test("accepts typographic quotes in the title, description, and category", () => {
+    expect(
+      parseFrontmatter(
+        { ...VALID_FRONTMATTER, title: "A title’s", description: "A “description”", category: "A category’s" },
+        "path",
+      ),
+    ).toMatchObject({ title: "A title’s", description: "A “description”", category: "A category’s" });
+  });
+
   test("accepts an ISO calendar date", () => {
     expect(parseFrontmatter({ ...VALID_FRONTMATTER, date: "2028-02-29" }, "path").date).toBe("2028-02-29");
   });

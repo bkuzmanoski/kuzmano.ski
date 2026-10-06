@@ -12,7 +12,7 @@ import {
   stringAttributeOf,
 } from "./tree.ts";
 
-import type { ContentNode, ContentParent, EntryVFile, EstreeNode } from "./tree.ts";
+import type { ContentNode, ContentNodeAttribute, ContentParent, EntryVFile, EstreeNode } from "./tree.ts";
 
 export const RAIL_COMPONENT_NAME = "Rail";
 export const FOOTNOTE_COMPONENT_NAME = "Footnote";
@@ -43,7 +43,7 @@ const isComponentElement = (node: ContentNode) =>
   node.type === "mdxJsxFlowElement" &&
   (node.name === null || node.name === undefined || !/^[a-z][\w-]*$/.test(node.name));
 
-function railSubjectStyleAttribute(anchorName: string): NonNullable<ContentNode["attributes"]>[number] {
+function railSubjectStyleAttribute(anchorName: string): ContentNodeAttribute {
   const literal = (value: string): EstreeNode & { raw: string } => ({
     type: "Literal",
     value,

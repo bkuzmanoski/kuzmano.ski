@@ -1,7 +1,5 @@
-// eslint-disable-next-line import/no-extraneous-dependencies -- Provided by `markdownlint-cli2`
+// eslint-disable-next-line import/no-extraneous-dependencies -- Provided by `markdownlint-cli2`.
 import type { Rule, RuleParams } from "markdownlint";
-
-// A markdownlint rule limiting an entry's headings to the levels the content styles support.
 
 type Token = RuleParams["parsers"]["micromark"]["tokens"][number];
 

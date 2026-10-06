@@ -107,7 +107,7 @@ function footnoteElementOf(identifier: string, footnote: NumberedFootnote): Cont
 
 function assertReferencesDefined(tree: ContentParent, file: FootnoteVFile) {
   const source = typeof file.value === "string" ? file.value : new TextDecoder().decode(file.value);
-  visit(tree, "text", (node: ContentNode & { position?: { start: { offset?: number }; end: { offset?: number } } }) => {
+  visit(tree, "text", (node: ContentNode) => {
     const start = node.position?.start.offset;
     const end = node.position?.end.offset;
 
