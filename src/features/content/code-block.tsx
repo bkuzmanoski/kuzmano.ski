@@ -44,6 +44,7 @@ export function CodeBlock({ style, ...props }: ComponentProps<"pre">) {
           copyStatus={entryClipboard?.copyStatusOf(copyControlId) ?? null}
           disabled={!isHydrated || entryClipboard === null}
           announcesConfirmation={false}
+          className={styles.copyControl}
           onCopy={() => entryClipboard?.copyToClipboard(copyControlId, preRef.current?.textContent ?? "", "code")}
           onDidHide={() => entryClipboard?.clearCopyConfirmationOf(copyControlId)}
         />
