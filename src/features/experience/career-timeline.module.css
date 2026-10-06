@@ -194,12 +194,8 @@
 .role {
   display: flex;
   flex-direction: column;
-  padding-block: 8px;
+  padding-block-start: 8px;
   border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
-
-  &:last-child {
-    padding-block-end: 0;
-  }
 }
 
 .roleHeader {
