@@ -90,8 +90,8 @@ describe("llmsTxtFor", () => {
   test("describes both ways to request Markdown above the first section", () => {
     const preamble = llmsTxt.slice(0, llmsTxt.indexOf("## "));
 
-    expect(preamble).toContain("append `.md` to a path");
-    expect(preamble).toContain("send `Accept: text/markdown`");
+    expect(preamble).toContain("Add `.md` to its path");
+    expect(preamble).toContain("send a request with the `Accept: text/markdown` header");
   });
 
   test("links each document's Markdown representation, not the document itself", () => {

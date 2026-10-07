@@ -24,12 +24,11 @@ const PAGES_SECTION_HEADING = "Pages";
 const OPTIONAL_SECTION_HEADING = "Optional";
 
 const LLMS_TXT_BODY_PARAGRAPH = paragraphOf([
-  textNode("Each page and entry on this site is also written as Markdown: append "),
+  textNode("Every page on this site is available as Markdown. Add "),
   { type: "inlineCode", value: ".md" },
-  textNode(" to a path, or send "),
+  textNode(" to its path, or send a request with the "),
   { type: "inlineCode", value: "Accept: text/markdown" },
-  textNode(`.
-The links to pages and entries below address that Markdown, each annotated with an estimate of the tokens it costs to read.`),
+  textNode(` header. The links below lead to the Markdown versions, each with an estimated token count.`),
 ]);
 
 function tokenNoteFor(markdownFilePath: string, tokenCounts: MarkdownTokenCounts): string {
