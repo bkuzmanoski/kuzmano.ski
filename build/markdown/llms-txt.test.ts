@@ -167,6 +167,11 @@ describe("llmsTxtFor", () => {
     expect(llmsTxt).not.toContain(`(${SITE_URL}${route}.md)`);
   });
 
+  test("lists the contact page's document under the reserved `Optional` heading", () => {
+    const optional = llmsTxt.slice(llmsTxt.indexOf("## Optional"));
+    expect(optional).toContain(`[Contact](${SITE_URL}/contact)`);
+  });
+
   test("lists the Atom feed under the reserved `Optional` heading", () => {
     const optional = llmsTxt.slice(llmsTxt.indexOf("## Optional"));
     expect(optional).toContain(`[Atom feed](${SITE_URL}/feed.xml)`);

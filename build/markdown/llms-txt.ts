@@ -1,3 +1,4 @@
+import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGE_SLUGS } from "#/config/content.ts";
 import { PLAIN_TEXT_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL, SITE_DESCRIPTION, SITE_NAME } from "#/config/site.ts";
@@ -59,11 +60,6 @@ const sectionOf = (heading: string, items: Array<Array<ContentNode>>): Array<Con
   listOf(items),
 ];
 
-/**
- * Returns the site's `llms.txt`, listing every published page and entry as Markdown.
- *
- * Throws when a listed page or entry has no token count, naming its Markdown path.
- */
 export function llmsTxtFor({ pages, collections }: AuthoredContent, tokenCounts: MarkdownTokenCounts): string {
   const publishedPages = publishedEntries(pages.entries);
   const pageItems = PAGE_SLUGS.flatMap((slug) => {
@@ -79,7 +75,10 @@ export function llmsTxtFor({ pages, collections }: AuthoredContent, tokenCounts:
       ),
     }))
     .filter(({ entries }) => entries.length > 0);
-  const optionalItems = [listItemOf("Atom feed", canonicalUrl(SITE_FEED.path), ["New entries across the site."])];
+  const optionalItems = [
+    listItemOf(CONTACT_DOCUMENT_TITLE, canonicalUrl(CONTACT_ROUTE), ["A form for sending a message."]),
+    listItemOf("Atom feed", canonicalUrl(SITE_FEED.path), ["New entries across the site."]),
+  ];
 
   return markdownFrom([
     { type: "heading", depth: 1, children: [textNode(SITE_NAME)] },
