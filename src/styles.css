@@ -190,7 +190,6 @@
   --color-warning: var(--accent-orange);
   --color-error: var(--accent-red);
   --color-syntax-foreground: var(--color-foreground);
-  --color-syntax-background: var(--color-background-secondary);
   --color-syntax-punctuation: var(--color-foreground-secondary);
   --color-syntax-comment: var(--color-foreground-secondary);
   --color-syntax-keyword: color-mix(in oklab, var(--accent-magenta) 92%, var(--color-foreground));

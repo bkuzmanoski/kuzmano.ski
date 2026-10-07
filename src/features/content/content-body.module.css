@@ -600,7 +600,7 @@
       letter-spacing: -0.01em;
       overflow-wrap: break-word;
 
-      background: var(--color-syntax-background);
+      background: var(--color-background-secondary);
       box-decoration-break: clone;
     }
 
@@ -693,6 +693,8 @@
       max-width: var(--content-body-image-max-width);
       height: auto;
       margin-inline-start: max(0px, round(down, (100% - var(--content-body-image-max-width)) / 2, 1px));
+
+      background: var(--color-background-secondary);
     }
 
     &:where(img, video):where([data-content-span="pane"], [data-content-span="pane"] *) {

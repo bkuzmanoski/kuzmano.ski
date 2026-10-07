@@ -54,7 +54,7 @@
     font: var(--font-code);
     color: var(--color-syntax-foreground);
 
-    background: var(--color-syntax-background);
+    background: var(--color-background-secondary);
 
     &:focus-visible {
       outline: none;
