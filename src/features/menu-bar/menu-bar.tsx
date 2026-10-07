@@ -193,7 +193,7 @@ function TimeStatus() {
 }
 
 export function MenuBar() {
-  const { open, close, cycleWindows } = useWindowActions();
+  const { open, close, toggleZoom, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
   const isBootSequenceComplete = useIsBootSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{
@@ -260,6 +260,7 @@ export function MenuBar() {
           : [],
       ),
     ),
+    { code: "Space", run: () => focusedWindow && toggleZoom(focusedWindow), invokesWhileEditing: true },
     { code: "Tab", run: cycleWindows, invokesWhileEditing: true },
   ]);
 
