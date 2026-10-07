@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { SITE_NAME } from "#/config/site.ts";
+import { AUTHOR_NAME } from "#/config/site.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
 import { deliverMessage } from "./mail.ts";
@@ -13,7 +13,7 @@ vi.mock("./env.ts", () => ({
   workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
 }));
 
-const SENDER: EmailAddress = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
+const SENDER: EmailAddress = { name: AUTHOR_NAME, email: "no-reply@kuzmano.ski" };
 const DESTINATION_EMAIL_ADDRESS = "inbox@example.com";
 const MESSAGE = {
   replyTo: "sender@example.com",

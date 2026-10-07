@@ -1,5 +1,5 @@
 import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
-import { SITE_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
+import { AUTHOR_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
 import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
@@ -27,7 +27,7 @@ export const LLMS_TXT_FILE_NAME = "llms.txt";
 export const LLMS_TXT_PATH = `/${LLMS_TXT_FILE_NAME}`;
 export const LLMS_TXT_LINK_HEADER = `<${canonicalUrl(LLMS_TXT_PATH)}>; rel="describedby"`; // Absolute, like the `describedby` link in the `<head>`.
 
-export const documentTitle = (title: string) => `${title}—${SITE_NAME}`;
+export const documentTitle = (title: string) => `${title}—${AUTHOR_NAME}`;
 export const fontPreloadLinkFor = (href: string) =>
   ({ rel: "preload", as: "font", href, type: "font/woff2", crossOrigin: "anonymous" }) as const;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
@@ -50,7 +50,7 @@ export function documentHead({
   noindex,
 }: DocumentMetadata) {
   const url = canonicalUrl(path);
-  const fullTitle = path === "/" ? SITE_NAME : documentTitle(title);
+  const fullTitle = path === "/" ? AUTHOR_NAME : documentTitle(title);
   const socialImage = coverImage?.social ?? { src: SOCIAL_IMAGE, width: undefined, height: undefined };
 
   return {
@@ -59,7 +59,7 @@ export function documentHead({
       ...(description ? [{ name: "description", content: description }] : []),
       ...(noindex ? [{ name: "robots", content: "noindex" }] : []),
       { property: "og:type", content: kind },
-      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:site_name", content: AUTHOR_NAME },
       { property: "og:title", content: fullTitle },
       ...(description ? [{ property: "og:description", content: description }] : []),
       { property: "og:url", content: url },

@@ -1,10 +1,10 @@
-import { SITE_NAME } from "#/config/site.ts";
+import { AUTHOR_NAME } from "#/config/site.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
 import { workerEnv } from "./env.ts";
 import { errorMessageOf, logServerEvent, reportMissingBinding } from "./log.ts";
 
-const SENDER = { name: SITE_NAME, email: "no-reply@kuzmano.ski" };
+const SENDER = { name: AUTHOR_NAME, email: "no-reply@kuzmano.ski" };
 
 export interface OutgoingMessage {
   replyTo: string;

@@ -1,4 +1,4 @@
-import { SITE_NAME } from "#/config/site.ts";
+import { AUTHOR_NAME, SITE_NAME } from "#/config/site.ts";
 
 import type { IconFile, ManifestIcon } from "./icon-files.ts";
 import type { Palette } from "../stylesheet/palette.ts";
@@ -26,7 +26,7 @@ export interface WebAppManifest {
 export const webAppManifestFrom = (palette: Palette, icons: Array<IconFile>): WebAppManifest => ({
   id: "/",
   short_name: SITE_NAME,
-  name: SITE_NAME,
+  name: AUTHOR_NAME,
   icons: icons.flatMap(({ fileName, mediaType, manifestIcon }) =>
     manifestIcon ? [{ src: fileName, type: mediaType, ...manifestIcon }] : [],
   ),
