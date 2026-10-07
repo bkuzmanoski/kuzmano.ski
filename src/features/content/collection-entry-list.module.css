@@ -19,7 +19,6 @@
   --collection-entry-list-column-gap: 16px;
   --collection-entry-list-column-headings-height: 32px; /* 28px, +1px per rule, +2px between them. */
   --collection-entry-list-name-column-max-width: 544px;
-  --collection-entry-list-title-padding-inline: 4px;
 
   container: collection-entry-list / inline-size;
 
@@ -117,6 +116,16 @@
 
   outline: none;
 
+  &:focus {
+    @mixin focus-stroke 1px;
+
+    &::after {
+      inset-inline: calc(1px + var(--window-safe-area-inline-start, 0px))
+        calc(1px + var(--window-safe-area-inline-end, 0px));
+      color: inherit;
+    }
+  }
+
   &.active {
     --color-foreground-secondary: var(--color-foreground-secondary-active);
 
@@ -158,38 +167,24 @@
   flex-direction: column;
   gap: 4px;
 
-  max-width: calc(
-    var(--collection-entry-list-name-column-max-width) + 2 * var(--collection-entry-list-title-padding-inline)
-  );
+  max-width: var(--collection-entry-list-name-column-max-width);
   margin-block: -1px; /* A title and one-line description (50px) fit the 48px cover image, overhanging into their half-leading. */
-  margin-inline: calc(-1 * var(--collection-entry-list-title-padding-inline));
+}
+
+.title,
+.description {
+  text-wrap: pretty;
+
+  text-box: trim-both text;
 }
 
 .title {
-  position: relative;
-
-  width: fit-content;
-  margin-block-start: -1px;
-  padding-block-start: 1px; /* Balances the focus stroke's space above the title with the space below it. */
-  padding-inline: var(--collection-entry-list-title-padding-inline);
-
   font: var(--font-heading-3);
-  text-wrap: pretty;
-
-  .listItem:focus & {
-    @mixin focus-stroke;
-
-    &::after {
-      color: inherit;
-    }
-  }
 }
 
 .description {
-  padding-inline: var(--collection-entry-list-title-padding-inline);
   font: var(--font-body-small);
   color: var(--color-foreground-secondary);
-  text-wrap: pretty;
 }
 
 .category,
