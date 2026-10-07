@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Checkbox } from "#/components/checkbox.tsx";
 import { PopupMenu } from "#/components/popup-menu.tsx";
@@ -30,13 +30,12 @@ import styles from "./career-timeline.module.css";
 import { useCareerTimelineLastRoleHeight } from "./use-career-timeline-last-role-height.ts";
 import { useCareerTimelineMinimap } from "./use-career-timeline-minimap.ts";
 
-import type { ReactNode } from "react";
-
-const TICK_INTERVAL_YEARS = 4;
 const CAREER_TIMELINE_DIRECTION_OPTIONS: ReadonlyArray<PopupMenuOption<CareerTimelineDirection>> = [
   { value: "newest-first", label: "Newest first" },
   { value: "oldest-first", label: "Oldest first" },
 ];
+const TICK_INTERVAL_YEARS = 4;
+const CHAR_WORD_JOINER = "\u2060";
 
 const careerTimelinePlacementVariables = (
   span: MonthSpan,
@@ -50,9 +49,6 @@ const careerTimelinePlacementVariables = (
 const tickVariables = (monthIndex: number, range: MonthSpan, direction: CareerTimelineDirection): StyleWithVars => ({
   "--career-timeline-tick-offset": monthOffsetOf(monthIndex, range, direction),
 });
-
-const labelFrom = (parts: ReadonlyArray<ReactNode>) =>
-  parts.map((part, index) => <Fragment key={index}>{part}</Fragment>);
 
 export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
   const [hiddenDisciplineIds, setHiddenDisciplineIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -166,6 +162,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
         <ol ref={listRef} className={styles.roles}>
           {visibleCareerTimelineRoles.map((careerTimelineRole) => {
             const { role, span, shownDiscipline } = careerTimelineRole;
+            const [startMonth, dash, endMonth] = roleDatesLabelPartsOf(role, monthTimeElementOf);
             return (
               <li
                 key={roleKeyOf(role)}
@@ -175,12 +172,17 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                 data-content-default-styles="on"
               >
                 <h3>{role.title}</h3>
-                <div className={styles.roleHeader}>
-                  <p className={styles.roleDisciplines}>{roleDisciplinesLabelOf(careerTimelineRole)}</p>
-                  <p className={styles.roleDates}>{labelFrom(roleDatesLabelPartsOf(role, monthTimeElementOf))}</p>
+                <div className={styles.header}>
+                  <p className={styles.disciplines}>{roleDisciplinesLabelOf(careerTimelineRole)}</p>
                 </div>
-                <p className={styles.roleOrganization}>{role.organization}</p>
-                <p className={styles.roleSummary}>{role.summary}</p>
+                <p className={styles.organizationAndDates}>
+                  {role.organization}, {startMonth}
+                  {CHAR_WORD_JOINER}
+                  {dash}
+                  {CHAR_WORD_JOINER}
+                  {endMonth}
+                </p>
+                <p className={styles.summary}>{role.summary}</p>
                 {role.highlights && (
                   <ul className={styles.highlights}>
                     {role.highlights.map((highlight) => (
@@ -188,7 +190,11 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                     ))}
                   </ul>
                 )}
-                {role.link && <ContentLink href={role.link.href}>{role.link.label}</ContentLink>}
+                {role.link && (
+                  <ContentLink className={styles.link} href={role.link.href}>
+                    {role.link.label}
+                  </ContentLink>
+                )}
               </li>
             );
           })}

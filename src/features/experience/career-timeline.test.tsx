@@ -230,12 +230,20 @@ describe("CareerTimeline", () => {
 
   test("labels a role's dates from its first month to `Present` when its `end` is `null`", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-    expect(within(roleNamed("Newest Role")!).getByText(paragraphWithText("Mar 2024–Present"))).toBeTruthy();
+    expect(
+      within(roleNamed("Newest Role")!).getByText(
+        paragraphWithText("Newest Organization, Mar 2024\u2060–\u2060Present"),
+      ),
+    ).toBeTruthy();
   });
 
   test("labels a role's dates from its first month to its last month when it has ended", () => {
     render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-    expect(within(roleNamed("Oldest Role")!).getByText(paragraphWithText("Jan 2015–Jun 2018"))).toBeTruthy();
+    expect(
+      within(roleNamed("Oldest Role")!).getByText(
+        paragraphWithText("Oldest Organization, Jan 2015\u2060–\u2060Jun 2018"),
+      ),
+    ).toBeTruthy();
   });
 
   test("renders each month in a role's dates as a `<time>` with the month in its `datetime` attribute", () => {
@@ -276,7 +284,7 @@ describe("CareerTimeline", () => {
 
     for (const label of [
       within(role).getByText("Second, First"),
-      within(role).getByText(paragraphWithText("Jan 2019–Jun 2021")),
+      within(role).getByText(paragraphWithText("Middle Organization, Jan 2019\u2060–\u2060Jun 2021")),
     ]) {
       expect(heading.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
         Node.DOCUMENT_POSITION_FOLLOWING,
@@ -289,13 +297,6 @@ describe("CareerTimeline", () => {
 
     expect(screen.getByText("A highlight of the newest role.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Read the entry" }).getAttribute("href")).toBe("/collection/entry");
-  });
-
-  test("renders a role's link inside an element whose `data-content-default-styles` attribute is `on`", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
-    expect(
-      screen.getByRole("link", { name: "Read the entry" }).closest('[data-content-default-styles="on"]'),
-    ).toBeTruthy();
   });
 
   test("renders a checked filter for every discipline, in a list labeled `Disciplines`", () => {

@@ -198,7 +198,7 @@
   border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
 }
 
-.roleHeader {
+.header {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
@@ -209,28 +209,29 @@
   padding-block-end: var(--content-body-layout-space);
 }
 
-.roleDisciplines {
+.disciplines {
   @mixin bitmap-label;
 
   color: var(--career-timeline-discipline-accent-color);
 }
 
-.roleDates {
-  @mixin bitmap-label;
-}
-
-.roleOrganization {
+.organizationAndDates {
+  margin-block-start: 4px;
   font: var(--font-body-small);
   color: var(--color-foreground-secondary);
 }
 
-.roleOrganization ~ * {
+.organizationAndDates ~ * {
   margin-block-start: var(--content-body-layout-space);
 }
 
 /* Qualified by `.role` to outrank the content element defaults. */
 .role .highlights > li::before {
   color: var(--career-timeline-discipline-accent-color);
+}
+
+.link {
+  --color-accent: var(--career-timeline-discipline-accent-color);
 }
 
 .emptyState {
@@ -335,7 +336,7 @@
     break-after: avoid;
   }
 
-  .roleSummary,
+  .summary,
   .highlights li {
     break-inside: avoid;
   }

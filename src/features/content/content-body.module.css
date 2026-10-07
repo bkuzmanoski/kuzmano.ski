@@ -457,7 +457,7 @@
       padding-inline-start: 24px;
     }
 
-    &:where(:is(ul, ol) > li + li) {
+    &:where(:is(ul, ol) > li + li, li > :is(ul, ol)) {
       margin-block-start: 8px;
     }
 
