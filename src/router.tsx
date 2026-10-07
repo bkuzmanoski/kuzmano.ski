@@ -10,6 +10,8 @@ export function getRouter(history?: RouterHistory) {
   const router = createTanStackRouter({
     routeTree,
     history,
+    scrollRestoration: false,
+    trailingSlash: "never",
     defaultPreload: "intent",
     defaultPreloadStaleTime: Infinity,
     defaultStaleTime: Infinity,
