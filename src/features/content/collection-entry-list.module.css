@@ -122,7 +122,7 @@
     &::after {
       inset-inline: calc(1px + var(--window-safe-area-inline-start, 0px))
         calc(1px + var(--window-safe-area-inline-end, 0px));
-      color: inherit;
+      color: var(--color-border);
     }
   }
 
