@@ -7,6 +7,7 @@ import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
 import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
 import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
 import { Button } from "#/components/button.tsx";
+import { Tooltip } from "#/components/tooltip.tsx";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
@@ -250,15 +251,20 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         onTimeUpdate={syncState}
       />
       <div className={styles.controls} role="group" aria-label="Playback controls" data-feed-omit>
-        <Button
-          variant="strip"
-          className={cx(styles.button, styles.playPauseButton)}
-          disabled={!hasSiteControls}
-          aria-label={isPaused ? "Play" : "Pause"}
-          onClick={togglePlayback}
+        <Tooltip
+          label={isPaused ? "Play" : "Pause"}
+          suppressed={!hasSiteControls}
+          className={cx(styles.control, styles.playPauseControl)}
         >
-          {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
-        </Button>
+          <Button
+            variant="strip"
+            disabled={!hasSiteControls}
+            aria-label={isPaused ? "Play" : "Pause"}
+            onClick={togglePlayback}
+          >
+            {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
+          </Button>
+        </Tooltip>
         <div
           ref={trackRef}
           className={styles.track}
@@ -274,24 +280,34 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         >
           <div ref={thumbRef} className={styles.thumb} />
         </div>
-        <Button
-          variant="strip"
-          className={cx(styles.button, styles.muteButton)}
-          disabled={!hasSiteControls}
-          aria-label={isMuted ? "Unmute" : "Mute"}
-          onClick={toggleMuted}
+        <Tooltip
+          label={isMuted ? "Unmute" : "Mute"}
+          suppressed={!hasSiteControls}
+          className={cx(styles.control, styles.muteControl)}
         >
-          {isMuted ? <SoundOffVideoIcon /> : <SoundOnVideoIcon />}
-        </Button>
-        <Button
-          variant="strip"
-          className={cx(styles.button, styles.fullScreenButton)}
-          disabled={!canToggleFullScreen}
-          aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
-          onClick={toggleFullScreen}
+          <Button
+            variant="strip"
+            disabled={!hasSiteControls}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            onClick={toggleMuted}
+          >
+            {isMuted ? <SoundOffVideoIcon /> : <SoundOnVideoIcon />}
+          </Button>
+        </Tooltip>
+        <Tooltip
+          label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+          suppressed={!canToggleFullScreen}
+          className={cx(styles.control, styles.fullScreenControl)}
         >
-          {isFullScreen ? <FullScreenExitVideoIcon /> : <FullScreenEnterVideoIcon />}
-        </Button>
+          <Button
+            variant="strip"
+            disabled={!canToggleFullScreen}
+            aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+            onClick={toggleFullScreen}
+          >
+            {isFullScreen ? <FullScreenExitVideoIcon /> : <FullScreenEnterVideoIcon />}
+          </Button>
+        </Tooltip>
       </div>
     </div>
   );

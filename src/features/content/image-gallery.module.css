@@ -61,9 +61,14 @@
   border-block-start: 1px solid var(--color-border);
 }
 
-/* Under `.controls` so the hairlines override the strip `Button`'s border reset and a disabled `Button`'s border color. */
+/* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order.  */
 .controls > .control {
+  align-self: stretch;
   width: var(--image-gallery-control-size);
+
+  & > button {
+    width: 100%;
+  }
 
   &.previousControl {
     border-inline-end: 1px solid var(--color-border);
@@ -71,6 +76,14 @@
 
   &:is(.nextControl, .previewControl) {
     border-inline-start: 1px solid var(--color-border);
+  }
+
+  &.previewControl {
+    display: none;
+
+    @mixin without-fine-pointer {
+      display: inline-flex;
+    }
   }
 }
 

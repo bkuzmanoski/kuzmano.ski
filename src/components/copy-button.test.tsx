@@ -109,37 +109,30 @@ test("a failed copy shows an alert and does not show the confirmation or leave t
   expect(screen.getByRole("alertdialog", { hidden: true }).hasAttribute("open")).toBe(false);
 });
 
-test("a write that succeeds after a second copy has started does not confirm the second copy", async () => {
+test("the button ignores a press while its copy is pending, and confirms that copy", async () => {
   renderButton();
 
-  const firstWrite = deferWrite(writeText);
-  const secondWrite = deferWrite(writeText);
+  const write = deferWrite(writeText);
 
   await clickCopy();
   await clickCopy();
-  await firstWrite.succeed();
+  await write.succeed();
 
-  expect(screen.getByRole("status").textContent).toBe("");
-
-  await secondWrite.fail();
-
-  expect(screen.getByRole("status").textContent).toBe("");
-  expect(screen.getByRole("alertdialog").textContent).toContain("The email address couldn’t be copied.");
+  expect(writeText).toHaveBeenCalledOnce();
+  expect(screen.getByRole("status").textContent).toBe("Copied");
 });
 
-test("a write that fails after a second copy has started does not show the failure alert", async () => {
+test("the button ignores a press while its copy is confirmed, without restarting the confirmation", async () => {
   renderButton();
-
-  const firstWrite = deferWrite(writeText);
-  const secondWrite = deferWrite(writeText);
-
   await clickCopy();
   await clickCopy();
-  await secondWrite.succeed();
-  await firstWrite.fail();
 
-  expect(screen.queryByRole("alertdialog")).toBeNull();
+  expect(writeText).toHaveBeenCalledOnce();
   expect(screen.getByRole("status").textContent).toBe("Copied");
+
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
+
+  expect(screen.getByRole("status").textContent).toBe(""); // The confirmation was not restarted by the second press.
 });
 
 test("a button with a `null` value is disabled", async () => {

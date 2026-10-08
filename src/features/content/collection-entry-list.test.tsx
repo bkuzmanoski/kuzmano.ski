@@ -217,14 +217,15 @@ test("pressing an entry with the mouse plays a click sound", () => {
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a tap plays a click sound on release, but not when it is canceled by scrolling", () => {
+test("a tap plays a click sound on its `click` event, but not when scrolling cancels it", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
+  fireEvent.pointerUp(links[1]!, { pointerType: "touch" });
 
   expect(playClickSound).not.toHaveBeenCalled();
 
-  fireEvent.pointerUp(links[1]!, { pointerType: "touch" });
+  fireEvent.click(links[1]!, { detail: 1 });
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 

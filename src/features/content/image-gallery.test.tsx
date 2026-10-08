@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import zoomRectStyles from "#/features/window-manager/zoom-rect.module.css";
 import { ZOOM_RECT_DURATION_MS } from "#/features/window-manager/zoom-rect.tsx";
-import { playHoverSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
+import { playClickSound, playHoverSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
@@ -22,6 +22,7 @@ const prefersReducedMotion = { matches: true };
 
 beforeEach(() => {
   prefersReducedMotion.matches = true;
+  vi.mocked(playClickSound).mockClear();
   vi.mocked(playHoverSound).mockClear();
   vi.mocked(playKeyDownSound).mockClear();
   vi.mocked(playKeyUpSound).mockClear();
@@ -34,6 +35,7 @@ afterEach(() => {
 });
 
 const SWIPE_START_POINT = { x: 200, y: 100 };
+const TOUCH_PRESS = { pointerType: "touch", button: 0 };
 
 const renderGallery = () =>
   render(
@@ -214,6 +216,20 @@ test("pressing a thumbnail shows its image", () => {
 
   fireEvent.click(thumbnail("Third image"));
 
+  expect(shownImageName()).toBe("Third image");
+});
+
+test("a touch on a thumbnail plays the click sound when its `click` event selects the image", () => {
+  renderGallery();
+
+  fireEvent.pointerDown(thumbnail("Third image"), TOUCH_PRESS);
+  fireEvent.pointerUp(thumbnail("Third image"), TOUCH_PRESS);
+
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  fireEvent.click(thumbnail("Third image"), { detail: 1 });
+
+  expect(playClickSound).toHaveBeenCalledOnce();
   expect(shownImageName()).toBe("Third image");
 });
 

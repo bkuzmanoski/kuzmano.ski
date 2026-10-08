@@ -34,7 +34,8 @@ function HeadingLink({
   const renderedEntry = useRenderedEntry();
   const entryClipboard = useEntryClipboard();
 
-  const isCopied = entryClipboard?.copyStatusOf(fragment) === "copied";
+  const copyStatus = entryClipboard?.copyStatusOf(fragment) ?? null;
+  const hasCopied = copyStatus === "copied";
 
   return (
     <span className={styles.headingLinkPosition} style={anchorStyle} data-heading-level={level} data-feed-omit>
@@ -42,7 +43,7 @@ function HeadingLink({
         label={"Copy link"}
         confirmation={"Copied"}
         margin={2}
-        isCopied={isCopied}
+        hasCopied={hasCopied}
         suppressed={renderedEntry === null || entryClipboard === null}
         announcesConfirmation={false}
         onDidHide={() => entryClipboard?.clearCopyConfirmationOf(fragment)}
@@ -59,7 +60,11 @@ function HeadingLink({
 
             event.preventDefault();
             playClickSound();
-            entryClipboard.copyToClipboard(fragment, canonicalUrl(renderedEntry.route) + fragment, "link");
+
+            // A press while a copy is pending or confirmed is ignored (see also `ControlledCopyButton`).
+            if (copyStatus !== "copying" && !hasCopied) {
+              entryClipboard.copyToClipboard(fragment, canonicalUrl(renderedEntry.route) + fragment, "link");
+            }
           }}
         >
           <span id={labelStartId} hidden>

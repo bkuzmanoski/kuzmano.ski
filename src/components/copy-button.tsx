@@ -73,7 +73,8 @@ export function ControlledCopyButton({
   onCopy: () => void;
   onDidHide: () => void;
 }) {
-  const isCopied = copyStatus === "copied";
+  const isCopying = copyStatus === "copying";
+  const hasCopied = copyStatus === "copied";
 
   const Icon = COPY_ICONS[icon];
 
@@ -81,7 +82,7 @@ export function ControlledCopyButton({
     <CopyTooltip
       label={label}
       confirmation={confirmation}
-      isCopied={isCopied}
+      hasCopied={hasCopied}
       suppressed={disabled}
       announcesConfirmation={announcesConfirmation}
       onDidHide={onDidHide}
@@ -90,11 +91,17 @@ export function ControlledCopyButton({
       <Button
         variant={variant}
         disabled={disabled}
-        holdPressed={copyStatus === "copying" || isCopied}
+        holdPressed={isCopying || hasCopied}
         aria-label={label}
-        onClick={onCopy}
+        onClick={() => {
+          // Copying again would show the copy icon and its label until the new write finished, then
+          // restart the confirmation, so a press while a copy is pending or confirmed is ignored.
+          if (!isCopying && !hasCopied) {
+            onCopy();
+          }
+        }}
       >
-        {isCopied ? <Checkmark /> : <Icon />}
+        {hasCopied ? <Checkmark /> : <Icon />}
       </Button>
     </CopyTooltip>
   );

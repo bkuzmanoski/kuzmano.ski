@@ -38,7 +38,6 @@ export function InputField({
     <div
       className={cx(styles.inputField, className)}
       onPointerDown={onInputFieldSurface(pressSound.onPointerDown)}
-      onPointerUp={onInputFieldSurface(pressSound.onPointerUp)}
       onPointerCancel={pressSound.onPointerCancel}
       onClick={onInputFieldSurface(pressSound.onClick)}
     >

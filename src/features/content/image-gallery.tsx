@@ -3,6 +3,7 @@ import { Children, isValidElement, useEffect, useId, useRef, useState } from "re
 import PreviewImageGalleryIcon from "#/assets/images/image-gallery-icon-preview.svg?react";
 import ArrowScrollbarIcon from "#/assets/images/scrollbar-icon-arrow.svg?react";
 import { Button } from "#/components/button.tsx";
+import { Tooltip } from "#/components/tooltip.tsx";
 import { ZoomRect } from "#/features/window-manager/zoom-rect.tsx";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { loadKeySounds, playHoverSound } from "#/lib/audio/sounds.ts";
@@ -121,7 +122,7 @@ export function ImageGallery({
   const [previewZoomRect, setPreviewZoomRect] = useState<PreviewZoomRect | null>(null);
   const images = galleryImagesIn(children);
   const hasControls = useIsHydrated();
-  const thumbnailPressSoundHandlers = usePressSound();
+  const thumbnailPressSoundHandlers = usePressSound({ scrollSafe: true });
   const closeButtonPressSoundHandlers = usePressSound();
   const galleryRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -290,30 +291,32 @@ export function ImageGallery({
   });
 
   const previousControl = (
-    <Button
-      variant="strip"
-      className={cx(styles.control, styles.previousControl)}
-      disabled={!canStep}
-      aria-disabled={(canStep && isFirstImage) || undefined} // Marked `aria-disabled` rather than disabled so the focus remains on it.
-      aria-label="Previous image"
-      aria-keyshortcuts="ArrowLeft"
-      onClick={() => step(-1)}
-    >
-      <ArrowScrollbarIcon className={styles.previousIcon} />
-    </Button>
+    <Tooltip label="Previous image" suppressed={!canStep} className={cx(styles.control, styles.previousControl)}>
+      <Button
+        variant="strip"
+        disabled={!canStep}
+        aria-disabled={(canStep && isFirstImage) || undefined} // Marked `aria-disabled` rather than disabled so the focus remains on it.
+        aria-label="Previous image"
+        aria-keyshortcuts="ArrowLeft"
+        onClick={() => step(-1)}
+      >
+        <ArrowScrollbarIcon className={styles.previousIcon} />
+      </Button>
+    </Tooltip>
   );
   const nextControl = (
-    <Button
-      variant="strip"
-      className={cx(styles.control, styles.nextControl)}
-      disabled={!canStep}
-      aria-disabled={(canStep && isLastImage) || undefined} // Marked `aria-disabled` rather than disabled so the focus remains on it.
-      aria-label="Next image"
-      aria-keyshortcuts="ArrowRight"
-      onClick={() => step(1)}
-    >
-      <ArrowScrollbarIcon className={styles.nextIcon} />
-    </Button>
+    <Tooltip label="Next image" suppressed={!canStep} className={cx(styles.control, styles.nextControl)}>
+      <Button
+        variant="strip"
+        disabled={!canStep}
+        aria-disabled={(canStep && isLastImage) || undefined} // Marked `aria-disabled` rather than disabled so the focus remains on it.
+        aria-label="Next image"
+        aria-keyshortcuts="ArrowRight"
+        onClick={() => step(1)}
+      >
+        <ArrowScrollbarIcon className={styles.nextIcon} />
+      </Button>
+    </Tooltip>
   );
 
   return (
@@ -361,6 +364,7 @@ export function ImageGallery({
               tabIndex={0}
               aria-roledescription="slide"
               aria-label={positionLabelOf(index)}
+              aria-keyshortcuts="Space"
               hidden={index !== currentIndex}
             >
               {image}
@@ -381,6 +385,7 @@ export function ImageGallery({
                   disabled={!hasControls}
                   aria-selected={index === currentIndex}
                   aria-controls={slideIdOf(index)}
+                  aria-keyshortcuts="Space"
                   {...thumbnailPressSoundHandlers}
                   onClick={(event) => {
                     thumbnailPressSoundHandlers.onClick(event);
@@ -393,16 +398,21 @@ export function ImageGallery({
             </div>
           </div>
           {nextControl}
-          <Button
-            variant="strip"
+          <Tooltip
+            label="Preview image"
+            suppressed={!hasControls}
             className={cx(styles.control, styles.previewControl)}
-            disabled={!hasControls}
-            aria-label="Preview image"
-            aria-keyshortcuts="Space"
-            onClick={openPreview}
           >
-            <PreviewImageGalleryIcon />
-          </Button>
+            <Button
+              variant="strip"
+              disabled={!hasControls}
+              aria-label="Preview image"
+              aria-keyshortcuts="Space"
+              onClick={openPreview}
+            >
+              <PreviewImageGalleryIcon />
+            </Button>
+          </Tooltip>
         </div>
       </div>
       {caption && <figcaption id={captionId}>{caption}</figcaption>}
@@ -437,18 +447,20 @@ export function ImageGallery({
       >
         <div ref={previewFrameRef} className={styles.previewFrame}>
           <div className={styles.previewTitleBar}>
-            <button
-              type="button"
-              className={styles.previewCloseButton}
-              disabled={!hasControls}
-              aria-label="Close preview"
-              aria-keyshortcuts="Space"
-              {...closeButtonPressSoundHandlers}
-              onClick={(event) => {
-                closeButtonPressSoundHandlers.onClick(event);
-                closePreview();
-              }}
-            />
+            <Tooltip label="Close preview" suppressed={!hasControls}>
+              <button
+                type="button"
+                className={styles.previewCloseButton}
+                disabled={!hasControls}
+                aria-label="Close preview"
+                aria-keyshortcuts="Space"
+                {...closeButtonPressSoundHandlers}
+                onClick={(event) => {
+                  closeButtonPressSoundHandlers.onClick(event);
+                  closePreview();
+                }}
+              />
+            </Tooltip>
           </div>
           <div
             ref={previewImageRef}

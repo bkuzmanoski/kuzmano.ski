@@ -13,7 +13,7 @@ export function CopyTooltip({
   label,
   confirmation,
   margin,
-  isCopied,
+  hasCopied,
   suppressed = false,
   announcesConfirmation,
   onDidHide,
@@ -23,7 +23,7 @@ export function CopyTooltip({
   label: string;
   confirmation: string;
   margin?: number;
-  isCopied: boolean;
+  hasCopied: boolean;
   suppressed?: boolean;
   announcesConfirmation: boolean;
   onDidHide: () => void;
@@ -33,10 +33,10 @@ export function CopyTooltip({
   return (
     <>
       <Tooltip
-        label={isCopied ? confirmation : label}
+        label={hasCopied ? confirmation : label}
         margin={margin}
         persistOnPress
-        showsState={isCopied}
+        showsState={hasCopied}
         suppressed={suppressed}
         onDidHide={onDidHide}
         className={className}
@@ -45,7 +45,7 @@ export function CopyTooltip({
       </Tooltip>
       {announcesConfirmation && (
         <span className={styles.announcement} role="status">
-          {isCopied ? confirmation : ""}
+          {hasCopied ? confirmation : ""}
         </span>
       )}
     </>

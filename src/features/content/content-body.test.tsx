@@ -379,7 +379,7 @@ test("a copy from a second code block during the first code block's confirmation
   expect(status.textContent).toBe("");
 });
 
-test("a second copy from the same code block during its confirmation inserts a new confirmation element into the status region", async () => {
+test("a code block's copy control ignores a second press during its confirmation, leaving the same confirmation element in the status region", async () => {
   await renderContent(codeBlocksFixture);
   vi.useFakeTimers();
 
@@ -393,8 +393,8 @@ test("a second copy from the same code block during its confirmation inserts a n
   advanceTimersBy(STATE_DISPLAY_DURATION_MS / 2);
   await copyFrom(copyControl!);
 
-  expect(status.textContent).toBe("Copied");
-  expect(status.firstElementChild).not.toBe(firstConfirmation); // A screen reader announces an inserted node, not an unchanged one.
+  expect(writeText).toHaveBeenCalledOnce();
+  expect(status.firstElementChild).toBe(firstConfirmation); // A screen reader announces an inserted node, so it is not announced again.
 });
 
 test("removing a code block during its confirmation clears the confirmation from the status region", async () => {

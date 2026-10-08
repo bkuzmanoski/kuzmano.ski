@@ -8,13 +8,10 @@ import type { EntryClipboard } from "./entry-clipboard.ts";
 import type { ReactNode } from "react";
 
 /**
- * Provides the entry's clipboard to its copy controls, and renders the status region and the failure
- * alert they share after the entry's content.
+ * Shares clipboard state with an entry's copy controls and renders their status region and failure alert.
  *
- * The confirmation in the status region is keyed by the copy's ID, so a copy made while the last one's
- * confirmation is still shown inserts it again, which a screen reader announces as a new status. The
- * entry, rather than the control, ends the confirmation, so a control that unmounts during its
- * confirmation does not leave the confirmation in the region.
+ * Keying confirmations by copy ID causes subsequent copies to be announced as new status updates. The
+ * provider clears confirmations so they are removed even if the originating control unmounts.
  */
 export function EntryClipboardProvider({ children }: { children: ReactNode }) {
   const { latestClipboardCopy, copy, clearConfirmation, dismissFailure } = useCopyToClipboard<{

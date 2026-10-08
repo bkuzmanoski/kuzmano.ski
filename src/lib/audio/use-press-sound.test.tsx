@@ -96,17 +96,27 @@ test("a non-primary press does not play a sound", () => {
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a scroll-safe control plays a sound for a touch press on pointer up", () => {
+test("a scroll-safe control plays a sound for a touch press on its `click` event", () => {
   const control = renderControl({ scrollSafe: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
+  fireEvent.pointerUp(control, { pointerType: "touch" });
 
   expect(playClickSound).not.toHaveBeenCalled();
 
-  fireEvent.pointerUp(control, { pointerType: "touch" });
   fireEvent.click(control, CLICK);
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
+});
+
+// A touch that stops a scroll in motion ends without a `click` event.
+test("a scroll-safe control does not play a sound for a touch press that ends without a `click` event", () => {
+  const control = renderControl({ scrollSafe: true });
+
+  fireEvent.pointerDown(control, { pointerType: "touch" });
+  fireEvent.pointerUp(control, { pointerType: "touch" });
+
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("a scroll-safe control does not play a sound for a canceled touch press", () => {
@@ -125,6 +135,18 @@ test("a scroll-safe control plays a sound for a mouse press on pointer down", ()
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 
+  fireEvent.pointerUp(control, { pointerType: "mouse" });
+  fireEvent.click(control, CLICK);
+
+  expect(playClickSound).toHaveBeenCalledTimes(1);
+});
+
+test("a scroll-safe control plays one sound for a mouse press after a touch press whose `click` event went to another control", () => {
+  const control = renderControl({ scrollSafe: true });
+
+  fireEvent.pointerDown(control, { pointerType: "touch" });
+  fireEvent.pointerUp(control, { pointerType: "touch" }); // iOS dispatches the tap's `click` to another control.
+  fireEvent.pointerDown(control, { pointerType: "mouse" });
   fireEvent.pointerUp(control, { pointerType: "mouse" });
   fireEvent.click(control, CLICK);
 

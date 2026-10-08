@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { playClickSound, playHoverSound } from "../audio/sounds.ts";
+import { isFollowingLink } from "../link.ts";
 import { cycle } from "../math.ts";
 import { isPointerClick, isPrimaryPress } from "../press.ts";
 
@@ -225,10 +226,12 @@ export function useMenuInteraction({
   }, [listRef]);
 
   function onClick(event: MouseEvent) {
-    const index = Number((event.target as Element).closest<HTMLElement>("[data-index]")?.dataset.index ?? -1);
+    const item = (event.target as Element).closest<HTMLElement>("[data-index]");
+    const index = Number(item?.dataset.index ?? -1);
 
-    // A pointer's click follows the `pointerup` that has already activated the item.
-    if (!isPointerClick(event) && index >= 0) {
+    // Pointer clicks and `followLink` clicks dispatched after a link item's activation
+    // flash belong to the activation already handled by `pointerup`.
+    if (!isPointerClick(event) && index >= 0 && !(item && isFollowingLink(item))) {
       activate(index);
     }
   }

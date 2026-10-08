@@ -14,6 +14,7 @@ let focusedWindow: WindowId | null = null;
 
 const open = vi.hoisted(() => vi.fn());
 const playHoverSound = vi.hoisted(() => vi.fn());
+const playClickSound = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
@@ -23,13 +24,14 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
 );
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound, playClickSound }),
 );
 
 beforeEach(() => {
   focusedWindow = null;
   open.mockClear();
   playHoverSound.mockClear();
+  playClickSound.mockClear();
   resetTooltipState();
 });
 
@@ -508,6 +510,25 @@ describe("items that open a destination", () => {
     runActivationFlash();
 
     expect(follow).toHaveBeenCalled();
+  });
+
+  test("releasing the pointer over a menu item link plays the click sound once, including when the link is followed", () => {
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    openWithPointer("Special");
+    playClickSound.mockClear(); // Pressing the menu's title plays its own click sound.
+
+    const viewSource = menuItem("View Source") as HTMLAnchorElement;
+    const follow = vi.spyOn(viewSource, "click").mockImplementation(() => {
+      // Following the link dispatches a click on it, which bubbles through the menu. Its default action, opening a new tab, is prevented.
+      viewSource.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    viewSource.addEventListener("click", (event) => event.preventDefault());
+    releasePointerOver(viewSource);
+    runActivationFlash();
+
+    expect(follow).toHaveBeenCalledOnce();
+    expect(playClickSound).toHaveBeenCalledOnce();
   });
 
   test("choosing an item that does not move the focus returns the focus to the menu's title", () => {

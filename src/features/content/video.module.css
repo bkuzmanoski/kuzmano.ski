@@ -52,15 +52,20 @@
   }
 }
 
-/* Under `.controls` so the hairlines override the strip `Button`'s border reset and a disabled `Button`'s border color. */
-.controls > .button {
+/* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order. */
+.controls > .control {
+  align-self: stretch;
   width: var(--video-control-height);
 
-  &.playPauseButton {
+  & > button {
+    width: 100%;
+  }
+
+  &.playPauseControl {
     border-inline-end: 1px solid var(--color-border);
   }
 
-  &:is(.muteButton, .fullScreenButton) {
+  &:is(.muteControl, .fullScreenControl) {
     border-inline-start: 1px solid var(--color-border);
   }
 }

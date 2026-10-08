@@ -92,6 +92,7 @@ export default defineConfig(
               from: ["./src/test-utils"],
               except: [
                 "./audio.ts",
+                "./clipboard.ts",
                 "./collection.ts",
                 "./content-source.ts",
                 "./fetch.ts",
