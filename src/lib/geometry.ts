@@ -30,6 +30,14 @@ export function containsPoint(rect: Rect, { x, y }: Position): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
 
+/** `rect` in the coordinates of a box whose top-left corner is at `origin`. */
+export const rectRelativeTo = ({ x, y, width, height }: Rect, origin: Position): Rect => ({
+  x: x - origin.x,
+  y: y - origin.y,
+  width,
+  height,
+});
+
 /** The rect two rects overlap in, or `null` when they do not overlap. */
 export function intersectionOf(a: Rect, b: Rect): Rect | null {
   const x = Math.max(a.x, b.x);

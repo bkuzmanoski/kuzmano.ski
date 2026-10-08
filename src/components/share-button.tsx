@@ -39,7 +39,7 @@ export function ShareButton({
   return (
     <Tooltip label={label} suppressed={disabled} className={className}>
       <Button
-        variant="icon"
+        variant="standalone"
         disabled={disabled}
         holdPressed={isSharing}
         aria-label={label}

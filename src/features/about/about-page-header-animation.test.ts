@@ -18,7 +18,7 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   },
 }));
 
-// At a `--dither-cell` of 4px and a device pixel ratio of 1, the component is 500 by 200 dither pixels.
+// At a `--dither-cell` of 4px and a device pixel ratio of 1, the component is 500x200 dither pixels.
 const COMPONENT_WIDTH_PX = 2_000;
 const COMPONENT_HEIGHT_PX = 800;
 const DITHER_FIELD_WIDTH_DITHER_PIXELS = 500;

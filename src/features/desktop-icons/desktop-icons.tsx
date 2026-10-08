@@ -9,6 +9,7 @@ import type { Icon, IconPlacement } from "#/lib/desktop-icons/icon.ts";
 import { positionFromDrop, resolveIconPlacements } from "#/lib/desktop-icons/layout.ts";
 import { adjacentIconId } from "#/lib/desktop-icons/navigation.ts";
 import { createIconPositionsStore } from "#/lib/desktop-icons/positions.ts";
+import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useElementSize } from "#/lib/hooks/use-element-size.ts";
@@ -76,17 +77,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const iconElement = (id: string) => layerRef.current?.querySelector<HTMLAnchorElement>(`[data-icon="${id}"]`);
 
   /** The box of an element in the layer's own coordinates. */
-  function relativeRect(element: Element): Rect {
-    const layerRect = layerRef.current?.getBoundingClientRect();
-    const rect = element.getBoundingClientRect();
-
-    return {
-      x: rect.left - (layerRect?.left ?? 0),
-      y: rect.top - (layerRect?.top ?? 0),
-      width: rect.width,
-      height: rect.height,
-    };
-  }
+  const relativeRect = (element: Element): Rect =>
+    rectRelativeTo(element.getBoundingClientRect(), layerRef.current?.getBoundingClientRect() ?? { x: 0, y: 0 });
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
   const openWindowRoutes = Object.values(content).map(({ route }) => route);

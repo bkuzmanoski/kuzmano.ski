@@ -4,16 +4,14 @@ import type { Rect } from "#/lib/geometry.ts";
 
 import styles from "./zoom-rect.module.css";
 
-const ZOOM_RECT_ANIMATION_DURATION_MS = 200;
-const ZOOM_RECT_HOLD_INTERVAL_MS = 260;
+const ZOOM_RECT_TRANSITION_DURATION_MS = 200;
+
+export const ZOOM_RECT_DURATION_MS = 260; // From mounting to calling `onDone`, which includes the transition and a hold at the target.
 
 /**
- * The zoom-rect that grows from an icon to the window it opened. It is a sibling of the windows, not
- * part of the icon layer, so it shares their stacking context. Its z-index is the new window's level;
- * being earlier in the DOM, it stacks below that window but above every other window.
- *
- * The target box is the window's own geometry, fitted to the same desktop rect the window layer uses,
- * so the outline lands exactly on the window.
+ * A dashed outline that grows from `from` to `target` in its containing block's
+ * coordinates, then calls `onDone` after holding at the target. The target is read
+ * only on the first render, so each new zoom rect must be rendered with a new `key`.
  */
 export function ZoomRect({
   from,
@@ -23,21 +21,18 @@ export function ZoomRect({
 }: {
   from: Rect;
   target: Rect | null;
-  z: number;
+  z?: number;
   onDone: () => void;
 }) {
   const [box, setBox] = useState(from);
   const [animate, setAnimate] = useState(false);
-
-  // The window the zoom rect grows towards was opened in the same handler that
-  // mounted this component, so its geometry is in state by the first render.
   const [latchedTarget] = useState(target);
 
   const start = useEffectEvent(() => {
     const frameIds: Array<number> = [];
 
     if (latchedTarget) {
-      // Two frames: the outline must paint at the icon before it starts to grow.
+      // Two frames: the outline must paint at `from` before it starts to grow.
       frameIds.push(
         requestAnimationFrame(() =>
           frameIds.push(
@@ -56,7 +51,7 @@ export function ZoomRect({
   const finish = useEffectEvent(onDone);
 
   useEffect(() => {
-    const timer = setTimeout(finish, ZOOM_RECT_HOLD_INTERVAL_MS);
+    const timer = setTimeout(finish, ZOOM_RECT_DURATION_MS);
     const frameIds = start();
 
     return () => {
@@ -74,7 +69,7 @@ export function ZoomRect({
         width: box.width,
         height: box.height,
         zIndex: z,
-        transition: animate ? `all ${ZOOM_RECT_ANIMATION_DURATION_MS}ms ease-out` : "none",
+        transition: animate ? `all ${ZOOM_RECT_TRANSITION_DURATION_MS}ms ease-out` : "none",
       }}
     />
   );

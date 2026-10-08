@@ -352,6 +352,19 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     ).rejects.toThrow("writes components inline whose fallback Markdown is a block: Rail");
   });
 
+  test("replaces an `ImageGallery` with its children, then the paragraph of its `caption` attribute", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      <ImageGallery caption="A caption.">
+        ![First](https://example.com/first.png)
+        ![Second](https://example.com/second.png)
+      </ImageGallery>
+    `);
+    expect(markdown).toContain(`![First](https://example.com/first.png)
+![Second](https://example.com/second.png)
+
+A caption.`);
+  });
+
   test("replaces an `ImageGrid` with its children, then the paragraph of its `caption` attribute", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <ImageGrid caption="A caption.">

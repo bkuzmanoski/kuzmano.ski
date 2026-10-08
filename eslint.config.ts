@@ -194,7 +194,7 @@ export default defineConfig(
       "import/no-extraneous-dependencies": [
         "error",
         {
-          devDependencies: ["src/**/*.test.{ts,tsx}", "src/test-utils/**/*.{ts,tsx}", "src/server/env.ts"], // `src/server/env.ts` imports `wrangler` only under `vite dev`, to read the bindings from its platform proxy.
+          devDependencies: ["src/**/*.test.{ts,tsx}", "src/test-utils/**/*.{ts,tsx}", "src/server/env.ts"], // `/src/server/env.ts` imports `wrangler` only under `vite dev`, to read the bindings from its platform proxy.
           includeTypes: true,
         },
       ],

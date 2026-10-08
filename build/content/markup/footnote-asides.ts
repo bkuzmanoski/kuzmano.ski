@@ -133,9 +133,9 @@ function assertReferencesDefined(tree: ContentParent, file: FootnoteVFile) {
  * first reference and any existing `Rail` elements. Appends links back to every reference to the
  * footnote's final paragraph.
  *
- * Throws, naming the entry and label, when a reference has no definition, a label is defined twice, two
- * labels share an ID, a definition has no reference or is not at the entry root, or a reference appears
- * inside a footnote, link, or heading. Also throws, naming the entry, when it renders a `Footnote` itself.
+ * Throws when a reference has no definition, a label is defined twice, two labels share an ID, a definition
+ * has no reference or is not at the entry root, or a reference appears inside a footnote, link, or heading.
+ * Also throws, naming the entry, when it renders a `Footnote` itself.
  */
 export function remarkFootnoteAsides() {
   return function transform(tree: ContentParent, file: FootnoteVFile) {

@@ -24,10 +24,7 @@ function spanAttributeOf(node: ContentNode): { value?: unknown } | undefined {
   return undefined;
 }
 
-/**
- * Throws when an entry renders an element whose `data-content-span` attribute is not one of
- * `CONTENT_SPANS`, naming the entry, the element, and the value.
- */
+/** Throws if an entry renders an element whose `data-content-span` attribute is not one of `CONTENT_SPANS`. */
 export function rehypeContentSpans() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node: ContentNode) => {

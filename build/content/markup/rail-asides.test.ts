@@ -155,7 +155,7 @@ A paragraph.
 <Rail>A note.</Rail>
 `),
     ).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` after `<ContributionGraph>`, which it cannot be placed beside. Expected an element or one of: Callout, ImageGrid, Waitlist.',
+      '"content/collection/entry.mdx" renders a `Rail` after `<ContributionGraph>`, which it cannot be placed beside. Expected an element or one of: Callout, ImageGallery, ImageGrid, Waitlist.',
     );
   });
 

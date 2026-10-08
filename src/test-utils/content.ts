@@ -11,7 +11,7 @@ interface SiteCollection {
   entries: Array<Entry>;
 }
 
-/** Returns the site's `segment` collection and its listing. Throws when the collection does not exist. */
+/** Returns the site's `segment` collection and its listing. Throws if the collection does not exist. */
 export function siteCollection(segment: string): SiteCollection {
   const collection = collections[segment];
 

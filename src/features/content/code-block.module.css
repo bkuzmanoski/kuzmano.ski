@@ -31,19 +31,10 @@
     }
   }
 
-  /* Specific enough to override the icon `Button` as the stylesheets do not load in a fixed order. */
   & .copyControl > button {
     width: 28px;
     height: 28px;
-    border-block: none;
-    border-inline-end: none;
-    border-radius: 0;
-
-    &:focus-visible {
-      @mixin focus-stroke 1px;
-
-      outline: none;
-    }
+    border-inline-start: 1px solid var(--color-border);
   }
 
   & pre {

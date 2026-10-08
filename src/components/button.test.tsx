@@ -141,6 +141,42 @@ test("a button and a link activated with the keyboard each play a click sound", 
   expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
+test("a press or an activation key press on a button with the `aria-disabled` attribute does not play a click sound or call its `onClick` prop", () => {
+  const onClick = vi.fn();
+
+  render(
+    <Button aria-disabled onClick={onClick}>
+      Press
+    </Button>,
+  );
+
+  const button = screen.getByRole("button", { name: "Press" });
+
+  expect(button.hasAttribute("disabled")).toBe(false);
+
+  fireEvent.pointerDown(button, MOUSE);
+  fireEvent.pointerUp(button, MOUSE);
+  fireEvent.click(button, CLICK);
+  fireEvent.keyDown(button, { key: " " });
+  fireEvent.click(button);
+
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(onClick).not.toHaveBeenCalled();
+});
+
+test("a click on a link with the `aria-disabled` attribute prevents the navigation and does not call its `onClick` prop", () => {
+  const onClick = vi.fn();
+
+  render(
+    <Button aria-disabled="true" href="/page" onClick={onClick}>
+      Link
+    </Button>,
+  );
+
+  expect(fireEvent.click(screen.getByRole("link", { name: "Link" }), CLICK)).toBe(false);
+  expect(onClick).not.toHaveBeenCalled();
+});
+
 test("a button with an `href` prop is activated with the Enter or Space key", () => {
   const onClick = vi.fn((event: MouseEvent) => event.preventDefault());
 

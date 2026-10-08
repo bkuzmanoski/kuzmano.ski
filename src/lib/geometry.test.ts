@@ -8,6 +8,7 @@ import {
   insetToViewport,
   intersectionOf,
   intersectionRatioOf,
+  rectRelativeTo,
   scaleInset,
   transformBetween,
 } from "./geometry.ts";
@@ -31,6 +32,17 @@ describe("containsPoint", () => {
     expect(containsPoint(rect, { x: 501, y: 200 })).toBe(false);
     expect(containsPoint(rect, { x: 300, y: 49 })).toBe(false);
     expect(containsPoint(rect, { x: 300, y: 351 })).toBe(false);
+  });
+});
+
+describe("rectRelativeTo", () => {
+  test("moves the rect by the origin, keeping its size", () => {
+    expect(rectRelativeTo({ x: 100, y: 200, width: 300, height: 150 }, { x: 20, y: 40 })).toEqual({
+      x: 80,
+      y: 160,
+      width: 300,
+      height: 150,
+    });
   });
 });
 

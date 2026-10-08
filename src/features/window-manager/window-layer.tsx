@@ -155,6 +155,9 @@ export function WindowLayer({ children }: { children: ReactNode }) {
       }}
     >
       <DesktopIcons onZoomRect={setZoomRect} />
+      {/* Animate from the icon to its newly opened window. This sibling shares the windows' stacking context;
+          its matching z-index and earlier DOM position place it below the target window and above existing ones.
+          Both use geometry fitted to the same desktop surface, so the animation lands precisely on the window. */}
       {zoomRect && (
         <ZoomRect
           key={zoomRect.windowId}

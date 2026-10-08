@@ -102,6 +102,13 @@ const INLINE_CODE_MARKDOWN: ComponentMarkdown = {
   },
 };
 
+const CAPTIONED_IMAGES_MARKDOWN: ComponentMarkdown = {
+  block: (node) => {
+    const caption = stringAttributeOf(node, "caption");
+    return [...(node.children ?? []), ...(caption ? [textParagraph(caption)] : [])];
+  },
+};
+
 const waitlistFallbackParagraphFor = (url: string): ContentNode =>
   paragraphOf([textNode(FALLBACK_TEXT_BEFORE_URL), { type: "link", url, children: [textNode(url)] }]);
 
@@ -122,12 +129,8 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
       return experienceMarkdownNodesFrom(value, quotedDataFilePath); // Validates the record, throwing if invalid.
     },
   },
-  ImageGrid: {
-    block: (node) => {
-      const caption = stringAttributeOf(node, "caption");
-      return [...(node.children ?? []), ...(caption ? [textParagraph(caption)] : [])];
-    },
-  },
+  ImageGallery: CAPTIONED_IMAGES_MARKDOWN,
+  ImageGrid: CAPTIONED_IMAGES_MARKDOWN,
   PrintLink: { block: () => [] }, // Omitted.
   Rail: ASIDE_MARKDOWN,
   Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },

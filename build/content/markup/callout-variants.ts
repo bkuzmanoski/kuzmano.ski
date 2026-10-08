@@ -8,10 +8,7 @@ import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
 const CALLOUT_VARIANT_NAMES = new Set<string>(CALLOUT_VARIANTS);
 
-/**
- * Throws when an entry renders a `<Callout>` whose `variant` attribute is not one of
- * `CALLOUT_VARIANTS`, naming the entry and the value.
- */
+/** Throws if an entry renders a `<Callout>` whose `variant` attribute is not one of `CALLOUT_VARIANTS`. */
 export function rehypeCalloutVariants() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node: ContentNode) => {

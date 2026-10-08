@@ -13,25 +13,38 @@
 
   background: var(--color-background);
 
+  /* Strip buttons fill control-strip cells. The strip defines their widths and separators, whose
+   * selectors must outrank `.button:disabled` regardless of stylesheet load order. */
+  &:where(.strip) {
+    flex: none;
+
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+  }
+
   &:focus {
     @mixin focus-ring;
 
     box-shadow: 0 0 0 1px var(--color-background);
   }
 
-  &:disabled {
+  &:is(:disabled, [aria-disabled="true"]) {
     border-color: var(--color-border-secondary);
     color: var(--color-foreground-disabled);
   }
 
-  &:active:not(:disabled),
-  &.pressed:not(:disabled) {
+  &:active:not(:disabled, [aria-disabled="true"]),
+  &.pressed:not(:disabled, [aria-disabled="true"]) {
     color: var(--color-pressed-foreground);
     background: var(--color-pressed-background);
   }
 
-  &.icon {
-    --color-icon-foreground: var(--color-foreground-secondary);
+  &.standalone,
+  &.strip {
+    --color-icon-foreground: var(--color-border);
 
     cursor: default;
 
@@ -41,34 +54,49 @@
     align-items: center;
     justify-content: center;
 
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    &:is(:disabled, [aria-disabled="true"]) {
+      --color-icon-foreground: var(--color-border-secondary);
+    }
+
+    & > svg {
+      display: block;
+    }
+  }
+
+  &.standalone {
     width: 24px;
     min-width: 0;
     height: 24px;
     padding: 0;
     border-radius: 3px;
 
-    &:focus {
-      outline: none;
-      box-shadow: none;
-    }
-
     &:focus-visible {
       outline: 1px dotted var(--color-focus-ring); /* An outline rather than `focus-stroke` so it is concentric with the button's border radius. */
       outline-offset: 1px;
     }
 
-    &:disabled {
-      --color-icon-foreground: var(--color-border-secondary);
-    }
-
-    &:active:not(:disabled),
-    &.pressed:not(:disabled) {
+    &:active:not(:disabled, [aria-disabled="true"]),
+    &.pressed:not(:disabled, [aria-disabled="true"]) {
       --color-icon-foreground: var(--color-pressed-foreground);
       --color-icon-background: var(--color-pressed-background);
     }
+  }
 
-    & > svg {
-      display: block;
+  &.strip {
+    &:focus-visible {
+      @mixin focus-stroke 1px;
+    }
+
+    &:active:not(:disabled, [aria-disabled="true"]),
+    &.pressed:not(:disabled, [aria-disabled="true"]) {
+      --color-icon-background: var(--color-icon-foreground);
+
+      background: var(--color-background);
     }
   }
 }

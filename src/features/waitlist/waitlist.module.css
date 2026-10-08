@@ -90,8 +90,6 @@
 }
 
 .formArea {
-  @mixin dither-text;
-
   position: relative;
 
   display: grid;
@@ -101,14 +99,7 @@
 
   font: var(--font-ui-large);
 
-  &::before {
-    @mixin dither-13;
-
-    content: "";
-    position: absolute;
-    inset: 0;
-    color: var(--color-background-dither);
-  }
+  background: var(--color-background-secondary);
 
   & > * {
     position: relative;

@@ -67,8 +67,7 @@ function entryImportsIn(tree: ContentNode): Map<string, EntryImport> {
 
 // The identifier an element spreads into its props as `{...NAME}`.
 //
-// Throws, naming the entry, when the element spreads anything but one identifier or has any other
-// attribute.
+// Throws if the element spreads anything but one identifier or has any other attribute.
 function spreadIdentifierOf(element: ContentNode, file: EntryVFile): string {
   const [attribute, ...otherAttributes] = element.attributes ?? [];
   const properties =
@@ -100,9 +99,8 @@ export interface EntryDataExport {
  * from the data file it imports, resolved against the entry's path. Imports each data file once, and
  * only when `elements` is not empty.
  *
- * Throws, naming the entry, when an element has attributes other than that spread, the entry does not
- * import `NAME` by a path relative to itself, or the data file cannot be imported, and naming the data
- * file when it does not export the name the import names.
+ * Throws if an element has attributes other than that spread, `NAME` is not imported from a path
+ * relative to the entry, the data file cannot be imported, or it does not export the imported name.
  */
 export async function readEntryDataExports(
   tree: ContentNode,

@@ -15,5 +15,5 @@ export const API_ROUTES = {
 type Assert<TCondition extends true> = TCondition;
 type UnlistedRoute = Exclude<ApiRoute, (typeof API_ROUTES)[keyof typeof API_ROUTES]>;
 
-// Fails to compile, naming the route, when a file in `/src/routes/api` has no entry in `API_ROUTES`.
+// Fails to compile if a file in `/src/routes/api` has no entry in `API_ROUTES`.
 export type EveryApiRouteIsListed = Assert<[UnlistedRoute] extends [never] ? true : UnlistedRoute>;

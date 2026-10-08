@@ -41,7 +41,7 @@ export function EntryMasthead({ target: { collection, slug } }: { target: Collec
           copyStatus={entryClipboard?.copyStatusOf(copyControlId) ?? null}
           disabled={!isHydrated || entryClipboard === null}
           announcesConfirmation={false}
-          variant="url"
+          icon="url"
           label="Copy link"
           onCopy={() => entryClipboard?.copyToClipboard(copyControlId, url, "link")}
           onDidHide={() => entryClipboard?.clearCopyConfirmationOf(copyControlId)}

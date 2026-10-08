@@ -17,6 +17,7 @@ import { EntryColophon } from "./entry-colophon.tsx";
 import { EntryMasthead } from "./entry-masthead.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 import { Footnote } from "./footnote.tsx";
+import { ImageGallery } from "./image-gallery.tsx";
 import { ImageGrid } from "./image-grid.tsx";
 import { observeRailClearances } from "./observe-rail-clearances.ts";
 import { Rail } from "./rail.tsx";
@@ -36,6 +37,7 @@ const MDX_COMPONENTS: MDXComponents = {
   Callout,
   Rail,
   Footnote, // Emitted by the build for each footnote definition (see `/build/content/markup/footnote-asides.ts`).
+  ImageGallery,
   ImageGrid,
   Waitlist,
 };

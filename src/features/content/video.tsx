@@ -6,8 +6,8 @@ import PauseVideoIcon from "#/assets/images/video-icon-pause.svg?react";
 import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
 import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
 import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
+import { Button } from "#/components/button.tsx";
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
 import { useClientValue, useIsHydrated } from "#/lib/hooks/use-client-value.ts";
@@ -66,7 +66,6 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
 
   const hasSiteControls = useIsHydrated();
   const canToggleFullScreen = useClientValue(false, canEnterFullScreen);
-  const pressSoundHandlers = usePressSound();
 
   const hasDuration = duration > 0;
 
@@ -251,19 +250,15 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         onTimeUpdate={syncState}
       />
       <div className={styles.controls} role="group" aria-label="Playback controls" data-feed-omit>
-        <button
-          type="button"
+        <Button
+          variant="strip"
           className={cx(styles.button, styles.playPauseButton)}
           disabled={!hasSiteControls}
           aria-label={isPaused ? "Play" : "Pause"}
-          {...pressSoundHandlers}
-          onClick={(event) => {
-            pressSoundHandlers.onClick(event);
-            togglePlayback();
-          }}
+          onClick={togglePlayback}
         >
-          {isPaused ? <PlayVideoIcon className={styles.videoIcon} /> : <PauseVideoIcon className={styles.videoIcon} />}
-        </button>
+          {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
+        </Button>
         <div
           ref={trackRef}
           className={styles.track}
@@ -279,40 +274,24 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         >
           <div ref={thumbRef} className={styles.thumb} />
         </div>
-        <button
-          type="button"
+        <Button
+          variant="strip"
           className={cx(styles.button, styles.muteButton)}
           disabled={!hasSiteControls}
           aria-label={isMuted ? "Unmute" : "Mute"}
-          {...pressSoundHandlers}
-          onClick={(event) => {
-            pressSoundHandlers.onClick(event);
-            toggleMuted();
-          }}
+          onClick={toggleMuted}
         >
-          {isMuted ? (
-            <SoundOffVideoIcon className={styles.videoIcon} />
-          ) : (
-            <SoundOnVideoIcon className={styles.videoIcon} />
-          )}
-        </button>
-        <button
-          type="button"
+          {isMuted ? <SoundOffVideoIcon /> : <SoundOnVideoIcon />}
+        </Button>
+        <Button
+          variant="strip"
           className={cx(styles.button, styles.fullScreenButton)}
           disabled={!canToggleFullScreen}
           aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
-          {...pressSoundHandlers}
-          onClick={(event) => {
-            pressSoundHandlers.onClick(event);
-            toggleFullScreen();
-          }}
+          onClick={toggleFullScreen}
         >
-          {isFullScreen ? (
-            <FullScreenExitVideoIcon className={styles.videoIcon} />
-          ) : (
-            <FullScreenEnterVideoIcon className={styles.videoIcon} />
-          )}
-        </button>
+          {isFullScreen ? <FullScreenExitVideoIcon /> : <FullScreenEnterVideoIcon />}
+        </Button>
       </div>
     </div>
   );

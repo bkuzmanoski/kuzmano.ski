@@ -46,43 +46,22 @@
     height: calc(var(--video-control-height) + 2px);
     border: 1px solid var(--color-border);
   }
+
+  @mixin without-fine-pointer {
+    --video-control-height: 32px;
+  }
 }
 
-.button {
-  position: relative;
-
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-
+/* Under `.controls` so the hairlines override the strip `Button`'s border reset and a disabled `Button`'s border color. */
+.controls > .button {
   width: var(--video-control-height);
 
-  &:focus-visible {
-    @mixin focus-stroke 1px;
+  &.playPauseButton {
+    border-inline-end: 1px solid var(--color-border);
   }
 
-  &:disabled {
-    --color-icon-foreground: var(--color-border-secondary);
-  }
-}
-
-.playPauseButton {
-  border-right: 1px solid var(--color-border);
-}
-
-.muteButton,
-.fullScreenButton {
-  border-left: 1px solid var(--color-border);
-}
-
-.videoIcon {
-  --color-icon-foreground: var(--color-border);
-
-  flex: none;
-
-  .button:active:not(:disabled) & {
-    --color-icon-background: var(--color-icon-foreground);
+  &:is(.muteButton, .fullScreenButton) {
+    border-inline-start: 1px solid var(--color-border);
   }
 }
 
@@ -134,6 +113,10 @@
 }
 
 @media print {
+  .video {
+    border: none;
+  }
+
   .controls {
     display: none;
   }

@@ -61,9 +61,8 @@ const pathPatternRegExpFrom = (pathPattern: string) =>
   new RegExp(`^${pathPattern.split("*").map(escapedForRegExp).join(".*")}$`);
 
 /**
- * Returns the rule with the regular expression `headersMatchingPathIn` tests request paths against.
- * Throws, naming the rule, when it has no path pattern, and naming the pattern when a path pattern
- * uses syntax the dev server would not match.
+ * Adds the regular expression `headersMatchingPathIn` uses to test request paths to a rule.
+ * Throws if the rule has no path patterns or any pattern uses syntax the dev server cannot match.
  */
 export function matchableHeadersRuleFrom(rule: HeadersRule): MatchableHeadersRule {
   if (rule.pathPatterns.length === 0) {

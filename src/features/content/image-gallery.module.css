@@ -1,0 +1,357 @@
+.imageGallery {
+  --image-gallery-control-size: 24px;
+  --image-gallery-thumbnail-size: var(--layout-cover-image-size);
+  --image-gallery-thumbnail-gap: 8px;
+  --image-gallery-stage-aspect-ratio: 3 / 2; /* An entry's stylesheet can set this on `[data-image-gallery]`. */
+
+  outline: none;
+
+  @mixin without-fine-pointer {
+    --image-gallery-control-size: 32px;
+  }
+}
+
+.panel {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.stage {
+  touch-action: pan-y pinch-zoom; /* A touch dragged across the image shows the next or previous image, so the browser must not claim a horizontal gesture for panning. */
+  cursor: zoom-in;
+  user-select: none;
+
+  position: relative;
+
+  aspect-ratio: var(--image-gallery-stage-aspect-ratio);
+  width: 100%;
+  max-height: 80cqh;
+
+  background: var(--color-background-secondary);
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  outline: none;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:focus-visible {
+    @mixin focus-stroke 1px;
+  }
+
+  & picture {
+    display: contents;
+  }
+
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.controls {
+  user-select: none;
+  display: flex;
+  border-block-start: 1px solid var(--color-border);
+}
+
+/* Under `.controls` so the hairlines override the strip `Button`'s border reset and a disabled `Button`'s border color. */
+.controls > .control {
+  width: var(--image-gallery-control-size);
+
+  &.previousControl {
+    border-inline-end: 1px solid var(--color-border);
+  }
+
+  &:is(.nextControl, .previewControl) {
+    border-inline-start: 1px solid var(--color-border);
+  }
+}
+
+.previousIcon {
+  rotate: -90deg;
+}
+
+.nextIcon {
+  rotate: 90deg;
+}
+
+.thumbnailRow {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+
+  &:has(:focus-visible) {
+    @mixin focus-stroke 1px;
+  }
+}
+
+.thumbnails {
+  scrollbar-width: none;
+
+  position: relative; /* The offset parent of the thumbnails, which their positions are read against. */
+
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  display: flex;
+  flex: 1;
+  gap: var(--image-gallery-thumbnail-gap);
+
+  min-width: 0;
+  padding: var(--image-gallery-thumbnail-gap);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.thumbnail {
+  position: relative;
+
+  flex: none;
+
+  width: var(--image-gallery-thumbnail-size);
+  height: var(--image-gallery-thumbnail-size);
+  padding: 1px;
+
+  background: var(--color-background-secondary);
+
+  &[aria-selected="true"] {
+    outline: 1px solid var(--color-border);
+  }
+
+  & picture {
+    display: contents;
+  }
+
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.preview {
+  --image-gallery-preview-title-bar-height: calc(16 * var(--dither-dot)); /* Excludes the bottom border. */
+
+  /* The title bar is sized in dither dots, so its fill and its close button stay aligned at any device pixel
+   * ratio. */
+  @mixin dither-dot;
+
+  position: fixed;
+  inset: calc(var(--layout-safe-area-top) + var(--layout-menu-bar-height) + var(--layout-window-layer-padding))
+    calc(var(--layout-safe-area-right) + var(--layout-window-layer-padding))
+    calc(var(--layout-safe-area-bottom) + var(--layout-window-layer-padding))
+    calc(var(--layout-safe-area-left) + var(--layout-window-layer-padding));
+
+  overflow: visible;
+  overscroll-behavior: contain;
+
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  background: none;
+  outline: none;
+
+  &::backdrop {
+    background: var(--color-scrim);
+  }
+
+  &[data-image-gallery-zoom-rect="out"]::backdrop {
+    background: none;
+  }
+
+  &[open] {
+    display: block;
+  }
+}
+
+.previewFrame {
+  @mixin panel;
+
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewTitleBar {
+  user-select: none;
+
+  display: flex;
+  flex: none;
+
+  height: calc(var(--image-gallery-preview-title-bar-height) + 1px); /* Includes the bottom border. */
+  padding: calc(3 * var(--dither-dot));
+  border-block-end: 1px solid var(--color-border);
+
+  &::before,
+  &::after {
+    @mixin dither-11;
+
+    content: "";
+    color: var(--color-border);
+  }
+
+  &::before {
+    flex: none;
+    width: calc(4 * var(--dither-dot));
+  }
+
+  &::after {
+    flex: 1;
+  }
+}
+
+.previewCloseButton {
+  position: relative;
+
+  align-self: center;
+
+  width: calc(10 * var(--dither-dot));
+  height: calc(10 * var(--dither-dot));
+  margin-inline: calc(3 * var(--dither-dot));
+  border: 1px solid var(--color-border);
+
+  background: var(--color-background);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc(-3 * var(--dither-dot));
+  }
+
+  &:focus-visible {
+    @mixin focus-stroke -3px;
+  }
+
+  &:disabled {
+    border-color: var(--color-border-secondary);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--color-pressed-background);
+  }
+
+  @mixin without-fine-pointer {
+    &::before {
+      inset-inline: -17px;
+    }
+  }
+}
+
+.previewImage {
+  --image-gallery-preview-image-width: auto; /* Set from JS. */
+  --image-gallery-preview-image-height: auto; /* Set from JS. */
+  --image-gallery-preview-image-offset-x: 0px; /* Set from JS. */
+  --image-gallery-preview-image-offset-y: 0px; /* Set from JS. */
+
+  touch-action: none; /* A touch dragged across the image shows the next or previous image, or pans or pinches it, so the browser must not claim the gesture. */
+
+  position: relative;
+
+  overflow: hidden;
+  flex: 1;
+
+  min-height: 0;
+
+  background: var(--color-background-secondary);
+
+  & > * {
+    position: absolute;
+    inset: 0;
+  }
+
+  & picture {
+    display: contents;
+  }
+
+  & img {
+    position: absolute;
+    top: round(down, 50%, 1px);
+    left: round(down, 50%, 1px);
+    translate: calc(round(up, -50%, 1px) + var(--image-gallery-preview-image-offset-x))
+      calc(round(up, -50%, 1px) + var(--image-gallery-preview-image-offset-y));
+
+    display: block;
+
+    width: var(--image-gallery-preview-image-width);
+    max-width: 100%;
+    height: var(--image-gallery-preview-image-height);
+    max-height: 100%;
+  }
+
+  &[data-image-gallery-preview-zoomed] {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    & img {
+      max-width: none;
+      max-height: none;
+    }
+  }
+}
+
+.previewControls {
+  height: calc(var(--image-gallery-control-size) + 1px); /* Includes the top border. */
+}
+
+.position {
+  flex: 1;
+  align-self: center;
+
+  padding-inline: 8px;
+
+  font: var(--font-ui);
+  color: var(--color-foreground);
+  text-align: center;
+}
+
+.preview[data-image-gallery-zoom-rect] .previewFrame {
+  visibility: hidden;
+}
+
+@media print {
+  .panel {
+    border: none;
+  }
+
+  .stage {
+    aspect-ratio: auto;
+    max-height: none;
+  }
+
+  .slide,
+  .slide[hidden] {
+    position: static;
+    display: block;
+
+    & + & {
+      margin-block-start: var(--image-gallery-thumbnail-gap);
+    }
+
+    & img {
+      height: auto;
+    }
+  }
+
+  .controls {
+    display: none;
+  }
+}

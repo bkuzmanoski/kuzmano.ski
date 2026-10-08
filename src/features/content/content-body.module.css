@@ -702,11 +702,7 @@
       margin-inline-start: 0;
     }
 
-    &:where(img) {
-      border: 1px solid var(--color-border);
-    }
-
-    &:is(img, [data-content-panel]):where([data-content-span="pane"], [data-content-span="pane"] *) {
+    &[data-content-panel]:where([data-content-span="pane"], [data-content-span="pane"] *) {
       border-inline: none;
     }
   }

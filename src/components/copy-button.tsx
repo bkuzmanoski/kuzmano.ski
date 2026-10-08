@@ -8,10 +8,13 @@ import { Button } from "./button.tsx";
 import { CopyFailureAlert } from "./copy-failure-alert.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
-const VARIANT_ICONS = { value: CopyButtonIcon, url: LinkButtonIcon };
+import type { IconButtonVariant } from "./button.tsx";
+
+const COPY_ICONS = { value: CopyButtonIcon, url: LinkButtonIcon };
 
 interface CopyButtonAppearance {
-  variant?: keyof typeof VARIANT_ICONS;
+  icon?: keyof typeof COPY_ICONS;
+  variant?: IconButtonVariant;
   label?: string;
   confirmation?: string;
   className?: string;
@@ -56,7 +59,8 @@ export function ControlledCopyButton({
   copyStatus,
   disabled,
   announcesConfirmation,
-  variant = "value",
+  icon = "value",
+  variant = "standalone",
   label = "Copy to clipboard",
   confirmation = "Copied",
   className,
@@ -70,7 +74,8 @@ export function ControlledCopyButton({
   onDidHide: () => void;
 }) {
   const isCopied = copyStatus === "copied";
-  const Icon = VARIANT_ICONS[variant];
+
+  const Icon = COPY_ICONS[icon];
 
   return (
     <CopyTooltip
@@ -83,7 +88,7 @@ export function ControlledCopyButton({
       className={className}
     >
       <Button
-        variant="icon"
+        variant={variant}
         disabled={disabled}
         holdPressed={copyStatus === "copying" || isCopied}
         aria-label={label}
