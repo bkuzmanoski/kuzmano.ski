@@ -31,6 +31,7 @@
   &.multiline {
     resize: none;
     scrollbar-width: none; /* The input is paired with a `Scrollbar` of its own. */
+    scroll-padding-block: var(--layout-gutter);
 
     align-self: stretch;
 
