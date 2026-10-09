@@ -45,3 +45,17 @@
     line-height: 46px;
   }
 }
+
+@media print {
+  .header {
+    min-height: auto;
+  }
+
+  .ditherField {
+    display: none;
+  }
+
+  .column {
+    padding-block: var(--content-body-layout-space-loose) 0;
+  }
+}

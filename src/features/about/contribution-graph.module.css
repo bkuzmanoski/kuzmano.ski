@@ -202,3 +202,9 @@
     clip-path: inset(0);
   }
 }
+
+@media print {
+  .track::before {
+    content: none;
+  }
+}
