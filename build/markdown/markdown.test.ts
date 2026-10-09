@@ -441,7 +441,7 @@ After.`);
     const markdown = await markdownFor(`${FRONTMATTER}
       <ContributionGraph />
     `);
-    expect(markdown).toContain(`[${GITHUB_PROFILE_LINK_TEXT}](${GITHUB_PROFILE_URL}).`);
+    expect(markdown).toContain(`[${GITHUB_PROFILE_LINK_TEXT}.](${GITHUB_PROFILE_URL})`);
   });
 
   test("renders an `CareerTimeline` from the export of the entry's data file that its spread names", async () => {
