@@ -119,7 +119,7 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   ContributionGraph: {
     // The graph is rendered from data fetched in the browser, so in Markdown it becomes a GitHub profile link.
     block: () => [
-      paragraphOf([{ type: "link", url: GITHUB_PROFILE_URL, children: [textNode(GITHUB_PROFILE_LINK_TEXT)] }]),
+      paragraphOf([{ type: "link", url: GITHUB_PROFILE_URL, children: [textNode(`${GITHUB_PROFILE_LINK_TEXT}.`)] }]),
     ],
   },
   CareerTimeline: {
