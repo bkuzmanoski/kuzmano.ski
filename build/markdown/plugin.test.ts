@@ -155,9 +155,13 @@ test("ignores the query when matching a request path", async () => {
 
 describe("reading entry data", () => {
   test("renders a Markdown response with the reader of the dev server's module runner", async () => {
-    vi.mocked(markdownFilesFor).mockClear();
+    const markdownMiddleware = devServerMiddlewareOf(
+      pluginNamed(devServerPlugins, "kuzmano.ski:markdown-emit"),
+      DEV_SERVER,
+    );
 
-    await requestFor("/page", "text/markdown");
+    vi.mocked(markdownFilesFor).mockClear();
+    await devServerRequestFor(markdownMiddleware, "/page", { requestHeaders: { accept: "text/markdown" } });
 
     expect(entryDataModuleReaderThrough).toHaveBeenCalledWith(expect.objectContaining(DEV_SERVER));
     expect(markdownFilesFor).toHaveBeenCalledWith(

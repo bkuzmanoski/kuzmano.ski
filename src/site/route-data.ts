@@ -12,7 +12,7 @@ import { documentHead, fontPreloadLinkFor } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
 import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./routes.ts";
 
-import type { Frontmatter } from "./catalog.ts";
+import type { ContentIndex, Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
 const CONTENT_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
@@ -32,18 +32,25 @@ function entryDocumentMetadata(
   };
 }
 
+async function loadBodyBeforeServerRender(contentIndex: ContentIndex, slug: string) {
+  if (import.meta.env.SSR) {
+    await contentIndex.load(slug);
+  }
+}
+
 export function contentHead(metadata: DocumentMetadata) {
   const head = documentHead(metadata);
   return { ...head, links: [...head.links, ...CONTENT_PRELOADED_FONT_URLS.map(fontPreloadLinkFor)] };
 }
 
 export const contentRoute = {
-  loader: ({ params }: { params: { segment: string; slug?: string } }): DocumentMetadata => {
+  loader: async ({ params }: { params: { segment: string; slug?: string } }): Promise<DocumentMetadata> => {
     const content = resolveContent(params.segment, params.slug);
     const feed = collectionFeedOf(collectionRoute(params.segment));
 
     switch (content.kind) {
       case "page":
+        await loadBodyBeforeServerRender(pages, content.slug);
         return entryDocumentMetadata(content.frontmatter, {
           path: pageRoute(content.slug),
           bodyChunks: pages.bodyChunksOf(content.slug),
@@ -53,6 +60,7 @@ export const contentRoute = {
         });
 
       case "collectionEntry":
+        await loadBodyBeforeServerRender(content.collection, content.slug);
         return entryDocumentMetadata(content.frontmatter, {
           path: entryRoute(params.segment, content.slug),
           kind: "article",

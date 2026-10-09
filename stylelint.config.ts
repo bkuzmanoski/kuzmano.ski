@@ -23,6 +23,7 @@ export default {
     "selector-class-pattern": "^[a-z][a-zA-Z0-9]*$|^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
     "selector-pseudo-class-no-unknown": [true, { ignorePseudoClasses: ["global"] }],
     "at-rule-no-unknown": [true, { ignoreAtRules: ["define-mixin", "mixin", "mixin-content"] }], // postcss-mixins syntax (see `/src/mixins.css`).
+    "at-rule-prelude-no-invalid": [true, { ignoreAtRules: ["mixin"] }], // postcss-mixins uses `@mixin` syntax that the CSS grammar rejects (see `/src/mixins.css`).
     "order/order": [order, cleanOrderOptions],
     "property-no-unknown": [true, { ignoreProperties: ["composes"] }], // CSS modules syntax.
     "value-keyword-case": ["lower", { ignoreProperties: ["composes", "/font/"], ignoreKeywords: ["currentColor"] }],

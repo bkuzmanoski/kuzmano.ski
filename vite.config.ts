@@ -16,7 +16,6 @@ import { headersFile } from "./build/headers.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownPlugin } from "./build/markdown/plugin.ts";
 import { prerenderRoutes } from "./build/prerender/routes.ts";
-import { sitemapNamespacePlugin } from "./build/prerender/sitemap-namespace.ts";
 import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
 import { robotsPlugin } from "./build/robots.ts";
@@ -75,7 +74,6 @@ export default defineConfig(({ command }) => {
           },
         },
       }),
-      sitemapNamespacePlugin(),
       feedsPlugin,
       viteReact({ include: /\.(tsx?|mdx)$/ }),
       babel({ presets: [reactCompilerPreset({ logger: optimizationFailures.logger })] }),

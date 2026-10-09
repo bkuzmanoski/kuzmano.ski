@@ -3,6 +3,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { PAGE_SLUGS } from "#/config/content.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
 
+import { collections, pages } from "./catalog.ts";
 import { contentHead, contentRoute } from "./route-data.ts";
 
 vi.mock("./catalog.ts", async () => {
@@ -43,7 +44,7 @@ const CONTENT_PRELOADED_FONT_FILE_NAMES = [
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });
 const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } }); // A one-segment route: a page, or a collection listing.
-const preloadedFontFileNamesOf = (loaderData: ReturnType<typeof contentRoute.loader>) =>
+const preloadedFontFileNamesOf = (loaderData: Awaited<ReturnType<typeof contentRoute.loader>>) =>
   contentHead(loaderData)
     .links.filter((link) => link.rel === "preload" && "as" in link)
     .map((link) => link.href.split("/").at(-1)?.split("?")[0]);
@@ -52,68 +53,99 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-test("a page exposes its cover image", () => {
-  expect(loadSegment(DECLARED_PAGE_SLUG).coverImage).toEqual(fakeCoverImage(DECLARED_PAGE_SLUG));
+test("a page exposes its cover image", async () => {
+  expect((await loadSegment(DECLARED_PAGE_SLUG)).coverImage).toEqual(fakeCoverImage(DECLARED_PAGE_SLUG));
 });
 
-test("a draft page does not expose a Markdown representation in production", () => {
+test("a draft page does not expose a Markdown representation in production", async () => {
   vi.stubEnv("DEV", false);
-  expect(loadSegment("draft-page").markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
+  expect((await loadSegment("draft-page")).markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
 });
 
-test("a page the site links to is indexable", () => {
-  expect(loadSegment(DECLARED_PAGE_SLUG).noindex).toBeFalsy();
+test("a page the site links to is indexable", async () => {
+  expect((await loadSegment(DECLARED_PAGE_SLUG)).noindex).toBeFalsy();
 });
 
-test("a page the site does not link to is marked noindex", () => {
-  expect(loadSegment("unlisted-page").noindex).toBe(true);
+test("a page the site does not link to is marked noindex", async () => {
+  expect((await loadSegment("unlisted-page")).noindex).toBe(true);
 });
 
-test("an entry exposes its cover image, or `null` when it does not have one", () => {
-  expect(loadCollectionEntry("published").coverImage).toEqual(fakeCoverImage("published"));
-  expect(loadCollectionEntry("draft-entry").coverImage).toBeNull();
+test("an entry exposes its cover image, or `null` when it does not have one", async () => {
+  expect((await loadCollectionEntry("published")).coverImage).toEqual(fakeCoverImage("published"));
+  expect((await loadCollectionEntry("draft-entry")).coverImage).toBeNull();
 });
 
-test("a published entry exposes a Markdown representation in production", () => {
+test("a published entry exposes a Markdown representation in production", async () => {
   vi.stubEnv("DEV", false);
-  expect(loadCollectionEntry("published").markdown).toBe(true);
+  expect((await loadCollectionEntry("published")).markdown).toBe(true);
 });
 
-test("a draft entry does not expose a Markdown representation in production", () => {
+test("a draft entry does not expose a Markdown representation in production", async () => {
   vi.stubEnv("DEV", false);
-  expect(loadCollectionEntry("draft-entry").markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
+  expect((await loadCollectionEntry("draft-entry")).markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
 });
 
-test("a draft entry exposes a Markdown representation in development", () => {
+test("a draft entry exposes a Markdown representation in development", async () => {
   vi.stubEnv("DEV", true);
-  expect(loadCollectionEntry("draft-entry").markdown).toBe(true); // The dev server renders the Markdown representation of a draft.
+  expect((await loadCollectionEntry("draft-entry")).markdown).toBe(true); // The dev server renders the Markdown representation of a draft.
 });
 
-test("an entry the site publishes is indexable", () => {
-  expect(loadCollectionEntry("published").noindex).toBeFalsy();
+test("an entry the site publishes is indexable", async () => {
+  expect((await loadCollectionEntry("published")).noindex).toBeFalsy();
 });
 
-test("a draft entry is marked noindex", () => {
-  expect(loadCollectionEntry("draft-entry").noindex).toBe(true);
+test("a draft entry is marked noindex", async () => {
+  expect((await loadCollectionEntry("draft-entry")).noindex).toBe(true);
 });
 
-test("a collection listing exposes a Markdown representation in production", () => {
+test("a collection listing exposes a Markdown representation in production", async () => {
   vi.stubEnv("DEV", false);
-  expect(loadSegment("collection").markdown).toBe(true);
+  expect((await loadSegment("collection")).markdown).toBe(true);
 });
 
-test("a collection listing is indexable", () => {
-  expect(loadSegment("collection").noindex).toBeUndefined();
+test("a collection listing is indexable", async () => {
+  expect((await loadSegment("collection")).noindex).toBeUndefined();
 });
 
 test.each([
   ["a page", () => loadSegment(DECLARED_PAGE_SLUG)],
   ["a collection entry", () => loadCollectionEntry("published")],
   ["a collection listing", () => loadSegment("collection")],
-])("%s's head preloads the display, body, and bitmap faces", (_kind, load) => {
-  expect(preloadedFontFileNamesOf(load())).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
+])("%s's head preloads the display, body, and bitmap faces", async (_kind, load) => {
+  expect(preloadedFontFileNamesOf(await load())).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
 });
 
-test("an entry's route data does not include the URLs of the fonts its head preloads", () => {
-  expect(JSON.stringify(loadCollectionEntry("published"))).not.toContain(".woff2");
+test("an entry's route data does not include the URLs of the fonts its head preloads", async () => {
+  expect(JSON.stringify(await loadCollectionEntry("published"))).not.toContain(".woff2");
+});
+
+test.each([
+  ["a page", pages, () => loadSegment(DECLARED_PAGE_SLUG)],
+  ["a collection entry", collections.collection!, () => loadCollectionEntry("published")],
+])("on the server, %s's route data resolves after its body has loaded", async (_kind, contentIndex, load) => {
+  const loadBodyUnmocked = contentIndex.load.bind(contentIndex);
+
+  let isBodyLoaded = false;
+
+  vi.stubEnv("SSR", true);
+  vi.spyOn(contentIndex, "load").mockImplementation(async (slug) => {
+    await new Promise((resolve) => setTimeout(resolve));
+    isBodyLoaded = true;
+    return loadBodyUnmocked(slug);
+  });
+  await load();
+
+  expect(isBodyLoaded).toBe(true);
+});
+
+test.each([
+  ["a page", pages, () => loadSegment(DECLARED_PAGE_SLUG)],
+  ["a collection entry", collections.collection!, () => loadCollectionEntry("published")],
+])("in the browser, %s's route data resolves without loading its body", async (_kind, contentIndex, load) => {
+  const loadBody = vi.spyOn(contentIndex, "load");
+
+  vi.stubEnv("SSR", false);
+  await load();
+
+  expect(loadBody).not.toHaveBeenCalled();
 });

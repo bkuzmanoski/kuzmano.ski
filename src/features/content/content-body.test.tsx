@@ -240,8 +240,6 @@ test("opening an entry at a fragment sets the rail clearance of the heading it n
 
   let railClearanceAtScroll: string | undefined;
 
-  vi.stubGlobal("CSS", { supports: (condition: string) => condition === "anchor-scope: all" });
-  Object.defineProperty(document, "fonts", { configurable: true, value: { ready: new Promise(() => undefined) } });
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function boxOf(this: Element) {
     return DOMRect.fromRect({ height: this.matches("[data-rail-asides] > *") ? railAsideBottom : 0 });
   });

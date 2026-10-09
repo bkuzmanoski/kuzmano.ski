@@ -9,6 +9,10 @@ globalThis.ResizeObserver = class {
   disconnect = vi.fn();
 };
 
+Object.defineProperty(Document.prototype, "fonts", {
+  configurable: true,
+  value: { ready: Promise.resolve(), load: () => Promise.resolve([]) },
+});
 Document.prototype.elementFromPoint = () => null;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.setPointerCapture = vi.fn();

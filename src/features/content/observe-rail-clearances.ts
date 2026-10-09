@@ -86,7 +86,7 @@ function updateRailClearances(body: HTMLElement) {
  * Returns a cleanup function that stops observing.
  */
 export function observeRailClearances(body: HTMLElement | null) {
-  if (!body || typeof CSS === "undefined" || !CSS.supports("anchor-scope: all")) {
+  if (!body || !CSS.supports("anchor-scope: all")) {
     return;
   }
 

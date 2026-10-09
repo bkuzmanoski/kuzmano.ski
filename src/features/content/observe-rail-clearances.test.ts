@@ -29,7 +29,6 @@ beforeEach(() => {
   resizeCallbacks = [];
   frameCallbacks = [];
 
-  vi.stubGlobal("CSS", { supports: (condition: string) => condition === "anchor-scope: all" });
   vi.stubGlobal(
     "ResizeObserver",
     class {

@@ -47,7 +47,6 @@ beforeEach(() => {
   useContributionCalendar.mockReset();
   resizeObserverTargets = new Map();
   vi.stubGlobal("ResizeObserver", FakeResizeObserver);
-  vi.stubGlobal("CSS", { supports: (condition: string) => condition === "view-timeline: --contribution-graph block" });
   prefersReducedMotion.matches = false;
 });
 
