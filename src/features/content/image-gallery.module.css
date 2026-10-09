@@ -332,7 +332,7 @@
   padding-inline: 8px;
 
   font: var(--font-ui);
-  color: var(--color-foreground);
+  color: var(--color-foreground-secondary);
   text-align: center;
 }
 
