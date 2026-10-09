@@ -17,9 +17,9 @@ Content is authored in MDX and must contain the following frontmatter:
 ```yaml
 title: Entry Title
 description: Collection entry lists and meta descriptions use this text.
-date: 2026-07-19
-category: Category # Optional. The entry's category in Atom feeds.
-draft: false # Optional. Unlists the entry on the deployed site.
+date: 1970-01-01
+category: Category # Optional.
+draft: true # Set to `false` to hide the entry on the deployed site (it will remain accessible via its URL).
 ```
 
 MDX files are located at:
