@@ -197,6 +197,12 @@
 
 .category {
   grid-column: 3;
+  word-break: normal;
+  overflow-wrap: anywhere;
+
+  &.uncategorized {
+    color: var(--color-foreground-disabled);
+  }
 }
 
 .date {
@@ -214,13 +220,19 @@
     padding-block-start: 0;
   }
 
-  .date {
-    grid-column: 2;
-  }
-
   .category {
     grid-column: 3;
     text-align: end;
     overflow-wrap: anywhere;
+
+    &.uncategorized {
+      @container collection-entry-list (width < 620px) {
+        display: none;
+      }
+    }
+  }
+
+  .date {
+    grid-column: 2;
   }
 }

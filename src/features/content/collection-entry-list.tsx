@@ -22,6 +22,7 @@ import { EntryCoverImage } from "./entry-cover-image.tsx";
 
 import type { MouseEvent } from "react";
 
+export const UNCATEGORIZED_LABEL = "Uncategorized";
 export const EMPTY_COLLECTION_MESSAGE = "There are no entries in this collection.";
 
 const LIST_VIEW_STYLE: StyleWithVars = {
@@ -108,11 +109,12 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
                     {entry.description}
                   </span>
                 </span>
-                {entry.category !== undefined && (
-                  <span id={`${entryId}-category`} className={styles.category}>
-                    {entry.category}
-                  </span>
-                )}
+                <span
+                  id={`${entryId}-category`}
+                  className={cx(styles.category, entry.category === undefined && styles.uncategorized)}
+                >
+                  {entry.category ?? UNCATEGORIZED_LABEL}
+                </span>
                 <time id={`${entryId}-date`} dateTime={entry.date} className={styles.date} lang={dateLanguage}>
                   {formatDate(entry.date, dateFormat)}
                 </time>

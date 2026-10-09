@@ -7,7 +7,7 @@ import type { CoverImage } from "#/lib/content/media.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 import { fakeCollection, fakeCollectionEntries, fakeCoverImage, fakeEntry } from "#/test-utils/collection.ts";
 
-import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE } from "./collection-entry-list.tsx";
+import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE, UNCATEGORIZED_LABEL } from "./collection-entry-list.tsx";
 
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({ actions: { open } }),
@@ -71,7 +71,7 @@ test("the cover image thumbnail does not contribute to the entry link's accessib
   expect(screen.getByRole("link", { name: "newest" })).toBeDefined();
 });
 
-test("an entry shows its description, and its category when its frontmatter specifies one", () => {
+test("an entry shows its description and its category, or `Uncategorized` when its frontmatter omits one", () => {
   const categorizedCollection = fakeCollection([
     fakeEntry("categorized", { description: "A description.", category: "Category" }),
     fakeEntry("uncategorized", { description: "Another description." }),
@@ -84,10 +84,10 @@ test("an entry shows its description, and its category when its frontmatter spec
   expect(categorizedRow?.textContent).toContain("A description.");
   expect(categorizedRow?.textContent).toContain("Category");
   expect(uncategorizedRow?.textContent).toContain("Another description.");
-  expect(uncategorizedRow?.textContent).not.toContain("Category");
+  expect(uncategorizedRow?.textContent).toContain(UNCATEGORIZED_LABEL);
 });
 
-test("an entry's link is named by its title and described by its description, category, and date", () => {
+test("a categorized entry's link is named by its title and described by its description, category, and date", () => {
   render(
     <CollectionEntryList
       activeSlug={null}
@@ -95,6 +95,17 @@ test("an entry's link is named by its title and described by its description, ca
     />,
   );
   expect(screen.getByRole("link", { name: "entry", description: /^A description\. Category \S/ })).toBeDefined();
+});
+
+test("an uncategorized entry's link is named by its title and described by its description and date", () => {
+  render(
+    <CollectionEntryList
+      activeSlug={null}
+      collection={fakeCollection([fakeEntry("entry", { description: "A description." })])}
+    />,
+  );
+  expect(screen.getByRole("link", { name: "entry", description: /^A description\. \S/ })).toBeDefined();
+  expect(screen.queryByRole("link", { description: new RegExp(UNCATEGORIZED_LABEL) })).toBeNull();
 });
 
 test("the column headings are hidden from assistive technology", () => {
