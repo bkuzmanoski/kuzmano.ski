@@ -453,6 +453,26 @@
       line-height: 0; /* The fallback font of the arrow would otherwise add to the line's height. */
     }
 
+    &:where(a:has(> img:only-child, > picture:only-child > img)) {
+      position: relative;
+
+      display: block;
+
+      width: fit-content;
+      margin-inline: auto;
+      padding: 0;
+
+      text-decoration: none;
+
+      &::after {
+        content: none;
+      }
+
+      &:focus-visible {
+        @mixin focus-stroke -2px;
+      }
+    }
+
     &:where(ul, ol) {
       padding-inline-start: 24px;
     }
