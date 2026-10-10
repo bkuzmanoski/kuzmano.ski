@@ -1,10 +1,12 @@
+import { render } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { PAGE_SLUGS } from "#/config/content.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
 
 import { collections, pages } from "./catalog.ts";
-import { contentHead, contentRoute } from "./route-data.ts";
+import { contentRoute } from "./route-data.ts";
 
 vi.mock("./catalog.ts", async () => {
   const { PAGES_DIRECTORY_NAME: pagesDirectoryName, PAGE_SLUGS: slugs } = await import("#/config/content.ts");
@@ -44,10 +46,10 @@ const CONTENT_PRELOADED_FONT_FILE_NAMES = [
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });
 const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } }); // A one-segment route: a page, or a collection listing.
-const preloadedFontFileNamesOf = (loaderData: Awaited<ReturnType<typeof contentRoute.loader>>) =>
-  contentHead(loaderData)
-    .links.filter((link) => link.rel === "preload" && "as" in link)
-    .map((link) => link.href.split("/").at(-1)?.split("?")[0]);
+const preloadedFontFileNames = () =>
+  [...document.head.querySelectorAll('link[rel="preload"][as="font"]')].map(
+    (link) => link.getAttribute("href")?.split("/").at(-1)?.split("?")[0],
+  );
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -107,15 +109,12 @@ test("a collection listing is indexable", async () => {
   expect((await loadSegment("collection")).noindex).toBeUndefined();
 });
 
-test.each([
-  ["a page", () => loadSegment(DECLARED_PAGE_SLUG)],
-  ["a collection entry", () => loadCollectionEntry("published")],
-  ["a collection listing", () => loadSegment("collection")],
-])("%s's head preloads the display, body, and bitmap faces", async (_kind, load) => {
-  expect(preloadedFontFileNamesOf(await load())).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
+test("the content route's component preloads the display, body, and bitmap fonts", () => {
+  render(createElement(contentRoute.component));
+  expect(preloadedFontFileNames()).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
 });
 
-test("an entry's route data does not include the URLs of the fonts its head preloads", async () => {
+test("an entry's route data does not include the URLs of the fonts its route preloads", async () => {
   expect(JSON.stringify(await loadCollectionEntry("published"))).not.toContain(".woff2");
 });
 

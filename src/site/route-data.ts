@@ -4,11 +4,12 @@ import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 import displayFontUrl from "#/assets/fonts/Archivo-Variable.woff2?url";
 import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
 import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable.woff2?url";
+import { preloadFont } from "#/lib/fonts.ts";
 
 import { pages } from "./catalog.ts";
 import { collectionFeedOf } from "./feeds.ts";
 import { hasMarkdownRepresentation } from "./markdown-negotiation.ts";
-import { documentHead, fontPreloadLinkFor } from "./metadata.ts";
+import { documentHead } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
 import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./routes.ts";
 
@@ -36,11 +37,6 @@ async function loadBodyBeforeServerRender(contentIndex: ContentIndex, slug: stri
   if (import.meta.env.SSR) {
     await contentIndex.load(slug);
   }
-}
-
-export function contentHead(metadata: DocumentMetadata) {
-  const head = documentHead(metadata);
-  return { ...head, links: [...head.links, ...CONTENT_PRELOADED_FONT_URLS.map(fontPreloadLinkFor)] };
 }
 
 export const contentRoute = {
@@ -84,5 +80,9 @@ export const contentRoute = {
         throw notFound(); // Not found, or a feature route that renders its own head tags.
     }
   },
-  head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? contentHead(loaderData) : {}),
+  head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),
+  component: () => {
+    CONTENT_PRELOADED_FONT_URLS.forEach(preloadFont);
+    return null; // The window layer renders the content.
+  },
 };

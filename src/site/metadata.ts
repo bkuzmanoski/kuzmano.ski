@@ -28,8 +28,6 @@ export const LLMS_TXT_PATH = `/${LLMS_TXT_FILE_NAME}`;
 export const LLMS_TXT_LINK_HEADER = `<${canonicalUrl(LLMS_TXT_PATH)}>; rel="describedby"`; // Absolute, like the `describedby` link in the `<head>`.
 
 export const documentTitle = (title: string) => `${title}—${AUTHOR_NAME}`;
-export const fontPreloadLinkFor = (href: string) =>
-  ({ rel: "preload", as: "font", href, type: "font/woff2", crossOrigin: "anonymous" }) as const;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 
 /**

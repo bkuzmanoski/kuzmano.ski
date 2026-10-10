@@ -2,8 +2,10 @@ import { HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { THEME_COLORS } from "virtual:theme-colors";
 
+import chromeFontUrl from "#/assets/fonts/ChicagoFLF-Adjusted.woff2?url";
 import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
+import { preloadFont } from "#/lib/fonts.ts";
 import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
 import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
@@ -13,6 +15,7 @@ import type { ReactNode } from "react";
 
 export function RootDocument({ children }: { children: ReactNode }) {
   useEffect(watchFaviconColorScheme, []);
+  preloadFont(chromeFontUrl); // Every document renders the chrome face.
 
   return (
     // suppressHydrationWarning: `themeScript`, `bootSequenceScript`, `webShareScript`, and `devicePixelRatioScript`

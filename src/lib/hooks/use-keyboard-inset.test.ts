@@ -41,12 +41,12 @@ afterEach(() => {
   document.documentElement.removeAttribute("style");
 });
 
-test("`--keyboard-inset` is set to the gap between the layout and visual viewport heights", () => {
+test("`--keyboard-inset` is set to the gap between the layout and visual viewport heights, and removed when the gap closes", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
 
-  expect(inset()).toBe("0px");
+  expect(inset()).toBe("");
 
   viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
 
@@ -54,25 +54,48 @@ test("`--keyboard-inset` is set to the gap between the layout and visual viewpor
 
   viewport.resizeTo(LAYOUT_HEIGHT_PX);
 
-  expect(inset()).toBe("0px");
+  expect(inset()).toBe("");
 });
 
-test("`--keyboard-inset` is set to `0px` when the gap is below the keyboard threshold", () => {
+test("`--keyboard-inset` is removed when the gap is below the keyboard threshold", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
+
+  expect(inset()).toBe("300px");
+
   viewport.resizeTo(LAYOUT_HEIGHT_PX - 1);
 
-  expect(inset()).toBe("0px");
+  expect(inset()).toBe("");
 });
 
 test("`--keyboard-inset` is removed while the page is zoomed in", () => {
   const viewport = stubViewport();
 
   renderHook(() => useKeyboardInset());
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
+
+  expect(inset()).toBe("300px");
+
   viewport.resizeTo(LAYOUT_HEIGHT_PX - 300, 2);
 
   expect(inset()).toBe("");
+});
+
+test("a scroll of the visual viewport that leaves the gap unchanged does not write `--keyboard-inset`", () => {
+  const viewport = stubViewport();
+
+  renderHook(() => useKeyboardInset());
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
+
+  // A spy rather than a `MutationObserver`, since jsdom does not record a mutation for a write of the same value.
+  const setProperty = vi.spyOn(document.documentElement.style, "setProperty");
+
+  viewport.scroll();
+
+  expect(inset()).toBe("300px");
+  expect(setProperty).not.toHaveBeenCalled();
 });
 
 test("the window is scrolled back to the top when the visual viewport scrolls", () => {
