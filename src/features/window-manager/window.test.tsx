@@ -1,11 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import type * as Scroll from "#/lib/audio/scroll.ts";
 import { playClickSound, playScrollDetentSound } from "#/lib/audio/sounds.ts";
 import type * as BootSequenceLifecycle from "#/lib/boot-sequence/lifecycle.ts";
-import { isTouchOnly } from "#/lib/device.ts";
+import { isMacOS, isTouchOnly } from "#/lib/device.ts";
 import { clamp } from "#/lib/math.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
@@ -28,7 +28,7 @@ vi.mock("#/lib/boot-sequence/lifecycle.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof BootSequenceLifecycle>()),
   useIsBootSequenceComplete: () => true,
 }));
-vi.mock("#/lib/device.ts", () => ({ isTouchOnly: vi.fn() }));
+vi.mock("#/lib/device.ts", () => ({ isMacOS: vi.fn(), isTouchOnly: vi.fn() }));
 
 const BASE_PANE_HEIGHT_PX = 100;
 const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX; // A page overlaps the previous one by one arrow step.
@@ -61,6 +61,11 @@ beforeAll(() => {
       this.scrollTop = clamp(this.scrollTop + top, 0, Math.max(0, this.scrollHeight - this.clientHeight));
     },
   });
+});
+
+beforeEach(() => {
+  vi.mocked(isMacOS).mockReset();
+  vi.mocked(isTouchOnly).mockReset();
 });
 
 afterAll(() => {
@@ -225,6 +230,69 @@ test.each([
 });
 
 test.each([
+  [
+    "the Down arrow key with the Option key",
+    INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX,
+    { key: "ArrowDown", altKey: true },
+  ],
+  [
+    "the Up arrow key with the Option key",
+    INITIAL_SCROLL_TOP_PX - PAGE_SCROLL_DISTANCE_PX,
+    { key: "ArrowUp", altKey: true },
+  ],
+  ["the Down arrow key with the Command key", 700, { key: "ArrowDown", metaKey: true }],
+  ["the Up arrow key with the Command key", 0, { key: "ArrowUp", metaKey: true }],
+])(
+  "on macOS, pressing %s while the window itself has the focus scrolls its content to %i",
+  (_label, expectedTop, init) => {
+    vi.mocked(isMacOS).mockReturnValue(true);
+    render(windowShowing("tall", TALL_PANE_ELEMENT));
+    scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
+
+    const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), init);
+
+    expect(scrollPane().scrollTop).toBe(expectedTop);
+    expect(isDefaultAllowed).toBe(false);
+  },
+);
+
+test.each([
+  ["the Down arrow key with the Control key", { key: "ArrowDown", ctrlKey: true }],
+  ["the Down arrow key with the Option and Command keys", { key: "ArrowDown", altKey: true, metaKey: true }],
+  ["the Page Down key with the Option key", { key: "PageDown", altKey: true }],
+  ["the Space key with the Command key", { key: " ", metaKey: true }],
+])(
+  "on macOS, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
+  (_label, init) => {
+    vi.mocked(isMacOS).mockReturnValue(true);
+    render(windowShowing("tall", TALL_PANE_ELEMENT));
+    scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
+
+    const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), init);
+
+    expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX);
+    expect(isDefaultAllowed).toBe(true);
+  },
+);
+
+test.each([
+  ["the Down arrow key with the Option key", { key: "ArrowDown", altKey: true }],
+  ["the Down arrow key with the Command key", { key: "ArrowDown", metaKey: true }],
+])(
+  "outside macOS, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
+  (_label, init) => {
+    vi.mocked(isMacOS).mockReturnValue(false);
+    render(windowShowing("tall", TALL_PANE_ELEMENT));
+    scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
+
+    const isDefaultAllowed = fireEvent.keyDown(screen.getByRole("region"), init);
+
+    expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX);
+    expect(isDefaultAllowed).toBe(true);
+  },
+);
+
+test.each([
   ["the Page Down key", INITIAL_SCROLL_TOP_PX + ARROW_STEP_PX, "PageDown"],
   ["the Page Up key", INITIAL_SCROLL_TOP_PX - ARROW_STEP_PX, "PageUp"],
 ])(
@@ -316,6 +384,16 @@ test("pressing a key not claimed by a handler the window's content registered st
   expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX);
 });
 
+test("on macOS, pressing the Down arrow key with the Option key scrolls the content by a page when a handler the content registered claims the Down arrow key", () => {
+  vi.mocked(isMacOS).mockReturnValue(true);
+  render(windowShowing("tall", <ContentClaimingKey claimedKey="ArrowDown" />));
+  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
+
+  fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", altKey: true });
+
+  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX);
+});
+
 test("the window scrolls its content for a key again once the content whose handler claimed it is replaced", () => {
   const { rerender } = render(windowShowing("claiming", <ContentClaimingKey claimedKey="ArrowDown" />));
 
@@ -333,15 +411,6 @@ test("pressing a key that scrolls while an element in the window's content has t
 
   expect(scrollPane().scrollTop).toBe(0);
   expect(isDefaultAllowed).toBe(true);
-});
-
-test("pressing a key that scrolls with the Alt key does not scroll the window's content", () => {
-  render(windowShowing("tall", TALL_PANE_ELEMENT));
-  scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
-
-  fireEvent.keyDown(screen.getByRole("region"), { key: "ArrowDown", altKey: true });
-
-  expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX);
 });
 
 test("the window restores focus to its last focused element when it is activated again", () => {

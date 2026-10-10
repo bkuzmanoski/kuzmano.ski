@@ -11,6 +11,7 @@ import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
+import { isMacOS } from "#/lib/device.ts";
 import { containsPoint } from "#/lib/geometry.ts";
 import { useDoublePress } from "#/lib/hooks/use-double-press.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
@@ -30,10 +31,25 @@ export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 /** Where a window is being dragged to, reported while the gesture runs so an outline can show the proposed position. */
 export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
 
+const MACOS_OPTION_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "PageUp", ArrowDown: "PageDown" };
+const MACOS_COMMAND_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "Home", ArrowDown: "End" };
+
+function scrollKeyOf(event: KeyboardEvent): string | null {
+  if (!event.altKey && !event.ctrlKey && !event.metaKey) {
+    return event.key;
+  }
+
+  if (!isMacOS() || event.ctrlKey || (event.altKey && event.metaKey)) {
+    return null;
+  }
+
+  return (event.altKey ? MACOS_OPTION_ARROW_SCROLL_KEYS : MACOS_COMMAND_ARROW_SCROLL_KEYS)[event.key] ?? null;
+}
+
 function keyboardScrollDelta(event: KeyboardEvent, viewport: HTMLElement): number | null {
   const pageDistance = () => Math.max(viewport.clientHeight - ARROW_STEP_PX, ARROW_STEP_PX);
 
-  switch (event.key) {
+  switch (scrollKeyOf(event)) {
     case "ArrowUp":
       return -ARROW_STEP_PX;
 
@@ -272,19 +288,19 @@ export function Window({
       aria-describedby={focused ? undefined : inactiveDescriptionId}
       data-maximized={maximized || undefined}
       onFocus={onFocus}
-      // The window is focused while none of its content is, but the browser scrolls only the scroll
-      // container around the focused element, which the window is outside of. The keys that scroll a
-      // page therefore scroll the window's content from here, unless a handler the content registered
-      // claims the key first. A key with a modifier other than Shift is a shortcut, so it reaches
-      // neither the content's handlers nor the scroll.
       onKeyDown={(event) => {
+        // Scrolls the window's content for page-scrolling keys that reach the focused window
+        // instead of its content's scroll container.
+
         const viewport = viewportRef.current;
 
-        if (event.target !== event.currentTarget || !viewport || event.altKey || event.ctrlKey || event.metaKey) {
+        if (event.target !== event.currentTarget || !viewport) {
           return;
         }
 
-        keyDownHandlers.handle(event);
+        if (!event.altKey && !event.ctrlKey && !event.metaKey) {
+          keyDownHandlers.handle(event);
+        }
 
         const delta = event.defaultPrevented ? null : keyboardScrollDelta(event, viewport);
 
