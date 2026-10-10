@@ -324,12 +324,13 @@ test.each([
   expect(shownImageName()).toBe("First image");
 });
 
-test("a swipe across the shown image does not open the preview", () => {
+test("a swipe across the shown image does not open the preview or play the click sound", () => {
   renderGallery();
   swipeAcross(stage(), { dx: -SWIPE_DISTANCE_PX });
   fireEvent.click(stage());
 
   expect(preview().open).toBe(false);
+  expect(playClickSound).not.toHaveBeenCalled();
 });
 
 test("an arrow key pressed with the Command key held leaves the shown image unchanged, and its default action is not prevented", () => {

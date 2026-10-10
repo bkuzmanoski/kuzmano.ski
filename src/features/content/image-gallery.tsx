@@ -6,7 +6,7 @@ import { Button } from "#/components/button.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { ZoomRect } from "#/features/window-manager/zoom-rect.tsx";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
-import { loadKeySounds, playHoverSound } from "#/lib/audio/sounds.ts";
+import { loadKeySounds, playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
@@ -351,6 +351,7 @@ export function ImageGallery({
           {...stageSwipeHandlers}
           onClick={() => {
             if (hasControls) {
+              playClickSound();
               openPreview();
             }
           }}
