@@ -95,6 +95,9 @@ export function observeRailClearances(body: HTMLElement | null) {
 
   // Measured before the ref callback returns, as well as on resize, so that the article's ref callback,
   // which React calls after this one, scrolls to a fragment target where the clearances place it.
+  //
+  // Note: After a client-side navigation, this performs the new entry's first layout, which the frame
+  // would otherwise perform, so Chrome reports a forced reflow that deferring the update would not remove.
   updateRailClearances(body);
 
   // Deferred to the next frame, so the resize the update causes is observed in that frame rather than
