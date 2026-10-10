@@ -110,7 +110,7 @@ test("an uncategorized entry's link is named by its title and described by its d
 
 test("the column headings are hidden from assistive technology", () => {
   render(<CollectionEntryList activeSlug={null} collection={COLLECTION} />);
-  expect(screen.getByText("Name").closest("[aria-hidden='true']")).not.toBeNull();
+  expect(screen.getByText("Title").closest("[aria-hidden='true']")).not.toBeNull();
 });
 
 test("a collection without entries shows the empty collection message instead of a list", () => {

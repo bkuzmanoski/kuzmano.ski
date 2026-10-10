@@ -8,7 +8,7 @@ export const dateFormatterOf = (format: DateFormat, locale = format.locale): Int
   new Intl.DateTimeFormat(locale, format.options);
 
 /**
- * Writes an ISO 8601 calendar date, `YYYY-MM-DD` or `YYYY-MM`, in `format`. Returns `isoString`
+ * Writes an ISO 8601 calendar date (`YYYY-MM-DD` or `YYYY-MM`) in `format`. Returns `isoString`
  * unchanged when it does not parse.
  */
 export function formatDate(isoString: string, format: Intl.DateTimeFormat): string {

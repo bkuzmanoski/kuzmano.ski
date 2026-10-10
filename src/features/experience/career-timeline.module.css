@@ -216,9 +216,7 @@
 }
 
 .organizationAndDates {
-  margin-block-start: 4px;
-  font: var(--font-body-small);
-  color: var(--color-foreground-secondary);
+  @mixin content-subtitle;
 }
 
 .organizationAndDates ~ * {

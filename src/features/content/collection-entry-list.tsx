@@ -64,7 +64,7 @@ export function CollectionEntryList({ collection, activeSlug }: { collection: Co
   return (
     <div className={styles.listView} style={LIST_VIEW_STYLE}>
       <div className={styles.columnHeadings} aria-hidden="true">
-        <span className={styles.nameColumnHeading}>Name</span>
+        <span className={styles.titleColumnHeading}>Title</span>
         <span>Category</span>
         <span>Date</span>
       </div>

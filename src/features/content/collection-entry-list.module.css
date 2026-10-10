@@ -16,9 +16,8 @@
     ); /* Clears the window safe area and reserved scrollbar width, and centers the list in a wider window. */
 
   --collection-entry-list-columns: var(--layout-cover-image-size) minmax(0, 1fr) 112px 112px;
-  --collection-entry-list-column-gap: 16px;
   --collection-entry-list-column-headings-height: 32px; /* 28px, +1px per rule, +2px between them. */
-  --collection-entry-list-name-column-max-width: 544px;
+  --collection-entry-list-title-column-max-width: 544px;
 
   container: collection-entry-list / inline-size;
 
@@ -43,7 +42,7 @@
 
   display: grid;
   grid-template-columns: var(--collection-entry-list-columns);
-  column-gap: var(--collection-entry-list-column-gap);
+  column-gap: var(--layout-gutter);
   align-items: center;
 
   height: var(--collection-entry-list-column-headings-height);
@@ -74,7 +73,7 @@
     white-space: nowrap;
   }
 
-  & .nameColumnHeading {
+  & .titleColumnHeading {
     grid-column: 2;
   }
 
@@ -106,7 +105,7 @@
 
   display: grid;
   grid-template-columns: var(--collection-entry-list-columns);
-  column-gap: var(--collection-entry-list-column-gap);
+  column-gap: var(--layout-gutter);
   align-items: start;
 
   padding-block: var(--layout-gutter);
@@ -149,33 +148,21 @@
     scroll-margin-block-end: calc(-1 * var(--layout-gutter) - 1px); /* Excludes the bottom border. */
     border-block-end: 1px solid var(--color-border);
   }
-
-  @container collection-entry-list (width < 620px) {
-    scroll-margin-block-start: calc(-1 * var(--layout-gutter));
-    grid-template-columns: var(--layout-cover-image-size) minmax(0, 1fr) minmax(0, auto);
-    row-gap: 8px;
-  }
-}
-
-.coverImage {
-  grid-row: span 2;
 }
 
 .details {
   display: flex;
   grid-column: 2;
   flex-direction: column;
-  gap: 4px;
+  align-self: baseline;
 
-  max-width: var(--collection-entry-list-name-column-max-width);
+  max-width: var(--collection-entry-list-title-column-max-width);
   margin-block: -1px; /* A title and one-line description (50px) fit the 48px cover image, overhanging into their half-leading. */
 }
 
 .title,
 .description {
   text-wrap: pretty;
-
-  text-box: trim-both text;
 }
 
 .title {
@@ -183,16 +170,13 @@
 }
 
 .description {
-  font: var(--font-body-small);
-  color: var(--color-foreground-secondary);
+  @mixin content-subtitle;
 }
 
 .category,
 .date {
-  @mixin bitmap-label;
-
-  padding-block-start: 4px; /* Level with the x-height of the title's first line. */
-  font-variant-numeric: tabular-nums;
+  align-self: baseline;
+  font: var(--font-ui);
 }
 
 .category {
@@ -210,29 +194,39 @@
 }
 
 @container collection-entry-list (width < 620px) {
+  .listItem {
+    scroll-margin-block-start: calc(-1 * var(--layout-gutter));
+    grid-template-areas:
+      "cover-image details details"
+      "cover-image date category";
+    grid-template-columns: var(--layout-cover-image-size) minmax(0, 1fr) minmax(0, auto);
+  }
+
+  .coverImage {
+    grid-area: cover-image;
+  }
+
   .details {
-    grid-column: 2 / -1;
+    grid-area: details;
   }
 
   .category,
   .date {
-    grid-row: 2;
-    padding-block-start: 0;
+    @mixin bitmap-label;
+
+    margin-block-start: 10px;
   }
 
   .category {
-    grid-column: 3;
+    grid-area: category;
     text-align: end;
-    overflow-wrap: anywhere;
 
     &.uncategorized {
-      @container collection-entry-list (width < 620px) {
-        display: none;
-      }
+      display: none;
     }
   }
 
   .date {
-    grid-column: 2;
+    grid-area: date;
   }
 }

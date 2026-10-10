@@ -44,7 +44,6 @@
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
 
   padding: var(--layout-gutter);
   padding-inline-start: calc(2 * var(--layout-gutter) + var(--entry-colophon-caret-width));
@@ -105,11 +104,6 @@
   @mixin visually-hidden;
 }
 
-.siblingTitle,
-.siblingDate {
-  text-box: trim-both text;
-}
-
 .siblingTitle {
   overflow: hidden;
   font: var(--font-heading-3);
@@ -118,8 +112,7 @@
 }
 
 .siblingDate {
-  font: var(--font-body-small);
-  color: var(--color-foreground-secondary);
+  @mixin content-subtitle;
 }
 
 @mixin content-rail-collapsed {
