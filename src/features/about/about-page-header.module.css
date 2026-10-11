@@ -3,7 +3,6 @@
 
   position: relative;
 
-  overflow: clip;
   display: grid;
   grid-template-columns: subgrid;
   grid-template-rows: 1fr;
