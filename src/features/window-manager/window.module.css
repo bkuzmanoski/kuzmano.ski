@@ -55,7 +55,7 @@
   }
 
   /* Extend into the safe-area insets when maximized. */
-  &.maximized {
+  &[data-maximized] {
     --window-safe-area-inline-start: var(--layout-safe-area-left);
     --window-safe-area-inline-end: var(--layout-safe-area-right);
     --window-safe-area-block-end: var(--layout-safe-area-bottom);

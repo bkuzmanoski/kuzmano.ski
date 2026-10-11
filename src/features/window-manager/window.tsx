@@ -279,7 +279,6 @@ export function Window({
       className={cx(
         styles.window,
         focused && styles.focused,
-        maximized && styles.maximized,
         hidden && styles.hidden,
         unplaced && styles.unplaced,
         isBootSequenceComplete && styles.ready,
