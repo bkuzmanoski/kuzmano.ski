@@ -61,22 +61,31 @@ const runAnimationFramesUntilIdle = () => {
   throw new Error("The renderer requested animation frames for 1,000 frames.");
 };
 
-const fakeContext = () =>
-  ({
+const fakeContext = () => {
+  const context = {
     canvas: document.createElement("canvas"),
+    fillStyle: "",
     clearRect: vi.fn(),
     fillRect: vi.fn(),
     drawImage,
-    getImageData: (_x: number, _y: number, width: number, height: number) => ({
-      data: new Uint8ClampedArray(width * height * 4).map((_value, index) => (index % 4 === 3 ? 255 : 0)),
-    }),
+    getImageData: (_x: number, _y: number, width: number, height: number) => {
+      if (width === 1 && height === 1) {
+        const [red = 0, green = 0, blue = 0] = context.fillStyle.match(/\d+/g)?.map(Number) ?? [];
+        return { data: new Uint8ClampedArray([red, green, blue, 255]) };
+      }
+
+      return { data: new Uint8ClampedArray(width * height * 4).map((_value, index) => (index % 4 === 3 ? 255 : 0)) };
+    },
     createImageData: (width: number, height: number) => ({
       width,
       height,
       data: new Uint8ClampedArray(width * height * 4),
     }),
     putImageData,
-  }) as unknown as CanvasRenderingContext2D;
+  };
+
+  return context as unknown as CanvasRenderingContext2D;
+};
 
 const setHeaderSize = (header: HTMLElement, width: number, height: number) => {
   Object.defineProperty(header, "clientWidth", { value: width, configurable: true });
@@ -385,6 +394,27 @@ test("applying a theme setting puts the whole dither field on the canvas again",
 
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(putImageData.mock.lastCall).toHaveLength(3);
+});
+
+test("applying a theme setting under which the dither color is lighter than the background renders the picture's dark areas without filled pixels", () => {
+  prefersReducedMotion.matches = true;
+
+  const elements = headerElements();
+
+  elements.canvas.style.color = "rgb(200, 200, 200)";
+  elements.header.style.backgroundColor = "rgb(250, 250, 250)";
+  startAnimation(elements);
+  loadPicture(200, 100);
+  runAnimationFrames();
+
+  const filledPixelCountWithDarkerDitherColor = filledPixelCountIn(lastPutPixels());
+
+  elements.canvas.style.color = "rgb(100, 100, 100)";
+  elements.header.style.backgroundColor = "rgb(70, 70, 70)";
+  applyTheme("dark");
+  runAnimationFrames();
+
+  expect(filledPixelCountWithDarkerDitherColor - filledPixelCountIn(lastPutPixels())).toBeGreaterThan(300 * 150 * 0.5);
 });
 
 test("stopping the animation cancels the requested animation frame and stops listening for `pointermove` and `scroll` events", () => {

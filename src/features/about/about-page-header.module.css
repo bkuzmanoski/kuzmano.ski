@@ -9,6 +9,8 @@
   grid-template-rows: 1fr;
 
   min-height: min(clamp(280px, 20cqi + 200px, 420px), 60cqh);
+
+  background-color: var(--color-background); /* Compared with the dither color by `about-page-header-animation.ts`. */
 }
 
 .ditherField {
@@ -18,19 +20,16 @@
   width: 100%;
   height: 100%;
 
-  color: var(--color-background-dither);
+  color: var(--color-border);
 
   image-rendering: pixelated;
 }
 
 .column {
   position: relative;
-
   grid-column: rail-start / text-end;
   grid-row: 1;
   align-self: end;
-
-  padding-block-end: var(--content-body-layout-space-loose);
 }
 
 .content {
@@ -41,14 +40,15 @@
   font-stretch: 82%;
 
   @mixin content-rail-collapsed {
-    font-size: 44px;
-    line-height: 46px;
+    font-size: 56px;
+    line-height: 60px;
   }
 }
 
 @media print {
   .header {
     min-height: auto;
+    background-color: transparent;
   }
 
   .ditherField {

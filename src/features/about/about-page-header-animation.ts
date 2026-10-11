@@ -3,10 +3,11 @@ import { subscribeToDevicePixelRatioChange } from "#/lib/device.ts";
 import {
   densityFromImage,
   dirtyRegionBetween,
+  filledToneBetween,
   renderDitherField,
   revealProgressAt,
 } from "#/lib/dither/dither-field.ts";
-import type { DitherField, PointerHighlight } from "#/lib/dither/dither-field.ts";
+import type { DitherField, ImageTone, PointerHighlight } from "#/lib/dither/dither-field.ts";
 import { getPrefersReducedMotion, subscribeToPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import { subscribeToColorSchemeChange } from "#/lib/settings/theme.ts";
 
@@ -23,6 +24,7 @@ interface DitherFieldLayout {
   height: number;
   cssPixelsPerDitherPixel: number;
   columnEnd: number | null; // The right edge of the text column, or `null` while the picture has not loaded.
+  filledTone: ImageTone;
 }
 
 const REVEAL_DURATION_MS = 1_400; // How long the dither field takes to be revealed.
@@ -60,11 +62,15 @@ export function startAboutPageHeaderAnimation(
   let ditherField: DitherField | null = null;
   let canvasPixels: ImageData | null = null;
   let composedLayout: DitherFieldLayout | null = null; // `null` until the dither field is first composed.
-  let scaledPicture: { width: number; height: number; density: Float32Array } | null = null; // Cached picture density for its most recently placed size. `null` until the picture is first placed.
+  let scaledPicture: { width: number; height: number; filledTone: ImageTone; density: Float32Array } | null = null; // Cached picture density for its most recently placed size and filled tone. `null` until the picture is first placed.
   let animationFrameId = 0;
   let previousFrameTimeMs: number | null = null; // `null` while stopped so restarting advances the pointer highlight by one frame, not the pause duration.
   let revealStartTimeMs: number | null = null; // `null` until the picture has loaded or if it failed to load.
   let ditherColor = rgbOfCssColor(scratchContext, getComputedStyle(canvas).color);
+  let filledTone = filledToneBetween(
+    ditherColor,
+    rgbOfCssColor(scratchContext, getComputedStyle(header).backgroundColor),
+  );
   let renderedFrame: { revealProgress: number; pointerHighlight: PointerHighlight } | null = null;
 
   const pointer = { clientX: 0, clientY: 0, x: 0, y: 0, isOverHeader: false };
@@ -75,8 +81,12 @@ export function startAboutPageHeaderAnimation(
     strength: 0,
   };
 
-  const scaledPictureDensity = (width: number, height: number): Float32Array => {
-    if (scaledPicture?.width !== width || scaledPicture.height !== height) {
+  const scaledPictureDensity = (width: number, height: number, pictureFilledTone: ImageTone): Float32Array => {
+    if (
+      scaledPicture?.width !== width ||
+      scaledPicture.height !== height ||
+      scaledPicture.filledTone !== pictureFilledTone
+    ) {
       scratchContext.canvas.width = width;
       scratchContext.canvas.height = height;
       scratchContext.imageSmoothingQuality = "high"; // Resizing resets the context; high-quality smoothing prevents aliasing when downscaling the photograph.
@@ -84,15 +94,19 @@ export function startAboutPageHeaderAnimation(
       scaledPicture = {
         width,
         height,
-        density: densityFromImage(scratchContext.getImageData(0, 0, width, height).data, PICTURE_CONTRAST),
+        filledTone: pictureFilledTone,
+        density: densityFromImage(
+          scratchContext.getImageData(0, 0, width, height).data,
+          PICTURE_CONTRAST,
+          pictureFilledTone,
+        ),
       };
     }
 
     return scaledPicture.density;
   };
 
-  // Rebuilds the dither field only when the header's size or device pixel ratio changes its layout.
-  // Returns `false` without clearing the canvas when a resize or zoom leaves the layout unchanged.
+  // Rebuilds the dither field when the header's size, the device pixel ratio, or the filled tone changes.
   const composeDitherField = (): boolean => {
     const devicePixelsPerDitherPixel = Math.max(1, Math.round(ditherCellPx * devicePixelRatio));
     const cssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
@@ -104,13 +118,15 @@ export function startAboutPageHeaderAnimation(
       columnEnd: isPictureLoaded
         ? (column.getBoundingClientRect().right - header.getBoundingClientRect().left) / cssPixelsPerDitherPixel
         : null,
+      filledTone,
     };
 
     const isLayoutUnchanged =
       composedLayout?.width === layout.width &&
       composedLayout.height === layout.height &&
       composedLayout.cssPixelsPerDitherPixel === layout.cssPixelsPerDitherPixel &&
-      composedLayout.columnEnd === layout.columnEnd;
+      composedLayout.columnEnd === layout.columnEnd &&
+      composedLayout.filledTone === layout.filledTone;
 
     if (isLayoutUnchanged) {
       return false;
@@ -145,7 +161,7 @@ export function startAboutPageHeaderAnimation(
       width,
       height,
       placement && placement.width >= 1 && placement.height >= 1
-        ? { density: scaledPictureDensity(placement.width, placement.height), placement }
+        ? { density: scaledPictureDensity(placement.width, placement.height, layout.filledTone), placement }
         : null,
     );
 
@@ -286,13 +302,17 @@ export function startAboutPageHeaderAnimation(
   resizeObserver.observe(header);
 
   const unsubscribeFromDevicePixelRatioChange = subscribeToDevicePixelRatioChange(composeAndRender);
-
   const unsubscribeFromColorSchemeChange = subscribeToColorSchemeChange(() => {
     ditherColor = rgbOfCssColor(scratchContext, getComputedStyle(canvas).color);
+    filledTone = filledToneBetween(
+      ditherColor,
+      rgbOfCssColor(scratchContext, getComputedStyle(header).backgroundColor),
+    );
     renderedFrame = null;
+
+    composeDitherField();
     scheduleAnimationFrame();
   });
-
   const unsubscribeFromPrefersReducedMotion = subscribeToPrefersReducedMotion(() => {
     prefersReducedMotion = getPrefersReducedMotion();
 

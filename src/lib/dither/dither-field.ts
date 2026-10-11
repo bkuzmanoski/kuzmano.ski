@@ -18,6 +18,8 @@ export interface DitherField {
   density: Float32Array; // Density per pixel, row-major, 0 to 1.
 }
 
+export type ImageTone = "dark" | "light";
+
 export interface PointerHighlight {
   x: number;
   y: number;
@@ -29,16 +31,23 @@ export const thresholdAt = (x: number, y: number): number =>
   ((BAYER_MATRIX_8X8[(y % BAYER_MATRIX_SIZE) * BAYER_MATRIX_SIZE + (x % BAYER_MATRIX_SIZE)] ?? 0) + 0.5) /
   BAYER_LEVEL_COUNT;
 
-export function densityFromImage(rgba: Uint8ClampedArray, contrast = 1): Float32Array {
+const luminanceOf = (red: number, green: number, blue: number): number =>
+  (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+
+export const filledToneBetween = (ditherColor: Rgb, backgroundColor: Rgb): ImageTone =>
+  luminanceOf(...ditherColor) > luminanceOf(...backgroundColor) ? "light" : "dark";
+
+/** Returns each pixel's density as its share of `filledTone`. Fully transparent pixels always have a density of 0. */
+export function densityFromImage(rgba: Uint8ClampedArray, contrast: number, filledTone: ImageTone): Float32Array {
   const density = new Float32Array(rgba.length / 4);
 
   for (let index = 0; index < density.length; index += 1) {
     const offset = index * 4;
-    const luminance =
-      (0.2126 * (rgba[offset] ?? 0) + 0.7152 * (rgba[offset + 1] ?? 0) + 0.0722 * (rgba[offset + 2] ?? 0)) / 255;
+    const luminance = luminanceOf(rgba[offset] ?? 0, rgba[offset + 1] ?? 0, rgba[offset + 2] ?? 0);
+    const filledToneShare = filledTone === "dark" ? 1 - luminance : luminance;
     const alpha = (rgba[offset + 3] ?? 255) / 255;
 
-    density[index] = clamp(((1 - luminance) * alpha - 0.5) * contrast + 0.5, 0, 1);
+    density[index] = clamp((filledToneShare * alpha - 0.5) * contrast + 0.5, 0, 1);
   }
 
   return density;
