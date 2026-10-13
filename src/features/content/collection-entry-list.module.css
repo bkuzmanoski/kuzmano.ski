@@ -212,7 +212,7 @@
   .date {
     @mixin bitmap-label;
 
-    margin-block-start: 10px;
+    margin-block-start: 8px;
   }
 
   .category {
