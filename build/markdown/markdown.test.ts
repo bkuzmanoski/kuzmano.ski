@@ -402,7 +402,7 @@ Body.`);
   });
 
   test.each([
-    ["a `<code>` with a `data-path` attribute", "<code data-path>directory/file.ts</code>", "`directory/file.ts`"],
+    ["a `<code>`", "<code>directory/file.ts</code>", "`directory/file.ts`"],
     ["a `<kbd>`", "<kbd>Escape</kbd>", "`Escape`"],
   ])("renders %s as inline code", async (_label, element, inlineCode) => {
     const markdown = await markdownFor(`${FRONTMATTER}

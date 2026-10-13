@@ -58,21 +58,21 @@
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  font-weight: 500;
+  font-family: "Source Code Pro";
+  font-weight: 200 900;
   font-style: normal;
 
   font-display: swap;
-  src: url("./assets/fonts/JetBrainsMono-Medium.woff2") format("woff2");
+  src: url("./assets/fonts/SourceCodePro-Variable.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  font-weight: 500;
+  font-family: "Source Code Pro";
+  font-weight: 200 900;
   font-style: italic;
 
   font-display: swap;
-  src: url("./assets/fonts/JetBrainsMono-MediumItalic.woff2") format("woff2");
+  src: url("./assets/fonts/SourceCodePro-Variable-Italic.woff2") format("woff2");
 }
 
 :root {
@@ -121,7 +121,8 @@
   --font-body-small: 400 15px/22px var(--font-family-body);
   --font-caption: 400 14px/20px var(--font-family-body);
   --font-bitmap: 400 12px/16px "Quanta Strike 12", ui-sans-serif, sans-serif;
-  --font-code: 500 13px/20px "JetBrains Mono", ui-monospace, monospace;
+  --font-code: 450 14px/20px "Source Code Pro", ui-monospace, monospace;
+  --font-code-feature-settings: "cv01", "cv02", "cv04", "cv12", "cv17";
 
   /* Color primitives */
 

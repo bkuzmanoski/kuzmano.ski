@@ -29,7 +29,6 @@
   --content-body-layout-space-loose: 44px;
   --content-body-layout-space-x-loose: 68px;
   --content-body-layout-label-offset: 5px; /* Lowers a bitmap label beside body text from the top of its box to the text's cap line. */
-  --content-body-inline-code-x-height: 0.485; /* Matches character width of `--font-code` to `--font-body` (JetBrains Mono x-height (0.550) × Source Serif 4 average lowercase advance (0.529) / JetBrains Mono advance (0.600) */
 
   font: var(--font-body);
   font-feature-settings:
@@ -411,10 +410,6 @@
       outline: none;
     }
 
-    &:where(h1, h2, h3, blockquote) {
-      --content-body-inline-code-x-height: 0.463; /* Matches character width of `--font-code` to the display face (JetBrains Mono x-height (0.550) × Archivo average lowercase advance (0.529) / JetBrains Mono advance (0.600) */
-    }
-
     &:where(h1) {
       font: var(--font-heading-1);
       letter-spacing: -0.01em;
@@ -451,6 +446,44 @@
       content: "\202F\2197" / "";
       font-size: 0.75em;
       line-height: 0; /* The fallback font of the arrow would otherwise add to the line's height. */
+    }
+
+    &:where(:not(pre) > :is(code, kbd)) {
+      font: var(--font-code);
+      font-size: 1em;
+      font-feature-settings: var(--font-code-feature-settings);
+      overflow-wrap: break-word;
+    }
+
+    &:where(:not(pre) > code) {
+      font-weight: 500;
+      color: var(--color-syntax-constant);
+    }
+
+    &:where(a code) {
+      color: inherit; /* Keeps the link's color. */
+    }
+
+    &:where(:is(h1, h2, h3, blockquote) code) {
+      /* Code in a heading or quotation is set in the surrounding face and marked by backticks instead. */
+      font: inherit;
+      font-feature-settings: inherit;
+      color: inherit;
+
+      &::before,
+      &::after {
+        content: "`";
+        content: "`" / "";
+      }
+    }
+
+    &:where(kbd) {
+      margin-inline: 2px;
+      padding: 0.5px 4px;
+      border: 1px solid var(--color-border);
+
+      background: var(--color-background-secondary);
+      box-shadow: 1px 1px 0 var(--color-border);
     }
 
     &:where(a:has(> img:only-child, > picture:only-child > img)) {
@@ -550,6 +583,7 @@
       position: relative;
       padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));
       font: var(--font-blockquote);
+      letter-spacing: 0.01em;
 
       &::before {
         @mixin dither-50;
@@ -608,43 +642,6 @@
       @supports (width: round(down, 1px, 1px)) {
         --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--dither-dot)));
       }
-    }
-
-    &:where(:not(pre) > code) {
-      padding-inline: 3px;
-      border: 1px solid var(--color-border-secondary);
-
-      font: var(--font-code);
-      font-size: 1em;
-      font-size-adjust: ex-height var(--content-body-inline-code-x-height);
-      letter-spacing: -0.01em;
-      overflow-wrap: break-word;
-
-      background: var(--color-background-secondary);
-      box-decoration-break: clone;
-    }
-
-    &:where(code[data-path]) {
-      padding-inline: 0;
-      border: none;
-
-      text-decoration: underline dotted var(--color-border);
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
-
-      background: none;
-    }
-
-    &:where(kbd) {
-      padding-inline: 4px;
-      border: 1px solid var(--color-border);
-
-      font: var(--font-code);
-      font-size: 1em;
-      font-size-adjust: ex-height var(--content-body-inline-code-x-height);
-
-      background: var(--color-background);
-      box-shadow: 1px 1px 0 var(--color-border);
     }
 
     &:where(figcaption, caption) {

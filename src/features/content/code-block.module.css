@@ -31,12 +31,17 @@
     padding: var(--layout-gutter);
 
     font: var(--font-code);
+    font-feature-settings: var(--font-code-feature-settings);
     color: var(--color-syntax-foreground);
 
     background: var(--color-background-secondary);
 
     &:focus-visible {
       outline: none;
+    }
+
+    & > code {
+      font: inherit; /* Overrides the user agent stylesheet's `font-family: monospace`. */
     }
   }
 }

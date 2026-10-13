@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import mdxPlugin from "./prettier.mdx.ts";
 
-const PARAGRAPH = `The paragraph wraps so that an inline element <code data-path>./file.css</code> falls at the start of a line.
+const PARAGRAPH = `The paragraph wraps so that an inline element <code>./directory/file.css</code> falls at the start of a line.
 `;
 
 function formatWith(source: string, parser: "markdown" | "mdx", plugins = [mdxPlugin]) {
@@ -19,14 +19,14 @@ describe("prettier.mdx.ts", () => {
   describe("inline elements", () => {
     test("wraps before the word preceding an inline element instead of before the element", async () => {
       expect(await formatWith(PARAGRAPH, "mdx")).toBe(`The paragraph wraps so that an inline
-element <code data-path>./file.css</code>
+element <code>./directory/file.css</code>
 falls at the start of a line.
 `);
     });
 
     test("leaves the paragraph whole when formatting its own output again", async () => {
       expect(await formatTwiceWith(PARAGRAPH, "mdx")).toBe(await formatWith(PARAGRAPH, "mdx"));
-      expect(await formatTwiceWith(PARAGRAPH, "mdx", [])).toContain("\n\n<code data-path>");
+      expect(await formatTwiceWith(PARAGRAPH, "mdx", [])).toContain("\n\n<code>");
     });
 
     test("formats an element on lines of its own as a block, as the built-in printer does", async () => {

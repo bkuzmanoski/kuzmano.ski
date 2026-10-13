@@ -18,7 +18,7 @@ export const shikiTheme: ThemeRegistration = {
     },
     {
       scope: ["comment", "punctuation.definition.comment"],
-      settings: { foreground: syntax("comment"), fontStyle: "italic" },
+      settings: { foreground: syntax("comment") },
     },
     {
       scope: ["meta.tag.sgml.doctype", "meta.diff.header", "meta.preprocessor", "entity.name.function.preprocessor"],
