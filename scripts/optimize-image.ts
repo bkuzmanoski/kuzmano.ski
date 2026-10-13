@@ -9,7 +9,7 @@ import { writeFileAtomically } from "../build/files.ts";
 
 import { wholeNumberOption } from "./helpers/arguments.ts";
 import { requireCommands, runCommand } from "./helpers/external-commands.ts";
-import { inputFilePathsOf } from "./helpers/files.ts";
+import { changeToInvocationDirectory, inputFilePathsOf } from "./helpers/files.ts";
 
 // Optimizes PNG and JPEG images in place (for images that are served as authored).
 
@@ -154,6 +154,8 @@ async function optimize(
 }
 
 try {
+  changeToInvocationDirectory();
+
   const { inputPaths, isRecursive, ...optimizationOptions } = parseArguments(process.argv.slice(2));
   const imageFilePaths = await inputFilePathsOf(inputPaths, {
     isRecursive,

@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist .output .tanstack .wrangler/tmp node_modules/.vite node_modules/.cache/jiti && find . -name node_modules -prune -o -name .git -prune -o -type f -name '*.tmp' -exec rm -f {} +",
     "prepare-media": "node scripts/prepare-media.ts",

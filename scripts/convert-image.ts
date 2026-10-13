@@ -12,6 +12,7 @@ import { isEncodableImage, withoutExtension } from "../build/content/media/forma
 import { fileSize } from "../build/content/media/problems.ts";
 
 import { wholeNumberOption } from "./helpers/arguments.ts";
+import { changeToInvocationDirectory } from "./helpers/files.ts";
 
 import type { ImageDerivative, ImageDerivativeFormat } from "../build/content/media/derivatives.ts";
 
@@ -82,6 +83,8 @@ async function convert(inputFilePath: string, qualityByFormat: Arguments["qualit
 }
 
 try {
+  changeToInvocationDirectory();
+
   const { inputFilePaths, qualityByFormat } = parseArguments(process.argv.slice(2));
 
   for (const inputFilePath of inputFilePaths) {

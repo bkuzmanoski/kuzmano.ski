@@ -8,7 +8,7 @@ import { writeFileAtomically } from "../build/files.ts";
 
 import { wholeNumberOption } from "./helpers/arguments.ts";
 import { requireCommands, runCommand } from "./helpers/external-commands.ts";
-import { inputFilePathsOf } from "./helpers/files.ts";
+import { changeToInvocationDirectory, inputFilePathsOf } from "./helpers/files.ts";
 
 // Encodes videos as fast-start H.264 MP4s and writes matching poster images.
 
@@ -103,6 +103,8 @@ async function encode(inputFilePath: string, mp4FilePath: string, { crf, width, 
 }
 
 try {
+  changeToInvocationDirectory();
+
   const { inputPaths, isRecursive, ...encodingOptions } = parseArguments(process.argv.slice(2));
   const inputFilePaths = await inputFilePathsOf(inputPaths, {
     isRecursive,

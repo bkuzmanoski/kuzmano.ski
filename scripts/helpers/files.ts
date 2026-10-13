@@ -6,6 +6,10 @@ interface InputPathOptions {
   isIncludedDirectoryFile: (filePath: string) => boolean;
 }
 
+export function changeToInvocationDirectory() {
+  process.chdir(process.env.INIT_CWD ?? process.cwd());
+}
+
 const isHiddenPath = (path: string) => path.split(sep).some((segment) => segment.startsWith("."));
 
 async function filePathsIn(directoryPath: string, isRecursive: boolean) {
