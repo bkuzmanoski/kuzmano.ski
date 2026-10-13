@@ -442,8 +442,8 @@
     }
 
     &:where(a[target="_blank"])::after {
-      content: "\202F\2197";
-      content: "\202F\2197" / "";
+      content: "\202f\2197";
+      content: "\202f\2197" / "";
       font-size: 0.75em;
       line-height: 0; /* The fallback font of the arrow would otherwise add to the line's height. */
     }
@@ -748,8 +748,8 @@
       padding-block: 4px;
 
       &::before {
-        content: "\201C";
-        content: "\201C" / "";
+        content: "\201c";
+        content: "\201c" / "";
 
         inset-block: var(--content-body-first-line-offset) auto;
 

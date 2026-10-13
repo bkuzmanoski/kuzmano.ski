@@ -21,17 +21,19 @@
 }
 
 .facts {
+  --entry-masthead-facts-divider-column-gap: 12px;
+
   @mixin bitmap-label;
 
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 4px var(--entry-masthead-facts-divider-column-gap);
   align-items: center;
 
   & > * + *::before {
-    content: "\2219";
-    content: "\2219" / "";
-    margin-inline-end: 8px;
+    content: "\25b8";
+    content: "\25b8" / "";
+    margin-inline-end: var(--entry-masthead-facts-divider-column-gap);
     color: var(--color-border-secondary);
   }
 }
