@@ -97,7 +97,7 @@
 }
 
 .siblingPlaceholder {
-  @mixin dither-06 var(--color-background-dither);
+  @mixin dither-06 var(--color-background-dither-pattern);
 }
 
 .siblingDirection {

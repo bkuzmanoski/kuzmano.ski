@@ -92,7 +92,7 @@
 
   list-style: none;
 
-  outline: 1px solid var(--color-border); /* Renders the bottom border beyond the scrollable area; `box-shadow` is removed when using forced colors. */
+  outline: 1px solid var(--color-border-secondary); /* Renders the bottom border beyond the scrollable area; `box-shadow` is removed when using forced colors. */
 }
 
 .listItem {
@@ -126,9 +126,7 @@
   }
 
   &.active {
-    --color-foreground-secondary: var(--color-foreground-secondary-active);
-
-    background: var(--color-background-active);
+    background: var(--color-background-secondary);
 
     @media (forced-colors: active) {
       &::before {
@@ -146,7 +144,7 @@
 
   .list > li:not(:last-child) & {
     scroll-margin-block-end: calc(-1 * var(--layout-gutter) - 1px); /* Excludes the bottom border. */
-    border-block-end: 1px solid var(--color-border);
+    border-block-end: 1px solid var(--color-border-secondary);
   }
 }
 

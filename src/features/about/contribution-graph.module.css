@@ -58,7 +58,7 @@
     /* Ends at the padding box, which a field that extended past it would scroll vertically. */
     inset-block-end: calc(-1 * var(--contribution-graph-padding-block-end));
 
-    color: var(--color-background-dither);
+    color: var(--color-background-dither-pattern);
 
     @media (forced-colors: active) {
       color: GrayText;

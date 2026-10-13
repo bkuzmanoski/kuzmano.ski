@@ -163,12 +163,10 @@
   /* Colors */
   --color-foreground: light-dark(var(--neutral-330), var(--neutral-925));
   --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-675));
-  --color-foreground-secondary-active: light-dark(var(--neutral-390), var(--neutral-790));
   --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
   --color-background: light-dark(var(--neutral-990), var(--neutral-280));
   --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305));
-  --color-background-active: light-dark(var(--neutral-925), var(--neutral-345));
-  --color-background-dither: light-dark(var(--neutral-820), var(--neutral-390));
+  --color-background-dither-pattern: light-dark(var(--neutral-820), var(--neutral-390));
   --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent);
   --color-border: var(--neutral-540);
   --color-border-secondary: light-dark(var(--neutral-820), var(--neutral-390));
@@ -221,7 +219,6 @@
 @media (forced-colors: active) {
   :root {
     --color-foreground-secondary: CanvasText;
-    --color-foreground-secondary-active: CanvasText;
     --color-background: Canvas;
     --color-border: CanvasText;
     --color-border-secondary: GrayText;
