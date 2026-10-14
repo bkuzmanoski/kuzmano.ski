@@ -8,12 +8,12 @@ import {
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import { ContentLink, OpensInNewTabDescriptionProvider } from "./content-link.tsx";
 
 test("a link to a path on this site does not have the `target` attribute", () => {
-  render(<ContentLink href="/collection/entry">Fixture link</ContentLink>, { wrapper: RouterContext });
+  renderInRouterContext(<ContentLink href="/collection/entry">Fixture link</ContentLink>);
 
   const link = screen.getByRole("link", { name: "Fixture link" });
 
@@ -73,7 +73,7 @@ test.each([
   ["a protocol-relative URL", "//example.com/path"],
   ["a path whose second character is a backslash", String.raw`/\example.com/path`],
 ])("a link to %s has the `target` attribute `_blank` and does not have the `rel` attribute", (_label, href) => {
-  render(<ContentLink href={href}>Fixture link</ContentLink>, { wrapper: RouterContext });
+  renderInRouterContext(<ContentLink href={href}>Fixture link</ContentLink>);
 
   const link = screen.getByRole("link", { name: "Fixture link" });
 
@@ -83,7 +83,7 @@ test.each([
 });
 
 test("a link to a fragment does not have the `target` attribute", () => {
-  render(<ContentLink href="#section">Fixture link</ContentLink>, { wrapper: RouterContext });
+  renderInRouterContext(<ContentLink href="#section">Fixture link</ContentLink>);
 
   const link = screen.getByRole("link", { name: "Fixture link" });
 
@@ -92,17 +92,16 @@ test("a link to a fragment does not have the `target` attribute", () => {
 });
 
 test("a link to another site in an entry is described as opening in a new tab", () => {
-  render(
+  renderInRouterContext(
     <OpensInNewTabDescriptionProvider>
       <ContentLink href="https://example.com/path">Fixture link</ContentLink>
     </OpensInNewTabDescriptionProvider>,
-    { wrapper: RouterContext },
   );
   expect(screen.getByRole("link", { name: "Fixture link", description: "Opens in a new tab" })).toBeDefined();
 });
 
 test("a link to a file on this site has the `target` attribute `_blank` and is described as opening in a new tab", () => {
-  render(
+  renderInRouterContext(
     <OpensInNewTabDescriptionProvider>
       <ContentLink href="/collection/entry.md">Fixture link</ContentLink>
     </OpensInNewTabDescriptionProvider>,
@@ -115,7 +114,7 @@ test("a link to a file on this site has the `target` attribute `_blank` and is d
 });
 
 test("a link to another site outside an entry does not have the `aria-describedby` attribute", () => {
-  render(<ContentLink href="https://example.com/path">Fixture link</ContentLink>, { wrapper: RouterContext });
+  renderInRouterContext(<ContentLink href="https://example.com/path">Fixture link</ContentLink>);
   expect(screen.getByRole("link", { name: "Fixture link" }).hasAttribute("aria-describedby")).toBe(false);
 });
 
@@ -125,11 +124,10 @@ test.each([
 ])(
   "a link to %s in an entry does not have the `target` attribute or the `aria-describedby` attribute",
   (_label, href) => {
-    render(
+    renderInRouterContext(
       <OpensInNewTabDescriptionProvider>
         <ContentLink href={href}>Fixture link</ContentLink>
       </OpensInNewTabDescriptionProvider>,
-      { wrapper: RouterContext },
     );
 
     const link = screen.getByRole("link", { name: "Fixture link" });

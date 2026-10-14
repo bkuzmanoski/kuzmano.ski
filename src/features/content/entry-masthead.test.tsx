@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
@@ -6,7 +6,7 @@ import { formatDate } from "#/lib/datetime.ts";
 import type { Collection } from "#/site/catalog.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 import { fakeCollection, fakeCollectionEntries, fakeEntry } from "#/test-utils/collection.ts";
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import { collectionEntryTargetOf } from "#/test-utils/windows.ts";
 
 import { EntryClipboardProvider } from "./entry-clipboard-provider.tsx";
@@ -34,11 +34,10 @@ const ENTRY = COLLECTION.list()[0]!;
 const BROWSER_LOCALE_DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, ENTRY_DATE_FORMAT.options);
 
 const renderMasthead = (inCollection: Collection = COLLECTION) =>
-  render(
+  renderInRouterContext(
     <EntryClipboardProvider>
       <EntryMasthead target={collectionEntryTargetOf(inCollection, ENTRY.slug)} />
     </EntryClipboardProvider>,
-    { wrapper: RouterContext },
   );
 
 test("the masthead is marked with the `data-feed-omit` attribute", () => {

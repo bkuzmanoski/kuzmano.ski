@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { Suspense, useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -16,7 +16,7 @@ import * as footnotesFixture from "#/test-utils/fixtures/footnotes.mdx";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 import * as linksFixture from "#/test-utils/fixtures/links.mdx";
 import * as railSubjectsFixture from "#/test-utils/fixtures/rail-subjects.mdx";
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 import { collectionEntryTargetOf, pageTargetOf } from "#/test-utils/windows.ts";
 
@@ -25,8 +25,6 @@ import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
 import { ContentBody } from "./content-body.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
-
-import type { RenderOptions } from "@testing-library/react";
 
 const pageContent = vi.hoisted(() => ({ module: Promise.resolve({}) as Promise<MDXModule> })); // The body the pages index loads for a page.
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
@@ -72,8 +70,6 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-const RENDER_OPTIONS: RenderOptions = { wrapper: RouterContext };
-
 // Renders `module` as the body of an entry titled `TITLE`: a collection entry in `collection`, or a page.
 const renderContent = async (module: MDXModule, collection: Collection | null = null) => {
   const content = Promise.resolve(module); // One promise for every render, as `load` memoizes.
@@ -83,11 +79,10 @@ const renderContent = async (module: MDXModule, collection: Collection | null = 
 
   pageContent.module = content;
   const { container } = await act(() =>
-    render(
+    renderInRouterContext(
       <Suspense>
         <ContentBody route={ROUTE} target={target} />
       </Suspense>,
-      RENDER_OPTIONS,
     ),
   );
 

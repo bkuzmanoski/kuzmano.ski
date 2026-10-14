@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import postcss from "postcss";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -9,6 +9,8 @@ import { GITHUB_PROFILE_URL, GITHUB_USERNAME } from "#/config/site.ts";
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import { CONTRIBUTION_LEVEL_COUNT } from "#/lib/github/contributions.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
+import { stubResizeObserver } from "#/test-utils/resize-observer.ts";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import styles from "./contribution-graph.module.css";
 import { ContributionGraph } from "./contribution-graph.tsx";
@@ -25,28 +27,11 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   usePrefersReducedMotion: () => prefersReducedMotion.matches,
 }));
 
-let resizeObserverTargets: Map<() => void, Set<Element>>;
-
-class FakeResizeObserver {
-  readonly #report: () => void;
-
-  constructor(callback: ResizeObserverCallback) {
-    this.#report = () => callback([], this as never);
-  }
-
-  observe(target: Element) {
-    resizeObserverTargets.set(this.#report, (resizeObserverTargets.get(this.#report) ?? new Set()).add(target));
-  }
-
-  disconnect() {
-    resizeObserverTargets.delete(this.#report);
-  }
-}
+let notifyResizeObservers: ReturnType<typeof stubResizeObserver>;
 
 beforeEach(() => {
   useContributionCalendar.mockReset();
-  resizeObserverTargets = new Map();
-  vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+  notifyResizeObservers = stubResizeObserver();
   prefersReducedMotion.matches = false;
 });
 
@@ -101,13 +86,7 @@ function placeFigure(topPx: number) {
 }
 
 function reportResize(target?: Element) {
-  act(() =>
-    resizeObserverTargets.forEach((targets, report) => {
-      if (!target || targets.has(target)) {
-        report();
-      }
-    }),
-  );
+  act(() => notifyResizeObservers(target));
 }
 
 function resizeScrollContainer(scrollWidth: number, clientWidth: number) {
@@ -125,7 +104,7 @@ describe("ContributionGraph", () => {
   test("sizes the plot to 53 weeks, with no days, while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(plotWeekCountIn(container)).toBe("53");
     expect(cellsIn(container)).toHaveLength(0);
@@ -134,7 +113,7 @@ describe("ContributionGraph", () => {
   test("links to the profile from the caption while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
 
     expect(screen.getByRole("link").getAttribute("href")).toBe(GITHUB_PROFILE_URL);
     expect(screen.getByRole("link").closest("figcaption")).toBeTruthy();
@@ -143,7 +122,7 @@ describe("ContributionGraph", () => {
   test("does not expose the plot as an image while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
 
     expect(screen.queryByRole("img")).toBeNull();
   });
@@ -151,7 +130,7 @@ describe("ContributionGraph", () => {
   test("renders the profile link when the calendar cannot be read", () => {
     useContributionCalendar.mockReturnValue(null);
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(screen.getByRole("link").getAttribute("href")).toBe(GITHUB_PROFILE_URL);
     expect(container.querySelector("figure")).toBeNull();
@@ -161,7 +140,7 @@ describe("ContributionGraph", () => {
   test("renders a cell for every day in the calendar", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(cellsIn(container)).toHaveLength(WEEKS.flat().length);
   });
@@ -169,7 +148,7 @@ describe("ContributionGraph", () => {
   test("sizes the plot to the calendar's week count once the calendar is read", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(plotWeekCountIn(container)).toBe(String(WEEKS.length));
   });
@@ -177,7 +156,7 @@ describe("ContributionGraph", () => {
   test("places each day in the grid row of its weekday, counting from Sunday", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
     const rows = cellsIn(container).map((cell) => cell.style.gridRow);
 
     expect(rows.slice(0, 4)).toEqual(["4", "5", "6", "7"]);
@@ -188,7 +167,7 @@ describe("ContributionGraph", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
     useContributionCalendar.mockReturnValue(contributionCalendar({ total: 2850 }));
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(container.querySelector("figcaption")?.textContent).toBe(
       `2.850 contributions in the last year, as @${GITHUB_USERNAME}.`,
@@ -200,7 +179,7 @@ describe("ContributionGraph", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("fr-FR");
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
     const axis = container.querySelector(`.${styles.axis}`);
 
     expect(axis?.textContent).toBe("janv.");
@@ -210,7 +189,7 @@ describe("ContributionGraph", () => {
   test("spans each month label from its week to the last week", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
     const label = container.querySelector<HTMLElement>(`.${styles.month}`);
 
     expect(label?.style.gridColumn).toBe(`1 / ${WEEKS.length + 1}`);
@@ -220,7 +199,7 @@ describe("ContributionGraph", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("en-US");
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(container.querySelector("figure [lang]")).toBeNull();
   });
@@ -228,7 +207,7 @@ describe("ContributionGraph", () => {
   test("renders the `<figcaption>` as the last child of the `<figure>`, with the profile link inside it", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
     const figcaption = container.querySelector("figure > figcaption:last-child");
 
     expect(figcaption?.querySelector("a")?.getAttribute("href")).toBe(GITHUB_PROFILE_URL);
@@ -237,7 +216,7 @@ describe("ContributionGraph", () => {
   test("gives a day without contributions the lowest level and the busiest day the highest", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
     const levels = cellsIn(container).map((cell) => cell.getAttribute("data-level"));
 
     expect(levels.at(0)).toBe("0");
@@ -247,7 +226,7 @@ describe("ContributionGraph", () => {
   test("hides the grid from the accessibility tree", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(cellsIn(container)[0]?.closest("[aria-hidden='true']")).toBeTruthy();
   });
@@ -255,7 +234,7 @@ describe("ContributionGraph", () => {
   test("exposes the contribution graph as an image named `Contributions by day` and described by the caption", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
 
     expect(
       screen.getByRole("img", {
@@ -270,7 +249,7 @@ describe("ContributionGraph", () => {
     vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(600);
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(300);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
 
     expect(screen.getByRole("img", { name: "Contributions by day" }).getAttribute("tabindex")).toBe("0");
   });
@@ -280,7 +259,7 @@ describe("ContributionGraph", () => {
     vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(300);
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(300);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
 
     expect(screen.getByRole("img", { name: "Contributions by day" }).hasAttribute("tabindex")).toBe(false);
   });
@@ -289,7 +268,7 @@ describe("ContributionGraph", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
     resizeScrollContainer(300, 300);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
     resizeScrollContainer(600, 300);
 
     expect(screen.getByRole("img", { name: "Contributions by day" }).getAttribute("tabindex")).toBe("0");
@@ -299,7 +278,7 @@ describe("ContributionGraph", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
     resizeScrollContainer(600, 300);
 
-    render(<ContributionGraph />);
+    renderInRouterContext(<ContributionGraph />);
     resizeScrollContainer(600, 600);
 
     expect(screen.getByRole("img", { name: "Contributions by day" }).hasAttribute("tabindex")).toBe(false);
@@ -308,7 +287,7 @@ describe("ContributionGraph", () => {
   test("sets the `--contribution-graph-reveal-start` custom property of the `<figure>` to `20%`", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(container.querySelector("figure")?.style.getPropertyValue("--contribution-graph-reveal-start")).toBe("20%");
   });
@@ -318,7 +297,7 @@ describe("ContributionGraph", () => {
     layOutScrollPane({ scrollTop: 300, scrollHeight: 1500 });
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(contributionGraphInScrollPaneContent());
+    const { container } = renderInRouterContext(contributionGraphInScrollPaneContent());
 
     reportResize(container.querySelector("[data-scroll-pane-viewport]")!);
 
@@ -332,7 +311,7 @@ describe("ContributionGraph", () => {
     layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(contributionGraphInScrollPaneContent());
+    const { container } = renderInRouterContext(contributionGraphInScrollPaneContent());
 
     reportResize(container.querySelector("article")!);
     layOutScrollPane({ scrollTop: 0, scrollHeight: 900 });
@@ -348,7 +327,7 @@ describe("ContributionGraph", () => {
     layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(contributionGraphInScrollPaneContent());
+    const { container } = renderInRouterContext(contributionGraphInScrollPaneContent());
     const figureStyle = container.querySelector("figure")!.style;
     const setProperty = vi.spyOn(figureStyle, "setProperty");
 
@@ -369,7 +348,7 @@ describe("ContributionGraph", () => {
     layOutScrollPane({ scrollTop: 0, scrollHeight: 1500 });
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(contributionGraphInScrollPaneContent());
+    const { container } = renderInRouterContext(contributionGraphInScrollPaneContent());
 
     reportResize();
 
@@ -379,7 +358,7 @@ describe("ContributionGraph", () => {
   test("leaves the `--contribution-graph-reveal-end-max` custom property unset outside a scroll pane", () => {
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     reportResize();
 
@@ -389,7 +368,7 @@ describe("ContributionGraph", () => {
   test("does not set the `data-reveal-timeline` attribute while the calendar is being read", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container } = render(<ContributionGraph />);
+    const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(container.querySelector("figure")?.hasAttribute("data-reveal-timeline")).toBe(false);
   });
@@ -397,7 +376,7 @@ describe("ContributionGraph", () => {
   test("sets the `data-reveal-timeline` attribute to `view` when less than 20% of the figure is in view as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container, rerender } = render(contributionGraphInScrollPane());
+    const { container, rerender } = renderInRouterContext(contributionGraphInScrollPane());
 
     placeFigure(SCROLL_PANE_HEIGHT_PX - 0.1 * FIGURE_HEIGHT_PX);
     useContributionCalendar.mockReturnValue(contributionCalendar());
@@ -409,7 +388,7 @@ describe("ContributionGraph", () => {
   test("sets the `data-reveal-timeline` attribute to `document` when 20% or more of the figure is in view as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container, rerender } = render(contributionGraphInScrollPane());
+    const { container, rerender } = renderInRouterContext(contributionGraphInScrollPane());
 
     placeFigure(SCROLL_PANE_HEIGHT_PX - 0.2 * FIGURE_HEIGHT_PX);
     useContributionCalendar.mockReturnValue(contributionCalendar());
@@ -422,7 +401,7 @@ describe("ContributionGraph", () => {
     placeFigure(0);
     useContributionCalendar.mockReturnValue(contributionCalendar());
 
-    const { container } = render(contributionGraphInScrollPane());
+    const { container } = renderInRouterContext(contributionGraphInScrollPane());
 
     expect(container.querySelector("figure")?.getAttribute("data-reveal-timeline")).toBe("document");
   });
@@ -430,7 +409,7 @@ describe("ContributionGraph", () => {
   test("sets the `data-reveal-timeline` attribute to `view` when the figure is within the viewport but below the scroll pane as the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container, rerender } = render(contributionGraphInScrollPane());
+    const { container, rerender } = renderInRouterContext(contributionGraphInScrollPane());
 
     placeFigure(SCROLL_PANE_HEIGHT_PX);
     useContributionCalendar.mockReturnValue(contributionCalendar());
@@ -442,7 +421,7 @@ describe("ContributionGraph", () => {
   test("leaves the `data-reveal-timeline` attribute at `view` when the figure scrolls into view after the calendar arrives", () => {
     useContributionCalendar.mockReturnValue(undefined);
 
-    const { container, rerender } = render(contributionGraphInScrollPane());
+    const { container, rerender } = renderInRouterContext(contributionGraphInScrollPane());
 
     placeFigure(SCROLL_PANE_HEIGHT_PX);
     useContributionCalendar.mockReturnValue(contributionCalendar());

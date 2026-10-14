@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { Experience } from "#/lib/experience/career-timeline.ts";
 import { runActivationFlash } from "#/test-utils/menu.ts";
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import styles from "./career-timeline.module.css";
 import { CareerTimeline } from "./career-timeline.tsx";
@@ -72,7 +72,7 @@ const careerTimelineInScrollPane = () => (
   </div>
 );
 
-const renderInScrollPane = () => render(careerTimelineInScrollPane(), { wrapper: RouterContext });
+const renderInScrollPane = () => renderInRouterContext(careerTimelineInScrollPane());
 
 const roleTitles = () => screen.queryAllByRole("heading").map((heading) => heading.textContent);
 const roleNamed = (title: string) => screen.getByRole("heading", { name: title }).closest("li");
@@ -219,17 +219,17 @@ const release = () => fireEvent.pointerUp(window, { pointerId: POINTER_ID });
 
 describe("CareerTimeline", () => {
   test("lists every role, newest first", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(roleTitles()).toEqual(["Newest Role", "Middle Role", "Oldest Role"]);
   });
 
   test("marks the chart with the `aria-hidden` attribute", () => {
-    const { container } = render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    const { container } = renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(container.querySelector(`.${styles.chart}`)?.getAttribute("aria-hidden")).toBe("true");
   });
 
   test("labels a role's dates from its first month to `Present` when its `end` is `null`", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(
       within(roleNamed("Newest Role")!).getByText(
         paragraphWithText("Newest Organization, Mar 2024\u2060–\u2060Present"),
@@ -238,7 +238,7 @@ describe("CareerTimeline", () => {
   });
 
   test("labels a role's dates from its first month to its last month when it has ended", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(
       within(roleNamed("Oldest Role")!).getByText(
         paragraphWithText("Oldest Organization, Jan 2015\u2060–\u2060Jun 2018"),
@@ -247,7 +247,7 @@ describe("CareerTimeline", () => {
   });
 
   test("renders each month in a role's dates as a `<time>` with the month in its `datetime` attribute", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const times = within(roleNamed("Oldest Role")!).getAllByText(/2015|2018/);
 
@@ -259,7 +259,7 @@ describe("CareerTimeline", () => {
 
   test("marks each month with a `lang` attribute naming the browser's locale when its language differs from the document's", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const months = within(roleNamed("Oldest Role")!).getAllByText(/2015|2018/);
 
@@ -267,17 +267,17 @@ describe("CareerTimeline", () => {
   });
 
   test("does not set a `lang` attribute on a month when the browser's locale is in the document's language", () => {
-    const { container } = render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    const { container } = renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(container.querySelector("time[lang]")).toBeNull();
   });
 
   test("labels a role with every discipline it lists, in the order it lists them", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     expect(within(roleNamed("Middle Role")!).getByText("Second, First")).toBeTruthy();
   });
 
   test("renders a role's heading before its disciplines and dates in document order", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const role = roleNamed("Middle Role")!;
     const heading = within(role).getByRole("heading", { name: "Middle Role" });
@@ -293,14 +293,14 @@ describe("CareerTimeline", () => {
   });
 
   test("renders a role's highlights and its link", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     expect(screen.getByText("A highlight of the newest role.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Read the entry" }).getAttribute("href")).toBe("/collection/entry");
   });
 
   test("renders a checked filter for every discipline, in a list labeled `Disciplines`", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const list = screen.getByRole("list", { name: "Disciplines" });
 
@@ -309,7 +309,7 @@ describe("CareerTimeline", () => {
   });
 
   test("omits a role from the list once the filter for every discipline it lists is unchecked", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     fireEvent.click(checkedFilterNamed("Second"));
 
     expect(roleTitles()).toEqual(["Newest Role", "Middle Role"]);
@@ -317,7 +317,7 @@ describe("CareerTimeline", () => {
   });
 
   test("lists a discipline's roles again when its filter is checked again", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     fireEvent.click(checkedFilterNamed("Second"));
     fireEvent.click(screen.getByRole("checkbox", { name: "Second", checked: false }));
 
@@ -325,7 +325,7 @@ describe("CareerTimeline", () => {
   });
 
   test("colors a listed role with the accent color of the first discipline it lists whose filter is checked", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const accentColorOfMiddleRole = () =>
       roleNamed("Middle Role")?.style.getPropertyValue("--career-timeline-discipline-accent-color");
@@ -338,7 +338,7 @@ describe("CareerTimeline", () => {
   });
 
   test("renders the empty-state message when every filter is unchecked", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     expect(screen.getByRole("status").textContent).toBe("");
 
@@ -349,14 +349,14 @@ describe("CareerTimeline", () => {
   });
 
   test("lists the roles newest first by default, with `Newest first` chosen in the order menu", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     expect(roleTitles()).toEqual(["Newest Role", "Middle Role", "Oldest Role"]);
     expect(screen.getByRole("button", { name: "Order Newest first" })).toBeTruthy();
   });
 
   test("reverses the order of the roles when `Oldest first` is chosen from the order menu", () => {
-    render(<CareerTimeline {...EXPERIENCE} />, { wrapper: RouterContext });
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
     chooseOrder("Oldest first");
 
     expect(roleTitles()).toEqual(["Oldest Role", "Middle Role", "Newest Role"]);

@@ -12,12 +12,11 @@ import type { RootRouteOptions } from "@tanstack/react-router";
 (rootRoute.options as RootRouteOptions).shellComponent = undefined;
 
 /**
- * Renders the real route tree at `route`. A load error is left to surface in the render.
+ * Renders the real route tree at `route`, allowing load errors to surface during rendering.
  *
- * Mounting the tree pulls in every route module, and with them the desktop, so a suite that mocks
- * a module the desktop reads has to mock all of it. A suite that renders one component and needs
- * nothing more than a router for its links to read should use `RouterContext` from
- * `./router-context`, which holds no routes.
+ * Because this loads every route module, tests that mock a module used by the desktop must mock
+ * all of its dependencies. For isolated component tests that only need router context for links,
+ * use `renderInRouterContext` from `./router-context`, which provides a router without routes.
  */
 export function renderRoute(route: string) {
   const history = createMemoryHistory({ initialEntries: [route] });

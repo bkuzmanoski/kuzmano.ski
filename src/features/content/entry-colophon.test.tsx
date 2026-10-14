@@ -1,10 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import type { Collection } from "#/site/catalog.ts";
 import { configuredCollections } from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeCollectionEntries, fakeEntry } from "#/test-utils/collection.ts";
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import { collectionEntryTargetOf } from "#/test-utils/windows.ts";
 
 import { EntryColophon } from "./entry-colophon.tsx";
@@ -20,7 +20,7 @@ afterEach(() => {
 const COLLECTION = fakeCollection(fakeCollectionEntries("newest", "middle", "oldest"));
 
 const renderColophon = (slug: string, inCollection: Collection = COLLECTION) =>
-  render(<EntryColophon target={collectionEntryTargetOf(inCollection, slug)} />, { wrapper: RouterContext });
+  renderInRouterContext(<EntryColophon target={collectionEntryTargetOf(inCollection, slug)} />);
 
 test("the colophon is marked with the `data-feed-omit` attribute", () => {
   const { container } = renderColophon("middle");

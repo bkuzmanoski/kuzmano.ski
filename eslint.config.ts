@@ -99,6 +99,7 @@ export default defineConfig(
                 "./fixtures",
                 "./geometry.ts",
                 "./match-media.ts",
+                "./resize-observer.ts",
                 "./router-context.tsx",
                 "./timers.ts",
                 "./window-manager.ts",

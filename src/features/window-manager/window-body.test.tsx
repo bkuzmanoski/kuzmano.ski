@@ -1,9 +1,9 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
-import { RouterContext } from "#/test-utils/router-context.tsx";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import { WindowBody } from "./window-body.tsx";
 
@@ -26,7 +26,7 @@ afterEach(() => {
 
 const COLLECTION_ENTRY = collectionEntries[0]!;
 
-const renderBody = (route: string) => render(<WindowBody route={route} />, { wrapper: RouterContext });
+const renderBody = (route: string) => renderInRouterContext(<WindowBody route={route} />);
 
 test("a collection route renders a link for every entry in the collection", () => {
   renderBody("/collection");

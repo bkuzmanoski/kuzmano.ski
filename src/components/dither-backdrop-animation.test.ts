@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { applyTheme } from "#/lib/settings/theme.ts";
+import { stubResizeObserver } from "#/test-utils/resize-observer.ts";
 
 import {
   BACKDROP_TOP_DENSITY,
@@ -30,10 +31,10 @@ const DITHER_FIELD_WIDTH_DITHER_PIXELS = 500;
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const mediaQueryListeners = new Set<() => void>();
 const putImageData = vi.fn<(...parameters: Array<unknown>) => void>();
-const resizeObserverCallbacks = new Set<() => void>();
 const stopAnimationFunctions: Array<() => void> = [];
 
 let nextAnimationFrameId = 1;
+let reportResize: ReturnType<typeof stubResizeObserver>;
 
 const startAnimation = (elements: ReturnType<typeof containerElements>) => {
   const stopAnimation = startDitherBackdropAnimation(elements);
@@ -101,24 +102,6 @@ const containerElements = () => {
   return { container, canvas };
 };
 
-class FakeResizeObserver {
-  readonly #report: () => void;
-
-  constructor(callback: ResizeObserverCallback) {
-    this.#report = () => callback([], this as never);
-  }
-
-  observe() {
-    resizeObserverCallbacks.add(this.#report);
-  }
-
-  disconnect() {
-    resizeObserverCallbacks.delete(this.#report);
-  }
-}
-
-const reportResize = () => resizeObserverCallbacks.forEach((report) => report());
-
 const resizeContainer = (container: HTMLElement, width: number, height: number) => {
   setContainerSize(container, width, height);
   reportResize();
@@ -145,7 +128,7 @@ beforeEach(() => {
   prefersReducedMotion.matches = false;
   prefersReducedMotion.unsubscribe.mockClear();
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(fakeContext);
-  vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+  reportResize = stubResizeObserver();
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
     const animationFrameId = nextAnimationFrameId;
 
@@ -168,7 +151,6 @@ afterEach(() => {
   pendingAnimationFrames.clear();
   mediaQueryListeners.clear();
   putImageData.mockClear();
-  resizeObserverCallbacks.clear();
   document.documentElement.removeAttribute("data-theme");
   document.body.replaceChildren();
   vi.unstubAllGlobals();
