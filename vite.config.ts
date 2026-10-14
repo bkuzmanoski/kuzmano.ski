@@ -79,6 +79,27 @@ export default defineConfig(({ command }) => {
       babel({ presets: [reactCompilerPreset({ logger: optimizationFailures.logger })] }),
       optimizationFailures.plugin,
     ],
+    environments: {
+      client: {
+        build: {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                // Keep stable framework dependencies in a separately cached chunk. Dependencies used by only one MDX entry
+                // remain in that entry's body chunk. Exclude TanStack Start: its client entry imports the router, and grouping
+                // a module also groups its dependencies, which would otherwise pull the entire site into this chunk.
+                groups: [
+                  {
+                    name: "framework",
+                    test: /node_modules[\\/](react|react-dom|scheduler|seroval|seroval-plugins|@tanstack[\\/](react-router|router-core|history|store|react-store))[\\/]/,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
     server: { host: true },
   };
 });
