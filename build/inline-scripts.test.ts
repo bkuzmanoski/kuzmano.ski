@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { beforeEach, expect, test } from "vitest";
 
 import { runScript } from "#/test-utils/script.ts";

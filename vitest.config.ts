@@ -34,9 +34,28 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
   ],
   test: {
-    environment: "jsdom",
-    setupFiles: ["./vitest.setup.ts"],
-    include: ["**/*.{test,spec}.{ts,tsx}"],
     restoreMocks: true,
+    // Creating a jsdom accounts for most test-file runtime, so source tests use `vmThreads`, which creates
+    // one jsdom per worker rather than per file. Tooling tests use the default pool because native modules
+    // (Sharp and Vite bindings) reject VM-created `RegExp` values when validating Node built-in arguments.
+    // They run in Node unless a test file specifies `@vitest-environment jsdom`.
+    projects: [
+      {
+        test: {
+          name: "src",
+          include: ["src/**/*.{test,spec}.{ts,tsx}"],
+          environment: "jsdom",
+          setupFiles: ["./vitest.setup.ts"],
+          pool: "vmThreads",
+        },
+      },
+      {
+        test: {
+          name: "tooling",
+          include: ["build/**/*.{test,spec}.{ts,tsx}", "*.{test,spec}.{ts,tsx}"],
+          environment: "node",
+        },
+      },
+    ],
   },
 });

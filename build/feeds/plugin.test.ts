@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, expect, test, vi } from "vitest";
 
 import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";

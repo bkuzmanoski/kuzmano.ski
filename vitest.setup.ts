@@ -1,6 +1,8 @@
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 
+// Applies only to the `src` project (see `vitest.config.ts`); tooling tests run in Node without a DOM.
+
 vi.stubGlobal("scrollTo", vi.fn());
 
 globalThis.ResizeObserver = class {
