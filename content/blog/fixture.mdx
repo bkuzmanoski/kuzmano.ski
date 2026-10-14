@@ -1,0 +1,379 @@
+---
+title: Fixture
+description:
+  A fixture that exercises the content styles, components, and media pipeline.
+date: 2026-09-15
+category: "Test fixtures"
+draft: true
+---
+
+A lede paragraph, long enough to wrap onto a second line of the text column, so
+the masthead in the rail beside it can be compared with its first line.
+
+## Text
+
+A paragraph with **strong text**, _emphasized text_, ~~struck-through text~~,
+`inline code`, a key, <kbd>Ctrl + C</kbd>, and a
+[link to an external site](https://example.com).
+
+A second paragraph, long enough to wrap onto a second line of the text column,
+so the space between its lines can be compared with the space between
+paragraphs.
+
+### A subsection heading
+
+A paragraph the subsection heading heads.
+
+## A section heading with `inline code`, long enough to wrap onto a second line of the text column
+
+### A subsection heading directly after a section heading
+
+### A subsection heading directly after another
+
+A paragraph the subsection heading heads.
+
+### A subsection heading at the end of a section
+
+## Lists
+
+### A subsection heading before a list
+
+- A list item.
+- A second list item.
+  - A nested list item.
+- A third list item.
+
+1. A numbered list item.
+2. A second numbered list item.
+
+<dl>
+  <dt>A term</dt>
+  <dd>
+    A definition long enough to wrap onto a second line, so the term’s alignment
+    can be compared with its first line.
+  </dd>
+  <dt>A second term</dt>
+  <dd>A second definition.</dd>
+</dl>
+
+## Code
+
+### A subsection heading before a code block
+
+```swift
+import Foundation
+
+/// An item as the store tracks it.
+public struct Item: Identifiable, Sendable {
+  public let id: UUID
+  public var title: String
+  public var frame: CGRect
+  public var isPinned: Bool = false
+
+  static let minimumSize = CGSize(width: 320, height: 240)
+}
+
+enum LoadState<Value> {
+  case idle
+  case loading(progress: Double)
+  case loaded(Value)
+  case failed(any Error)
+}
+
+protocol ItemStoring: AnyObject {
+  var items: [Item] { get }
+  func moveToEnd(_ id: UUID) throws
+}
+
+extension ItemStoring {
+  func summary(for id: UUID) -> String {
+    guard let item = items.first(where: { $0.id == id }) else {
+      return "No item with ID \(id)."
+    }
+
+    let label = item.title.isEmpty ? "Untitled" : item.title
+
+    switch (item.isPinned, item.frame.width) {
+    case (true, _):
+      return "\(label) is pinned."
+    case (false, let width) where width < Item.minimumSize.width:
+      return "\(label) is only \(Int(width))pt wide."
+    default:
+      return String(format: "%@ — %.0f×%.0f", label, item.frame.width, item.frame.height)
+    }
+  }
+}
+
+@MainActor
+final class Store: ItemStoring {
+  private(set) var items: [Item] = []
+
+  func moveToEnd(_ id: UUID) throws {
+    guard let index = items.firstIndex(where: { $0.id == id }) else {
+      throw CocoaError(.fileNoSuchFile)
+    }
+
+    items.append(items.remove(at: index))
+  }
+}
+```
+
+A paragraph after the code block.
+
+## Quotations
+
+### A subsection heading before a quotation
+
+> A short quotation with `inline code`.
+
+A paragraph after the quotation.
+
+> A quotation long enough to wrap onto a second line in the text column, so the
+> quotation mark beside it is no taller than the text.
+>
+> <cite>A source</cite>
+
+A paragraph after the second quotation.
+
+## Rules
+
+A paragraph before the rule.
+
+---
+
+A paragraph after the rule.
+
+---
+
+### A subsection heading after a rule
+
+A paragraph the subsection heading heads.
+
+## Tables
+
+| Column     | Start | Center | End |
+| ---------- | :---- | :----: | --: |
+| First row  | 1     |   2    |   3 |
+| Second row | 10    |   20   |  30 |
+
+A paragraph before the table.
+
+<table>
+  <caption>A caption below a table.</caption>
+  <thead>
+    <tr>
+      <th>Column</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>First row</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Second row</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+
+<Rail label="Aside">An aside beside a table.</Rail>
+
+A paragraph after the table.
+
+### A subsection heading before a table in a figure
+
+<figure>
+
+| Column    | Value |
+| --------- | ----: |
+| First row |     3 |
+
+<figcaption>A caption below a table in a figure.</figcaption>
+</figure>
+
+## Figures
+
+<figure>
+  <img src="./image.jpg" alt="A JPEG image in an img element in a figure" />
+  <figcaption>A caption below an image.</figcaption>
+</figure>
+
+A paragraph between two figures.
+
+<figure>
+
+```swift
+let value = 1
+```
+
+  <figcaption>A caption below a code block.</figcaption>
+</figure>
+
+### A subsection heading before an unnumbered figure
+
+<figure data-content-unnumbered>
+  <blockquote>A quotation in a figure that takes no number.</blockquote>
+  <figcaption>A caption below an unnumbered figure.</figcaption>
+</figure>
+
+<figure data-content-span="wide">
+
+![A JPEG image in a wide figure](./image.jpg)
+
+  <figcaption>A caption below a wide figure.</figcaption>
+</figure>
+
+<figure data-content-span="pane">
+
+![A PNG image with a transparent background in a pane-spanning figure](./image.png)
+
+  <figcaption>A caption below a pane-spanning figure.</figcaption>
+</figure>
+
+## Images
+
+![A portrait JPEG image referenced through a definition][portrait-image]
+
+[portrait-image]: ./portrait-image.jpeg
+
+[![A JPEG image inside a link](./image.jpg)](https://example.com)
+
+A sentence with an inline image ![A circle](./inline-image.png) between two
+words.
+
+![An animated GIF image](./animated-image.gif)
+
+![An SVG image](./vector-image.svg)
+
+![An AVIF image](./authored-image.avif)
+
+![A WebP image](./authored-image.webp)
+
+<img
+  srcSet="./picture-1x.png 1x, ./picture-2x.png 2x"
+  src="./picture-1x.png"
+  alt="A PNG image in an img element with a srcSet"
+/>
+
+<picture data-content-span="wide">
+  <source srcSet="./picture-1x.png 1x, ./picture-2x.png 2x" type="image/png" />
+  <img src="./picture-1x.png" alt="A PNG image in a picture element" />
+</picture>
+
+## Image grid
+
+<ImageGrid caption="A caption below an image grid.">
+  ![A small PNG image](./inline-image.png)
+  ![An animated GIF image](./animated-image.gif)
+  ![An SVG image](./vector-image.svg)
+  <img src="./picture-1x.png" alt="A PNG image in an img element" />
+</ImageGrid>
+
+## Image gallery
+
+<ImageGallery caption="A caption below an image gallery.">
+  ![A PNG image with a transparent background](./image.png)
+  ![A JPEG image](./image.jpg)
+  ![A portrait JPEG image](./portrait-image.jpeg)
+  <img src="./image.png" alt="A PNG image with a transparent background" />
+  <img src="./image.jpg" alt="A JPEG image" />
+  <img src="./portrait-image.jpeg" alt="A portrait JPEG image" />
+</ImageGallery>
+
+## Videos
+
+<video
+  src="./video.mp4"
+  controls
+  aria-label="A video with controls and audio"
+  data-content-span="wide"
+/>
+
+<video
+  autoPlay
+  muted
+  loop
+  playsInline
+  aria-label="A video with a source element"
+>
+  <source src="./source-video.mp4" type="video/mp4" />
+</video>
+
+<video
+  src="./portrait-video.mp4"
+  poster="./portrait-video.poster.png"
+  width="360"
+  controls
+  aria-label="A portrait video with an authored poster image and width"
+/>
+
+## Rail asides
+
+A paragraph with an aside beside it, long enough to wrap onto a second line so
+the aside’s alignment can be compared with its first line.
+
+<Rail label="Aside">An aside beside a paragraph.</Rail>
+
+### A subsection heading with an aside beside it
+
+<Rail label="Aside">An aside beside a subsection heading.</Rail>
+
+A short paragraph.
+
+<Rail label="Aside">
+  A long aside beside a short paragraph, which runs on for more lines than the
+  paragraph has, past the paragraph after it.
+</Rail>
+
+A second short paragraph.
+
+<Rail label="Aside">A second aside, which starts below the first.</Rail>
+
+<Rail label="Aside">A third aside, beside the same paragraph.</Rail>
+
+A paragraph with an aside of two paragraphs beside it.
+
+<Rail label="Aside">
+
+The first paragraph of the aside.
+
+The second paragraph of the aside.
+
+</Rail>
+
+A paragraph at the end of the section.
+
+<Rail label="Aside">
+  A long aside beside the last paragraph of a section, which runs on for more
+  lines than the paragraph has, past the end of the section.
+</Rail>
+
+## Footnotes
+
+A sentence with a footnote.[^first] A second sentence with another
+footnote,[^second] long enough to wrap onto a second line of the paragraph.
+
+A paragraph that refers to the first footnote again.[^first]
+
+[^first]: The first footnote, beside the paragraph that first refers to it.
+
+[^second]: The second footnote, below the first.
+
+## Callouts
+
+<Callout label="Note">
+  A paragraph in a callout, long enough to wrap onto a second line so the
+  padding above the first line can be compared with the padding below the last.
+</Callout>
+
+<Callout label="Warning" variant="warning">
+  A paragraph in a warning callout.
+</Callout>
+
+## Waitlist
+
+<Waitlist list="List" title="A title above the sign-up form.">
+  A paragraph that introduces the sign-up form.
+</Waitlist>
