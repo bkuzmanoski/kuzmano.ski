@@ -229,9 +229,18 @@ test("a resize that leaves the size of the dither field in dither pixels unchang
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeContainer(elements.container, COMPONENT_WIDTH_PX - 1, COMPONENT_HEIGHT_PX);
+  resizeContainer(elements.container, COMPONENT_WIDTH_PX + 1, COMPONENT_HEIGHT_PX);
 
   expect(putImageData).not.toHaveBeenCalled();
+});
+
+test("a resize to a size between whole dither pixels sizes the canvas to the whole dither pixels inside the container", () => {
+  const elements = containerElements();
+
+  startAnimation(elements);
+  resizeContainer(elements.container, 1_003, 803);
+
+  expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual(["1000px", "800px"]);
 });
 
 test("a change to the device pixel ratio that changes the size of a dither pixel puts the dither field on the canvas at the new width", () => {

@@ -76,9 +76,10 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
   const composeDitherField = (): boolean => {
     const devicePixelsPerDitherPixel = Math.max(1, Math.round(ditherCellPx * devicePixelRatio));
     const cssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
+    // Rounded down to whole dither pixels, so the canvas never extends past the container into its margin.
     const layout: DitherFieldLayout = {
-      width: Math.max(1, Math.ceil(container.clientWidth / cssPixelsPerDitherPixel)),
-      height: Math.max(1, Math.ceil(container.clientHeight / cssPixelsPerDitherPixel)),
+      width: Math.max(1, Math.floor(container.clientWidth / cssPixelsPerDitherPixel)),
+      height: Math.max(1, Math.floor(container.clientHeight / cssPixelsPerDitherPixel)),
       cssPixelsPerDitherPixel,
     };
 
