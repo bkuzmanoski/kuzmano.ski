@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  densityFromImage,
   dirtyRegionBetween,
-  filledToneBetween,
   pointerHighlightRegionIn,
   renderDitherField,
   revealProgressAt,
@@ -224,42 +222,6 @@ describe("dirtyRegionBetween", () => {
   test("returns `null` when neither pointer highlight has a `strength` above `0`", () => {
     const pointerHighlight = { x: 10, y: 10, standardDeviation: 1, strength: 0 };
     expect(dirtyRegionBetween(ditherField, pointerHighlight, pointerHighlight)).toBeNull();
-  });
-});
-
-describe("densityFromImage", () => {
-  test("returns `1` for black and `0` for white for a `dark` filled tone", () => {
-    const [black, white] = densityFromImage(new Uint8ClampedArray([0, 0, 0, 255, 255, 255, 255, 255]), 1, "dark");
-
-    expect(black).toBe(1);
-    expect(white).toBeCloseTo(0);
-  });
-
-  test("returns `1` for white and `0` for black for a `light` filled tone", () => {
-    const [black, white] = densityFromImage(new Uint8ClampedArray([0, 0, 0, 255, 255, 255, 255, 255]), 1, "light");
-
-    expect(black).toBe(0);
-    expect(white).toBeCloseTo(1);
-  });
-
-  test("returns `0` for a transparent pixel for both `dark` and `light` filled tones", () => {
-    expect([...densityFromImage(new Uint8ClampedArray([0, 0, 0, 0]), 1, "dark")]).toEqual([0]);
-    expect([...densityFromImage(new Uint8ClampedArray([255, 255, 255, 0]), 1, "light")]).toEqual([0]);
-  });
-
-  test("moves a density further from `0.5` at a `contrast` above `1`", () => {
-    const gray = new Uint8ClampedArray([64, 64, 64, 255]);
-    expect(densityFromImage(gray, 2, "dark")[0]).toBeGreaterThan(densityFromImage(gray, 1, "dark")[0] ?? 0);
-  });
-});
-
-describe("filledToneBetween", () => {
-  test("returns `dark` for a dither color darker than the background", () => {
-    expect(filledToneBetween([200, 200, 200], [250, 250, 250])).toBe("dark");
-  });
-
-  test("returns `light` for a dither color lighter than the background", () => {
-    expect(filledToneBetween([100, 100, 100], [70, 70, 70])).toBe("light");
   });
 });
 

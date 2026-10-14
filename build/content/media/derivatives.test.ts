@@ -99,10 +99,10 @@ describe("encodeImageDerivative", () => {
   });
 
   test("resizes a portrait image until its width is the derivative's shortest side length, preserving its aspect ratio", async () => {
-    const portraitImageAbsolutePath = join(directoryAbsolutePath, "portrait.jpg");
+    const portraitImageAbsolutePath = join(directoryAbsolutePath, "portrait.webp");
 
     await sharp({ create: { width: 20, height: 40, channels: 3, background: "#336699" } })
-      .jpeg()
+      .webp()
       .toFile(portraitImageAbsolutePath);
 
     const encodedBytes = await encodeImageDerivative(portraitImageAbsolutePath, {

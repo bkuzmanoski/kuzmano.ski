@@ -2,7 +2,11 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { applyTheme } from "#/lib/settings/theme.ts";
 
-import { startAboutPageHeaderAnimation } from "./about-page-header-animation.ts";
+import {
+  BACKDROP_TOP_DENSITY,
+  composeBackdropDitherField,
+  startDitherBackdropAnimation,
+} from "./dither-backdrop-animation.ts";
 
 const prefersReducedMotion = vi.hoisted(() => ({
   matches: false,
@@ -26,15 +30,13 @@ const DITHER_FIELD_WIDTH_DITHER_PIXELS = 500;
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const mediaQueryListeners = new Set<() => void>();
 const putImageData = vi.fn<(...parameters: Array<unknown>) => void>();
-const drawImage = vi.fn();
-const pictureImages: Array<HTMLImageElement> = [];
 const resizeObserverCallbacks = new Set<() => void>();
 const stopAnimationFunctions: Array<() => void> = [];
 
 let nextAnimationFrameId = 1;
 
-const startAnimation = (elements: ReturnType<typeof headerElements>) => {
-  const stopAnimation = startAboutPageHeaderAnimation(elements, "/image.png");
+const startAnimation = (elements: ReturnType<typeof containerElements>) => {
+  const stopAnimation = startDitherBackdropAnimation(elements);
 
   stopAnimationFunctions.push(stopAnimation);
   reportResize();
@@ -67,14 +69,9 @@ const fakeContext = () => {
     fillStyle: "",
     clearRect: vi.fn(),
     fillRect: vi.fn(),
-    drawImage,
-    getImageData: (_x: number, _y: number, width: number, height: number) => {
-      if (width === 1 && height === 1) {
-        const [red = 0, green = 0, blue = 0] = context.fillStyle.match(/\d+/g)?.map(Number) ?? [];
-        return { data: new Uint8ClampedArray([red, green, blue, 255]) };
-      }
-
-      return { data: new Uint8ClampedArray(width * height * 4).map((_value, index) => (index % 4 === 3 ? 255 : 0)) };
+    getImageData: () => {
+      const [red = 0, green = 0, blue = 0] = context.fillStyle.match(/\d+/g)?.map(Number) ?? [];
+      return { data: new Uint8ClampedArray([red, green, blue, 255]) };
     },
     createImageData: (width: number, height: number) => ({
       width,
@@ -87,32 +84,21 @@ const fakeContext = () => {
   return context as unknown as CanvasRenderingContext2D;
 };
 
-const setHeaderSize = (header: HTMLElement, width: number, height: number) => {
-  Object.defineProperty(header, "clientWidth", { value: width, configurable: true });
-  Object.defineProperty(header, "clientHeight", { value: height, configurable: true });
+const setContainerSize = (container: HTMLElement, width: number, height: number) => {
+  Object.defineProperty(container, "clientWidth", { value: width, configurable: true });
+  Object.defineProperty(container, "clientHeight", { value: height, configurable: true });
 };
 
-const headerElements = () => {
-  const header = document.createElement("header");
+const containerElements = () => {
+  const container = document.createElement("div");
   const canvas = document.createElement("canvas");
-  const column = document.createElement("div");
 
-  vi.spyOn(column, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, COMPONENT_WIDTH_PX, 0));
-  header.style.setProperty("--dither-cell", "4px");
-  setHeaderSize(header, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX);
-  header.append(canvas, column);
-  document.body.append(header);
+  container.style.setProperty("--dither-cell", "4px");
+  setContainerSize(container, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX);
+  container.append(canvas);
+  document.body.append(container);
 
-  return { header, canvas, column };
-};
-
-const loadPicture = (naturalWidth: number, naturalHeight: number) => {
-  const pictureImage = pictureImages.at(-1)!;
-
-  Object.defineProperty(pictureImage, "complete", { value: true });
-  Object.defineProperty(pictureImage, "naturalWidth", { value: naturalWidth });
-  Object.defineProperty(pictureImage, "naturalHeight", { value: naturalHeight });
-  pictureImage.dispatchEvent(new Event("load"));
+  return { container, canvas };
 };
 
 class FakeResizeObserver {
@@ -133,28 +119,26 @@ class FakeResizeObserver {
 
 const reportResize = () => resizeObserverCallbacks.forEach((report) => report());
 
-const resizeHeader = (header: HTMLElement, width: number, height: number) => {
-  setHeaderSize(header, width, height);
+const resizeContainer = (container: HTMLElement, width: number, height: number) => {
+  setContainerSize(container, width, height);
   reportResize();
 };
 
-// Each listener replaces itself with a listener on a query for the new ratio, so the listeners are
-// copied before they are called.
 const changeDevicePixelRatio = (ratio: number) => {
   vi.stubGlobal("devicePixelRatio", ratio);
-  [...mediaQueryListeners].forEach((listener) => listener());
+  [...mediaQueryListeners].forEach((listener) => listener()); // Copy listeners because they re-register for the new ratio.
 };
 
 const lastPutPixels = () => (putImageData.mock.lastCall?.[0] as ImageData | undefined)?.data ?? new Uint8ClampedArray();
 const filledPixelCountIn = (rgba: Uint8ClampedArray) =>
-  rgba.filter((value, index) => index % 4 === 3 && value === 255).length;
+  rgba.filter((value, index) => index % 4 === 3 && value > 0).length;
 const lastPutRegionCenterY = () => {
   const [, , , , dirtyY = 0, , dirtyHeight = 0] = (putImageData.mock.lastCall ?? []) as Array<number>;
   return dirtyY + dirtyHeight / 2;
 };
 const hasFilledPixels = (rgba: Uint8ClampedArray) => filledPixelCountIn(rgba) > 0;
-const movePointer = (header: HTMLElement, pointerType: string) => {
-  header.dispatchEvent(new PointerEvent("pointermove", { pointerType, clientX: 400, clientY: 400 }));
+const movePointer = (container: HTMLElement, pointerType: string) => {
+  container.dispatchEvent(new PointerEvent("pointermove", { pointerType, clientX: 400, clientY: 400 }));
 };
 
 beforeEach(() => {
@@ -170,13 +154,6 @@ beforeEach(() => {
 
     return animationFrameId;
   });
-  vi.stubGlobal("Image", function Image() {
-    const pictureImage = document.createElement("img");
-
-    pictureImages.push(pictureImage);
-
-    return pictureImage;
-  });
   vi.stubGlobal("cancelAnimationFrame", (animationFrameId: number) => pendingAnimationFrames.delete(animationFrameId));
   vi.stubGlobal("matchMedia", (media: string) => ({
     media,
@@ -191,43 +168,49 @@ afterEach(() => {
   pendingAnimationFrames.clear();
   mediaQueryListeners.clear();
   putImageData.mockClear();
-  drawImage.mockClear();
-  pictureImages.length = 0;
   resizeObserverCallbacks.clear();
   document.documentElement.removeAttribute("data-theme");
   document.body.replaceChildren();
   vi.unstubAllGlobals();
 });
 
-test("starting the animation puts the dither field on the canvas without filled pixels before the picture loads", () => {
-  startAnimation(headerElements());
+test("`composeBackdropDitherField` returns a density that falls from the top edge to `0` at the bottom edge", () => {
+  const { density } = composeBackdropDitherField(4, 10);
+
+  expect(density[0]).toBeCloseTo(BACKDROP_TOP_DENSITY);
+  expect(density[9 * 4]).toBe(0);
+  expect(density[2 * 4]).toBeGreaterThan(density[6 * 4] ?? 1);
+});
+
+test("starting the animation puts the dither field on the canvas without filled pixels at the start of its reveal", () => {
+  vi.spyOn(performance, "now").mockReturnValue(0);
+  startAnimation(containerElements());
 
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(hasFilledPixels(lastPutPixels())).toBe(false);
 });
 
-test("starting the animation puts the dither field on the canvas with filled pixels before the picture loads when reduced motion is preferred", () => {
+test("starting the animation puts the dither field on the canvas with filled pixels when reduced motion is preferred", () => {
   prefersReducedMotion.matches = true;
-  startAnimation(headerElements());
+  startAnimation(containerElements());
 
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(hasFilledPixels(lastPutPixels())).toBe(true);
 });
 
 test("starting the animation does not put pixels on the canvas when `--dither-cell` is not a positive `px` length", () => {
-  const elements = headerElements();
+  const elements = containerElements();
 
-  elements.header.style.setProperty("--dither-cell", "0px");
+  elements.container.style.setProperty("--dither-cell", "0px");
   startAnimation(elements);
 
   expect(putImageData).not.toHaveBeenCalled();
 });
 
-test("loading the picture reveals the dither field over successive animation frames, then stops requesting them", () => {
+test("starting the animation reveals the dither field over successive animation frames, then stops requesting them", () => {
   const now = vi.spyOn(performance, "now").mockReturnValue(0);
 
-  startAnimation(headerElements());
-  loadPicture(200, 100);
+  startAnimation(containerElements());
 
   const filledPixelCountAt = (timeMs: number) => {
     now.mockReturnValue(timeMs);
@@ -236,30 +219,23 @@ test("loading the picture reveals the dither field over successive animation fra
     return filledPixelCountIn(lastPutPixels());
   };
 
-  const [atStart = 0, halfway = 0, threeQuartersOfTheWay = 0] = [0, 700, 1_050].map(filledPixelCountAt);
+  // The backdrop is at most half as dense as a filled pixel, so its pixels are revealed in the second half of the reveal.
+  const [atStart = 0, threeQuartersOfTheWay = 0, nineTenthsOfTheWay = 0] = [0, 1_050, 1_260].map(filledPixelCountAt);
 
   expect(atStart).toBe(0);
-  expect(halfway).toBeGreaterThan(atStart);
-  expect(threeQuartersOfTheWay).toBeGreaterThan(halfway);
+  expect(threeQuartersOfTheWay).toBeGreaterThan(atStart);
+  expect(nineTenthsOfTheWay).toBeGreaterThan(threeQuartersOfTheWay);
   expect(pendingAnimationFrames.size).toBe(1);
-  expect(filledPixelCountAt(1_400)).toBeGreaterThan(threeQuartersOfTheWay);
+  expect(filledPixelCountAt(1_400)).toBeGreaterThan(nineTenthsOfTheWay);
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("loading the picture scales it once, to the size of its placement", () => {
-  startAnimation(headerElements());
-  loadPicture(200, 100);
-
-  expect(drawImage).toHaveBeenCalledTimes(1);
-  expect(drawImage.mock.lastCall?.slice(1)).toEqual([0, 0, 300, 150]); // A picture twice as wide as it is tall is limited to 60% of the 500 dither pixels' width.
-});
-
 test("a resize that changes the width of the dither field puts the whole dither field on the canvas at the new width", () => {
-  const elements = headerElements();
+  const elements = containerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeHeader(elements.header, 1_000, COMPONENT_HEIGHT_PX);
+  resizeContainer(elements.container, 1_000, COMPONENT_HEIGHT_PX);
 
   expect(elements.canvas.width).toBe(250);
   expect(putImageData).toHaveBeenCalledTimes(1);
@@ -267,28 +243,17 @@ test("a resize that changes the width of the dither field puts the whole dither 
 });
 
 test("a resize that leaves the size of the dither field in dither pixels unchanged does not put pixels on the canvas", () => {
-  const elements = headerElements();
+  const elements = containerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeHeader(elements.header, COMPONENT_WIDTH_PX - 1, COMPONENT_HEIGHT_PX);
+  resizeContainer(elements.container, COMPONENT_WIDTH_PX - 1, COMPONENT_HEIGHT_PX);
 
   expect(putImageData).not.toHaveBeenCalled();
 });
 
-test("a resize that changes the height of the dither field but not the size of the picture's placement recomposes the dither field without scaling the picture again", () => {
-  const elements = headerElements();
-
-  startAnimation(elements);
-  loadPicture(200, 100);
-  resizeHeader(elements.header, COMPONENT_WIDTH_PX, 1_000);
-
-  expect(elements.canvas.height).toBe(250);
-  expect(drawImage).toHaveBeenCalledTimes(1);
-});
-
 test("a change to the device pixel ratio that changes the size of a dither pixel puts the dither field on the canvas at the new width", () => {
-  const elements = headerElements();
+  const elements = containerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
@@ -299,19 +264,19 @@ test("a change to the device pixel ratio that changes the size of a dither pixel
 });
 
 test("a change to the device pixel ratio that leaves the size of a dither pixel unchanged does not put pixels on the canvas", () => {
-  startAnimation(headerElements());
+  startAnimation(containerElements());
   putImageData.mockClear();
   changeDevicePixelRatio(2);
 
   expect(putImageData).not.toHaveBeenCalled();
 });
 
-test("moving a mouse pointer over the header requests an animation frame that puts only the region changed by the pointer highlight on the canvas", () => {
-  const elements = headerElements();
+test("moving a mouse pointer over the container requests an animation frame that puts only the region changed by the pointer highlight on the canvas", () => {
+  const elements = containerElements();
 
   startAnimation(elements);
   putImageData.mockClear();
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
 
   expect(runAnimationFrames()).toBe(1);
   expect(putImageData).toHaveBeenCalledTimes(1);
@@ -325,55 +290,61 @@ test("moving a mouse pointer over the header requests an animation frame that pu
   expect(pendingAnimationFrames.size).toBe(1);
 });
 
-test("scrolling the header under a stationary mouse pointer moves the pointer highlight down the header by the distance scrolled", () => {
-  const elements = headerElements();
+test("scrolling the container under a stationary mouse pointer moves the pointer highlight down the container by the distance scrolled", () => {
+  const elements = containerElements();
 
-  let headerTopPx = 0;
+  let containerTopPx = 0;
   let timeMs = 0;
 
   vi.spyOn(performance, "now").mockImplementation(() => (timeMs += 16)); // Each frame runs 16ms after the one before, so the pointer highlight eases at its real rate.
-  vi.spyOn(elements.header, "getBoundingClientRect").mockImplementation(() => new DOMRect(0, headerTopPx, 2_000, 800));
+  vi.spyOn(elements.container, "getBoundingClientRect").mockImplementation(
+    () => new DOMRect(0, containerTopPx, 2_000, 800),
+  );
   startAnimation(elements);
-  movePointer(elements.header, "mouse");
+  runAnimationFramesUntilIdle(); // Finishes the reveal, which puts the whole dither field on the canvas.
+  movePointer(elements.container, "mouse");
 
   runAnimationFramesUntilIdle();
 
   const pointerHighlightCenterBeforeScroll = lastPutRegionCenterY();
 
-  headerTopPx = -100;
-  elements.header.parentElement!.dispatchEvent(new Event("scroll"));
+  containerTopPx = -100;
+  elements.container.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 25 dither pixels down the header. The region put on the canvas
+  // Scrolling by 100px moves the pointer 25 dither pixels down the container. The region put on the canvas
   // is rounded out to whole pixels, so its center can differ from the pointer highlight's by one.
   expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 25)).toBeLessThanOrEqual(1);
 });
 
-test("moving a touch pointer over the header does not request an animation frame", () => {
-  const elements = headerElements();
+test("moving a touch pointer over the container does not request an animation frame once the reveal has finished", () => {
+  const now = vi.spyOn(performance, "now").mockReturnValue(0);
+  const elements = containerElements();
 
   startAnimation(elements);
-  movePointer(elements.header, "touch");
+  now.mockReturnValue(1_400);
+  runAnimationFramesUntilIdle();
+  movePointer(elements.container, "touch");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("moving a mouse pointer over the header does not request an animation frame when reduced motion is preferred", () => {
+test("moving a mouse pointer over the container does not request an animation frame when reduced motion is preferred", () => {
   prefersReducedMotion.matches = true;
 
-  const elements = headerElements();
+  const elements = containerElements();
 
   startAnimation(elements);
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("moving a mouse pointer over the header does not request an animation frame once reduced motion becomes preferred", () => {
-  const elements = headerElements();
+test("moving a mouse pointer over the container does not request an animation frame once reduced motion becomes preferred", () => {
+  const elements = containerElements();
 
   startAnimation(elements);
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
   runAnimationFrames();
 
   prefersReducedMotion.matches = true;
@@ -381,13 +352,13 @@ test("moving a mouse pointer over the header does not request an animation frame
 
   runAnimationFramesUntilIdle();
 
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
 test("applying a theme setting puts the whole dither field on the canvas again", () => {
-  startAnimation(headerElements());
+  startAnimation(containerElements());
   putImageData.mockClear();
   applyTheme("dark");
   runAnimationFrames();
@@ -396,44 +367,23 @@ test("applying a theme setting puts the whole dither field on the canvas again",
   expect(putImageData.mock.lastCall).toHaveLength(3);
 });
 
-test("applying a theme setting under which the dither color is lighter than the background renders the picture's dark areas without filled pixels", () => {
-  prefersReducedMotion.matches = true;
-
-  const elements = headerElements();
-
-  elements.canvas.style.color = "rgb(200, 200, 200)";
-  elements.header.style.backgroundColor = "rgb(250, 250, 250)";
-  startAnimation(elements);
-  loadPicture(200, 100);
-  runAnimationFrames();
-
-  const filledPixelCountWithDarkerDitherColor = filledPixelCountIn(lastPutPixels());
-
-  elements.canvas.style.color = "rgb(100, 100, 100)";
-  elements.header.style.backgroundColor = "rgb(70, 70, 70)";
-  applyTheme("dark");
-  runAnimationFrames();
-
-  expect(filledPixelCountWithDarkerDitherColor - filledPixelCountIn(lastPutPixels())).toBeGreaterThan(300 * 150 * 0.5);
-});
-
 test("stopping the animation cancels the requested animation frame and stops listening for `pointermove` and `scroll` events", () => {
-  const elements = headerElements();
+  const elements = containerElements();
   const stopAnimation = startAnimation(elements);
 
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
   stopAnimation();
 
   expect(pendingAnimationFrames.size).toBe(0);
 
-  movePointer(elements.header, "mouse");
+  movePointer(elements.container, "mouse");
   document.body.dispatchEvent(new Event("scroll"));
 
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
 test("stopping the animation stops listening for changes to the device pixel ratio, color scheme, theme setting, and reduced motion preference", () => {
-  const stopAnimation = startAnimation(headerElements());
+  const stopAnimation = startAnimation(containerElements());
 
   stopAnimation();
   applyTheme("dark");

@@ -151,7 +151,7 @@
 }
 
 @define-mixin dither-cell {
-  --dither-cell: 2px; /* Must be in px (see `about-page-header-animation.ts`). */
+  --dither-cell: 2px; /* Must be in px (see `dither-backdrop-animation.ts`). */
 }
 
 @define-mixin dither-dot {

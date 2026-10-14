@@ -1,0 +1,25 @@
+.container {
+  @mixin dither-cell; /* Read by `dither-backdrop-animation.ts`. */
+
+  isolation: isolate; /* Contains the canvas's negative `z-index`, so it paints over the container's background but under its children. */
+  position: relative;
+}
+
+.ditherField {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  color: var(--color-background-dither-pattern);
+
+  image-rendering: pixelated;
+}
+
+@media print {
+  .ditherField {
+    display: none;
+  }
+}
