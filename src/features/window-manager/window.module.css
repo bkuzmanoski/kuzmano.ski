@@ -111,8 +111,8 @@
   & .bars {
     position: absolute;
     top: calc((var(--layout-title-bar-height) - var(--window-control-size)) / 2);
-    right: calc(4px + var(--window-safe-area-inline-end));
-    left: calc(4px + var(--window-safe-area-inline-start));
+    right: calc(var(--layout-title-bar-inset-inline) + var(--window-safe-area-inline-end));
+    left: calc(var(--layout-title-bar-inset-inline) + var(--window-safe-area-inline-start));
 
     height: var(--window-control-size);
 
