@@ -2,13 +2,12 @@ import mdx from "@mdx-js/rollup";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
-import remarkFrontmatter from "remark-frontmatter";
 
 import { rehypeCalloutVariants } from "./markup/callout-variants.ts";
 import { rehypeContentSpans } from "./markup/content-spans.ts";
 import { rehypeElementIds } from "./markup/element-ids.ts";
+import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./markup/entry-syntax.ts";
 import { remarkFootnoteAsides } from "./markup/footnote-asides.ts";
-import { remarkGfmSubset } from "./markup/gfm.ts";
 import { rehypeImageGalleryChildren } from "./markup/image-gallery-children.ts";
 import { NO_MEDIA_FOR_ENTRY, rehypeMedia } from "./markup/media-rewrite.ts";
 import { rehypeNumberedElements } from "./markup/numbered-elements.ts";
@@ -78,7 +77,7 @@ export function mdxCompileOptionsFor({
   ];
   return {
     providerImportSource: "@mdx-js/react",
-    remarkPlugins: [remarkFrontmatter, remarkGfmSubset, remarkFootnoteAsides],
+    remarkPlugins: [...ENTRY_SYNTAX_REMARK_PLUGINS, remarkFootnoteAsides],
     rehypePlugins,
     tableCellAlignToStyle: false, // A pipe table's column alignment is emitted as an `align` attribute, which a stylesheet can select on and override, rather than as an inline style.
   };

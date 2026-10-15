@@ -185,12 +185,11 @@ A paragraph after the table.
 ### A subsection heading before a table in a figure
 
 <figure>
+  | Column    | Value |
+  | --------- | ----: |
+  | First row |     3 |
 
-| Column    | Value |
-| --------- | ----: |
-| First row |     3 |
-
-<figcaption>A caption below a table in a figure.</figcaption>
+  <figcaption>A caption below a table in a figure.</figcaption>
 </figure>
 
 ## Figures
@@ -203,10 +202,9 @@ A paragraph after the table.
 A paragraph between two figures.
 
 <figure>
-
-```swift
-let value = 1
-```
+  ```swift
+  let value = 1
+  ```
 
   <figcaption>A caption below a code block.</figcaption>
 </figure>
@@ -219,15 +217,13 @@ let value = 1
 </figure>
 
 <figure data-content-span="wide">
-
-![A JPEG image in a wide figure](./image.jpg)
+  ![A JPEG image in a wide figure](./image.jpg)
 
   <figcaption>A caption below a wide figure.</figcaption>
 </figure>
 
 <figure data-content-span="pane">
-
-![A PNG image with a transparent background in a pane-spanning figure](./image.png)
+  ![A PNG image with a transparent background in a pane-spanning figure](./image.png)
 
   <figcaption>A caption below a pane-spanning figure.</figcaption>
 </figure>
@@ -266,8 +262,11 @@ words.
 
 <ImageGrid caption="A caption below an image grid.">
   ![A small PNG image](./inline-image.png)
+
   ![An animated GIF image](./animated-image.gif)
+
   ![An SVG image](./vector-image.svg)
+
   <img src="./picture-1x.png" alt="A PNG image in an img element" />
 </ImageGrid>
 
@@ -275,8 +274,11 @@ words.
 
 <ImageGallery caption="A caption below an image gallery.">
   ![A PNG image with a transparent background](./image.png)
+
   ![A JPEG image](./image.jpg)
+
   ![A portrait JPEG image](./portrait-image.jpeg)
+
   <img src="./image.png" alt="A PNG image with a transparent background" />
   <img src="./image.jpg" alt="A JPEG image" />
   <img src="./portrait-image.jpeg" alt="A portrait JPEG image" />
@@ -336,11 +338,9 @@ A second short paragraph.
 A paragraph with an aside of two paragraphs beside it.
 
 <Rail label="Aside">
+  The first paragraph of the aside.
 
-The first paragraph of the aside.
-
-The second paragraph of the aside.
-
+  The second paragraph of the aside.
 </Rail>
 
 A paragraph at the end of the section.
