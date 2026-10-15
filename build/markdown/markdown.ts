@@ -384,7 +384,7 @@ function splitBlockElements() {
 }
 
 /** The name of every component with block fallback Markdown that is authored inside a sentence in `tree`. */
-function blockFallbacksWrittenInlineIn(tree: ContentNode): Set<string> {
+function blockFallbacksAuthoredInlineIn(tree: ContentNode): Set<string> {
   const componentNames = new Set<string>();
 
   visit(tree, (node) => {
@@ -406,11 +406,11 @@ function blockFallbacksWrittenInlineIn(tree: ContentNode): Set<string> {
 // replacement would be serialized into the prose around it rather than as a block of its own.
 function assertBlockFallbacks() {
   return function assert(tree: ContentNode, file: EntryVFile) {
-    const writtenInline = blockFallbacksWrittenInlineIn(tree);
+    const authoredInline = blockFallbacksAuthoredInlineIn(tree);
 
-    if (writtenInline.size > 0) {
+    if (authoredInline.size > 0) {
       throw new Error(
-        `${quotedEntryPathOf(file)} writes components inline whose fallback Markdown is a block: ${[...writtenInline].join(", ")}.`,
+        `${quotedEntryPathOf(file)} has components authored inline whose fallback Markdown is a block: ${[...authoredInline].join(", ")}.`,
       );
     }
   };

@@ -231,7 +231,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     const pendingMarkdown = markdownFor(source, { path: fromContent("collection/entry.mdx"), url: ENTRY_URL });
 
     await expect(pendingMarkdown).rejects.toThrow(
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.mdx" writes components inline`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.mdx" has components authored inline`,
     );
     await expect(pendingMarkdown).rejects.toThrow("Waitlist");
   });
@@ -341,7 +341,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
       markdownFor(`${FRONTMATTER}
       A sentence with <PrintLink>a print link</PrintLink> inside it.
     `),
-    ).rejects.toThrow("writes components inline whose fallback Markdown is a block: PrintLink");
+    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: PrintLink");
   });
 
   test("throws when a `Rail` is authored inside a sentence, naming the component", async () => {
@@ -349,7 +349,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
       markdownFor(`${FRONTMATTER}
       A sentence with <Rail label="Label">an aside</Rail> inside it.
     `),
-    ).rejects.toThrow("writes components inline whose fallback Markdown is a block: Rail");
+    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: Rail");
   });
 
   test("replaces an `ImageGallery` with its children, then the paragraph of its `caption` attribute", async () => {
@@ -485,7 +485,7 @@ import { RECORD } from "./entry.data.ts";
 
 A sentence with <CareerTimeline {...RECORD} /> inside it.
 `),
-    ).rejects.toThrow("writes components inline whose fallback Markdown is a block: CareerTimeline");
+    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: CareerTimeline");
   });
 
   test("throws when an `CareerTimeline` has an attribute beside its spread, naming the entry", async () => {

@@ -443,7 +443,7 @@ test("canceling during submission aborts the request and ignores its result", as
   expect(forceCloseWindow).toHaveBeenCalledOnce();
 });
 
-test("discarding a written message shows a confirmation alert and preserves the message when canceled", () => {
+test("discarding an entered message shows a confirmation alert and preserves the message when canceled", () => {
   render(<ContactBody />);
   compose();
 
