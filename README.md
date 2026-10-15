@@ -60,7 +60,8 @@ To add styles for a single entry, add a CSS module beside its MDX file:
 <entry>.module.css
 ```
 
-The module's `.entry` class is applied to the entry's `<article>` element.
+The module's `.entry` class is applied to the `<article>` element. Its `.title`
+class is applied to `h1`.
 
 ### Media
 
@@ -83,12 +84,8 @@ PNG and JPEG images referenced in Markdown or by an `<img>` element without a
 WebP alternates (see [Generated media](#generated-media)) before falling back to
 the authored image.
 
-Other image formats are served as authored, as are images referenced within an
-authored `<picture>`, through a `srcSet`, as a component's `src`, or in Open
-Graph previews.
-
-Markdown images receive explicit dimensions, `loading="lazy"`, and
-`decoding="async"`. An `<img>` element retains only its authored attributes.
+Other image formats and images referenced within an authored `<picture>` are
+served as authored.
 
 To optimize PNG and JPEG images in place:
 
@@ -122,7 +119,7 @@ npm run encode-video <video|directory> ... # Requires ffmpeg
 ```
 
 The poster image is taken from the first frame unless a time is given (e.g.,
-`npm run encode-video -- --poster-time 3`).
+`npm run encode-video -- --poster-time 3 <video>`).
 
 #### Generated media
 
@@ -167,12 +164,8 @@ Published entries and collections are also available as Markdown.
 /<collection>.md # An index of published entries.
 ```
 
-Standard HTML routes also serve their Markdown representation when a request
-prefers it (i.e. sends an `Accept: text/markdown` header).
-
-When rendered as Markdown, MDX React components are replaced with their
-children. Components requiring custom Markdown output can define it in
-`/build/markdown/markdown.ts`.
+Standard HTML routes also serve their Markdown representation when a request's
+`Accept` header ranks `text/markdown` at least as high as `text/html`.
 
 #### Atom feed
 
@@ -197,11 +190,29 @@ For production:
 3. Create a Worker secret with the destination address:
 
    ```bash
-   npm exec -- wrangler secret put CONTACT_EMAIL_ADDRESS
+   npx wrangler secret put CONTACT_EMAIL_ADDRESS
    ```
 
 For local development, set the contact email address in `.env`. The dev server
 does not send messages; local messages are written to `.wrangler/tmp/email/`.
+
+### GitHub
+
+The `ContributionGraph` component fetches the contribution calendar of the
+`GITHUB_USERNAME` account configured in `/src/config/site.ts`.
+
+For production:
+
+1. Create a fine-grained
+   [personal access token](https://github.com/settings/personal-access-tokens/new)
+   with read-only access to public repositories and no permissions.
+2. Create a Worker secret with the personal access token:
+
+   ```bash
+   npx wrangler secret put GITHUB_TOKEN
+   ```
+
+For local development, set the personal access token in `.env`.
 
 ### Waitlist
 
@@ -223,8 +234,8 @@ For production, create Worker secrets for the connection access token and
 production data source ID:
 
 ```bash
-npm exec -- wrangler secret put NOTION_TOKEN
-npm exec -- wrangler secret put WAITLIST_DATA_SOURCE_ID
+npx wrangler secret put NOTION_TOKEN
+npx wrangler secret put WAITLIST_DATA_SOURCE_ID
 ```
 
 For local development, set the connection access token and development data
@@ -262,7 +273,13 @@ A GitHub Actions workflow deploys the project whenever changes are pushed to the
 To deploy manually:
 
 ```bash
-wrangler login
+npx wrangler login
 npm run build
 npx wrangler deploy
 ```
+
+## Logs
+
+The Cloudflare Worker logs each failure as an object with an `event` property.
+In production, the logs can be viewed in the Worker's Observability tab in the
+Cloudflare dashboard or streamed using `npx wrangler tail`.
