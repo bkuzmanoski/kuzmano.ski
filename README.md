@@ -128,8 +128,9 @@ WebP alternates described in [Images](#images), AVIF and WebP cover-image
 thumbnails, and a WebP of each video poster image.
 
 The dev server encodes missing derivatives on demand and a pre-commit hook
-updates `/media` when content is staged. The build fails if `/media` does not
-match the content. To validate and update generated media manually:
+stages the changes to `/media` that the staged content requires. The build fails
+if `/media` does not match the content. To validate and update generated media
+manually:
 
 ```bash
 npm run prepare-media

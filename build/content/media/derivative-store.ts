@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { writeFileAtomically } from "../../files.ts";
 import { fromContent } from "../../paths.ts";
 
-import { encodeImageDerivative } from "./derivatives.ts";
+import { encodeImageDerivative, isImageDerivativeFileName } from "./derivatives.ts";
 import { renditionSizeProblems } from "./problems.ts";
 
 import type { ImageDerivativeRendition, MediaRendition } from "./renditions.ts";
@@ -20,8 +20,6 @@ interface ImageDerivativeAudit {
   staleDerivativeFileNames: Array<string>;
   sizeProblems: Array<string>;
 }
-
-const GENERATED_FILE_NAME = /^[0-9a-f]+\.[0-9a-f]+\.[a-z0-9.]+$/;
 
 const isMissingFileError = (cause: unknown) => cause instanceof Error && "code" in cause && cause.code === "ENOENT";
 
@@ -45,7 +43,7 @@ export function imageDerivativeAuditBetween(
       ({ derivativeFileName }) => !storedByteLengths.has(derivativeFileName),
     ),
     staleDerivativeFileNames: [...storedByteLengths.keys()].filter(
-      (fileName) => GENERATED_FILE_NAME.test(fileName) && !derivativesByFileName.has(fileName),
+      (fileName) => isImageDerivativeFileName(fileName) && !derivativesByFileName.has(fileName),
     ),
     sizeProblems: derivativeRenditions.flatMap((rendition) => {
       const storedByteLength = storedByteLengths.get(rendition.derivativeFileName);

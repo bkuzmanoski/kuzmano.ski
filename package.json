@@ -23,12 +23,28 @@
     "preview": "vite preview",
     "clean": "rm -rf dist .output .tanstack .wrangler/tmp node_modules/.vite node_modules/.cache/jiti && find . -name node_modules -prune -o -name .git -prune -o -type f -name '*.tmp' -exec rm -f {} +",
     "prepare-media": "node scripts/prepare-media.ts",
+    "stage-media": "node scripts/stage-media.ts",
     "optimize-image": "node scripts/optimize-image.ts",
     "encode-video": "node scripts/encode-video.ts",
     "convert-image": "node scripts/convert-image.ts"
   },
   "simple-git-hooks": {
-    "pre-commit": "npx lint-staged --diff-filter=ACMRD"
+    "pre-commit": "npx lint-staged && node scripts/stage-media.ts --if-media-inputs-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.css": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{md,mdx}": [
+      "markdownlint-cli2 --fix --no-globs",
+      "prettier --write"
+    ],
+    "*.{json,jsonc,yml,yaml}": "prettier --write"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",

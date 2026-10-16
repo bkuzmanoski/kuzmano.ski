@@ -9,51 +9,56 @@ import { MEDIA_DIRECTORY_PATH, fromRoot } from "../build/paths.ts";
 // Validates content media, encodes missing derivatives into the media directory,
 // and removes derivatives that are no longer required.
 
-const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));
-const { renditionsByUrl, problems } = await buildMediaIndex();
-const indexProblems = problems();
+try {
+  const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));
+  const { renditionsByUrl, problems } = await buildMediaIndex();
+  const indexProblems = problems();
 
-if (indexProblems.length > 0) {
-  console.error(contentMediaProblemReport(indexProblems));
-  process.exit(1);
-}
-
-let encodedCount = 0;
-
-// Encoded one at a time: sharp already spreads each encoding across every core.
-for (const rendition of renditionsByUrl.values()) {
-  if (rendition.origin === "authored") {
-    continue; // Served from the content directory as authored.
+  if (indexProblems.length > 0) {
+    console.error(contentMediaProblemReport(indexProblems));
+    process.exit(1);
   }
 
-  const encodedByteLength = await derivativeStore.encodeIfMissing(rendition);
+  let encodedCount = 0;
 
-  if (encodedByteLength === null) {
-    continue; // Already generated, possibly for another URL served from the same bytes.
+  // Encoded one at a time: sharp already spreads each encoding across every core.
+  for (const rendition of renditionsByUrl.values()) {
+    if (rendition.origin === "authored") {
+      continue; // Served from the content directory as authored.
+    }
+
+    const encodedByteLength = await derivativeStore.encodeIfMissing(rendition);
+
+    if (encodedByteLength === null) {
+      continue; // Already generated, possibly for another URL served from the same bytes.
+    }
+
+    encodedCount += 1;
+
+    console.log(`+ ${rootRelativePathOf(rendition)}  ${fileSize(encodedByteLength)}`);
   }
 
-  encodedCount += 1;
+  const { staleDerivativeFileNames, sizeProblems } = imageDerivativeAuditBetween(
+    renditionsByUrl.values(),
+    await derivativeStore.storedByteLengths(),
+  );
 
-  console.log(`+ ${rootRelativePathOf(rendition)}  ${fileSize(encodedByteLength)}`);
-}
+  for (const fileName of staleDerivativeFileNames) {
+    await derivativeStore.remove(fileName);
+    console.log(`- ${join(MEDIA_DIRECTORY_PATH, fileName)}`);
+  }
 
-const { staleDerivativeFileNames, sizeProblems } = imageDerivativeAuditBetween(
-  renditionsByUrl.values(),
-  await derivativeStore.storedByteLengths(),
-);
+  const hasChanges = encodedCount + staleDerivativeFileNames.length > 0;
 
-for (const fileName of staleDerivativeFileNames) {
-  await derivativeStore.remove(fileName);
-  console.log(`- ${join(MEDIA_DIRECTORY_PATH, fileName)}`);
-}
+  console.log(
+    `${hasChanges ? "\n" : ""}Encoded ${encodedCount} derivative(s). Removed ${staleDerivativeFileNames.length} stale derivative(s).`,
+  );
 
-const hasChanges = encodedCount + staleDerivativeFileNames.length > 0;
-
-console.log(
-  `${hasChanges ? "\n" : ""}Encoded ${encodedCount} derivative(s). Removed ${staleDerivativeFileNames.length} stale derivative(s).`,
-);
-
-if (sizeProblems.length > 0) {
-  console.error(`\n${contentMediaProblemReport(sizeProblems)}`);
+  if (sizeProblems.length > 0) {
+    console.error(`\n${contentMediaProblemReport(sizeProblems)}`);
+    process.exit(1);
+  }
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }

@@ -17,8 +17,6 @@ const VIDEO_MEDIA_TYPES = { ".mp4": "video/mp4" } as const;
 const MEDIA_TYPES: Record<string, string | undefined> = { ...IMAGE_MEDIA_TYPES, ...VIDEO_MEDIA_TYPES };
 const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"]; // Images in these formats have derivatives. Images in other formats are served as authored.
 
-export const CONTENT_MEDIA_EXTENSIONS = Object.keys(MEDIA_TYPES);
-
 const FILE_EXTENSION = /\.[^./]*$/;
 
 export const authoredExtensionOf = (filePath: string) => FILE_EXTENSION.exec(filePath)?.[0] ?? "";

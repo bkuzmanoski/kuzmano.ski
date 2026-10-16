@@ -83,6 +83,11 @@ const imageDerivativeSuffixOf = ({ format, variant }: ImageDerivative) => (varia
 export const imageDerivativeFileName = (hash: string, derivative: ImageDerivative) =>
   `${hash}.${imageDerivativeFingerprint(derivative)}.${imageDerivativeSuffixOf(derivative)}`;
 
+const IMAGE_DERIVATIVE_FILE_NAME = /^[0-9a-f]+\.[0-9a-f]+\.[a-z0-9.]+$/;
+
+/** Whether `fileName` has the form `imageDerivativeFileName` produces, for any image and derivative. */
+export const isImageDerivativeFileName = (fileName: string) => IMAGE_DERIVATIVE_FILE_NAME.test(fileName);
+
 /** Encodes one derivative of the image at `absolutePath` and returns its bytes. */
 export async function encodeImageDerivative(absolutePath: string, derivative: ImageDerivative): Promise<Buffer> {
   const image = sharp(absolutePath, { autoOrient: true });

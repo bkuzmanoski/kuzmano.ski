@@ -9,7 +9,9 @@ export function wholeNumberOption(name: string, value: string | undefined, maxim
   const parsed = Number(value);
 
   if (value.trim() === "" || !Number.isInteger(parsed) || parsed < 0 || parsed > maximum) {
-    throw new Error(`--${name} accepts a whole number between 0 and ${maximum}.`);
+    throw new Error(
+      `--${name} accepts ${maximum === Infinity ? "a whole number" : `a whole number between 0 and ${maximum}`}.`,
+    );
   }
 
   return parsed;
