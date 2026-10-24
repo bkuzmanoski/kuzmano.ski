@@ -51,7 +51,7 @@ async function readEmailAddress() {
       headers: { "content-type": "application/json" },
     }),
   );
-  await waitFor(() => expect(button("Copy to clipboard").hasAttribute("disabled")).toBe(false));
+  await waitFor(() => expect(button("Copy to Clipboard").hasAttribute("disabled")).toBe(false));
 }
 
 beforeEach(() => {
@@ -116,7 +116,7 @@ test("the copy button copies the email address that was read", async () => {
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
   render(<ContactBody />);
   await readEmailAddress();
-  fireEvent.click(button("Copy to clipboard"));
+  fireEvent.click(button("Copy to Clipboard"));
 
   await waitFor(() => expect(writeText).toHaveBeenCalledWith(CONTACT_EMAIL_ADDRESS));
 });
@@ -130,7 +130,7 @@ test("reopening the window reuses the email address read earlier in the session"
   unmount();
   render(<ContactBody />);
 
-  await waitFor(() => expect(button("Copy to clipboard").hasAttribute("disabled")).toBe(false));
+  await waitFor(() => expect(button("Copy to Clipboard").hasAttribute("disabled")).toBe(false));
   expect(emailAddressReads()).toHaveLength(1);
 });
 
@@ -139,7 +139,7 @@ test("a window without a contact email address still sends messages", async () =
   compose();
   await submit();
 
-  expect(button("Copy to clipboard").hasAttribute("disabled")).toBe(true);
+  expect(button("Copy to Clipboard").hasAttribute("disabled")).toBe(true);
   expect(await screen.findByText("Message sent!")).toBeDefined();
 });
 

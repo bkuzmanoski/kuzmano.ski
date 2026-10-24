@@ -34,7 +34,7 @@ test("the control copies the source of the code block it belongs to", async () =
     </CodeBlock>,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Copy to clipboard" }));
+  fireEvent.click(screen.getByRole("button", { name: "Copy to Clipboard" }));
 
   await act(async () => {
     await Promise.resolve();
@@ -49,7 +49,7 @@ test("the control is disabled outside an entry", () => {
       <code>const answer = 42;</code>
     </CodeBlock>,
   );
-  expect(screen.getByRole("button", { name: "Copy to clipboard" }).hasAttribute("disabled")).toBe(true);
+  expect(screen.getByRole("button", { name: "Copy to Clipboard" }).hasAttribute("disabled")).toBe(true);
 });
 
 test("the code block preserves the attributes set by the syntax highlighter on its `<pre>`", () => {
@@ -96,7 +96,7 @@ test("the header of a code block is marked with the `data-feed-omit` attribute",
     </CodeBlock>,
   );
 
-  const feedOmittedElement = screen.getByRole("button", { name: "Copy to clipboard" }).closest("[data-feed-omit]");
+  const feedOmittedElement = screen.getByRole("button", { name: "Copy to Clipboard" }).closest("[data-feed-omit]");
 
   expect(feedOmittedElement?.contains(screen.getByText("typescript"))).toBe(true);
   expect(feedOmittedElement?.contains(screen.getByText("const answer = 42;"))).toBe(false);

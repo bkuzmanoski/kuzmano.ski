@@ -56,16 +56,16 @@ test("clicking the button copies the value", async () => {
 test("the button announces the confirmation after a successful copy without changing its label, then clears it after the state display duration", async () => {
   renderButton();
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to Clipboard");
 
   await clickCopy();
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to Clipboard");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
   advanceTimersBy(STATE_DISPLAY_DURATION_MS);
 
-  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to clipboard");
+  expect(screen.getByRole("button").getAttribute("aria-label")).toBe("Copy to Clipboard");
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
@@ -99,7 +99,7 @@ test("a failed copy shows an alert and does not show the confirmation or leave t
 
   await clickCopy();
 
-  expect(screen.getByRole("button", { name: "Copy to clipboard" }).className).not.toContain("pressed");
+  expect(screen.getByRole("button", { name: "Copy to Clipboard" }).className).not.toContain("pressed");
   expect(screen.getByRole("status").textContent).toBe("");
   expect(screen.getByRole("alertdialog").textContent).toContain("The email address couldn’t be copied.");
   expect(playErrorSound).toHaveBeenCalledOnce();
@@ -160,7 +160,7 @@ test("the confirmation clears after the state display duration while the pointer
   advanceTimersBy(1);
 
   expect(screen.getByRole("status").textContent).toBe("");
-  expect(screen.getByRole("tooltip").textContent).toBe("Copy to clipboard"); // Still hovered.
+  expect(screen.getByRole("tooltip").textContent).toBe("Copy to Clipboard"); // Still hovered.
 });
 
 test("the confirmation clears as soon as the tooltip showing it is hidden", async () => {

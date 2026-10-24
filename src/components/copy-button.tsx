@@ -61,7 +61,7 @@ export function ControlledCopyButton({
   announcesConfirmation,
   icon = "value",
   variant = "standalone",
-  label = "Copy to clipboard",
+  label = "Copy to Clipboard",
   confirmation = "Copied",
   className,
   onCopy,

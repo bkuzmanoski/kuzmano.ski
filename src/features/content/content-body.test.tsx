@@ -339,7 +339,7 @@ test("a copy from a heading link is announced by the entry's only status region,
 
 test("a copy from a code block is announced by the entry's only status region, outside the `<article>`", async () => {
   const article = await renderContent(codeBlocksFixture);
-  const [firstCopyControl] = await screen.findAllByRole("button", { name: "Copy to clipboard" });
+  const [firstCopyControl] = await screen.findAllByRole("button", { name: "Copy to Clipboard" });
 
   await act(async () => {
     fireEvent.click(firstCopyControl!);
@@ -357,7 +357,7 @@ test("a copy from a second code block during the first code block's confirmation
   await renderContent(codeBlocksFixture);
   vi.useFakeTimers();
 
-  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
+  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
   const status = screen.getByRole("status");
 
   await copyFrom(firstCopyControl!);
@@ -376,7 +376,7 @@ test("a code block's copy control ignores a second press during its confirmation
   await renderContent(codeBlocksFixture);
   vi.useFakeTimers();
 
-  const [copyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
+  const [copyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
   const status = screen.getByRole("status");
 
   await copyFrom(copyControl!);
@@ -396,7 +396,7 @@ test("removing a code block during its confirmation clears the confirmation from
 
   const status = screen.getByRole("status");
 
-  await copyFrom(screen.getByRole("button", { name: "Copy to clipboard" }));
+  await copyFrom(screen.getByRole("button", { name: "Copy to Clipboard" }));
 
   expect(status.textContent).toBe("Copied");
 
@@ -411,7 +411,7 @@ test("a failed copy from a code block shows an alert that the code could not be 
 
   await renderContent(codeBlocksFixture);
 
-  const [copyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
+  const [copyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
 
   await copyFrom(copyControl!);
 
@@ -421,7 +421,7 @@ test("a failed copy from a code block shows an alert that the code could not be 
 test("a code block's clipboard write that succeeds after another code block's copy has started does not show a confirmation", async () => {
   await renderContent(codeBlocksFixture);
 
-  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
+  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
   const status = screen.getByRole("status");
   const firstWrite = deferWrite(writeText);
   const secondWrite = deferWrite(writeText);
@@ -442,7 +442,7 @@ test("a code block's clipboard write that succeeds after another code block's co
 test("a code block's clipboard write that fails after another code block's copy has started does not show the failure alert", async () => {
   await renderContent(codeBlocksFixture);
 
-  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to clipboard" });
+  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
   const firstWrite = deferWrite(writeText);
   const secondWrite = deferWrite(writeText);
 
@@ -474,7 +474,7 @@ test("a code block's clipboard write that succeeds after a heading link's copy h
   const firstWrite = deferWrite(writeText);
   const secondWrite = deferWrite(writeText);
 
-  await copyFrom(screen.getByRole("button", { name: "Copy to clipboard" }));
+  await copyFrom(screen.getByRole("button", { name: "Copy to Clipboard" }));
   await copyFrom(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }));
   await firstWrite.succeed();
 
