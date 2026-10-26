@@ -31,6 +31,7 @@ function clipPath(rawWidth: number, rawHeight: number, rawRadius: number, rawBow
 
 export interface ScreenParameters {
   box: Rect;
+  inscribedBox: Rect; // `box` inset by the edge bow, so a rounded rectangle of `radius` on it lies inside `clipPath`.
   inset: Inset;
   radius: number;
   clipPath: string;
@@ -39,11 +40,13 @@ export interface ScreenParameters {
 export function screenParametersFor(display: Rect, bezel: Inset, scale: number): ScreenParameters {
   const inset = scaleInset(bezel, scale);
   const box = insetRect(display, inset);
+  const bow = EDGE_BOW * scale;
 
   return {
     box,
+    inscribedBox: insetRect(box, { top: bow, right: bow, bottom: bow, left: bow }),
     inset,
     radius: CORNER_RADIUS * scale,
-    clipPath: clipPath(box.width, box.height, CORNER_RADIUS * scale, EDGE_BOW * scale),
+    clipPath: clipPath(box.width, box.height, CORNER_RADIUS * scale, bow),
   };
 }

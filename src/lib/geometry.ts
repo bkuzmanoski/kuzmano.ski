@@ -79,17 +79,23 @@ export function insetRect(rect: Rect, inset: Inset): Rect {
   };
 }
 
-/**
- * Insets for a child of `box` that places its edges on the edges of the viewport.
- * Each edge is given its own distance to travel, so animating to them reaches all
- * four corners at the same time.
- */
+/** Insets for a child of `box` that places its edges on the edges of the viewport. */
 export function insetToViewport(box: Rect, viewport: Size): Inset {
   return {
     top: -box.y,
     right: box.x + box.width - viewport.width,
     bottom: box.y + box.height - viewport.height,
     left: -box.x,
+  };
+}
+
+/** Insets for a child of the viewport that places its edges on the edges of `box`. */
+export function insetFromViewport(box: Rect, viewport: Size): Inset {
+  return {
+    top: box.y,
+    right: viewport.width - box.x - box.width,
+    bottom: viewport.height - box.y - box.height,
+    left: box.x,
   };
 }
 

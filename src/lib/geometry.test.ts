@@ -4,6 +4,7 @@ import { transformedBox } from "#/test-utils/geometry.ts";
 
 import {
   containsPoint,
+  insetFromViewport,
   insetRect,
   insetToViewport,
   intersectionOf,
@@ -15,6 +16,7 @@ import {
 
 import type { Inset, Rect } from "./geometry.ts";
 
+const viewport = { width: 1000, height: 800 };
 const rect: Rect = { x: 100, y: 50, width: 400, height: 300 };
 const inset: Inset = { top: 28, right: 24, bottom: 28, left: 24 };
 
@@ -118,8 +120,6 @@ describe("insetRect", () => {
 });
 
 describe("insetToViewport", () => {
-  const viewport = { width: 1000, height: 800 };
-
   test("returns distance from the box to the viewport for each edge", () => {
     expect(insetToViewport({ x: 300, y: 100, width: 500, height: 400 }, viewport)).toEqual({
       top: -100,
@@ -142,6 +142,22 @@ describe("insetToViewport", () => {
     expect(box.x + edges.left).toBe(0);
     expect(box.x + box.width - edges.right).toBe(viewport.width);
     expect(box.y + box.height - edges.bottom).toBe(viewport.height);
+  });
+});
+
+describe("insetFromViewport", () => {
+  test("returns distance from the viewport to the box for each edge", () => {
+    expect(insetFromViewport({ x: 300, y: 100, width: 500, height: 400 }, viewport)).toEqual({
+      top: 100,
+      right: 200,
+      bottom: 300,
+      left: 300,
+    });
+  });
+
+  test("returns edges that place a child of the viewport on the box", () => {
+    const box = { x: 330, y: 99, width: 554, height: 410 };
+    expect(insetRect({ x: 0, y: 0, ...viewport }, insetFromViewport(box, viewport))).toEqual(box);
   });
 });
 

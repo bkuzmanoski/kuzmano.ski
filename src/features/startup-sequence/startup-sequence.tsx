@@ -14,7 +14,7 @@ import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { playKeyDownSound, playKeyPressSound, playKeyUpSound, playStartupChimeSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { isTouchOnly } from "#/lib/device.ts";
-import { insetToViewport } from "#/lib/geometry.ts";
+import { insetFromViewport, insetToViewport } from "#/lib/geometry.ts";
 import type { Inset, Size, Transform } from "#/lib/geometry.ts";
 import { useClientValue } from "#/lib/hooks/use-client-value.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -74,11 +74,10 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
     height: display.height,
     "--startup-sequence-display-scale": scale,
     "--startup-sequence-screen-radius": `${screenParameters.radius}px`,
-    "--startup-sequence-inset": cssInset(
-      isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset,
-    ),
+    "--startup-sequence-inset": cssInset(screenParameters.inset),
+    "--startup-sequence-viewport-inset": cssInset(insetToViewport(display, viewport)),
+    "--startup-sequence-inscribed-screen-inset": cssInset(insetFromViewport(screenParameters.inscribedBox, viewport)),
   };
-  const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
 
   return (
     <div
@@ -93,9 +92,8 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
           !isDisplayOn && styles.hidden,
           isWarmingUp && styles.warmingUp,
           isGlassHidden && styles.coolingDown,
-          isRevealingDesktop && styles.growing,
         )}
-        style={{ clipPath: screenClipPath }}
+        style={{ clipPath: screenParameters.clipPath }}
       >
         {isScreenContentVisible && (
           <div className={cx(styles.screen, isGlassHidden && styles.leaving)}>
@@ -103,6 +101,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
           </div>
         )}
       </div>
+      {isRevealingDesktop && <div className={styles.desktopWallpaper} />}
       <DisplayGlassLayerMacintoshIllustration
         className={cx(
           styles.displayGlassLayerMacintoshIllustration,

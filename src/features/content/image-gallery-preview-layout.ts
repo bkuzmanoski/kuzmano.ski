@@ -180,6 +180,7 @@ export function usePreviewImageLayout(
   previewRef: RefObject<HTMLDialogElement | null>,
   previewImageRef: RefObject<HTMLElement | null>,
   imageIndex: number,
+  isPreviewOpen: boolean,
 ) {
   const stateRef = useRef<PreviewImageState>({
     layout: null,
@@ -201,6 +202,22 @@ export function usePreviewImageLayout(
     const controller = new AbortController();
     const refit = () => fit(state, preview, previewImage);
 
+    previewImage.addEventListener("load", refit, { capture: true, signal: controller.signal }); // `load` does not bubble, so only a capturing listener receives it from the `<img>`.
+    window.addEventListener("resize", refit, { signal: controller.signal });
+
+    return () => controller.abort();
+  }, [previewRef, previewImageRef]);
+
+  useEffect(() => {
+    const previewImage = previewImageRef.current;
+    const state = stateRef.current;
+
+    if (!isPreviewOpen || !previewImage) {
+      return;
+    }
+
+    const controller = new AbortController();
+
     previewImage.addEventListener(
       "wheel",
       (event) => {
@@ -208,15 +225,13 @@ export function usePreviewImageLayout(
         zoomByWheel(state, previewImage, event);
       },
       {
-        passive: false, // Not passive to keep the browser from zooming the page on a trackpad pinch.
+        passive: false, // `preventDefault` stops a trackpad pinch from zooming the page only in a listener that is not passive.
         signal: controller.signal,
       },
     );
-    previewImage.addEventListener("load", refit, { capture: true, signal: controller.signal }); // `load` does not bubble, so it is listened for in the capture phase.
-    window.addEventListener("resize", refit, { signal: controller.signal });
 
     return () => controller.abort();
-  }, [previewRef, previewImageRef]);
+  }, [previewImageRef, isPreviewOpen]);
 
   useLayoutEffect(() => {
     const state = stateRef.current;

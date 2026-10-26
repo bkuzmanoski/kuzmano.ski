@@ -589,6 +589,20 @@ describe("zooming the image in the preview", () => {
     expect(offsetOf(previewImageArea)).toEqual(["0px", "0px"]);
   });
 
+  test("scrolling over the image after the preview closes leaves its size unchanged, and its default action is not prevented", () => {
+    const previewImageArea = openPreviewOfFittedImage();
+    const scroll = () =>
+      fireEvent.wheel(previewImageArea, { deltaY: SCROLL_TO_DOUBLE_PX / 2, clientX: 400, clientY: 200 });
+
+    expect(scroll()).toBe(false);
+    expect(sizeOf(previewImageArea)).toEqual(["849px", "566px"]);
+
+    fireEvent.click(previewButton("Close preview"));
+
+    expect(scroll()).toBe(true);
+    expect(sizeOf(previewImageArea)).toEqual(["849px", "566px"]);
+  });
+
   test("a trackpad pinch apart zooms the image in", () => {
     const previewImageArea = openPreviewOfFittedImage();
 

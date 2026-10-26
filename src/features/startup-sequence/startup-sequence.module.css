@@ -116,6 +116,8 @@
   --startup-sequence-display-scale: 1; /* Set from JS. */
   --startup-sequence-screen-radius: 0px; /* Set from JS. */
   --startup-sequence-inset: 0; /* Set from JS. */
+  --startup-sequence-viewport-inset: 0; /* Set from JS. */
+  --startup-sequence-inscribed-screen-inset: 0; /* Set from JS. */
 
   position: absolute;
   z-index: 1;
@@ -161,28 +163,27 @@
       transition: filter var(--startup-sequence-glass-fade-ms) ease-out;
     }
 
-    &.growing {
-      border-radius: 0;
-      filter: none; /* Ordered after `coolingDown`, which has already transitioned to the same grade, to keep the full-viewport reveal off a filtered layer. */
-      transition:
-        inset var(--startup-sequence-desktop-reveal-ms) ease-in,
-        border-radius calc(var(--startup-sequence-desktop-reveal-ms) / 2) ease-in
-          calc(var(--startup-sequence-desktop-reveal-ms) / 4);
-    }
-
     & .screen {
       display: flex;
 
       & .logo {
         width: calc(108px * var(--startup-sequence-display-scale));
         height: auto;
-        animation: reveal-logo var(--startup-sequence-logo-reveal-ms) steps(10, jump-start) both;
+        animation: logo-reveal var(--startup-sequence-logo-reveal-ms) steps(10, jump-start) both;
 
         & :global(.foreground) {
           opacity: 1;
         }
       }
     }
+  }
+
+  /* Occupies the viewport from the first frame and is revealed with a clip path to avoid per-frame layout caused by animating the display's `inset`. */
+  & .desktopWallpaper {
+    position: absolute;
+    inset: var(--startup-sequence-viewport-inset);
+    background: var(--color-wallpaper);
+    animation: desktop-reveal var(--startup-sequence-desktop-reveal-ms) ease-in both;
   }
 
   & .displayGlassLayerMacintoshIllustration {
@@ -218,13 +219,24 @@
   }
 }
 
-@keyframes reveal-logo {
+@keyframes logo-reveal {
   from {
     clip-path: inset(0 0 100% 0);
   }
 
   to {
     clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes desktop-reveal {
+  from {
+    /* Begins within the display clip so its bowed edges remain visible until the reveal extends beyond them. */
+    clip-path: inset(var(--startup-sequence-inscribed-screen-inset) round var(--startup-sequence-screen-radius));
+  }
+
+  to {
+    clip-path: inset(0 round 0);
   }
 }
 

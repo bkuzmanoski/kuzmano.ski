@@ -120,6 +120,7 @@ export function ImageGallery({
   const idPrefix = useId();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewZoomRect, setPreviewZoomRect] = useState<PreviewZoomRect | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const images = galleryImagesIn(children);
   const hasControls = useIsHydrated();
   const thumbnailPressSoundHandlers = usePressSound({ scrollSafe: true });
@@ -136,6 +137,7 @@ export function ImageGallery({
     previewRef,
     previewImageRef,
     currentIndex,
+    isPreviewOpen,
   );
 
   useEffect(() => {
@@ -214,6 +216,7 @@ export function ImageGallery({
     }
 
     preview.showModal();
+    setIsPreviewOpen(true);
     preview.focus(); // Prevent `showModal()` from focusing Previous, where Space would advance the gallery instead of closing the preview.
     fitPreviewImage({ resetsZoom: true });
     startZoomRect("in");
@@ -440,6 +443,8 @@ export function ImageGallery({
           closePreview();
         }}
         onClose={() => {
+          setIsPreviewOpen(false);
+
           // Restore focus to the active preview image's thumbnail, which is the row's tab stop.
           if (thumbnailListRef.current?.contains(document.activeElement)) {
             focusThumbnail(currentIndex);
