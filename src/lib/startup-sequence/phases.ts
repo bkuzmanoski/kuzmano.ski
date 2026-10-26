@@ -17,8 +17,8 @@ export type Phase = (typeof PHASES)[number];
 
 // The motion the stylesheet animates over.
 export const MOTION_DURATION_MS = {
-  macintoshReveal: 1100,
-  stageZoom: 800,
+  macintoshReveal: 900,
+  stageZoom: 1200,
   crtWarmUp: 500,
   logoReveal: 250,
   glassFade: 150,

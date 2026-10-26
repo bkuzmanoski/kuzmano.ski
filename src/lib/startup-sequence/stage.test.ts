@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { transformedBox } from "#/test-utils/geometry.ts";
 
-import { stageMetricsFor } from "./stage.ts";
+import { FOCAL_POINT, KEYBOARD_PARALLAX, stageMetricsFor } from "./stage.ts";
 
 import type { Rect, Size } from "../geometry.ts";
 
@@ -10,12 +10,10 @@ const WIDE_VIEWPORT: Size = { width: 1440, height: 900 };
 const TALL_VIEWPORT: Size = { width: 430, height: 932 };
 const PORTRAIT_VIEWPORT: Size = { width: 390, height: 844 };
 const LANDSCAPE_VIEWPORT: Size = { width: 844, height: 390 };
-const VIEWPORTS = [WIDE_VIEWPORT, TALL_VIEWPORT, PORTRAIT_VIEWPORT, LANDSCAPE_VIEWPORT];
-
-const ILLUSTRATION_ASPECT_RATIO = 1214 / 1067;
+const SQUARE_VIEWPORT: Size = { width: 800, height: 800 };
+const VIEWPORTS = [WIDE_VIEWPORT, TALL_VIEWPORT, PORTRAIT_VIEWPORT, LANDSCAPE_VIEWPORT, SQUARE_VIEWPORT];
 const DISPLAY_PLACEMENT: Rect = { x: 330 / 1214, y: 99 / 1067, width: 554 / 1214, height: 410 / 1067 };
-const APPLE_LOGO_BOTTOM = 735 / 1067;
-const DISK_DRIVE_BOTTOM = 692 / 1067;
+const ROUNDING_TOLERANCE_PX = 1e-9;
 
 const zoomedInBoxFor = (viewport: Size) => stageMetricsFor(viewport).illustration;
 const zoomedOutBoxFor = (viewport: Size) => {
@@ -67,20 +65,22 @@ describe("stageMetricsFor", () => {
 });
 
 describe("the zoomed out framing", () => {
-  test("fits the entire illustration in a wide viewport", () => {
-    const box = zoomedOutBoxFor(WIDE_VIEWPORT);
+  test("centers the illustration within every viewport", () => {
+    for (const viewport of VIEWPORTS) {
+      const box = zoomedOutBoxFor(viewport);
 
-    expect(box.height).toBeCloseTo(0.9 * WIDE_VIEWPORT.height);
-    expect(box.width / box.height).toBeCloseTo(ILLUSTRATION_ASPECT_RATIO);
-    expect(box.x + box.width / 2).toBeCloseTo(WIDE_VIEWPORT.width / 2);
-    expect(box.y + box.height / 2).toBeCloseTo(WIDE_VIEWPORT.height / 2);
+      expect(box.x + box.width / 2).toBeCloseTo(viewport.width / 2);
+      expect(box.y + box.height / 2).toBeCloseTo(viewport.height / 2);
+    }
   });
 
-  test("extends past the sides of a narrow viewport rather than shrinking the illustration", () => {
-    const box = zoomedOutBoxFor(PORTRAIT_VIEWPORT);
+  test("fits the illustration's full width within every viewport", () => {
+    for (const viewport of VIEWPORTS) {
+      const box = zoomedOutBoxFor(viewport);
 
-    expect(box.width).toBeCloseTo(1.4 * PORTRAIT_VIEWPORT.width);
-    expect(box.x).toBeLessThan(0);
+      expect(box.x).toBeGreaterThanOrEqual(-ROUNDING_TOLERANCE_PX);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + ROUNDING_TOLERANCE_PX);
+    }
   });
 
   test("fits the illustration's full height within every viewport", () => {
@@ -105,15 +105,6 @@ describe("the zoomed in framing", () => {
     }
   });
 
-  test("keeps the Apple logo and disk drive in view", () => {
-    for (const viewport of VIEWPORTS) {
-      const { illustration } = stageMetricsFor(viewport);
-
-      expect(illustration.y + illustration.height * DISK_DRIVE_BOTTOM).toBeLessThan(viewport.height);
-      expect(illustration.y + illustration.height * APPLE_LOGO_BOTTOM).toBeLessThan(viewport.height);
-    }
-  });
-
   test("gives the display more of the viewport than the zoomed out framing does", () => {
     for (const viewport of VIEWPORTS) {
       const zoomedOutDisplayWidth = zoomedOutBoxFor(viewport).width * DISPLAY_PLACEMENT.width;
@@ -130,24 +121,29 @@ describe("the zoomed in framing", () => {
 });
 
 describe("the vertical placement of both framings", () => {
-  const boxesFor = (viewport: Size) => [zoomedOutBoxFor(viewport), zoomedInBoxFor(viewport)];
-
-  test("centers the illustration when the width is what binds", () => {
+  test("leaves equal margins above the zoomed in illustration and below its keyboard's parallax when the width is what binds", () => {
     for (const viewport of [PORTRAIT_VIEWPORT, TALL_VIEWPORT]) {
-      for (const box of boxesFor(viewport)) {
-        expect(box.y).toBeCloseTo((viewport.height - box.height) / 2);
-      }
+      const box = zoomedInBoxFor(viewport);
+      const keyboardBottom =
+        box.y +
+        box.height * (FOCAL_POINT.y + KEYBOARD_PARALLAX.translate.y + KEYBOARD_PARALLAX.scale.y * (1 - FOCAL_POINT.y));
+
+      expect(box.y).toBeGreaterThan(0);
+      expect(box.y).toBeCloseTo(viewport.height - keyboardBottom);
     }
   });
 
-  test("applies a minimum margin above the illustration when the height is what binds", () => {
+  test("centers the display when the height is what binds", () => {
     for (const viewport of [WIDE_VIEWPORT, LANDSCAPE_VIEWPORT]) {
-      for (const box of boxesFor(viewport)) {
-        expect(box.y).toBeGreaterThan(0);
-        expect(box.y).toBeGreaterThanOrEqual((viewport.height - box.height) / 2); // Never placed above where centering it alone would.
-      }
-
-      expect((viewport.height - zoomedInBoxFor(viewport).height) / 2).toBeLessThan(0);
+      const { display } = stageMetricsFor(viewport);
+      expect(display.y + display.height / 2).toBeCloseTo(viewport.height / 2);
     }
+  });
+
+  test("keeps the display in view when the width is what binds and the illustration is taller than the viewport", () => {
+    const { illustration, display } = stageMetricsFor(SQUARE_VIEWPORT);
+
+    expect(illustration.height).toBeGreaterThan(SQUARE_VIEWPORT.height);
+    expect(display.y).toBeGreaterThan(0);
   });
 });

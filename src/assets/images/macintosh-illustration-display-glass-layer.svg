@@ -4,8 +4,36 @@
       id="screen"
       d="M277 0c108.642 0 229 6.942 244 8s26.281 9 28 25.5c1.712 16.43 4.971 92.248 4.999 170.5v.5l.001.5c-.028 78.261-3.288 155.07-5 171.5-1.719 16.5-13 24.442-28 25.5s-135.358 8-244 8-229-6.942-244-8-26.28-9-28-25.5S0 283.605 0 205 3.28 50 5 33.5 18 9.058 33 8s135.358-8 244-8"
     />
+    <!-- Rendering each glare at 10% opacity leaves roughly 25 8-bit color levels between its brightest area and the
+          screen, causing visible banding. Grain is applied before the glare is faded so pixels round randomly instead
+          of forming bands. After fading, its standard deviation is about half a level (noise standard deviation 0.104
+          × `k3` × glare opacity); `k4` recenters it at zero. A single 64-unit noise tile is repeated because generating
+          noise across each full glare delays Chrome rasterization by several frames. -->
     <filter
-      id="glare-2-blur"
+      id="glare-3-dither"
+      width="554"
+      height="410"
+      x="0"
+      y="0"
+      color-interpolation-filters="sRGB"
+      filterUnits="userSpaceOnUse"
+    >
+      <feTurbulence
+        width="64"
+        height="64"
+        x="0"
+        y="0"
+        baseFrequency="1.7"
+        seed="3"
+        stitchTiles="stitch"
+        type="fractalNoise"
+      />
+      <feTile />
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0" result="grain" />
+      <feComposite in="SourceGraphic" in2="grain" k2="1" k3=".2" k4="-.1" operator="arithmetic" />
+    </filter>
+    <filter
+      id="glare-2-blur-dither"
       width="714"
       height="570"
       x="-64"
@@ -13,10 +41,23 @@
       color-interpolation-filters="sRGB"
       filterUnits="userSpaceOnUse"
     >
-      <feGaussianBlur in="SourceGraphic" stdDeviation="40" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="glare" />
+      <feTurbulence
+        width="64"
+        height="64"
+        x="0"
+        y="0"
+        baseFrequency="1.7"
+        seed="2"
+        stitchTiles="stitch"
+        type="fractalNoise"
+      />
+      <feTile />
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0" result="grain" />
+      <feComposite in="glare" in2="grain" k2="1" k3=".2" k4="-.1" operator="arithmetic" />
     </filter>
     <filter
-      id="glare-1-blur"
+      id="glare-1-blur-dither"
       width="469"
       height="397"
       x="-56"
@@ -24,7 +65,20 @@
       color-interpolation-filters="sRGB"
       filterUnits="userSpaceOnUse"
     >
-      <feGaussianBlur in="SourceGraphic" stdDeviation="48" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="48" result="glare" />
+      <feTurbulence
+        width="64"
+        height="64"
+        x="0"
+        y="0"
+        baseFrequency="1.7"
+        seed="1"
+        stitchTiles="stitch"
+        type="fractalNoise"
+      />
+      <feTile />
+      <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0" result="grain" />
+      <feComposite in="glare" in2="grain" k2="1" k3=".2" k4="-.1" operator="arithmetic" />
     </filter>
     <filter
       id="inner-shadow"
@@ -57,16 +111,16 @@
   <mask id="glare-mask" width="554" height="410" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type: alpha">
     <use href="#screen" fill="#fff" />
   </mask>
-  <use href="#screen" fill="url(#glare-3-gradient)" opacity=".1" />
+  <!-- The mask also keeps the grain from spreading past the screen. -->
   <g mask="url(#glare-mask)">
-    <!-- Safari clips masked content to the geometry bounding box of the masked group, which does not
-         account for how far the blurs spread past it. Without this padding rect the glares are cut off
-         along the top and left edges, where the group's box starts at (16, 16). -->
+    <!-- Safari clips masked content to the group's geometry bounds, ignoring blur overflow. This padding
+          rect prevents the glares from being cut off at the top and left edges, where the group begins at (16, 16). -->
     <rect width="554" height="410" fill="#fff" fill-opacity="0" />
-    <g filter="url(#glare-2-blur)" opacity=".1">
+    <use href="#screen" fill="url(#glare-3-gradient)" filter="url(#glare-3-dither)" opacity=".1" />
+    <g filter="url(#glare-2-blur-dither)" opacity=".1">
       <path fill="#fff" d="M16 16v410C49.081 216.879 217.762 55.61 428.157 31.95L570 16z" />
     </g>
-    <g filter="url(#glare-1-blur)" opacity=".1">
+    <g filter="url(#glare-1-blur-dither)" opacity=".1">
       <path fill="#fff" d="M40 40v205C56.54 140.44 140.881 59.805 246.079 47.975L317 40z" />
     </g>
   </g>

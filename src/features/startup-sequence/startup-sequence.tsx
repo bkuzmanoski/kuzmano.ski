@@ -5,7 +5,7 @@ import bodyMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illustra
 import bodyMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-body.webp";
 import DiskActivityIndicatorMacintoshIllustration from "#/assets/images/macintosh-illustration-disk-activity-indicator.svg?react";
 import DisplayBackdropMacintoshIllustration from "#/assets/images/macintosh-illustration-display-backdrop.svg?react";
-import DisplayGlassLayerMacintoshIllustration from "#/assets/images/macintosh-illustration-display-glass-layer.svg?react";
+import displayGlassLayerMacintoshIllustrationSvgUrl from "#/assets/images/macintosh-illustration-display-glass-layer.svg";
 import keyboardMacintoshIllustrationAvifUrl from "#/assets/images/macintosh-illustration-keyboard.avif";
 import keyboardMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illustration-keyboard.webp";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
@@ -40,6 +40,7 @@ import {
   DISK_ACTIVITY_INDICATOR_PLACEMENT,
   DISPLAY_BEZEL_INSET,
   FOCAL_POINT,
+  KEYBOARD_PARALLAX,
   stageMetricsFor,
 } from "#/lib/startup-sequence/stage.ts";
 import type { StageMetrics } from "#/lib/startup-sequence/stage.ts";
@@ -49,6 +50,8 @@ import styles from "./startup-sequence.module.css";
 
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
+const cssParallaxTransform = ({ translate, scale }: typeof KEYBOARD_PARALLAX) =>
+  `translate3d(${translate.x * 100}%, ${translate.y * 100}%, 0) scale3d(${scale.x}, ${scale.y}, 1)`;
 
 const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
 
@@ -102,7 +105,10 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
         )}
       </div>
       {isRevealingDesktop && <div className={styles.desktopWallpaper} />}
-      <DisplayGlassLayerMacintoshIllustration
+      {/* Use an image instead of inline SVG as WebKit repaints inline filters when the layer changes, dropping frames during reveals. */}
+      <img
+        alt=""
+        src={displayGlassLayerMacintoshIllustrationSvgUrl}
         className={cx(
           styles.displayGlassLayerMacintoshIllustration,
           isPreparingToLeave && styles.preparingToLeave,
@@ -260,6 +266,7 @@ function StartupSequenceContent() {
     "--startup-sequence-glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
     "--startup-sequence-focal-point-x": `${FOCAL_POINT.x * 100}%`,
     "--startup-sequence-focal-point-y": `${FOCAL_POINT.y * 100}%`,
+    "--startup-sequence-parallax-transform": cssParallaxTransform(KEYBOARD_PARALLAX),
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
   const stageStyle: StyleWithVars = {
