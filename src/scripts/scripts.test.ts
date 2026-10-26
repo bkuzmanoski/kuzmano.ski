@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { BOOT_SEQUENCE_OVERLAY_ATTRIBUTE, BOOT_SEQUENCE_THEME_COLOR_SELECTOR } from "#/lib/boot-sequence/overlay.ts";
-import { BOOT_SEQUENCE_STORAGE_KEY } from "#/lib/boot-sequence/session.ts";
-import bootSequenceScript from "#/scripts/boot-sequence.ts?inline-script";
+import {
+  STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE,
+  STARTUP_SEQUENCE_THEME_COLOR_SELECTOR,
+} from "#/lib/startup-sequence/overlay.ts";
+import { STARTUP_SEQUENCE_STORAGE_KEY } from "#/lib/startup-sequence/session.ts";
 import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
+import startupSequenceScript from "#/scripts/startup-sequence.ts?inline-script";
 import themeScript from "#/scripts/theme.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
@@ -14,17 +17,17 @@ import { runScript } from "#/test-utils/script.ts";
 // defined inline because they must match the strings used by the stylesheet.
 
 function setThemeColorMetaTags() {
-  const bootLight = document.createElement("meta");
-  bootLight.dataset.bootSequenceThemeColor = "";
-  bootLight.name = "theme-color";
-  bootLight.media = "(prefers-color-scheme: light)";
-  bootLight.content = "#2e373c";
+  const startupLight = document.createElement("meta");
+  startupLight.dataset.startupSequenceThemeColor = "";
+  startupLight.name = "theme-color";
+  startupLight.media = "(prefers-color-scheme: light)";
+  startupLight.content = "#2e373c";
 
-  const bootDark = document.createElement("meta");
-  bootDark.dataset.bootSequenceThemeColor = "";
-  bootDark.name = "theme-color";
-  bootDark.media = "(prefers-color-scheme: dark)";
-  bootDark.content = "#232a2f";
+  const startupDark = document.createElement("meta");
+  startupDark.dataset.startupSequenceThemeColor = "";
+  startupDark.name = "theme-color";
+  startupDark.media = "(prefers-color-scheme: dark)";
+  startupDark.content = "#232a2f";
 
   const lightThemeColor = document.createElement("meta");
   lightThemeColor.name = "theme-color";
@@ -36,19 +39,19 @@ function setThemeColorMetaTags() {
   darkThemeColor.media = "(prefers-color-scheme: dark)";
   darkThemeColor.content = "#151a1d";
 
-  document.head.append(bootLight, bootDark, lightThemeColor, darkThemeColor);
+  document.head.append(startupLight, startupDark, lightThemeColor, darkThemeColor);
 }
 
-function bootThemeColors() {
-  return document.querySelectorAll(BOOT_SEQUENCE_THEME_COLOR_SELECTOR);
+function startupThemeColors() {
+  return document.querySelectorAll(STARTUP_SEQUENCE_THEME_COLOR_SELECTOR);
 }
 
 beforeEach(() => {
   document.documentElement.removeAttribute("data-theme");
-  document.documentElement.removeAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE);
+  document.documentElement.removeAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE);
   document.documentElement.removeAttribute("data-web-share");
   document.documentElement.style.removeProperty("--device-pixel-ratio");
-  sessionStorage.removeItem(BOOT_SEQUENCE_STORAGE_KEY);
+  sessionStorage.removeItem(STARTUP_SEQUENCE_STORAGE_KEY);
   localStorage.clear();
   document.head.replaceChildren();
 });
@@ -76,35 +79,35 @@ describe("theme", () => {
   });
 });
 
-describe("boot sequence", () => {
-  test("enables the overlay when the boot sequence has not run in this session", () => {
-    runScript(bootSequenceScript);
-    expect(document.documentElement.getAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe("");
+describe("startup sequence", () => {
+  test("enables the overlay when the startup sequence has not run in this session", () => {
+    runScript(startupSequenceScript);
+    expect(document.documentElement.getAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe("");
   });
 
-  test("does not enable the overlay when the boot sequence has already run in this session", () => {
-    sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
-    runScript(bootSequenceScript);
+  test("does not enable the overlay when the startup sequence has already run in this session", () => {
+    sessionStorage.setItem(STARTUP_SEQUENCE_STORAGE_KEY, "1");
+    runScript(startupSequenceScript);
 
-    expect(document.documentElement.hasAttribute(BOOT_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe(false);
+    expect(document.documentElement.hasAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE)).toBe(false);
   });
 });
 
-describe("boot sequence theme colors", () => {
+describe("startup sequence theme colors", () => {
   beforeEach(() => {
     setThemeColorMetaTags();
   });
 
-  test("retains the theme colors when the boot sequence has not run in this session", () => {
-    runScript(bootSequenceScript);
-    expect(bootThemeColors()).toHaveLength(2);
+  test("retains the theme colors when the startup sequence has not run in this session", () => {
+    runScript(startupSequenceScript);
+    expect(startupThemeColors()).toHaveLength(2);
   });
 
-  test("removes the theme colors when the boot sequence has already run in this session", () => {
-    sessionStorage.setItem(BOOT_SEQUENCE_STORAGE_KEY, "1");
-    runScript(bootSequenceScript);
+  test("removes the theme colors when the startup sequence has already run in this session", () => {
+    sessionStorage.setItem(STARTUP_SEQUENCE_STORAGE_KEY, "1");
+    runScript(startupSequenceScript);
 
-    expect(bootThemeColors()).toHaveLength(0);
+    expect(startupThemeColors()).toHaveLength(0);
     expect(document.querySelectorAll('meta[name="theme-color"]')).toHaveLength(2);
   });
 });
@@ -165,7 +168,7 @@ describe("device pixel ratio", () => {
 
 describe("storage failures", () => {
   test.for([
-    ["boot sequence", bootSequenceScript, BOOT_SEQUENCE_OVERLAY_ATTRIBUTE],
+    ["startup sequence", startupSequenceScript, STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE],
     ["theme", themeScript, "data-theme"],
   ] as const)("the %s script does not throw when storage access fails", ([, script, attribute]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {

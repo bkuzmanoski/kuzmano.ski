@@ -11,7 +11,6 @@ import type { DestinationId } from "#/config/navigation.ts";
 import { SITE_LOCALE, SITE_LOCATION, SITE_SOURCE_URL, SITE_TIME_ZONE } from "#/config/site.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
-import { restart, useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts.ts";
 import type { KeyboardShortcut } from "#/lib/hooks/use-global-shortcuts.ts";
@@ -22,6 +21,7 @@ import { isPrimaryPress } from "#/lib/press.ts";
 import { sleep } from "#/lib/screensaver/lifecycle.ts";
 import { setSoundEffects, setTheme, useSettings } from "#/lib/settings/settings.ts";
 import type { Theme } from "#/lib/settings/settings.ts";
+import { restart, useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager/context.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
@@ -195,7 +195,7 @@ function TimeStatus() {
 export function MenuBar() {
   const { open, close, toggleZoom, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
-  const isBootSequenceComplete = useIsBootSequenceComplete();
+  const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{
     label: string;
     anchor: HTMLButtonElement;
@@ -351,7 +351,7 @@ export function MenuBar() {
   }
 
   return (
-    <header className={cx(styles.menuBar, isBootSequenceComplete && styles.ready)}>
+    <header className={cx(styles.menuBar, isStartupSequenceComplete && styles.ready)}>
       <div className={styles.logo}>
         <Logo />
       </div>

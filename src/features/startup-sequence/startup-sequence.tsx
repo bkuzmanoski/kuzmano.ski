@@ -11,10 +11,16 @@ import keyboardMacintoshIllustrationWebpUrl from "#/assets/images/macintosh-illu
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { needsAudioPriming, primeAudio } from "#/lib/audio/context.ts";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
-import { playBootChimeSound, playKeyDownSound, playKeyPressSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
-import { screenParametersFor } from "#/lib/boot-sequence/crt-display-effect.ts";
-import { beginBootSequence, completeBootSequence } from "#/lib/boot-sequence/lifecycle.ts";
-import { clearBootSequenceThemeColor } from "#/lib/boot-sequence/overlay.ts";
+import { playKeyDownSound, playKeyPressSound, playKeyUpSound, playStartupChimeSound } from "#/lib/audio/sounds.ts";
+import { cx } from "#/lib/class-names.ts";
+import { isTouchOnly } from "#/lib/device.ts";
+import { insetToViewport } from "#/lib/geometry.ts";
+import type { Inset, Size, Transform } from "#/lib/geometry.ts";
+import { useClientValue } from "#/lib/hooks/use-client-value.ts";
+import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
+import { screenParametersFor } from "#/lib/startup-sequence/crt-display-effect.ts";
+import { beginStartupSequence, completeStartupSequence } from "#/lib/startup-sequence/lifecycle.ts";
+import { clearStartupSequenceThemeColor } from "#/lib/startup-sequence/overlay.ts";
 import {
   MIN_LOADING_DURATION_MS,
   MOTION_DURATION_MS,
@@ -27,25 +33,19 @@ import {
   whenFontReady,
   whenIllustrationReady,
   whenKeySoundsReady,
-} from "#/lib/boot-sequence/phases.ts";
-import type { Motion, Phase } from "#/lib/boot-sequence/phases.ts";
-import { shouldRunBootSequence } from "#/lib/boot-sequence/session.ts";
+} from "#/lib/startup-sequence/phases.ts";
+import type { Motion, Phase } from "#/lib/startup-sequence/phases.ts";
+import { shouldRunStartupSequence } from "#/lib/startup-sequence/session.ts";
 import {
   DISK_ACTIVITY_INDICATOR_PLACEMENT,
   DISPLAY_BEZEL_INSET,
   FOCAL_POINT,
   stageMetricsFor,
-} from "#/lib/boot-sequence/stage.ts";
-import type { StageMetrics } from "#/lib/boot-sequence/stage.ts";
-import { cx } from "#/lib/class-names.ts";
-import { isTouchOnly } from "#/lib/device.ts";
-import { insetToViewport } from "#/lib/geometry.ts";
-import type { Inset, Size, Transform } from "#/lib/geometry.ts";
-import { useClientValue } from "#/lib/hooks/use-client-value.ts";
-import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
+} from "#/lib/startup-sequence/stage.ts";
+import type { StageMetrics } from "#/lib/startup-sequence/stage.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
-import styles from "./boot-sequence.module.css";
+import styles from "./startup-sequence.module.css";
 
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
@@ -72,9 +72,11 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
     top: display.y,
     width: display.width,
     height: display.height,
-    "--boot-sequence-display-scale": scale,
-    "--boot-sequence-screen-radius": `${screenParameters.radius}px`,
-    "--boot-sequence-inset": cssInset(isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset),
+    "--startup-sequence-display-scale": scale,
+    "--startup-sequence-screen-radius": `${screenParameters.radius}px`,
+    "--startup-sequence-inset": cssInset(
+      isRevealingDesktop ? insetToViewport(display, viewport) : screenParameters.inset,
+    ),
   };
   const screenClipPath = isRevealingDesktop ? "none" : screenParameters.clipPath;
 
@@ -112,7 +114,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
   );
 }
 
-function BootSequenceContent() {
+function StartupSequenceContent() {
   // Held for the whole run, so the durations the stylesheet animates over and the
   // timers for each phase do not disagree if the reduced motion preference changes.
   const [motion] = useState<Motion>(() =>
@@ -138,7 +140,7 @@ function BootSequenceContent() {
     const steps = sequence(motion);
 
     setPhase(steps[0].phase);
-    playBootChimeSound({ delaySeconds: startOfPhaseMs(steps, "display-on") / 1000 });
+    playStartupChimeSound({ delaySeconds: startOfPhaseMs(steps, "display-on") / 1000 });
 
     let elapsedTimeMs = 0;
 
@@ -151,14 +153,14 @@ function BootSequenceContent() {
         setPhase(nextPhase);
 
         if (nextPhase === "complete") {
-          completeBootSequence();
+          completeStartupSequence();
         }
       }, elapsedTimeMs);
     });
   });
 
   useEffect(() => {
-    beginBootSequence();
+    beginStartupSequence();
 
     const timers: Array<ReturnType<typeof setTimeout>> = [];
     const controller = new AbortController();
@@ -230,7 +232,7 @@ function BootSequenceContent() {
     return () => {
       controller.abort();
       timers.forEach(clearTimeout);
-      clearBootSequenceThemeColor();
+      clearStartupSequenceThemeColor();
     };
   }, []);
 
@@ -249,20 +251,20 @@ function BootSequenceContent() {
   } = phaseFlags(phase);
   const hasZoom = hasStageZoom(motion);
   const containerStyle: StyleWithVars = {
-    "--boot-sequence-macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
-    "--boot-sequence-stage-zoom-ms": `${motion.stageZoom}ms`,
-    "--boot-sequence-crt-warm-up-ms": `${motion.crtWarmUp}ms`,
-    "--boot-sequence-logo-reveal-ms": `${motion.logoReveal}ms`,
-    "--boot-sequence-glass-fade-ms": `${motion.glassFade}ms`,
-    "--boot-sequence-desktop-reveal-ms": `${motion.desktopReveal}ms`,
-    "--boot-sequence-glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,
-    "--boot-sequence-glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
-    "--boot-sequence-focal-point-x": `${FOCAL_POINT.x * 100}%`,
-    "--boot-sequence-focal-point-y": `${FOCAL_POINT.y * 100}%`,
+    "--startup-sequence-macintosh-reveal-ms": `${motion.macintoshReveal}ms`,
+    "--startup-sequence-stage-zoom-ms": `${motion.stageZoom}ms`,
+    "--startup-sequence-crt-warm-up-ms": `${motion.crtWarmUp}ms`,
+    "--startup-sequence-logo-reveal-ms": `${motion.logoReveal}ms`,
+    "--startup-sequence-glass-fade-ms": `${motion.glassFade}ms`,
+    "--startup-sequence-desktop-reveal-ms": `${motion.desktopReveal}ms`,
+    "--startup-sequence-glow-origin-x": `${metrics.display.x + metrics.display.width / 2}px`,
+    "--startup-sequence-glow-origin-y": `${metrics.display.y + metrics.display.height / 2}px`,
+    "--startup-sequence-focal-point-x": `${FOCAL_POINT.x * 100}%`,
+    "--startup-sequence-focal-point-y": `${FOCAL_POINT.y * 100}%`,
   };
   const beginPrompt = isTouchOnly() ? "Tap to begin" : "Press any key to begin";
   const stageStyle: StyleWithVars = {
-    "--boot-sequence-zoom-out": cssTransform(metrics.zoomOut),
+    "--startup-sequence-zoom-out": cssTransform(metrics.zoomOut),
   };
   const illustrationStyle = {
     left: metrics.illustration.x,
@@ -339,6 +341,6 @@ function BootSequenceContent() {
   );
 }
 
-export function BootSequence() {
-  return useClientValue(false, shouldRunBootSequence) ? <BootSequenceContent /> : null;
+export function StartupSequence() {
+  return useClientValue(false, shouldRunStartupSequence) ? <StartupSequenceContent /> : null;
 }

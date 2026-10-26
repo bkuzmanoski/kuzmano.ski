@@ -20,7 +20,7 @@ export interface Palette {
   foreground: SchemeColor;
   background: SchemeColor;
   wallpaper: SchemeColor;
-  bootSequenceBackdrop: SchemeColor;
+  startupSequenceBackdrop: SchemeColor;
 }
 
 const COLOR_PLUGINS = [
@@ -233,7 +233,7 @@ export async function paletteFrom(css: string): Promise<Palette> {
     foreground: await colorOf("--color-foreground"),
     background: await colorOf("--color-background"),
     wallpaper: await colorOf("--color-wallpaper"),
-    bootSequenceBackdrop: await colorOf("--color-boot-sequence-backdrop"),
+    startupSequenceBackdrop: await colorOf("--color-startup-sequence-backdrop"),
   };
 }
 

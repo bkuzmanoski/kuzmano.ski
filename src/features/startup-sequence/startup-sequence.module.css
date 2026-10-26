@@ -1,66 +1,66 @@
 .container {
-  --boot-sequence-macintosh-reveal-ms: 0ms; /* Set from JS. */
-  --boot-sequence-stage-zoom-ms: 0ms; /* Set from JS. */
-  --boot-sequence-crt-warm-up-ms: 0ms; /* Set from JS. */
-  --boot-sequence-logo-reveal-ms: 0ms; /* Set from JS. */
-  --boot-sequence-glass-fade-ms: 0ms; /* Set from JS. */
-  --boot-sequence-desktop-reveal-ms: 0ms; /* Set from JS. */
-  --boot-sequence-glow-origin-x: 0%; /* Set from JS. */
-  --boot-sequence-glow-origin-y: 0%; /* Set from JS. */
-  --boot-sequence-focal-point-x: 0%; /* Set from JS. */
-  --boot-sequence-focal-point-y: 0%; /* Set from JS. */
+  --startup-sequence-macintosh-reveal-ms: 0ms; /* Set from JS. */
+  --startup-sequence-stage-zoom-ms: 0ms; /* Set from JS. */
+  --startup-sequence-crt-warm-up-ms: 0ms; /* Set from JS. */
+  --startup-sequence-logo-reveal-ms: 0ms; /* Set from JS. */
+  --startup-sequence-glass-fade-ms: 0ms; /* Set from JS. */
+  --startup-sequence-desktop-reveal-ms: 0ms; /* Set from JS. */
+  --startup-sequence-glow-origin-x: 0%; /* Set from JS. */
+  --startup-sequence-glow-origin-y: 0%; /* Set from JS. */
+  --startup-sequence-focal-point-x: 0%; /* Set from JS. */
+  --startup-sequence-focal-point-y: 0%; /* Set from JS. */
 
   position: fixed;
-  z-index: var(--layer-boot-sequence);
+  z-index: var(--layer-startup-sequence);
   inset: 0;
-  background: var(--color-boot-sequence-backdrop);
+  background: var(--color-startup-sequence-backdrop);
 }
 
 .glow {
-  --boot-sequence-spill: 25vw;
-  --boot-sequence-grain-strength: 0.5;
+  --startup-sequence-spill: 25vw;
+  --startup-sequence-grain-strength: 0.5;
 
   position: absolute;
-  inset: 0 calc(-1 * var(--boot-sequence-spill));
+  inset: 0 calc(-1 * var(--startup-sequence-spill));
   mask-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='luminanceToAlpha'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"),
-    linear-gradient(rgb(0 0 0 / calc(1 - var(--boot-sequence-grain-strength))) 0 0);
+    linear-gradient(rgb(0 0 0 / calc(1 - var(--startup-sequence-grain-strength))) 0 0);
 
   &::before {
-    --boot-sequence-initial-transform: translate3d(0, -3%, 0) scale3d(0.86, 0.94, 1);
-    --boot-sequence-initial-opacity: 0.3;
+    --startup-sequence-initial-transform: translate3d(0, -3%, 0) scale3d(0.86, 0.94, 1);
+    --startup-sequence-initial-opacity: 0.3;
 
     content: "";
 
     position: absolute;
     inset: 0;
-    transform-origin: calc(var(--boot-sequence-glow-origin-x) + var(--boot-sequence-spill))
-      var(--boot-sequence-glow-origin-y);
+    transform-origin: calc(var(--startup-sequence-glow-origin-x) + var(--startup-sequence-spill))
+      var(--startup-sequence-glow-origin-y);
 
     background: radial-gradient(
-      200vw 90% at calc(70vw + var(--boot-sequence-spill)) 50%,
-      var(--color-boot-sequence-accent) 0%,
-      color-mix(in oklab, var(--color-boot-sequence-accent) 93%, transparent) 13%,
-      color-mix(in oklab, var(--color-boot-sequence-accent) 74%, transparent) 27%,
-      color-mix(in oklab, var(--color-boot-sequence-accent) 50%, transparent) 40%,
-      color-mix(in oklab, var(--color-boot-sequence-accent) 26%, transparent) 53%,
-      color-mix(in oklab, var(--color-boot-sequence-accent) 7%, transparent) 67%,
+      200vw 90% at calc(70vw + var(--startup-sequence-spill)) 50%,
+      var(--color-startup-sequence-accent) 0%,
+      color-mix(in oklab, var(--color-startup-sequence-accent) 93%, transparent) 13%,
+      color-mix(in oklab, var(--color-startup-sequence-accent) 74%, transparent) 27%,
+      color-mix(in oklab, var(--color-startup-sequence-accent) 50%, transparent) 40%,
+      color-mix(in oklab, var(--color-startup-sequence-accent) 26%, transparent) 53%,
+      color-mix(in oklab, var(--color-startup-sequence-accent) 7%, transparent) 67%,
       transparent 80%
     );
 
     transition:
-      transform var(--boot-sequence-stage-zoom-ms) cubic-bezier(0.33, 0, 0.1, 1),
-      opacity calc(var(--boot-sequence-stage-zoom-ms) + 120ms) cubic-bezier(0.4, 0, 0.6, 1);
+      transform var(--startup-sequence-stage-zoom-ms) cubic-bezier(0.33, 0, 0.1, 1),
+      opacity calc(var(--startup-sequence-stage-zoom-ms) + 120ms) cubic-bezier(0.4, 0, 0.6, 1);
   }
 
   .zoomedOut &::before {
-    transform: var(--boot-sequence-initial-transform);
-    opacity: var(--boot-sequence-initial-opacity);
+    transform: var(--startup-sequence-initial-transform);
+    opacity: var(--startup-sequence-initial-opacity);
   }
 
   @supports not (mix-blend-mode: plus-darker) {
     .revealingMacintosh & {
-      animation: fade-in var(--boot-sequence-macintosh-reveal-ms) ease-in;
+      animation: fade-in var(--startup-sequence-macintosh-reveal-ms) ease-in;
     }
   }
 }
@@ -72,18 +72,18 @@
 }
 
 .stage {
-  --boot-sequence-zoom-out: none; /* Set from JS. */
+  --startup-sequence-zoom-out: none; /* Set from JS. */
 
   position: absolute;
   z-index: 1;
   inset: 0;
   transform-origin: 0 0;
 
-  transition: transform var(--boot-sequence-stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--startup-sequence-stage-zoom-ms) cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Only the zoom in is animated; a re-frame while the stage is zoomed out (e.g., via a viewport resize) is immediate. */
   &.zoomedOut {
-    transform: var(--boot-sequence-zoom-out);
+    transform: var(--startup-sequence-zoom-out);
     transition: none;
   }
 
@@ -93,14 +93,14 @@
 
   @supports not (mix-blend-mode: plus-darker) {
     .revealingMacintosh & {
-      filter: brightness(calc(1 / (1 + 2 * var(--boot-sequence-macintosh-reveal-dimming))))
-        contrast(calc(1 + 2 * var(--boot-sequence-macintosh-reveal-dimming)));
-      animation: undim var(--boot-sequence-macintosh-reveal-ms) cubic-bezier(0, 0, 0.2, 1);
+      filter: brightness(calc(1 / (1 + 2 * var(--startup-sequence-macintosh-reveal-dimming))))
+        contrast(calc(1 + 2 * var(--startup-sequence-macintosh-reveal-dimming)));
+      animation: undim var(--startup-sequence-macintosh-reveal-ms) cubic-bezier(0, 0, 0.2, 1);
     }
   }
 }
 
-@property --boot-sequence-macintosh-reveal-dimming {
+@property --startup-sequence-macintosh-reveal-dimming {
   inherits: false;
   initial-value: 0;
   syntax: "<number>";
@@ -108,14 +108,14 @@
 
 @keyframes undim {
   from {
-    --boot-sequence-macintosh-reveal-dimming: 1;
+    --startup-sequence-macintosh-reveal-dimming: 1;
   }
 }
 
 .displayMask {
-  --boot-sequence-display-scale: 1; /* Set from JS. */
-  --boot-sequence-screen-radius: 0px; /* Set from JS. */
-  --boot-sequence-inset: 0; /* Set from JS. */
+  --startup-sequence-display-scale: 1; /* Set from JS. */
+  --startup-sequence-screen-radius: 0px; /* Set from JS. */
+  --startup-sequence-inset: 0; /* Set from JS. */
 
   position: absolute;
   z-index: 1;
@@ -133,50 +133,50 @@
   }
 
   & .display {
-    --boot-sequence-crt-grade: brightness(1.1) contrast(0.9) saturate(1.3);
-    --boot-sequence-crt-grade-struck: brightness(1.9) contrast(0.7) saturate(1.1); /* The over-bright raster of a tube that has only just been struck. */
-    --boot-sequence-crt-grade-none: brightness(1) contrast(1) saturate(1); /* Explicitly defined so that every browser interpolates the grade function by function. */
+    --startup-sequence-crt-grade: brightness(1.1) contrast(0.9) saturate(1.3);
+    --startup-sequence-crt-grade-struck: brightness(1.9) contrast(0.7) saturate(1.1); /* The over-bright raster of a tube that has only just been struck. */
+    --startup-sequence-crt-grade-none: brightness(1) contrast(1) saturate(1); /* Explicitly defined so that every browser interpolates the grade function by function. */
 
     position: absolute;
-    inset: var(--boot-sequence-inset);
+    inset: var(--startup-sequence-inset);
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: var(--boot-sequence-screen-radius);
+    border-radius: var(--startup-sequence-screen-radius);
 
     background: var(--color-wallpaper);
-    filter: var(--boot-sequence-crt-grade);
+    filter: var(--startup-sequence-crt-grade);
 
     &.warmingUp {
       mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
       mask-repeat: no-repeat;
       mask-position: center;
-      animation: crt-warm-up var(--boot-sequence-crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
+      animation: crt-warm-up var(--startup-sequence-crt-warm-up-ms) cubic-bezier(0.16, 0.85, 0.3, 1) both;
     }
 
     &.coolingDown {
-      filter: var(--boot-sequence-crt-grade-none);
-      transition: filter var(--boot-sequence-glass-fade-ms) ease-out;
+      filter: var(--startup-sequence-crt-grade-none);
+      transition: filter var(--startup-sequence-glass-fade-ms) ease-out;
     }
 
     &.growing {
       border-radius: 0;
       filter: none; /* Ordered after `coolingDown`, which has already transitioned to the same grade, to keep the full-viewport reveal off a filtered layer. */
       transition:
-        inset var(--boot-sequence-desktop-reveal-ms) ease-in,
-        border-radius calc(var(--boot-sequence-desktop-reveal-ms) / 2) ease-in
-          calc(var(--boot-sequence-desktop-reveal-ms) / 4);
+        inset var(--startup-sequence-desktop-reveal-ms) ease-in,
+        border-radius calc(var(--startup-sequence-desktop-reveal-ms) / 2) ease-in
+          calc(var(--startup-sequence-desktop-reveal-ms) / 4);
     }
 
     & .screen {
       display: flex;
 
       & .logo {
-        width: calc(108px * var(--boot-sequence-display-scale));
+        width: calc(108px * var(--startup-sequence-display-scale));
         height: auto;
-        animation: reveal-logo var(--boot-sequence-logo-reveal-ms) steps(10, jump-start) both;
+        animation: reveal-logo var(--startup-sequence-logo-reveal-ms) steps(10, jump-start) both;
 
         & :global(.foreground) {
           opacity: 1;
@@ -196,24 +196,24 @@
   & .screen.leaving,
   & .displayGlassLayerMacintoshIllustration.leaving {
     opacity: 0;
-    transition: opacity var(--boot-sequence-glass-fade-ms) ease-out;
+    transition: opacity var(--startup-sequence-glass-fade-ms) ease-out;
   }
 }
 
 @keyframes crt-warm-up {
   0%,
   15% {
-    filter: var(--boot-sequence-crt-grade-struck);
+    filter: var(--startup-sequence-crt-grade-struck);
     mask-size: 100% 0%;
   }
 
   /* The struck grade is repeated so that it only begins interpolating to the settled grade once the raster has opened. */
   45% {
-    filter: var(--boot-sequence-crt-grade-struck);
+    filter: var(--startup-sequence-crt-grade-struck);
   }
 
   100% {
-    filter: var(--boot-sequence-crt-grade);
+    filter: var(--startup-sequence-crt-grade);
     mask-size: 100% 150%; /* Grow past the screen so that both of the gradient's ramps clear it (100% / (1 - 2 * 15%) = 143%). */
   }
 }
@@ -241,9 +241,9 @@
     opacity: 0;
     filter: blur(16px);
     transition:
-      opacity var(--boot-sequence-desktop-reveal-ms) ease-in,
-      transform var(--boot-sequence-desktop-reveal-ms) ease-in,
-      filter var(--boot-sequence-desktop-reveal-ms) ease-in;
+      opacity var(--startup-sequence-desktop-reveal-ms) ease-in,
+      transform var(--startup-sequence-desktop-reveal-ms) ease-in,
+      filter var(--startup-sequence-desktop-reveal-ms) ease-in;
   }
 
   & picture,
@@ -274,13 +274,13 @@
   }
 
   & .keyboardMacintoshIllustration {
-    --boot-sequence-parallax-transform: translate3d(0, 1%, 0) scale3d(1.07, 1.045, 1);
+    --startup-sequence-parallax-transform: translate3d(0, 1%, 0) scale3d(1.07, 1.045, 1);
 
-    transform-origin: var(--boot-sequence-focal-point-x) var(--boot-sequence-focal-point-y);
-    transition: transform calc(var(--boot-sequence-stage-zoom-ms) + 80ms) cubic-bezier(0.3, 0, 0.15, 1); /* Finishes 80ms after the stage zoom, before the `macintosh-reveal` phase ends. */
+    transform-origin: var(--startup-sequence-focal-point-x) var(--startup-sequence-focal-point-y);
+    transition: transform calc(var(--startup-sequence-stage-zoom-ms) + 80ms) cubic-bezier(0.3, 0, 0.15, 1); /* Finishes 80ms after the stage zoom, before the `macintosh-reveal` phase ends. */
 
     .zoomedIn & {
-      transform: var(--boot-sequence-parallax-transform);
+      transform: var(--startup-sequence-parallax-transform);
     }
   }
 }
@@ -366,7 +366,7 @@
     /* stylelint-disable-next-line declaration-property-value-no-unknown -- Supported by Safari; check with @supports query. */
     mix-blend-mode: plus-darker;
 
-    animation: fade-out var(--boot-sequence-macintosh-reveal-ms) cubic-bezier(0, 0, 0.2, 1);
+    animation: fade-out var(--startup-sequence-macintosh-reveal-ms) cubic-bezier(0, 0, 0.2, 1);
   }
 }
 
@@ -380,7 +380,7 @@
   position: absolute;
   z-index: 4;
   inset: 0;
-  background: var(--color-boot-sequence-backdrop);
+  background: var(--color-startup-sequence-backdrop);
 }
 
 .loadingContent {
@@ -394,7 +394,7 @@
 
   padding-block-end: 5dvh;
 
-  color: var(--color-boot-sequence-foreground);
+  color: var(--color-startup-sequence-foreground);
 
   & .prompt {
     font: var(--font-chrome);

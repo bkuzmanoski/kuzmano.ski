@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
-import type * as BootSequenceLifecycle from "#/lib/boot-sequence/lifecycle.ts";
 import { MAX_CLICK_DELAY_MS } from "#/lib/press.ts";
+import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 
@@ -22,9 +22,9 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
     notFoundRoute: () => notFoundRoute,
   }),
 );
-vi.mock("#/lib/boot-sequence/lifecycle.ts", async (importOriginal) => ({
-  ...(await importOriginal<typeof BootSequenceLifecycle>()),
-  useIsBootSequenceComplete: () => true,
+vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof StartupSequenceLifecycle>()),
+  useIsStartupSequenceComplete: () => true,
 }));
 vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   getPrefersReducedMotion: () => prefersReducedMotion.matches,

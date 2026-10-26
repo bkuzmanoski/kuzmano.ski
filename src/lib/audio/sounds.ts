@@ -32,7 +32,7 @@ const DETENT: Strike = {
   fadeSeconds: 0.0015,
 };
 
-const BOOT_CHIME: Tone = {
+const STARTUP_CHIME: Tone = {
   notes: [{ hz: 600, seconds: 1.2 }],
   partials: 6,
   partialDecay: 0.5,
@@ -74,7 +74,7 @@ const KEY_LEVEL = 1.25;
 const KEY_UP_MIN_DELAY_S = 0.04; // Ensures key up follows key down, even when both wait for the same audio resume.
 const KEY_UP_TAP_DELAY_S = 0.1175; // Timing of the key-up sound within the original keypress recording.
 
-const BOOT_CHIME_LEVEL = 0.5;
+const STARTUP_CHIME_LEVEL = 0.5;
 const ERROR_LEVEL = 0.5;
 const SUCCESS_LEVEL = 0.4;
 
@@ -158,9 +158,12 @@ export function playKeyPressSound() {
   });
 }
 
-export function playBootChimeSound({ delaySeconds }: { delaySeconds: number }) {
+export function playStartupChimeSound({ delaySeconds }: { delaySeconds: number }) {
   schedulePlayback((context) =>
-    playTone(context, BOOT_CHIME, { at: context.currentTime + LEAD_TIME_S + delaySeconds, level: BOOT_CHIME_LEVEL }),
+    playTone(context, STARTUP_CHIME, {
+      at: context.currentTime + LEAD_TIME_S + delaySeconds,
+      level: STARTUP_CHIME_LEVEL,
+    }),
   );
 }
 

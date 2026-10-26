@@ -3,7 +3,6 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { ICON_LAYOUT } from "#/config/desktop.ts";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { Icon, IconPlacement } from "#/lib/desktop-icons/icon.ts";
 import { positionFromDrop, resolveIconPlacements } from "#/lib/desktop-icons/layout.ts";
@@ -18,6 +17,7 @@ import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.
 import { isArrowKey } from "#/lib/keys.ts";
 import type { ArrowKey } from "#/lib/keys.ts";
 import { followLink } from "#/lib/link.ts";
+import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import {
   useFocusedWindow,
   useNotFoundRoute,
@@ -51,7 +51,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const { open, focusDesktop } = useWindowActions();
   const followsPointerPress = useFollowsPointerPress();
   const positions = useIconPositions();
-  const isBootSequenceComplete = useIsBootSequenceComplete();
+  const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -198,7 +198,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const onDesktopArrowKeyPress = useEffectEvent((key: ArrowKey) => moveSelection(selectedIconId, key));
 
   useEffect(() => {
-    if (focusedWindow !== null || !isBootSequenceComplete) {
+    if (focusedWindow !== null || !isStartupSequenceComplete) {
       return;
     }
 
@@ -216,11 +216,11 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     window.addEventListener("keydown", onKeyDown);
 
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedWindow, isBootSequenceComplete]);
+  }, [focusedWindow, isStartupSequenceComplete]);
 
   return (
     // The layer always renders so its ref exists for measurement.
-    <div ref={layerRef} className={cx(styles.layer, isBootSequenceComplete && styles.ready)}>
+    <div ref={layerRef} className={cx(styles.layer, isStartupSequenceComplete && styles.ready)}>
       {placements.map(({ id, iconDefinition, x, y }) => (
         <DesktopIcon
           key={id}

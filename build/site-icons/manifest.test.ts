@@ -10,14 +10,14 @@ const palette: Palette = {
   foreground: { light: "#111111", dark: "#eeeeee" },
   background: { light: "#fefefe", dark: "#222222" },
   wallpaper: { light: "#dddddd", dark: "#101010" },
-  bootSequenceBackdrop: { light: "#333333", dark: "#444444" },
+  startupSequenceBackdrop: { light: "#333333", dark: "#444444" },
 };
 const icons = await iconFilesFrom(palette, await readArtwork());
 const manifest = webAppManifestFrom(palette, icons);
 
-test("the theme and background colors are the palette's light wallpaper and boot sequence backdrop", () => {
+test("the theme and background colors are the palette's light wallpaper and startup sequence backdrop", () => {
   expect(manifest.theme_color).toBe(palette.wallpaper.light);
-  expect(manifest.background_color).toBe(palette.bootSequenceBackdrop.light);
+  expect(manifest.background_color).toBe(palette.startupSequenceBackdrop.light);
 });
 
 test("each generated icon represented by the manifest is listed with its file name, media type, sizes, and purpose", () => {

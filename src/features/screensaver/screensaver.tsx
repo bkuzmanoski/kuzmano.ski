@@ -4,7 +4,6 @@ import { SCREENSAVER_IDLE_DELAY_MS } from "#/config/desktop.ts";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { loadKeySounds } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
-import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useIdleTimeout } from "#/lib/hooks/use-idle-timeout.ts";
 import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -12,6 +11,7 @@ import { isBrowserShortcut } from "#/lib/keys.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { FLOCK } from "#/lib/screensaver/flock.ts";
 import { FADE_IN_DURATION_MS, sleepOnIdle, useSleepState, wake } from "#/lib/screensaver/lifecycle.ts";
+import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./screensaver.module.css";
@@ -44,11 +44,11 @@ function wakeOnKeyDown(event: KeyboardEvent) {
 
 export function Screensaver() {
   const sleepState = useSleepState();
-  const isBootSequenceComplete = useIsBootSequenceComplete();
+  const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const prefersReducedMotion = usePrefersReducedMotion();
   const pressSoundHandlers = usePressSound();
 
-  const isIdleSleepEnabled = isBootSequenceComplete && !prefersReducedMotion && sleepState === "awake";
+  const isIdleSleepEnabled = isStartupSequenceComplete && !prefersReducedMotion && sleepState === "awake";
   const isUp = sleepState !== "awake";
   const isDismissible = sleepState === "asleep";
 

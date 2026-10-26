@@ -34,5 +34,5 @@ export const webAppManifestFrom = (palette: Palette, icons: Array<IconFile>): We
   scope: "/",
   display: "standalone",
   theme_color: palette.wallpaper.light,
-  background_color: palette.bootSequenceBackdrop.light,
+  background_color: palette.startupSequenceBackdrop.light,
 });

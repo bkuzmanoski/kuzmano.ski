@@ -9,7 +9,6 @@ import { Tooltip } from "#/components/tooltip.tsx";
 import { stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
-import { useIsBootSequenceComplete } from "#/lib/boot-sequence/lifecycle.ts";
 import { cx } from "#/lib/class-names.ts";
 import { isMacOS } from "#/lib/device.ts";
 import { containsPoint } from "#/lib/geometry.ts";
@@ -18,6 +17,7 @@ import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress, swallowNextPress } from "#/lib/press.ts";
+import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
@@ -159,7 +159,7 @@ export function Window({
 }) {
   const inactiveDescriptionId = useId();
   const fallbackContentId = useId();
-  const isBootSequenceComplete = useIsBootSequenceComplete();
+  const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const [isResizing, setIsResizing] = useState(false);
   const [isResizePressed, setIsResizePressed] = useState(false);
   const [keyDownHandlers] = useState(createWindowKeyDownHandlers);
@@ -168,9 +168,9 @@ export function Window({
   const hasMovedWindowRef = useRef(false);
   const dragRef = useRef<WindowDrag | null>(null);
 
-  // The desktop is inert until the boot sequence completes, and focusing an element in inert content
-  // has no effect, so the focused window takes the focus only once the boot sequence has completed.
-  useRestorableFocus(windowRef, { isActive: focused && !hidden && isBootSequenceComplete, contentKey });
+  // The desktop is inert until the startup sequence completes, and focusing an element in inert content
+  // has no effect, so the focused window takes the focus only once the startup sequence has completed.
+  useRestorableFocus(windowRef, { isActive: focused && !hidden && isStartupSequenceComplete, contentKey });
 
   function reportDrag(drag: WindowDrag) {
     dragRef.current = drag;
@@ -281,7 +281,7 @@ export function Window({
         focused && styles.focused,
         hidden && styles.hidden,
         unplaced && styles.unplaced,
-        isBootSequenceComplete && styles.ready,
+        isStartupSequenceComplete && styles.ready,
       )}
       aria-label={title} // Rather than `aria-labelledby` referencing the title, which Chromium ignores inside inert content.
       aria-describedby={focused ? undefined : inactiveDescriptionId}

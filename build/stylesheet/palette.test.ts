@@ -8,7 +8,7 @@ const REQUIRED_PROPERTIES = [
   "--color-foreground",
   "--color-background",
   "--color-wallpaper",
-  "--color-boot-sequence-backdrop",
+  "--color-startup-sequence-backdrop",
 ];
 
 function stylesheet(declarations: Record<string, string>): string {
@@ -46,14 +46,14 @@ describe("paletteFrom", () => {
         "--color-foreground": "light-dark(#111111, #222222)",
         "--color-background": "light-dark(#333333, #444444)",
         "--color-wallpaper": "light-dark(#555555, #666666)",
-        "--color-boot-sequence-backdrop": "light-dark(#777777, #888888)",
+        "--color-startup-sequence-backdrop": "light-dark(#777777, #888888)",
       }),
     );
     expect(palette).toEqual({
       foreground: { light: "#111111", dark: "#222222" },
       background: { light: "#333333", dark: "#444444" },
       wallpaper: { light: "#555555", dark: "#666666" },
-      bootSequenceBackdrop: { light: "#777777", dark: "#888888" },
+      startupSequenceBackdrop: { light: "#777777", dark: "#888888" },
     });
   });
 

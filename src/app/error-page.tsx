@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 
 import { Alert } from "#/components/alert.tsx";
-import { useDismissBootSequence } from "#/lib/boot-sequence/use-dismiss-boot-sequence.ts";
 import { reportClientError } from "#/lib/client-errors/client.ts";
+import { useDismissStartupSequence } from "#/lib/startup-sequence/use-dismiss-startup-sequence.ts";
 import { documentTitle } from "#/site/metadata.ts";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
 export function ErrorPage({ error }: ErrorComponentProps) {
-  useDismissBootSequence();
+  useDismissStartupSequence();
 
   useEffect(() => {
     if (import.meta.env.DEV && import.meta.env.MODE !== "test") {

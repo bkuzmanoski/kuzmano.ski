@@ -4,9 +4,9 @@ import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import type * as Scroll from "#/lib/audio/scroll.ts";
 import { playClickSound, playScrollDetentSound } from "#/lib/audio/sounds.ts";
-import type * as BootSequenceLifecycle from "#/lib/boot-sequence/lifecycle.ts";
 import { isMacOS, isTouchOnly } from "#/lib/device.ts";
 import { clamp } from "#/lib/math.ts";
+import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { nextAnimationFrame } from "#/test-utils/timers.ts";
@@ -24,9 +24,9 @@ vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
     stepScrollForPress: (await importOriginal<typeof Scroll>()).stepScrollForPress,
   }),
 );
-vi.mock("#/lib/boot-sequence/lifecycle.ts", async (importOriginal) => ({
-  ...(await importOriginal<typeof BootSequenceLifecycle>()),
-  useIsBootSequenceComplete: () => true,
+vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof StartupSequenceLifecycle>()),
+  useIsStartupSequenceComplete: () => true,
 }));
 vi.mock("#/lib/device.ts", () => ({ isMacOS: vi.fn(), isTouchOnly: vi.fn() }));
 

@@ -4,9 +4,9 @@ import { stylesheetValuePlugin } from "./stylesheet-value.ts";
 import type { Palette } from "./palette.ts";
 import type { Plugin } from "vite";
 
-export const themeColorsFrom = ({ wallpaper, bootSequenceBackdrop }: Palette) => ({
+export const themeColorsFrom = ({ wallpaper, startupSequenceBackdrop }: Palette) => ({
   wallpaper,
-  bootSequenceBackdrop,
+  startupSequenceBackdrop,
 });
 
 export type ThemeColors = ReturnType<typeof themeColorsFrom>;
