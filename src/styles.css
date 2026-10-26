@@ -82,7 +82,7 @@
   --layer-tooltip: 300;
   --layer-skip-link: 400;
   --layer-screensaver: 500;
-  --layer-boot-sequence: 600;
+  --layer-startup-sequence: 600;
 
   /* Layout metrics
    *
@@ -181,9 +181,9 @@
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
   --color-wallpaper: light-dark(var(--neutral-925), var(--neutral-215));
-  --color-boot-sequence-accent: var(--neutral-390);
-  --color-boot-sequence-foreground: var(--neutral-925);
-  --color-boot-sequence-backdrop: #000;
+  --color-startup-sequence-accent: var(--neutral-390);
+  --color-startup-sequence-foreground: var(--neutral-925);
+  --color-startup-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
   --color-accent: var(--accent-blue);
   --color-success: var(--accent-green);
@@ -244,14 +244,14 @@ html {
   text-size-adjust: 100%;
   background-color: var(--color-wallpaper);
 
-  &[data-boot-sequence-overlay]::before {
+  &[data-startup-sequence-overlay]::before {
     content: "";
 
     position: fixed;
-    z-index: var(--layer-boot-sequence);
+    z-index: var(--layer-startup-sequence);
     inset: 0;
 
-    background: var(--color-boot-sequence-backdrop);
+    background: var(--color-startup-sequence-backdrop);
   }
 }
 
