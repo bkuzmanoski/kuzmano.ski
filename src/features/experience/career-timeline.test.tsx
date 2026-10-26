@@ -324,7 +324,7 @@ describe("CareerTimeline", () => {
     expect(roleTitles()).toHaveLength(3);
   });
 
-  test("colors a listed role with the accent color of the first discipline it lists whose filter is checked", () => {
+  test("colors a listed role with the accent color of the first of its disciplines with a checked filter", () => {
     renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const accentColorOfMiddleRole = () =>

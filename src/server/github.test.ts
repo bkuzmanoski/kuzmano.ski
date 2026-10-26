@@ -16,8 +16,6 @@ const USERNAME = "login";
 
 const fetchMock = vi.fn<typeof fetch>();
 
-// A GraphQL response, with the field names the query's aliases give it, whose calendar has a partial
-// first week that starts on a Wednesday.
 const graphQlResponse = (days: Array<unknown> = [{ date: "2026-01-07", count: 3 }]) =>
   Response.json({
     data: {

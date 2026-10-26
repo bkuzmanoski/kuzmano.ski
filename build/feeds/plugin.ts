@@ -149,7 +149,7 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
         const authoredContent = readAuthoredContent();
 
         // Every published entry was prerendered, so a route with no document means the build
-        // lost one. Emitting the feed without it would publish an entry whose body is empty.
+        // lost one. Emitting the feed without it would publish an entry with an empty body.
         const documentOf: DocumentSource = (route) =>
           prerenderedDocuments.has(route)
             ? Promise.resolve(prerenderedDocuments.get(route))

@@ -394,7 +394,7 @@ test("on macOS, pressing the Down arrow key with the Option key scrolls the cont
   expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX);
 });
 
-test("the window scrolls its content for a key again once the content whose handler claimed it is replaced", () => {
+test("pressing the Down arrow key scrolls the content again after new content replaces the content that registered a handler claiming that key", () => {
   const { rerender } = render(windowShowing("claiming", <ContentClaimingKey claimedKey="ArrowDown" />));
 
   rerender(windowShowing("tall", TALL_PANE_ELEMENT));

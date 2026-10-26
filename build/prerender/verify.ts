@@ -12,9 +12,10 @@ const MENU_BAR_SELECTOR = '[aria-label="Main menu"]';
 const WINDOW_CONTENT_SELECTOR = "#window-content";
 const LOADING_INDICATOR_SELECTOR = "[data-loading-indicator]";
 
-// React's server renderer marks a Suspense boundary whose children threw with a `<!--$!-->` comment and
-// streams the boundary's fallback in their place, in a response with a `200` status code. The browser then
-// renders the children again, so the prerendered markup is the fallback rather than the content.
+// When the children of a Suspense boundary throw, React's server renderer marks the boundary with a
+// `<!--$!-->` comment and streams its fallback in their place in a response with a `200` status code.
+// The browser then renders the children again, so the prerendered markup is the fallback rather than
+// the content.
 const ERRORED_SUSPENSE_BOUNDARY_COMMENT = "$!";
 
 // TanStack Start waits for every Suspense boundary to resolve only for a bot's request, and the prerender

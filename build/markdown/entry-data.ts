@@ -120,7 +120,7 @@ export async function readEntryDataExports(
 
   if (!entryPath || !entryDataModuleReader) {
     throw new Error(
-      `${quotedEntryPathOf(file)} renders \`${firstElement.name}\`, whose record requires the entry's path and a reader for its data file.`,
+      `${quotedEntryPathOf(file)} renders \`${firstElement.name}\` from its data file, which requires the entry's path and a reader for the data file.`,
     );
   }
 

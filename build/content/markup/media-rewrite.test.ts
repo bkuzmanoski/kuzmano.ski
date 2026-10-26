@@ -270,7 +270,7 @@ describe("rehypeMedia", () => {
     expect(attributeOf(image, "height")).toBeUndefined();
   });
 
-  test("does not set the `width` or `height` attribute of an authored `<img>` whose `src` attribute is unresolved", async () => {
+  test("does not set the `width` or `height` attribute of an authored `<img>` with an unresolved `src` attribute", async () => {
     const [image] = jsxElementsNamed(await compiledTree('<img src="./missing-image.png" alt="An image" />\n'), "img");
     expect(image?.attributes?.map(({ name }) => name)).toEqual(["src", "alt"]);
   });

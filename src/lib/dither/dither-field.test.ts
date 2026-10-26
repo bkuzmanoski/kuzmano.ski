@@ -99,7 +99,7 @@ describe("renderDitherField", () => {
     }
   });
 
-  test("renders the same pattern under a pointer highlight whose `strength` is `0` as without a pointer highlight", () => {
+  test("renders the same pattern under a pointer highlight with a `strength` of `0` as without a pointer highlight", () => {
     const pointerHighlight = { x: 4, y: 4, standardDeviation: 2, strength: 0 };
     expect(render(ditherFieldOf(16, 16, 0.5), { pointerHighlight })).toEqual(render(ditherFieldOf(16, 16, 0.5)));
   });
@@ -152,7 +152,7 @@ describe("pointerHighlightRegionIn", () => {
     });
   });
 
-  test("returns `null` for a pointer highlight whose `strength` is `0`", () => {
+  test("returns `null` for a pointer highlight with a `strength` of `0`", () => {
     const pointerHighlight = { x: 20, y: 30, standardDeviation: 2, strength: 0 };
     expect(pointerHighlightRegionIn(ditherFieldOf(64, 64, 0), pointerHighlight)).toBeNull();
   });

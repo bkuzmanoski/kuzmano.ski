@@ -308,7 +308,7 @@ test("the message character count's status changes only when the count crosses t
   expect(liveRegionsWithText().map((region) => region.textContent)).not.toEqual([thresholdStatus]);
 });
 
-test("the `To:` field is a read-only input, out of the tab order, whose value is the email address", async () => {
+test("the `To:` field is a read-only input with the email address as its value, out of the tab order", async () => {
   render(<ContactBody />);
   await readEmailAddress();
 

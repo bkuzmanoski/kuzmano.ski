@@ -171,7 +171,7 @@ test("a function key that dismisses the screensaver is withheld from the focused
   expect(onKeyDown).not.toHaveBeenCalled();
 });
 
-test("the next press and release of a key whose release was missed reach the focused control underneath, without the key up sound", () => {
+test("after the screensaver misses a key's release, the next press and release of the key reach the focused control underneath, without the key up sound", () => {
   const { control, onKeyDown, onKeyUp } = renderControlUnderneath();
 
   raise();

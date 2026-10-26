@@ -13,8 +13,8 @@
 
   background: var(--color-background);
 
-  /* Strip buttons fill control-strip cells. The strip defines their widths and separators, whose
-   * selectors must outrank `.button:disabled` regardless of stylesheet load order. */
+  /* Strip buttons fill control-strip cells. The strip defines their widths and separators with
+   * selectors that must outrank `.button:disabled` regardless of stylesheet load order. */
   &:where(.strip) {
     flex: none;
 

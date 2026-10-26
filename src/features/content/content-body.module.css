@@ -736,7 +736,7 @@
     text-align: right;
   }
 
-  /* After the element defaults, whose band metrics it overrides at the same specificity. */
+  /* After the element defaultes as it overrides their band metrics at the same specificity. */
   @mixin content-rail-expanded {
     & :where([data-content-body]) > :where(blockquote) {
       --content-body-blockquote-band-width: var(--content-body-layout-rail-width);

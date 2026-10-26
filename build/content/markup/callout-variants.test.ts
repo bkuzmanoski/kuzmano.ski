@@ -31,13 +31,13 @@ describe("rehypeCalloutVariants", () => {
     );
   });
 
-  test("throws for a `Callout` whose variant is authored as an expression", async () => {
+  test("throws for a `Callout` with a `variant` attribute authored as an expression", async () => {
     await expect(compile(`<Callout variant={"note"}>A note.</Callout>`)).rejects.toThrow(
       "a `variant` attribute authored as an expression",
     );
   });
 
-  test("throws for a `Callout` whose `variant` attribute has no value", async () => {
+  test("throws for a `Callout` with a `variant` attribute without a value", async () => {
     await expect(compile(`<Callout variant>A note.</Callout>`)).rejects.toThrow(
       "a `variant` attribute without a value",
     );

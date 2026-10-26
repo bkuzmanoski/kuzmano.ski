@@ -495,12 +495,12 @@ describe("scrollTopForVisibleCareerTimelineCenter", () => {
     expect(scrollTopForVisibleCareerTimelineCenter(viewport, centerAt(400))).toBeCloseTo(400, 3);
   });
 
-  test("returns the maximum scroll position for a drag pressed at that position whose pointer has not traveled", () => {
+  test("returns the maximum scroll position for a drag pressed at that position before its pointer travels", () => {
     const center = visibleCareerTimelineCenterAfterTravel(centerAt(maximumScrollTop), 0, 400);
     expect(scrollTopForVisibleCareerTimelineCenter(viewport, center)).toBe(maximumScrollTop);
   });
 
-  test("returns the scroll position of the press for a drag pressed within the range whose pointer has not traveled", () => {
+  test("returns the scroll position of the press for a drag pressed within the range before its pointer travels", () => {
     const center = visibleCareerTimelineCenterAfterTravel(centerAt(viewport.scrollTop), 0, 400);
     expect(scrollTopForVisibleCareerTimelineCenter(viewport, center)).toBeCloseTo(viewport.scrollTop, 3);
   });

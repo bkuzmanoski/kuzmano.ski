@@ -100,7 +100,7 @@ describe("buildMediaIndex", () => {
     expect(coverImageSize).toBe(RENDERED_COVER_IMAGE_SIZE_PX);
   });
 
-  test("resolves a cover image to a social image at its authored URL and a WebP thumbnail whose shortest side is twice the cover image size with an AVIF alternate", async () => {
+  test("resolves a cover image to a social image at its authored URL, and to a WebP thumbnail with an AVIF alternate and a shortest side of twice the cover image size", async () => {
     const { coverImages } = await indexOf();
     const coverImage = coverImages[ENTRY_MEDIA.key]!;
 
@@ -136,7 +136,7 @@ describe("buildMediaIndex", () => {
     expect(index.problems()).toEqual([]);
   });
 
-  test("resolves a portrait cover image to a thumbnail whose width is twice the cover image size", async () => {
+  test("resolves a portrait cover image to a thumbnail with a width of twice the cover image size", async () => {
     const portraitCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 630, height: 1200 } });
     const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: portraitCoverImage } });
 
@@ -146,7 +146,7 @@ describe("buildMediaIndex", () => {
     });
   });
 
-  test("resolves a cover image whose shortest side is below twice the cover image size to a thumbnail at its authored dimensions", async () => {
+  test("resolves a cover image to a thumbnail at its authored dimensions when its shortest side is below twice the cover image size", async () => {
     const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 200, height: 100 } });
     const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
 

@@ -99,8 +99,8 @@ function nameRailSubject(subject: ContentNode, anchorName: string) {
  * `anchor-name` directly could resolve a shared name to a later subject).
  *
  * Throws entry-specific errors when an aside is nested, lacks a preceding element, follows an
- * unsupported component, or follows an element whose `style` or spread attribute could conflict with
- * the generated style.
+ * unsupported component, or follows an element with a `style` or spread attribute that could conflict
+ * with the generated style.
  *
  * Must run last so the subject is the element ultimately rendered by the entry.
  */

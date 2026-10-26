@@ -99,7 +99,7 @@ test("a press on an item prevents its default behavior, focuses the item without
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[2]);
 });
 
-test("a press on an item whose default behavior a merged handler has already prevented does not focus the item or scroll it into view", () => {
+test("a press on an item does not focus the item or scroll it into view when a merged handler has already prevented the press's default behavior", () => {
   const { links } = renderList({ count: 3, activeIndex: 0, guardedIndex: 2 });
   const focus = vi.spyOn(links[2]!, "focus");
 

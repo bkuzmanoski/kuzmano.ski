@@ -120,7 +120,7 @@ describe("authoredMediaIn", () => {
     },
   );
 
-  test("reports a cover image whose name only begins with an entry's cover image name as one without a corresponding entry", () => {
+  test("reports a cover image without a corresponding entry when its name only begins with an entry's cover image name", () => {
     const { entryMedia, problems } = authoredMediaIn(
       directoryListing({ fileNames: ["entry.mdx", "entry.cover.png", "entry.cover.old.png"] }),
     );

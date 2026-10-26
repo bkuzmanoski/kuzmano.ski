@@ -255,7 +255,7 @@ test("a press on the thumb does not scroll the viewport", () => {
 
   fireEvent.pointerDown(thumb, { button: 0, clientY: TRACK_TOP_PX + TRACK_HEIGHT_PX });
 
-  expect(viewport.scrollTop).toBe(0); // The thumb sits inside the track and initiates its own drag, whose press bubbles through the track.
+  expect(viewport.scrollTop).toBe(0);
   expect(playClickSound).toHaveBeenCalledTimes(1); // The thumb plays its own press sound.
 });
 
