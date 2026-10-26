@@ -276,6 +276,7 @@ describe("entryDataModuleReaderThrough", () => {
     server = await createServer({
       root: directoryAbsolutePath,
       configFile: false,
+      cacheDir: join(directoryAbsolutePath, ".vite"), // Defaults to the repository's `node_modules/.vite`, so this server would replace the dev server's optimized dependencies.
       logLevel: "silent",
       server: { middlewareMode: true, ws: false },
     });
