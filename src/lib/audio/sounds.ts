@@ -33,7 +33,7 @@ const DETENT: Strike = {
 };
 
 const BOOT_CHIME: Tone = {
-  notes: [{ hz: 440, seconds: 1.2 }],
+  notes: [{ hz: 600, seconds: 1.2 }],
   partials: 6,
   partialDecay: 0.5,
   attackSeconds: 0.004,
