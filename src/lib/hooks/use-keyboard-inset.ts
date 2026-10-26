@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+import { isEditableTarget } from "../keys.ts";
+
 // Below this the difference between the two viewports is rounding, or a browser toolbar
 // mid-collapse, rather than a keyboard. Treating it as zero keeps the desktop still.
 const KEYBOARD_THRESHOLD_PX = 24;
@@ -32,7 +34,7 @@ export function useKeyboardInset(): void {
         return;
       }
 
-      const viewportGap = window.innerHeight - viewport.height;
+      const viewportGap = isEditableTarget(document.activeElement) ? window.innerHeight - viewport.height : 0;
       const inset = viewportGap < KEYBOARD_THRESHOLD_PX ? 0 : Math.round(viewportGap);
       const isScrolled = window.scrollY !== 0; // Read before the write, so the browser does not recalculate the style of the whole document to return it.
 

@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { useKeyboardInset } from "./use-keyboard-inset.ts";
 
@@ -36,8 +36,17 @@ function stubViewport({ height = LAYOUT_HEIGHT_PX, scale = 1 } = {}) {
 
 const inset = () => document.documentElement.style.getPropertyValue("--keyboard-inset");
 
+let textInput: HTMLInputElement;
+
+beforeEach(() => {
+  textInput = document.createElement("input");
+  document.body.append(textInput);
+  textInput.focus();
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  textInput.remove();
   document.documentElement.removeAttribute("style");
 });
 
@@ -53,6 +62,16 @@ test("`--keyboard-inset` is set to the gap between the layout and visual viewpor
   expect(inset()).toBe("300px");
 
   viewport.resizeTo(LAYOUT_HEIGHT_PX);
+
+  expect(inset()).toBe("");
+});
+
+test("`--keyboard-inset` remains unset while the visual viewport is shorter than the layout viewport and no editable element has the focus", () => {
+  const viewport = stubViewport();
+
+  textInput.blur();
+  renderHook(() => useKeyboardInset());
+  viewport.resizeTo(LAYOUT_HEIGHT_PX - 114);
 
   expect(inset()).toBe("");
 });
