@@ -55,7 +55,7 @@
 /* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order. */
 .controls > .control {
   align-self: stretch;
-  width: var(--video-control-height);
+  width: calc(var(--video-control-height) + 1px); /* Includes the border beside the control. */
 
   & > button {
     width: 100%;

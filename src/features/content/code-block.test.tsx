@@ -1,8 +1,12 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { GITHUB_GIST_LINK_TEXT } from "#/config/site.ts";
+import { githubGistUrlOf } from "#/site/github-gists.ts";
+
 import { CodeBlock } from "./code-block.tsx";
 import { EntryClipboardProvider } from "./entry-clipboard-provider.tsx";
+import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 
 import type { ReactNode } from "react";
 
@@ -79,7 +83,7 @@ test("the header of a code block names the language from the `language-` class o
 test.each([
   { description: "has no `language-` class", className: undefined },
   { description: "has a `language-` class without a language after it", className: "language-" },
-])("the header of a code block whose `<code>` $description names no language", ({ className }) => {
+])("the header of a code block does not name a language when its `<code>` $description", ({ className }) => {
   const { container } = renderInEntry(
     <CodeBlock>
       <code className={className}>const answer = 42;</code>
@@ -89,15 +93,51 @@ test.each([
   expect(container.textContent).toBe("const answer = 42;");
 });
 
-test("the header of a code block is marked with the `data-feed-omit` attribute", () => {
+test("the header of a code block with a `<pre>` that has the `data-gist-id` attribute links to that gist in a new tab", () => {
+  render(
+    <OpensInNewTabDescriptionProvider>
+      <CodeBlock data-gist-id="0123abcd">
+        <code>const answer = 42;</code>
+      </CodeBlock>
+    </OpensInNewTabDescriptionProvider>,
+  );
+
+  const link = screen.getByRole("link", { name: GITHUB_GIST_LINK_TEXT, description: "Opens in a new tab" });
+
+  expect(link.getAttribute("href")).toBe(githubGistUrlOf("0123abcd"));
+  expect(link.getAttribute("target")).toBe("_blank");
+});
+
+test("the gist link of a code block has a `data-feed-text` attribute of its text followed by a period", () => {
+  render(<CodeBlock data-gist-id="0123abcd" />);
+  expect(screen.getByRole("link", { name: GITHUB_GIST_LINK_TEXT }).getAttribute("data-feed-text")).toBe(
+    `${GITHUB_GIST_LINK_TEXT}.`,
+  );
+});
+
+test("the header of a code block with a `<pre>` that does not have the `data-gist-id` attribute omits the gist link", () => {
+  render(
+    <CodeBlock>
+      <code>const answer = 42;</code>
+    </CodeBlock>,
+  );
+  expect(screen.queryByRole("link")).toBeNull();
+});
+
+test("the code block omits the `data-gist-id` attribute from its `<pre>`", () => {
+  const { container } = render(<CodeBlock data-gist-id="0123abcd" />);
+  expect(container.querySelector("pre")!.hasAttribute("data-gist-id")).toBe(false);
+});
+
+test("the language label of a code block is marked with the `data-feed-omit` attribute", () => {
   renderInEntry(
     <CodeBlock>
       <code className="language-typescript">const answer = 42;</code>
     </CodeBlock>,
   );
 
-  const feedOmittedElement = screen.getByRole("button", { name: "Copy to Clipboard" }).closest("[data-feed-omit]");
+  const feedOmittedElement = screen.getByText("typescript").closest("[data-feed-omit]");
 
-  expect(feedOmittedElement?.contains(screen.getByText("typescript"))).toBe(true);
+  expect(feedOmittedElement).not.toBeNull();
   expect(feedOmittedElement?.contains(screen.getByText("const answer = 42;"))).toBe(false);
 });

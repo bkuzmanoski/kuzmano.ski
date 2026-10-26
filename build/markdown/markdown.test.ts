@@ -1,9 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, SITE_URL } from "#/config/site.ts";
+import { GITHUB_GIST_LINK_TEXT, GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, SITE_URL } from "#/config/site.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 import type { Experience } from "#/lib/experience/career-timeline.ts";
 import { fallbackText } from "#/lib/waitlist/render-fallback.ts";
+import { githubGistUrlOf } from "#/site/github-gists.ts";
 
 import { CONTENT_DIRECTORY_PATH, fromContent } from "../paths.ts";
 import { ENTRY_ABSOLUTE_PATH, MEDIA_FILE_HASH } from "../test-utils/media.ts";
@@ -102,6 +103,36 @@ describe("markdownFor", () => {
     expect(markdown).toContain("# Heading");
     expect(markdown).toContain("Some _text_.");
     expect(markdown).toContain("```ts\nconst a = 1;\n```");
+  });
+
+  test("replaces the `gist` attribute of a code fence with a link to the gist before the fence", async () => {
+    const markdown = await markdownFor(`${FRONTMATTER}
+      \`\`\`ts gist=0123abcd
+      const a = 1;
+      \`\`\`
+
+      A paragraph.
+    `);
+    expect(markdown).toContain(`[${GITHUB_GIST_LINK_TEXT}.](${githubGistUrlOf("0123abcd")})
+
+\`\`\`ts
+const a = 1;
+\`\`\`
+
+A paragraph.`);
+  });
+
+  test("throws for an unsupported attribute in the meta string of a code fence, naming the entry", async () => {
+    await expect(
+      markdownFor(
+        `${FRONTMATTER}
+      \`\`\`ts title="value.ts"
+      const a = 1;
+      \`\`\`
+    `,
+        { path: fromContent("collection", "entry.mdx") },
+      ),
+    ).rejects.toThrow('"content/collection/entry.mdx" has a code fence that sets the attribute "title".');
   });
 
   test("omits imports, exports, and expressions", async () => {
@@ -224,16 +255,15 @@ describe("markdownFor", () => {
 ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
   });
 
-  test("throws when a component whose fallback Markdown is a block is authored inside a sentence, naming the file by its repository-relative path and the component", async () => {
+  test("throws for a component with a block as its fallback Markdown authored inside a sentence, naming the file by its repository-relative path and the component", async () => {
     const source = `${FRONTMATTER}
       A sentence with <Waitlist list="List">a phrase</Waitlist> inside it.
     `;
     const pendingMarkdown = markdownFor(source, { path: fromContent("collection/entry.mdx"), url: ENTRY_URL });
 
     await expect(pendingMarkdown).rejects.toThrow(
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.mdx" has components authored inline`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.mdx" renders \`Waitlist\` inside a sentence.`,
     );
-    await expect(pendingMarkdown).rejects.toThrow("Waitlist");
   });
 
   test("omits a `Waitlist` when called without an entry URL", async () => {
@@ -341,7 +371,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
       markdownFor(`${FRONTMATTER}
       A sentence with <PrintLink>a print link</PrintLink> inside it.
     `),
-    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: PrintLink");
+    ).rejects.toThrow("renders `PrintLink` inside a sentence.");
   });
 
   test("throws when a `Rail` is authored inside a sentence, naming the component", async () => {
@@ -349,7 +379,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
       markdownFor(`${FRONTMATTER}
       A sentence with <Rail label="Label">an aside</Rail> inside it.
     `),
-    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: Rail");
+    ).rejects.toThrow("renders `Rail` inside a sentence.");
   });
 
   test("replaces an `ImageGallery` with its children, then the paragraph of its `caption` attribute", async () => {
@@ -485,7 +515,7 @@ import { RECORD } from "./entry.data.ts";
 
 A sentence with <CareerTimeline {...RECORD} /> inside it.
 `),
-    ).rejects.toThrow("has components authored inline whose fallback Markdown is a block: CareerTimeline");
+    ).rejects.toThrow("renders `CareerTimeline` inside a sentence.");
   });
 
   test("throws when an `CareerTimeline` has an attribute beside its spread, naming the entry", async () => {
@@ -702,7 +732,7 @@ if (value) {
     expect(markdown).toContain(String.raw`| \<value> |`);
   });
 
-  test("renders a `<table>` cell whose paragraph is authored across lines on the line of its row", async () => {
+  test("renders a paragraph authored across lines in a `<table>` cell on the line of its row", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <table>
         <tr>

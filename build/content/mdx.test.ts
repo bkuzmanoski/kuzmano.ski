@@ -5,6 +5,8 @@ import * as runtime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
+import { fromContent } from "../paths.ts";
+
 import { mdxCompileOptionsFor } from "./mdx.ts";
 
 import type { MDXComponents } from "mdx/types";
@@ -81,6 +83,46 @@ const value = 1;
       /^<pre class="shiki [^"]*" tabindex="0"><code class="language-ts">/,
     );
   });
+
+  test.each([
+    { description: "on", syntaxHighlight: true },
+    { description: "off", syntaxHighlight: false },
+  ])(
+    "marks the `<pre>` of a code block with the `data-gist-id` attribute from the `gist` attribute of its meta string, with highlighting $description",
+    async ({ syntaxHighlight }) => {
+      const { default: MDXContent } = await evaluate(
+        `
+\`\`\`ts gist=0123abcd
+const value = 1;
+\`\`\`
+`,
+        { ...mdxCompileOptionsFor({ syntaxHighlight }), ...runtime, useMDXComponents },
+      );
+      expect(renderToStaticMarkup(createElement(MDXContent))).toMatch(/^<pre [^>]*data-gist-id="0123abcd"/);
+    },
+  );
+
+  test.each([
+    { description: "on", syntaxHighlight: true },
+    { description: "off", syntaxHighlight: false },
+  ])(
+    "throws for an unsupported attribute in the meta string of a code block, with highlighting $description, naming the entry",
+    async ({ syntaxHighlight }) => {
+      await expect(
+        evaluate(
+          {
+            path: fromContent("collection", "entry.mdx"),
+            value: `
+\`\`\`ts title="value.ts"
+const value = 1;
+\`\`\`
+`,
+          },
+          { ...mdxCompileOptionsFor({ syntaxHighlight }), ...runtime, useMDXComponents },
+        ),
+      ).rejects.toThrow('"content/collection/entry.mdx" has a code fence that sets the attribute "title".');
+    },
+  );
 
   test("marks a highlighted code block before a `Rail` as its rail subject", async () => {
     const { default: MDXContent } = await evaluate(

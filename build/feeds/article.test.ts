@@ -117,6 +117,16 @@ describe("articleContentOf", () => {
     expect(body).toBe(`<p>A body.</p><p>Join the waitlist at ${ENTRY_URL}</p>`);
   });
 
+  test("replaces a link that has a `data-feed-text` attribute with a paragraph containing a link to its `href` attribute's value, with the attribute's value as its text", () => {
+    const body = articleContentOf(
+      articleDocument(
+        '<p>A body.</p><a href="https://example.com/destination" aria-label="A label" data-feed-text="A link."><svg></svg></a>',
+      ),
+      ENTRY_URL,
+    );
+    expect(body).toBe('<p>A body.</p><p><a href="https://example.com/destination">A link.</a></p>');
+  });
+
   test("moves each footnote into an `<li>` with its ID, in an `<ol>` after an `<hr>` at the end of the article, without its rail label", () => {
     const body = articleContentOf(
       articleDocument(`<p>A sentence.<sup><a href="#fn-1" id="fnref-1" aria-label="Footnote 1">1</a></sup></p>

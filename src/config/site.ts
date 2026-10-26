@@ -3,6 +3,8 @@ export const AUTHOR_NAME = "Brian Kuzmanoski";
 export const GITHUB_USERNAME = "bkuzmanoski";
 export const GITHUB_PROFILE_URL = `https://github.com/${GITHUB_USERNAME}`;
 export const GITHUB_PROFILE_LINK_TEXT = `Recent work on GitHub, as @${GITHUB_USERNAME}`;
+export const GITHUB_GISTS_URL = `https://gist.github.com/${GITHUB_USERNAME}`;
+export const GITHUB_GIST_LINK_TEXT = "View GitHub Gist";
 
 // Site identity
 export const SITE_NAME = "kuzmano.ski";

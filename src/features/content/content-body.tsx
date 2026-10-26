@@ -11,7 +11,7 @@ import type { EntryTarget } from "#/site/windows.ts";
 import { Callout } from "./callout.tsx";
 import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
-import { ContentLink, OpensInNewTabDescriptionProvider } from "./content-link.tsx";
+import { ContentLink } from "./content-link.tsx";
 import { EntryClipboardProvider } from "./entry-clipboard-provider.tsx";
 import { EntryColophon } from "./entry-colophon.tsx";
 import { EntryMasthead } from "./entry-masthead.tsx";
@@ -20,6 +20,7 @@ import { Footnote } from "./footnote.tsx";
 import { ImageGallery } from "./image-gallery.tsx";
 import { ImageGrid } from "./image-grid.tsx";
 import { observeRailClearances } from "./observe-rail-clearances.ts";
+import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 import { Rail } from "./rail.tsx";
 import { Video } from "./video.tsx";
 

@@ -64,7 +64,7 @@
 /* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order.  */
 .controls > .control {
   align-self: stretch;
-  width: var(--image-gallery-control-size);
+  width: calc(var(--image-gallery-control-size) + 1px); /* Includes the border beside the control. */
 
   & > button {
     width: 100%;

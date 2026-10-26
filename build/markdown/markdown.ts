@@ -5,10 +5,12 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { CONTINUE, EXIT, SKIP, visit } from "unist-util-visit";
 
-import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL } from "#/config/site.ts";
+import { GITHUB_GIST_LINK_TEXT, GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL } from "#/config/site.ts";
 import { FALLBACK_TEXT_BEFORE_URL } from "#/lib/waitlist/render-fallback.ts";
+import { githubGistUrlOf } from "#/site/github-gists.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 
+import { codeFenceAttributesIn } from "../content/markup/code-fence-attributes.ts";
 import { remarkGfmSubset } from "../content/markup/gfm.ts";
 import { NO_MEDIA_FOR_ENTRY, remarkMedia } from "../content/markup/media-rewrite.ts";
 import {
@@ -27,6 +29,7 @@ import { MARKDOWN_SERIALIZER_OPTIONS, paragraphOf, textNode, textParagraph } fro
 import { remarkAuthoredTables } from "./tables.ts";
 
 import type { EntryDataExport, EntryDataModuleReader } from "./entry-data.ts";
+import type { CodeFenceAttributeName } from "../content/markup/code-fence-attributes.ts";
 import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
 import type { ContentNode, ContentParent, EntryVFile } from "../content/markup/tree.ts";
 
@@ -70,7 +73,7 @@ const ASIDE_MARKDOWN: ComponentMarkdown = {
     const children = node.children ?? [];
 
     if (children.length === 0) {
-      return []; // An aside whose children were all omitted is omitted too.
+      return []; // Omits the aside too when the Markdown pass omitted every child.
     }
 
     if (!label) {
@@ -361,6 +364,33 @@ function replacePreformattedElements() {
   };
 }
 
+// The blocks each code fence attribute is emitted as before its fence (see `/build/content/markup/code-fence-attributes.ts`).
+const CODE_FENCE_ATTRIBUTE_MARKDOWN: Record<CodeFenceAttributeName, (value: string) => Array<ContentNode>> = {
+  gist: (gistId) => [
+    paragraphOf([{ type: "link", url: githubGistUrlOf(gistId), children: [textNode(`${GITHUB_GIST_LINK_TEXT}.`)] }]),
+  ],
+};
+
+// Replaces the meta string of each code fence with the Markdown of the attributes it sets.
+function replaceCodeFenceAttributes() {
+  return function transform(tree: ContentParent, file: EntryVFile) {
+    visit(tree, (node, index, parent) => {
+      if (node.type !== "code" || !parent || index === undefined) {
+        return CONTINUE;
+      }
+
+      const blocksBeforeFence = [...codeFenceAttributesIn(node.meta, file)].flatMap(([name, value]) =>
+        CODE_FENCE_ATTRIBUTE_MARKDOWN[name](value),
+      );
+
+      node.meta = null;
+      parent.children.splice(index, 0, ...blocksBeforeFence);
+
+      return index + blocksBeforeFence.length + 1; // Continues after the inserted blocks and the fence.
+    });
+  };
+}
+
 function splitBlockElements() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
@@ -402,15 +432,15 @@ function blockFallbacksAuthoredInlineIn(tree: ContentNode): Set<string> {
   return componentNames;
 }
 
-// Ensures no component whose fallback Markdown is a block was authored inside a sentence, where its
-// replacement would be serialized into the prose around it rather than as a block of its own.
+// Throws for a component with a block as its fallback Markdown authored inside a sentence, where the
+// serializer would emit its replacement into the prose around it rather than as a block of its own.
 function assertBlockFallbacks() {
   return function assert(tree: ContentNode, file: EntryVFile) {
     const authoredInline = blockFallbacksAuthoredInlineIn(tree);
 
     if (authoredInline.size > 0) {
       throw new Error(
-        `${quotedEntryPathOf(file)} has components authored inline whose fallback Markdown is a block: ${[...authoredInline].join(", ")}.`,
+        `${quotedEntryPathOf(file)} renders ${[...authoredInline].map((name) => `\`${name}\``).join(", ")} inside a sentence. Expected a component with a block as its fallback Markdown in a paragraph of its own.`,
       );
     }
   };
@@ -535,6 +565,7 @@ export function markdownRendererFor(mediaForEntry: MediaForEntry = NO_MEDIA_FOR_
     .use(splitBlockElements)
     .use(assertBlockFallbacks)
     .use(replacePreformattedElements)
+    .use(replaceCodeFenceAttributes)
     .use(replaceLiteralExpressions)
     .use(remarkMedia, mediaForEntry, canonicalUrl) // Resolve media URLs before stripping MDX so the fallback Markdown uses them.
     .use(remarkAuthoredTables)

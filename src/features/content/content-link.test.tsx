@@ -10,7 +10,8 @@ import { expect, test, vi } from "vitest";
 
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
-import { ContentLink, OpensInNewTabDescriptionProvider } from "./content-link.tsx";
+import { ContentLink } from "./content-link.tsx";
+import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 
 test("a link to a path on this site does not have the `target` attribute", () => {
   renderInRouterContext(<ContentLink href="/collection/entry">Fixture link</ContentLink>);

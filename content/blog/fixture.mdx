@@ -60,10 +60,10 @@ A paragraph the subsection heading heads.
 
 ### A subsection heading before a code block
 
-```swift
+```swift gist=3b317c92f49c54474d6553054e671767
 import Foundation
 
-/// An item as the store tracks it.
+/// An item.
 public struct Item: Identifiable, Sendable {
   public let id: UUID
   public var title: String
@@ -96,8 +96,10 @@ extension ItemStoring {
     switch (item.isPinned, item.frame.width) {
     case (true, _):
       return "\(label) is pinned."
+
     case (false, let width) where width < Item.minimumSize.width:
       return "\(label) is only \(Int(width))pt wide."
+
     default:
       return String(format: "%@ — %.0f×%.0f", label, item.frame.width, item.frame.height)
     }

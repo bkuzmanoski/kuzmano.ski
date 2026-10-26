@@ -4,6 +4,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 
 import { rehypeCalloutVariants } from "./markup/callout-variants.ts";
+import { rehypeCodeFenceAttributes } from "./markup/code-fence-attributes.ts";
 import { rehypeContentSpans } from "./markup/content-spans.ts";
 import { rehypeElementIds } from "./markup/element-ids.ts";
 import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./markup/entry-syntax.ts";
@@ -18,15 +19,29 @@ import { shikiTheme } from "./shiki-theme.ts";
 import type { MediaForEntry } from "./markup/media-rewrite.ts";
 import type { CompileOptions } from "@mdx-js/mdx";
 import type { RehypeShikiOptions } from "@shikijs/rehype";
+import type { ElementData } from "hast";
 import type { Options as AutolinkOptions } from "rehype-autolink-headings";
 import type { PluggableList } from "unified";
 import type { Plugin } from "vite";
 
 type ShikiTransformer = NonNullable<RehypeShikiOptions["transformers"]>[number];
 
+// Removes Shiki's inline `<pre>` colors so the stylesheet can define them instead.
 const PRE_STYLE_REMOVAL_TRANSFORMER: ShikiTransformer = {
   pre(node) {
-    delete node.properties.style; // Remove Shiki's inline `<pre>` colors so the stylesheet can control them.
+    delete node.properties.style;
+  },
+};
+
+// Preserves a code fence's meta string on Shiki's replacement `<code>` element so
+// `rehypeCodeFenceAttributes` can read it from both highlighted and unhighlighted blocks.
+const META_STRING_PRESERVATION_TRANSFORMER: ShikiTransformer = {
+  code(node) {
+    const meta = this.options.meta?.__raw;
+
+    if (meta) {
+      node.data = { ...node.data, meta } as ElementData; // Cast because `hast-util-from-parse5` requires `position` on `ElementData`, but only verbosely parsed HTML has it.
+    }
   },
 };
 
@@ -68,11 +83,12 @@ export function mdxCompileOptionsFor({
               // `addLanguageClass` adds a `language-<name>` class to the highlighted `<code>`, which `CodeBlock`
               // reads for its label (see `/src/features/content/code-block.tsx`).
               addLanguageClass: true,
-              transformers: [PRE_STYLE_REMOVAL_TRANSFORMER],
+              transformers: [PRE_STYLE_REMOVAL_TRANSFORMER, META_STRING_PRESERVATION_TRANSFORMER],
             },
           ],
         ] as PluggableList)
       : []),
+    rehypeCodeFenceAttributes, // Runs after the highlighter, which replaces each `<pre>` and its properties.
     rehypeRailAsides,
   ];
   return {

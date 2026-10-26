@@ -1,13 +1,12 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { createContext, use, useId } from "react";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
 import { isBrowserHandledClick, linkDestinationOf, sitePathPartsOf } from "#/lib/link.ts";
 
-import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import { useOpensInNewTabDescriptionId } from "./opens-in-new-tab-description.ts";
 
-const OpensInNewTabDescriptionIdContext = createContext<string | undefined>(undefined);
+import type { ComponentProps, MouseEvent } from "react";
 
 function playContentLinkClickSound(event: MouseEvent<HTMLAnchorElement>) {
   if (!isBrowserHandledClick(event)) {
@@ -34,7 +33,7 @@ export function ContentLink({
   children,
   ...props
 }: Omit<ComponentProps<"a">, "href" | "target" | "onClick"> & { href: string }) {
-  const opensInNewTabDescriptionId = use(OpensInNewTabDescriptionIdContext);
+  const opensInNewTabDescriptionId = useOpensInNewTabDescriptionId();
   const router = useRouter();
 
   switch (linkDestinationOf(href)) {
@@ -85,20 +84,4 @@ export function ContentLink({
         </a>
       );
   }
-}
-
-/**
- * Renders a shared "Opens in a new tab" description, which every `ContentLink` to another
- * site or to a file references through `aria-describedby`.
- */
-export function OpensInNewTabDescriptionProvider({ children }: { children: ReactNode }) {
-  const id = useId();
-  return (
-    <OpensInNewTabDescriptionIdContext value={id}>
-      {children}
-      <span id={id} hidden>
-        Opens in a new tab
-      </span>
-    </OpensInNewTabDescriptionIdContext>
-  );
 }

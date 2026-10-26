@@ -17,8 +17,12 @@
     border-block-end: 1px solid var(--color-border);
   }
 
-  & .copyControl > button {
-    width: 28px;
+  & .controls {
+    display: flex;
+  }
+
+  & .control > :is(button, a) {
+    width: 29px; /* Includes the left border. */
     height: 28px;
     border-inline-start: 1px solid var(--color-border);
   }
@@ -42,6 +46,11 @@
       font: inherit; /* Overrides the user agent stylesheet's `font-family: monospace`. */
     }
   }
+
+  &.gist pre {
+    overflow-y: auto;
+    max-block-size: calc(16.5lh + var(--layout-gutter)); /* Capped to bound long gists. */
+  }
 }
 
 .languageLabel {
@@ -58,5 +67,10 @@
     overflow-x: visible;
     overflow-wrap: anywhere;
     white-space: pre-wrap;
+  }
+
+  .codeBlock.gist pre {
+    overflow-y: visible;
+    max-block-size: none;
   }
 }

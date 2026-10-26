@@ -48,12 +48,20 @@ const paragraph = (value: string): Element => ({
   children: [{ type: "text", value }],
 });
 
+const linkParagraph = (value: string, href: string): Element => ({
+  type: "element",
+  tagName: "p",
+  properties: {},
+  children: [{ type: "element", tagName: "a", properties: { href }, children: [{ type: "text", value }] }],
+});
+
 // Rewrites markup for output in a feed.
 //
 // Components can use the following attributes to control how their markup is rendered:
 //
 // - `data-feed-omit` removes the element entirely
-// - `data-feed-text` replaces the element with a paragraph containing text supplied by the component
+// - `data-feed-text` replaces the element with a paragraph containing component-provided text; for links,
+//   the paragraph text links to the element's `href`
 function replaceUIMarkup(article: Element) {
   visit(article, "element", (element, index, parent) => {
     if (!parent || index === undefined) {
@@ -68,7 +76,11 @@ function replaceUIMarkup(article: Element) {
     const fallbackText = element.properties.dataFeedText;
 
     if (typeof fallbackText === "string") {
-      parent.children[index] = paragraph(fallbackText);
+      const { href } = element.properties;
+      parent.children[index] =
+        element.tagName === "a" && typeof href === "string"
+          ? linkParagraph(fallbackText, href)
+          : paragraph(fallbackText);
       return SKIP; // The paragraph replaces the element's children as well as the element.
     }
 

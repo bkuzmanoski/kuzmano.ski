@@ -24,6 +24,7 @@ export interface ContentNode {
   alt?: string | null;
   title?: string | null;
   lang?: string | null; // Language of an mdast `code` node.
+  meta?: string | null; // Text after the language on the opening fence of an mdast `code` node.
   depth?: number; // Level of an mdast `heading` node, from 1 to 6.
   ordered?: boolean | null; // Whether an mdast `list` node is numbered.
   spread?: boolean | null; // Whether an mdast `list` or `listItem` node separates its children with blank lines.
