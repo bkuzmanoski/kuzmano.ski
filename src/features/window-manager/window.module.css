@@ -39,6 +39,11 @@
     background: var(--color-scrim);
   }
 
+  &.fitsContentHeight {
+    /* Fits the window within the surface's padding as `createWindowPlacer` in `/src/lib/window-manager/layout.ts` does. */
+    max-height: calc(100% - 2 * var(--layout-window-layer-padding));
+  }
+
   /* A window the server rendered has no position as the window layer has not yet been measured.
    * These values mirror the default position and size for the initial window placed by the
    * window manager (see `defaultRect` in `/src/lib/window-manager/layout.ts`). */

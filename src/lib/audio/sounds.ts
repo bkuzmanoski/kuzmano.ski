@@ -20,7 +20,7 @@ const CLICK: Strike = {
   fadeSeconds: 0.002,
 };
 
-// Shared by hover and the scroll detents.
+// Shared by hover, scroll detents, and slider steps.
 const DETENT: Strike = {
   durationSeconds: 0.01,
   seed: 0xfee1e7,
@@ -62,10 +62,9 @@ const SUCCESS: Tone = {
   fadeSeconds: 0.02,
 };
 
-const HOVER_INTERVAL_S = 0.03;
-const HOVER_LEVEL = 0.2;
+const DETENT_INTERVAL_S = 0.03;
+const DETENT_PLAYBACK = { level: 0.2, rate: 1 };
 
-const SCROLL_DETENT_INTERVAL_S = 0.03;
 const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000; // The speed, in pixels per second, at which a detent is at full strength.
 const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.2 };
 const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
@@ -89,42 +88,32 @@ export function playClickSound() {
   });
 }
 
-let lastHoverAt = 0;
+function createDetentPlayer<TArgs extends Array<unknown>>(
+  playbackOf: (...args: TArgs) => { level: number; rate: number },
+) {
+  let lastPlayedAt = 0;
+  return (...args: TArgs) =>
+    schedulePlayback((context) => {
+      const at = context.currentTime + LEAD_TIME_S;
 
-export function playHoverSound() {
-  schedulePlayback((context) => {
-    const at = context.currentTime + LEAD_TIME_S;
+      if (at < lastPlayedAt + DETENT_INTERVAL_S) {
+        return;
+      }
 
-    if (at < lastHoverAt + HOVER_INTERVAL_S) {
-      return;
-    }
-
-    playStrike(context, DETENT, { at, level: HOVER_LEVEL, rate: 1 });
-    lastHoverAt = at;
-  });
-}
-
-let lastDetentAt = 0;
-
-export function playScrollDetentSound(speed: number) {
-  schedulePlayback((context) => {
-    const at = context.currentTime + LEAD_TIME_S;
-
-    if (at < lastDetentAt + SCROLL_DETENT_INTERVAL_S) {
-      return;
-    }
-
-    const intensity = Math.sqrt(Math.min(1, speed / SCROLL_DETENT_FULL_SPEED_PX_PER_S));
-
-    playStrike(context, DETENT, {
-      at,
-      level: SCROLL_DETENT_LEVEL.quiet + (SCROLL_DETENT_LEVEL.loud - SCROLL_DETENT_LEVEL.quiet) * intensity,
-      rate: SCROLL_DETENT_RATE.slow + (SCROLL_DETENT_RATE.fast - SCROLL_DETENT_RATE.slow) * intensity,
+      playStrike(context, DETENT, { at, ...playbackOf(...args) });
+      lastPlayedAt = at;
     });
-
-    lastDetentAt = at;
-  });
 }
+
+export const playHoverSound = createDetentPlayer(() => DETENT_PLAYBACK);
+export const playSliderStepSound = createDetentPlayer(() => DETENT_PLAYBACK);
+export const playScrollDetentSound = createDetentPlayer((speed: number) => {
+  const intensity = Math.sqrt(Math.min(1, speed / SCROLL_DETENT_FULL_SPEED_PX_PER_S));
+  return {
+    level: SCROLL_DETENT_LEVEL.quiet + (SCROLL_DETENT_LEVEL.loud - SCROLL_DETENT_LEVEL.quiet) * intensity,
+    rate: SCROLL_DETENT_RATE.slow + (SCROLL_DETENT_RATE.fast - SCROLL_DETENT_RATE.slow) * intensity,
+  };
+});
 
 export function loadKeySounds(): Promise<unknown> {
   return Promise.all([loadRecording(keyDownRecordingUrl), loadRecording(keyUpRecordingUrl)]);

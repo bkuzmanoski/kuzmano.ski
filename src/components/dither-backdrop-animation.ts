@@ -3,7 +3,7 @@ import { subscribeToDevicePixelRatioChange } from "#/lib/device.ts";
 import { dirtyRegionBetween, renderDitherField, revealProgressAt } from "#/lib/dither/dither-field.ts";
 import type { DitherField, PointerHighlight } from "#/lib/dither/dither-field.ts";
 import { getPrefersReducedMotion, subscribeToPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
-import { subscribeToColorSchemeChange } from "#/lib/settings/theme.ts";
+import { subscribeToColorChange } from "#/lib/settings/color-change.ts";
 
 export interface DitherBackdropElements {
   container: HTMLElement;
@@ -226,7 +226,7 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
   resizeObserver.observe(container);
 
   const unsubscribeFromDevicePixelRatioChange = subscribeToDevicePixelRatioChange(composeAndRender);
-  const unsubscribeFromColorSchemeChange = subscribeToColorSchemeChange(() => {
+  const unsubscribeFromColorChange = subscribeToColorChange(() => {
     ditherColor = rgbOfCssColor(scratchContext, getComputedStyle(canvas).color);
     renderedFrame = null;
     scheduleAnimationFrame();
@@ -277,7 +277,7 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
     cancelAnimationFrame(animationFrameId);
     resizeObserver.disconnect();
     unsubscribeFromDevicePixelRatioChange();
-    unsubscribeFromColorSchemeChange();
+    unsubscribeFromColorChange();
     unsubscribeFromPrefersReducedMotion();
     container.removeEventListener("pointermove", onPointerMove);
     container.removeEventListener("pointerleave", onPointerLeave);

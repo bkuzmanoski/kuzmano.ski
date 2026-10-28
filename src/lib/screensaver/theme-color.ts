@@ -1,3 +1,5 @@
+import { computedColorOf } from "../computed-color.ts";
+
 const SCREENSAVER_THEME_COLOR_ATTRIBUTE = "data-screensaver-theme-color";
 const SCREENSAVER_THEME_COLOR_SELECTOR = `meta[${SCREENSAVER_THEME_COLOR_ATTRIBUTE}]`;
 const SCREENSAVER_BACKDROP_PROPERTY = "--color-screensaver-backdrop";
@@ -13,13 +15,12 @@ export function setScreensaverThemeColor() {
     return;
   }
 
-  const backdropColor = getComputedStyle(document.documentElement)
-    .getPropertyValue(SCREENSAVER_BACKDROP_PROPERTY)
-    .trim();
-
-  if (!backdropColor) {
+  // `computedColorOf` returns the inherited text color for a `var()` of an undeclared property.
+  if (!getComputedStyle(document.documentElement).getPropertyValue(SCREENSAVER_BACKDROP_PROPERTY)) {
     return;
   }
+
+  const backdropColor = computedColorOf(`var(${SCREENSAVER_BACKDROP_PROPERTY})`);
 
   const themeColorMeta = document.createElement("meta");
 

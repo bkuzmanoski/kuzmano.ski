@@ -1,6 +1,6 @@
 import type { Rect, Size } from "../geometry.ts";
 
-export const WINDOW_DOM_ORDER = ["collection", "entry", "contact"] as const;
+export const WINDOW_DOM_ORDER = ["collection", "entry", "contact", "controlPanel"] as const;
 
 export type WindowId = (typeof WINDOW_DOM_ORDER)[number];
 
@@ -21,9 +21,11 @@ export interface WindowGeometry extends Rect {
   maximized: boolean;
 }
 
+export type WindowSizing = "resizable" | "fixed" | "fitContentHeight";
+
 export interface WindowSpec {
-  defaultSize: Size;
-  fixedSize: boolean;
+  defaultSize: Size; // A `"fitContentHeight"` window is placed by this height until its content height is reported.
+  sizing: WindowSizing;
 }
 
 export interface WindowLayout {
@@ -47,6 +49,7 @@ export type Action =
   | { type: "focus"; id: WindowId }
   | { type: "move"; id: WindowId; x: number; y: number }
   | { type: "resize"; id: WindowId; width: number; height: number }
+  | { type: "fitContentHeight"; id: WindowId; height: number }
   | { type: "zoom"; id: WindowId }
   | { type: "measure"; surface: Size }
   | { type: "cycleWindows" }

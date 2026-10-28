@@ -16,7 +16,6 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 beforeEach(() => vi.mocked(playClickSound).mockClear());
 
 const CLICK = { detail: 1 }; // A pointer click, as opposed to keyboard activation.
-const FORWARDED_CLICK = { detail: 0 }; // The click a label sends to the control it names.
 
 function Harness({
   label,
@@ -96,16 +95,39 @@ test("a press on the control plays one click sound", () => {
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a press on the label plays one click sound, and the click it forwards does not play another", () => {
+test.each([["mouse"], ["touch"]])(
+  "a %s press on the label plays one click sound, and the click it forwards to the control does not play another",
+  (pointerType) => {
+    render(<Harness label="From:" />);
+
+    const label = screen.getByText("From:");
+
+    fireEvent.pointerDown(label, { pointerType });
+    fireEvent.pointerUp(label, { pointerType });
+    fireEvent.click(label, CLICK); // jsdom forwards this click to the control with the same `detail`.
+
+    expect(playClickSound).toHaveBeenCalledTimes(1);
+  },
+);
+
+test("a touch press on the control plays the click sound after a press on the label that does not forward its click", () => {
   render(<Harness label="From:" />);
 
-  fireEvent.pointerDown(screen.getByText("From:"));
+  const label = screen.getByText("From:");
+  const control = screen.getByLabelText("From:");
+
+  label.addEventListener("click", (event) => event.preventDefault()); // Prevents jsdom from forwarding the click to the control.
+  fireEvent.pointerDown(label);
+  fireEvent.pointerUp(label);
+  fireEvent.click(label, CLICK);
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 
-  fireEvent.click(screen.getByLabelText("From:"), FORWARDED_CLICK);
+  fireEvent.pointerDown(control, { pointerType: "touch" });
+  fireEvent.pointerUp(control, { pointerType: "touch" });
+  fireEvent.click(control, CLICK);
 
-  expect(playClickSound).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
 test("a press on a control that plays its own press sound does not play the input field's click sound", () => {

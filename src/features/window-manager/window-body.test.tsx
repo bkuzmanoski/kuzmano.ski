@@ -1,7 +1,7 @@
 import { act, screen } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
@@ -67,7 +67,7 @@ test("an entry route suspends on its body chunk, from a collection or the top-le
 
 test.each([
   ["a collection route", collection.route, collection.title],
-  ["the contact route", CONTACT_ROUTE, CONTACT_DOCUMENT_TITLE],
+  ["the contact route", FEATURE_ROUTE_SPECS.contact.route, FEATURE_ROUTE_SPECS.contact.title],
 ])("%s renders the window's title as a `<h1>`", (_label, route, title) => {
   vi.stubGlobal(
     "fetch",

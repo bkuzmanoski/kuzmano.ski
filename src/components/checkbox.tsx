@@ -24,7 +24,6 @@ export function Checkbox({
     <label className={cx(styles.checkbox, className)}>
       <input
         type="checkbox"
-        className={styles.input}
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.currentTarget.checked)}

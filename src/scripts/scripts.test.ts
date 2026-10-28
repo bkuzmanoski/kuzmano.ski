@@ -5,9 +5,10 @@ import {
   STARTUP_SEQUENCE_THEME_COLOR_SELECTOR,
 } from "#/lib/startup-sequence/overlay.ts";
 import { STARTUP_SEQUENCE_STORAGE_KEY } from "#/lib/startup-sequence/session.ts";
+import appearanceScript from "#/scripts/appearance.ts?inline-script";
 import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
 import startupSequenceScript from "#/scripts/startup-sequence.ts?inline-script";
-import themeScript from "#/scripts/theme.ts?inline-script";
+import themeTintScript from "#/scripts/theme-tint.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
 import { runScript } from "#/test-utils/script.ts";
@@ -16,30 +17,16 @@ import { runScript } from "#/test-utils/script.ts";
 // plugin, tree-shaking, minification, and runtime behavior. Attribute names are intentionally
 // defined inline because they must match the strings used by the stylesheet.
 
+const themeColorMedia = () =>
+  [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')].map((meta) => meta.getAttribute("media"));
+
 function setThemeColorMetaTags() {
-  const startupLight = document.createElement("meta");
-  startupLight.dataset.startupSequenceThemeColor = "";
-  startupLight.name = "theme-color";
-  startupLight.media = "(prefers-color-scheme: light)";
-  startupLight.content = "#2e373c";
-
-  const startupDark = document.createElement("meta");
-  startupDark.dataset.startupSequenceThemeColor = "";
-  startupDark.name = "theme-color";
-  startupDark.media = "(prefers-color-scheme: dark)";
-  startupDark.content = "#232a2f";
-
-  const lightThemeColor = document.createElement("meta");
-  lightThemeColor.name = "theme-color";
-  lightThemeColor.media = "(prefers-color-scheme: light)";
-  lightThemeColor.content = "#e3e7ea";
-
-  const darkThemeColor = document.createElement("meta");
-  darkThemeColor.name = "theme-color";
-  darkThemeColor.media = "(prefers-color-scheme: dark)";
-  darkThemeColor.content = "#151a1d";
-
-  document.head.append(startupLight, startupDark, lightThemeColor, darkThemeColor);
+  document.head.innerHTML = `
+    <meta data-startup-sequence-theme-color data-color-scheme="light" name="theme-color" media="(prefers-color-scheme: light)" content="#2e373c" />
+    <meta data-startup-sequence-theme-color data-color-scheme="dark" name="theme-color" media="(prefers-color-scheme: dark)" content="#232a2f" />
+    <meta data-desktop-background-theme-color data-color-scheme="light" name="theme-color" media="(prefers-color-scheme: light)" content="#e3e7ea" />
+    <meta data-desktop-background-theme-color data-color-scheme="dark" name="theme-color" media="(prefers-color-scheme: dark)" content="#151a1d" />
+  `;
 }
 
 function startupThemeColors() {
@@ -47,7 +34,9 @@ function startupThemeColors() {
 }
 
 beforeEach(() => {
-  document.documentElement.removeAttribute("data-theme");
+  document.documentElement.removeAttribute("data-appearance");
+  document.documentElement.removeAttribute("data-theme-color");
+  document.documentElement.style.removeProperty("--theme-chroma-scale");
   document.documentElement.removeAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE);
   document.documentElement.removeAttribute("data-web-share");
   document.documentElement.style.removeProperty("--device-pixel-ratio");
@@ -56,26 +45,99 @@ beforeEach(() => {
   document.head.replaceChildren();
 });
 
-describe("theme", () => {
-  test.for(["light", "dark"])("applies a stored %s theme setting", (theme) => {
-    localStorage.setItem("theme", theme);
-    runScript(themeScript);
+describe("appearance", () => {
+  test.for(["light", "dark"])("applies a stored %s appearance setting", (appearance) => {
+    localStorage.setItem("appearance", appearance);
+    runScript(appearanceScript);
 
-    expect(document.documentElement.getAttribute("data-theme")).toBe(theme);
+    expect(document.documentElement.getAttribute("data-appearance")).toBe(appearance);
   });
 
   test.for([
-    ["there is no stored theme", null],
-    ["the stored theme is the system theme", "system"],
-    ["the stored theme is unrecognized", "sepia"],
-  ] as const)("leaves the `data-theme` attribute unset when %s", ([, stored]) => {
+    ["light", ["all", "not all", "all", "not all"]],
+    ["dark", ["not all", "all", "not all", "all"]],
+  ] as const)(
+    "sets the `media` attribute of each `theme-color` to match only in the color scheme of a stored %s appearance setting",
+    ([appearance, media]) => {
+      setThemeColorMetaTags();
+      localStorage.setItem("appearance", appearance);
+      runScript(appearanceScript);
+
+      expect(themeColorMedia()).toEqual(media);
+    },
+  );
+
+  test("leaves the `media` attribute of each `theme-color` unchanged when there is no stored appearance", () => {
+    setThemeColorMetaTags();
+    runScript(appearanceScript);
+
+    expect(themeColorMedia()).toEqual([
+      "(prefers-color-scheme: light)",
+      "(prefers-color-scheme: dark)",
+      "(prefers-color-scheme: light)",
+      "(prefers-color-scheme: dark)",
+    ]);
+  });
+
+  test.for([
+    ["there is no stored appearance", null],
+    ["the stored appearance is the system appearance", "system"],
+    ["the stored appearance is unrecognized", "sepia"],
+  ] as const)("leaves the `data-appearance` attribute unset when %s", ([, stored]) => {
     if (stored !== null) {
-      localStorage.setItem("theme", stored);
+      localStorage.setItem("appearance", stored);
     }
 
-    runScript(themeScript);
+    runScript(appearanceScript);
 
-    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+    expect(document.documentElement.hasAttribute("data-appearance")).toBe(false);
+  });
+});
+
+describe("theme tint", () => {
+  const rootStyleProperty = (property: string) => document.documentElement.style.getPropertyValue(property);
+
+  test("applies a stored theme color and chroma scale to `<html>`", () => {
+    localStorage.setItem("theme-color", "green");
+    localStorage.setItem("theme-chroma-scale", "1.5");
+    runScript(themeTintScript);
+
+    expect(document.documentElement.getAttribute("data-theme-color")).toBe("green");
+    expect(rootStyleProperty("--theme-chroma-scale")).toBe("1.5");
+  });
+
+  test("leaves `<html>` unchanged when the stored theme color is unrecognized and the stored chroma scale is not a step of its range", () => {
+    localStorage.setItem("theme-color", "teal");
+    localStorage.setItem("theme-chroma-scale", "9");
+    runScript(themeTintScript);
+
+    expect(document.documentElement.hasAttribute("data-theme-color")).toBe(false);
+    expect(rootStyleProperty("--theme-chroma-scale")).toBe("");
+  });
+
+  describe("desktop background theme colors", () => {
+    beforeEach(() => {
+      setThemeColorMetaTags();
+      localStorage.setItem("desktop-background-theme-color-light", "oklch(0.925 0.0087 139)");
+      localStorage.setItem("desktop-background-theme-color-dark", "oklch(0.215 0.0134 139)");
+    });
+
+    const desktopBackgroundThemeColors = () =>
+      [...document.querySelectorAll<HTMLMetaElement>("meta[data-desktop-background-theme-color]")].map(
+        (meta) => meta.content,
+      );
+
+    test("sets the desktop background theme colors to the stored ones when a theme color is stored", () => {
+      localStorage.setItem("theme-color", "green");
+      runScript(themeTintScript);
+
+      expect(desktopBackgroundThemeColors()).toEqual(["oklch(0.925 0.0087 139)", "oklch(0.215 0.0134 139)"]);
+    });
+
+    test("leaves the desktop background theme colors unchanged when neither a theme color nor a chroma scale is stored", () => {
+      runScript(themeTintScript);
+      expect(desktopBackgroundThemeColors()).toEqual(["#e3e7ea", "#151a1d"]);
+    });
   });
 });
 
@@ -169,7 +231,8 @@ describe("device pixel ratio", () => {
 describe("storage failures", () => {
   test.for([
     ["startup sequence", startupSequenceScript, STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE],
-    ["theme", themeScript, "data-theme"],
+    ["appearance", appearanceScript, "data-appearance"],
+    ["theme tint", themeTintScript, "data-theme-color"],
   ] as const)("the %s script does not throw when storage access fails", ([, script, attribute]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("Storage access denied.");

@@ -22,6 +22,7 @@ import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
 import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
+import { themeDefaultsPlugin } from "./build/stylesheet/theme-defaults.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 import { SITE_URL } from "./src/config/site.ts";
@@ -53,6 +54,7 @@ export default defineConfig(({ command }) => {
       siteIconsPlugin(),
       inlineScriptsPlugin(),
       layoutMetricsPlugin(),
+      themeDefaultsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
       ...mediaPlugins,

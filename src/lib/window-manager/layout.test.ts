@@ -7,9 +7,9 @@ import type { Size } from "../geometry.ts";
 import type { WindowLayout, WindowSpec } from "./window.ts";
 
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
-const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, fixedSize: false };
+const WINDOW_SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, sizing: "resizable" };
 const WINDOW_LAYOUT: WindowLayout = {
-  windows: { entry: SPEC, collection: SPEC, contact: SPEC },
+  windows: { entry: WINDOW_SPEC, collection: WINDOW_SPEC, contact: WINDOW_SPEC, controlPanel: WINDOW_SPEC },
   minSize: { width: 480, height: 320 },
   padding: 8,
 };

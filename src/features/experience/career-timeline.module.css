@@ -26,7 +26,9 @@
   align-items: baseline;
   justify-self: start;
 
-  padding: calc(16 * var(--dither-dot));
+  /* The extra trailing dot makes the content and surrounding dots 4n + 1 dots tall (i.e., an even number of 30px rows).
+     This aligns the field with a dot row 16 dots below the content, matching the 16-dot space above it. */
+  padding: calc(16 * var(--dither-dot)) calc(16 * var(--dither-dot)) calc(17 * var(--dither-dot));
 
   @supports (width: round(down, 1px, 1px)) {
     /* A width of 4n + 1 dots starts and ends the field on a column of dots. */
@@ -50,7 +52,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(max(124px, (100% - 16px) / 2), 1fr));
   flex: 1;
-  gap: 4px 16px;
+  gap: 0 16px;
   align-items: center;
 
   margin: 0;

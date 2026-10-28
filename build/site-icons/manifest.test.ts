@@ -9,14 +9,14 @@ import type { Palette } from "../stylesheet/palette.ts";
 const palette: Palette = {
   foreground: { light: "#111111", dark: "#eeeeee" },
   background: { light: "#fefefe", dark: "#222222" },
-  wallpaper: { light: "#dddddd", dark: "#101010" },
+  desktopBackground: { light: "#dddddd", dark: "#101010" },
   startupSequenceBackdrop: { light: "#333333", dark: "#444444" },
 };
 const icons = await iconFilesFrom(palette, await readArtwork());
 const manifest = webAppManifestFrom(palette, icons);
 
-test("the theme and background colors are the palette's light wallpaper and startup sequence backdrop", () => {
-  expect(manifest.theme_color).toBe(palette.wallpaper.light);
+test("the theme and background colors are the palette's light desktop background and startup sequence backdrop", () => {
+  expect(manifest.theme_color).toBe(palette.desktopBackground.light);
   expect(manifest.background_color).toBe(palette.startupSequenceBackdrop.light);
 });
 

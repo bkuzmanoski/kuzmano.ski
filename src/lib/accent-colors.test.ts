@@ -16,6 +16,8 @@ describe("ACCENT_COLOR_NAMES", () => {
 
 describe("accentColorVariable", () => {
   test("sets the given custom property to the accent's `--accent-*` color", () => {
-    expect(accentColorVariable("--component-accent", "teal")).toEqual({ "--component-accent": "var(--accent-teal)" });
+    expect(accentColorVariable("--component-accent", "turquoise")).toEqual({
+      "--component-accent": "var(--accent-turquoise)",
+    });
   });
 });

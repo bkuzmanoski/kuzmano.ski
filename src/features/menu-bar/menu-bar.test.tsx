@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { SITE_SOURCE_URL } from "#/config/site.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
+import { SITE_NAME, SITE_SOURCE_URL } from "#/config/site.ts";
+import { getSettings, setSoundEffects } from "#/lib/settings/settings.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
@@ -40,6 +42,7 @@ afterEach(() => {
   Reflect.deleteProperty(document, "elementFromPoint");
 });
 
+const siteMenuTitle = () => screen.getByRole("button", { name: SITE_NAME });
 const menuTitle = (label: string) => screen.getByText(label);
 const isExpanded = (label: string) => menuTitle(label).getAttribute("aria-expanded") === "true";
 const menu = () => document.querySelector('[role="menu"]');
@@ -280,7 +283,7 @@ describe("navigating an open menu", () => {
 
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
 
-    expect(isExpanded("File")).toBe(true);
+    expect(siteMenuTitle().getAttribute("aria-expanded")).toBe("true");
 
     fireEvent.keyDown(menu()!, { key: "ArrowLeft" });
 
@@ -512,6 +515,54 @@ describe("items that open a destination", () => {
     expect(follow).toHaveBeenCalled();
   });
 
+  test.each([
+    ["pressing elsewhere on the page", () => fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }))],
+    ["pressing the Escape key", () => fireEvent.keyDown(menu()!, { key: "Escape" })],
+  ])(
+    "%s during an item's activation flash leaves the menu open, and the item opens its destination when the flash ends",
+    (_interruption, interrupt) => {
+      vi.useFakeTimers();
+      render(<MenuBar />);
+      openWithPointer("Go");
+      releasePointerOver(menuItem("About"));
+      interrupt();
+
+      expect(isExpanded("Go")).toBe(true);
+      expect(open).not.toHaveBeenCalled();
+
+      runActivationFlash();
+
+      expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+      expect(menu()).toBeNull();
+    },
+  );
+
+  test.each([
+    ["moving the pointer over another menu title", () => fireEvent.pointerOver(menuTitle("Special"))],
+    ["pressing another menu title", () => openWithPointer("Special")],
+    ["pressing the Right arrow key", () => fireEvent.keyDown(menu()!, { key: "ArrowRight" })],
+  ])(
+    "%s during an item's activation flash opens the next menu, and the item opens its destination once",
+    (_interruption, interrupt) => {
+      vi.useFakeTimers();
+      render(<MenuBar />);
+      openWithPointer("Go");
+      releasePointerOver(menuItem("About"));
+
+      expect(open).not.toHaveBeenCalled();
+
+      interrupt();
+
+      expect(isExpanded("Special")).toBe(true);
+      expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+
+      runActivationFlash();
+
+      expect(open).toHaveBeenCalledOnce();
+      expect(isExpanded("Special")).toBe(true);
+    },
+  );
+
   test("releasing the pointer over a menu item link plays the click sound once, including when the link is followed", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
@@ -570,6 +621,29 @@ describe("items that open a destination", () => {
 
     expect(viewSource.getAttribute("href")).toBe(SITE_SOURCE_URL);
     expect(viewSource.getAttribute("target")).toBe("_blank");
+  });
+});
+
+describe("the site menu", () => {
+  test("the title renders the logo and is named by the site name", () => {
+    render(<MenuBar />);
+    expect(siteMenuTitle().querySelector("svg")).not.toBeNull();
+  });
+
+  test("a plain click on the `Control Panel` item opens the control panel window in the page", () => {
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    fireEvent.pointerDown(siteMenuTitle());
+
+    const controlPanel = menuItem("Control Panel");
+
+    expect(controlPanel.getAttribute("href")).toBe(FEATURE_ROUTE_SPECS.controlPanel.route);
+
+    releasePointerOver(controlPanel);
+    fireEvent.click(controlPanel);
+    runActivationFlash();
+
+    expect(open).toHaveBeenCalledWith(FEATURE_ROUTE_SPECS.controlPanel.route);
   });
 });
 
@@ -648,8 +722,40 @@ describe("status controls", () => {
   });
 });
 
+describe("the `Sound` status button", () => {
+  beforeEach(() => setSoundEffects("on"));
+
+  afterEach(() => {
+    setSoundEffects("on");
+    localStorage.clear();
+  });
+
+  const soundControl = () => screen.getByRole("button", { name: /^Sound:/ });
+  const pressWithMouse = (element: Element) => {
+    fireEvent.pointerDown(element, { pointerType: "mouse", button: 0, isPrimary: true });
+    fireEvent.click(element);
+  };
+
+  test("pressing it while sound effects are on turns them off without playing the click sound", () => {
+    render(<MenuBar />);
+    pressWithMouse(soundControl());
+
+    expect(getSettings().soundEffects).toBe("off");
+    expect(playClickSound).not.toHaveBeenCalled();
+  });
+
+  test("pressing it while sound effects are off turns them on and plays the click sound", () => {
+    setSoundEffects("off");
+    render(<MenuBar />);
+    fireEvent.click(soundControl()); // A click without a press, since the mocked press sound plays while sound effects are off.
+
+    expect(getSettings().soundEffects).toBe("on");
+    expect(playClickSound).toHaveBeenCalledOnce();
+  });
+});
+
 test.each([["Appearance"], ["Sound"]])(
-  "the icon in the %s status button is hidden from assistive technology",
+  "the icon in the `%s` status button is hidden from assistive technology",
   (name) => {
     render(<MenuBar />);
 

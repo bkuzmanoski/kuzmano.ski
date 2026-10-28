@@ -9,9 +9,9 @@ import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from ".
 
 const SURFACE = { width: 1600, height: 1200 };
 const DEFAULT_SIZE: Size = { width: 1024, height: 1024 };
-const SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, fixedSize: false };
+const WINDOW_SPEC: WindowSpec = { defaultSize: DEFAULT_SIZE, sizing: "resizable" };
 const WINDOW_LAYOUT: WindowLayout = {
-  windows: { entry: SPEC, collection: SPEC, contact: SPEC },
+  windows: { entry: WINDOW_SPEC, collection: WINDOW_SPEC, contact: WINDOW_SPEC, controlPanel: WINDOW_SPEC },
   minSize: { width: 480, height: 320 },
   padding: 8,
 };
@@ -197,6 +197,57 @@ describe("resize", () => {
   });
 });
 
+describe("fitContentHeight", () => {
+  const fittingReducer = createWindowReducer({
+    ...WINDOW_LAYOUT,
+    windows: { ...WINDOW_LAYOUT.windows, controlPanel: { ...WINDOW_SPEC, sizing: "fitContentHeight" } },
+  });
+  const fitAction = (height: number): Action => ({ type: "fitContentHeight", id: "controlPanel", height });
+  const openedFitting = () =>
+    fittingReducer(
+      fittingReducer(EMPTY_STATE, { type: "measure", surface: SURFACE }),
+      openAction("controlPanel", "/controlPanel"),
+    );
+
+  test("sets the height of a window centered on the desktop and centers it at the new height", () => {
+    const state = fittingReducer(openedFitting(), fitAction(300));
+    expect(state.geometry.controlPanel).toMatchObject({
+      ...centerOf({ width: DEFAULT_SIZE.width, height: 300 }),
+      height: 300,
+    });
+  });
+
+  test("sets the height of a moved window and leaves its top edge unchanged", () => {
+    const movedState = fittingReducer(openedFitting(), { type: "move", id: "controlPanel", x: 50, y: 50 });
+    const state = fittingReducer(movedState, fitAction(300));
+
+    expect(state.geometry.controlPanel).toMatchObject({ x: 50, y: 50, height: 300 });
+  });
+
+  test("returns the same state for an unchanged height", () => {
+    const state = fittingReducer(openedFitting(), fitAction(300));
+    expect(fittingReducer(state, fitAction(300))).toBe(state);
+  });
+
+  test("returns the same state for a closed window", () => {
+    const state = opened("entry");
+    expect(fittingReducer(state, fitAction(300))).toBe(state);
+  });
+
+  test("centers a window that reported its height before the first measurement at that height", () => {
+    const preRendered = fittingReducer(
+      fittingReducer(EMPTY_STATE, openAction("controlPanel", "/controlPanel")),
+      fitAction(300),
+    );
+    const measuredState = fittingReducer(preRendered, { type: "measure", surface: SURFACE });
+
+    expect(measuredState.geometry.controlPanel).toMatchObject({
+      ...centerOf({ width: DEFAULT_SIZE.width, height: 300 }),
+      height: 300,
+    });
+  });
+});
+
 describe("zoom", () => {
   test("toggles `maximized`, raises the window, and focuses it", () => {
     const state = reducer(opened("entry", "collection"), { type: "zoom", id: "entry" });
@@ -318,7 +369,7 @@ describe("per-window layout", () => {
 
   const varyingReducer = createWindowReducer({
     ...WINDOW_LAYOUT,
-    windows: { ...WINDOW_LAYOUT.windows, contact: { ...SPEC, defaultSize: SMALL_SIZE } },
+    windows: { ...WINDOW_LAYOUT.windows, contact: { ...WINDOW_SPEC, defaultSize: SMALL_SIZE } },
   });
 
   test("each window opens at its default size, centered on the desktop surface", () => {

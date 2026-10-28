@@ -48,6 +48,10 @@
   }
 }
 
+.fitsContentHeight {
+  container-type: inline-size;
+}
+
 @media print {
   .scrollPane {
     display: block;

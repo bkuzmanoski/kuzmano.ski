@@ -1,4 +1,5 @@
-import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
+import type { FeatureRouteId } from "#/config/feature-routes.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 
 import { pages } from "./catalog.ts";
@@ -13,6 +14,7 @@ type WindowTarget = {
     entry: { slug: string } & ({ collection: null } | { collection: Collection });
     collection: { collection: Collection };
     contact: Record<never, never>;
+    controlPanel: Record<never, never>;
   }[K];
 }[WindowId];
 
@@ -57,8 +59,15 @@ export function resolveRoute(route: string): ResolvedRoute {
         collection: content.collection,
       };
 
-    case "feature":
-      return content.route === CONTACT_ROUTE ? { id: "contact", title: CONTACT_DOCUMENT_TITLE } : { id: "notFound" };
+    case "feature": {
+      const featureRouteId = (Object.keys(FEATURE_ROUTE_SPECS) as Array<FeatureRouteId>).find(
+        (id) => FEATURE_ROUTE_SPECS[id].route === content.route,
+      );
+
+      return featureRouteId
+        ? { id: featureRouteId, title: FEATURE_ROUTE_SPECS[featureRouteId].title }
+        : { id: "notFound" };
+    }
 
     default:
       return { id: "notFound" };
@@ -76,6 +85,7 @@ function destinationShownBy(windowRoute: string): string | null {
   switch (windowTarget?.id) {
     case "entry":
     case "contact":
+    case "controlPanel":
       return windowRoute;
 
     case "collection":

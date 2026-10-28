@@ -19,7 +19,7 @@ describe("rootCustomPropertiesIn", () => {
   });
 
   test("omits a declaration in a rule nested inside `:root`", () => {
-    const css = ':root { --layout-gutter: 16px; &[data-theme="dark"] { --layout-gutter: 99px; } }';
+    const css = ':root { --layout-gutter: 16px; &[data-appearance="dark"] { --layout-gutter: 99px; } }';
     expect(read(css).get("--layout-gutter")).toBe("16px");
   });
 

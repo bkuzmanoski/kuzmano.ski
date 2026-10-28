@@ -1,0 +1,76 @@
+.controlPanelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  padding: 20px var(--layout-gutter) var(--layout-gutter);
+
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+}
+
+.label {
+  cursor: default;
+  user-select: none;
+}
+
+.themeSettings {
+  display: contents;
+
+  @media (forced-colors: active) {
+    display: none; /* Forced colors replace the theme's colors, so the settings that choose them have no effect. */
+  }
+}
+
+.themeColorControls {
+  --control-panel-body-saturation-step-count: 1; /* Set from JS. */
+  --control-panel-body-slider-min-width: calc(var(--control-panel-body-saturation-step-count) * 11px + 11px);
+  --control-panel-body-slider-max-width: calc(var(--control-panel-body-saturation-step-count) * 21px + 11px);
+  --control-panel-body-wrapped-control-width: min(
+    var(--control-panel-body-slider-max-width),
+    round(down, 100% - 11px, var(--control-panel-body-saturation-step-count) * 1px) + 11px
+  ); /* Rounds the thumb's travel (the control width minus the thumb) down to a multiple of the step count, ensuring each step lands on a whole pixel. */
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.popupMenu {
+  flex: 1 0 auto;
+  max-width: var(--control-panel-body-slider-max-width);
+
+  @supports (width: round(down, 1px, 1px)) {
+    max-width: var(--control-panel-body-wrapped-control-width);
+  }
+}
+
+.saturation {
+  flex: 1000000 1 var(--control-panel-body-slider-min-width);
+  min-width: var(--control-panel-body-slider-min-width);
+}
+
+.slider {
+  max-width: var(--control-panel-body-slider-max-width);
+
+  @supports (width: round(down, 1px, 1px)) {
+    width: var(--control-panel-body-wrapped-control-width);
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+
+  @media (forced-colors: active) {
+    display: none;
+  }
+}

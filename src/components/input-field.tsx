@@ -1,10 +1,12 @@
+import { useRef } from "react";
+
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { InputFieldBinding } from "#/lib/forms/use-input-field.ts";
 
 import styles from "./input-field.module.css";
 
-import type { ReactNode, SyntheticEvent } from "react";
+import type { MouseEvent, PointerEvent, ReactNode, SyntheticEvent } from "react";
 
 const INPUT_FIELD_SURFACES = "label, input, textarea";
 
@@ -33,13 +35,36 @@ export function InputField({
   children: ReactNode;
 }) {
   const pressSound = usePressSound({ scrollSafe: true });
+  const forwardedClickTargetRef = useRef<HTMLElement | null>(null);
+
+  function onPointerDown(event: PointerEvent) {
+    // Clicking a label causes the browser to dispatch a second `click` on its control, with the same
+    // `detail`, in Chrome. Since the label click already settles the press, ignore the forwarded click to
+    // avoid playing a sound without a matching press. Clear the expected click on the next press because
+    // label clicks are not always forwarded (for example, when their default action is prevented).
+    forwardedClickTargetRef.current = null;
+    onInputFieldSurface(pressSound.onPointerDown)(event);
+  }
+
+  function onClick(event: MouseEvent) {
+    if (event.target === forwardedClickTargetRef.current) {
+      forwardedClickTargetRef.current = null;
+      return;
+    }
+
+    const control = (event.target as Element).closest("label")?.control;
+
+    forwardedClickTargetRef.current = control && !control.matches(":disabled") ? control : null; // A disabled control does not receive a forwarded click.
+
+    onInputFieldSurface(pressSound.onClick)(event);
+  }
 
   return (
     <div
       className={cx(styles.inputField, className)}
-      onPointerDown={onInputFieldSurface(pressSound.onPointerDown)}
+      onPointerDown={onPointerDown}
       onPointerCancel={pressSound.onPointerCancel}
-      onClick={onInputFieldSurface(pressSound.onClick)}
+      onClick={onClick}
     >
       <label className={labelHidden ? styles.hidden : styles.label} htmlFor={binding.control.id}>
         {label}

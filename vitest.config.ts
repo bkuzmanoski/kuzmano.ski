@@ -11,6 +11,7 @@ import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
 import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
+import { themeDefaultsPlugin } from "./build/stylesheet/theme-defaults.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 
@@ -20,6 +21,7 @@ export default defineConfig({
     workersRuntimePlugin(),
     inlineScriptsPlugin(),
     layoutMetricsPlugin(),
+    themeDefaultsPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     // Enables content catalog resolution (see `/src/site/catalog.ts`) for tests that load the real content catalog.

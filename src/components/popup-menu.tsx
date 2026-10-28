@@ -115,22 +115,26 @@ function PopupMenuOptions<TValue extends string>({
 export function PopupMenu<TValue extends string>({
   value,
   options,
+  disabled = false,
   className,
   onChange,
   "aria-label": label,
+  "aria-labelledby": labelledBy,
 }: {
   value: TValue;
   options: ReadonlyArray<PopupMenuOption<TValue>>;
+  disabled?: boolean;
   className?: string;
   onChange: (value: TValue) => void;
-  "aria-label": string;
-}) {
+} & (
+  { "aria-label": string; "aria-labelledby"?: undefined } | { "aria-label"?: undefined; "aria-labelledby": string }
+)) {
   const id = useId();
-  const [openState, setOpenState] = useState<OpenState | null>(null);
   const pressSoundHandlers = usePressSound();
+  const [openState, setOpenState] = useState<OpenState | null>(null);
   const isPressPendingRef = useRef(false);
 
-  const labelId = `${id}-label`;
+  const labelId = labelledBy ?? `${id}-label`;
   const buttonId = `${id}-button`;
   const optionsId = `${id}-options`;
   const chosenOptionIndex = Math.max(
@@ -150,9 +154,11 @@ export function PopupMenu<TValue extends string>({
 
   return (
     <>
-      <span id={labelId} hidden>
-        {label}
-      </span>
+      {label !== undefined && (
+        <span id={labelId} hidden>
+          {label}
+        </span>
+      )}
       <button
         id={buttonId}
         type="button"
@@ -161,13 +167,14 @@ export function PopupMenu<TValue extends string>({
         aria-haspopup="listbox"
         aria-expanded={openState !== null}
         aria-controls={openState ? optionsId : undefined}
+        disabled={disabled}
         {...pressSoundHandlers}
         onMouseDown={(event) => event.preventDefault()} // Prevent the button from reclaiming focus when the options receive it on open.
         onPointerDown={(event) => {
           pressSoundHandlers.onPointerDown(event);
 
-          if (!isPrimaryPress(event)) {
-            return;
+          if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled")) {
+            return; // Chromium dispatches pointer events to disabled buttons, including those disabled by a `<fieldset>`.
           }
 
           const button = event.currentTarget;

@@ -26,6 +26,11 @@ export function defaultRect(layout: WindowLayout, surface: Size, id: WindowId): 
   return { x: centeredOffset(surface.width, width), y: centeredOffset(surface.height, height), width, height };
 }
 
+export function fitContentHeight(geometry: Rect, surface: Size, height: number): Rect {
+  const isCentered = !isUnmeasured(surface) && geometry.y === centeredOffset(surface.height, geometry.height);
+  return { ...geometry, y: isCentered ? centeredOffset(surface.height, height) : geometry.y, height };
+}
+
 export type WindowPlacer = (geometry: Rect, surface: Size) => Rect;
 
 export function createWindowPlacer(layout: WindowLayout): WindowPlacer {

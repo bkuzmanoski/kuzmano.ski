@@ -40,6 +40,70 @@
   white-space: nowrap;
 }
 
+@define-mixin checkable-label {
+  cursor: default;
+  user-select: none;
+
+  position: relative;
+
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+
+  padding-block: 3px; /* Makes a line of `--font-chrome` as tall as a text `Button`. */
+
+  font: var(--font-chrome);
+  color: var(--color-foreground);
+
+  &:has(> input:disabled) {
+    color: var(--color-foreground-disabled);
+  }
+
+  & > input {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+    margin: 0;
+
+    opacity: 0;
+  }
+}
+
+@define-mixin checkable-indicator {
+  pointer-events: none;
+
+  position: relative;
+
+  flex: none;
+  align-self: center;
+
+  border: 1px solid currentColor;
+
+  color: var(--color-border);
+
+  background: var(--color-background);
+
+  input:disabled + & {
+    color: var(--color-border-secondary);
+  }
+
+  input:focus-visible + & {
+    box-shadow: 0 0 0 3px var(--color-background);
+  }
+
+  input:active:not(:disabled) + & {
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+
+  input:focus-visible:active:not(:disabled) + & {
+    box-shadow:
+      inset 0 0 0 1px currentColor,
+      0 0 0 3px var(--color-background);
+  }
+}
+
 /* The inverted fill of a selected item. */
 @define-mixin highlight {
   color: var(--color-highlight-foreground);

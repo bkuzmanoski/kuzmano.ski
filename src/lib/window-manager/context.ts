@@ -21,6 +21,7 @@ export interface WindowActions {
   focus: (id: WindowId) => void;
   move: (id: WindowId, x: number, y: number) => void;
   resize: (id: WindowId, width: number, height: number) => void;
+  fitContentHeight: (id: WindowId, height: number) => void;
   toggleZoom: (id: WindowId) => void;
   measure: (surface: Size) => void;
   cycleWindows: () => void;

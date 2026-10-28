@@ -186,6 +186,18 @@ test("the contact route opens a compose window with From and Message fields", as
   expect(within(window).getByLabelText("Message:")).toBeDefined();
 });
 
+test("the control panel route opens the control panel window with its `Appearance`, `Theme colour`, `Saturation`, and `Sound effects` controls", async () => {
+  const { history } = renderRoute("/control-panel");
+  const window = await screen.findByRole("region", { name: "Control Panel" });
+
+  expect(history.location.pathname).toBe("/control-panel");
+  expect(openWindows()).toHaveLength(1);
+  expect(within(window).getByRole("radiogroup", { name: "Appearance:" })).toBeDefined();
+  expect(within(window).getByRole("button", { name: /^Theme colour/ })).toBeDefined();
+  expect(within(window).getByRole("slider", { name: "Saturation" })).toBeDefined();
+  expect(within(window).getByRole("radiogroup", { name: "Sound effects:" })).toBeDefined();
+});
+
 test("closing the contact window with an unsent message prompts for confirmation", async () => {
   renderRoute("/contact");
 

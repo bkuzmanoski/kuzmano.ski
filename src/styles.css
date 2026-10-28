@@ -125,48 +125,82 @@
   --font-code: 450 14px/20px "Source Code Pro", ui-monospace, monospace;
   --font-code-feature-settings: "cv01", "cv02", "cv04", "cv12", "cv17";
 
-  /* Color primitives */
+  /* Theme  */
+  --theme-hue: var(--accent-purple-hue);
+  --theme-chroma-scale: 1; /* Must match the `Saturation` slider step in `/src/lib/settings/theme-tint.ts`. */
 
   /* Neutral colors
    *
    * - Lightness values are intentionally unevenly spaced; each step exists because a role below needs it.
-   * - Chroma follows `0.0215 * sin(pi * L^1.25)`, peaking mid-ramp and tapering to near zero at both ends.
+   * - Chroma follows `0.0301 * sin(pi * L^1.25)` at a `--theme-chroma-scale` of 1, peaking mid-ramp and tapering to
+   *   near zero at both ends. Every step stays in the sRGB gamut at any hue up to a scale of 2.6.
    */
-  --neutral-190: oklch(19% 0.0083 238deg);
-  --neutral-215: oklch(21.5% 0.0095 238deg);
-  --neutral-280: oklch(28% 0.0128 238deg);
-  --neutral-305: oklch(30.5% 0.014 238deg);
-  --neutral-330: oklch(33% 0.0152 238deg);
-  --neutral-345: oklch(34.5% 0.0159 238deg);
-  --neutral-390: oklch(39% 0.0177 238deg);
-  --neutral-540: oklch(54% 0.0214 238deg);
-  --neutral-565: oklch(56.5% 0.0215 238deg);
-  --neutral-645: oklch(64.5% 0.0209 238deg);
-  --neutral-675: oklch(67.5% 0.0202 238deg);
-  --neutral-790: oklch(79% 0.0154 238deg);
-  --neutral-820: oklch(82% 0.0137 238deg);
-  --neutral-925: oklch(92.5% 0.0062 238deg);
-  --neutral-965: oklch(96.5% 0.0029 238deg);
-  --neutral-990: oklch(99% 0.0008 238deg);
+  --neutral-190: oklch(19% calc(0.0116 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-215: oklch(21.5% calc(0.0134 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-280: oklch(28% calc(0.018 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-305: oklch(30.5% calc(0.0197 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-330: oklch(33% calc(0.0213 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-345: oklch(34.5% calc(0.0222 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-390: oklch(39% calc(0.0248 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-465: oklch(46.5% calc(0.0281 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-540: oklch(54% calc(0.0299 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-565: oklch(56.5% calc(0.0301 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-645: oklch(64.5% calc(0.0292 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-675: oklch(67.5% calc(0.0283 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-790: oklch(79% calc(0.0216 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-820: oklch(82% calc(0.0192 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-925: oklch(92.5% calc(0.0087 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-970: oklch(97% calc(0.0035 * var(--theme-chroma-scale)) var(--theme-hue));
+  --neutral-990: oklch(99% calc(0.0012 * var(--theme-chroma-scale)) var(--theme-hue));
 
   /* Accent colors
    *
-   * - Chroma is 0.105 by default, clamped to 85% of each hue's sRGB gamut (except for red which uses a higher chroma).
+   * - Chroma is 0.105 by default, clamped to 85% of each hue's sRGB gamut
+   * - Values of `--theme-chroma-scale` above 1 increase chroma up to the sRGB gamut limit for the lightness and hue
+   *   (the third argument of each `clamp()`); values below 1 preserve the authored chroma.
    */
-  --accent-blue: light-dark(oklch(54% 0.102 238deg), oklch(71% 0.105 238deg));
-  --accent-teal: light-dark(oklch(54% 0.078 205deg), oklch(71% 0.103 205deg)); /* #2a7c84 #40b4c0 */
-  --accent-green: light-dark(oklch(54% 0.105 155deg), oklch(71% 0.105 155deg)); /* #328053 #68b585 */
-  --accent-orange: light-dark(oklch(54% 0.105 46deg), oklch(71% 0.105 46deg)); /* #a05936 #d88c68 */
-  --accent-red: light-dark(oklch(54% 0.147 17deg), oklch(71% 0.147 17deg)); /* #b4434f #ef7780 */
-  --accent-magenta: light-dark(oklch(54% 0.105 335deg), oklch(71% 0.105 335deg)); /* #945687 #ca88bc */
-  --accent-violet: light-dark(oklch(54% 0.105 297deg), oklch(71% 0.105 297deg)); /* #7560a4 #a893db */
+  --accent-purple-hue: 285deg;
+  --accent-orange-hue: 46deg;
+  --accent-green-hue: 155deg;
+  --accent-turquoise-hue: 205deg;
+  --accent-red-hue: 17deg;
+  --accent-pink-hue: 335deg;
+  --accent-blue-hue: 238deg;
+  --accent-purple: light-dark(
+    oklch(52% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.281) var(--accent-purple-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.151) var(--accent-purple-hue))
+  );
+  --accent-orange: light-dark(
+    oklch(52% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.146) var(--accent-orange-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.186) var(--accent-orange-hue))
+  );
+  --accent-green: light-dark(
+    oklch(52% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.128) var(--accent-green-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.177) var(--accent-green-hue))
+  );
+  --accent-turquoise: light-dark(
+    oklch(52% clamp(0.075, calc(0.075 * var(--theme-chroma-scale)), 0.088) var(--accent-turquoise-hue)),
+    oklch(72% clamp(0.104, calc(0.104 * var(--theme-chroma-scale)), 0.122) var(--accent-turquoise-hue))
+  );
+  --accent-red: light-dark(
+    oklch(52% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.208) var(--accent-red-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.175) var(--accent-red-hue))
+  );
+  --accent-pink: light-dark(
+    oklch(52% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.231) var(--accent-pink-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.26) var(--accent-pink-hue))
+  );
+  --accent-blue: light-dark(
+    oklch(52% clamp(0.097, calc(0.097 * var(--theme-chroma-scale)), 0.115) var(--accent-blue-hue)),
+    oklch(72% clamp(0.105, calc(0.105 * var(--theme-chroma-scale)), 0.159) var(--accent-blue-hue))
+  );
 
   /* Colors */
   --color-foreground: light-dark(var(--neutral-330), var(--neutral-925));
   --color-foreground-secondary: light-dark(var(--neutral-540), var(--neutral-675));
   --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
   --color-background: light-dark(var(--neutral-990), var(--neutral-280));
-  --color-background-secondary: light-dark(var(--neutral-965), var(--neutral-305));
+  --color-background-secondary: light-dark(var(--neutral-970), var(--neutral-305));
   --color-background-dither-pattern: light-dark(var(--neutral-820), var(--neutral-390));
   --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent);
   --color-border: var(--neutral-540);
@@ -179,38 +213,69 @@
   --color-pressed-foreground: var(--color-background);
   --color-pressed-background: var(--neutral-540);
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */
+  --color-icon-foreground-secondary: light-dark(var(--neutral-465), var(--neutral-675));
   --color-icon-background: var(--color-background); /* Replaces `white` in icons (see `/build/svgr.ts`). */
-  --color-wallpaper: light-dark(var(--neutral-925), var(--neutral-215));
+  --color-desktop-background: light-dark(var(--neutral-925), var(--neutral-215));
   --color-startup-sequence-accent: var(--neutral-390);
   --color-startup-sequence-foreground: var(--neutral-925);
   --color-startup-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
-  --color-accent: var(--accent-blue);
+  --color-accent: var(--accent-purple); /* The default theme color. */
   --color-success: var(--accent-green);
   --color-warning: var(--accent-orange);
   --color-error: var(--accent-red);
   --color-syntax-foreground: var(--color-foreground);
   --color-syntax-punctuation: var(--color-foreground-secondary);
   --color-syntax-comment: var(--color-foreground-secondary);
-  --color-syntax-keyword: color-mix(in oklab, var(--accent-magenta) 92%, var(--color-foreground));
-  --color-syntax-function: color-mix(in oklab, var(--accent-blue) 92%, var(--color-foreground));
-  --color-syntax-property: color-mix(in oklab, var(--accent-violet) 92%, var(--color-foreground));
-  --color-syntax-type: color-mix(in oklab, var(--accent-teal) 92%, var(--color-foreground));
-  --color-syntax-constant: color-mix(in oklab, var(--accent-orange) 92%, var(--color-foreground));
-  --color-syntax-string: color-mix(in oklab, var(--accent-green) 92%, var(--color-foreground));
-  --color-syntax-invalid: color-mix(in oklab, var(--accent-red) 92%, var(--color-foreground));
+  --color-syntax-keyword: var(--accent-pink);
+  --color-syntax-function: var(--accent-blue);
+  --color-syntax-property: var(--accent-purple);
+  --color-syntax-type: var(--accent-turquoise);
+  --color-syntax-constant: var(--accent-orange);
+  --color-syntax-string: var(--accent-green);
+  --color-syntax-invalid: var(--accent-red);
 
   /* Shadows */
   --shadow: var(--layout-shadow-length) var(--layout-shadow-length) 0 var(--color-shadow);
 
   color-scheme: light dark;
 
+  &[data-theme-color="orange"] {
+    --theme-hue: var(--accent-orange-hue);
+    --color-accent: var(--accent-orange);
+  }
+
+  &[data-theme-color="green"] {
+    --theme-hue: var(--accent-green-hue);
+    --color-accent: var(--accent-green);
+  }
+
+  &[data-theme-color="turquoise"] {
+    --theme-hue: var(--accent-turquoise-hue);
+    --color-accent: var(--accent-turquoise);
+  }
+
+  &[data-theme-color="red"] {
+    --theme-hue: var(--accent-red-hue);
+    --color-accent: var(--accent-red);
+  }
+
+  &[data-theme-color="pink"] {
+    --theme-hue: var(--accent-pink-hue);
+    --color-accent: var(--accent-pink);
+  }
+
+  &[data-theme-color="blue"] {
+    --theme-hue: var(--accent-blue-hue);
+    --color-accent: var(--accent-blue);
+  }
+
   @media not (forced-colors: active) {
-    &[data-theme="light"] {
+    &[data-appearance="light"] {
       color-scheme: light;
     }
 
-    &[data-theme="dark"] {
+    &[data-appearance="dark"] {
       color-scheme: dark;
     }
   }
@@ -220,6 +285,7 @@
 @media (forced-colors: active) {
   :root {
     --color-foreground-secondary: CanvasText;
+    --color-icon-foreground-secondary: CanvasText;
     --color-background: Canvas;
     --color-border: CanvasText;
     --color-border-secondary: GrayText;
@@ -242,7 +308,7 @@ body {
 html {
   overscroll-behavior: none;
   text-size-adjust: 100%;
-  background-color: var(--color-wallpaper);
+  background-color: var(--color-desktop-background);
 
   &[data-startup-sequence-overlay]::before {
     content: "";
@@ -308,7 +374,7 @@ hr {
 
 @media print {
   :root,
-  :root[data-theme] {
+  :root[data-appearance] {
     color-scheme: light;
   }
 

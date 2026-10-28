@@ -280,3 +280,72 @@ test("a scroll anywhere on the page closes the options", () => {
 
   expect(listbox()).toBeNull();
 });
+
+test.each([
+  ["a press on the button", () => pressButton()],
+  ["a scroll anywhere on the page", () => fireEvent.scroll(document)],
+  ["a resize of the window", () => fireEvent(window, new Event("resize"))],
+])(
+  "%s during an option's activation flash closes the options and chooses the option once",
+  (_interruption, interrupt) => {
+    const onChange = vi.fn();
+
+    renderPopupMenu(onChange);
+    pressButton();
+    releasePointerOver(optionNamed("Third"), POINT_PAST_DRAG_THRESHOLD);
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    interrupt();
+
+    expect(listbox()).toBeNull();
+    expect(onChange).toHaveBeenCalledWith("third");
+
+    runActivationFlash();
+
+    expect(onChange).toHaveBeenCalledOnce();
+  },
+);
+
+test("a press on the button during an option's activation flash plays the click sound, and its `click` event leaves the options closed", () => {
+  renderPopupMenu();
+  pressButton();
+  releasePointerOver(optionNamed("Third"), POINT_PAST_DRAG_THRESHOLD);
+  vi.mocked(playClickSound).mockClear();
+  pressButton();
+  fireEvent.pointerUp(button());
+  fireEvent.click(button(), { detail: 1 });
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+  expect(listbox()).toBeNull();
+});
+
+test("a pop-up menu with the `aria-labelledby` prop is named by the element with that ID followed by the chosen option", () => {
+  render(
+    <>
+      <span id="visible-label">A visible label</span>
+      <PopupMenu value="second" options={OPTIONS} aria-labelledby="visible-label" onChange={() => undefined} />
+    </>,
+  );
+  expect(screen.getByRole("button", { name: "A visible label Second" })).toBeDefined();
+});
+
+test.for([
+  [
+    "its `disabled` prop",
+    <PopupMenu value="second" options={OPTIONS} aria-label="A menu" disabled onChange={() => undefined} />,
+  ],
+  [
+    "a disabled `<fieldset>`",
+    <fieldset disabled>
+      <PopupMenu value="second" options={OPTIONS} aria-label="A menu" onChange={() => undefined} />
+    </fieldset>,
+  ],
+] as const)("pressing a pop-up menu disabled by %s neither plays the click sound nor opens its options", ([, menu]) => {
+  render(menu);
+  pressButton();
+
+  expect(button().matches(":disabled")).toBe(true);
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(listbox()).toBeNull();
+});

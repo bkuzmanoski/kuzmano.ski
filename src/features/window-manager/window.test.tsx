@@ -109,12 +109,17 @@ const windowShowing = (
     onFocus={handlers.onFocus ?? vi.fn()}
     onMove={handlers.onMove ?? vi.fn()}
     onResize={handlers.onResize ?? vi.fn()}
+    onFitContentHeight={null}
     onDrag={handlers.onDrag ?? vi.fn()}
   >
     {children}
   </Window>
 );
-const fixedSizeWindow = (contentKey: string, children: ReactNode) => (
+const unresizableWindow = (
+  contentKey: string,
+  children: ReactNode,
+  onFitContentHeight: ((height: number) => void) | null = null,
+) => (
   <Window
     contentKey={contentKey}
     title="Window"
@@ -132,6 +137,7 @@ const fixedSizeWindow = (contentKey: string, children: ReactNode) => (
     onFocus={vi.fn()}
     onMove={vi.fn()}
     onResize={null}
+    onFitContentHeight={onFitContentHeight}
     onDrag={vi.fn()}
   >
     {children}
@@ -486,6 +492,26 @@ test("a press on an inactive window prevents the default focus behavior, while a
   expect(fireEvent.mouseDown(windowElement)).toBe(true);
 });
 
+test("a press on a window plays the click sound only when it is a primary press and the window is inactive", () => {
+  const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false));
+  const windowElement = screen.getByRole("region", { name: "Window" });
+
+  vi.mocked(playClickSound).mockClear();
+  fireEvent.pointerDown(windowElement, { button: 2 });
+
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  fireEvent.pointerDown(windowElement, { button: 0 });
+
+  expect(playClickSound).toHaveBeenCalledTimes(1);
+
+  rerender(windowShowing("tall", BUTTON_ELEMENT));
+  vi.mocked(playClickSound).mockClear();
+  fireEvent.pointerDown(windowElement, { button: 0 });
+
+  expect(playClickSound).not.toHaveBeenCalled();
+});
+
 test("a press on an inactive window does not trigger a click on the content under it, and the next click does", () => {
   const onClick = vi.fn();
   const { rerender } = render(
@@ -559,20 +585,33 @@ test("the window restores focus to itself when its content is replaced", () => {
 });
 
 test("a fixed-size window has neither a zoom control nor a resize control", () => {
-  render(fixedSizeWindow("short", SHORT_PANE_ELEMENT));
+  render(unresizableWindow("short", SHORT_PANE_ELEMENT));
 
   expect(screen.queryByRole("button", { name: "Zoom" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Resize" })).toBeNull();
 });
 
 test("the scrollbar of a fixed-size window collapses when its content does not overflow", () => {
-  const { rerender } = render(fixedSizeWindow("short", SHORT_PANE_ELEMENT));
+  const { rerender } = render(unresizableWindow("short", SHORT_PANE_ELEMENT));
 
   expect(isScrollbarCollapsed()).toBe(true);
 
-  rerender(fixedSizeWindow("tall", TALL_PANE_ELEMENT));
+  rerender(unresizableWindow("tall", TALL_PANE_ELEMENT));
 
   expect(isScrollbarCollapsed()).toBe(false);
+});
+
+test("a window that fits its content height reports its rendered height and omits the `height` property from its `style` attribute", () => {
+  const onFitContentHeight = vi.fn();
+  const getBoundingClientRect = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue(new DOMRect(0, 0, 800, 240));
+
+  render(unresizableWindow("short", SHORT_PANE_ELEMENT, onFitContentHeight));
+  getBoundingClientRect.mockRestore();
+
+  expect(onFitContentHeight).toHaveBeenCalledWith(240);
+  expect(screen.getByRole("region", { name: "Window" }).style.height).toBe("");
 });
 
 test("the scrollbar of a resizable window does not collapse when its content does not overflow", () => {

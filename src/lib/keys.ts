@@ -35,8 +35,26 @@ export function activateOnKeyPress(event: KeyboardEvent, activate: () => void): 
   return true;
 }
 
-const EDITABLE_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+const TEXT_ENTRY_INPUT_TYPES = new Set([
+  "text",
+  "search",
+  "email",
+  "url",
+  "tel",
+  "password",
+  "number",
+  "date",
+  "datetime-local",
+  "month",
+  "time",
+  "week",
+]);
 
+/** Whether `target` accepts typed text (a text-entry `<input>`, a `<textarea>`, or a `contenteditable` element). */
 export function isEditableTarget(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (EDITABLE_TAGS.has(target.tagName) || target.isContentEditable);
+  if (target instanceof HTMLInputElement) {
+    return TEXT_ENTRY_INPUT_TYPES.has(target.type); // `type` reads as `text` for a missing or unknown `type` attribute.
+  }
+
+  return target instanceof HTMLTextAreaElement || (target instanceof HTMLElement && target.isContentEditable);
 }

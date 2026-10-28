@@ -51,11 +51,11 @@ export function Tooltip({
   children: ReactNode;
 }) {
   const id = useId();
+  const timer = useTimer();
   const [isOpen, setIsOpen] = useState(false);
   const [wasShowingState, setWasShowingState] = useState(showsState);
   const [wasSuppressed, setWasSuppressed] = useState(suppressed);
   const [isPointerHovering, setIsPointerHovering] = useState(false);
-  const timer = useTimer();
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const tipRef = useRef<HTMLSpanElement>(null);
   const lastPointerTypeRef = useRef<string | null>(null);

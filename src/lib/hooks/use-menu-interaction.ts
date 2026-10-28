@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { playClickSound, playHoverSound } from "../audio/sounds.ts";
 import { isFollowingLink } from "../link.ts";
@@ -66,6 +66,7 @@ export function useMenuInteraction({
   const isOpeningPressStationaryRef = useRef(pressOrigin !== null); // True until the opening press crosses the drag threshold or a new press begins.
   const focusedItemIndexRef = useRef(focusedItemIndex);
   const typeaheadRef = useRef("");
+  const flashingItemIndexRef = useRef(-1); // The item whose activation flash is running, or `-1`.
 
   function focusItem(index: number) {
     if (index === focusedItemIndexRef.current) {
@@ -141,13 +142,28 @@ export function useMenuInteraction({
 
     setFocusedItemIndex(index);
     playClickSound();
+    flashingItemIndexRef.current = index;
 
     flash.start(index, () => {
+      flashingItemIndexRef.current = -1;
       onActivate(index);
       returnFocusToAnchor(isPointerActivation);
       onClose();
     });
   }
+
+  const activateFlashingItem = useEffectEvent(() => {
+    const index = flashingItemIndexRef.current;
+
+    if (index >= 0) {
+      flashingItemIndexRef.current = -1;
+      onActivate(index);
+    }
+  });
+
+  // Unmounting cancels flash timers, so activate a flashing item during cleanup when its menu closes or is replaced.
+  // A layout-effect cleanup runs while the list is attached, allowing link items to be followed; replacement menus retain focus.
+  useLayoutEffect(() => () => activateFlashingItem(), []);
 
   const hasMovedFromPressOrigin = (event: PointerEvent) =>
     pressOrigin === null ||
@@ -171,6 +187,10 @@ export function useMenuInteraction({
     const wasSticky = isStickyRef.current;
 
     isStickyRef.current = true;
+
+    if (flash.isRunning()) {
+      return;
+    }
 
     if (!wasSticky && isOpeningPressStationaryRef.current && !hasMovedFromPressOrigin(event)) {
       return; // Ignore the release that opened the menu.
@@ -206,7 +226,7 @@ export function useMenuInteraction({
     const isTargetInsideMenu =
       listRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
 
-    if (isStickyRef.current && !isTargetInsideMenu) {
+    if (isStickyRef.current && !isTargetInsideMenu && !flash.isRunning()) {
       onClose();
     }
   });
@@ -237,6 +257,10 @@ export function useMenuInteraction({
   }
 
   function onKeyDown(event: KeyboardEvent) {
+    if (flash.isRunning()) {
+      return;
+    }
+
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();

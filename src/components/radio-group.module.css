@@ -1,0 +1,40 @@
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap; /* Prevents server-rendered rows that are too wide from overflowing before `RadioGroup` measures them on the client. */
+  gap: 0 16px;
+
+  /* Preserves each radio button's width so stacking does not change the measured row width. */
+  &[data-stacked] {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.radioButton {
+  @mixin checkable-label;
+}
+
+.circle {
+  @mixin checkable-indicator;
+
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+
+  input:checked + &::before {
+    content: "";
+
+    position: absolute;
+    inset: 2px;
+
+    border-radius: 50%;
+
+    forced-color-adjust: none;
+    background: currentColor;
+  }
+
+  input:focus-visible + & {
+    outline: 1px dotted var(--color-focus-ring); /* An outline rather than `focus-stroke` so it is concentric with the circle. */
+    outline-offset: 1px;
+  }
+}

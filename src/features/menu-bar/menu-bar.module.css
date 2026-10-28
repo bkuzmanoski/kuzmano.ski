@@ -21,18 +21,6 @@
   }
 }
 
-.logo {
-  display: inline-flex;
-  align-items: center;
-  height: 100%;
-  padding: 0 var(--layout-gutter);
-
-  & svg {
-    width: 19px;
-    height: 19px;
-  }
-}
-
 .menus {
   display: flex;
   align-items: stretch;
@@ -59,6 +47,12 @@
   &:focus-visible:not(.open) {
     @mixin focus-stroke 2px;
   }
+}
+
+.titleIcon {
+  display: block;
+  width: 19px;
+  height: 19px;
 }
 
 .spacer {
@@ -107,7 +101,7 @@
 }
 
 @media (forced-colors: active) {
-  .themeStatus {
+  .appearanceStatus {
     display: none;
   }
 }

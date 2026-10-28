@@ -13,6 +13,11 @@
     color: var(--color-foreground-disabled);
   }
 
+  &::selection {
+    color: var(--color-background);
+    background: var(--color-foreground);
+  }
+
   &:focus {
     outline: none;
   }

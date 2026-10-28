@@ -88,6 +88,7 @@ export function WindowManagerProvider({
       focus: (id) => dispatch({ type: "focus", id }),
       move: (id, x, y) => dispatch({ type: "move", id, x, y }),
       resize: (id, width, height) => dispatch({ type: "resize", id, width, height }),
+      fitContentHeight: (id, height) => dispatch({ type: "fitContentHeight", id, height }),
       toggleZoom: (id) => dispatch({ type: "zoom", id }),
       measure: (surface) => dispatch({ type: "measure", surface }),
       cycleWindows: () => dispatch({ type: "cycleWindows" }),

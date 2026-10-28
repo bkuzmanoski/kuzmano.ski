@@ -1,5 +1,5 @@
-import { CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "./contact.ts";
 import { COLLECTIONS } from "./content.ts";
+import { FEATURE_ROUTE_SPECS } from "./feature-routes.ts";
 
 import type { CollectionSegment, PageSlug } from "./content.ts";
 
@@ -15,7 +15,7 @@ export const DESTINATION_SPECS = {
   experience: { type: "entry", route: "/experience" },
   work: { type: "collection", route: "/work", title: COLLECTIONS.work.title },
   blog: { type: "collection", route: "/blog", title: COLLECTIONS.blog.title },
-  contact: { type: "contact", route: CONTACT_ROUTE, title: CONTACT_DOCUMENT_TITLE },
+  contact: { type: "contact", route: FEATURE_ROUTE_SPECS.contact.route, title: FEATURE_ROUTE_SPECS.contact.title },
 } as const satisfies Record<DestinationId, DestinationSpec>;
 
 /**

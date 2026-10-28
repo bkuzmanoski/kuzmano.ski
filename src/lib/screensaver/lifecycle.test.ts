@@ -1,7 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { computedColorOf } from "../computed-color.ts";
+
 import { FADE_IN_DURATION_MS, sleep, sleepOnIdle, useSleepState, wake } from "./lifecycle.ts";
+
+vi.mock("../computed-color.ts", () => ({ computedColorOf: vi.fn(() => "oklch(0.215 0.0134 257)") })); // jsdom does not resolve `var()` in a computed color.
 
 const themeColors = () => document.querySelectorAll('meta[data-screensaver-theme-color][name="theme-color"]');
 
@@ -104,19 +108,29 @@ describe("screensaver lifecycle", () => {
     alert.remove();
   });
 
-  test("adds a `theme-color` `<meta>` with the `--color-screensaver-backdrop` color on `sleep`, and removes it on `wake`", () => {
-    document.documentElement.style.setProperty("--color-screensaver-backdrop", "#151a1d");
+  test("adds a `theme-color` `<meta>` with the computed value of the `--color-screensaver-backdrop` custom property on `sleep`, and removes it on `wake`", () => {
+    document.documentElement.style.setProperty("--color-screensaver-backdrop", "var(--neutral-215)");
 
     expect(themeColors()).toHaveLength(0);
 
     act(sleep);
 
+    expect(computedColorOf).toHaveBeenCalledWith("var(--color-screensaver-backdrop)");
     expect(themeColors()).toHaveLength(1);
-    expect(themeColors()[0]?.getAttribute("content")).toBe("#151a1d");
+    expect(themeColors()[0]?.getAttribute("content")).toBe("oklch(0.215 0.0134 257)");
 
     completeFadeIn();
     act(wake);
 
     expect(themeColors()).toHaveLength(0);
+  });
+
+  test("omits the `theme-color` `<meta>` on `sleep` when the `--color-screensaver-backdrop` custom property is not declared", () => {
+    act(sleep);
+
+    expect(themeColors()).toHaveLength(0);
+
+    completeFadeIn();
+    act(wake);
   });
 });

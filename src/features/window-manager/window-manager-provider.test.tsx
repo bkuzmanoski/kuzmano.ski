@@ -9,7 +9,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { CONTACT_ROUTE } from "#/config/contact.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import {
   useFocusedWindow,
   useNotFoundRoute,
@@ -139,7 +139,7 @@ test("an external URL change focuses an open window rather than opening a second
 
   await waitFor(() => expect(focusedWindow).toBe("entry"));
 
-  act(() => actions().open(CONTACT_ROUTE));
+  act(() => actions().open(FEATURE_ROUTE_SPECS.contact.route));
   await waitFor(() => expect(focusedWindow).toBe("contact"));
 
   history.push(ENTRY_ROUTE);

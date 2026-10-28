@@ -104,8 +104,8 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
           </div>
         )}
       </div>
-      {isRevealingDesktop && <div className={styles.desktopWallpaper} />}
-      {/* Use an image instead of inline SVG as WebKit repaints inline filters when the layer changes, dropping frames during reveals. */}
+      {isRevealingDesktop && <div className={styles.desktopBackground} />}
+      {/* An image instead of inline SVG as WebKit repaints inline filters when the layer changes, dropping frames during reveals. */}
       <img
         alt=""
         src={displayGlassLayerMacintoshIllustrationSvgUrl}

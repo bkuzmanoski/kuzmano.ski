@@ -4,6 +4,7 @@ import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { ContactBody } from "#/features/contact/contact-body.tsx";
 import { CollectionBody } from "#/features/content/collection-body.tsx";
 import { ContentBody } from "#/features/content/content-body.tsx";
+import { ControlPanelBody } from "#/features/control-panel/control-panel-body.tsx";
 import { resolveWindow } from "#/site/windows.ts";
 
 import styles from "./window-body.module.css";
@@ -38,6 +39,14 @@ export function WindowBody({ route }: { route: string }) {
         <>
           {hiddenTitle}
           <ContactBody />
+        </>
+      );
+
+    case "controlPanel":
+      return (
+        <>
+          {hiddenTitle}
+          <ControlPanelBody />
         </>
       );
   }

@@ -1,4 +1,4 @@
-// This module imports only types, so a plugin built on it can be registered in `/vitest.config.ts`
+// This module imports only types so a plugin built on it can be registered in `/vitest.config.ts`
 // without loading what the plugin's own loader reads.
 import type { Environment, Plugin } from "vite";
 

@@ -54,7 +54,7 @@ const pagesWith = (slug: string) =>
   ]);
 
 describe("routesFor", () => {
-  test("includes the root, page, collection, collection entry, and contact routes in order", () => {
+  test("includes the root, page, collection, collection entry, contact, and control panel routes in order", () => {
     expect(paths()).toEqual([
       "/",
       "/page-1",
@@ -65,7 +65,12 @@ describe("routesFor", () => {
       "/collection-2/entry-2",
       "/collection-3",
       "/contact",
+      "/control-panel",
     ]);
+  });
+
+  test("excludes the control panel route from the sitemap", () => {
+    expect(routes()).toContainEqual({ path: "/control-panel", sitemap: { exclude: true } });
   });
 
   test("uses an entry's date as its sitemap `lastmod`", () => {

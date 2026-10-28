@@ -17,6 +17,7 @@ export interface InputFieldBinding {
 /** Binds a field to the control it labels. */
 export function useInputField(error?: string, { describedBy }: { describedBy?: string } = {}): InputFieldBinding {
   const id = useId();
+
   const errorId = `${id}-error`;
   const descriptionIds = [error ? errorId : undefined, describedBy].filter((descriptionId) => descriptionId);
 

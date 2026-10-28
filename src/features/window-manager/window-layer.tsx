@@ -71,7 +71,7 @@ const DesktopWindow = memo(function OpenWindow({
   unplaced: boolean;
   onDrag: (drag: WindowDragState | null) => void;
 }) {
-  const { close, registerCloseGuard, focus, move, resize, toggleZoom } = useWindowActions();
+  const { close, registerCloseGuard, focus, move, resize, fitContentHeight, toggleZoom } = useWindowActions();
 
   // Memoized because the body registers its close guard against this object, so changing its
   // identity would re-register the guard on every render.
@@ -84,7 +84,8 @@ const DesktopWindow = memo(function OpenWindow({
     [close, id, registerCloseGuard],
   );
 
-  const { fixedSize } = WINDOW_LAYOUT.windows[id];
+  const { sizing } = WINDOW_LAYOUT.windows[id];
+  const isResizable = sizing === "resizable";
 
   return (
     <Window
@@ -100,10 +101,11 @@ const DesktopWindow = memo(function OpenWindow({
       hidden={hidden}
       unplaced={unplaced}
       onClose={windowClose.close}
-      onZoom={fixedSize ? null : () => toggleZoom(id)}
+      onZoom={isResizable ? () => toggleZoom(id) : null}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
-      onResize={fixedSize ? null : (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight)}
+      onResize={isResizable ? (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight) : null}
+      onFitContentHeight={sizing === "fitContentHeight" ? (nextHeight) => fitContentHeight(id, nextHeight) : null}
       onDrag={(drag) => onDrag(drag && { id, drag })}
     >
       <WindowCloseContext value={windowClose}>

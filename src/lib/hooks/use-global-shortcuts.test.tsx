@@ -11,9 +11,9 @@ beforeEach(() => {
   invokeShortcut.mockClear();
 });
 
-function Target({ shortcuts }: { shortcuts: Array<KeyboardShortcut> }) {
+function Target({ shortcuts, fieldType = "text" }: { shortcuts: Array<KeyboardShortcut>; fieldType?: string }) {
   useGlobalShortcuts(shortcuts);
-  return <input data-testid="field" />;
+  return <input type={fieldType} data-testid="field" />;
 }
 
 const press = (target: Element | Document, init: KeyboardEventInit = {}) =>
@@ -40,7 +40,7 @@ describe("matching a shortcut", () => {
   });
 });
 
-describe("a key press targeting an input", () => {
+describe("a key press targeting a text input", () => {
   test("does not invoke the shortcut or prevent the default behavior of the key press", () => {
     render(<Target shortcuts={[{ code: "KeyW", run: invokeShortcut }]} />);
 
@@ -66,6 +66,19 @@ describe("a key press targeting an input", () => {
     );
     press(screen.getByTestId("field"));
 
+    expect(invokeShortcut).toHaveBeenCalledOnce();
+  });
+});
+
+describe.each([
+  ["a checkbox", "checkbox"],
+  ["a radio button", "radio"],
+  ["a slider", "range"],
+])("a key press targeting %s", (_control, fieldType) => {
+  test("invokes the shortcut and prevents the default behavior of the key press", () => {
+    render(<Target shortcuts={[{ code: "KeyW", run: invokeShortcut }]} fieldType={fieldType} />);
+
+    expect(press(screen.getByTestId("field"))).toBe(false);
     expect(invokeShortcut).toHaveBeenCalledOnce();
   });
 });

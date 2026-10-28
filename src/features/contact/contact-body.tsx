@@ -8,8 +8,7 @@ import { InputField } from "#/components/input-field.tsx";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { Scrollbar } from "#/components/scrollbar.tsx";
 import { TextArea, TextInput } from "#/components/text-input.tsx";
-import { CONTACT_DISPLAY_NAME } from "#/config/contact.ts";
-import { DOCUMENT_LANGUAGE, SITE_LOCALE } from "#/config/site.ts";
+import { AUTHOR_NAME, DOCUMENT_LANGUAGE, SITE_LOCALE } from "#/config/site.ts";
 import { useInputScrollSound } from "#/lib/audio/use-input-scroll-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import {
@@ -182,7 +181,7 @@ export function ContactBody() {
                 readOnly
                 tabIndex={-1}
                 spellCheck={false}
-                value={contactEmailAddress ?? CONTACT_DISPLAY_NAME}
+                value={contactEmailAddress ?? AUTHOR_NAME}
               />
               <CopyButton value={contactEmailAddress} entity="email address" />
             </InputField>

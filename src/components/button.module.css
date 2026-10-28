@@ -44,7 +44,7 @@
 
   &.standalone,
   &.strip {
-    --color-icon-foreground: var(--color-border);
+    --color-icon-foreground: var(--color-icon-foreground-secondary);
 
     cursor: default;
 

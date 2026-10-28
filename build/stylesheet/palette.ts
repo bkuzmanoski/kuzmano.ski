@@ -19,7 +19,7 @@ export type SchemeColor = Record<Scheme, string>;
 export interface Palette {
   foreground: SchemeColor;
   background: SchemeColor;
-  wallpaper: SchemeColor;
+  desktopBackground: SchemeColor;
   startupSequenceBackdrop: SchemeColor;
 }
 
@@ -232,7 +232,7 @@ export async function paletteFrom(css: string): Promise<Palette> {
   return {
     foreground: await colorOf("--color-foreground"),
     background: await colorOf("--color-background"),
-    wallpaper: await colorOf("--color-wallpaper"),
+    desktopBackground: await colorOf("--color-desktop-background"),
     startupSequenceBackdrop: await colorOf("--color-startup-sequence-backdrop"),
   };
 }

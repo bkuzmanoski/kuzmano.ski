@@ -441,6 +441,10 @@
       -webkit-touch-callout: default;
     }
 
+    &:where(a:not([data-heading-link])):not(:where(h1, h2, h3, blockquote, strong) *) {
+      font-weight: 450;
+    }
+
     &:where(a[target="_blank"])::after {
       content: "\202f\2197";
       content: "\202f\2197" / "";
@@ -578,7 +582,7 @@
     &:where(blockquote) {
       --content-body-blockquote-band-width: 4px;
       --content-body-blockquote-band-gap: 16px;
-      --content-body-blockquote-mark-color: var(--accent-magenta);
+      --content-body-blockquote-mark-color: var(--accent-pink);
 
       position: relative;
       padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));

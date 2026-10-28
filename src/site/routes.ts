@@ -1,13 +1,12 @@
-import { CONTACT_ROUTE } from "#/config/contact.ts";
 import { PAGE_SLUGS } from "#/config/content.ts";
 import type { PageSlug } from "#/config/content.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { pageRoute } from "#/lib/content/paths.ts";
 
 export { collectionRoute, entryRoute, isRootPath, pageRoute, parseContentPath } from "#/lib/content/paths.ts";
 export type { ContentPath } from "#/lib/content/paths.ts";
 
-/** Routes for UI rather than content files. */
-export const FEATURE_ROUTES: Array<string> = [CONTACT_ROUTE];
+export const FEATURE_ROUTES: Array<string> = Object.values(FEATURE_ROUTE_SPECS).map(({ route }) => route);
 
 /** Returns the feature route shadowed by a top-level segment, if any. */
 export const featureRouteFor = (segment: string): string | undefined =>

@@ -1,40 +1,114 @@
-// This module imports only a leaf module, so the pre-hydration theme script can use it (see `/build/inline-scripts.ts`).
-import { createEmitter } from "../emitter.ts";
+// This module imports only leaf modules so the pre-hydration theme scripts can use it (see `/build/inline-scripts.ts`).
+import { ACCENT_COLOR_NAMES } from "../accent-colors.ts";
+import { readStored } from "../storage.ts";
 
-export type ThemeSetting = "system" | "light" | "dark";
+import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE, isSteppedValueIn } from "./theme-tint.ts";
 
-export const THEME_STORAGE_KEY = "theme";
+import type { AccentColorName } from "../accent-colors.ts";
 
-const THEME_ATTRIBUTE = "data-theme";
+export type AppearanceSetting = "system" | "light" | "dark";
+export type ThemeColor = AccentColorName;
 
-export const isThemeSetting = (value: string): value is ThemeSetting =>
+export const DEFAULT_THEME_COLOR: ThemeColor = "purple";
+
+export type ColorScheme = "light" | "dark";
+
+export const COLOR_SCHEMES: ReadonlyArray<ColorScheme> = ["light", "dark"];
+
+export const APPEARANCE_STORAGE_KEY = "appearance";
+export const THEME_COLOR_STORAGE_KEY = "theme-color";
+export const THEME_CHROMA_SCALE_STORAGE_KEY = "theme-chroma-scale";
+
+export const desktopBackgroundThemeColorStorageKeyFor = (colorScheme: ColorScheme) =>
+  `desktop-background-theme-color-${colorScheme}`;
+
+const APPEARANCE_ATTRIBUTE = "data-appearance";
+const THEME_COLOR_ATTRIBUTE = "data-theme-color";
+
+export const THEME_COLOR_SCHEME_ATTRIBUTE = "data-color-scheme";
+export const DESKTOP_BACKGROUND_THEME_COLOR_ATTRIBUTE = "data-desktop-background-theme-color";
+
+export const isAppearanceSetting = (value: string): value is AppearanceSetting =>
   value === "system" || value === "light" || value === "dark";
 
-const themeAppliedEmitter = createEmitter();
+export const isThemeColor = (value: string | null): value is ThemeColor =>
+  (ACCENT_COLOR_NAMES as ReadonlyArray<string | null>).includes(value);
 
-export function applyTheme(theme: ThemeSetting) {
-  if (theme === "system") {
-    document.documentElement.removeAttribute(THEME_ATTRIBUTE);
+export function themeChromaScaleFrom(rawValue: string | null): number | null {
+  const value = rawValue?.trim() ? Number(rawValue) : Number.NaN; // `Number` parses an empty or whitespace-only string as `0`.
+  return isSteppedValueIn(value, THEME_CHROMA_SCALE_RANGE) ? value : null;
+}
+
+export function readStoredThemeTint(): { themeColor: ThemeColor | null; chromaScale: number | null } | null {
+  const storedThemeColor = readStored(THEME_COLOR_STORAGE_KEY);
+  const themeColor = isThemeColor(storedThemeColor) ? storedThemeColor : null;
+  const chromaScale = themeChromaScaleFrom(readStored(THEME_CHROMA_SCALE_STORAGE_KEY));
+
+  return themeColor === null && chromaScale === null ? null : { themeColor, chromaScale };
+}
+
+function setRootAttribute(name: string, value: string | null) {
+  if (value === null) {
+    document.documentElement.removeAttribute(name);
   } else {
-    document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+    document.documentElement.setAttribute(name, value);
+  }
+}
+
+export const themeColorMediaFor = (colorScheme: ColorScheme, appearance: AppearanceSetting): string => {
+  if (appearance === "system") {
+    return `(prefers-color-scheme: ${colorScheme})`;
   }
 
-  themeAppliedEmitter.emit();
+  return appearance === colorScheme ? "all" : "not all";
+};
+
+/**
+ * Applies the appearance to `<html>` and to the `media` attribute of each `theme-color` pair. Does not notify the color
+ * change listeners (see `notifyColorChange`).
+ */
+export function applyAppearance(appearance: AppearanceSetting) {
+  setRootAttribute(APPEARANCE_ATTRIBUTE, appearance === "system" ? null : appearance);
+
+  for (const meta of document.querySelectorAll<HTMLMetaElement>(`meta[${THEME_COLOR_SCHEME_ATTRIBUTE}]`)) {
+    meta.setAttribute(
+      "media",
+      themeColorMediaFor(meta.getAttribute(THEME_COLOR_SCHEME_ATTRIBUTE) as ColorScheme, appearance),
+    );
+  }
 }
 
 /**
- * Calls `onChange` whenever the color scheme the document is shown in may have changed.
+ * Applies the theme color, chroma scale, or both. Pass `null` to reset a value to the stylesheet default, or omit it
+ * to leave it unchanged. This does not notify color change listeners (see `notifyColorChange`).
  *
- * Returns a function that stops listening.
+ * Values are set on `<html>` because `:root` uses them to derive neutral and accent colors inherited by descendants.
  */
-export function subscribeToColorSchemeChange(onChange: () => void): () => void {
-  const systemColorSchemeQuery = (window as Partial<Window>).matchMedia?.("(prefers-color-scheme: dark)");
-  const unsubscribeFromThemeApplication = themeAppliedEmitter.subscribe(onChange);
+export function applyThemeTint({
+  themeColor,
+  chromaScale,
+}: {
+  themeColor?: ThemeColor | null;
+  chromaScale?: number | null;
+}) {
+  if (themeColor !== undefined) {
+    setRootAttribute(THEME_COLOR_ATTRIBUTE, themeColor === DEFAULT_THEME_COLOR ? null : themeColor);
+  }
 
-  systemColorSchemeQuery?.addEventListener("change", onChange);
+  if (chromaScale === null) {
+    document.documentElement.style.removeProperty(THEME_CHROMA_SCALE_PROPERTY);
+  } else if (chromaScale !== undefined) {
+    document.documentElement.style.setProperty(THEME_CHROMA_SCALE_PROPERTY, String(chromaScale));
+  }
+}
 
-  return () => {
-    systemColorSchemeQuery?.removeEventListener("change", onChange);
-    unsubscribeFromThemeApplication();
-  };
+/** Sets the rendered desktop background `theme-color` for `colorScheme` when `color` is not `null`. */
+export function applyDesktopBackgroundThemeColor(colorScheme: ColorScheme, color: string | null) {
+  const meta = document.querySelector<HTMLMetaElement>(
+    `meta[${DESKTOP_BACKGROUND_THEME_COLOR_ATTRIBUTE}][${THEME_COLOR_SCHEME_ATTRIBUTE}="${colorScheme}"]`,
+  );
+
+  if (meta && color !== null) {
+    meta.content = color;
+  }
 }

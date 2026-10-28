@@ -1,4 +1,4 @@
-import { createWindowPlacer, createWindowResizer, defaultRect } from "./layout.ts";
+import { createWindowPlacer, createWindowResizer, defaultRect, fitContentHeight } from "./layout.ts";
 import { isUnmeasured } from "./window.ts";
 
 import type { Action, ManagerState, WindowGeometry, WindowId, WindowLayout, WindowRecord } from "./window.ts";
@@ -21,7 +21,15 @@ function layOutWindows(layout: WindowLayout, state: ManagerState): WindowRecord<
   const geometry: WindowRecord<WindowGeometry> = {};
 
   for (const windowId of state.order) {
-    geometry[windowId] = { ...defaultRect(layout, state.surface, windowId), maximized: false };
+    const rect = defaultRect(layout, state.surface, windowId);
+    const currentGeometry = state.geometry[windowId];
+
+    geometry[windowId] = {
+      ...(layout.windows[windowId].sizing === "fitContentHeight" && currentGeometry
+        ? fitContentHeight(rect, state.surface, currentGeometry.height)
+        : rect),
+      maximized: false,
+    };
   }
 
   return geometry;
@@ -102,6 +110,16 @@ export function createWindowReducer(layout: WindowLayout): WindowReducer {
         return updateGeometry(state, action.id, (target) =>
           resizeWindow(target, state.surface, { width: action.width, height: action.height }),
         );
+      }
+
+      case "fitContentHeight": {
+        const targetGeometry = state.geometry[action.id];
+
+        if (!targetGeometry || targetGeometry.height === action.height) {
+          return state;
+        }
+
+        return updateGeometry(state, action.id, (target) => fitContentHeight(target, state.surface, action.height));
       }
 
       case "zoom": {

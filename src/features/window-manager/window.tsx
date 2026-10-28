@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 
 import ActiveWindowControl from "#/assets/images/window-control-active.svg?react";
 import CloseWindowControl from "#/assets/images/window-control-close.svg?react";
@@ -135,6 +135,7 @@ export function Window({
   onFocus,
   onMove,
   onResize,
+  onFitContentHeight,
   onDrag,
   children,
 }: {
@@ -154,6 +155,7 @@ export function Window({
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
   onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which also hides the resize control from its scrollbar.
+  onFitContentHeight: ((height: number) => void) | null; // Set on a window that is as tall as its content, which ignores `height` and reports the height it renders at.
   onDrag: (drag: WindowDrag | null) => void;
   children: ReactNode;
 }) {
@@ -167,6 +169,27 @@ export function Window({
   const viewportRef = useRef<HTMLDivElement>(null);
   const hasMovedWindowRef = useRef(false);
   const dragRef = useRef<WindowDrag | null>(null);
+
+  const fitsContentHeight = onFitContentHeight !== null;
+  const reportContentHeight = useEffectEvent((nextHeight: number) => onFitContentHeight?.(nextHeight));
+
+  // A layout effect so that the window manager places a window that has just opened by its content height before the
+  // window first paints.
+  useLayoutEffect(() => {
+    const element = windowRef.current;
+
+    if (!fitsContentHeight || !element) {
+      return;
+    }
+
+    const measure = () => reportContentHeight(element.getBoundingClientRect().height);
+    const observer = new ResizeObserver(measure);
+
+    measure();
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [fitsContentHeight]);
 
   // The desktop is inert until the startup sequence completes, and focusing an element in inert content
   // has no effect, so the focused window takes the focus only once the startup sequence has completed.
@@ -275,9 +298,19 @@ export function Window({
     <section
       ref={windowRef}
       tabIndex={0} // A tab stop to focus the window before its contents and raise it to the top.
-      style={maximized ? { zIndex: z } : { width, height, zIndex: z, ...(unplaced ? null : { left: x, top: y }) }} // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
+      style={
+        maximized
+          ? { zIndex: z }
+          : {
+              width,
+              height: fitsContentHeight ? undefined : height,
+              zIndex: z,
+              ...(unplaced ? null : { left: x, top: y }),
+            }
+      } // A maximized window is laid out entirely by CSS. An unplaced window defines a size but is positioned by CSS.
       className={cx(
         styles.window,
+        fitsContentHeight && styles.fitsContentHeight,
         focused && styles.focused,
         hidden && styles.hidden,
         unplaced && styles.unplaced,
@@ -308,9 +341,13 @@ export function Window({
           stepScrollForPress(viewport, delta, event.repeat); // Each press plays the sound of a press on a scrollbar arrow.
         }
       }}
-      onPointerDownCapture={() => {
+      onPointerDownCapture={(event) => {
         if (!focused) {
           swallowNextPress();
+
+          if (isPrimaryPress(event)) {
+            playClickSound();
+          }
         }
 
         onFocus();
@@ -344,7 +381,13 @@ export function Window({
             </>
           )}
         </header>
-        <ScrollPane key={contentKey} id={contentId} viewportRef={viewportRef} resizeControl={resizeControl}>
+        <ScrollPane
+          key={contentKey}
+          id={contentId}
+          viewportRef={viewportRef}
+          resizeControl={resizeControl}
+          fitsContentHeight={fitsContentHeight}
+        >
           <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
         </ScrollPane>
       </div>

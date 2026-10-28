@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { CONTACT_DOCUMENT_DESCRIPTION, CONTACT_DOCUMENT_TITLE, CONTACT_ROUTE } from "#/config/contact.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { documentHead } from "#/site/metadata.ts";
 
 /**
@@ -8,7 +8,9 @@ import { documentHead } from "#/site/metadata.ts";
  * The contact window has no document behind it, so this route exists only to supply head tags.
  */
 export const Route = createFileRoute("/contact")({
-  head: () =>
-    documentHead({ title: CONTACT_DOCUMENT_TITLE, description: CONTACT_DOCUMENT_DESCRIPTION, path: CONTACT_ROUTE }),
+  head: () => {
+    const { route, title, description, isIndexed } = FEATURE_ROUTE_SPECS.contact;
+    return documentHead({ title, description, path: route, noindex: !isIndexed });
+  },
   component: () => null,
 });

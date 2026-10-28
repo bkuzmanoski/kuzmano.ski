@@ -47,7 +47,7 @@ const EXPERIENCE: Experience = {
   asOf: AS_OF,
   disciplines: [
     { id: "first", name: "First", accentColor: "blue" },
-    { id: "second", name: "Second", accentColor: "magenta" },
+    { id: "second", name: "Second", accentColor: "pink" },
   ],
   roles: [
     role({ title: "Current", disciplines: ["first"], start: "2024-03", end: null }),

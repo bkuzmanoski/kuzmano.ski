@@ -50,6 +50,10 @@ describe("resolveRoute", () => {
     expect(resolveRoute("/contact")).toEqual({ id: "contact", title: "Contact" });
   });
 
+  test("the control panel route resolves to the control panel window", () => {
+    expect(resolveRoute("/control-panel")).toEqual({ id: "controlPanel", title: "Control Panel" });
+  });
+
   test("a path nested under contact resolves to the not-found window", () => {
     expect(resolveRoute("/contact/anything")).toMatchObject({ id: "notFound" });
   });

@@ -22,7 +22,7 @@ const EXPERIENCE: Experience = {
   asOf: "2026-09",
   disciplines: [
     { id: "first", name: "First", accentColor: "blue" },
-    { id: "second", name: "Second", accentColor: "magenta" },
+    { id: "second", name: "Second", accentColor: "pink" },
   ],
   roles: [
     {
@@ -330,7 +330,7 @@ describe("CareerTimeline", () => {
     const accentColorOfMiddleRole = () =>
       roleNamed("Middle Role")?.style.getPropertyValue("--career-timeline-discipline-accent-color");
 
-    expect(accentColorOfMiddleRole()).toBe("var(--accent-magenta)");
+    expect(accentColorOfMiddleRole()).toBe("var(--accent-pink)");
 
     fireEvent.click(checkedFilterNamed("Second"));
 

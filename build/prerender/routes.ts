@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
-import { CONTACT_ROUTE } from "#/config/contact.ts";
 import { COLLECTIONS, PAGES_DIRECTORY_NAME, PAGE_SLUGS } from "#/config/content.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { SITE_TIME_ZONE } from "#/config/site.ts";
 import { entryFileName } from "#/lib/content/entry-file.ts";
 import { MEDIA_SEGMENT } from "#/lib/content/paths.ts";
@@ -148,7 +148,9 @@ export function routesFor(
       route(collectionRoute(name), newestDate(entries) ?? siteLastModifiedDate),
       ...entries.map(({ slug, date }) => route(entryRoute(name, slug), date)),
     ]),
-    route(CONTACT_ROUTE, siteLastModifiedDate), // Backed by a window rather than a document, so the content walk above misses it.
+    ...Object.values(FEATURE_ROUTE_SPECS).map(({ route: featureRoute, isIndexed }) =>
+      isIndexed ? route(featureRoute, siteLastModifiedDate) : unlistedRoute(featureRoute),
+    ),
   ];
 }
 

@@ -14,7 +14,7 @@ import type { Palette } from "../stylesheet/palette.ts";
 const palette: Palette = {
   foreground: { light: "#000000", dark: "#e5e5e5" },
   background: { light: "#ffffff", dark: "#111111" },
-  wallpaper: { light: "#dddddd", dark: "#101010" },
+  desktopBackground: { light: "#dddddd", dark: "#101010" },
   startupSequenceBackdrop: { light: "#333333", dark: "#444444" },
 };
 

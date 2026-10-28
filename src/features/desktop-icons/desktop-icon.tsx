@@ -32,6 +32,7 @@ const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIc
     open: [FolderOpenDesktopIcon, FolderOpenSelectedDesktopIcon],
   },
   contact: { closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon] },
+  controlPanel: { closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon] },
   download: { closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon] },
 };
 

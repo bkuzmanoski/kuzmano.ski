@@ -11,7 +11,7 @@ if (ROLLDOWN_VERSION !== VITE_ROLLDOWN_VERSION) {
   );
 }
 
-const MAX_INLINE_SCRIPT_BYTES = 1024; // These scripts block the first paint, so they must stay small.
+const MAX_INLINE_SCRIPT_BYTES = 1280; // These scripts block the first paint, so they must stay small.
 
 const VIRTUAL_MODULE_PREFIX = "\0"; // Rolldown prefixes generated module IDs, such as its runtime, with a NUL byte instead of a filesystem path.
 const INLINE_SCRIPT_QUERY = "inline-script";

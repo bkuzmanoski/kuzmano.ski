@@ -12,9 +12,9 @@ beforeEach(() => vi.mocked(playClickSound).mockClear());
 
 const CLICK = { detail: 1 }; // A pointer click, as opposed to keyboard activation.
 
-function Control({ scrollSafe = false }) {
+function Control({ scrollSafe = false, disabled = false }) {
   return (
-    <button type="button" {...usePressSound({ scrollSafe })}>
+    <button type="button" disabled={disabled} {...usePressSound({ scrollSafe })}>
       Press
     </button>
   );
@@ -93,6 +93,25 @@ test("a canceled pointer down event lets the next pointer click event play a sou
 test("a non-primary press does not play a sound", () => {
   fireEvent.pointerDown(renderControl(), { button: 2 });
 
+  expect(playClickSound).not.toHaveBeenCalled();
+});
+
+test.for([
+  ["its `disabled` attribute", <Control disabled />],
+  [
+    "a disabled `<fieldset>`",
+    <fieldset disabled>
+      <Control />
+    </fieldset>,
+  ],
+] as const)("a press on a control disabled by %s does not play a sound", ([, control]) => {
+  render(control);
+
+  const button = screen.getByRole("button", { name: "Press" });
+
+  fireEvent.pointerDown(button);
+
+  expect(button.matches(":disabled")).toBe(true);
   expect(playClickSound).not.toHaveBeenCalled();
 });
 

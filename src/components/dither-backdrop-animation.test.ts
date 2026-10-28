@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { applyTheme } from "#/lib/settings/theme.ts";
+import { notifyColorChange } from "#/lib/settings/color-change.ts";
 import { stubResizeObserver } from "#/test-utils/resize-observer.ts";
 
 import {
@@ -151,7 +151,6 @@ afterEach(() => {
   pendingAnimationFrames.clear();
   mediaQueryListeners.clear();
   putImageData.mockClear();
-  document.documentElement.removeAttribute("data-theme");
   document.body.replaceChildren();
   vi.unstubAllGlobals();
 });
@@ -348,10 +347,10 @@ test("moving a mouse pointer over the container does not request an animation fr
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("applying a theme setting puts the whole dither field on the canvas again", () => {
+test("a color change notification puts the whole dither field on the canvas again", () => {
   startAnimation(containerElements());
   putImageData.mockClear();
-  applyTheme("dark");
+  notifyColorChange();
   runAnimationFrames();
 
   expect(putImageData).toHaveBeenCalledTimes(1);
@@ -373,11 +372,11 @@ test("stopping the animation cancels the requested animation frame and stops lis
   expect(pendingAnimationFrames.size).toBe(0);
 });
 
-test("stopping the animation stops listening for changes to the device pixel ratio, color scheme, theme setting, and reduced motion preference", () => {
+test("stopping the animation stops listening for color change notifications and for changes to the device pixel ratio and the reduced motion preference", () => {
   const stopAnimation = startAnimation(containerElements());
 
   stopAnimation();
-  applyTheme("dark");
+  notifyColorChange();
 
   expect(mediaQueryListeners.size).toBe(0);
   expect(prefersReducedMotion.unsubscribe).toHaveBeenCalledTimes(1);

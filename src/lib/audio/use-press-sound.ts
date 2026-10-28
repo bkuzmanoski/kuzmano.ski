@@ -37,7 +37,7 @@ export function usePressSound({
 
   return {
     onPointerDown: (event: PointerEvent) => {
-      if (!isPrimaryPress(event)) {
+      if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled")) {
         return;
       }
 

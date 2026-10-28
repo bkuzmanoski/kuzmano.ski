@@ -3,12 +3,14 @@ import { useEffect, useId, useRef, useState } from "react";
 import Logo from "#/assets/images/logo.svg?react";
 import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-off.svg?react";
 import SoundEffectsOnMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-on.svg?react";
-import ToggleThemeLightDarkMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-theme-light-dark.svg?react";
-import ToggleThemeSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-theme-system.svg?react";
+import ToggleAppearanceLightDarkMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-light-dark.svg?react";
+import ToggleAppearanceSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-system.svg?react";
 import { Tooltip } from "#/components/tooltip.tsx";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
-import { SITE_LOCALE, SITE_LOCATION, SITE_SOURCE_URL, SITE_TIME_ZONE } from "#/config/site.ts";
+import { SITE_LOCALE, SITE_LOCATION, SITE_NAME, SITE_SOURCE_URL, SITE_TIME_ZONE } from "#/config/site.ts";
+import { setSoundEffectsAudibly } from "#/lib/audio/sound-effects-setting.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
@@ -19,8 +21,7 @@ import { cycle } from "#/lib/math.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress } from "#/lib/press.ts";
 import { sleep } from "#/lib/screensaver/lifecycle.ts";
-import { setSoundEffects, setTheme, useSettings } from "#/lib/settings/settings.ts";
-import type { Theme } from "#/lib/settings/settings.ts";
+import { APPEARANCE_LABELS, APPEARANCE_ORDER, setAppearance, useSettings } from "#/lib/settings/settings.ts";
 import { restart, useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
 import { useFocusedWindow, useWindowActions } from "#/lib/window-manager/context.ts";
@@ -30,7 +31,7 @@ import styles from "./menu-bar.module.css";
 import { Menu } from "./menu.tsx";
 
 import type { MenuItem } from "./menu.tsx";
-import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
+import type { ComponentType, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
   const shortcutNumber = DESTINATION_ORDER.indexOf(id) + 1;
@@ -40,11 +41,13 @@ const destinationShortcut = (id: DestinationId) => {
 function StatusButton({
   label,
   className,
+  isSilent = false,
   onClick,
   children,
 }: {
   label: string;
   className?: string;
+  isSilent?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -74,7 +77,7 @@ function StatusButton({
         type="button"
         className={styles.control}
         aria-label={label}
-        {...mergeHandlers(pressSoundHandlers, {
+        {...mergeHandlers(isSilent ? {} : pressSoundHandlers, {
           onClick: () => {
             showState();
             onClick();
@@ -87,19 +90,16 @@ function StatusButton({
   );
 }
 
-const THEME_ORDER: Array<Theme> = ["system", "light", "dark"];
-const THEME_LABEL: Record<Theme, string> = { system: "System", light: "Light", dark: "Dark" };
-
-function ThemeStatus() {
-  const { theme } = useSettings();
-  const nextTheme = THEME_ORDER[cycle(THEME_ORDER.length, THEME_ORDER.indexOf(theme), 1)]!;
-  const Icon = theme === "system" ? ToggleThemeSystemMenuBarIcon : ToggleThemeLightDarkMenuBarIcon;
+function AppearanceStatus() {
+  const { appearance } = useSettings();
+  const nextAppearance = APPEARANCE_ORDER[cycle(APPEARANCE_ORDER.length, APPEARANCE_ORDER.indexOf(appearance), 1)]!;
+  const Icon = appearance === "system" ? ToggleAppearanceSystemMenuBarIcon : ToggleAppearanceLightDarkMenuBarIcon;
 
   return (
     <StatusButton
-      label={`Appearance: ${THEME_LABEL[theme]}`}
-      className={styles.themeStatus}
-      onClick={() => setTheme(nextTheme)}
+      label={`Appearance: ${APPEARANCE_LABELS[appearance]}`}
+      className={styles.appearanceStatus}
+      onClick={() => setAppearance(nextAppearance)}
     >
       <Icon className={styles.menuBarIcon} />
     </StatusButton>
@@ -113,13 +113,8 @@ function SoundStatus() {
   return (
     <StatusButton
       label={`Sound: ${sound === "on" ? "On" : "Off"}`}
-      onClick={() => {
-        setSoundEffects(sound === "on" ? "off" : "on");
-
-        if (sound === "off") {
-          playClickSound(); // The press itself was gated by the setting being enabled.
-        }
-      }}
+      isSilent={sound === "on"}
+      onClick={() => setSoundEffectsAudibly(sound === "on" ? "off" : "on")}
     >
       <Icon className={styles.menuBarIcon} />
     </StatusButton>
@@ -211,7 +206,19 @@ export function MenuBar() {
   const printWindow = () => requestAnimationFrame(() => requestAnimationFrame(() => print())); // Two frames: the menu closes after the action runs, and must paint closed before `print()` blocks rendering.
   const closeWindow = () => focusedWindow && close(focusedWindow);
 
-  const menus: Array<{ label: string; items: Array<MenuItem> }> = [
+  const menus: Array<{ label: string; icon?: ComponentType<{ className?: string }>; items: Array<MenuItem> }> = [
+    {
+      label: SITE_NAME,
+      icon: Logo,
+      items: [
+        {
+          kind: "action",
+          label: FEATURE_ROUTE_SPECS.controlPanel.title,
+          href: FEATURE_ROUTE_SPECS.controlPanel.route,
+          action: () => open(FEATURE_ROUTE_SPECS.controlPanel.route),
+        },
+      ],
+    },
     {
       label: "File",
       items: [
@@ -352,11 +359,8 @@ export function MenuBar() {
 
   return (
     <header className={cx(styles.menuBar, isStartupSequenceComplete && styles.ready)}>
-      <div className={styles.logo}>
-        <Logo />
-      </div>
       <nav className={styles.menus} aria-label="Main menu">
-        {menus.map(({ label, items }, menuIndex) => (
+        {menus.map(({ label, icon: Icon, items }, menuIndex) => (
           <div key={label} className={styles.item}>
             <button
               ref={(node) => {
@@ -365,6 +369,7 @@ export function MenuBar() {
               id={`${titleIdPrefix}-${menuIndex}`}
               type="button"
               className={cx(styles.title, openMenu?.label === label && styles.open)}
+              aria-label={Icon ? label : undefined}
               aria-expanded={openMenu?.label === label}
               aria-haspopup="menu"
               onKeyDown={(event) => onTitleKeyDown(event, label)}
@@ -383,7 +388,7 @@ export function MenuBar() {
                 }
               }}
             >
-              {label}
+              {Icon ? <Icon className={styles.titleIcon} /> : label}
             </button>
             {openMenu?.label === label && (
               <Menu
@@ -401,7 +406,7 @@ export function MenuBar() {
       </nav>
       <div className={styles.spacer} />
       <div className={styles.statusItems}>
-        <ThemeStatus />
+        <AppearanceStatus />
         <SoundStatus />
         <TimeStatus />
       </div>

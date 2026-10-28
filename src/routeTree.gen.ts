@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ControlPanelRouteImport } from './routes/control-panel'
 import { Route as SegmentIndexRouteImport } from './routes/$segment/index'
 import { Route as SegmentSlugRouteImport } from './routes/$segment/$slug'
 import { Route as ApiClientErrorsRouteImport } from './routes/api/client-errors'
@@ -32,6 +33,11 @@ const SplatRoute = SplatRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlPanelRoute = ControlPanelRouteImport.update({
+  id: '/control-panel',
+  path: '/control-panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SegmentIndexRoute = SegmentIndexRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/contact': typeof ContactRoute
+  '/control-panel': typeof ControlPanelRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/contact': typeof ContactRoute
+  '/control-panel': typeof ControlPanelRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/contact': typeof ContactRoute
+  '/control-panel': typeof ControlPanelRoute
   '/$segment/$slug': typeof SegmentSlugRoute
   '/api/client-errors': typeof ApiClientErrorsRoute
   '/api/contact': typeof ApiContactRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/contact'
+    | '/control-panel'
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/contact'
+    | '/control-panel'
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/contact'
+    | '/control-panel'
     | '/$segment/$slug'
     | '/api/client-errors'
     | '/api/contact'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   ContactRoute: typeof ContactRoute
+  ControlPanelRoute: typeof ControlPanelRoute
   SegmentSlugRoute: typeof SegmentSlugRoute
   ApiClientErrorsRoute: typeof ApiClientErrorsRoute
   ApiContactRoute: typeof ApiContactRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control-panel': {
+      id: '/control-panel'
+      path: '/control-panel'
+      fullPath: '/control-panel'
+      preLoaderRoute: typeof ControlPanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$segment/': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   ContactRoute: ContactRoute,
+  ControlPanelRoute: ControlPanelRoute,
   SegmentSlugRoute: SegmentSlugRoute,
   ApiClientErrorsRoute: ApiClientErrorsRoute,
   ApiContactRoute: ApiContactRoute,

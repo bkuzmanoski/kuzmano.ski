@@ -33,6 +33,6 @@ export const webAppManifestFrom = (palette: Palette, icons: Array<IconFile>): We
   start_url: "/",
   scope: "/",
   display: "standalone",
-  theme_color: palette.wallpaper.light,
+  theme_color: palette.desktopBackground.light,
   background_color: palette.startupSequenceBackdrop.light,
 });

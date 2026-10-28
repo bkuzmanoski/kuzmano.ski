@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 
-import { CONTACT_ROUTE } from "#/config/contact.ts";
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 
 import { resolveContent } from "./resolve-content.ts";
@@ -44,9 +44,12 @@ test("a segment corresponding to a collection resolves to that collection", () =
 });
 
 test("a segment corresponding to a feature resolves to its feature route", () => {
-  expect(resolveContent(CONTACT_ROUTE.slice(1))).toEqual({ kind: "feature", route: CONTACT_ROUTE });
+  expect(resolveContent(FEATURE_ROUTE_SPECS.contact.route.slice(1))).toEqual({
+    kind: "feature",
+    route: FEATURE_ROUTE_SPECS.contact.route,
+  });
 });
 
 test("a feature segment with an additional slug resolves to not found", () => {
-  expect(resolveContent(CONTACT_ROUTE.slice(1), "anything")).toEqual({ kind: "notFound" });
+  expect(resolveContent(FEATURE_ROUTE_SPECS.contact.route.slice(1), "anything")).toEqual({ kind: "notFound" });
 });
