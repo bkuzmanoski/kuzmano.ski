@@ -42,8 +42,7 @@ afterEach(() => {
   Reflect.deleteProperty(document, "elementFromPoint");
 });
 
-const siteMenuTitle = () => screen.getByRole("button", { name: SITE_NAME });
-const menuTitle = (label: string) => screen.getByText(label);
+const menuTitle = (label: string) => screen.getByRole("button", { name: label });
 const isExpanded = (label: string) => menuTitle(label).getAttribute("aria-expanded") === "true";
 const menu = () => document.querySelector('[role="menu"]');
 const menuItem = (label: string) => screen.getByText(label).closest("[data-index]")!;
@@ -92,7 +91,7 @@ describe("navigating the menu bar", () => {
     openWithKeyboard("Go");
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
 
-    expect(isExpanded("Special")).toBe(true);
+    expect(isExpanded(SITE_NAME)).toBe(true);
     expect(playHoverSound).toHaveBeenCalledTimes(1);
   });
 });
@@ -251,7 +250,7 @@ describe("navigating an open menu", () => {
 
   test("typing a letter highlights the next enabled item that starts with it, and typing on to text that does not start an item leaves the highlight in place", () => {
     render(<MenuBar />);
-    openWithPointer("Special");
+    openWithPointer(SITE_NAME);
     fireEvent.keyDown(menu()!, { key: "s" });
 
     expect(highlightedMenuItem()).toBe("Sleep");
@@ -279,15 +278,11 @@ describe("navigating an open menu", () => {
 
     fireEvent.keyDown(menu()!, { key: "ArrowRight" });
 
-    expect(isExpanded("Special")).toBe(true);
-
-    fireEvent.keyDown(menu()!, { key: "ArrowRight" });
-
-    expect(siteMenuTitle().getAttribute("aria-expanded")).toBe("true");
+    expect(isExpanded(SITE_NAME)).toBe(true);
 
     fireEvent.keyDown(menu()!, { key: "ArrowLeft" });
 
-    expect(isExpanded("Special")).toBe(true);
+    expect(isExpanded("Go")).toBe(true);
   });
 
   test("an adjacent menu opened with the arrow keys receives the focus and highlights its first item", () => {
@@ -426,7 +421,7 @@ describe("items that open a destination", () => {
 
   test("an item without a destination is not an `<a>`", () => {
     render(<MenuBar />);
-    openWithPointer("Special");
+    openWithPointer(SITE_NAME);
 
     expect(menuItem("Restart").tagName).toBe("DIV");
     expect(menuItem("Restart").hasAttribute("href")).toBe(false);
@@ -502,7 +497,8 @@ describe("items that open a destination", () => {
   test("the Enter key follows a menu item link once its activation flash is complete", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
-    openWithKeyboard("Special");
+    openWithKeyboard(SITE_NAME);
+    fireEvent.keyDown(menu()!, { key: "ArrowDown" });
 
     const follow = vi.spyOn(menuItem("View Source") as HTMLAnchorElement, "click").mockReturnValue(undefined);
 
@@ -538,8 +534,8 @@ describe("items that open a destination", () => {
   );
 
   test.each([
-    ["moving the pointer over another menu title", () => fireEvent.pointerOver(menuTitle("Special"))],
-    ["pressing another menu title", () => openWithPointer("Special")],
+    ["moving the pointer over another menu title", () => fireEvent.pointerOver(menuTitle(SITE_NAME))],
+    ["pressing another menu title", () => openWithPointer(SITE_NAME)],
     ["pressing the Right arrow key", () => fireEvent.keyDown(menu()!, { key: "ArrowRight" })],
   ])(
     "%s during an item's activation flash opens the next menu, and the item opens its destination once",
@@ -553,20 +549,20 @@ describe("items that open a destination", () => {
 
       interrupt();
 
-      expect(isExpanded("Special")).toBe(true);
+      expect(isExpanded(SITE_NAME)).toBe(true);
       expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
 
       runActivationFlash();
 
       expect(open).toHaveBeenCalledOnce();
-      expect(isExpanded("Special")).toBe(true);
+      expect(isExpanded(SITE_NAME)).toBe(true);
     },
   );
 
   test("releasing the pointer over a menu item link plays the click sound once, including when the link is followed", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
-    openWithPointer("Special");
+    openWithPointer(SITE_NAME);
     playClickSound.mockClear(); // Pressing the menu's title plays its own click sound.
 
     const viewSource = menuItem("View Source") as HTMLAnchorElement;
@@ -585,18 +581,19 @@ describe("items that open a destination", () => {
   test("choosing an item that does not move the focus returns the focus to the menu's title", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
-    openWithKeyboard("Special");
+    openWithKeyboard(SITE_NAME);
+    fireEvent.keyDown(menu()!, { key: "ArrowDown" });
     vi.spyOn(menuItem("View Source") as HTMLAnchorElement, "click").mockReturnValue(undefined);
     fireEvent.keyDown(menu()!, { key: "Enter" });
     runActivationFlash();
 
     expect(menu()).toBeNull();
-    expect(document.activeElement).toBe(menuTitle("Special"));
+    expect(document.activeElement).toBe(menuTitle(SITE_NAME));
   });
 
   test("the `View Source` menu item is described as opening in a new tab", () => {
     render(<MenuBar />);
-    openWithPointer("Special");
+    openWithPointer(SITE_NAME);
 
     expect(screen.getByRole("menuitem", { name: "View Source", description: "Opens in a new tab" })).toBe(
       menuItem("View Source"),
@@ -615,7 +612,7 @@ describe("items that open a destination", () => {
 
   test("the `View Source` menu item links to the site source URL with a `target` attribute of `_blank`", () => {
     render(<MenuBar />);
-    openWithPointer("Special");
+    openWithPointer(SITE_NAME);
 
     const viewSource = menuItem("View Source");
 
@@ -627,13 +624,13 @@ describe("items that open a destination", () => {
 describe("the site menu", () => {
   test("the title renders the logo and is named by the site name", () => {
     render(<MenuBar />);
-    expect(siteMenuTitle().querySelector("svg")).not.toBeNull();
+    expect(menuTitle(SITE_NAME).querySelector("svg")).not.toBeNull();
   });
 
   test("a plain click on the `Control Panel` item opens the control panel window in the page", () => {
     vi.useFakeTimers();
     render(<MenuBar />);
-    fireEvent.pointerDown(siteMenuTitle());
+    fireEvent.pointerDown(menuTitle(SITE_NAME));
 
     const controlPanel = menuItem("Control Panel");
 

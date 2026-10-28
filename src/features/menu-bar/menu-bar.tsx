@@ -217,6 +217,11 @@ export function MenuBar() {
           href: FEATURE_ROUTE_SPECS.controlPanel.route,
           action: () => open(FEATURE_ROUTE_SPECS.controlPanel.route),
         },
+        { kind: "separator" },
+        { kind: "action", label: "View Source", accessory: "external-link", href: SITE_SOURCE_URL, target: "_blank" },
+        { kind: "separator" },
+        { kind: "action", label: "Sleep", action: sleep },
+        { kind: "action", label: "Restart", action: restart },
       ],
     },
     {
@@ -246,15 +251,6 @@ export function MenuBar() {
             action: () => open(DESTINATIONS[id].route),
           })),
         ]),
-      ],
-    },
-    {
-      label: "Special",
-      items: [
-        { kind: "action", label: "View Source", accessory: "external-link", href: SITE_SOURCE_URL, target: "_blank" },
-        { kind: "separator" },
-        { kind: "action", label: "Sleep", action: sleep },
-        { kind: "action", label: "Restart", action: restart },
       ],
     },
   ];
