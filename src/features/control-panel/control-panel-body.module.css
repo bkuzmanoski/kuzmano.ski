@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 20px;
 
-  padding: 20px var(--layout-gutter) var(--layout-gutter);
+  padding: var(--layout-gutter);
 
   font: var(--font-chrome);
   color: var(--color-foreground);
@@ -12,7 +12,7 @@
 .controls {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 16px;
+  gap: 12px 16px;
   align-items: baseline;
 }
 
@@ -31,38 +31,32 @@
 
 .themeColorControls {
   --control-panel-body-saturation-step-count: 1; /* Set from JS. */
-  --control-panel-body-slider-min-width: calc(var(--control-panel-body-saturation-step-count) * 11px + 11px);
-  --control-panel-body-slider-max-width: calc(var(--control-panel-body-saturation-step-count) * 21px + 11px);
-  --control-panel-body-wrapped-control-width: min(
+  --control-panel-body-slider-width-beyond-travel: 27px; /* The thumb's width plus the track's overhang at either end (see `slider.module.css`). */
+  --control-panel-body-slider-max-width: calc(
+    var(--control-panel-body-saturation-step-count) * 21px + var(--control-panel-body-slider-width-beyond-travel)
+  );
+  --control-panel-body-theme-color-control-width: min(
     var(--control-panel-body-slider-max-width),
-    round(down, 100% - 11px, var(--control-panel-body-saturation-step-count) * 1px) + 11px
-  ); /* Rounds the thumb's travel (the control width minus the thumb) down to a multiple of the step count, ensuring each step lands on a whole pixel. */
+    round(
+        down,
+        100% - var(--control-panel-body-slider-width-beyond-travel),
+        var(--control-panel-body-saturation-step-count) * 1px
+      ) +
+      var(--control-panel-body-slider-width-beyond-travel)
+  ); /* Rounds the thumb's travel down to a multiple of the step count, ensuring each step lands on a whole pixel. */
 
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  margin-block-end: 4px;
 }
 
-.popupMenu {
-  flex: 1 0 auto;
-  max-width: var(--control-panel-body-slider-max-width);
-
-  @supports (width: round(down, 1px, 1px)) {
-    max-width: var(--control-panel-body-wrapped-control-width);
-  }
-}
-
-.saturation {
-  flex: 1000000 1 var(--control-panel-body-slider-min-width);
-  min-width: var(--control-panel-body-slider-min-width);
-}
-
+.popupMenu,
 .slider {
   max-width: var(--control-panel-body-slider-max-width);
 
   @supports (width: round(down, 1px, 1px)) {
-    width: var(--control-panel-body-wrapped-control-width);
+    max-width: var(--control-panel-body-theme-color-control-width);
   }
 }
 

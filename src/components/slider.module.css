@@ -1,8 +1,8 @@
 .slider {
-  --slider-thumb-width: 11px; /* The width of `slider-thumb.svg`. */
-  --slider-thumb-height: 16px;
-  --slider-height: 30px; /* As tall as a text `Button`. */
-  --slider-rendering-inset: 4px; /* Centers the 22px of track, ticks, and thumb in the slider's height. */
+  --slider-thumb-width: 15px; /* The width of `slider-thumb.svg`. */
+  --slider-height: 30px; /* As tall as a text `Button`, and the height of `slider-thumb.svg`. */
+  --slider-track-height: 16px; /* Centers the track in the slider's height. */
+  --slider-track-overhang: 6px; /* Shows the track's rounded ends past the thumb at either end of its travel. */
   --slider-value-fraction: 0; /* Set from JS. */
 
   position: relative;
@@ -10,7 +10,7 @@
   color: var(--color-border);
 
   &:has(.input:focus-visible) {
-    @mixin focus-stroke calc(var(--slider-rendering-inset) - 3px) -3px;
+    @mixin focus-stroke -2px;
   }
 
   &:has(.input:disabled) {
@@ -18,12 +18,14 @@
   }
 }
 
+/* Spans the thumb's travel, so a press lands on the value the thumb shows there. */
 .input {
   position: absolute;
   z-index: 1;
-  inset: 0;
+  inset-block: 0;
+  inset-inline-start: var(--slider-track-overhang);
 
-  width: 100%;
+  width: calc(100% - 2 * var(--slider-track-overhang));
   height: 100%;
   margin: 0;
 
@@ -52,24 +54,38 @@
 .track {
   position: absolute;
   inset-inline: 0;
-  top: calc(var(--slider-rendering-inset) + 5px);
+  top: calc((var(--slider-height) - var(--slider-track-height)) / 2);
 
-  height: 6px;
+  height: var(--slider-track-height);
   border: 1px solid currentColor;
+  border-radius: calc(var(--slider-track-height) / 2);
 
-  background: var(--color-background-secondary);
+  background: var(--color-background);
+  box-shadow:
+    inset 0 0 0 2px var(--color-background),
+    inset 0 0 0 3px currentColor; /* Strokes the dither fill 2px inside the border. */
+
+  &::before {
+    @mixin dither-50 var(--color-background-dither-pattern);
+
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: calc(var(--slider-track-height) / 2 - 4px);
+  }
 }
 
-/* Spans the thumb's travel, so each tick is under the center of the thumb at its step. */
+/* Spans the thumb's travel, so each tick is under the center of the thumb at its step, and hangs from the track to the
+ * bottom of the thumb. */
 .ticks {
   position: absolute;
-  inset-inline: calc((var(--slider-thumb-width) - 1px) / 2);
-  bottom: var(--slider-rendering-inset);
+  inset-inline: calc(var(--slider-track-overhang) + (var(--slider-thumb-width) - 1px) / 2);
+  top: calc((var(--slider-height) + var(--slider-track-height)) / 2);
 
   display: flex;
   justify-content: space-between;
 
-  height: 4px;
+  height: calc((var(--slider-height) - var(--slider-track-height)) / 2);
 }
 
 .tick {
@@ -79,15 +95,16 @@
 
 .thumb {
   position: absolute;
-  top: var(--slider-rendering-inset);
-  left: calc((100% - var(--slider-thumb-width)) * var(--slider-value-fraction));
+  top: 0;
+  left: calc(
+    var(--slider-track-overhang) + (100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang)) *
+      var(--slider-value-fraction)
+  );
 
   display: block;
 
   width: var(--slider-thumb-width);
-  height: var(--slider-thumb-height);
+  height: var(--slider-height);
 
-  .input:active:not(:disabled) ~ & {
-    --color-icon-background: var(--color-pressed-background);
-  }
+  color: var(--color-foreground);
 }

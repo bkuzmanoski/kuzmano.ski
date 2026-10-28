@@ -15,11 +15,17 @@
 }
 
 .circle {
+  --radio-group-dot-color: var(--color-foreground);
+
   @mixin checkable-indicator;
 
   width: 14px;
   height: 14px;
   border-radius: 50%;
+
+  input:disabled + & {
+    --radio-group-dot-color: var(--color-foreground-disabled);
+  }
 
   input:checked + &::before {
     content: "";
@@ -30,7 +36,11 @@
     border-radius: 50%;
 
     forced-color-adjust: none;
-    background: currentColor;
+    background: var(--radio-group-dot-color);
+
+    @media (forced-colors: active) {
+      background: currentColor;
+    }
   }
 
   input:focus-visible + & {

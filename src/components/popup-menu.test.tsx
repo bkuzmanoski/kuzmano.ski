@@ -71,6 +71,20 @@ test("a pop-up menu sets the `--popup-menu-chosen-option-index` and `--popup-men
   expect(style.getPropertyValue("--popup-menu-option-count")).toBe("3");
 });
 
+test("an option with the `swatchColor` property shows a swatch before its label", () => {
+  const options = [
+    { value: "first", label: "First", swatchColor: "red" },
+    { value: "second", label: "Second", swatchColor: "blue" },
+  ];
+
+  render(<PopupMenu value="second" options={options} aria-label="A menu" onChange={() => undefined} />);
+  pressButton();
+
+  const swatch = optionNamed("Second").firstChild as HTMLElement;
+
+  expect(swatch.style.getPropertyValue("--popup-menu-swatch-color")).toBe("blue");
+});
+
 test("releasing the press that opened the options without moving leaves them open, even over an option", () => {
   const onChange = vi.fn();
 

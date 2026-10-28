@@ -16,6 +16,7 @@ const OPEN_OPTIONS_KEYS = new Set(["ArrowDown", "ArrowUp"]); // Enter and Space 
 export interface PopupMenuOption<TValue extends string> {
   value: TValue;
   label: string;
+  swatchColor?: string;
 }
 
 interface OpenState {
@@ -23,6 +24,21 @@ interface OpenState {
   buttonRect: DOMRect;
   isPointerHeld: boolean;
   pressOrigin: Position | null;
+}
+
+function PopupMenuOptionLabel({ option }: { option: PopupMenuOption<string> }) {
+  if (option.swatchColor === undefined) {
+    return option.label;
+  }
+
+  const swatchStyle: StyleWithVars = { "--popup-menu-swatch-color": option.swatchColor };
+
+  return (
+    <>
+      <span className={styles.swatch} style={swatchStyle} aria-hidden="true" />
+      {option.label}
+    </>
+  );
 }
 
 function PopupMenuOptions<TValue extends string>({
@@ -104,7 +120,7 @@ function PopupMenuOptions<TValue extends string>({
           className={cx(styles.option, isHighlighted(index) && styles.active)}
           data-index={index}
         >
-          {option.label}
+          <PopupMenuOptionLabel option={option} />
         </div>
       ))}
     </div>,
@@ -212,10 +228,12 @@ export function PopupMenu<TValue extends string>({
         <span className={styles.label}>
           {options.map((option, index) =>
             index === chosenOptionIndex ? (
-              <span key={option.value}>{option.label}</span>
+              <span key={option.value}>
+                <PopupMenuOptionLabel option={option} />
+              </span>
             ) : (
               <span key={option.value} className={styles.widthReservingLabel} aria-hidden="true">
-                {option.label}
+                <PopupMenuOptionLabel option={option} />
               </span>
             ),
           )}

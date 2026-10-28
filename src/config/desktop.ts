@@ -8,7 +8,7 @@ export const WINDOW_SPECS: WindowLayout["windows"] = {
   collection: { defaultSize: { width: 961, height: 960 }, sizing: "resizable" },
 
   contact: { defaultSize: { width: 572, height: 480 }, sizing: "fixed" },
-  controlPanel: { defaultSize: { width: 480, height: 240 }, sizing: "fitContentHeight" },
+  controlPanel: { defaultSize: { width: 480, height: 273 }, sizing: "fitContentHeight" },
 };
 export const WINDOW_MIN_SIZE: Size = { width: 440, height: 440 }; // Full-width on an iPhone Pro Max in portrait (clamped by the window layer padding).
 export const ICON_LAYOUT: IconLayout = {

@@ -1,6 +1,10 @@
 .button {
   user-select: none;
 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   min-width: 112px;
   height: 30px;
   padding: 0 16px;
@@ -47,12 +51,8 @@
     --color-icon-foreground: var(--color-icon-foreground-secondary);
 
     cursor: default;
-
     position: relative;
-
     display: flex;
-    align-items: center;
-    justify-content: center;
 
     &:focus {
       outline: none;

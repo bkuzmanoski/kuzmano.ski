@@ -1,6 +1,7 @@
 .button,
 .options {
   --popup-menu-padding-inline-start: 10px;
+  --popup-menu-swatch-gap: var(--popup-menu-padding-inline-start);
 }
 
 .button {
@@ -59,7 +60,10 @@
     text-align: start;
 
     & > * {
+      display: flex;
       grid-area: 1 / 1;
+      gap: var(--popup-menu-swatch-gap);
+      align-items: center;
     }
   }
 
@@ -106,6 +110,7 @@
   @mixin menu-item;
 
   position: relative;
+  gap: var(--popup-menu-swatch-gap);
   padding-inline-start: var(--popup-menu-option-padding-inline-start);
 
   &.active {
@@ -116,5 +121,22 @@
     content: "\2713" / "";
     position: absolute;
     inset-inline-start: 10px;
+  }
+}
+
+.swatch {
+  --popup-menu-swatch-color: transparent; /* Set from JS. */
+
+  flex: none;
+
+  width: 24px;
+  height: 12px;
+  border: 1px solid currentColor;
+
+  forced-color-adjust: none; /* Preserve the swatch's specified color. */
+  background: var(--popup-menu-swatch-color);
+
+  .button:disabled & {
+    background: var(--color-border-secondary);
   }
 }

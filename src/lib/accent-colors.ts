@@ -7,6 +7,8 @@ export const ACCENT_COLOR_NAMES = ["purple", "orange", "green", "turquoise", "re
 /** One of the `--accent-*` colors declared in `/src/styles.css`. */
 export type AccentColorName = (typeof ACCENT_COLOR_NAMES)[number];
 
+export const accentColorOf = (accent: AccentColorName): string => `var(--accent-${accent})`;
+
 export const accentColorVariable = (propertyName: `--${string}`, accent: AccentColorName): StyleWithVars => ({
-  [propertyName]: `var(--accent-${accent})`,
+  [propertyName]: accentColorOf(accent),
 });

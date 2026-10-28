@@ -6,7 +6,7 @@ import type { PopupMenuOption } from "#/components/popup-menu.tsx";
 import { RadioGroup } from "#/components/radio-group.tsx";
 import type { RadioGroupOption } from "#/components/radio-group.tsx";
 import { Slider } from "#/components/slider.tsx";
-import { ACCENT_COLOR_NAMES } from "#/lib/accent-colors.ts";
+import { ACCENT_COLOR_NAMES, accentColorOf } from "#/lib/accent-colors.ts";
 import { resetSettingsAudibly, setSoundEffectsAudibly } from "#/lib/audio/sound-effects-setting.ts";
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
 import {
@@ -31,6 +31,7 @@ const APPEARANCE_OPTIONS: ReadonlyArray<RadioGroupOption<AppearanceSetting>> = A
 const THEME_COLOR_OPTIONS: ReadonlyArray<PopupMenuOption<ThemeColor>> = ACCENT_COLOR_NAMES.map((themeColor) => ({
   value: themeColor,
   label: THEME_COLOR_LABELS[themeColor],
+  swatchColor: accentColorOf(themeColor),
 }));
 const SOUND_EFFECTS_OPTIONS: ReadonlyArray<RadioGroupOption<SoundEffectsSetting>> = [
   { value: "on", label: "On" },
@@ -56,16 +57,6 @@ export function ControlPanelBody() {
     <div className={styles.controlPanelBody}>
       <div className={styles.controls}>
         <div className={styles.themeSettings}>
-          <span id={appearanceLabelId} className={styles.label}>
-            Appearance:
-          </span>
-          <RadioGroup
-            value={appearance}
-            options={APPEARANCE_OPTIONS}
-            disabled={!isHydrated}
-            onChange={setAppearance}
-            aria-labelledby={appearanceLabelId}
-          />
           <span id={themeColorLabelId} className={styles.label}>
             Theme colour:
           </span>
@@ -81,18 +72,26 @@ export function ControlPanelBody() {
             <span id={saturationLabelId} hidden>
               Saturation
             </span>
-            <div className={styles.saturation}>
-              <Slider
-                className={styles.slider}
-                value={themeChromaScale}
-                {...THEME_CHROMA_SCALE_RANGE}
-                disabled={!isHydrated}
-                valueTextOf={chromaScaleValueTextOf}
-                onChange={setThemeChromaScale}
-                aria-labelledby={saturationLabelId}
-              />
-            </div>
+            <Slider
+              className={styles.slider}
+              value={themeChromaScale}
+              {...THEME_CHROMA_SCALE_RANGE}
+              disabled={!isHydrated}
+              valueTextOf={chromaScaleValueTextOf}
+              onChange={setThemeChromaScale}
+              aria-labelledby={saturationLabelId}
+            />
           </div>
+          <span id={appearanceLabelId} className={styles.label}>
+            Appearance:
+          </span>
+          <RadioGroup
+            value={appearance}
+            options={APPEARANCE_OPTIONS}
+            disabled={!isHydrated}
+            onChange={setAppearance}
+            aria-labelledby={appearanceLabelId}
+          />
         </div>
         <span id={soundEffectsLabelId} className={styles.label}>
           Sound effects:
