@@ -21,16 +21,25 @@ import { cycle } from "#/lib/math.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress } from "#/lib/press.ts";
 import { sleep } from "#/lib/screensaver/lifecycle.ts";
-import { APPEARANCE_LABELS, APPEARANCE_ORDER, setAppearance, useSettings } from "#/lib/settings/settings.ts";
+import {
+  APPEARANCE_LABELS,
+  APPEARANCE_SETTINGS,
+  SOUND_EFFECTS_LABELS,
+  setAppearance,
+  useSettings,
+} from "#/lib/settings/settings.ts";
 import { restart, useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
-import { useFocusedWindow, useWindowActions } from "#/lib/window-manager/context.ts";
+import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
+import { SITE_FEED } from "#/site/feeds.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import { isFeatureWindow, windowAlternateRepresentationsOf } from "#/site/windows.ts";
 
 import styles from "./menu-bar.module.css";
+import { joinedWithSeparators } from "./menu-items.ts";
 import { Menu } from "./menu.tsx";
 
-import type { MenuItem } from "./menu.tsx";
+import type { MenuItem } from "./menu-items.ts";
 import type { ComponentType, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
@@ -92,7 +101,8 @@ function StatusButton({
 
 function AppearanceStatus() {
   const { appearance } = useSettings();
-  const nextAppearance = APPEARANCE_ORDER[cycle(APPEARANCE_ORDER.length, APPEARANCE_ORDER.indexOf(appearance), 1)]!;
+  const nextAppearance =
+    APPEARANCE_SETTINGS[cycle(APPEARANCE_SETTINGS.length, APPEARANCE_SETTINGS.indexOf(appearance), 1)]!;
   const Icon = appearance === "system" ? ToggleAppearanceSystemMenuBarIcon : ToggleAppearanceLightDarkMenuBarIcon;
 
   return (
@@ -112,7 +122,7 @@ function SoundStatus() {
 
   return (
     <StatusButton
-      label={`Sound: ${sound === "on" ? "On" : "Off"}`}
+      label={`Sound: ${SOUND_EFFECTS_LABELS[sound]}`}
       isSilent={sound === "on"}
       onClick={() => setSoundEffectsAudibly(sound === "on" ? "off" : "on")}
     >
@@ -190,6 +200,7 @@ function TimeStatus() {
 export function MenuBar() {
   const { open, close, toggleZoom, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
+  const windowContent = useWindowContent();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const [openMenu, setOpenMenu] = useState<{
     label: string;
@@ -202,9 +213,20 @@ export function MenuBar() {
   const titlePressPointerIdRef = useRef<number | null>(null);
 
   const isWindowFocused = focusedWindow !== null;
+  const isContentWindowFocused = isWindowFocused && !isFeatureWindow(focusedWindow);
+  const focusedWindowRoute = focusedWindow && windowContent[focusedWindow]?.route;
+  const alternateRepresentations = focusedWindowRoute ? windowAlternateRepresentationsOf(focusedWindowRoute) : null;
+  const feed = alternateRepresentations && (alternateRepresentations.feed ?? SITE_FEED); // A page has no feed of its own but its document links the site feed.
 
   const printWindow = () => requestAnimationFrame(() => requestAnimationFrame(() => print())); // Two frames: the menu closes after the action runs, and must paint closed before `print()` blocks rendering.
   const closeWindow = () => focusedWindow && close(focusedWindow);
+
+  const alternateRepresentationItems = [
+    { label: "View as Markdown", href: alternateRepresentations?.markdownRepresentationPath },
+    { label: "Atom Feed", href: feed?.path },
+  ].flatMap(({ label, href }): Array<MenuItem> =>
+    href ? [{ kind: "action", label, accessory: "external-link", href, target: "_blank" }] : [],
+  );
 
   const menus: Array<{ label: string; icon?: ComponentType<{ className?: string }>; items: Array<MenuItem> }> = [
     {
@@ -226,32 +248,33 @@ export function MenuBar() {
     },
     {
       label: "File",
-      items: [
-        { kind: "action", label: "Print…", disabled: !isWindowFocused, action: printWindow },
-        { kind: "separator" },
-        {
-          kind: "action",
-          label: "Close",
-          shortcut: { code: "KeyW", label: "W" },
-          disabled: !isWindowFocused,
-          action: closeWindow,
-        },
-      ],
+      items: joinedWithSeparators([
+        alternateRepresentationItems,
+        isContentWindowFocused ? [{ kind: "action", label: "Print…", action: printWindow }] : [],
+        [
+          {
+            kind: "action",
+            label: "Close",
+            shortcut: { code: "KeyW", label: "W" },
+            disabled: !isWindowFocused,
+            action: closeWindow,
+          },
+        ],
+      ]),
     },
     {
       label: "Go",
-      items: [
-        ...DESTINATION_GROUPS.flatMap((group, index): Array<MenuItem> => [
-          ...(index > 0 ? [{ kind: "separator" } as const] : []),
-          ...group.map((id): MenuItem => ({
+      items: joinedWithSeparators(
+        DESTINATION_GROUPS.map((group) =>
+          group.map((id): MenuItem => ({
             kind: "action",
             label: DESTINATIONS[id].title,
             shortcut: destinationShortcut(id),
             href: DESTINATIONS[id].route,
             action: () => open(DESTINATIONS[id].route),
           })),
-        ]),
-      ],
+        ),
+      ),
     },
   ];
 

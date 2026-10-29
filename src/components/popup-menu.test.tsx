@@ -71,18 +71,24 @@ test("a pop-up menu sets the `--popup-menu-chosen-option-index` and `--popup-men
   expect(style.getPropertyValue("--popup-menu-option-count")).toBe("3");
 });
 
-test("an option with the `swatchColor` property shows a swatch before its label", () => {
+test("a pop-up menu renders a swatch of an option's `swatchColor` before its label, in the options and on the button for the chosen option", () => {
   const options = [
     { value: "first", label: "First", swatchColor: "red" },
     { value: "second", label: "Second", swatchColor: "blue" },
   ];
+  const swatchColorOf = (element: ChildNode | null | undefined) =>
+    (element as HTMLElement | null | undefined)?.style.getPropertyValue("--popup-menu-swatch-color");
 
   render(<PopupMenu value="second" options={options} aria-label="A menu" onChange={() => undefined} />);
+
+  expect(swatchColorOf(button().querySelector(':scope > span > span:not([aria-hidden="true"])')?.firstChild)).toBe(
+    "blue",
+  );
+
   pressButton();
 
-  const swatch = optionNamed("Second").firstChild as HTMLElement;
-
-  expect(swatch.style.getPropertyValue("--popup-menu-swatch-color")).toBe("blue");
+  expect(swatchColorOf(optionNamed("First").firstChild)).toBe("red");
+  expect(swatchColorOf(optionNamed("Second").firstChild)).toBe("blue");
 });
 
 test("releasing the press that opened the options without moving leaves them open, even over an option", () => {

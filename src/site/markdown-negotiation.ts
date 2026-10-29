@@ -1,3 +1,4 @@
+// Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { HTML_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
 

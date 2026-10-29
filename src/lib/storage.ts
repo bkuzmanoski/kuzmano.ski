@@ -1,4 +1,4 @@
-// This module has no imports, so pre-hydration scripts can use it (see `/build/inline-scripts.ts`).
+// Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
 
 export function readStored(key: string): string | null {
   try {

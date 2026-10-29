@@ -1,5 +1,4 @@
-// This module imports only types so a plugin built on it can be registered in `/vitest.config.ts`
-// without loading what the plugin's own loader reads.
+// Imports only types because every test run loads this module through `/vitest.config.ts`.
 import type { Environment, Plugin } from "vite";
 
 /** Configuration for a virtual module that exports one JSON-serializable value. */

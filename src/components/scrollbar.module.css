@@ -72,7 +72,7 @@
 }
 
 .thumb {
-  --scrollbar-thumb-proportion: 1; /* Set from JS. */
+  --scrollbar-thumb-proportion: 0; /* Set from JS. */
   --scrollbar-thumb-position: 0; /* Set from JS. */
   --scrollbar-thumb-min-height: 20px;
   --scrollbar-thumb-height: min(

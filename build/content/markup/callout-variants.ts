@@ -1,12 +1,13 @@
 import { visit } from "unist-util-visit";
 
 import { CALLOUT_VARIANTS } from "#/lib/content/callout-variants.ts";
+import { isOneOf } from "#/lib/guards.ts";
 
 import { elementNameOf, isJsxElement, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
-const CALLOUT_VARIANT_NAMES = new Set<string>(CALLOUT_VARIANTS);
+const isCalloutVariant = isOneOf(CALLOUT_VARIANTS);
 
 /** Throws if an entry renders a `<Callout>` whose `variant` attribute is not one of `CALLOUT_VARIANTS`. */
 export function rehypeCalloutVariants() {
@@ -24,7 +25,7 @@ export function rehypeCalloutVariants() {
 
       const { value } = variantAttribute;
 
-      if (typeof value !== "string" || !CALLOUT_VARIANT_NAMES.has(value)) {
+      if (typeof value !== "string" || !isCalloutVariant(value)) {
         const writtenVariant =
           typeof value === "string"
             ? `the variant "${value}"`

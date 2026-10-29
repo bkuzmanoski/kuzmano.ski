@@ -1,13 +1,15 @@
 import { visit } from "unist-util-visit";
 
 import { CONTENT_SPANS } from "#/lib/content/content-spans.ts";
+import { isOneOf } from "#/lib/guards.ts";
 
 import { elementNameOf, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
-const CONTENT_SPAN_NAMES = new Set<string>(CONTENT_SPANS);
 const SPAN_ATTRIBUTE_NAME = "data-content-span";
+
+const isContentSpan = isOneOf(CONTENT_SPANS);
 
 // Reads the attribute from authored JSX, or from a hast element such as the `<picture>` that
 // `rehypeMedia` moves an authored `<img>`'s layout attributes to. Returns `undefined` when the
@@ -36,7 +38,7 @@ export function rehypeContentSpans() {
 
       const { value } = spanAttribute;
 
-      if (typeof value !== "string" || !CONTENT_SPAN_NAMES.has(value)) {
+      if (typeof value !== "string" || !isContentSpan(value)) {
         const elementName = elementNameOf(node);
         const writtenElement =
           typeof value === "string"

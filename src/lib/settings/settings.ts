@@ -1,6 +1,7 @@
 import { THEME_DEFAULTS } from "virtual:theme-defaults";
 
 import { createClientStore } from "../client-store.ts";
+import { isOneOf } from "../guards.ts";
 import { readStored, removeStored, writeStored } from "../storage.ts";
 
 import { notifyColorChange } from "./color-change.ts";
@@ -17,9 +18,12 @@ import {
 
 import type { AppearanceSetting, ThemeColor } from "./theme.ts";
 
+export { APPEARANCE_SETTINGS } from "./theme.ts";
 export type { AppearanceSetting, ThemeColor };
 
-export type SoundEffectsSetting = "on" | "off";
+export const SOUND_EFFECTS_SETTINGS = ["on", "off"] as const;
+
+export type SoundEffectsSetting = (typeof SOUND_EFFECTS_SETTINGS)[number];
 
 export interface Settings {
   appearance: AppearanceSetting;
@@ -28,7 +32,6 @@ export interface Settings {
   soundEffects: SoundEffectsSetting;
 }
 
-export const APPEARANCE_ORDER: ReadonlyArray<AppearanceSetting> = ["system", "light", "dark"];
 export const APPEARANCE_LABELS: Record<AppearanceSetting, string> = { system: "System", light: "Light", dark: "Dark" };
 export const THEME_COLOR_LABELS: Record<ThemeColor, string> = {
   purple: "Purple",
@@ -39,6 +42,7 @@ export const THEME_COLOR_LABELS: Record<ThemeColor, string> = {
   pink: "Pink",
   blue: "Blue",
 };
+export const SOUND_EFFECTS_LABELS: Record<SoundEffectsSetting, string> = { on: "On", off: "Off" };
 
 const SOUND_EFFECTS_STORAGE_KEY = "sound";
 const SETTINGS_STORAGE_KEYS: ReadonlySet<string> = new Set([
@@ -54,7 +58,7 @@ const DEFAULT_SETTINGS: Settings = {
   soundEffects: "on",
 };
 
-const isSoundEffectsSetting = (value: string): value is SoundEffectsSetting => value === "off" || value === "on";
+const isSoundEffectsSetting = isOneOf(SOUND_EFFECTS_SETTINGS);
 
 function parseStored<T extends string>(key: string, isValid: (value: string) => value is T, fallback: T): T {
   const rawValue = readStored(key);

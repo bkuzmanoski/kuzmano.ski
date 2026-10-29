@@ -1,4 +1,4 @@
-// This module has no imports, so build plugins can use it.
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
 
 export interface ContentPath {
   segment: string;

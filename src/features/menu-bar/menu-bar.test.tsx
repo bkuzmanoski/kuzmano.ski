@@ -6,13 +6,18 @@ import { SITE_NAME, SITE_SOURCE_URL } from "#/config/site.ts";
 import { getSettings, setSoundEffects } from "#/lib/settings/settings.ts";
 import { HIDE_DELAY_MS, STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
+import type { AlternateRepresentations } from "#/site/alternate-representations.ts";
+import { SITE_FEED } from "#/site/feeds.ts";
+import type { FeedMetadata } from "#/site/feeds.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import type * as Windows from "#/site/windows.ts";
 import { releasePointerOver, runActivationFlash, stubElementFromPoint } from "#/test-utils/menu.ts";
 import { advanceTimersBy, nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
 
 let focusedWindow: WindowId | null = null;
+let alternateRepresentations: AlternateRepresentations | null = null;
 
 const open = vi.hoisted(() => vi.fn());
 const playHoverSound = vi.hoisted(() => vi.fn());
@@ -21,9 +26,15 @@ const playClickSound = vi.hoisted(() => vi.fn());
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
     actions: { open, close: vi.fn() },
+    content: () => (focusedWindow ? { [focusedWindow]: { route: "/route", title: "Title" } } : {}),
     focusedWindow: () => focusedWindow,
   }),
 );
+
+vi.mock("#/site/windows.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof Windows>()),
+  windowAlternateRepresentationsOf: () => alternateRepresentations,
+}));
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound, playClickSound }),
@@ -31,6 +42,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 
 beforeEach(() => {
   focusedWindow = null;
+  alternateRepresentations = null;
   open.mockClear();
   playHoverSound.mockClear();
   playClickSound.mockClear();
@@ -375,11 +387,12 @@ describe("disabled items", () => {
 describe("printing", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  test("the `Print…` menu item is disabled without a focused window", () => {
+  test("the `Print…` menu item is enabled while an entry window is focused", () => {
+    focusedWindow = "entry";
     render(<MenuBar />);
     openWithPointer("File");
 
-    expect(menuItem("Print…").getAttribute("aria-disabled")).toBe("true");
+    expect(menuItem("Print…").hasAttribute("aria-disabled")).toBe(false);
   });
 
   test("the `Print…` menu item opens the browser's print dialog two animation frames after the menu closes", async () => {
@@ -618,6 +631,60 @@ describe("items that open a destination", () => {
 
     expect(viewSource.getAttribute("href")).toBe(SITE_SOURCE_URL);
     expect(viewSource.getAttribute("target")).toBe("_blank");
+  });
+});
+
+describe("alternate representations", () => {
+  const COLLECTION_FEED: FeedMetadata = { ...SITE_FEED, path: "/collection/feed.xml", route: "/collection" };
+
+  test("the `View as Markdown` and `Atom Feed` menu items link to the focused window's Markdown representation and feed with a `target` attribute of `_blank`", () => {
+    focusedWindow = "entry";
+    alternateRepresentations = { markdownRepresentationPath: "/collection/entry.md", feed: COLLECTION_FEED };
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(menuItem("View as Markdown").getAttribute("href")).toBe("/collection/entry.md");
+    expect(menuItem("View as Markdown").getAttribute("target")).toBe("_blank");
+    expect(menuItem("Atom Feed").getAttribute("href")).toBe(COLLECTION_FEED.path);
+    expect(menuItem("Atom Feed").getAttribute("target")).toBe("_blank");
+  });
+
+  test("the `Atom Feed` menu item links to the site feed when the focused window's content does not have a feed of its own", () => {
+    focusedWindow = "entry";
+    alternateRepresentations = { markdownRepresentationPath: "/page.md", feed: null };
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(menuItem("Atom Feed").getAttribute("href")).toBe(SITE_FEED.path);
+  });
+
+  test("the File menu omits the `View as Markdown` menu item when the focused window does not have a Markdown representation", () => {
+    focusedWindow = "entry";
+    alternateRepresentations = { markdownRepresentationPath: null, feed: COLLECTION_FEED };
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(screen.queryByText("View as Markdown")).toBeNull();
+    expect(screen.getAllByRole("menuitem")[0]).toBe(menuItem("Atom Feed"));
+  });
+});
+
+describe("the File menu", () => {
+  test("lists only the `Close` menu item when a feature route's window is focused", () => {
+    focusedWindow = "contact";
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(screen.getAllByRole("menuitem")).toEqual([menuItem("Close")]);
+    expect(menu()!.querySelector("hr")).toBeNull();
+  });
+
+  test("lists only the `Close` menu item, with the `aria-disabled` attribute when the desktop is focused", () => {
+    render(<MenuBar />);
+    openWithPointer("File");
+
+    expect(screen.getAllByRole("menuitem")).toEqual([menuItem("Close")]);
+    expect(menuItem("Close").getAttribute("aria-disabled")).toBe("true");
   });
 });
 

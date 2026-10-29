@@ -2,6 +2,7 @@ import SliderThumb from "#/assets/images/slider-thumb.svg?react";
 import { playSliderStepSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
+import { stepCountOf } from "#/lib/stepped-range.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./slider.module.css";
@@ -31,8 +32,11 @@ export function Slider({
 }) {
   const pressSoundHandlers = usePressSound();
 
-  const stepCount = Math.round((max - min) / step);
-  const style: StyleWithVars = { "--slider-value-fraction": (value - min) / (max - min) };
+  const stepCount = stepCountOf({ min, max, step });
+  const style: StyleWithVars = {
+    "--slider-step-count": stepCount,
+    "--slider-value-fraction": (value - min) / (max - min),
+  };
 
   return (
     <div className={cx(styles.slider, className)} style={style}>

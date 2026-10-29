@@ -6,15 +6,15 @@ import postcssRelativeColorSyntax from "@csstools/postcss-relative-color-syntax"
 import postcss from "postcss";
 import valueParser from "postcss-value-parser";
 
+import type { ColorScheme } from "#/lib/settings/theme.ts";
+
 import { STYLESHEET_FILE_PATH, fromRoot } from "../paths.ts";
 
 import { rootCustomPropertiesIn } from "./custom-properties.ts";
 
 import type { FunctionNode, Node } from "postcss-value-parser";
 
-type Scheme = "light" | "dark";
-
-export type SchemeColor = Record<Scheme, string>;
+export type SchemeColor = Record<ColorScheme, string>;
 
 export interface Palette {
   foreground: SchemeColor;
@@ -50,7 +50,12 @@ function argumentsOf(node: FunctionNode): Array<Array<Node>> {
 
 const isSignificant = (node: Node) => node.type !== "comment" && node.type !== "space";
 
-function resolveVar(node: FunctionNode, properties: Map<string, string>, scheme: Scheme, trail: Array<string>): string {
+function resolveVar(
+  node: FunctionNode,
+  properties: Map<string, string>,
+  scheme: ColorScheme,
+  trail: Array<string>,
+): string {
   const [firstArgument, ...fallback] = argumentsOf(node);
   const nameNode = firstArgument?.find(isSignificant);
 
@@ -81,7 +86,7 @@ function resolveVar(node: FunctionNode, properties: Map<string, string>, scheme:
 function resolveLightDark(
   node: FunctionNode,
   properties: Map<string, string>,
-  scheme: Scheme,
+  scheme: ColorScheme,
   trail: Array<string>,
 ): string {
   const argumentLists = argumentsOf(node);
@@ -98,7 +103,7 @@ function resolveLightDark(
 function resolveIndirections(
   nodes: Array<Node>,
   properties: Map<string, string>,
-  scheme: Scheme,
+  scheme: ColorScheme,
   trail: Array<string>,
 ): string {
   return nodes
@@ -213,7 +218,7 @@ function hexFrom(computed: string, authored: string): string {
 export async function paletteFrom(css: string): Promise<Palette> {
   const properties = rootCustomPropertiesIn(css, STYLESHEET_FILE_PATH);
 
-  const hexOf = async (name: string, scheme: Scheme) => {
+  const hexOf = async (name: string, scheme: ColorScheme) => {
     const declaredValue = properties.get(name)?.trim();
 
     if (!declaredValue) {

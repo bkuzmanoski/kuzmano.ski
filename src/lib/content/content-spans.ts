@@ -1,3 +1,5 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
+
 /**
  * Valid `data-content-span` values for selecting an element's content-grid columns. Elements without this attribute
  * span `text`. The build uses this list to validate MDX attributes (see `/build/content/markup/content-spans.ts`).

@@ -11,7 +11,9 @@ import { resetSettingsAudibly, setSoundEffectsAudibly } from "#/lib/audio/sound-
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
 import {
   APPEARANCE_LABELS,
-  APPEARANCE_ORDER,
+  APPEARANCE_SETTINGS,
+  SOUND_EFFECTS_LABELS,
+  SOUND_EFFECTS_SETTINGS,
   THEME_COLOR_LABELS,
   setAppearance,
   setThemeChromaScale,
@@ -19,28 +21,28 @@ import {
   useSettings,
 } from "#/lib/settings/settings.ts";
 import type { AppearanceSetting, SoundEffectsSetting, ThemeColor } from "#/lib/settings/settings.ts";
-import { THEME_CHROMA_SCALE_RANGE, stepCountOf } from "#/lib/settings/theme-tint.ts";
-import type { StyleWithVars } from "#/lib/style.ts";
+import { THEME_CHROMA_SCALE_RANGE } from "#/lib/settings/theme-tint.ts";
 
 import styles from "./control-panel-body.module.css";
 
-const APPEARANCE_OPTIONS: ReadonlyArray<RadioGroupOption<AppearanceSetting>> = APPEARANCE_ORDER.map((appearance) => ({
-  value: appearance,
-  label: APPEARANCE_LABELS[appearance],
-}));
+const APPEARANCE_OPTIONS: ReadonlyArray<RadioGroupOption<AppearanceSetting>> = APPEARANCE_SETTINGS.map(
+  (appearance) => ({
+    value: appearance,
+    label: APPEARANCE_LABELS[appearance],
+  }),
+);
 const THEME_COLOR_OPTIONS: ReadonlyArray<PopupMenuOption<ThemeColor>> = ACCENT_COLOR_NAMES.map((themeColor) => ({
   value: themeColor,
   label: THEME_COLOR_LABELS[themeColor],
   swatchColor: accentColorOf(themeColor),
 }));
-const SOUND_EFFECTS_OPTIONS: ReadonlyArray<RadioGroupOption<SoundEffectsSetting>> = [
-  { value: "on", label: "On" },
-  { value: "off", label: "Off", isSilent: true }, // Sound effects are still on when it is pressed.
-];
-const THEME_COLOR_CONTROLS_STYLE: StyleWithVars = {
-  "--control-panel-body-saturation-step-count": stepCountOf(THEME_CHROMA_SCALE_RANGE),
-};
-
+const SOUND_EFFECTS_OPTIONS: ReadonlyArray<RadioGroupOption<SoundEffectsSetting>> = SOUND_EFFECTS_SETTINGS.map(
+  (soundEffects) => ({
+    value: soundEffects,
+    label: SOUND_EFFECTS_LABELS[soundEffects],
+    isSilent: soundEffects === "off", // Sound effects are still on when it is pressed.
+  }),
+);
 const chromaScaleValueTextOf = (chromaScale: number) => `${Math.round(chromaScale * 100)}%`;
 
 export function ControlPanelBody() {
@@ -60,7 +62,7 @@ export function ControlPanelBody() {
           <span id={themeColorLabelId} className={styles.label}>
             Theme colour:
           </span>
-          <div className={styles.themeColorControls} style={THEME_COLOR_CONTROLS_STYLE}>
+          <div className={styles.themeColorControls}>
             <PopupMenu
               className={styles.popupMenu}
               value={themeColor}

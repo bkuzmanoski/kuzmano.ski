@@ -1,4 +1,4 @@
-// This module has no imports, so the pre-hydration startup sequence script can use it (see `/build/inline-scripts.ts`).
+// Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
 
 /** Set on `<html>` to hide the server-rendered desktop until the startup sequence has loaded. */
 export const STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE = "data-startup-sequence-overlay";

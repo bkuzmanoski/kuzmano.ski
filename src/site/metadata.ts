@@ -1,23 +1,20 @@
+// Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { AUTHOR_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
 import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
 
-interface FeedLink {
-  title: string;
-  path: string;
-}
+import type { AlternateRepresentations } from "./alternate-representations.ts";
 
-export interface DocumentMetadata {
+/** Alternate representations are advertised as `rel="alternate"` links and omitted when `null`. */
+export interface DocumentMetadata extends Partial<AlternateRepresentations> {
   title: string; // The document's own title, without the site suffix `documentTitle` adds.
   description: string;
   path: string;
   kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
   bodyChunks?: EntryBodyChunks | null; // Linked so the entry's stylesheets apply to the first paint and its body is available to hydration.
   coverImage?: CoverImage | null; // Used as `og:image` in place of the site image.
-  markdown?: boolean; // Whether the document has a Markdown representation to advertise.
-  feed?: FeedLink;
   noindex?: boolean;
 }
 
@@ -43,7 +40,7 @@ export function documentHead({
   kind = "website",
   bodyChunks,
   coverImage,
-  markdown,
+  markdownRepresentationPath,
   feed,
   noindex,
 }: DocumentMetadata) {
@@ -78,8 +75,15 @@ export function documentHead({
         precedence: "entry", // The React precedence for entry stylesheets, ensuring their rules follow and override the site's default styles after navigation.
       })),
       ...(bodyChunks?.moduleUrls ?? []).map((href) => ({ rel: "modulepreload", href })),
-      ...(markdown
-        ? [{ rel: "alternate", type: MARKDOWN_MEDIA_TYPE, href: markdownUrl(path), title: "Markdown" }]
+      ...(markdownRepresentationPath
+        ? [
+            {
+              rel: "alternate",
+              type: MARKDOWN_MEDIA_TYPE,
+              href: canonicalUrl(markdownRepresentationPath),
+              title: "Markdown",
+            },
+          ]
         : []),
       ...(feed ? [{ rel: "alternate", type: FEED_MEDIA_TYPE, href: feed.path, title: feed.title }] : []),
       { rel: "describedby", href: canonicalUrl(LLMS_TXT_PATH) },

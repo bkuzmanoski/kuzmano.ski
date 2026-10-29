@@ -9,6 +9,7 @@ import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.t
 
 import styles from "./menu.module.css";
 
+import type { MenuItem, MenuItemAccessory } from "./menu-items.ts";
 import type { MouseEvent } from "react";
 
 const CHAR_OPTION_KEY = "⌥";
@@ -20,24 +21,6 @@ const ACCESSORY_DESCRIPTIONS: Record<MenuItemAccessory, string> = {
   "external-link": "Opens in a new tab",
 };
 
-interface MenuShortcut {
-  code: string;
-  label: string;
-}
-
-export type MenuItem =
-  | ({
-      kind: "action";
-      label: string;
-      accessory?: MenuItemAccessory;
-    } & (
-      | { href?: undefined; target?: undefined; disabled?: boolean; action: () => void; shortcut?: MenuShortcut }
-      | { href: string; target?: "_blank"; disabled?: undefined; action: () => void; shortcut?: MenuShortcut }
-      | { href: string; target?: "_blank"; disabled?: undefined; action?: undefined; shortcut?: undefined }
-    ))
-  | { kind: "separator" };
-
-type MenuItemAccessory = "download" | "external-link";
 type MenuAction = Extract<MenuItem, { kind: "action" }>;
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;

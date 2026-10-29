@@ -3,7 +3,19 @@
   --slider-height: 30px; /* As tall as a text `Button`, and the height of `slider-thumb.svg`. */
   --slider-track-height: 16px; /* Centers the track in the slider's height. */
   --slider-track-overhang: 6px; /* Shows the track's rounded ends past the thumb at either end of its travel. */
+  --slider-travel: calc(100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang));
+  --slider-travel-start: var(--slider-track-overhang);
+  --slider-step-count: 0; /* Set from JS. */
   --slider-value-fraction: 0; /* Set from JS. */
+
+  @supports (width: round(down, 1px, 1px)) {
+    --slider-travel: round(
+      down,
+      100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang),
+      var(--slider-step-count) * 1px
+    );
+    --slider-travel-start: round(down, (100% - var(--slider-travel) - var(--slider-thumb-width)) / 2, 1px);
+  }
 
   position: relative;
   height: var(--slider-height);
@@ -23,9 +35,9 @@
   position: absolute;
   z-index: 1;
   inset-block: 0;
-  inset-inline-start: var(--slider-track-overhang);
+  inset-inline-start: var(--slider-travel-start);
 
-  width: calc(100% - 2 * var(--slider-track-overhang));
+  width: calc(var(--slider-travel) + var(--slider-thumb-width));
   height: 100%;
   margin: 0;
 
@@ -53,9 +65,10 @@
 
 .track {
   position: absolute;
-  inset-inline: 0;
+  inset-inline-start: 0;
   top: calc((var(--slider-height) - var(--slider-track-height)) / 2);
 
+  width: calc(2 * var(--slider-travel-start) + var(--slider-travel) + var(--slider-thumb-width));
   height: var(--slider-track-height);
   border: 1px solid currentColor;
   border-radius: calc(var(--slider-track-height) / 2);
@@ -79,12 +92,13 @@
  * bottom of the thumb. */
 .ticks {
   position: absolute;
-  inset-inline: calc(var(--slider-track-overhang) + (var(--slider-thumb-width) - 1px) / 2);
+  inset-inline-start: calc(var(--slider-travel-start) + (var(--slider-thumb-width) - 1px) / 2);
   top: calc((var(--slider-height) + var(--slider-track-height)) / 2);
 
   display: flex;
   justify-content: space-between;
 
+  width: calc(var(--slider-travel) + 1px);
   height: calc((var(--slider-height) - var(--slider-track-height)) / 2);
 }
 
@@ -96,10 +110,7 @@
 .thumb {
   position: absolute;
   top: 0;
-  left: calc(
-    var(--slider-track-overhang) + (100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang)) *
-      var(--slider-value-fraction)
-  );
+  left: calc(var(--slider-travel-start) + var(--slider-travel) * var(--slider-value-fraction));
 
   display: block;
 
@@ -107,4 +118,8 @@
   height: var(--slider-height);
 
   color: var(--color-foreground);
+
+  .input:disabled ~ & {
+    color: var(--color-foreground-disabled);
+  }
 }

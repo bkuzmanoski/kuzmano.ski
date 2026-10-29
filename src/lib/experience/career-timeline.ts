@@ -1,3 +1,4 @@
+// Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { formatDate } from "../datetime.ts";
 import { clamp } from "../math.ts";
 

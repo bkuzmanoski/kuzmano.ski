@@ -1,10 +1,12 @@
+import type { ColorScheme } from "./settings/theme.ts";
+
 /**
  * Resolves `color` (e.g., `var(--color-desktop-background)`) to its computed value.
  *
  * When provided, `colorScheme` controls how scheme-dependent colors such as `light-dark()` are resolved.
  * Forced colors are disabled on the probe.
  */
-export function computedColorOf(color: string, colorScheme?: "light" | "dark"): string {
+export function computedColorOf(color: string, colorScheme?: ColorScheme): string {
   const probe = document.createElement("span");
 
   probe.hidden = true;

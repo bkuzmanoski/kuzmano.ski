@@ -1,3 +1,5 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
+
 export function clamp(value: number, floor: number, ceiling: number): number {
   return Math.max(Math.min(value, ceiling), floor);
 }

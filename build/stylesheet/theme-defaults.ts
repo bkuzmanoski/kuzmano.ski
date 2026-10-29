@@ -2,8 +2,10 @@ import { readFile } from "node:fs/promises";
 
 import valueParser from "postcss-value-parser";
 
-import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE, isSteppedValueIn } from "#/lib/settings/theme-tint.ts";
-import type { SteppedRange, ThemeDefaults } from "#/lib/settings/theme-tint.ts";
+import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE } from "#/lib/settings/theme-tint.ts";
+import type { ThemeDefaults } from "#/lib/settings/theme-tint.ts";
+import { isSteppedValueIn } from "#/lib/stepped-range.ts";
+import type { SteppedRange } from "#/lib/stepped-range.ts";
 
 import { STYLESHEET_FILE_PATH, fromRoot } from "../paths.ts";
 

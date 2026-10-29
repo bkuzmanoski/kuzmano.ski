@@ -1,5 +1,5 @@
-// This module imports only types and `../../json-value-module.ts`, which also imports only types, so
-// `/vitest.config.ts` can serve the module without reaching sharp through the media index.
+// Imports only types and `../../json-value-module.ts` because every test run loads this module through
+// `/vitest.config.ts`.
 import type { EntryKey } from "#/lib/content/entry-file.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 

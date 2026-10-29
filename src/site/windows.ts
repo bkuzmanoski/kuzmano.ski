@@ -1,11 +1,13 @@
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
-import type { FeatureRouteId } from "#/config/feature-routes.ts";
+import { isOneOf } from "#/lib/guards.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 
+import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";
 import { pages } from "./catalog.ts";
 import { resolveContent } from "./resolve-content.ts";
-import { isRootPath, parseContentPath } from "./routes.ts";
+import { FEATURE_ROUTE_IDS, isRootPath, parseContentPath } from "./routes.ts";
 
+import type { AlternateRepresentations } from "./alternate-representations.ts";
 import type { Collection, ContentIndex } from "./catalog.ts";
 import type { ResolvedContent } from "./resolve-content.ts";
 
@@ -23,6 +25,7 @@ export type CollectionEntryTarget = Extract<EntryTarget, { collection: Collectio
 export type CollectionTarget = Extract<WindowTarget, { id: "collection" }>;
 export type ResolvedRoute = WindowTarget | { id: "desktop" } | { id: "notFound" };
 
+export const isFeatureWindow = isOneOf(FEATURE_ROUTE_IDS);
 export const contentIndexOf = (entry: EntryTarget): ContentIndex => entry.collection ?? pages;
 
 export function resolveRoute(route: string): ResolvedRoute {
@@ -60,10 +63,7 @@ export function resolveRoute(route: string): ResolvedRoute {
       };
 
     case "feature": {
-      const featureRouteId = (Object.keys(FEATURE_ROUTE_SPECS) as Array<FeatureRouteId>).find(
-        (id) => FEATURE_ROUTE_SPECS[id].route === content.route,
-      );
-
+      const featureRouteId = FEATURE_ROUTE_IDS.find((id) => FEATURE_ROUTE_SPECS[id].route === content.route);
       return featureRouteId
         ? { id: featureRouteId, title: FEATURE_ROUTE_SPECS[featureRouteId].title }
         : { id: "notFound" };
@@ -104,4 +104,22 @@ export function isDestinationOpen(destinationRoute: string, openWindowRoutes: It
   }
 
   return false;
+}
+
+export function windowAlternateRepresentationsOf(windowRoute: string): AlternateRepresentations | null {
+  const windowTarget = resolveWindow(windowRoute);
+
+  switch (windowTarget?.id) {
+    case "entry":
+      return entryAlternateRepresentationsOf({
+        ...windowTarget,
+        frontmatter: contentIndexOf(windowTarget).frontmatterOf(windowTarget.slug),
+      });
+
+    case "collection":
+      return collectionAlternateRepresentationsOf(windowTarget.collection);
+
+    default:
+      return null;
+  }
 }

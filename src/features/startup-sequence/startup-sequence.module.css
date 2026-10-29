@@ -114,7 +114,7 @@
 }
 
 .displayMask {
-  --startup-sequence-display-scale: 1; /* Set from JS. */
+  --startup-sequence-display-scale: 0; /* Set from JS. */
   --startup-sequence-screen-radius: 0px; /* Set from JS. */
   --startup-sequence-inset: 0; /* Set from JS. */
   --startup-sequence-viewport-inset: 0; /* Set from JS. */

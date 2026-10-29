@@ -1,10 +1,12 @@
+import { isOneOf } from "./guards.ts";
+
 import type { KeyboardEvent } from "react";
 
 const ARROW_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"] as const;
 
 export type ArrowKey = (typeof ARROW_KEYS)[number];
 
-export const isArrowKey = (key: string): key is ArrowKey => ARROW_KEYS.includes(key as ArrowKey);
+export const isArrowKey = isOneOf(ARROW_KEYS);
 
 const CARET_SCROLL_KEYS = new Set([...ARROW_KEYS, "Home", "End", "PageUp", "PageDown"]);
 const FUNCTION_KEY = /^F\d{1,2}$/;

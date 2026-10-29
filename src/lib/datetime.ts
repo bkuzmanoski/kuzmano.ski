@@ -1,3 +1,5 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
+
 export interface DateFormat {
   locale: string;
   options: Intl.DateTimeFormatOptions & { timeZone: "UTC" };

@@ -1,3 +1,4 @@
+// Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { isIsoDate } from "../datetime.ts";
 import { isRecord } from "../guards.ts";
 

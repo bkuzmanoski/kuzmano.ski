@@ -30,21 +30,6 @@
 }
 
 .themeColorControls {
-  --control-panel-body-saturation-step-count: 1; /* Set from JS. */
-  --control-panel-body-slider-width-beyond-travel: 27px; /* The thumb's width plus the track's overhang at either end (see `slider.module.css`). */
-  --control-panel-body-slider-max-width: calc(
-    var(--control-panel-body-saturation-step-count) * 21px + var(--control-panel-body-slider-width-beyond-travel)
-  );
-  --control-panel-body-theme-color-control-width: min(
-    var(--control-panel-body-slider-max-width),
-    round(
-        down,
-        100% - var(--control-panel-body-slider-width-beyond-travel),
-        var(--control-panel-body-saturation-step-count) * 1px
-      ) +
-      var(--control-panel-body-slider-width-beyond-travel)
-  ); /* Rounds the thumb's travel down to a multiple of the step count, ensuring each step lands on a whole pixel. */
-
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -53,11 +38,7 @@
 
 .popupMenu,
 .slider {
-  max-width: var(--control-panel-body-slider-max-width);
-
-  @supports (width: round(down, 1px, 1px)) {
-    max-width: var(--control-panel-body-theme-color-control-width);
-  }
+  max-width: 241px; /* Keeps the Saturation slider's 10 steps centered between equal track overhangs. */
 }
 
 .actions {

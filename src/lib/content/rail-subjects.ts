@@ -1,3 +1,5 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
+
 /**
  * The content components a rail aside can follow. Each renders its `style` prop on its root element,
  * where the build sets the anchor name the aside is placed beside. The build fails for a rail aside

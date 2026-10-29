@@ -6,9 +6,8 @@ import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
 import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable.woff2?url";
 import { preloadFont } from "#/lib/fonts.ts";
 
+import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";
 import { pages } from "./catalog.ts";
-import { collectionFeedOf } from "./feeds.ts";
-import { hasMarkdownRepresentation } from "./markdown-negotiation.ts";
 import { documentHead } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
 import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./routes.ts";
@@ -42,7 +41,6 @@ async function loadBodyBeforeServerRender(contentIndex: ContentIndex, slug: stri
 export const contentRoute = {
   loader: async ({ params }: { params: { segment: string; slug?: string } }): Promise<DocumentMetadata> => {
     const content = resolveContent(params.segment, params.slug);
-    const feed = collectionFeedOf(collectionRoute(params.segment));
 
     switch (content.kind) {
       case "page":
@@ -51,7 +49,7 @@ export const contentRoute = {
           path: pageRoute(content.slug),
           bodyChunks: pages.bodyChunksOf(content.slug),
           coverImage: ENTRY_COVER_IMAGES[pages.entryKeyOf(content.slug)] ?? null,
-          markdown: hasMarkdownRepresentation(content.frontmatter),
+          ...entryAlternateRepresentationsOf({ ...content, collection: null }),
           noindex: content.frontmatter?.draft === true || !isDeclaredPageSlug(content.slug),
         });
 
@@ -62,8 +60,7 @@ export const contentRoute = {
           kind: "article",
           bodyChunks: content.collection.bodyChunksOf(content.slug),
           coverImage: ENTRY_COVER_IMAGES[content.collection.entryKeyOf(content.slug)] ?? null,
-          markdown: hasMarkdownRepresentation(content.frontmatter),
-          feed,
+          ...entryAlternateRepresentationsOf(content),
           noindex: content.frontmatter?.draft === true,
         });
 
@@ -72,8 +69,7 @@ export const contentRoute = {
           title: content.collection.title,
           description: content.collection.description,
           path: collectionRoute(params.segment),
-          markdown: true,
-          feed,
+          ...collectionAlternateRepresentationsOf(content.collection),
         };
 
       default:

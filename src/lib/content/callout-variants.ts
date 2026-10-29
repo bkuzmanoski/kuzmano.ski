@@ -1,3 +1,5 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
+
 /**
  * Valid values for a `Callout`'s `variant` prop. The build uses this list to validate
  * authored props (see `/build/content/markup/callout-variants.ts`).

@@ -1,5 +1,7 @@
 import { visit } from "unist-util-visit";
 
+import { isOneOf } from "#/lib/guards.ts";
+
 import { elementNameOf } from "../content/markup/tree.ts";
 
 import { blocksIn, listOf, textNode } from "./nodes.ts";
@@ -12,8 +14,7 @@ const TABLE_SECTION_NAMES = ["thead", "tbody", "tfoot"] as const;
 
 type TableSectionName = (typeof TABLE_SECTION_NAMES)[number];
 
-const isTableSectionName = (name: string | null): name is TableSectionName =>
-  TABLE_SECTION_NAMES.some((sectionName) => sectionName === name);
+const isTableSectionName = isOneOf(TABLE_SECTION_NAMES);
 
 interface AuthoredTable {
   caption: Array<ContentNode>;

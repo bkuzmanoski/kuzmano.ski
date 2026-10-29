@@ -1,4 +1,3 @@
-// This module imports only types from `/build/content` to avoid reading from the real content directory.
 import { listedEntry } from "./listing.ts";
 
 import type { AuthoredEntryMedia } from "../content/media/authored-media.ts";

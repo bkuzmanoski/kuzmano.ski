@@ -1,3 +1,4 @@
+// Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { COLLECTIONS } from "#/config/content.ts";
 import type { CollectionSegment } from "#/config/content.ts";
 import { SITE_DESCRIPTION, SITE_NAME } from "#/config/site.ts";
@@ -32,9 +33,9 @@ const COLLECTION_FEEDS: Array<FeedMetadata> = Object.entries(COLLECTIONS).map(([
   collections: [segment as CollectionSegment],
 }));
 
-/** The feed of the collection at `route`, or `undefined` for a route that is not a collection's. */
-export const collectionFeedOf = (route: string): FeedMetadata | undefined =>
-  COLLECTION_FEEDS.find((feed) => feed.route === route);
+/** The feed of the collection at `route`, or `null` for a route that is not a collection's. */
+export const collectionFeedOf = (route: string): FeedMetadata | null =>
+  COLLECTION_FEEDS.find((feed) => feed.route === route) ?? null;
 
 /** Every feed the site publishes. */
 export const FEEDS: Array<FeedMetadata> = [SITE_FEED, ...COLLECTION_FEEDS];

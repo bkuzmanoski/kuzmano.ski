@@ -1,19 +1,23 @@
-// This module imports only leaf modules so the pre-hydration theme scripts can use it (see `/build/inline-scripts.ts`).
+// Imports only leaf modules because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
 import { ACCENT_COLOR_NAMES } from "../accent-colors.ts";
+import { isOneOf } from "../guards.ts";
+import { isSteppedValueIn } from "../stepped-range.ts";
 import { readStored } from "../storage.ts";
 
-import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE, isSteppedValueIn } from "./theme-tint.ts";
+import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE } from "./theme-tint.ts";
 
 import type { AccentColorName } from "../accent-colors.ts";
 
-export type AppearanceSetting = "system" | "light" | "dark";
+export const APPEARANCE_SETTINGS = ["system", "light", "dark"] as const; // In the order the controls cycle through them.
+
+export type AppearanceSetting = (typeof APPEARANCE_SETTINGS)[number];
 export type ThemeColor = AccentColorName;
 
 export const DEFAULT_THEME_COLOR: ThemeColor = "purple";
 
-export type ColorScheme = "light" | "dark";
+export const COLOR_SCHEMES = ["light", "dark"] as const;
 
-export const COLOR_SCHEMES: ReadonlyArray<ColorScheme> = ["light", "dark"];
+export type ColorScheme = (typeof COLOR_SCHEMES)[number];
 
 export const APPEARANCE_STORAGE_KEY = "appearance";
 export const THEME_COLOR_STORAGE_KEY = "theme-color";
@@ -28,11 +32,8 @@ const THEME_COLOR_ATTRIBUTE = "data-theme-color";
 export const THEME_COLOR_SCHEME_ATTRIBUTE = "data-color-scheme";
 export const DESKTOP_BACKGROUND_THEME_COLOR_ATTRIBUTE = "data-desktop-background-theme-color";
 
-export const isAppearanceSetting = (value: string): value is AppearanceSetting =>
-  value === "system" || value === "light" || value === "dark";
-
-export const isThemeColor = (value: string | null): value is ThemeColor =>
-  (ACCENT_COLOR_NAMES as ReadonlyArray<string | null>).includes(value);
+export const isAppearanceSetting = isOneOf(APPEARANCE_SETTINGS);
+export const isThemeColor = isOneOf(ACCENT_COLOR_NAMES);
 
 export function themeChromaScaleFrom(rawValue: string | null): number | null {
   const value = rawValue?.trim() ? Number(rawValue) : Number.NaN; // `Number` parses an empty or whitespace-only string as `0`.

@@ -1,13 +1,11 @@
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { cx } from "#/lib/class-names.ts";
 import { entrySiblings } from "#/lib/content/entry-siblings.ts";
-import { markdownPath } from "#/lib/content/paths.ts";
 import { formatDate } from "#/lib/datetime.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
+import { entryAlternateRepresentationsOf } from "#/site/alternate-representations.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
-import { collectionFeedOf } from "#/site/feeds.ts";
 import { languageAttributeInDocumentFor } from "#/site/language.ts";
-import { hasMarkdownRepresentation } from "#/site/markdown-negotiation.ts";
 import type { CollectionEntryTarget } from "#/site/windows.ts";
 
 import { ContentLink } from "./content-link.tsx";
@@ -44,8 +42,11 @@ function SiblingLink({
 
 export function EntryColophon({ target: { collection, slug } }: { target: CollectionEntryTarget }) {
   const { newer, older } = entrySiblings(collection, slug);
-  const feed = collectionFeedOf(collection.route);
-  const hasMarkdown = hasMarkdownRepresentation(collection.frontmatterOf(slug));
+  const { markdownRepresentationPath, feed } = entryAlternateRepresentationsOf({
+    collection,
+    slug,
+    frontmatter: collection.frontmatterOf(slug),
+  });
 
   return (
     <footer
@@ -56,11 +57,13 @@ export function EntryColophon({ target: { collection, slug } }: { target: Collec
       data-content-space="loose"
       data-feed-omit
     >
-      {(hasMarkdown || feed) && (
+      {(markdownRepresentationPath !== null || feed) && (
         <>
           <p className={styles.label}>Formats</p>
           <p className={styles.formats} data-content-default-styles="on">
-            {hasMarkdown && <ContentLink href={markdownPath(collection.routeOf(slug))}>Markdown</ContentLink>}
+            {markdownRepresentationPath !== null && (
+              <ContentLink href={markdownRepresentationPath}>Markdown</ContentLink>
+            )}
             {feed && <ContentLink href={feed.path}>Atom feed</ContentLink>}
           </p>
         </>

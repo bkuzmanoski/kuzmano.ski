@@ -23,7 +23,7 @@ title: Entry Title
 description: Collection entry lists and meta descriptions use this text.
 date: 1970-01-01
 category: Category # Optional.
-draft: true # Set to `false` to hide the entry on the deployed site (it will remain accessible via its URL).
+draft: false # Set to `true` to hide the entry on the deployed site (it will remain accessible via its URL).
 ```
 
 MDX files are located at:

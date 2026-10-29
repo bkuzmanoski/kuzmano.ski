@@ -1,12 +1,24 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { collection, collectionEntries } from "#/test-utils/catalog.ts";
+import { collection, collectionEntries, configuredCollections } from "#/test-utils/catalog.ts";
 
 import { pages } from "./catalog.ts";
-import { contentIndexOf, isDestinationOpen, resolveRoute, resolveWindow } from "./windows.ts";
+import { collectionFeedOf } from "./feeds.ts";
+import {
+  contentIndexOf,
+  isDestinationOpen,
+  resolveRoute,
+  resolveWindow,
+  windowAlternateRepresentationsOf,
+} from "./windows.ts";
 
-vi.mock("./catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
+vi.mock("./catalog.ts", async () => {
+  const { configuredCollections: collectionsWithFeeds, siteCatalogMock } = await import("#/test-utils/catalog.ts");
+  return siteCatalogMock({ collections: { ...siteCatalogMock().collections, ...collectionsWithFeeds } });
+});
 
+const COLLECTION_WITH_FEED = Object.values(configuredCollections)[0]!;
+const COLLECTION_WITH_FEED_ENTRY_ROUTE = COLLECTION_WITH_FEED.routeOf(COLLECTION_WITH_FEED.list()[0]!.slug);
 const COLLECTION_ENTRY = collectionEntries[0]!;
 
 describe("contentIndexOf", () => {
@@ -125,5 +137,32 @@ describe("isDestinationOpen", () => {
 
   test("a destination is closed when there are no open windows", () => {
     expect(isDestinationOpen("/collection", [])).toBe(false);
+  });
+});
+
+describe("windowAlternateRepresentationsOf", () => {
+  test("returns the alternate representations of the page a window shows", () => {
+    expect(windowAlternateRepresentationsOf("/page")).toEqual({ markdownRepresentationPath: "/page.md", feed: null });
+  });
+
+  test("returns the alternate representations of the collection entry a window shows", () => {
+    expect(windowAlternateRepresentationsOf(COLLECTION_WITH_FEED_ENTRY_ROUTE)).toEqual({
+      markdownRepresentationPath: `${COLLECTION_WITH_FEED_ENTRY_ROUTE}.md`,
+      feed: collectionFeedOf(COLLECTION_WITH_FEED.route),
+    });
+  });
+
+  test("returns the alternate representations of the collection a window shows, including when the window's route has a trailing slash", () => {
+    const expected = {
+      markdownRepresentationPath: `${COLLECTION_WITH_FEED.route}.md`,
+      feed: collectionFeedOf(COLLECTION_WITH_FEED.route),
+    };
+
+    expect(windowAlternateRepresentationsOf(COLLECTION_WITH_FEED.route)).toEqual(expected);
+    expect(windowAlternateRepresentationsOf(`${COLLECTION_WITH_FEED.route}/`)).toEqual(expected);
+  });
+
+  test("returns `null` for a feature route's window", () => {
+    expect(windowAlternateRepresentationsOf("/contact")).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-// This module has no imports, so the pre-hydration startup sequence script can use it (see `/build/inline-scripts.ts`).
+// Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
 
 export const STARTUP_SEQUENCE_STORAGE_KEY = "startup-sequence-run";
 

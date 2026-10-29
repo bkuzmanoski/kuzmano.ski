@@ -59,9 +59,8 @@ test("a page exposes its cover image", async () => {
   expect((await loadSegment(DECLARED_PAGE_SLUG)).coverImage).toEqual(fakeCoverImage(DECLARED_PAGE_SLUG));
 });
 
-test("a draft page does not expose a Markdown representation in production", async () => {
-  vi.stubEnv("DEV", false);
-  expect((await loadSegment("draft-page")).markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
+test("a page exposes its Markdown representation path", async () => {
+  expect((await loadSegment(DECLARED_PAGE_SLUG)).markdownRepresentationPath).toBe(`/${DECLARED_PAGE_SLUG}.md`);
 });
 
 test("a page the site links to is indexable", async () => {
@@ -77,19 +76,8 @@ test("an entry exposes its cover image, or `null` when it does not have one", as
   expect((await loadCollectionEntry("draft-entry")).coverImage).toBeNull();
 });
 
-test("a published entry exposes a Markdown representation in production", async () => {
-  vi.stubEnv("DEV", false);
-  expect((await loadCollectionEntry("published")).markdown).toBe(true);
-});
-
-test("a draft entry does not expose a Markdown representation in production", async () => {
-  vi.stubEnv("DEV", false);
-  expect((await loadCollectionEntry("draft-entry")).markdown).toBe(false); // A production build does not emit Markdown representations for drafts.
-});
-
-test("a draft entry exposes a Markdown representation in development", async () => {
-  vi.stubEnv("DEV", true);
-  expect((await loadCollectionEntry("draft-entry")).markdown).toBe(true); // The dev server renders the Markdown representation of a draft.
+test("an entry exposes its Markdown representation path", async () => {
+  expect((await loadCollectionEntry("published")).markdownRepresentationPath).toBe("/collection/published.md");
 });
 
 test("an entry the site publishes is indexable", async () => {
@@ -100,9 +88,8 @@ test("a draft entry is marked noindex", async () => {
   expect((await loadCollectionEntry("draft-entry")).noindex).toBe(true);
 });
 
-test("a collection listing exposes a Markdown representation in production", async () => {
-  vi.stubEnv("DEV", false);
-  expect((await loadSegment("collection")).markdown).toBe(true);
+test("a collection listing exposes its Markdown representation path", async () => {
+  expect((await loadSegment("collection")).markdownRepresentationPath).toBe("/collection.md");
 });
 
 test("a collection listing is indexable", async () => {
