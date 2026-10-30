@@ -133,7 +133,7 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
     },
   },
   ImageGallery: CAPTIONED_IMAGES_MARKDOWN,
-  ImageGrid: CAPTIONED_IMAGES_MARKDOWN,
+  ImageRow: CAPTIONED_IMAGES_MARKDOWN,
   PrintLink: { block: () => [] }, // Omitted.
   Rail: ASIDE_MARKDOWN,
   Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },

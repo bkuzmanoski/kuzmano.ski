@@ -18,7 +18,7 @@ import { EntryMasthead } from "./entry-masthead.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 import { Footnote } from "./footnote.tsx";
 import { ImageGallery } from "./image-gallery.tsx";
-import { ImageGrid } from "./image-grid.tsx";
+import { ImageRow } from "./image-row.tsx";
 import { observeRailClearances } from "./observe-rail-clearances.ts";
 import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 import { Rail } from "./rail.tsx";
@@ -39,7 +39,7 @@ const MDX_COMPONENTS: MDXComponents = {
   Rail,
   Footnote, // Emitted by the build for each footnote definition (see `/build/content/markup/footnote-asides.ts`).
   ImageGallery,
-  ImageGrid,
+  ImageRow,
   Waitlist,
 };
 

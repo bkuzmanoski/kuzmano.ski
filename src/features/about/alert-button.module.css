@@ -1,0 +1,19 @@
+.alertButton {
+  cursor: pointer;
+
+  position: relative;
+
+  padding: 0;
+  border: 0;
+
+  background: none;
+  outline: none;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    @mixin focus-stroke -2px;
+  }
+}

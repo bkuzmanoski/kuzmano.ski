@@ -222,8 +222,8 @@ export function MenuBar() {
   const closeWindow = () => focusedWindow && close(focusedWindow);
 
   const alternateRepresentationItems = [
-    { label: "View as Markdown", href: alternateRepresentations?.markdownRepresentationPath },
-    { label: "Atom Feed", href: feed?.path },
+    { label: "Show Markdown", href: alternateRepresentations?.markdownRepresentationPath },
+    { label: "Show Atom Feed", href: feed?.path },
   ].flatMap(({ label, href }): Array<MenuItem> =>
     href ? [{ kind: "action", label, accessory: "external-link", href, target: "_blank" }] : [],
   );

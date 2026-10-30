@@ -637,35 +637,35 @@ describe("items that open a destination", () => {
 describe("alternate representations", () => {
   const COLLECTION_FEED: FeedMetadata = { ...SITE_FEED, path: "/collection/feed.xml", route: "/collection" };
 
-  test("the `View as Markdown` and `Atom Feed` menu items link to the focused window's Markdown representation and feed with a `target` attribute of `_blank`", () => {
+  test("the `Show Markdown` and `Show Atom Feed` menu items link to the focused window's Markdown representation and feed with a `target` attribute of `_blank`", () => {
     focusedWindow = "entry";
     alternateRepresentations = { markdownRepresentationPath: "/collection/entry.md", feed: COLLECTION_FEED };
     render(<MenuBar />);
     openWithPointer("File");
 
-    expect(menuItem("View as Markdown").getAttribute("href")).toBe("/collection/entry.md");
-    expect(menuItem("View as Markdown").getAttribute("target")).toBe("_blank");
-    expect(menuItem("Atom Feed").getAttribute("href")).toBe(COLLECTION_FEED.path);
-    expect(menuItem("Atom Feed").getAttribute("target")).toBe("_blank");
+    expect(menuItem("Show Markdown").getAttribute("href")).toBe("/collection/entry.md");
+    expect(menuItem("Show Markdown").getAttribute("target")).toBe("_blank");
+    expect(menuItem("Show Atom Feed").getAttribute("href")).toBe(COLLECTION_FEED.path);
+    expect(menuItem("Show Atom Feed").getAttribute("target")).toBe("_blank");
   });
 
-  test("the `Atom Feed` menu item links to the site feed when the focused window's content does not have a feed of its own", () => {
+  test("the `Show Atom Feed` menu item links to the site feed when the focused window's content does not have a feed of its own", () => {
     focusedWindow = "entry";
     alternateRepresentations = { markdownRepresentationPath: "/page.md", feed: null };
     render(<MenuBar />);
     openWithPointer("File");
 
-    expect(menuItem("Atom Feed").getAttribute("href")).toBe(SITE_FEED.path);
+    expect(menuItem("Show Atom Feed").getAttribute("href")).toBe(SITE_FEED.path);
   });
 
-  test("the File menu omits the `View as Markdown` menu item when the focused window does not have a Markdown representation", () => {
+  test("the File menu omits the `Show Markdown` menu item when the focused window does not have a Markdown representation", () => {
     focusedWindow = "entry";
     alternateRepresentations = { markdownRepresentationPath: null, feed: COLLECTION_FEED };
     render(<MenuBar />);
     openWithPointer("File");
 
-    expect(screen.queryByText("View as Markdown")).toBeNull();
-    expect(screen.getAllByRole("menuitem")[0]).toBe(menuItem("Atom Feed"));
+    expect(screen.queryByText("Show Markdown")).toBeNull();
+    expect(screen.getAllByRole("menuitem")[0]).toBe(menuItem("Show Atom Feed"));
   });
 });
 

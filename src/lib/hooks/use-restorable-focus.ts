@@ -7,6 +7,10 @@ import type { RefObject } from "react";
 
 export const PRESERVE_FOCUS_PROPS = { "data-preserve-focus": "" };
 
+/** Marks the element to receive focus when its containing window opens. */
+export const INITIAL_FOCUS_PROPS = { "data-initial-focus": "" };
+
+const INITIAL_FOCUS_SELECTOR = "[data-initial-focus]";
 const PRESERVE_FOCUS_SELECTOR = "[data-preserve-focus]";
 
 interface FocusRecord {
@@ -14,14 +18,16 @@ interface FocusRecord {
   element: HTMLElement;
 }
 
+const isAllowedFocusTarget = (element: HTMLElement) => !(isTouchOnly() && isEditableTarget(element)); // Focusing a text field on a touch-only device would open its software keyboard.
+
 function focusTarget(container: HTMLElement, record: FocusRecord | null, contentKey: string): HTMLElement {
-  if (!record || (isTouchOnly() && isEditableTarget(record.element))) {
-    return container;
+  if (record?.contentKey === contentKey && container.contains(record.element) && isAllowedFocusTarget(record.element)) {
+    return record.element;
   }
 
-  const isRestorable = record.contentKey === contentKey && container.contains(record.element);
+  const initialFocusElement = container.querySelector<HTMLElement>(INITIAL_FOCUS_SELECTOR);
 
-  return isRestorable ? record.element : container;
+  return initialFocusElement && isAllowedFocusTarget(initialFocusElement) ? initialFocusElement : container;
 }
 
 export function useRestorableFocus(

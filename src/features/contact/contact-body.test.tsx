@@ -110,6 +110,11 @@ async function submit() {
   await waitFor(() => expect(sendMessageCalls()).not.toHaveLength(0));
 }
 
+test("the `From:` field has the `data-initial-focus` attribute", () => {
+  render(<ContactBody />);
+  expect(input("From:").hasAttribute("data-initial-focus")).toBe(true); // The window focuses the marked element when it opens (see `window.test.tsx`).
+});
+
 test("the copy button copies the email address that was read", async () => {
   const writeText = vi.fn<(value: string) => Promise<void>>().mockResolvedValue(undefined);
 

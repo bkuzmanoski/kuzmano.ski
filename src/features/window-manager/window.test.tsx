@@ -5,6 +5,7 @@ import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import type * as Scroll from "#/lib/audio/scroll.ts";
 import { playClickSound, playScrollDetentSound } from "#/lib/audio/sounds.ts";
 import { isMacOS, isTouchOnly } from "#/lib/device.ts";
+import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { clamp } from "#/lib/math.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
@@ -80,6 +81,12 @@ const INITIAL_SCROLL_TOP_PX = 240;
 const TALL_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT_PX * 8} />;
 const SHORT_PANE_ELEMENT = <div data-height={BASE_PANE_HEIGHT_PX / 4} />;
 const BUTTON_ELEMENT = <button type="button">Button</button>;
+const INITIAL_FOCUS_FIELD_ELEMENT = (
+  <>
+    <button type="button">Button</button>
+    <input aria-label="Field" {...INITIAL_FOCUS_PROPS} />
+  </>
+);
 
 const windowShowing = (
   contentKey: string,
@@ -419,12 +426,39 @@ test("pressing a key that scrolls while an element in the window's content has t
   expect(isDefaultAllowed).toBe(true);
 });
 
+test("an opening window focuses itself when its content does not mark an element for initial focus", () => {
+  render(windowShowing("tall", BUTTON_ELEMENT));
+  expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
+});
+
+test("an opening window focuses the element its content marks for initial focus", () => {
+  render(windowShowing("tall", INITIAL_FOCUS_FIELD_ELEMENT));
+  expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Field" }));
+});
+
+test("on a touch-only device, an opening window focuses itself instead of a text field its content marks for initial focus", () => {
+  vi.mocked(isTouchOnly).mockReturnValue(true);
+  render(windowShowing("tall", INITIAL_FOCUS_FIELD_ELEMENT));
+
+  expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" })); // Focusing a text field on a touch-only device would open its software keyboard.
+});
+
 test("the window restores focus to its last focused element when it is activated again", () => {
   const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT));
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
   switchAwayAndBack(rerender, "tall", BUTTON_ELEMENT);
+
+  expect(document.activeElement).toBe(focusableElement);
+});
+
+test("the window restores focus to its last focused element instead of the element its content marks for initial focus", () => {
+  const { rerender } = render(windowShowing("tall", INITIAL_FOCUS_FIELD_ELEMENT));
+  const focusableElement = screen.getByRole("button", { name: "Button" });
+
+  focusableElement.focus();
+  switchAwayAndBack(rerender, "tall", INITIAL_FOCUS_FIELD_ELEMENT);
 
   expect(document.activeElement).toBe(focusableElement);
 });

@@ -395,12 +395,12 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
 A caption.`);
   });
 
-  test("replaces an `ImageGrid` with its children, then the paragraph of its `caption` attribute", async () => {
+  test("replaces an `ImageRow` with its children, then the paragraph of its `caption` attribute", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
-      <ImageGrid caption="A caption.">
+      <ImageRow caption="A caption.">
         <img src="https://example.com/first.png" alt="First" />
         <img src="https://example.com/second.png" alt="Second" />
-      </ImageGrid>
+      </ImageRow>
     `);
     expect(markdown).toContain(`![First](https://example.com/first.png)
 
@@ -409,20 +409,20 @@ A caption.`);
 A caption.`);
   });
 
-  test("replaces an `ImageGrid` authored on one line with its children, then the paragraph of its `caption` attribute", async () => {
+  test("replaces an `ImageRow` authored on one line with its children, then the paragraph of its `caption` attribute", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
-      <ImageGrid caption="A caption.">![An image](https://example.com/image.png)</ImageGrid>
+      <ImageRow caption="A caption.">![An image](https://example.com/image.png)</ImageRow>
     `);
     expect(markdown).toContain(`![An image](https://example.com/image.png)
 
 A caption.`);
   });
 
-  test("replaces an `ImageGrid` without a `caption` attribute with its children", async () => {
+  test("replaces an `ImageRow` without a `caption` attribute with its children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
-      <ImageGrid>
+      <ImageRow>
         <img src="https://example.com/image.png" alt="An image" />
-      </ImageGrid>
+      </ImageRow>
 
       Body.
     `);

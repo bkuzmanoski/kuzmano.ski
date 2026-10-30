@@ -25,6 +25,7 @@ import { firstMessage } from "#/lib/forms/client.ts";
 import { useForm } from "#/lib/forms/use-form.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
 import { useLocale } from "#/lib/hooks/use-locale.ts";
+import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useCloseGuard, useCloseWindow } from "#/lib/window-manager/use-close-window.ts";
@@ -189,6 +190,7 @@ export function ContactBody() {
               <TextInput
                 {...fromField.control}
                 {...form.handlers.from}
+                {...INITIAL_FOCUS_PROPS}
                 ref={fromFieldRef}
                 autoComplete="email"
                 inputMode="email"

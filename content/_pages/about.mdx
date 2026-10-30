@@ -4,14 +4,20 @@ description: Coming soon.
 date: 2026-10-15
 ---
 
+import { AlertButton } from "#/features/about/alert-button.tsx";
 import { ContributionGraph } from "#/features/about/contribution-graph.tsx";
+import { DitherBackdrop } from "#/components/dither-backdrop.tsx";
+
+<DitherBackdrop data-content-span="pane">
+  <p>Brian Kuzmanoski</p>
+</DitherBackdrop>
 
 <ContributionGraph />
 
-<ImageGrid className="buttons">
-  ![Made with MacOS](./button-made-with-macos.gif)
-  ![Microsoft Internet Exploder](./button-microsoft-internet-exploder.gif)
-  ![Best viewed with eyes](./button-best-viewed-with-eyes.gif)
-  ![CSS is awesome](./button-css-is-awesome.png)
-  ![Have a smile](./button-have-a-smile.png)
-</ImageGrid>
+<ImageRow>
+  ![Made on Mac OS](./button-made-on-macos.png)
+  ![Best on any browser](./button-best-on-any-browser.png)
+  [![Sign my guestbook](./button-sign-my-guestbook.png)](/contact)
+  <AlertButton message="What year do you think this is?">![Get Flash](./button-get-flash.png)</AlertButton>
+  ![Valid HTML 5](./button-w3c-html-5.png) ![Valid CSS!](./button-w3c-css.png)
+</ImageRow>

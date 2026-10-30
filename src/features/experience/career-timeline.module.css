@@ -332,6 +332,10 @@
     display: block;
   }
 
+  .roles {
+    margin-block-start: 0;
+  }
+
   .role > * {
     break-after: avoid;
   }
