@@ -36,7 +36,10 @@
   &.multiline {
     resize: none;
     scrollbar-width: none; /* The input is paired with a `Scrollbar` of its own. */
-    scroll-padding-block: var(--layout-gutter);
+
+    /* The caret is shorter than its line, so the padding also covers the leading below the caret. Without it, the
+     * browser stops short of the end of the scroll range. */
+    scroll-padding-block: calc(var(--layout-gutter) + (1lh - 1em) / 2);
 
     align-self: stretch;
 
