@@ -19,6 +19,7 @@ interface DitherFieldLayout {
 export const BACKDROP_TOP_DENSITY = 0.5;
 
 const BACKDROP_FALLOFF_EXPONENT = 1.5;
+const DITHER_CELL_SIZE_PX = 2;
 const REVEAL_DURATION_MS = 1_400;
 const REVEAL_STEP_COUNT = 14;
 const POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX = 90;
@@ -51,14 +52,6 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
     return () => undefined;
   }
 
-  // Round each dither cell to whole device pixels. `parseFloat` only correctly reads pixel lengths, so `--dither-cell`
-  // must use px units.
-  const ditherCellPx = Number.parseFloat(getComputedStyle(container).getPropertyValue("--dither-cell"));
-
-  if (!(ditherCellPx > 0)) {
-    return () => undefined;
-  }
-
   const revealStartTimeMs = performance.now();
 
   let prefersReducedMotion = getPrefersReducedMotion();
@@ -74,12 +67,12 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
   const pointerHighlight: PointerHighlight = {
     x: 0,
     y: 0,
-    standardDeviation: POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX / ditherCellPx,
+    standardDeviation: POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX / DITHER_CELL_SIZE_PX,
     strength: 0,
   };
 
   const composeDitherField = (): boolean => {
-    const devicePixelsPerDitherPixel = Math.max(1, Math.round(ditherCellPx * devicePixelRatio));
+    const devicePixelsPerDitherPixel = Math.max(1, Math.round(DITHER_CELL_SIZE_PX * devicePixelRatio)); // Round each dither cell to whole device pixels.
     const cssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
     // Rounded down to whole dither pixels, so the canvas never extends past the container into its margin.
     const layout: DitherFieldLayout = {

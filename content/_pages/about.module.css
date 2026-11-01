@@ -8,8 +8,8 @@
   grid-template-rows: 1fr;
 
   min-height: 320px;
-  margin-block-start: var(--layout-title-bar-inset-inline);
-  margin-inline: var(--layout-title-bar-inset-inline);
+  margin-block-start: 2px;
+  margin-inline: 2px;
 
   & > p {
     grid-column: text;
@@ -19,7 +19,7 @@
     text-wrap: balance;
     letter-spacing: -0.02em;
 
-    font-stretch: 82%;
+    font-stretch: 90%;
 
     @mixin content-rail-collapsed {
       font-size: 56px;

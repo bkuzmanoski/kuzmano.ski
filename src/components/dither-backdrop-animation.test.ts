@@ -23,10 +23,10 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   },
 }));
 
-/** At a `--dither-cell` of 4px and a device pixel ratio of 1, the component is 500x200 dither pixels. */
+/** At a dither cell of 2px and a device pixel ratio of 1, the component is 1000x400 dither pixels. */
 const COMPONENT_WIDTH_PX = 2_000;
 const COMPONENT_HEIGHT_PX = 800;
-const DITHER_FIELD_WIDTH_DITHER_PIXELS = 500;
+const DITHER_FIELD_WIDTH_DITHER_PIXELS = 1_000;
 
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const mediaQueryListeners = new Set<() => void>();
@@ -94,7 +94,6 @@ const containerElements = () => {
   const container = document.createElement("div");
   const canvas = document.createElement("canvas");
 
-  container.style.setProperty("--dither-cell", "4px");
   setContainerSize(container, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX);
   container.append(canvas);
   document.body.append(container);
@@ -179,15 +178,6 @@ test("starting the animation puts the dither field on the canvas with filled pix
   expect(hasFilledPixels(lastPutPixels())).toBe(true);
 });
 
-test("starting the animation does not put pixels on the canvas when `--dither-cell` is not a positive `px` length", () => {
-  const elements = containerElements();
-
-  elements.container.style.setProperty("--dither-cell", "0px");
-  startAnimation(elements);
-
-  expect(putImageData).not.toHaveBeenCalled();
-});
-
 test("starting the animation reveals the dither field over successive animation frames, then stops requesting them", () => {
   const now = vi.spyOn(performance, "now").mockReturnValue(0);
 
@@ -219,7 +209,7 @@ test("a resize that changes the width of the dither field puts the whole dither 
   putImageData.mockClear();
   resizeContainer(elements.container, 1_000, COMPONENT_HEIGHT_PX);
 
-  expect(elements.canvas.width).toBe(250);
+  expect(elements.canvas.width).toBe(500);
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(putImageData.mock.lastCall).toHaveLength(3);
 });
@@ -240,7 +230,7 @@ test("a resize to a size between whole dither pixels sizes the canvas to the who
   startAnimation(elements);
   resizeContainer(elements.container, 1_003, 803);
 
-  expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual(["1000px", "800px"]);
+  expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual(["1002px", "802px"]);
 });
 
 test("a change to the device pixel ratio that changes the size of a dither pixel puts the dither field on the canvas at the new width", () => {
@@ -248,9 +238,9 @@ test("a change to the device pixel ratio that changes the size of a dither pixel
 
   startAnimation(elements);
   putImageData.mockClear();
-  changeDevicePixelRatio(1.1); // At a ratio of 1.1, a 4px dither cell rounds to 4 device pixels (4 / 1.1 CSS pixels).
+  changeDevicePixelRatio(1.1); // At a ratio of 1.1, a 2px dither cell rounds to 2 device pixels (2 / 1.1 CSS pixels).
 
-  expect(elements.canvas.width).toBe(550);
+  expect(elements.canvas.width).toBe(1_100);
   expect(putImageData).toHaveBeenCalledTimes(1);
 });
 
@@ -303,9 +293,9 @@ test("scrolling the container under a stationary mouse pointer moves the pointer
   elements.container.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 25 dither pixels down the container. The region put on the canvas is rounded
+  // Scrolling by 100px moves the pointer 50 dither pixels down the container. The region put on the canvas is rounded
   // out to whole pixels, so its center can differ from the pointer highlight's by one.
-  expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 25)).toBeLessThanOrEqual(1);
+  expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 50)).toBeLessThanOrEqual(1);
 });
 
 test("moving a touch pointer over the container does not request an animation frame once the reveal has finished", () => {

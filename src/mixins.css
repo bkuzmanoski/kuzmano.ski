@@ -214,10 +214,6 @@
   letter-spacing: 1px; /* Use whole pixels so letters remain aligned to device pixels. */
 }
 
-@define-mixin dither-cell {
-  --dither-cell: 2px; /* Must be in px (see `dither-backdrop-animation.ts`). */
-}
-
 @define-mixin dither-dot {
   --dither-dot: calc(max(1, round(var(--device-pixel-ratio, 1))) / var(--device-pixel-ratio, 1) * 1px);
 }
