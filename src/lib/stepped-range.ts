@@ -1,7 +1,7 @@
 // Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`) and
 // `/vite.config.ts` loads it through `/build`.
 
-/** A range of numbers a control moves through in equal steps, such as a `Slider`'s. */
+/** A range of numbers a control moves through in equal steps, such as that of a `Slider`. */
 export interface SteppedRange {
   min: number;
   max: number;

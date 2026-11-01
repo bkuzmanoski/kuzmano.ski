@@ -12,6 +12,7 @@ import type { FeedMetadata } from "#/site/feeds.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import type * as Windows from "#/site/windows.ts";
 import { releasePointerOver, runActivationFlash, stubElementFromPoint } from "#/test-utils/menu.ts";
+import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
@@ -61,10 +62,7 @@ const menuItem = (label: string) => screen.getByText(label).closest("[data-index
 const highlightedMenuItem = () =>
   document.querySelector('[role="menuitem"][class*="active"]')?.querySelector("span")?.textContent;
 
-function openWithPointer(label: string) {
-  fireEvent.pointerDown(menuTitle(label));
-  return fireEvent.mouseDown(menuTitle(label));
-}
+const openWithPointer = (label: string) => pressWithMouse(menuTitle(label));
 
 function openWithKeyboard(label: string) {
   menuTitle(label).focus();
@@ -176,7 +174,7 @@ describe("opening a menu", () => {
   test("a press on another title opens its menu on that same press", () => {
     render(<MenuBar />);
     openWithPointer("File");
-    fireEvent(menuTitle("File"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold, as a touch tap does.
+    fireEvent(menuTitle("File"), new MouseEvent("pointerup", { bubbles: true })); // Ends the hold like a touch tap.
     fireEvent.pointerDown(menuTitle("Go"));
     fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }));
 
@@ -212,6 +210,60 @@ describe("opening a menu", () => {
     expect(isExpanded("File")).toBe(false);
     expect(menu()).toBeNull();
   });
+
+  test.each(SCREEN_READER_ACTIVATIONS)(
+    "a screen reader's activate action on a menu title in %s opens its menu without playing the click sound",
+    (_browser, activate) => {
+      render(<MenuBar />);
+      activate(menuTitle("Go"));
+
+      expect(isExpanded("Go")).toBe(true);
+      expect(playClickSound).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each(SCREEN_READER_ACTIVATIONS)(
+    "a screen reader's activate action on a menu title in %s highlights the first item of its menu",
+    (_browser, activate) => {
+      render(<MenuBar />);
+      activate(menuTitle("Go"));
+
+      expect(document.activeElement).toBe(menu());
+      expect(highlightedMenuItem()).toBe("About");
+    },
+  );
+
+  test("a tap retargeted to a menu title by iOS plays the click sound and opens its menu", () => {
+    render(<MenuBar />);
+    fireEvent.click(menuTitle("Go"), { detail: 1 });
+
+    expect(playClickSound).toHaveBeenCalledOnce();
+    expect(isExpanded("Go")).toBe(true);
+  });
+
+  test("the click that ends a pointer press on a menu title does not close the menu opened by the press, or play the click sound again", () => {
+    render(<MenuBar />);
+    openWithPointer("Go");
+    fireEvent.pointerUp(menuTitle("Go"));
+    fireEvent.click(menuTitle("Go"), { detail: 1 });
+
+    expect(isExpanded("Go")).toBe(true);
+    expect(playClickSound).toHaveBeenCalledOnce();
+  });
+
+  test("a click on a menu title without a pointer press opens its menu after a pointer press that starts on the title and ends on a menu item", () => {
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    openWithPointer("Go");
+    releasePointerOver(menuItem("About"));
+    runActivationFlash();
+
+    expect(isExpanded("Go")).toBe(false);
+
+    fireEvent.click(menuTitle("Go"));
+
+    expect(isExpanded("Go")).toBe(true);
+  });
 });
 
 describe("dismissing a menu", () => {
@@ -241,6 +293,17 @@ describe("dismissing a menu", () => {
 
     expect(menu()).toBeNull();
   });
+
+  test.each(SCREEN_READER_ACTIVATIONS)(
+    "a screen reader's activate action on a menu title in %s closes its menu when the menu is open",
+    (_browser, activate) => {
+      render(<MenuBar />);
+      activate(menuTitle("Go"));
+      activate(menuTitle("Go"));
+
+      expect(isExpanded("Go")).toBe(false);
+    },
+  );
 });
 
 describe("navigating an open menu", () => {
@@ -449,7 +512,7 @@ describe("items that open a destination", () => {
 
     releasePointerOver(about);
 
-    expect(fireEvent.click(about)).toBe(false); // The default behavior was prevented.
+    expect(fireEvent.click(about)).toBe(false); // The menu item prevented the default behavior.
 
     runActivationFlash();
 
@@ -471,21 +534,25 @@ describe("items that open a destination", () => {
 
       releasePointerOver(about, init);
 
-      expect(fireEvent.click(about, init)).toBe(true); // The default behavior was not prevented.
+      expect(fireEvent.click(about, init)).toBe(true); // The menu item did not prevent the default behavior.
       expect(open).not.toHaveBeenCalled();
       expect(menu()).not.toBeNull();
     },
   );
 
-  test("a click on an item without a pointer press, as an assistive technology sends, opens its destination", () => {
-    vi.useFakeTimers();
-    render(<MenuBar />);
-    openWithKeyboard("Go");
-    fireEvent.click(menuItem("About"));
-    runActivationFlash();
+  test.each(SCREEN_READER_ACTIVATIONS)(
+    "a screen reader's activate action on an item in %s opens its destination",
+    (_browser, activate) => {
+      vi.useFakeTimers();
+      render(<MenuBar />);
+      openWithKeyboard("Go");
+      stubElementFromPoint(menuItem("About")); // Chrome dispatches the simulated `pointerup` at the center of the item.
+      activate(menuItem("About"));
+      runActivationFlash();
 
-    expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
-  });
+      expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+    },
+  );
 
   test("a secondary pointer up event does not activate the menu item", () => {
     vi.useFakeTimers();
@@ -580,7 +647,8 @@ describe("items that open a destination", () => {
 
     const viewSource = menuItem("View Source") as HTMLAnchorElement;
     const follow = vi.spyOn(viewSource, "click").mockImplementation(() => {
-      // Following the link dispatches a click on it, which bubbles through the menu. Its default action, opening a new tab, is prevented.
+      // Following the link dispatches a click on it, which bubbles through the menu. Its default action, opening a new
+      // tab, is prevented.
       viewSource.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     });
     viewSource.addEventListener("click", (event) => event.preventDefault());
@@ -714,7 +782,7 @@ describe("the site menu", () => {
 describe("status controls", () => {
   const appearanceControl = () => screen.getByRole("button", { name: /^Appearance:/ });
   const appearanceLabel = () => appearanceControl().getAttribute("aria-label");
-  const tooltip = () => screen.queryByRole("tooltip");
+  const tooltip = () => screen.queryByRole("tooltip", { hidden: true });
 
   beforeEach(() => vi.useFakeTimers());
 
@@ -765,7 +833,7 @@ describe("status controls", () => {
     fireEvent.click(appearanceControl());
     fireEvent.click(soundControl);
 
-    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+    expect(screen.getAllByRole("tooltip", { hidden: true })).toHaveLength(1);
     expect(tooltip()?.textContent).toBe(soundControl.getAttribute("aria-label"));
   });
 
@@ -795,14 +863,14 @@ describe("the `Sound` status button", () => {
   });
 
   const soundControl = () => screen.getByRole("button", { name: /^Sound:/ });
-  const pressWithMouse = (element: Element) => {
+  const pressAndClick = (element: Element) => {
     fireEvent.pointerDown(element, { pointerType: "mouse", button: 0, isPrimary: true });
     fireEvent.click(element);
   };
 
   test("pressing it while sound effects are on turns them off without playing the click sound", () => {
     render(<MenuBar />);
-    pressWithMouse(soundControl());
+    pressAndClick(soundControl());
 
     expect(getSettings().soundEffects).toBe("off");
     expect(playClickSound).not.toHaveBeenCalled();
@@ -811,7 +879,7 @@ describe("the `Sound` status button", () => {
   test("pressing it while sound effects are off turns them on and plays the click sound", () => {
     setSoundEffects("off");
     render(<MenuBar />);
-    fireEvent.click(soundControl()); // A click without a press, since the mocked press sound plays while sound effects are off.
+    fireEvent.click(soundControl()); // A click without a press, as a press would call the mocked `playClickSound` even while sound effects are off.
 
     expect(getSettings().soundEffects).toBe("on");
     expect(playClickSound).toHaveBeenCalledOnce();

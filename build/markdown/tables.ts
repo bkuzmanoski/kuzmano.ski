@@ -18,13 +18,16 @@ const isTableSectionName = isOneOf(TABLE_SECTION_NAMES);
 
 interface AuthoredTable {
   caption: Array<ContentNode>;
-  rows: Array<Array<ContentNode>>; // The `<td>` and `<th>` elements of each row.
+  /** The `<td>` and `<th>` elements of each row. */
+  rows: Array<Array<ContentNode>>;
 }
 
 const TABLE_CELL_NAMES = new Set(["td", "th"]);
 
-// MDX parses an element authored on one line as phrasing inside a paragraph, so the rows and cells of a
-// table are found through the paragraphs between them.
+/**
+ * MDX parses an element authored on one line as phrasing inside a paragraph, so this function finds the rows and cells
+ * of a table through the paragraphs between them.
+ */
 function cellsIn(row: ContentNode): Array<ContentNode> {
   return (row.children ?? []).flatMap((child) => {
     if (child.type === "paragraph") {
@@ -137,9 +140,9 @@ function tableMarkdownNodesFrom(table: ContentNode): Array<ContentNode> {
 }
 
 /**
- * Replaces each `<table>` authored as a block with its Markdown nodes. This must run before the MDX
- * is stripped, which replaces a table's children before the table itself and so would remove the
- * `<tr>`, `<td>`, and `<th>` elements the rows and cells are read from.
+ * Replaces each `<table>` authored as a block with its Markdown nodes. This must run before the MDX is stripped, which
+ * replaces a table's children before the table itself and so would remove the `<tr>`, `<td>`, and `<th>` elements the
+ * rows and cells are read from.
  */
 export function remarkAuthoredTables() {
   return function transform(tree: ContentParent) {

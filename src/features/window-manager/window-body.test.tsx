@@ -5,7 +5,7 @@ import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
-import { WindowBody } from "./window-body.tsx";
+import { WindowBody, WindowHeader } from "./window-body.tsx";
 
 const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; title: string } }>(() => ({})));
 
@@ -27,6 +27,16 @@ afterEach(() => {
 const COLLECTION_ENTRY = collectionEntries[0]!;
 
 const renderBody = (route: string) => renderInRouterContext(<WindowBody route={route} />);
+
+test("the window header of a collection route renders the column headings", () => {
+  renderInRouterContext(<WindowHeader route="/collection" />);
+  expect(screen.getByText("Title")).toBeDefined();
+});
+
+test("the window header of an entry route is empty", () => {
+  const { container } = renderInRouterContext(<WindowHeader route={`/collection/${COLLECTION_ENTRY.slug}`} />);
+  expect(container.firstChild).toBeNull();
+});
 
 test("a collection route renders a link for every entry in the collection", () => {
   renderBody("/collection");

@@ -108,8 +108,7 @@ test("a scroll of the visual viewport that leaves the gap unchanged does not wri
   renderHook(() => useKeyboardInset());
   viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
 
-  // A spy rather than a `MutationObserver`, since jsdom does not record a mutation for a write of the same value.
-  const setProperty = vi.spyOn(document.documentElement.style, "setProperty");
+  const setProperty = vi.spyOn(document.documentElement.style, "setProperty"); // A spy rather than a `MutationObserver` as jsdom does not record a mutation for a write of the same value.
 
   viewport.scroll();
 

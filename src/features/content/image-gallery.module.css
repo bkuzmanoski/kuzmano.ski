@@ -1,6 +1,6 @@
 .imageGallery {
   --image-gallery-control-size: 24px;
-  --image-gallery-thumbnail-size: var(--layout-cover-image-size);
+  --image-gallery-thumbnail-size: 48px;
   --image-gallery-thumbnail-gap: 8px;
   --image-gallery-stage-aspect-ratio: 3 / 2; /* An entry's stylesheet can set this on `[data-image-gallery]`. */
 
@@ -61,7 +61,7 @@
   border-block-start: 1px solid var(--color-border);
 }
 
-/* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order.  */
+/* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order. */
 .controls > .control {
   align-self: stretch;
   width: calc(var(--image-gallery-control-size) + 1px); /* Includes the border beside the control. */
@@ -155,8 +155,7 @@
 .preview {
   --image-gallery-preview-title-bar-height: calc(16 * var(--dither-dot)); /* Excludes the bottom border. */
 
-  /* The title bar is sized in dither dots, so its fill and its close button stay aligned at any device pixel
-   * ratio. */
+  /* The title bar is sized in dither dots, so its fill and its close button stay aligned at any device pixel ratio. */
   @mixin dither-dot;
 
   position: fixed;

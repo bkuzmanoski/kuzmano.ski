@@ -52,8 +52,8 @@ test("returns `undefined` on the server and during hydration, then the calendar 
   expect(container.textContent).toBe("pending");
   expect(readContributionCalendar).not.toHaveBeenCalled();
 
-  // A hydration render that returned a calendar would not match the server markup,
-  // which React recovers from and reports here.
+  // A hydration render that returned a calendar would not match the server markup, which React recovers from and
+  // reports here.
   const onRecoverableError = vi.fn();
 
   act(() => {

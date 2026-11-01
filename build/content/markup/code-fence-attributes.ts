@@ -7,8 +7,10 @@ import type { Root } from "hast";
 
 interface CodeFenceAttributeSpec {
   valuePattern: RegExp;
-  valueDescription: string; // Completes the "Expected …" message when `valuePattern` rejects a value.
-  preAttributeName: `data-${string}`; // The `<pre>` attribute that `rehypeCodeFenceAttributes` assigns this value to.
+  /** Completes the "Expected …" message when `valuePattern` rejects a value. */
+  valueDescription: string;
+  /** The `<pre>` attribute that `rehypeCodeFenceAttributes` assigns this value to. */
+  preAttributeName: `data-${string}`;
 }
 
 const CODE_FENCE_ATTRIBUTE_SPECS = {
@@ -28,8 +30,8 @@ const isCodeFenceAttributeName = (name: string): name is CodeFenceAttributeName 
 /**
  * Parses a code fence's meta string into supported `name=value` or `name="value"` attributes, in authored order.
  *
- * Returns an empty map when no meta string is provided. Throws if the syntax is invalid, an attribute is
- * unsupported or repeated, or a value fails its attribute's validation, naming the entry in `file`.
+ * Returns an empty map when no meta string is provided. Throws if the syntax is invalid, an attribute is unsupported or
+ * repeated, or a value fails its attribute's validation, naming the entry in `file`.
  */
 export function codeFenceAttributesIn(meta: string | null | undefined, file: EntryVFile): CodeFenceAttributes {
   const attributePattern = /\s*(?<name>[A-Za-z][\w-]*)=(?<value>"[^"]*"|[^\s"]+)\s*/y; // Matches one `name=value` or `name="value"` pair at the sticky position, with the whitespace around it.

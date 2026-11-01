@@ -6,7 +6,7 @@ import { Button } from "#/components/button.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { ZoomRect } from "#/features/window-manager/zoom-rect.tsx";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
-import { loadKeySounds, playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
+import { loadKeySounds, playHoverSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
@@ -27,8 +27,10 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode }
 /** The horizontal travel past which a touch drag across an image shows the next or previous image. */
 export const SWIPE_DISTANCE_PX = 32;
 
-// The preview's zoom rect, which grows from the stage to the frame (`in`) or shrinks from the frame
-// back to the stage (`out`), in the preview's coordinates.
+/**
+ * The preview's zoom rect, which grows from the stage to the frame (`in`) or shrinks from the frame back to the stage
+ * (`out`), in the preview's coordinates.
+ */
 interface PreviewZoomRect {
   direction: "in" | "out";
   from: Rect;
@@ -67,7 +69,7 @@ function galleryImagesIn(children: ReactNode): Array<ReactElement> {
   return images;
 }
 
-// Scrolls only the thumbnail row; `scrollIntoView` would also scroll the page, potentially behind an open preview.
+/** Scrolls only the thumbnail row; `scrollIntoView` would also scroll the page, potentially behind an open preview. */
 function scrollThumbnailIntoView(thumbnailList: HTMLElement, index: number) {
   const thumbnail = thumbnailList.children.item(index);
 
@@ -86,9 +88,11 @@ function scrollThumbnailIntoView(thumbnailList: HTMLElement, index: number) {
 
 const isThumbnail = (target: EventTarget) => target instanceof HTMLElement && target.getAttribute("role") === "tab";
 
-// Calls `onSwipe` with `1` when a touch drag moves toward the line's start (next image) or `-1` when it
-// moves toward the end. Predominantly vertical drags are ignored so the browser can scroll the page.
-// Suppresses the swipe's subsequent press to prevent it from opening the preview.
+/**
+ * Calls `onSwipe` with `1` when a touch drag moves toward the line's start (next image) or `-1` when it moves toward
+ * the end. Ignores a predominantly vertical drag so the browser can scroll the page. Suppresses the swipe's subsequent
+ * press to prevent it from opening the preview.
+ */
 function useSwipe(onSwipe: (direction: 1 | -1) => void) {
   const swipeDeltaRef = useRef<DragDelta | null>(null);
   return usePointerDrag({
@@ -123,7 +127,8 @@ export function ImageGallery({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const images = galleryImagesIn(children);
   const hasControls = useIsHydrated();
-  const thumbnailPressSoundHandlers = usePressSound({ scrollSafe: true });
+  const stagePressSoundHandlers = usePressSound({ defersTouchPressSound: true });
+  const thumbnailPressSoundHandlers = usePressSound({ defersTouchPressSound: true });
   const closeButtonPressSoundHandlers = usePressSound();
   const galleryRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -139,7 +144,6 @@ export function ImageGallery({
     currentIndex,
     isPreviewOpen,
   );
-
   useEffect(() => {
     if (hasControls) {
       void loadKeySounds();
@@ -341,9 +345,9 @@ export function ImageGallery({
         onPointerDown={(event) => {
           const button = event.target instanceof Element ? event.target.closest("button") : null;
 
-          // Safari does not focus pressed buttons, and presses around thumbnails do not focus anything.
-          // Focus the pressed button or the gallery so arrow keys remain available. Slides retain focus
-          // after being pressed because they are focusable.
+          // Safari does not focus pressed buttons, and presses around thumbnails do not focus anything. Focus the
+          // pressed button or the gallery so arrow keys remain available. Slides retain focus after being pressed
+          // because they are focusable.
           (button && !button.disabled ? button : galleryRef.current)?.focus({ preventScroll: true });
         }}
       >
@@ -351,10 +355,10 @@ export function ImageGallery({
           ref={stageRef}
           className={styles.stage}
           aria-live="polite"
-          {...stageSwipeHandlers}
-          onClick={() => {
+          {...mergeHandlers(stageSwipeHandlers, stagePressSoundHandlers)}
+          onClick={(event) => {
             if (hasControls) {
-              playClickSound();
+              stagePressSoundHandlers.onClick(event);
               openPreview();
             }
           }}
@@ -432,8 +436,8 @@ export function ImageGallery({
           isPressOutsidePreviewRef.current = event.target === event.currentTarget;
         }}
         onClick={(event) => {
-          // Close the preview only when a press begins and ends outside the frame. A click alone can
-          // target the dialog when a press starts on the image and ends outside the frame.
+          // Close the preview only when a press begins and ends outside the frame. A click alone can target the dialog
+          // when a press starts on the image and ends outside the frame.
           if (event.target === event.currentTarget && isPressOutsidePreviewRef.current) {
             closePreview();
           }

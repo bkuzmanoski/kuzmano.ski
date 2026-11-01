@@ -30,8 +30,10 @@ export interface CareerTimelineListState {
 const scrollPaneOf = (listElement: HTMLElement | null): HTMLElement | null =>
   listElement?.closest(SCROLL_PANE_VIEWPORT_SELECTOR) ?? null;
 
-// Scrolls so the visible-range frame is centered on `center`. The roles' positions are in the scroll pane's
-// scrolled coordinates, so a layout read at the start of a drag remains valid for the duration of the drag.
+/**
+ * Scrolls the scroll pane so the visible-range frame centers on `center`. The roles' positions are in the scroll pane's
+ * scrolled coordinates, so a layout read at the start of a drag remains valid for the duration of the drag.
+ */
 function scrollToVisibleCareerTimelineCenter(layout: CareerTimelineLayout, center: number) {
   const scrollTop = scrollTopForVisibleCareerTimelineCenter(layout.viewport, center);
 
@@ -41,8 +43,8 @@ function scrollToVisibleCareerTimelineCenter(layout: CareerTimelineLayout, cente
 }
 
 /**
- * Keeps the visible-range frame around the years of the roles in view of the scroll pane, and returns the
- * pointer handlers that make the chart scroll the list.
+ * Keeps the visible-range frame around the years of the roles in view of the scroll pane, and returns the pointer
+ * handlers that make the chart scroll the list.
  *
  * The frame is measured on each scroll and resize frame, and again when `listState` changes, and is marked
  * `data-visible` while a role is in view.
@@ -106,8 +108,8 @@ export function useCareerTimelineMinimap(
       resizeObserver.disconnect();
     };
 
-    // The list state is not read here, but a change to it reorders or filters the
-    // roles and moves their placements without scrolling or resizing the scroll pane.
+    // The list state is not read here, but a change to it reorders or filters the roles and moves their placements
+    // without scrolling or resizing the scroll pane.
   }, [chartColumn, lanes, visibleRangeFrame, list, direction, hiddenDisciplineIds]);
 
   return usePointerDrag({

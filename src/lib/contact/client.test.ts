@@ -25,26 +25,26 @@ describe("readContactEmailAddress", () => {
     respondWith(fetchMock, 200, { emailAddress: EMAIL_ADDRESS });
   });
 
-  test("the email address is read from the contact endpoint", async () => {
+  test("reads the email address from the contact endpoint", async () => {
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
     expect(fetchMock.mock.calls[0]![0]).toBe(API_ROUTES.contact);
   });
 
-  test("the email address is stored for the session, and a second read does not request it again", async () => {
+  test("stores the email address for the session, and does not request it again on a second read", async () => {
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
     expect(sessionStorage.getItem(CONTACT_EMAIL_ADDRESS_STORAGE_KEY)).toBe(EMAIL_ADDRESS);
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
     expect(fetchMock).toHaveBeenCalledOnce(); // Reopening the contact window reads the email address again.
   });
 
-  test("an email address already stored for the session is returned without a request", async () => {
+  test("returns an email address already stored for the session without a request", async () => {
     sessionStorage.setItem(CONTACT_EMAIL_ADDRESS_STORAGE_KEY, EMAIL_ADDRESS);
 
     await expect(readContactEmailAddress()).resolves.toBe(EMAIL_ADDRESS);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test("the abort signal is passed to the request", async () => {
+  test("passes the abort signal to the request", async () => {
     const controller = new AbortController();
 
     await readContactEmailAddress(controller.signal);
@@ -58,14 +58,14 @@ describe("readContactEmailAddress", () => {
     ["the response is not JSON", () => fetchMock.mockResolvedValue(new Response("nope", { status: 200 }))],
     ["the response has no email address", () => respondWith(fetchMock, 200, {})],
     ["the email address is not a string", () => respondWith(fetchMock, 200, { emailAddress: 42 })],
-  ])("`null` is returned, and an email address is not stored for the session, when %s", async (_label, arrange) => {
+  ])("returns `null`, and does not store an email address for the session, when %s", async (_label, arrange) => {
     arrange();
 
     await expect(readContactEmailAddress()).resolves.toBeNull();
     expect(sessionStorage.getItem(CONTACT_EMAIL_ADDRESS_STORAGE_KEY)).toBeNull(); // Not cached, so the next open retries.
   });
 
-  test("the email address is returned when session storage throws", async () => {
+  test("returns the email address when session storage throws", async () => {
     const throwDenied = () => {
       throw new Error("Denied.");
     };
@@ -80,7 +80,7 @@ describe("readContactEmailAddress", () => {
 });
 
 describe("sendMessage", () => {
-  test("the submission is posted as JSON to the endpoint", async () => {
+  test("posts the submission as JSON to the endpoint", async () => {
     respondWith(fetchMock, 204);
     await sendMessage(SUBMISSION);
 
@@ -91,7 +91,7 @@ describe("sendMessage", () => {
     expect(jsonBodyOfFirstRequest(fetchMock)).toEqual(SUBMISSION);
   });
 
-  test.each([204, 200])("a %i response is treated as a successful send", async (status) => {
+  test.each([204, 200])("treats a %i response as a successful send", async (status) => {
     respondWith(fetchMock, status);
     await expect(sendMessage(SUBMISSION)).resolves.toEqual({ status: "sent" });
   });
@@ -101,17 +101,17 @@ describe("sendMessage", () => {
     [429, /too many messages/],
     [502, /couldn’t be sent/],
     [503, /couldn’t be sent/],
-  ])("a %i response is treated as a failure with a message", async (status, message) => {
+  ])("treats a %i response as a failure with a message", async (status, message) => {
     respondWith(fetchMock, status);
     await expect(sendMessage(SUBMISSION)).resolves.toMatchObject({ status: "failed", message });
   });
 
-  test("a network error is treated as a failure rather than thrown", async () => {
+  test("treats a network error as a failure rather than throwing it", async () => {
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
     await expect(sendMessage(SUBMISSION)).resolves.toMatchObject({ status: "failed" });
   });
 
-  test("a 400 response is treated as an invalid submission with the field errors returned by the endpoint", async () => {
+  test("treats a 400 response as an invalid submission with the field errors returned by the endpoint", async () => {
     respondWith(fetchMock, 400, { errors: { from: "That doesn’t look like an email address." } });
 
     await expect(sendMessage(SUBMISSION)).resolves.toEqual({
@@ -120,7 +120,7 @@ describe("sendMessage", () => {
     });
   });
 
-  test("the abort signal is passed to the request", async () => {
+  test("passes the abort signal to the request", async () => {
     respondWith(fetchMock, 204);
 
     const controller = new AbortController();

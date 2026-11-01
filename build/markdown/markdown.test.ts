@@ -66,8 +66,6 @@ const ENTRY_DATA_MODULE: EntryDataModule = {
   INVALID_RECORD: { ...EXPERIENCE, asOf: "soon" },
 };
 
-// Returns the fake module for the data file of `collection/entry.mdx`, and rejects for any other
-// path, as a missing file does.
 const readEntryDataModule = vi.fn((absolutePath: string) =>
   absolutePath === fromContent("collection/entry.data.ts")
     ? Promise.resolve(ENTRY_DATA_MODULE)

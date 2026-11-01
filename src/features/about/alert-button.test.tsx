@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { AlertButton } from "./alert-button.tsx";
 
@@ -44,7 +45,7 @@ describe("AlertButton", () => {
 
   test("plays the click sound when the button is pressed with the mouse", () => {
     renderAlertButton();
-    fireEvent.pointerDown(screen.getByRole("button", { name: "First image" }), { pointerType: "mouse" });
+    pressWithMouse(screen.getByRole("button", { name: "First image" }));
 
     expect(playClickSound).toHaveBeenCalledTimes(1);
   });

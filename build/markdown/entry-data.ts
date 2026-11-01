@@ -10,9 +10,9 @@ import { fromRoot, toQuotedRootRelative } from "../paths.ts";
 import type { ContentNode, EntryVFile, EstreeNode } from "../content/markup/tree.ts";
 import type { ViteDevServer } from "vite";
 
-// A component rendered from entry data is given its record as `{...NAME}`, where `NAME` is imported
-// from the entry's data file. The Markdown pass reads the export that import names from the same
-// file, so it emits the record the page renders.
+// A component rendered from entry data is given its record as `{...NAME}`, where `NAME` is imported from the entry's
+// data file. The Markdown pass reads the export that import names from the same file, so it emits the record the page
+// renders.
 
 /** The exports of an entry data module, keyed by export name. */
 export type EntryDataModule = Record<string, unknown>;
@@ -65,9 +65,11 @@ function entryImportsIn(tree: ContentNode): Map<string, EntryImport> {
   return entryImports;
 }
 
-// The identifier an element spreads into its props as `{...NAME}`.
-//
-// Throws if the element spreads anything but one identifier or has any other attribute.
+/**
+ * The identifier an element spreads into its props as `{...NAME}`.
+ *
+ * Throws if the element spreads anything but one identifier or has any other attribute.
+ */
 function spreadIdentifierOf(element: ContentNode, file: EntryVFile): string {
   const [attribute, ...otherAttributes] = element.attributes ?? [];
   const properties =
@@ -94,13 +96,12 @@ export interface EntryDataExport {
 }
 
 /**
- * Reads the export each element in `elements` is rendered from, keyed by element: the element's
- * `{...NAME}` spread names an import of the entry in `tree`, and the export that import names is read
- * from the data file it imports, resolved against the entry's path. Imports each data file once, and
- * only when `elements` is not empty.
+ * Reads the export each element in `elements` is rendered from, keyed by element: the element's `{...NAME}` spread
+ * names an import of the entry in `tree`, and the export that import names is read from the data file it imports,
+ * resolved against the entry's path. Imports each data file once, and only when `elements` is not empty.
  *
- * Throws if an element has attributes other than that spread, `NAME` is not imported from a path
- * relative to the entry, the data file cannot be imported, or it does not export the imported name.
+ * Throws if an element has attributes other than that spread, `NAME` is not imported from a path relative to the entry,
+ * the data file cannot be imported, or it does not export the imported name.
  */
 export async function readEntryDataExports(
   tree: ContentNode,
@@ -177,8 +178,8 @@ export async function readEntryDataExports(
 /**
  * Imports an entry data module.
  *
- * `runnerImport` transforms and evaluates the module in a module runner of its own and closes the
- * runner before it returns, so each call reads the file again and no earlier version remains loaded.
+ * `runnerImport` transforms and evaluates the module in a module runner of its own and closes the runner before it
+ * returns, so each call reads the file again and no earlier version remains loaded.
  */
 export async function readEntryDataModule(absolutePath: string): Promise<EntryDataModule> {
   const { module } = await runnerImport<EntryDataModule>(absolutePath, { root: fromRoot(".") });
@@ -188,10 +189,9 @@ export async function readEntryDataModule(absolutePath: string): Promise<EntryDa
 /**
  * Returns a reader that imports an entry data module through the dev server's SSR module runner.
  *
- * The runner evaluates a module once and caches it until Vite invalidates it on an edit, so a Markdown
- * request re-evaluates the module only after it changes, rather than creating a runner of its own as
- * `readEntryDataModule` does. Falls back to `readEntryDataModule` when the SSR environment does not run
- * in this process.
+ * The runner evaluates a module once and caches it until Vite invalidates it on an edit, so a Markdown request
+ * re-evaluates the module only after it changes, rather than creating a runner of its own like `readEntryDataModule`.
+ * Falls back to `readEntryDataModule` when the SSR environment does not run in this process.
  */
 export function entryDataModuleReaderThrough(server: ViteDevServer): EntryDataModuleReader {
   return (absolutePath) => {

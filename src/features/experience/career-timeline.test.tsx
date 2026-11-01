@@ -257,7 +257,7 @@ describe("CareerTimeline", () => {
     ]);
   });
 
-  test("marks each month with a `lang` attribute naming the browser's locale when its language differs from the document's", () => {
+  test("marks each month with a `lang` attribute naming the browser's locale when its language differs from that of the document", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
     renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
@@ -299,13 +299,19 @@ describe("CareerTimeline", () => {
     expect(screen.getByRole("link", { name: "Read the entry" }).getAttribute("href")).toBe("/collection/entry");
   });
 
-  test("renders a checked filter for every discipline, in a list labeled `Disciplines`", () => {
+  test("renders a checked filter for every discipline, in a list labeled `Disciplines` that sets the `role` attribute to `list`", () => {
     renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
     const list = screen.getByRole("list", { name: "Disciplines" });
 
+    expect(list.getAttribute("role")).toBe("list");
     expect(within(list).getByRole("checkbox", { name: "First", checked: true })).toBeTruthy();
     expect(within(list).getByRole("checkbox", { name: "Second", checked: true })).toBeTruthy();
+  });
+
+  test("renders the roles in an `<ol>` that sets the `role` attribute to `list`", () => {
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
+    expect(document.querySelector("ol")?.getAttribute("role")).toBe("list");
   });
 
   test("omits a role from the list once the filter for every discipline it lists is unchecked", () => {

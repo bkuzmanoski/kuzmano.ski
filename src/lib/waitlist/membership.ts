@@ -21,7 +21,8 @@ export const EMPTY_MEMBERSHIP: WaitlistFields = { emailAddress: "" };
 
 export interface Membership extends WaitlistFields {
   list: string;
-  source: string; // The path to the entry where the waitlist was joined.
+  /** The path of the entry where the user joined the waitlist. */
+  source: string;
 }
 
 export function parseSubmission(value: Record<string, unknown>): ParsedSubmission<Membership, WaitlistFields> {

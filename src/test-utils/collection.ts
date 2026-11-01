@@ -18,18 +18,10 @@ const fakeBody =
     createElement("p", null, `The body of ${slug}.`);
 
 export function fakeCoverImage(slug: string): CoverImage {
-  const coverImageUrlBase = mediaRoute(`${COLLECTION_DIRECTORY_NAME}/${slug}.cover.0f1e2d3c4b5a6978`); // Matches `MEDIA_FILE_HASH` in `/build/test-utils/media.ts`; `src` cannot import `build`.
-  const placeholderFingerprint = "00000000";
-
   return {
-    social: { src: `${coverImageUrlBase}.png`, width: 512, height: 512 },
-    thumbnail: {
-      kind: "image",
-      src: `${coverImageUrlBase}.${placeholderFingerprint}.thumbnail.webp`,
-      width: 128,
-      height: 128,
-      alternates: [{ srcSet: `${coverImageUrlBase}.${placeholderFingerprint}.thumbnail.avif`, type: "image/avif" }],
-    },
+    src: mediaRoute(`${COLLECTION_DIRECTORY_NAME}/${slug}.cover.0f1e2d3c4b5a6978.png`), // Matches `MEDIA_FILE_HASH` in `/build/test-utils/media.ts`; `src` cannot import `build`.
+    width: 512,
+    height: 512,
   };
 }
 
@@ -54,8 +46,8 @@ export function fakeContentIndex(entries: Array<Entry>, directoryName = COLLECTI
         throw new Error(`Content not found: ${slug}`);
       }
 
-      // Memoized and tracked, as the real catalog memoizes and tracks, so
-      // a body that has already loaded renders without suspending again.
+      // Memoized and tracked, as the real catalog memoizes and tracks, so a body that has already loaded renders
+      // without suspending again.
       const module = modules.get(slug) ?? trackPromise(Promise.resolve({ default: fakeBody(slug) }));
 
       modules.set(slug, module);

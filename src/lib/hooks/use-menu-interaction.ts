@@ -19,10 +19,11 @@ export interface MenuInteractionItem {
   isEnabled: boolean;
 }
 
-// The index of the item under a point, or -1 if the point is not over one. The point is hit-tested
-// rather than read from an event's target, because on iOS a tap near an item can be retargeted to it
-// for the compatibility mouse events and `click`, while the touch pointer events remain on the element
-// under the finger.
+/**
+ * The index of the item under a point, or -1 if the point is not over one. The point is hit-tested rather than read
+ * from an event's target, because on iOS a tap near an item can be retargeted to it for the compatibility mouse events
+ * and `click`, while the touch pointer events remain on the element under the finger.
+ */
 function indexAt(x: number, y: number): number {
   const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
   return element ? Number(element.dataset.index) : -1;
@@ -53,9 +54,12 @@ export function useMenuInteraction({
   anchor: HTMLElement | null;
   listRef: RefObject<HTMLElement | null>;
   isPointerHeld: boolean;
-  pressOrigin: Position | null; // `null` when the press that opened the menu was not at a known point, which treats any release as having moved.
-  initialFocusedItemIndex: number; // `-1` if no item should have focus when the menu is first opened.
-  isBrowserHandledRelease?: (index: number, event: PointerEvent) => boolean; // Whether the browser handles a release on the item, preventing menu activation.
+  /** `null` when the press that opened the menu was not at a known point, which treats any release as having moved. */
+  pressOrigin: Position | null;
+  /** `-1` if no item should have focus when the menu is first opened. */
+  initialFocusedItemIndex: number;
+  /** Whether the browser handles a release on the item, preventing menu activation. */
+  isBrowserHandledRelease?: (index: number, event: PointerEvent) => boolean;
   onActivate: (index: number) => void;
   onClose: () => void;
 }) {
@@ -128,7 +132,8 @@ export function useMenuInteraction({
 
   function returnFocusToAnchor(isPointerActivation: boolean) {
     if (listRef.current?.contains(document.activeElement)) {
-      // Restore focus to the anchor when an item activation leaves focus in the unmounted list (e.g. when opening a new tab).
+      // Restore focus to the anchor when an item activation leaves focus in the unmounted list (e.g., when opening a
+      // new tab).
       anchor?.focus({ preventScroll: true, focusVisible: isPointerActivation ? false : undefined });
     }
   }
@@ -141,7 +146,7 @@ export function useMenuInteraction({
     focusedItemIndexRef.current = index;
 
     setFocusedItemIndex(index);
-    playClickSound();
+    playClickSound(); // Plays for every input, including a screen reader's activate action, unlike `usePressSound`.
     flashingItemIndexRef.current = index;
 
     flash.start(index, () => {
@@ -161,8 +166,9 @@ export function useMenuInteraction({
     }
   });
 
-  // Unmounting cancels flash timers, so activate a flashing item during cleanup when its menu closes or is replaced.
-  // A layout-effect cleanup runs while the list is attached, allowing link items to be followed; replacement menus retain focus.
+  // Unmounting cancels flash timers, so activate a flashing item during cleanup when its menu closes or is replaced. A
+  // layout-effect cleanup runs while the list is attached, allowing link items to be followed; replacement menus retain
+  // focus.
   useLayoutEffect(() => () => activateFlashingItem(), []);
 
   const hasMovedFromPressOrigin = (event: PointerEvent) =>
@@ -210,9 +216,8 @@ export function useMenuInteraction({
   });
 
   const onPointerCancel = useEffectEvent(() => {
-    // When the browser takes over a gesture (e.g., to scroll), it fires `pointercancel` instead of
-    // `pointerup`. Mark the menu as sticky so the next press starts a new interaction rather than
-    // ending the canceled opening hold.
+    // When the browser takes over a gesture (e.g., to scroll), it fires `pointercancel` instead of `pointerup`. Mark
+    // the menu as sticky so the next press starts a new interaction rather than ending the canceled opening hold.
     isStickyRef.current = true;
 
     if (!flash.isRunning()) {
@@ -249,8 +254,8 @@ export function useMenuInteraction({
     const item = (event.target as Element).closest<HTMLElement>("[data-index]");
     const index = Number(item?.dataset.index ?? -1);
 
-    // Pointer clicks and `followLink` clicks dispatched after a link item's activation
-    // flash belong to the activation already handled by `pointerup`.
+    // Pointer clicks and `followLink` clicks dispatched after a link item's activation flash belong to the activation
+    // already handled by `pointerup`.
     if (!isPointerClick(event) && index >= 0 && !(item && isFollowingLink(item))) {
       activate(index);
     }

@@ -15,9 +15,9 @@ function destinationLink(id: DestinationId) {
 }
 
 /**
- * Provides a prerendered list of links so every destination is discoverable without hydration. Only the
- * top-level routes are listed; each collection's own document lists its entries, so a crawler reaches
- * them one hop further in. The list is visually hidden and inert.
+ * Provides a prerendered list of links so every destination is discoverable without hydration. Only the top-level
+ * routes are listed; each collection's own document lists its entries, so a crawler reaches them one hop further in.
+ * The list is visually hidden and inert.
  */
 export function SiteIndex() {
   return (

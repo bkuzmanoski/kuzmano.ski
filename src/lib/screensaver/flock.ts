@@ -1,13 +1,14 @@
 import type { StyleWithVars } from "../style.ts";
 
-const FLIGHT_DURATION_S = { fast: 10, medium: 16, slow: 24 }; // How long a sprite takes to fly its whole course, in seconds.
+/** How long a sprite takes to fly its whole course, in seconds. */
+const FLIGHT_DURATION_S = { fast: 10, medium: 16, slow: 24 };
 
 type Speed = keyof typeof FLIGHT_DURATION_S;
 
 const TOAST_IMAGES = ["toast-1", "toast-2", "toast-3"] as const;
 const FLAP_FRAMES = 4;
 
-// Start positions, as percentages of the viewport measured in from its top and right edges.
+/** Start positions, as percentages of the viewport measured in from its top and right edges. */
 const START_POSITIONS = [
   [2, -17],
   [10, -19],
@@ -41,8 +42,10 @@ const START_POSITIONS = [
 
 interface Wave {
   speed: Speed;
-  delayS: number; // Seconds before the wave's first crossing.
-  toasters?: ReadonlyArray<number>; // Indices into `START_POSITIONS`. A position may reappear in a later wave: the delay keeps them apart.
+  /** Seconds before the wave's first crossing. */
+  delayS: number;
+  /** Indices into `START_POSITIONS`. A position may reappear in a later wave, where the delay keeps the two apart. */
+  toasters?: ReadonlyArray<number>;
   toast?: ReadonlyArray<number>;
 }
 

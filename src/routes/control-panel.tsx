@@ -4,8 +4,8 @@ import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { documentHead } from "#/site/metadata.ts";
 
 /**
- * Declared statically so it outranks `/$segment`, which resolves a segment to a collection or a page.
- * The control panel window has no document behind it, so this route exists only to supply head tags.
+ * Declared statically so it outranks `/$segment`, which resolves a segment to a collection or a page. The control panel
+ * window has no document behind it, so this route exists only to supply head tags.
  */
 export const Route = createFileRoute("/control-panel")({
   head: () => {

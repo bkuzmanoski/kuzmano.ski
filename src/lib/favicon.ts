@@ -5,12 +5,11 @@ const SCHEME_PARAMETER = "color-scheme";
 /**
  * Updates the SVG favicon to match the current system color scheme.
  *
- * `favicon.svg` already has a `prefers-color-scheme` query, but Chromium evaluates it only
- * once at load time and may cache the result from an earlier visit. The favicon is therefore
- * updated on start and whenever the scheme changes.
+ * `favicon.svg` already has a `prefers-color-scheme` query, but Chromium evaluates it only once at load time and may
+ * cache the result from an earlier visit. The favicon is therefore updated on start and whenever the scheme changes.
  *
- * Changes are deferred while the tab is hidden because the browser does not re-fetch its
- * favicon. `applied` avoids a redundant re-fetch when the scheme changes back while hidden.
+ * Changes are deferred while the tab is hidden because the browser does not re-fetch its favicon. `applied` avoids a
+ * redundant re-fetch when the scheme changes back while hidden.
  *
  * TODO: Remove this once https://crbug.com/1026539 is fixed.
  */

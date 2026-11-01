@@ -5,9 +5,9 @@ import { PopupMenu } from "#/components/popup-menu.tsx";
 import type { PopupMenuOption } from "#/components/popup-menu.tsx";
 import { EXPERIENCE_MONTH_FORMAT } from "#/config/content.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
+import { FormattedDate } from "#/features/content/formatted-date.tsx";
 import { accentColorVariable } from "#/lib/accent-colors.ts";
 import { cx } from "#/lib/class-names.ts";
-import { formatDate } from "#/lib/datetime.ts";
 import {
   DEFAULT_CAREER_TIMELINE_DIRECTION,
   careerTimelineModelFrom,
@@ -23,7 +23,6 @@ import {
 import type { CareerTimelineDirection, Experience, MonthSpan } from "#/lib/experience/career-timeline.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
-import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import { careerTimelinePlacementAttributesOf } from "./career-timeline-layout.ts";
 import styles from "./career-timeline.module.css";
@@ -70,12 +69,6 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
     { direction, hiddenDisciplineIds },
   );
 
-  const monthTimeElementOf = (month: string) => (
-    <time dateTime={month} lang={languageAttributeInDocumentFor(monthFormat)}>
-      {formatDate(month, monthFormat)}
-    </time>
-  );
-
   const { range, lanes, careerTimelineRoles } = careerTimelineModelFrom({ asOf, disciplines, roles });
   const years = yearsIn(range, TICK_INTERVAL_YEARS);
   const visibleCareerTimelineRoles = orderedCareerTimelineRoles(careerTimelineRoles, direction).flatMap(
@@ -86,6 +79,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
   );
   const hasVisibleRoles = visibleCareerTimelineRoles.length > 0;
 
+  const monthTimeElementOf = (month: string) => <FormattedDate date={month} format={monthFormat} />;
   const toggleDiscipline = (id: string) =>
     setHiddenDisciplineIds((hidden) => {
       const next = new Set(hidden);
@@ -106,7 +100,11 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
       data-content-space="relaxed"
     >
       <div className={styles.controls}>
-        <ul className={styles.filters} aria-label="Disciplines">
+        <ul
+          className={styles.filters}
+          role="list" // The explicit role is required because Safari removes the list role of a `<ul>` without list markers.
+          aria-label="Disciplines"
+        >
           {disciplines.map(({ id, name }) => (
             <li key={id}>
               <Checkbox checked={!hiddenDisciplineIds.has(id)} onChange={() => toggleDiscipline(id)}>
@@ -159,7 +157,11 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
         {hasVisibleRoles ? null : "Select a discipline to view roles."}
       </p>
       {hasVisibleRoles && (
-        <ol ref={listRef} className={styles.roles}>
+        <ol
+          ref={listRef}
+          className={styles.roles}
+          role="list" // The explicit role is required because Safari removes the list role of an `<ol>` without list markers.
+        >
           {visibleCareerTimelineRoles.map((careerTimelineRole) => {
             const { role, span, shownDiscipline } = careerTimelineRole;
             const [startMonth, dash, endMonth] = roleDatesLabelPartsOf(role, monthTimeElementOf);

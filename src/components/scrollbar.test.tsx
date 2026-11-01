@@ -6,6 +6,7 @@ import { DETENT_PX, playPaneScrollSound } from "#/lib/audio/scroll.ts";
 import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
+import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS, Scrollbar } from "./scrollbar.tsx";
@@ -25,7 +26,8 @@ const TRACK_TOP_PX = 50;
 const TRACK_HEIGHT_PX = 200;
 const THUMB_HEIGHT_PX = 20;
 const THUMB_TRAVEL_PX = TRACK_HEIGHT_PX - THUMB_HEIGHT_PX;
-const FRAME_MS = 16; // A drag reports its move on the frame that follows the pointer.
+/** A drag reports its move on the frame that follows the pointer. */
+const FRAME_MS = 16;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -35,7 +37,7 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-// The wiring `ScrollPane` provides, repeated here because a component may not import a feature.
+/** The wiring `ScrollPane` provides, repeated here because a component may not import a feature. */
 function Harness() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewportRef);
@@ -136,6 +138,17 @@ test("a tap whose touch pointer events do not reach the arrow still steps the vi
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
+test.each(SCREEN_READER_ACTIVATIONS)(
+  "a screen reader's activate action on an arrow in %s steps the viewport once",
+  (_browser, activate) => {
+    const { viewport, scrollDownButton } = renderScrollbar();
+
+    activate(scrollDownButton);
+
+    expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
+  },
+);
+
 test("a browser-canceled press scrolls once, and the following click scrolls again", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
@@ -149,7 +162,7 @@ test("a browser-canceled press scrolls once, and the following click scrolls aga
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
-test("a step at the scroll boundary still plays a click sound", () => {
+test("a step at the scroll boundary still plays the click sound", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   viewport.scrollTop = MAX_SCROLL_TOP_PX;
@@ -159,7 +172,7 @@ test("a step at the scroll boundary still plays a click sound", () => {
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a tap whose touch pointer events do not reach the arrow still plays a click sound at the scroll boundary", () => {
+test("a tap whose touch pointer events do not reach the arrow still plays the click sound at the scroll boundary", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 
   viewport.scrollTop = MAX_SCROLL_TOP_PX;
@@ -186,8 +199,8 @@ test("a keyboard activation steps the viewport after a press is abandoned outsid
 
   fireEvent.click(scrollDownButton);
 
-  // A press released outside the arrow button does not deliver a click to clear the press it
-  // recorded, so a keyboard activation must not be mistaken for that press arriving late.
+  // A press released outside the arrow button does not deliver a click to clear the press it recorded, so a keyboard
+  // activation must not be mistaken for that press arriving late.
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
@@ -229,7 +242,7 @@ test("a click that follows a press released away from the arrow still steps the 
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX * 2);
 });
 
-test("a press on the track scrolls to the pressed point and plays a click sound", () => {
+test("a press on the track scrolls to the pressed point and plays the click sound", () => {
   const { viewport, track } = renderScrollbar();
 
   pressTrackAt(track, 0.5);

@@ -19,8 +19,8 @@ export const DESTINATION_SPECS = {
 } as const satisfies Record<DestinationId, DestinationSpec>;
 
 /**
- * Destinations in display order, split into groups. Menus render a separator
- * between groups; consumers that render a flat list use `DESTINATION_ORDER`.
+ * Destinations in display order, split into groups. Menus render a separator between groups; consumers that render a
+ * flat list use `DESTINATION_ORDER`.
  */
 export const DESTINATION_GROUPS = [
   ["about", "experience", "work"],

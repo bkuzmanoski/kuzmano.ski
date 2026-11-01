@@ -4,8 +4,8 @@ import type { AddHeadersRules, HeadersRule } from "../headers.ts";
 import type { Plugin } from "vite";
 
 /**
- * Calls the `buildStart` hook of the plugin `pluginFor` creates, in the environment named
- * `environmentName`, and returns the rules the hook adds to `_headers`.
+ * Calls the `buildStart` hook of the plugin `pluginFor` creates, in the environment named `environmentName`, and
+ * returns the rules the hook adds to `_headers`.
  */
 export function headersRulesAddedAtBuildStartBy(
   pluginFor: (options: { addHeadersRules: AddHeadersRules }) => Plugin,

@@ -11,15 +11,18 @@ if (ROLLDOWN_VERSION !== VITE_ROLLDOWN_VERSION) {
   );
 }
 
-const MAX_INLINE_SCRIPT_BYTES = 1280; // These scripts block the first paint, so they must stay small.
+/** These scripts block the first paint, so they must stay small. */
+const MAX_INLINE_SCRIPT_BYTES = 1280;
 
-const VIRTUAL_MODULE_PREFIX = "\0"; // Rolldown prefixes generated module IDs, such as its runtime, with a NUL byte instead of a filesystem path.
+/** Rolldown prefixes generated module IDs, such as its runtime, with a NUL byte instead of a filesystem path. */
+const VIRTUAL_MODULE_PREFIX = "\0";
+
 const INLINE_SCRIPT_QUERY = "inline-script";
 const INLINE_SCRIPT_PREFIX = `${VIRTUAL_MODULE_PREFIX}${INLINE_SCRIPT_QUERY}:`;
 
 const ENV_KEY_IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
-// Defines the environment for Rolldown, which does not replace `import.meta.env`.
+/** Defines the environment for Rolldown, which does not replace `import.meta.env`. */
 const environmentDefinitionsFrom = (env: ResolvedConfig["env"]) => ({
   "import.meta.env": JSON.stringify(env),
   ...Object.fromEntries(
@@ -38,15 +41,14 @@ const definitionsFrom = (define: Record<string, unknown> | undefined) =>
   );
 
 /**
- * Exposes `<name>.ts?inline-script` as a module. The default export is the bundled
- * and minified source of that entry for inlining in a `<script>` tag.
+ * Exposes `<name>.ts?inline-script` as a module. The default export is the bundled and minified source of that entry
+ * for inlining in a `<script>` tag.
  *
- * The plugin bundles the entry instead of reading it as authored, so a pre-hydration
- * script can reuse constants and helpers from the app.
+ * The plugin bundles the entry instead of reading it as authored, so a pre-hydration script can reuse constants and
+ * helpers from the app.
  *
- * Warning: A script can safely reach leaf modules only. Tree-shaking cannot remove
- * a module that runs code at initialization, so an import that reaches React puts
- * React in the document head.
+ * Warning: A script can safely reach leaf modules only. Tree-shaking cannot remove a module that runs code at
+ * initialization, so an import that reaches React puts React in the document head.
  */
 export function inlineScriptsPlugin(): Plugin {
   let parent: ResolvedConfig;
@@ -83,8 +85,8 @@ export function inlineScriptsPlugin(): Plugin {
           define: { ...environmentDefinitionsFrom(parent.env), ...definitionsFrom(parent.define) },
         },
         onLog: (level, log) => {
-          // Route Rolldown logs through this plugin instead of its own console. Leave `logLevel`
-          // at its default as setting it to "silent" prevents this handler from running.
+          // Route Rolldown logs through this plugin instead of its own console. Leave `logLevel` at its default as
+          // setting it to "silent" prevents this handler from running.
           if (level === "warn") {
             this.warn(log);
           }

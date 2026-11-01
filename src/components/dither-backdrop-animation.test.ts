@@ -23,7 +23,7 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   },
 }));
 
-// At a `--dither-cell` of 4px and a device pixel ratio of 1, the component is 500x200 dither pixels.
+/** At a `--dither-cell` of 4px and a device pixel ratio of 1, the component is 500x200 dither pixels. */
 const COMPONENT_WIDTH_PX = 2_000;
 const COMPONENT_HEIGHT_PX = 800;
 const DITHER_FIELD_WIDTH_DITHER_PIXELS = 500;
@@ -200,7 +200,8 @@ test("starting the animation reveals the dither field over successive animation 
     return filledPixelCountIn(lastPutPixels());
   };
 
-  // The backdrop is at most half as dense as a filled pixel, so its pixels are revealed in the second half of the reveal.
+  // The backdrop is at most half as dense as a filled pixel, so its pixels are revealed in the second half of the
+  // reveal.
   const [atStart = 0, threeQuartersOfTheWay = 0, nineTenthsOfTheWay = 0] = [0, 1_050, 1_260].map(filledPixelCountAt);
 
   expect(atStart).toBe(0);
@@ -302,8 +303,8 @@ test("scrolling the container under a stationary mouse pointer moves the pointer
   elements.container.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 25 dither pixels down the container. The region put on the canvas
-  // is rounded out to whole pixels, so its center can differ from the pointer highlight's by one.
+  // Scrolling by 100px moves the pointer 25 dither pixels down the container. The region put on the canvas is rounded
+  // out to whole pixels, so its center can differ from the pointer highlight's by one.
   expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 25)).toBeLessThanOrEqual(1);
 });
 

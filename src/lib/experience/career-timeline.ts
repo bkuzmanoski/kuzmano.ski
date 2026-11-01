@@ -18,9 +18,12 @@ export interface RoleLink {
 export interface Role {
   title: string;
   organization: string;
-  disciplines: ReadonlyArray<string>; // The first discipline determines the accent color.
-  start: string; // `YYYY-MM`, inclusive.
-  end: string | null; // `YYYY-MM`, inclusive, or `null` if the role is current.
+  /** The first discipline determines the accent color. */
+  disciplines: ReadonlyArray<string>;
+  /** `YYYY-MM`, inclusive. */
+  start: string;
+  /** `YYYY-MM`, inclusive, or `null` if the role is current. */
+  end: string | null;
   summary: string;
   highlights?: ReadonlyArray<string>;
   link?: RoleLink;

@@ -1,6 +1,6 @@
 /**
- * Returns a POST request to `url` with `body` as JSON, or as is when it is a string. The `Origin`
- * header is `origin`, which defaults to the origin of `url`.
+ * Returns a POST request to `url` with `body` as JSON, or as is when it is a string. The `Origin` header is `origin`,
+ * which defaults to the origin of `url`.
  */
 export function jsonPostRequest(
   url: string,

@@ -16,6 +16,7 @@ import * as footnotesFixture from "#/test-utils/fixtures/footnotes.mdx";
 import * as headingAnchorFixture from "#/test-utils/fixtures/heading-anchor.mdx";
 import * as linksFixture from "#/test-utils/fixtures/links.mdx";
 import * as railSubjectsFixture from "#/test-utils/fixtures/rail-subjects.mdx";
+import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 import { collectionEntryTargetOf, pageTargetOf } from "#/test-utils/windows.ts";
@@ -26,7 +27,9 @@ import styles from "./content-body.module.css";
 import { ContentBody } from "./content-body.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 
-const pageContent = vi.hoisted(() => ({ module: Promise.resolve({}) as Promise<MDXModule> })); // The body the pages index loads for a page.
+/** The body the pages index loads for a page. */
+const pageContent = vi.hoisted(() => ({ module: Promise.resolve({}) as Promise<MDXModule> }));
+
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 const playClickSound = vi.hoisted(() => vi.fn());
 const writeText = vi.fn<(value: string) => Promise<void>>();
@@ -70,7 +73,7 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-// Renders `module` as the body of an entry titled `TITLE`: a collection entry in `collection`, or a page.
+/** Renders `module` as the body of an entry titled `TITLE`: a collection entry in `collection`, or a page. */
 const renderContent = async (module: MDXModule, collection: Collection | null = null) => {
   const content = Promise.resolve(module); // One promise for every render, as `load` memoizes.
   const target: EntryTarget = collection
@@ -268,7 +271,14 @@ test("opening an entry without a fragment does not scroll", async () => {
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("clicking a heading link copies the heading's canonical URL, shows a `Copied` tooltip, and plays a click sound", async () => {
+test("a press on a heading link with the mouse plays the click sound", async () => {
+  await renderContent(headingAnchorFixture);
+  pressWithMouse(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }));
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test("clicking a heading link copies the heading's canonical URL and shows a `Copied` tooltip", async () => {
   await renderContent(headingAnchorFixture);
 
   const link = screen.getByRole("link", { name: headingLinkName("Fixture Heading") });
@@ -279,8 +289,7 @@ test("clicking a heading link copies the heading's canonical URL, shows a `Copie
   });
 
   expect(writeText).toHaveBeenCalledWith(canonicalUrl(`${ROUTE}#fixture-heading`));
-  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
-  expect(playClickSound).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("tooltip", { hidden: true }).textContent).toBe("Copied");
 });
 
 test("clicking a heading link does not scroll the heading into view", async () => {
@@ -315,7 +324,7 @@ test("a failed copy from a heading link shows an alert that the link could not b
   });
 
   expect(screen.getByRole("alertdialog").textContent).toContain("The link couldn’t be copied."); // One alert shared by the article, not one per heading.
-  expect(screen.queryByRole("tooltip")).toBeNull(); // The tooltip only displays the successful-copy confirmation.
+  expect(screen.queryByRole("tooltip", { hidden: true })).toBeNull(); // The tooltip only displays the successful-copy confirmation.
 
   fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
@@ -431,7 +440,7 @@ test("a code block's clipboard write that succeeds after another code block's co
   await firstWrite.succeed();
 
   expect(status.textContent).toBe("");
-  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(screen.queryByRole("tooltip", { hidden: true })).toBeNull();
 
   await secondWrite.fail();
 
@@ -453,7 +462,7 @@ test("a code block's clipboard write that fails after another code block's copy 
 
   expect(screen.queryByRole("alertdialog")).toBeNull();
   expect(screen.getByRole("status").textContent).toBe("Copied");
-  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(screen.getByRole("tooltip", { hidden: true }).textContent).toBe("Copied");
 });
 
 test("a code block's clipboard write that succeeds after a heading link's copy has started does not show a confirmation", async () => {
@@ -486,21 +495,34 @@ test("a code block's clipboard write that succeeds after a heading link's copy h
   expect(writeText).toHaveBeenLastCalledWith(canonicalUrl(`${ROUTE}#fixture-heading`));
 });
 
-test.each(LINKS)("clicking the %s plays a click sound", async (name) => {
+test.each(LINKS)("a press on the %s with the mouse plays the click sound", async (name) => {
   await renderContent(linksFixture);
+  pressWithMouse(screen.getByRole("link", { name }));
 
-  fireEvent.click(screen.getByRole("link", { name }));
-
-  expect(playClickSound).toHaveBeenCalledTimes(1);
+  expect(playClickSound).toHaveBeenCalledOnce();
 });
 
-test.each(LINKS)("clicking the %s with a modifier key does not play a click sound", async (name) => {
+test.each(LINKS)("a press on the %s with a modifier key does not play the click sound", async (name) => {
   await renderContent(linksFixture);
 
-  fireEvent.click(screen.getByRole("link", { name }), { metaKey: true });
+  const link = screen.getByRole("link", { name });
+
+  fireEvent.pointerDown(link, { pointerType: "mouse", metaKey: true });
+  fireEvent.mouseDown(link, { detail: 1, metaKey: true });
+  fireEvent.click(link, { detail: 1, metaKey: true });
 
   expect(playClickSound).not.toHaveBeenCalled();
 });
+
+test.each(SCREEN_READER_ACTIVATIONS)(
+  "a screen reader's activate action on a content link in %s does not play the click sound",
+  async (_browser, activate) => {
+    await renderContent(linksFixture);
+    activate(screen.getByRole("link", { name: "external link" }));
+
+    expect(playClickSound).not.toHaveBeenCalled();
+  },
+);
 
 test("clicking a fragment link scrolls to the heading it names and focuses it, in place of the browser's navigation", async () => {
   await renderContent(linksFixture);

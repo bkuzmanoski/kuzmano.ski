@@ -14,7 +14,7 @@
   gap: 4px 16px;
   align-self: baseline;
 
-  font: var(--font-caption);
+  font: var(--content-body-font-caption);
 }
 
 .label {
@@ -106,7 +106,7 @@
 
 .siblingTitle {
   overflow: hidden;
-  font: var(--font-heading-3);
+  font: var(--content-body-font-heading-3);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

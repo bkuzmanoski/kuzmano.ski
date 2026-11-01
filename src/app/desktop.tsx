@@ -1,5 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation.ts";
 import { MenuBar } from "#/features/menu-bar/menu-bar.tsx";
 import { Screensaver } from "#/features/screensaver/screensaver.tsx";
@@ -12,8 +13,6 @@ import { useKeyboardInset } from "#/lib/hooks/use-keyboard-inset.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import { useMotionDurations } from "#/lib/startup-sequence/use-motion-durations.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
-import { EntryCoverImagesProvider } from "#/site/entry-cover-images.tsx";
-import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 
 import styles from "./desktop.module.css";
 import { SiteIndex } from "./site-index.tsx";
@@ -31,20 +30,18 @@ export function Desktop() {
 
   return (
     <WindowManagerProvider layout={WINDOW_LAYOUT} initialRoute={INITIAL_WINDOW_ROUTE}>
-      <EntryCoverImagesProvider>
-        {/* `inert` keeps the desktop inaccessible to focus and screen readers until the startup sequence finishes. */}
-        <div className={styles.desktop} style={desktopStyle} inert={!isStartupSequenceComplete}>
-          <SkipLink />
-          <SiteIndex />
-          <MenuBar />
-          <WindowLayer>
-            <Outlet />
-          </WindowLayer>
-          <NotFoundAlert />
-        </div>
-        <StartupSequence />
-        <Screensaver />
-      </EntryCoverImagesProvider>
+      {/* `inert` keeps the desktop inaccessible to focus and screen readers until the startup sequence finishes. */}
+      <div className={styles.desktop} style={desktopStyle} inert={!isStartupSequenceComplete}>
+        <SkipLink />
+        <SiteIndex />
+        <MenuBar />
+        <WindowLayer>
+          <Outlet />
+        </WindowLayer>
+        <NotFoundAlert />
+      </div>
+      <StartupSequence />
+      <Screensaver />
     </WindowManagerProvider>
   );
 }

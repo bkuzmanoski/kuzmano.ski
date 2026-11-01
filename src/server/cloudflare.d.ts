@@ -1,16 +1,16 @@
-// Minimal declarations for the Cloudflare Workers APIs used by this project.
-//
-// `wrangler types` declares `cloudflare:workers`, but its generated types also redeclare
-// browser globals such as `Response` and `ReadableStream`, which conflict with the browser
-// types used elsewhere in the project.
-//
-// Keep these declarations aligned with the runtime. To verify them against the generated
-// types, run:
-//
-//   npx wrangler types /tmp/worker-configuration.d.ts
-//
-// Last verified against workerd@1.20260811.1. The declarations follow the runtime shapes,
-// which differ from the published docs for `EmailAddress.name`.
+/**
+ * Minimal declarations for the Cloudflare Workers APIs used by this project.
+ *
+ * `wrangler types` declares `cloudflare:workers`, but its generated types also redeclare browser globals such as
+ * `Response` and `ReadableStream`, which conflict with the browser types used elsewhere in the project.
+ *
+ * Keep these declarations aligned with the runtime. To verify them against the generated types, run:
+ *
+ *   npx wrangler types /tmp/worker-configuration.d.ts
+ *
+ * Last verified against workerd@1.20260811.1. The declarations follow the runtime shapes, which differ from the
+ * published docs for `EmailAddress.name`.
+ */
 declare module "cloudflare:workers" {
   /**
    * Provides access to the Asset Worker.
@@ -57,8 +57,8 @@ declare module "cloudflare:workers" {
   export function waitUntil(promise: Promise<unknown>): void;
 
   /**
-   * A deployable Worker module. Cloudflare provides bindings through `env`; use `workerEnv` from
-   * `./env.ts` when running outside Workers, such as under `vite dev`.
+   * A deployable Worker module. Cloudflare provides bindings through `env`; use `workerEnv` from `./env.ts` when
+   * running outside Workers, such as under `vite dev`.
    */
   export interface WorkerEntry {
     fetch: (request: Request, env?: WorkerEnv) => Promise<Response>;

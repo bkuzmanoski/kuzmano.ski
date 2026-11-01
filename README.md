@@ -20,7 +20,7 @@ Content is authored in MDX and must contain the following frontmatter:
 
 ```yaml
 title: Entry Title
-description: Collection entry lists and meta descriptions use this text.
+description: Meta descriptions, feeds, and llms.txt use this text.
 date: 1970-01-01
 category: Category # Optional.
 draft: false # Set to `true` to hide the entry on the deployed site (it will remain accessible via its URL).
@@ -71,8 +71,8 @@ class is applied to `h1`.
 
 An entry's media is stored beside its MDX file:
 
-- `/content/<collection>/<entry>.cover.{png,jpg}`: the entry's cover image
-  (shown in collection entry lists and Open Graph previews)
+- `/content/<collection>/<entry>.cover.{png,jpg}`: the entry's cover image (used
+  in Open Graph previews)
 - `/content/<collection>/<entry>/`: images and videos used in the entry
 
 The entry references its media by file name (e.g., `./<image>.png`) and must
@@ -128,8 +128,8 @@ The poster image is taken from the first frame unless a time is given (e.g.,
 #### Generated media
 
 Content media derivatives are generated in `/media`. These include the AVIF and
-WebP alternates described in [Images](#images), AVIF and WebP cover-image
-thumbnails, and a WebP of each video poster image.
+WebP alternates described in [Images](#images) and a WebP of each video poster
+image.
 
 The dev server encodes missing derivatives on demand and a pre-commit hook
 stages the changes to `/media` that the staged content requires. The build fails

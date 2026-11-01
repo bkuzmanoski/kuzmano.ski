@@ -21,7 +21,7 @@ const REGEXP_SPECIAL_CHARACTERS = /[-/\\^$*+?.()|[\]{}]/g;
 const wranglerConfig: unknown = parse(readFileSync(join(process.cwd(), "wrangler.jsonc"), "utf8"));
 const environmentExample = readFileSync(join(process.cwd(), ".env.example"), "utf8");
 
-// Cloudflare treats `*` as matching `/` and evaluates negative rules before positive rules.
+/** Cloudflare treats `*` as matching `/` and evaluates negative rules before positive rules. */
 const ruleMatches = (rule: string, pathname: string) =>
   new RegExp(
     `^${rule
@@ -41,7 +41,7 @@ function runsWorkerFirst(pathname: string): boolean {
   return !servedAsAFile && rules.filter((rule) => rule.startsWith("/")).some((rule) => ruleMatches(rule, pathname));
 }
 
-// The bindings `wrangler.jsonc` declares under `section`, in the order it declares them.
+/** The bindings `wrangler.jsonc` declares under `section`, in the order it declares them. */
 function declaredIn(section: string): Array<Record<string, unknown>> {
   const declaredSection = isRecord(wranglerConfig) ? wranglerConfig[section] : undefined;
   return Array.isArray(declaredSection) ? (declaredSection as Array<unknown>).filter(isRecord) : [];

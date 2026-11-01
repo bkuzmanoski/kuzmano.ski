@@ -9,7 +9,8 @@ export interface FeedEntry {
   description: string;
   url: string;
   markdownUrl: string;
-  date: string; // ISO calendar date as defined in the content frontmatter.
+  /** ISO calendar date as defined in the content frontmatter. */
+  date: string;
   category: string | undefined;
   content: string;
 }
@@ -38,8 +39,10 @@ const removeForbiddenCharacters = (value: string) =>
 const link = (rel: string, type: string, href: string) =>
   x("link", { rel, type, href: removeForbiddenCharacters(href) });
 
-// `x` reads any object in its second argument as attributes, so an element with child elements
-// passes them as an array rather than as separate arguments.
+/**
+ * `x` reads any object in its second argument as attributes, so an element with child elements passes them as an array
+ * rather than as separate arguments.
+ */
 const entryElement = (
   { title, description, url, markdownUrl, date, category, content }: FeedEntry,
   timestamp: (date: string) => string,

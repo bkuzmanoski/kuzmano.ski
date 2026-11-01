@@ -1,13 +1,12 @@
 import { playKeyDownSound, playKeyUpSound } from "./sounds.ts";
 
 /**
- * Plays a key-down sound immediately, then plays a key-up sound and calls `onRelease` when the same
- * key is released.
+ * Plays a key-down sound immediately, then plays a key-up sound and calls `onRelease` when the same key is released.
  *
- * Key releases are captured on `window` so they are handled before page listeners and remain observable
- * if the caller stops listening after handling the press (on macOS, holding ⌘ can prevent key-up events
- * for other keys from reaching the window). The press ends without a key-up sound if the window blurs,
- * the key is pressed again without an observed release, or `signal` is aborted.
+ * Key releases are captured on `window` so they are handled before page listeners and remain observable if the caller
+ * stops listening after handling the press (on macOS, holding ⌘ can prevent key-up events for other keys from reaching
+ * the window). The press ends without a key-up sound if the window blurs, the key is pressed again without an observed
+ * release, or `signal` is aborted.
  */
 export function playKeyPressSounds(
   keyDownEvent: KeyboardEvent,

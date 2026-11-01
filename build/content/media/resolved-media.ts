@@ -15,8 +15,10 @@ const HASH_LENGTH = 16;
 
 /** A hashed authored media file under the content directory. */
 export interface ResolvedMediaFile {
-  path: string; // Relative to the content directory.
-  hash: string; // Truncated SHA-256 of its bytes.
+  /** Relative to the content directory. */
+  path: string;
+  /** Truncated SHA-256 of its bytes. */
+  hash: string;
   bytes: number;
 }
 
@@ -27,14 +29,18 @@ export interface ResolvedImage extends ResolvedMediaFile {
 }
 
 export interface Mp4Metadata {
-  sampleFormats: Array<string>; // Four-character format of each track, such as `avc1` for H.264.
-  dimensions: Dimensions | null; // The display dimensions of the first track that declares any.
-  movieBoxPrecedesMediaData: boolean; // Whether `moov` precedes `mdat`, allowing playback before the full file downloads.
+  /** Four-character format of each track, such as `avc1` for H.264. */
+  sampleFormats: Array<string>;
+  /** The display dimensions of the first track that declares any. */
+  dimensions: Dimensions | null;
+  /** Whether `moov` precedes `mdat`, allowing playback before the full file downloads. */
+  movieBoxPrecedesMediaData: boolean;
 }
 
 /** A resolved video with metadata read from its MP4 boxes. */
 export interface ResolvedVideo extends ResolvedMediaFile {
-  mp4Metadata: Mp4Metadata | null; // `null` when the file is not an MP4.
+  /** `null` when the file is not an MP4. */
+  mp4Metadata: Mp4Metadata | null;
 }
 
 /** An image sharp could not decode and its error message. */
@@ -92,8 +98,10 @@ const embeddedMetadataNamesOf = ({ exif, xmp, iptc, tifftagPhotoshop, comments }
   ...(comments?.length ? ["text"] : []), // PNG text chunks.
 ];
 
-// Returns an `UnreadableImage` instead of throwing when sharp cannot decode the bytes, so a corrupt
-// or partially-saved file is reported alongside other problems rather than in place of them.
+/**
+ * Returns an `UnreadableImage` instead of throwing when sharp cannot decode the bytes, so the build reports a corrupt
+ * or partially saved file alongside other problems rather than in place of them.
+ */
 async function readImage(path: string): Promise<ResolvedImage | UnreadableImage> {
   const { resolvedMediaFile, contents } = await readMediaFile(path);
   const unreadableImage = (reason: string): UnreadableImage => ({

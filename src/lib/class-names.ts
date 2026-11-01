@@ -23,8 +23,8 @@ function collect(value: ClassValue, into: Array<string>): void {
 }
 
 /**
- * Joins class names, ignoring falsy values. Accepts strings, numbers,
- * nested arrays, and objects whose truthy keys become class names.
+ * Joins class names, ignoring falsy values. Accepts strings, numbers, nested arrays, and objects whose truthy keys
+ * become class names.
  */
 export function cx(...values: Array<ClassValue>): string {
   const classNames: Array<string> = [];

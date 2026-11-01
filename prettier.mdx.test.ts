@@ -219,7 +219,7 @@ long enough to wrap.
       ).toBeUndefined();
     });
 
-    test("treats a line break in inline code as a space, as Markdown does", () => {
+    test("treats a line break in inline code as a space, like Markdown", () => {
       expect(
         firstDifferenceBetween(
           parse(`A paragraph with \`inline
@@ -254,8 +254,8 @@ code\`.
     });
   });
 
-  // The plugin checks its output with the string `doc.printer.printDocToString` renders, which the stub replaces,
-  // since no input is known to fail the check.
+  // The plugin checks its output with the string `doc.printer.printDocToString` renders, which the stub replaces, as no
+  // input is known to fail the check.
   describe("failures", () => {
     test("rejects with the line of the first difference when the formatted MDX parses to a different tree", async () => {
       vi.spyOn(doc.printer, "printDocToString").mockReturnValueOnce({

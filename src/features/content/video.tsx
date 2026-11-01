@@ -23,7 +23,8 @@ import type { ComponentProps, KeyboardEvent } from "react";
 const SEEK_STEP_S = 5;
 
 interface WebKitVideoElement extends HTMLVideoElement {
-  webkitEnterFullscreen?: () => void; // Safari on iPhone can't make an arbitrary element full screen, only a `<video>` through its native player.
+  /** Safari on iPhone can't make an arbitrary element full screen, only a `<video>` through its native player. */
+  webkitEnterFullscreen?: () => void;
 }
 
 const canEnterFullScreen = () =>

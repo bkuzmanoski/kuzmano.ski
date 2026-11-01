@@ -7,7 +7,9 @@ function getQuery() {
   return reducedMotionQuery;
 }
 
-/** Calls `onChange` when the visitor changes their reduced motion preference. Returns a function that stops listening. */
+/**
+ * Calls `onChange` when the visitor changes their reduced motion preference. Returns a function that stops listening.
+ */
 export const subscribeToPrefersReducedMotion = (onChange: () => void): (() => void) => {
   const query = getQuery();
 

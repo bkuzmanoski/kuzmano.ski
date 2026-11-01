@@ -27,7 +27,9 @@ const COLLECTION_ENTRY = COLLECTION.list()[0]!;
 const COLLECTION_ENTRY_ROUTE = COLLECTION.routeOf(COLLECTION_ENTRY.slug);
 
 const openWindows = () => screen.queryAllByRole("region");
-const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null; // Title bar controls are rendered only for the focused window.
+
+/** Only the focused window renders its title bar controls. */
+const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
 
 test("a collection entry route opens a window titled by its frontmatter, containing its compiled MDX body", async () => {
   const { container } = renderRoute(COLLECTION_ENTRY_ROUTE);
@@ -41,12 +43,9 @@ test("the menu bar is a `<header>` outside the main landmark, and the windows ar
 
   const window = await screen.findByRole("region", { name: COLLECTION.title });
   const main = screen.getByRole("main");
+  const menuBar = screen.getByRole("banner");
 
-  // Testing Library maps every `<header>` to the banner role, including a window's title bar, which
-  // browsers map to the generic role inside a `<section>`, so the menu bar is found by its element.
-  const menuBar = screen.getByRole("navigation", { name: "Main menu" }).closest("header");
-
-  expect(menuBar).not.toBeNull();
+  expect(within(menuBar).getByRole("navigation", { name: "Main menu" })).toBeDefined();
   expect(main.contains(menuBar)).toBe(false);
   expect(main.contains(window)).toBe(true);
 });
@@ -114,8 +113,8 @@ test("navigating to a second unknown path replaces the current not-found alert",
 test("loading the root path opens the initial window, replacing the root path in the session history", async () => {
   const { history } = renderRoute("/");
 
-  // A push would leave an entry that reopens the window as soon as Back reached it,
-  // which Chrome defuses by marking the entry skippable (see `syncUrlToFocus`).
+  // A push would leave an entry that reopens the window as soon as Back reached it, which Chrome defuses by marking the
+  // entry skippable (see `syncUrlToFocus`).
   expect(await screen.findByRole("region", { name: INITIAL_PAGE.title })).toBeDefined();
   expect(history.location.pathname).toBe(INITIAL_WINDOW_ROUTE);
   expect(history.length).toBe(1);

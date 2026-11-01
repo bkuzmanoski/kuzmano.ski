@@ -27,9 +27,9 @@ const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !
 const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
 
 function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
-  // Items activate from the document-level `pointerup` handler in `useMenuInteraction`, which
-  // waits for the activation flash effect to finish before running the action or following the link.
-  // A modified or non-primary click keeps its default behavior.
+  // Items activate from the document-level `pointerup` handler in `useMenuInteraction`, which waits for the activation
+  // flash effect to finish before running the action or following the link. A modified or non-primary click keeps its
+  // default behavior.
   if (!isFollowingLink(event.currentTarget) && !isBrowserHandledClick(event)) {
     event.preventDefault();
   }
@@ -52,8 +52,10 @@ function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
   );
 }
 
-// Memoized because the menu rebuilds every row whenever the highlight moves (the row
-// elements are built inside a `map`, which the React Compiler caches as one array).
+/**
+ * Memoized because the menu rebuilds every row whenever the highlight moves (the menu builds the row elements inside a
+ * `map`, which the React Compiler caches as one array).
+ */
 const MenuItemRow = memo(function MenuRow({
   item,
   index,
@@ -120,7 +122,11 @@ export function Menu({
   anchor: HTMLElement | null;
   labelledBy: string;
   isPointerHeld: boolean;
-  focusesFirstItem: boolean; // Set when the menu is opened with the keyboard, so the arrow keys move from an item rather than from the menu itself.
+  /**
+   * `true` for a menu opened with the keyboard or a `click` that does not end a press on its title, so the arrow keys
+   * move from an item rather than from the menu itself. Read only when the menu mounts.
+   */
+  focusesFirstItem: boolean;
   onOpenAdjacentMenu: (direction: 1 | -1) => void;
   onClose: () => void;
 }) {

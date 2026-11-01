@@ -23,7 +23,7 @@ describe("matching a shortcut", () => {
   test("invokes the shortcut whose key code was pressed with the Option key held", () => {
     render(<Target shortcuts={[{ code: "KeyW", run: invokeShortcut }]} />);
 
-    expect(press(document)).toBe(false); // The default behavior was prevented.
+    expect(press(document)).toBe(false); // The hook prevented the default behavior.
     expect(invokeShortcut).toHaveBeenCalledOnce();
   });
 
@@ -44,7 +44,7 @@ describe("a key press targeting a text input", () => {
   test("does not invoke the shortcut or prevent the default behavior of the key press", () => {
     render(<Target shortcuts={[{ code: "KeyW", run: invokeShortcut }]} />);
 
-    expect(press(screen.getByTestId("field"))).toBe(true); // The default behavior was not prevented.
+    expect(press(screen.getByTestId("field"))).toBe(true); // The hook did not prevent the default behavior.
     expect(invokeShortcut).not.toHaveBeenCalled();
   });
 

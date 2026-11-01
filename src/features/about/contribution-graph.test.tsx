@@ -39,6 +39,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/** A partial first week that starts on a Wednesday, then a whole week from Sunday. */
 const WEEKS = [
   [
     { date: "2026-01-07", count: 0 },
@@ -47,7 +48,8 @@ const WEEKS = [
     { date: "2026-01-10", count: 3 },
   ],
   Array.from({ length: 7 }, (_, index) => ({ date: `2026-01-${String(index + 11)}`, count: index + 4 })),
-]; // A partial first week that starts on a Wednesday, then a whole week from Sunday.
+];
+
 const SCROLL_PANE_HEIGHT_PX = 600;
 const SCROLL_PANE_SCROLL_PADDING_BOTTOM_PX = 16;
 const FIGURE_HEIGHT_PX = 200;

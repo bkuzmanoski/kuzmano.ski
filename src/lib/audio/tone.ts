@@ -7,23 +7,27 @@ interface Note {
 }
 
 /**
- * A pitched sound: a short run of notes played end to end, each one an odd-harmonic stack
- * shaped like a square wave after its higher partials have rolled off, approximating the
- * sound of the Macintosh driver. Rendered through the driver's own sample rate and quantizer.
+ * A pitched sound: a short run of notes played end to end, each one an odd-harmonic stack shaped like a square wave
+ * after its higher partials have rolled off, approximating the sound of the Macintosh driver. Rendered through the
+ * driver's own sample rate and quantizer.
  */
 export interface Tone {
   notes: ReadonlyArray<Note>;
-  partials: number; // Odd harmonics only.
+  /** Odd harmonics only. */
+  partials: number;
   partialDecay: number;
-  attackSeconds: number; // Applied per note, so a step up in pitch does not click.
+  /** Applied per note, so a step up in pitch does not click. */
+  attackSeconds: number;
   decaySeconds: number;
   fadeSeconds: number;
 }
 
 const toneSeconds = (tone: Tone) => tone.notes.reduce((total, note) => total + note.seconds, 0);
 
-// The note playing at `seconds`, with the time elapsed within it. The last note absorbs
-// any rounding past the end of the run so the final samples still have a pitch to render.
+/**
+ * The note playing at `seconds`, with the time elapsed within it. The last note absorbs any rounding past the end of
+ * the run so the final samples still have a pitch to render.
+ */
 function noteAt(tone: Tone, seconds: number): { note: Note; elapsed: number } {
   let start = 0;
 

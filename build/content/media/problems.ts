@@ -8,8 +8,11 @@ import { rootRelativePathOf } from "./renditions.ts";
 import type { MediaRendition } from "./renditions.ts";
 import type { ResolvedImage, ResolvedVideo } from "./resolved-media.ts";
 
-const MIN_SOCIAL_COVER_IMAGE_SHORTEST_SIDE_PX = 144; // X `summary` cards drop smaller images.
-const MAX_SOCIAL_COVER_IMAGE_BYTES = 5 * 1024 * 1024; // X fetches cover images up to this size.
+/** X `summary` cards drop smaller images. */
+const MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX = 144;
+
+/** X fetches cover images up to this size. */
+const MIN_OPEN_GRAPH_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /** The largest file Cloudflare serves as a static asset. */
 export const MAX_RENDITION_BYTES = 25 * 1024 * 1024;
@@ -19,7 +22,10 @@ const BYTES_PER_MEGABYTE = 1024 * 1024;
 
 const H264_SAMPLE_FORMAT = "avc1";
 const AAC_SAMPLE_FORMAT = "mp4a";
-const ASPECT_RATIO_TOLERANCE = 0.01; // Allowed poster/video aspect-ratio difference for rounding and non-square video pixels.
+
+/** Allowed poster/video aspect-ratio difference for rounding and non-square video pixels. */
+const ASPECT_RATIO_TOLERANCE = 0.01;
+
 const REENCODE_VIDEO_REMEDY = "Re-encode it with `npm run encode-video`.";
 
 const aspectRatioOf = ({ width, height }: Dimensions) => width / height;
@@ -29,24 +35,22 @@ export const fileSize = (bytes: number) =>
     ? `${Math.round(bytes / BYTES_PER_KILOBYTE)}KB`
     : `${Math.round((bytes / BYTES_PER_MEGABYTE) * 10) / 10}MB`;
 
-export function coverImageProblems(
-  { path, bytes, dimensions: { width, height } }: Pick<ResolvedImage, "path" | "bytes" | "dimensions">,
-  thumbnailShortestSideLength: number,
-): Array<string> {
+export function coverImageProblems({
+  path,
+  bytes,
+  dimensions: { width, height },
+}: Pick<ResolvedImage, "path" | "bytes" | "dimensions">): Array<string> {
   const problems: Array<string> = [];
   const quotedFilePath = quotedContentPath(path);
-  const minimumShortestSideLength = Math.max(thumbnailShortestSideLength, MIN_SOCIAL_COVER_IMAGE_SHORTEST_SIDE_PX);
 
-  if (Math.min(width, height) < minimumShortestSideLength) {
+  if (Math.min(width, height) < MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX) {
     problems.push(
-      `${quotedFilePath} is smaller than the ${minimumShortestSideLength}px minimum on its shortest side (${width}x${height}px).`,
+      `${quotedFilePath} is smaller than the ${MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX}px minimum on its shortest side (${width}x${height}px).`,
     );
   }
 
-  if (bytes > MAX_SOCIAL_COVER_IMAGE_BYTES) {
-    problems.push(
-      `${quotedFilePath} exceeds the ${fileSize(MAX_SOCIAL_COVER_IMAGE_BYTES)} limit (${fileSize(bytes)}).`,
-    );
+  if (bytes > MIN_OPEN_GRAPH_IMAGE_BYTES) {
+    problems.push(`${quotedFilePath} exceeds the ${fileSize(MIN_OPEN_GRAPH_IMAGE_BYTES)} limit (${fileSize(bytes)}).`);
   }
 
   return problems;

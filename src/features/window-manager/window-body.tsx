@@ -2,12 +2,17 @@ import { Suspense } from "react";
 
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { ContactBody } from "#/features/contact/contact-body.tsx";
-import { CollectionBody } from "#/features/content/collection-body.tsx";
+import { CollectionBody, CollectionColumnHeadings } from "#/features/content/collection-body.tsx";
 import { ContentBody } from "#/features/content/content-body.tsx";
 import { ControlPanelBody } from "#/features/control-panel/control-panel-body.tsx";
 import { resolveWindow } from "#/site/windows.ts";
 
 import styles from "./window-body.module.css";
+
+export function WindowHeader({ route }: { route: string }) {
+  const target = resolveWindow(route);
+  return target?.id === "collection" ? <CollectionColumnHeadings collection={target.collection} /> : null;
+}
 
 export function WindowBody({ route }: { route: string }) {
   const target = resolveWindow(route);

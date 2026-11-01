@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 export function AlertButton({ message, children }: { message: string; children: ReactNode }) {
   const isHydrated = useIsHydrated();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const pressSoundHandlers = usePressSound({ scrollSafe: true });
+  const pressSoundHandlers = usePressSound({ defersTouchPressSound: true });
 
   return (
     <>

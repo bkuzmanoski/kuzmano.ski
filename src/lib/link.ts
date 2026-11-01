@@ -1,38 +1,19 @@
 import type { MouseEvent as ReactMouseEvent } from "react";
 
 /**
- * Whether a click repeats one the browser has already acted on (e.g., the second of a double
- * click). `detail` contains the running count of the sequence.
- */
-export function isRepeatClick(event: ReactMouseEvent | MouseEvent): boolean {
-  return event.detail > 1;
-}
-
-/**
- * Whether a click on a link requires the browser's own handling of the href (e.g.
- * opening in a new tab or window, or downloading the resource).
+ * Whether a click on a link requires the browser's own handling of the href (e.g., opening in a new tab or window, or
+ * downloading the resource).
  */
 export function isBrowserHandledClick(event: ReactMouseEvent | MouseEvent): boolean {
   return event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 }
 
-/**
- * Opens a link's destination in the app in place of the browser loading it, unless the click is
- * one the browser handles itself, such as a click that opens the link in a new tab.
- */
-export function openInAppOnPlainClick(event: ReactMouseEvent, openInApp: () => void) {
-  if (isBrowserHandledClick(event)) {
-    return;
-  }
-
-  event.preventDefault();
-  openInApp();
-}
-
 const PLACEHOLDER_ORIGIN = "https://placeholder.origin";
 
-// Resolves `value` against a placeholder origin, as a browser resolves an `href` against the document,
-// or returns `null` when it is not a valid URL.
+/**
+ * Resolves `value` against a placeholder origin, as a browser resolves an `href` against the document, or returns
+ * `null` when it is not a valid URL.
+ */
 function resolvedAgainstSiteOrigin(value: string): URL | null {
   try {
     return new URL(value, PLACEHOLDER_ORIGIN);
@@ -42,12 +23,11 @@ function resolvedAgainstSiteOrigin(value: string): URL | null {
 }
 
 /**
- * Whether `value` is a path on this site: it starts with `/`, and resolving it against an origin
- * produces a URL on that origin.
+ * Whether `value` is a path on this site: it starts with `/`, and resolving it against an origin produces a URL on that
+ * origin.
  *
- * Resolving it also rejects the values a URL parser resolves to another host that a check of the
- * first two characters misses: `/\host`, and `//host` with a tab or a newline between the slashes,
- * which the parser removes.
+ * Resolving it also rejects the values a URL parser resolves to another host that a check of the first two characters
+ * misses: `/\host`, and `//host` with a tab or a newline between the slashes, which the parser removes.
  */
 export function isSitePath(value: string): boolean {
   return value.startsWith("/") && resolvedAgainstSiteOrigin(value)?.origin === PLACEHOLDER_ORIGIN;
@@ -95,9 +75,8 @@ export function followLink(element: HTMLAnchorElement | null | undefined) {
 }
 
 /**
- * Whether the click being handled on an element originated from `followLink` rather than
- * from the user. A handler that suppresses the user's own clicks has to let this one
- * through, or the deferred navigation never happens.
+ * Whether the click being handled on an element originated from `followLink` rather than from the user. A handler that
+ * suppresses the user's own clicks has to let this one through, or the deferred navigation never happens.
  */
 export function isFollowingLink(element: HTMLElement): boolean {
   return element.dataset.following !== undefined;

@@ -5,7 +5,8 @@ import type { CloseGuard } from "./close-guards.ts";
 export interface WindowClose {
   registerGuard: (guard: CloseGuard) => () => void;
   close: () => void;
-  forceClose: () => void; // Completes a guarded close without running the guard again.
+  /** Completes a guarded close without running the guard again. */
+  forceClose: () => void;
 }
 
 export const WindowCloseContext = createContext<WindowClose | null>(null);
@@ -15,8 +16,8 @@ export function useCloseWindow(): (() => void) | null {
 }
 
 /**
- * Registers `guard` for as long as the calling component is mounted. Returns a function
- * that completes the close without running the guard again.
+ * Registers `guard` for as long as the calling component is mounted. Returns a function that completes the close
+ * without running the guard again.
  */
 export function useCloseGuard(guard: CloseGuard): () => void {
   const windowClose = use(WindowCloseContext);

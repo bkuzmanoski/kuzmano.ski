@@ -32,8 +32,8 @@
 
     padding: var(--layout-gutter);
 
-    font: var(--font-code);
-    font-feature-settings: var(--font-code-feature-settings);
+    font: var(--content-body-font-code);
+    font-feature-settings: var(--content-body-font-code-feature-settings);
     color: var(--color-syntax-foreground);
 
     background: var(--color-background-secondary);

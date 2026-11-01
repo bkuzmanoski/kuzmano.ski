@@ -21,7 +21,8 @@ interface MarkdownFile {
 }
 
 export interface MarkdownFilesOptions {
-  renderMarkdown?: MarkdownRenderer; // Created once by the caller, so its processor is reused across renders.
+  /** Created once by the caller, so renders reuse its processor. */
+  renderMarkdown?: MarkdownRenderer;
   readEntryDataModule?: EntryDataModuleReader;
 }
 
@@ -31,8 +32,8 @@ async function entryMarkdown(
   renderMarkdown: MarkdownRenderer,
   readEntryDataModule: EntryDataModuleReader | undefined,
 ): Promise<string> {
-  // Validate the frontmatter even though it is emitted unchanged. A malformed block should
-  // fail the build rather than be included in the Markdown file.
+  // Validate the frontmatter even though it is emitted unchanged. A malformed block should fail the build rather than
+  // be included in the Markdown file.
   parseFrontmatter(entry.frontmatter, entry.entryFilePath);
   return renderMarkdown(await readFile(entry.absolutePath, "utf8"), {
     path: entry.absolutePath,
@@ -41,8 +42,10 @@ async function entryMarkdown(
   });
 }
 
-// A collection's entries as a Markdown index, linking each entry's Markdown. A collection
-// has no document of its own, so the index is its Markdown representation.
+/**
+ * A collection's entries as a Markdown index, linking each entry's Markdown. A collection has no document of its own,
+ * so the index is its Markdown representation.
+ */
 function collectionMarkdown(name: string, entries: Array<AuthoredEntry>): string {
   // Widened because `name` may be a directory that is not a declared collection.
   const declaredCollections: Record<string, { title: string; description: string } | undefined> = COLLECTIONS;

@@ -107,14 +107,14 @@ function renderStateControls() {
   };
 }
 
-const tip = () => screen.queryByRole("tooltip");
+const tip = () => screen.queryByRole("tooltip", { hidden: true });
 
 function hoverTooltipUntilShown(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, MOUSE);
   advanceTimersBy(HOVER_DELAY_MS);
 }
 
-// The pointer event sequence iOS Safari dispatches for a tap, including its synthesized mouse event.
+/** The pointer event sequence iOS Safari dispatches for a tap, including its synthesized mouse event. */
 function tap(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
@@ -124,7 +124,7 @@ function tap(wrapper: Element) {
   fireEvent.click(wrapper);
 }
 
-// A tap whose synthesized mouse event arrives after the touch sequence rather than within it.
+/** A tap whose synthesized mouse event arrives after the touch sequence rather than within it. */
 function tapWithLateMouseEvent(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
@@ -206,7 +206,7 @@ test("a persisted tooltip shows the updated label when the control is relabeled"
   expect(tip()?.textContent).toBe("New Label");
 });
 
-test("a persisted tooltip is hidden after the pointer moves outside the control", () => {
+test("a persisted tooltip hides after the pointer moves outside the control", () => {
   const { wrapper } = renderTooltip({ persistOnPress: true });
 
   hoverTooltipUntilShown(wrapper);
@@ -315,7 +315,20 @@ test("a visible tooltip describes a control whose `aria-label` attribute differs
 
   hoverTooltipUntilShown(screen.getByRole("button").parentElement!);
 
-  expect(screen.getByRole("button").getAttribute("aria-describedby")).toBe(tip()!.id);
+  expect(screen.getByRole("button", { description: "Tip" }).getAttribute("aria-describedby")).toBe(tip()!.id);
+});
+
+test("a visible tooltip is hidden from assistive technology", () => {
+  render(
+    <Tooltip label="Tip">
+      <button type="button" aria-label="Control" />
+    </Tooltip>,
+  );
+
+  hoverTooltipUntilShown(screen.getByRole("button").parentElement!);
+
+  expect(tip()).not.toBeNull();
+  expect(screen.queryByRole("tooltip")).toBeNull();
 });
 
 test("a visible tooltip with the `childTextIncludesLabel` prop does not describe its control", () => {
@@ -395,7 +408,7 @@ test("the tooltip remains visible after the transient state clears while a point
   expect(tip()?.textContent).toBe("Tip");
 });
 
-test("`onDidHide` is called when a visible tooltip is hidden after the hide delay", () => {
+test("a visible tooltip calls `onDidHide` when it hides after the hide delay", () => {
   const onDidHide = vi.fn();
   const { wrapper } = renderTooltip({ onDidHide });
 
@@ -412,7 +425,7 @@ test("`onDidHide` is called when a visible tooltip is hidden after the hide dela
   expect(onDidHide).toHaveBeenCalledOnce();
 });
 
-test("`onDidHide` is not called for a tooltip that was never shown", () => {
+test("a tooltip that never appears does not call `onDidHide`", () => {
   const onDidHide = vi.fn();
   const { wrapper } = renderTooltip({ onDidHide });
 
@@ -424,7 +437,7 @@ test("`onDidHide` is not called for a tooltip that was never shown", () => {
   expect(onDidHide).not.toHaveBeenCalled();
 });
 
-test("`onDidHide` is called when a visible tooltip is suppressed", () => {
+test("a visible tooltip calls `onDidHide` when it becomes suppressed", () => {
   const onDidHide = vi.fn();
   const { wrapper, suppress } = renderTooltip({ onDidHide });
 
@@ -434,7 +447,7 @@ test("`onDidHide` is called when a visible tooltip is suppressed", () => {
   expect(onDidHide).toHaveBeenCalledOnce();
 });
 
-test("`onDidHide` is called when a visible tooltip unmounts", () => {
+test("a visible tooltip calls `onDidHide` when it unmounts", () => {
   const onDidHide = vi.fn();
   const { wrapper, unmount } = renderTooltip({ onDidHide });
 
@@ -535,7 +548,7 @@ test("a tooltip stays on screen while the pointer crosses to a sibling, and the 
   fireEvent.pointerEnter(second, MOUSE);
   advanceTimersBy(0);
 
-  expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  expect(screen.getAllByRole("tooltip", { hidden: true })).toHaveLength(1);
   expect(tip()?.textContent).toBe("Second");
 });
 
@@ -590,8 +603,8 @@ test("a tooltip shown during a tap remains visible after the touch ends", () => 
   fireEvent.pointerLeave(wrapper, TOUCH);
   advanceTimersBy(HIDE_DELAY_MS);
 
-  // A control that shows its state synchronously does so before the tap's trailing
-  // pointer events arrive, unlike one that waits on a promise first.
+  // A control that shows its state synchronously does so before the tap's trailing pointer events arrive, unlike one
+  // that waits on a promise first.
   expect(tip()?.textContent).toBe("Tip");
 });
 
@@ -619,7 +632,7 @@ test("showing state on one control replaces the tooltip shown by another", () =>
 
   showSecond();
 
-  expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  expect(screen.getAllByRole("tooltip", { hidden: true })).toHaveLength(1);
   expect(tip()?.textContent).toBe("Second");
 });
 
@@ -630,8 +643,8 @@ test("a tooltip that replaced another is itself replaced by the next tooltip sho
   showSecond();
   showThird();
 
-  // The tooltip that is being replaced is deregistered as it is hidden. That
-  // must not deregister the tooltip that replaced it.
-  expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  // The tooltip that is being replaced is deregistered as it is hidden. That must not deregister the tooltip that
+  // replaced it.
+  expect(screen.getAllByRole("tooltip", { hidden: true })).toHaveLength(1);
   expect(tip()?.textContent).toBe("Third");
 });

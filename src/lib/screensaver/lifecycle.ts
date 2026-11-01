@@ -7,15 +7,15 @@ import { clearScreensaverThemeColor, setScreensaverThemeColor } from "./theme-co
 export const FADE_IN_DURATION_MS = 300;
 
 /**
- * Only `asleep` responds to input. The gesture that selected Sleep from the menu must not
- * carry through and dismiss the screensaver, so `falling-asleep` ignores input.
+ * Only `asleep` responds to input. The gesture that selected Sleep from the menu must not carry through and dismiss the
+ * screensaver, so `falling-asleep` ignores input.
  */
 export type SleepState = "awake" | "falling-asleep" | "asleep";
 
 let sleepState: SleepState = "awake";
 
-// This store is hand-rolled instead of using `createClientStore` because it has no client-only
-// initial value: the desktop is awake on the server and first client paint, and only transitions change it.
+// This store is hand-rolled instead of using `createClientStore` because it has no client-only initial value: the
+// desktop is awake on the server and first client paint, and only transitions change it.
 const { emit, subscribe } = createEmitter();
 const getState = () => sleepState;
 const serverState = (): SleepState => "awake";
@@ -42,9 +42,8 @@ export function sleep() {
 }
 
 /**
- * Puts the desktop to sleep once the visitor has gone idle, unless an alert is
- * waiting on them as an alert opened with `showModal()` sits in the browser's top
- * layer, above any stacking context the screensaver can claim.
+ * Puts the desktop to sleep once the visitor has gone idle, unless an alert is waiting on them as an alert opened with
+ * `showModal()` sits in the browser's top layer, above any stacking context the screensaver can claim.
  */
 export function sleepOnIdle() {
   if (!document.querySelector("dialog[open]")) {

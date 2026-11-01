@@ -48,7 +48,10 @@ export function intersectionOf(a: Rect, b: Rect): Rect | null {
   return width > 0 && height > 0 ? { x, y, width, height } : null;
 }
 
-/** The fraction of `rect`'s area within `bounds`, from 0 to 1, as `IntersectionObserver` measures it. `0` for an empty rect. */
+/**
+ * The fraction of `rect`'s area within `bounds`, from 0 to 1, as `IntersectionObserver` measures it. `0` for an empty
+ * rect.
+ */
 export function intersectionRatioOf(rect: Rect, bounds: Rect): number {
   const intersection = intersectionOf(rect, bounds);
   const area = rect.width * rect.height;
@@ -100,9 +103,9 @@ export function insetFromViewport(box: Rect, viewport: Size): Inset {
 }
 
 /**
- * The scale and translation that places `from` where `to` is, for an element whose transform
- * origin is the origin of the coordinates both rects are given in. The rects are taken to
- * share an aspect ratio, so their widths set the scale on both axes.
+ * The scale and translation that places `from` where `to` is, for an element whose transform origin is the origin of
+ * the coordinates both rects are given in. The rects are taken to share an aspect ratio, so their widths set the scale
+ * on both axes.
  */
 export function transformBetween(from: Rect, to: Rect): Transform {
   const scale = from.width === 0 ? 1 : to.width / from.width;

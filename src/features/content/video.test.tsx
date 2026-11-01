@@ -77,7 +77,7 @@ test("a video without the `controls` prop renders a `<video>` with its props, wi
   expect(screen.queryByRole("group", { name: "Playback controls" })).toBeNull();
 });
 
-test("a video with the `controls` prop renders the site's playback controls in place of the browser's", () => {
+test("a video with the `controls` prop renders the site's playback controls in place of the browser's controls", () => {
   const { container } = renderVideo();
   const video = container.querySelector("video")!;
 
@@ -225,7 +225,7 @@ test("pressing on the video focuses its container", () => {
   expect(document.activeElement).toBe(video.parentElement);
 });
 
-test("the Space key toggles playback and plays a click sound while the focus is on the container or the slider", () => {
+test("the Space key toggles playback and plays the click sound while the focus is on the container or the slider", () => {
   const { container } = renderVideo();
 
   fireEvent.keyDown(container.querySelector("video")!.parentElement!, { key: " " });

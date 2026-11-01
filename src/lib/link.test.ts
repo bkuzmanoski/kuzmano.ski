@@ -1,13 +1,6 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
-import {
-  isBrowserHandledClick,
-  isRepeatClick,
-  isSitePath,
-  linkDestinationOf,
-  openInAppOnPlainClick,
-  sitePathPartsOf,
-} from "./link.ts";
+import { isBrowserHandledClick, isSitePath, linkDestinationOf, sitePathPartsOf } from "./link.ts";
 
 import type { MouseEvent } from "react";
 
@@ -19,20 +12,8 @@ const click = (overrides: Partial<MouseEvent> = {}) =>
     ctrlKey: false,
     shiftKey: false,
     altKey: false,
-    preventDefault: () => undefined,
     ...overrides,
   }) as MouseEvent;
-
-describe("isRepeatClick", () => {
-  test("returns `false` for the first press of a sequence", () => {
-    expect(isRepeatClick(click({ detail: 1 }))).toBe(false);
-  });
-
-  test("returns `true` for every press after the first", () => {
-    expect(isRepeatClick(click({ detail: 2 }))).toBe(true);
-    expect(isRepeatClick(click({ detail: 3 }))).toBe(true);
-  });
-});
 
 describe("isBrowserHandledClick", () => {
   test("returns `false` for a primary button press without a modifier key", () => {
@@ -70,28 +51,6 @@ describe("isSitePath", () => {
     ["a relative path", "collection/entry"],
   ])("returns `false` for %s", (_label, value) => {
     expect(isSitePath(value)).toBe(false);
-  });
-});
-
-describe("openInAppOnPlainClick", () => {
-  test("opens the destination in the app and prevents the browser from loading it on a plain click", () => {
-    const preventDefault = vi.fn();
-    const openInApp = vi.fn();
-
-    openInAppOnPlainClick(click({ preventDefault }), openInApp);
-
-    expect(openInApp).toHaveBeenCalledOnce();
-    expect(preventDefault).toHaveBeenCalledOnce();
-  });
-
-  test("does not open the destination in the app or prevent the browser from loading it on a click with a modifier key", () => {
-    const preventDefault = vi.fn();
-    const openInApp = vi.fn();
-
-    openInAppOnPlainClick(click({ metaKey: true, preventDefault }), openInApp);
-
-    expect(openInApp).not.toHaveBeenCalled();
-    expect(preventDefault).not.toHaveBeenCalled();
   });
 });
 

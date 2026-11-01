@@ -15,7 +15,8 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 
 beforeEach(() => vi.mocked(playClickSound).mockClear());
 
-const CLICK = { detail: 1 }; // A pointer click, as opposed to keyboard activation.
+/** A pointer click, as opposed to keyboard activation. */
+const CLICK = { detail: 1 };
 
 function Harness({
   label,
@@ -103,6 +104,7 @@ test.each([["mouse"], ["touch"]])(
     const label = screen.getByText("From:");
 
     fireEvent.pointerDown(label, { pointerType });
+    fireEvent.mouseDown(label, CLICK);
     fireEvent.pointerUp(label, { pointerType });
     fireEvent.click(label, CLICK); // jsdom forwards this click to the control with the same `detail`.
 

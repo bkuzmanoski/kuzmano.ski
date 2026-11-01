@@ -91,16 +91,15 @@ function nameRailSubject(subject: ContentNode, anchorName: string) {
 }
 
 /**
- * Wraps each root-level run of `Rail` and `Footnote` elements in `<div data-rail-asides>` and assigns
- * a unique rail-subject name to the preceding element.
+ * Wraps each root-level run of `Rail` and `Footnote` elements in `<div data-rail-asides>` and assigns a unique
+ * rail-subject name to the preceding element.
  *
- * The transform stores the name in `--content-body-rail-subject` on both the subject and its aside
- * group. Content styles combine it with the anchor name for numbered-element labels (using
- * `anchor-name` directly could resolve a shared name to a later subject).
+ * The transform stores the name in `--content-body-rail-subject` on both the subject and its aside group. Content
+ * styles combine it with the anchor name for numbered-element labels (using `anchor-name` directly could resolve a
+ * shared name to a later subject).
  *
- * Throws entry-specific errors when an aside is nested, lacks a preceding element, follows an
- * unsupported component, or follows an element with a `style` or spread attribute that could conflict
- * with the generated style.
+ * Throws entry-specific errors when an aside is nested, lacks a preceding element, follows an unsupported component, or
+ * follows an element with a `style` or spread attribute that could conflict with the generated style.
  *
  * Must run last so the subject is the element ultimately rendered by the entry.
  */
@@ -119,7 +118,8 @@ export function rehypeRailAsides() {
       throw new Error(`${entryPath} renders a \`${node.name}\` ${placement}.`);
     });
 
-    // Shiki replaces a code block with a root node containing its `<pre>`, which is the element a rail aside after it is beside.
+    // Shiki replaces a code block with a root node containing its `<pre>`, which is the element a rail aside after it
+    // is beside.
     tree.children = tree.children.flatMap((node) => (node.type === "root" ? (node.children ?? []) : [node]));
 
     const children: Array<ContentNode> = [];

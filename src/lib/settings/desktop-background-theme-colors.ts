@@ -23,8 +23,8 @@ export function watchDesktopBackgroundThemeColors(): () => void {
   let pendingAnimationFrame: number | null = null;
   let appliedThemeTintKey =
     readStoredThemeTint() === null
-      ? themeTintKeyOf(getSettings()) // The build emits the colors for the stylesheet's default theme tint.
-      : null; // Makes the first update compute the colors, since the stored ones may come from an older stylesheet.
+      ? themeTintKeyOf(getSettings()) // The build emits the colors for the default theme tint.
+      : null; // Makes the first update compute the colors as the stored ones may come from an older build.
 
   const update = () => {
     pendingAnimationFrame = null;

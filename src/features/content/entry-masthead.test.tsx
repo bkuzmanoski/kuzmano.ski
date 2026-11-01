@@ -59,7 +59,7 @@ test("the masthead renders the entry's date as a `<time>` with the date in its `
   expect(date.getAttribute("datetime")).toBe(ENTRY.date);
 });
 
-test("the masthead marks the entry's date with a `lang` attribute naming the browser's locale when its language differs from the document's", () => {
+test("the masthead marks the entry's date with a `lang` attribute naming the browser's locale when its language differs from that of the document", () => {
   vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
   renderMasthead();
 

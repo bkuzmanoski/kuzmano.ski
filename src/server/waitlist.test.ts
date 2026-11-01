@@ -18,7 +18,6 @@ const MEMBERSHIP: Membership = { emailAddress: "user@example.com", list: "List",
 
 const fetchMock = vi.fn<typeof fetch>();
 
-// The module makes up to two requests: it looks the email address up, then writes the row.
 const lookupCall = () => fetchMock.mock.calls[0]!;
 const writeCall = () => fetchMock.mock.calls[1]!;
 const bodyOf = (call: Parameters<typeof fetch>) => JSON.parse(call[1]?.body as string) as Record<string, unknown>;

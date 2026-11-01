@@ -12,8 +12,7 @@ import { authoredRendition, imageDerivativeRendition, rootRelativePathOf } from 
 
 import type { ImageDerivative } from "./derivatives.ts";
 
-const AVIF: ImageDerivative = { format: "avif" };
-const THUMBNAIL_WEBP: ImageDerivative = { format: "webp", variant: "thumbnail", shortestSideLength: 128 };
+const AVIF_IMAGE_DERIVATIVE: ImageDerivative = { format: "avif" };
 
 describe("authoredRendition", () => {
   test("returns an authored rendition at a URL including the media file's hash, with the media type of its extension", () => {
@@ -39,39 +38,30 @@ describe("authoredRendition", () => {
 
 describe("imageDerivativeRendition", () => {
   test("returns a derivative rendition at a URL including the image's hash and the fingerprint of its encoding settings, with the media type of its format", () => {
-    expect(imageDerivativeRendition(resolvedImage(), AVIF)).toMatchObject({
-      url: mediaRoute(`collection/entry/image.${MEDIA_FILE_HASH}.${imageDerivativeFingerprint(AVIF)}.avif`),
+    expect(imageDerivativeRendition(resolvedImage(), AVIF_IMAGE_DERIVATIVE)).toMatchObject({
+      url: mediaRoute(
+        `collection/entry/image.${MEDIA_FILE_HASH}.${imageDerivativeFingerprint(AVIF_IMAGE_DERIVATIVE)}.avif`,
+      ),
       type: "image/avif",
     });
   });
 
-  test("replaces the image's extension with the derivative's variant and format", () => {
-    expect(
-      imageDerivativeRendition(resolvedImage({ path: "collection/entry.cover.png" }), THUMBNAIL_WEBP),
-    ).toMatchObject({
-      url: mediaRoute(
-        `collection/entry.cover.${MEDIA_FILE_HASH}.${imageDerivativeFingerprint(THUMBNAIL_WEBP)}.thumbnail.webp`,
-      ),
-      type: "image/webp",
-    });
-  });
-
   test("returns a different URL for a derivative with different encoding settings", () => {
-    expect(imageDerivativeRendition(resolvedImage(), { ...AVIF, shortestSideLength: 128 }).url).not.toBe(
-      imageDerivativeRendition(resolvedImage(), AVIF).url,
+    expect(imageDerivativeRendition(resolvedImage(), { ...AVIF_IMAGE_DERIVATIVE, quality: 70 }).url).not.toBe(
+      imageDerivativeRendition(resolvedImage(), AVIF_IMAGE_DERIVATIVE).url,
     );
   });
 
   test("names the derivative file after the image's bytes, so images with identical bytes share one", () => {
-    const entryDerivative = imageDerivativeRendition(resolvedImage(), AVIF);
+    const entryDerivative = imageDerivativeRendition(resolvedImage(), AVIF_IMAGE_DERIVATIVE);
     const otherEntryDerivative = imageDerivativeRendition(
       resolvedImage({ path: "collection/other-entry/image.png" }),
-      AVIF,
+      AVIF_IMAGE_DERIVATIVE,
     );
 
     expect(otherEntryDerivative.url).not.toBe(entryDerivative.url);
     expect(otherEntryDerivative.derivativeFileName).toBe(entryDerivative.derivativeFileName);
-    expect(entryDerivative.derivativeFileName).toBe(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF));
+    expect(entryDerivative.derivativeFileName).toBe(imageDerivativeFileName(MEDIA_FILE_HASH, AVIF_IMAGE_DERIVATIVE));
   });
 });
 
@@ -83,8 +73,8 @@ describe("rootRelativePathOf", () => {
   });
 
   test("returns the media-directory path of a derivative media rendition", () => {
-    expect(rootRelativePathOf(imageDerivativeRendition(resolvedImage(), AVIF))).toBe(
-      join(MEDIA_DIRECTORY_PATH, imageDerivativeFileName(MEDIA_FILE_HASH, AVIF)),
+    expect(rootRelativePathOf(imageDerivativeRendition(resolvedImage(), AVIF_IMAGE_DERIVATIVE))).toBe(
+      join(MEDIA_DIRECTORY_PATH, imageDerivativeFileName(MEDIA_FILE_HASH, AVIF_IMAGE_DERIVATIVE)),
     );
   });
 });

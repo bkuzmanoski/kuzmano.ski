@@ -5,8 +5,8 @@ import { playClickSound } from "./sounds.ts";
 import type { SoundEffectsSetting } from "../settings/settings.ts";
 
 /**
- * Applies a change to the settings, and plays the click sound when the change turns sound effects on, since the press
- * that made the change did not play its sound while they were off.
+ * Applies a change to the settings, and plays the click sound when the change turns sound effects on as the press that
+ * made the change did not play its sound while they were off.
  */
 function changeSettingsAudibly(change: () => void) {
   const wasOff = getSettings().soundEffects === "off";

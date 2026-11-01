@@ -6,12 +6,13 @@ import styles from "./zoom-rect.module.css";
 
 const ZOOM_RECT_TRANSITION_DURATION_MS = 200;
 
-export const ZOOM_RECT_DURATION_MS = 260; // From mounting to calling `onDone`, which includes the transition and a hold at the target.
+/** From mounting to calling `onDone`, which includes the transition and a hold at the target. */
+export const ZOOM_RECT_DURATION_MS = 260;
 
 /**
- * A dashed outline that grows from `from` to `target` in its containing block's
- * coordinates, then calls `onDone` after holding at the target. The target is read
- * only on the first render, so each new zoom rect must be rendered with a new `key`.
+ * A dashed outline that grows from `from` to `target` in its containing block's coordinates, then calls `onDone` after
+ * holding at the target. The target is read only on the first render, so each new zoom rect must be rendered with a new
+ * `key`.
  */
 export function ZoomRect({
   from,

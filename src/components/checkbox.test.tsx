@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { Checkbox } from "./checkbox.tsx";
 
@@ -39,7 +40,7 @@ test("pressing a checkbox with the mouse plays the click sound", () => {
       A label
     </Checkbox>,
   );
-  fireEvent.pointerDown(screen.getByRole("checkbox"), { pointerType: "mouse", button: 0, isPrimary: true });
+  pressWithMouse(screen.getByRole("checkbox"));
 
   expect(playClickSound).toHaveBeenCalledOnce();
 });

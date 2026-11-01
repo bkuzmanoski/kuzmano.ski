@@ -60,9 +60,9 @@ export function WindowManagerProvider({
   );
   const shouldReplaceUrlRef = useRef(false);
 
-  // The two effects below keep the focused window and the URL in sync. `expectedRouteRef` records a
-  // navigation started by the focus→URL effect, so the URL→focus effect ignores it and acts only on
-  // external URL changes (deep links, back, forward).
+  // The two effects below keep the focused window and the URL in sync. `expectedRouteRef` records a navigation started
+  // by the focus→URL effect, so the URL→focus effect ignores it and acts only on external URL changes (deep links,
+  // back, forward).
   const expectedRouteRef = useRef<string | null>(null);
 
   const actions = useMemo<WindowActions>(() => {

@@ -11,9 +11,9 @@ export function characterCountDescription(remainingCharacterCount: number, numbe
     : `${formattedCharacterCount(remainingCharacterCount, numberFormat)} left`;
 }
 /**
- * The text of the character count's status region. It changes only when the remaining characters
- * cross `CHARACTER_COUNT_VISIBLE_FROM` or the limit, so a screen reader announces those two
- * points rather than every keystroke.
+ * The text of the character count's status region. It changes only when the remaining characters cross
+ * `CHARACTER_COUNT_VISIBLE_FROM` or the limit, so a screen reader announces those two points rather than every
+ * keystroke.
  */
 export function characterCountStatus(remainingCharacterCount: number, numberFormat: Intl.NumberFormat): string {
   if (remainingCharacterCount < 0) {

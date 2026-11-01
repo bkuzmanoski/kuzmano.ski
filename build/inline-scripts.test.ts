@@ -15,7 +15,8 @@ beforeEach(() => {
 test("a script reading `import.meta.env` is bundled with the values Vite resolved for the parent config", () => {
   runScript(inlineScript);
 
-  // Compare with this module's Vite-replaced `import.meta.env` to ensure the bundle uses the app's resolved values rather than a separate copy.
+  // Compare with this module's Vite-replaced `import.meta.env` to ensure the bundle uses the app's resolved values
+  // rather than a separate copy.
   expect(document.documentElement.dataset.inlineScriptMode).toBe(import.meta.env.MODE);
   expect(document.documentElement.dataset.inlineScriptDev).toBe(String(import.meta.env.DEV));
 });

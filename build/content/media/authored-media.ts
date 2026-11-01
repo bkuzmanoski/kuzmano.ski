@@ -13,6 +13,7 @@ import {
   isContentMedia,
   isEncodableImage,
   isImage,
+  isSupportedCoverImage,
   isVideo,
   posterImageStemOf,
   withoutExtension,
@@ -24,11 +25,13 @@ import type { MediaReference } from "../markup/media-references.ts";
 /** A video in an entry's media directory, and the poster image paired with it by name. */
 export interface AuthoredVideo {
   videoFileName: string;
-  posterImageFileName: string | null; // `null` unless exactly one poster image, in an encodable format, is named after the video.
+  /** `null` unless exactly one poster image, in an encodable format, is named after the video. */
+  posterImageFileName: string | null;
 }
 
 export interface AuthoredEntryMedia extends ListedEntry {
-  coverImageFilePath: string | null; // Relative to the content directory.
+  /** Relative to the content directory. */
+  coverImageFilePath: string | null;
   bodyImageFileNames: Array<string>;
   videos: Array<AuthoredVideo>;
 }
@@ -105,7 +108,7 @@ function coverImageOf(directoryName: string, slug: string, directoryCoverImageFi
         ]
       : []),
     ...coverImageFileNames
-      .filter((fileName) => !isEncodableImage(fileName))
+      .filter((fileName) => !isSupportedCoverImage(fileName))
       .map(
         (fileName) =>
           `The image format of ${quotedContentPath(directoryName, fileName)} is not supported for cover images.`,
@@ -115,7 +118,7 @@ function coverImageOf(directoryName: string, slug: string, directoryCoverImageFi
       .map((fileName) => `${quotedContentPath(directoryName, fileName)} has a URL-unsafe file name.`),
   ];
   const isAssignable =
-    coverImageFileNames.length === 1 && coverImageFileName !== undefined && isEncodableImage(coverImageFileName);
+    coverImageFileNames.length === 1 && coverImageFileName !== undefined && isSupportedCoverImage(coverImageFileName);
 
   return { coverImageFilePath: isAssignable ? `${directoryName}/${coverImageFileName}` : null, problems };
 }

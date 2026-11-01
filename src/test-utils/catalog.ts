@@ -6,8 +6,8 @@ import { fakeCollection, fakeCollectionEntries, fakeContentIndex, fakeEntry } fr
 
 // A `vi.mock` factory for `#/site/catalog`.
 //
-// A suite covering content the fixtures below do not include, such as a draft, passes its own
-// collections or pages as `overrides`.
+// A suite covering content the fixtures below do not include, such as a draft, passes its own collections or pages as
+// `overrides`.
 
 export const collectionEntries = fakeCollectionEntries("newest-entry", "middle-entry", "oldest-entry");
 export const collection = fakeCollection(collectionEntries, { title: "Collection", route: "/collection" });
@@ -16,8 +16,10 @@ export const otherCollection = fakeCollection(fakeCollectionEntries("other-entry
   route: "/other-collection",
 });
 
-// The return type is the module being replaced, so an export added to the catalog fails to
-// typecheck here rather than arriving as `undefined` in the suites that mock it.
+/**
+ * The return type is the type of the module this mock replaces, so an export added to the catalog fails to typecheck
+ * here rather than arriving as `undefined` in the suites that mock it.
+ */
 export const siteCatalogMock = (overrides: Partial<typeof SiteCatalog> = {}): typeof SiteCatalog => ({
   pages: fakeContentIndex([fakeEntry("page", { title: "Page" })], PAGES_DIRECTORY_NAME),
   collections: { collection, "other-collection": otherCollection },

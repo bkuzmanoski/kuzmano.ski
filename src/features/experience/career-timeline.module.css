@@ -85,7 +85,7 @@
   height: max(240px, 100cqh - 2 * var(--layout-gutter) - var(--career-timeline-year-label-height));
   margin-block-end: var(--career-timeline-year-label-height);
 
-  font: var(--font-bitmap); /* Resolves the `ch` unit in the year label width. */
+  font: var(--content-body-font-bitmap); /* Resolves the `ch` unit in the year label width. */
 
   -webkit-tap-highlight-color: transparent;
 }
@@ -258,7 +258,8 @@
 
     grid-column: rail-start / text-end;
 
-    /* Begin scrolling out of view along with the last role. `.roles` offsets this with a negative margin (see below). */
+    /* Begin scrolling out of view along with the last role. `.roles` offsets this with a negative margin (see
+     * below). */
     margin-block-end: max(0px, var(--career-timeline-last-role-height) - var(--career-timeline-role-rule-width));
     padding-block: var(--layout-gutter);
     padding-inline: 0;

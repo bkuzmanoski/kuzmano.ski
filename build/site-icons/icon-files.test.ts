@@ -8,9 +8,11 @@ import type { Artwork } from "./artwork.ts";
 import type { IconFile } from "./icon-files.ts";
 import type { Palette } from "../stylesheet/palette.ts";
 
-// A black monogram on a white backdrop, so a decoded pixel is the monogram, the backdrop, or the
-// antialiasing between them. The dark foreground differs from both, so `favicon.svg` cannot satisfy
-// its scheme assertions by declaring one fill twice.
+/**
+ * A black monogram on a white backdrop, so a decoded pixel is the monogram, the backdrop, or the antialiasing between
+ * them. The dark foreground differs from both, so `favicon.svg` cannot satisfy its scheme assertions by declaring one
+ * fill twice.
+ */
 const palette: Palette = {
   foreground: { light: "#000000", dark: "#e5e5e5" },
   background: { light: "#ffffff", dark: "#111111" },
@@ -20,12 +22,14 @@ const palette: Palette = {
 
 const artwork: Artwork = { width: 100, height: 100, path: "M0 0h100v100H0z" };
 
-// The share of a maskable icon's width that a platform mask is guaranteed to leave visible is a
-// circle of 80% of its width, so the monogram has to stay within 40% of the center.
-// See https://www.w3.org/TR/appmanifest/#icon-masks.
+/**
+ * The share of a maskable icon's width that a platform mask is guaranteed to leave visible is a circle of 80% of its
+ * width, so the monogram has to stay within 40% of the center. See https://www.w3.org/TR/appmanifest/#icon-masks.
+ */
 const MASKABLE_SAFE_RADIUS = 0.4;
 
-const MID_CHANNEL = 128; // A pixel darker than this is the monogram or its antialiasing, given the palette above.
+/** A pixel darker than this is the monogram or its antialiasing, given the palette above. */
+const MID_CHANNEL = 128;
 
 const files = await iconFilesFrom(palette, artwork);
 
@@ -49,7 +53,7 @@ function rasterContentsIn(icons: Array<IconFile>, fileName: string): Buffer {
   return contents;
 }
 
-// The distance from the center of an icon to its furthest monogram pixel, as a share of its width.
+/** The distance from the center of an icon to its furthest monogram pixel, as a share of its width. */
 async function monogramRadiusIn(contents: Buffer): Promise<number> {
   const { data, info } = await sharp(contents).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height, channels } = info;

@@ -7,7 +7,8 @@ export interface Dimensions {
 
 export interface PictureSource {
   srcSet: string;
-  type: string; // Media type.
+  /** Media type. */
+  type: string;
 }
 
 /** One media URL and its intrinsic dimensions. */
@@ -17,7 +18,8 @@ export interface SizedMedia extends Dimensions {
 
 export interface ContentImage extends SizedMedia {
   kind: "image";
-  alternates: Array<PictureSource>; // Offered ahead of the fallback at `src`, in preference order.
+  /** Offered ahead of the fallback at `src`, in preference order. */
+  alternates: Array<PictureSource>;
 }
 
 export interface ContentVideo extends SizedMedia {
@@ -27,7 +29,5 @@ export interface ContentVideo extends SizedMedia {
 
 export type ContentMedia = ContentImage | ContentVideo;
 
-export interface CoverImage {
-  social: SizedMedia; // Served as authored because social crawlers do not render AVIF.
-  thumbnail: ContentImage;
-}
+/** Served as authored because Open Graph crawlers do not render AVIF. */
+export type CoverImage = SizedMedia;

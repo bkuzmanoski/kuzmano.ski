@@ -26,8 +26,8 @@
   }
 
   & .message {
-    /* The width the field reserves for the scrollbar. Declared here rather than only
-     * under the collapsed state so the parent pane's own reservation is not inherited. */
+    /* The width the field reserves for the scrollbar. Declared here rather than only under the collapsed state so the
+     * parent pane's own reservation is not inherited. */
     --scroll-pane-reserved-scrollbar-width: 0px;
 
     flex: 1;

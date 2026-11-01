@@ -4,10 +4,12 @@ import { isRecord } from "../guards.ts";
 /** The number of levels a count is rendered at, from no contributions to the busiest day. */
 export const CONTRIBUTION_LEVEL_COUNT = 5;
 
-const MINIMUM_WEEKS_BETWEEN_MONTH_LABELS = 3; // A leading label for the first, partial month overlaps the next label when it is closer than this.
+/** A leading label for the first, partial month overlaps the next label when it is closer than this. */
+const MINIMUM_WEEKS_BETWEEN_MONTH_LABELS = 3;
 
 export interface ContributionDay {
-  date: string; // `YYYY-MM-DD`.
+  /** `YYYY-MM-DD`. */
+  date: string;
   count: number;
 }
 
@@ -40,8 +42,8 @@ function contributionWeekFrom(value: unknown): Array<ContributionDay> | null {
 }
 
 /**
- * Checks untyped JSON against `ContributionCalendar`, returning the calendar or `null` when any
- * part of it does not match.
+ * Checks untyped JSON against `ContributionCalendar`, returning the calendar or `null` when any part of it does not
+ * match.
  */
 export function contributionCalendarFrom(value: unknown): ContributionCalendar | null {
   if (!isRecord(value) || typeof value.total !== "number" || !Array.isArray(value.weeks)) {

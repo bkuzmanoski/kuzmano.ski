@@ -150,7 +150,7 @@ test("the confirmation clears after the state display duration while the pointer
   hoverUntilTooltipShown();
   await clickCopy();
 
-  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(screen.getByRole("tooltip", { hidden: true }).textContent).toBe("Copied");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
   advanceTimersBy(STATE_DISPLAY_DURATION_MS - 1);
@@ -160,7 +160,7 @@ test("the confirmation clears after the state display duration while the pointer
   advanceTimersBy(1);
 
   expect(screen.getByRole("status").textContent).toBe("");
-  expect(screen.getByRole("tooltip").textContent).toBe("Copy to Clipboard"); // Still hovered.
+  expect(screen.getByRole("tooltip", { hidden: true }).textContent).toBe("Copy to Clipboard"); // Still hovered.
 });
 
 test("the confirmation clears as soon as the tooltip showing it is hidden", async () => {
@@ -171,7 +171,7 @@ test("the confirmation clears as soon as the tooltip showing it is hidden", asyn
   fireEvent.pointerLeave(wrapper(), { pointerType: "mouse" });
   advanceTimersBy(HIDE_DELAY_MS);
 
-  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(screen.queryByRole("tooltip", { hidden: true })).toBeNull();
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
@@ -179,11 +179,11 @@ test("a tap shows the confirmation, then clears it after the state display durat
   renderButton();
   await clickCopy();
 
-  expect(screen.getByRole("tooltip").textContent).toBe("Copied");
+  expect(screen.getByRole("tooltip", { hidden: true }).textContent).toBe("Copied");
   expect(screen.getByRole("status").textContent).toBe("Copied");
 
   advanceTimersBy(STATE_DISPLAY_DURATION_MS);
 
-  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(screen.queryByRole("tooltip", { hidden: true })).toBeNull();
   expect(screen.getByRole("status").textContent).toBe("");
 });

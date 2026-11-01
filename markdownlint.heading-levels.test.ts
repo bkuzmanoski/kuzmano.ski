@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import headingLevelsRule from "./markdownlint.heading-levels.ts";
 
-// Lints the source with only the rule under test, and returns the line and detail of each error.
+/** Lints the source with only the rule under test, and returns the line and detail of each error. */
 async function headingLevelErrorsIn(source: string) {
   const results = await lint({
     strings: { entry: source },
@@ -76,7 +76,7 @@ A sentence with <h5>a heading</h5> inside it.
     ).toEqual([]);
   });
 
-  test("ignores an element whose name begins with `h` and a digit but continues", async () => {
+  test("ignores an element with a name that begins with `h` and a digit but continues with other characters", async () => {
     expect(await headingLevelErrorsIn("<h4x>Not a heading</h4x>")).toEqual([]);
   });
 });

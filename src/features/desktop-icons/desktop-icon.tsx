@@ -10,18 +10,19 @@ import FolderSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-selec
 import FolderDesktopIcon from "#/assets/images/desktop-icon-folder.svg?react";
 import DownloadDesktopIconIndicator from "#/assets/images/desktop-icon-indicator-download.svg?react";
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { iconHref } from "#/lib/desktop-icons/icon.ts";
 import type { Icon as IconDefinition, IconKind } from "#/lib/desktop-icons/icon.ts";
-import { useDoublePress } from "#/lib/hooks/use-double-press.ts";
+import { useDoublePressLink } from "#/lib/hooks/use-double-press-link.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
-import { isBrowserHandledClick, isFollowingLink, isRepeatClick } from "#/lib/link.ts";
+import { isBrowserHandledClick } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress } from "#/lib/press.ts";
 
 import styles from "./desktop-icon.module.css";
 
-import type { ComponentType, KeyboardEvent, MouseEvent } from "react";
+import type { ComponentType, KeyboardEvent } from "react";
 
 type GlyphIcon = ComponentType<{ className?: string }>;
 
@@ -55,10 +56,10 @@ function Glyph({
 }
 
 /**
- * Memoized because the desktop rebuilds every icon on every frame of a drag (the icon
- * elements are built inside a `map`, which the React Compiler caches as one array rather
- * than per item). Handlers take the icon they belong to as an argument rather than closing
- * over it, so the desktop holds one copy of each and only the icon being dragged re-renders.
+ * Memoized because the desktop rebuilds every icon on every frame of a drag (the icon elements are built inside a
+ * `map`, which the React Compiler caches as one array rather than per item). Handlers take the icon they belong to as
+ * an argument rather than closing over it, so the desktop holds one copy of each and only the icon being dragged
+ * re-renders.
  */
 export const DesktopIcon = memo(function Icon({
   iconDefinition,
@@ -88,20 +89,17 @@ export const DesktopIcon = memo(function Icon({
   onKeyDown: (event: KeyboardEvent, iconDefinition: IconDefinition) => void;
 }) {
   const hasMovedRef = useRef(false);
-  const pressHandlers = useDoublePress({
-    onDoublePress: (event) => {
-      if (!hasMovedRef.current && !isBrowserHandledClick(event)) {
-        onOpen(iconDefinition);
-      }
-    },
+
+  const pressSoundHandlers = usePressSound();
+  const doublePressLinkHandlers = useDoublePressLink({
+    isPressOpenable: () => !hasMovedRef.current,
+    onOpen: () => onOpen(iconDefinition),
   });
   const dragHandlers = usePointerDrag({
     threshold: DRAG_THRESHOLD_PX,
+    canStart: (event) => !isBrowserHandledClick(event), // A modified press follows the link without selecting or moving the icon.
     start: () => {
-      playClickSound();
       onSelect(iconDefinition);
-      hasMovedRef.current = false;
-
       return { x, y };
     },
     onDragMove: (delta, from) => onMoveStart(iconDefinition, from.x + delta.dx, from.y + delta.dy),
@@ -115,16 +113,6 @@ export const DesktopIcon = memo(function Icon({
     },
   });
 
-  function onClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (isFollowingLink(event.currentTarget)) {
-      return;
-    }
-
-    if (hasMovedRef.current || isRepeatClick(event) || !isBrowserHandledClick(event)) {
-      event.preventDefault();
-    }
-  }
-
   return (
     <a
       href={iconHref(iconDefinition)}
@@ -134,20 +122,24 @@ export const DesktopIcon = memo(function Icon({
       style={{ left: x, top: y, width: cellSize }}
       className={styles.icon}
       aria-label={iconDefinition.label}
+      aria-keyshortcuts="Alt+O"
       data-icon={iconDefinition.id}
-      onClick={onClick}
       onDragStart={(event) => event.preventDefault()}
-      onMouseDown={(event) => {
-        if (!isPrimaryPress(event)) {
-          event.preventDefault();
+      // Runs ahead of the drag and double-press handlers, so every primary press starts out unmoved.
+      onPointerDownCapture={(event) => {
+        if (isPrimaryPress(event)) {
+          hasMovedRef.current = false;
         }
       }}
-      {...mergeHandlers(dragHandlers, pressHandlers)}
+      {...mergeHandlers(mergeHandlers(pressSoundHandlers, dragHandlers), doublePressLinkHandlers)}
       onFocus={() => onSelect(iconDefinition)}
       onKeyDown={(event) => onKeyDown(event, iconDefinition)}
     >
       <Glyph kind={iconDefinition.kind} selected={selected} open={open} className={styles.glyph} />
-      <span className={cx(styles.label, selected && styles.selected)}>
+      <span
+        className={cx(styles.label, selected && styles.selected)}
+        aria-hidden="true" // The `aria-label` provides the label to a screen reader.
+      >
         <span className={styles.labelText}>{iconDefinition.label}</span>
         {iconDefinition.kind === "download" && <DownloadDesktopIconIndicator className={styles.downloadIndicator} />}
       </span>

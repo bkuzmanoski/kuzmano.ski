@@ -8,7 +8,7 @@ describe("languageAttributeFor", () => {
     expect(languageAttributeFor(new Intl.NumberFormat("en-US"), "en")).toBeUndefined();
   });
 
-  test("returns the formatter's locale when its language differs from the document's", () => {
+  test("returns the formatter's locale when its language differs from that of the document", () => {
     expect(languageAttributeFor(new Intl.DateTimeFormat("de-DE"), "en")).toBe("de-DE");
     expect(languageAttributeFor(new Intl.NumberFormat("de-DE"), "en")).toBe("de-DE");
   });

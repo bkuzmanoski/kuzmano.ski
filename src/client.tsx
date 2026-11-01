@@ -4,8 +4,10 @@ import { hydrateRoot } from "react-dom/client";
 
 import { contentIndexOf, resolveWindow } from "#/site/windows.ts";
 
-// Loads the entry before hydration to prevent a Suspense boundary from replacing
-// server-rendered content with its fallback while the compiled MDX loads.
+/**
+ * Loads the entry before hydration to prevent a Suspense boundary from replacing server-rendered content with its
+ * fallback while the compiled MDX loads.
+ */
 async function loadInitialContent() {
   try {
     const windowTarget = resolveWindow(window.location.pathname);

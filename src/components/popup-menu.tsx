@@ -2,16 +2,19 @@ import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { Position } from "#/lib/geometry.ts";
+import { useMenuButtonPress } from "#/lib/hooks/use-menu-button-press.ts";
 import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
+import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./popup-menu.module.css";
 
-const OPEN_OPTIONS_KEYS = new Set(["ArrowDown", "ArrowUp"]); // Enter and Space open the options through the button's `click`.
+import type { KeyboardEvent } from "react";
+
+/** Enter and Space open the options through the button's `click`. */
+const OPEN_OPTIONS_KEYS = new Set(["ArrowDown", "ArrowUp"]);
 
 export interface PopupMenuOption<TValue extends string> {
   value: TValue;
@@ -146,9 +149,7 @@ export function PopupMenu<TValue extends string>({
   { "aria-label": string; "aria-labelledby"?: undefined } | { "aria-label"?: undefined; "aria-labelledby": string }
 )) {
   const id = useId();
-  const pressSoundHandlers = usePressSound();
   const [openState, setOpenState] = useState<OpenState | null>(null);
-  const isPressPendingRef = useRef(false);
 
   const labelId = labelledBy ?? `${id}-label`;
   const buttonId = `${id}-button`;
@@ -163,10 +164,11 @@ export function PopupMenu<TValue extends string>({
       current ? null : { button, buttonRect: button.getBoundingClientRect(), ...openingPress },
     );
 
-  function close() {
-    isPressPendingRef.current = false; // A press that opens the options may end on them instead of the button, so its clearing `click` never fires.
-    setOpenState(null);
-  }
+  const menuButtonPressHandlers = useMenuButtonPress({
+    onPress: (event) =>
+      toggle(event.currentTarget, { isPointerHeld: true, pressOrigin: { x: event.clientX, y: event.clientY } }),
+    onActivate: (event) => toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null }),
+  });
 
   return (
     <>
@@ -184,46 +186,15 @@ export function PopupMenu<TValue extends string>({
         aria-expanded={openState !== null}
         aria-controls={openState ? optionsId : undefined}
         disabled={disabled}
-        {...pressSoundHandlers}
-        onMouseDown={(event) => event.preventDefault()} // Prevent the button from reclaiming focus when the options receive it on open.
-        onPointerDown={(event) => {
-          pressSoundHandlers.onPointerDown(event);
-
-          if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled")) {
-            return; // Chromium dispatches pointer events to disabled buttons, including those disabled by a `<fieldset>`.
-          }
-
-          const button = event.currentTarget;
-
-          if (button.hasPointerCapture(event.pointerId)) {
-            button.releasePointerCapture(event.pointerId); // Touch implicitly captures the pointer to its target, preventing a release outside the options from closing them.
-          }
-
-          isPressPendingRef.current = true;
-
-          toggle(button, { isPointerHeld: true, pressOrigin: { x: event.clientX, y: event.clientY } });
-        }}
-        onClick={(event) => {
-          pressSoundHandlers.onClick(event);
-
-          if (isPressPendingRef.current) {
-            // Ignore clicks following a button press, which is already handled by `onPointerDown`. Other clicks come from
-            // Enter, Space, assistive technology, or iOS retargeting a nearby tap's compatibility click to the button.
-            isPressPendingRef.current = false;
-            return;
-          }
-
-          toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null });
-        }}
-        onKeyDown={(event) => {
-          pressSoundHandlers.onKeyDown(event);
-
-          if (OPEN_OPTIONS_KEYS.has(event.key) && openState === null) {
-            event.preventDefault();
-            playClickSound();
-            toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null });
-          }
-        }}
+        {...mergeHandlers(menuButtonPressHandlers, {
+          onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
+            if (OPEN_OPTIONS_KEYS.has(event.key) && openState === null) {
+              event.preventDefault();
+              playClickSound();
+              toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null });
+            }
+          },
+        })}
       >
         <span className={styles.label}>
           {options.map((option, index) =>
@@ -251,7 +222,7 @@ export function PopupMenu<TValue extends string>({
               onChange(option.value);
             }
           }}
-          onClose={close}
+          onClose={() => setOpenState(null)}
         />
       )}
     </>

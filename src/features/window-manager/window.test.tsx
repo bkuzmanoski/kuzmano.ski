@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { cloneElement } from "react";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
@@ -12,6 +13,7 @@ import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { nextAnimationFrame } from "#/test-utils/timers.ts";
 
+import { SCROLL_PANE_VIEWPORT_SELECTOR } from "./scroll-pane.tsx";
 import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window.tsx";
 
 import type { WindowDrag } from "./window.tsx";
@@ -32,7 +34,9 @@ vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
 vi.mock("#/lib/device.ts", () => ({ isMacOS: vi.fn(), isTouchOnly: vi.fn() }));
 
 const BASE_PANE_HEIGHT_PX = 100;
-const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX; // A page overlaps the previous one by one arrow step.
+
+/** A page overlaps the previous one by one arrow step. */
+const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX;
 
 const scrollTops = new WeakMap<Element, number>();
 const replacedProperties: Array<[string, PropertyDescriptor | undefined]> = [];
@@ -184,6 +188,13 @@ function switchAwayAndBack(rerender: (ui: ReactNode) => void, contentKey: string
   (document.activeElement as HTMLElement).blur();
   rerender(windowShowing(contentKey, children));
 }
+
+test("the window renders its header outside the scroll pane's viewport", () => {
+  render(cloneElement(windowShowing("/page", SHORT_PANE_ELEMENT), { header: <div>A header</div> }));
+
+  expect(screen.getByText("A header").closest(SCROLL_PANE_VIEWPORT_SELECTOR)).toBeNull();
+  expect(screen.getByText("A header").nextElementSibling?.querySelector(SCROLL_PANE_VIEWPORT_SELECTOR)).not.toBeNull();
+});
 
 test("the scrollbar arrows are not in the tab order, whether or not the content overflows", () => {
   const { rerender } = render(windowShowing("tall", TALL_PANE_ELEMENT));
@@ -351,7 +362,7 @@ test.each([
   ["the Down arrow key", "ArrowDown"],
   ["the Page Down key", "PageDown"],
   ["the End key", "End"],
-])("a press of %s at the end of the content plays a click sound and does not play a scroll detent", (_label, key) => {
+])("a press of %s at the end of the content plays the click sound and does not play a scroll detent", (_label, key) => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
   scrollPane().scrollTop = 700;
   vi.mocked(playClickSound).mockClear();
@@ -364,7 +375,7 @@ test.each([
   expect(playScrollDetentSound).not.toHaveBeenCalled();
 });
 
-test("a repeat of a held Down arrow key at the end of the content does not play a click sound", () => {
+test("a repeat of a held Down arrow key at the end of the content does not play the click sound", () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
   scrollPane().scrollTop = 700;
   vi.mocked(playClickSound).mockClear();
@@ -560,8 +571,8 @@ test("a press on an inactive window does not trigger a click on the content unde
 
   const target = screen.getByRole("button", { name: "Button" });
 
-  // The press activates the window, so the click that ends it is dispatched to the
-  // content the scrim was covering (see `swallowNextPress` in `/src/lib/press.ts`).
+  // The press activates the window, so the click that ends it is dispatched to the content the scrim was covering (see
+  // `swallowNextPress` in `/src/lib/press.ts`).
   fireEvent.pointerDown(screen.getByRole("region", { name: "Window" }));
   rerender(
     windowShowing(
@@ -616,6 +627,22 @@ test("the window restores focus to itself when its content is replaced", () => {
   rerender(windowShowing("other", TALL_PANE_ELEMENT));
 
   expect(document.activeElement).toBe(screen.getByRole("region", { name: "Window" }));
+});
+
+test("each tap of a double tap on the `Zoom` button zooms the window", () => {
+  const onZoom = vi.fn();
+
+  render(cloneElement(windowShowing("tall", TALL_PANE_ELEMENT), { onZoom }));
+
+  const zoomButton = screen.getByRole("button", { name: "Zoom" });
+
+  for (let tap = 0; tap < 2; tap++) {
+    fireEvent.pointerDown(zoomButton, { pointerType: "touch" });
+    fireEvent.pointerUp(zoomButton, { pointerType: "touch" });
+    fireEvent.click(zoomButton, { detail: 1 });
+  }
+
+  expect(onZoom).toHaveBeenCalledTimes(2);
 });
 
 test("a fixed-size window has neither a zoom control nor a resize control", () => {
@@ -778,8 +805,8 @@ test("a resize drag commits and clears its preview when `pointerup` is dispatche
   fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
   await nextAnimationFrame();
 
-  // Pointer capture ends when the capturing element is removed from the document, so the release is
-  // then dispatched to the element under the pointer rather than to the control.
+  // Pointer capture ends when the capturing element is removed from the document, so the release is then dispatched to
+  // the element under the pointer rather than to the control.
   fireEvent.pointerUp(document.body, { clientX: -50, clientY: 100 });
 
   expect(onResize).toHaveBeenCalledExactlyOnceWith(750, 700);
@@ -813,8 +840,20 @@ test("a tap retargeted from the title bar to a control plays the press sound onc
   fireEvent.pointerUp(windowTitleBar(), { clientX: 0, clientY: 0 });
   fireEvent.click(screen.getByRole("button", { name: "Close" }), { detail: 1 });
 
-  // iOS can retarget a tap near a control to the control, but only the click event follows. The
-  // touch pointer events stay with the element under the finger, which plays the press sound.
+  // iOS can retarget a tap near a control to the control, but only the click event follows. The touch pointer events
+  // stay with the element under the finger, which plays the press sound.
+  expect(playClickSound).toHaveBeenCalledTimes(1);
+});
+
+test("a tap retargeted from the title bar of a maximized window to a control plays the press sound once", () => {
+  render(cloneElement(windowShowing("maximized-press-sound", BUTTON_ELEMENT), { maximized: true }));
+
+  vi.mocked(playClickSound).mockClear();
+
+  fireEvent.pointerDown(windowTitleBar(), { clientX: 0, clientY: 0, button: 0 }); // The touch press.
+  fireEvent.pointerUp(windowTitleBar(), { clientX: 0, clientY: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Close" }), { detail: 1 });
+
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 

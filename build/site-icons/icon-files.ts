@@ -12,11 +12,14 @@ export interface ManifestIcon {
 export interface IconFile {
   fileName: string;
   mediaType: string;
-  manifestIcon: ManifestIcon | null; // `null` for a file the web app manifest does not list.
+  /** `null` for a file the web app manifest does not list. */
+  manifestIcon: ManifestIcon | null;
   contents: Buffer | string;
 }
 
-const MONOGRAM_FILLS = { favicon: 0.9, appIcon: 0.8, maskable: 0.6 }; // Fraction of each icon's width occupied by the monogram.
+/** Fraction of each icon's width occupied by the monogram. */
+const MONOGRAM_FILLS = { favicon: 0.9, appIcon: 0.8, maskable: 0.6 };
+
 const SVG_MEDIA_TYPE = "image/svg+xml";
 const ICO_MEDIA_TYPE = "image/x-icon";
 const PNG_MEDIA_TYPE = "image/png";
@@ -60,11 +63,12 @@ const faviconSvg = (artwork: Artwork, palette: Palette) =>
   />
 </svg>`;
 
-// Render at high density so Sharp downsamples the SVG instead of upscaling its 96 DPI output.
-//
-// Indexed PNGs reduce the size of standalone flat-color icons. ICO frames use full color because
-// `sharp-ico` cannot read indexed PNGs, and palette/transparency metadata outweighs the savings at
-// 48px and below.
+/**
+ * Rasterizes `markup` at high density so Sharp downsamples the SVG instead of upscaling its 96 DPI output.
+ *
+ * Indexed PNGs reduce the size of standalone flat-color icons. ICO frames use full color because `sharp-ico` cannot
+ * read indexed PNGs, and palette/transparency metadata outweighs the savings at 48px and below.
+ */
 const rasterize = (markup: string, size: number, { indexed }: { indexed: boolean }) =>
   sharp(Buffer.from(markup), { density: 512 })
     .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })

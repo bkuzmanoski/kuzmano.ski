@@ -4,16 +4,21 @@ import { isOneOf } from "../guards.ts";
 import { isSteppedValueIn } from "../stepped-range.ts";
 import { readStored } from "../storage.ts";
 
-import { THEME_CHROMA_SCALE_PROPERTY, THEME_CHROMA_SCALE_RANGE } from "./theme-tint.ts";
+import {
+  DEFAULT_THEME_CHROMA_SCALE,
+  DEFAULT_THEME_COLOR,
+  THEME_CHROMA_SCALE_PROPERTY,
+  THEME_CHROMA_SCALE_RANGE,
+  themeColorPropertiesOf,
+} from "./theme-tint.ts";
 
 import type { AccentColorName } from "../accent-colors.ts";
 
-export const APPEARANCE_SETTINGS = ["system", "light", "dark"] as const; // In the order the controls cycle through them.
+/** In the order the controls cycle through them. */
+export const APPEARANCE_SETTINGS = ["system", "light", "dark"] as const;
 
 export type AppearanceSetting = (typeof APPEARANCE_SETTINGS)[number];
 export type ThemeColor = AccentColorName;
-
-export const DEFAULT_THEME_COLOR: ThemeColor = "purple";
 
 export const COLOR_SCHEMES = ["light", "dark"] as const;
 
@@ -27,18 +32,18 @@ export const desktopBackgroundThemeColorStorageKeyFor = (colorScheme: ColorSchem
   `desktop-background-theme-color-${colorScheme}`;
 
 const APPEARANCE_ATTRIBUTE = "data-appearance";
-const THEME_COLOR_ATTRIBUTE = "data-theme-color";
 
 export const THEME_COLOR_SCHEME_ATTRIBUTE = "data-color-scheme";
 export const DESKTOP_BACKGROUND_THEME_COLOR_ATTRIBUTE = "data-desktop-background-theme-color";
 
 export const isAppearanceSetting = isOneOf(APPEARANCE_SETTINGS);
-export const isThemeColor = isOneOf(ACCENT_COLOR_NAMES);
 
 export function themeChromaScaleFrom(rawValue: string | null): number | null {
   const value = rawValue?.trim() ? Number(rawValue) : Number.NaN; // `Number` parses an empty or whitespace-only string as `0`.
   return isSteppedValueIn(value, THEME_CHROMA_SCALE_RANGE) ? value : null;
 }
+
+const isThemeColor = isOneOf(ACCENT_COLOR_NAMES);
 
 export function readStoredThemeTint(): { themeColor: ThemeColor | null; chromaScale: number | null } | null {
   const storedThemeColor = readStored(THEME_COLOR_STORAGE_KEY);
@@ -46,14 +51,6 @@ export function readStoredThemeTint(): { themeColor: ThemeColor | null; chromaSc
   const chromaScale = themeChromaScaleFrom(readStored(THEME_CHROMA_SCALE_STORAGE_KEY));
 
   return themeColor === null && chromaScale === null ? null : { themeColor, chromaScale };
-}
-
-function setRootAttribute(name: string, value: string | null) {
-  if (value === null) {
-    document.documentElement.removeAttribute(name);
-  } else {
-    document.documentElement.setAttribute(name, value);
-  }
 }
 
 export const themeColorMediaFor = (colorScheme: ColorScheme, appearance: AppearanceSetting): string => {
@@ -69,7 +66,11 @@ export const themeColorMediaFor = (colorScheme: ColorScheme, appearance: Appeara
  * change listeners (see `notifyColorChange`).
  */
 export function applyAppearance(appearance: AppearanceSetting) {
-  setRootAttribute(APPEARANCE_ATTRIBUTE, appearance === "system" ? null : appearance);
+  if (appearance === "system") {
+    document.documentElement.removeAttribute(APPEARANCE_ATTRIBUTE);
+  } else {
+    document.documentElement.setAttribute(APPEARANCE_ATTRIBUTE, appearance);
+  }
 
   for (const meta of document.querySelectorAll<HTMLMetaElement>(`meta[${THEME_COLOR_SCHEME_ATTRIBUTE}]`)) {
     meta.setAttribute(
@@ -80,8 +81,8 @@ export function applyAppearance(appearance: AppearanceSetting) {
 }
 
 /**
- * Applies the theme color, chroma scale, or both. Pass `null` to reset a value to the stylesheet default, or omit it
- * to leave it unchanged. This does not notify color change listeners (see `notifyColorChange`).
+ * Applies the theme color, chroma scale, or both. Pass `null` to reset a value to its default, or omit it to leave it
+ * unchanged. This does not notify color change listeners (see `notifyColorChange`).
  *
  * Values are set on `<html>` because `:root` uses them to derive neutral and accent colors inherited by descendants.
  */
@@ -93,13 +94,16 @@ export function applyThemeTint({
   chromaScale?: number | null;
 }) {
   if (themeColor !== undefined) {
-    setRootAttribute(THEME_COLOR_ATTRIBUTE, themeColor === DEFAULT_THEME_COLOR ? null : themeColor);
+    for (const [property, value] of Object.entries(themeColorPropertiesOf(themeColor ?? DEFAULT_THEME_COLOR))) {
+      document.documentElement.style.setProperty(property, value);
+    }
   }
 
-  if (chromaScale === null) {
-    document.documentElement.style.removeProperty(THEME_CHROMA_SCALE_PROPERTY);
-  } else if (chromaScale !== undefined) {
-    document.documentElement.style.setProperty(THEME_CHROMA_SCALE_PROPERTY, String(chromaScale));
+  if (chromaScale !== undefined) {
+    document.documentElement.style.setProperty(
+      THEME_CHROMA_SCALE_PROPERTY,
+      String(chromaScale ?? DEFAULT_THEME_CHROMA_SCALE),
+    );
   }
 }
 

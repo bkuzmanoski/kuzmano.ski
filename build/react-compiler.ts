@@ -10,8 +10,10 @@ export interface CompilerOptimizationFailure {
   reason: string;
 }
 
+/** A location is `GeneratedSource` (a symbol) for a node the compiler synthesized itself. */
 const lineOf = (location: SourceLocation | null | undefined) =>
-  typeof location === "object" && location !== null ? location.start.line : null; // A location is `GeneratedSource` (a symbol) for a node the compiler synthesized itself.
+  typeof location === "object" && location !== null ? location.start.line : null;
+
 const functionLine = (event: LoggerEvent) => ("fnLoc" in event ? lineOf(event.fnLoc) : null);
 
 export function optimizationFailureFrom(
@@ -41,7 +43,10 @@ export const formatOptimizationFailures = (failures: Array<CompilerOptimizationF
     .map(({ filePath, line, reason }) => `  ${filePath}${line === null ? "" : `:${line}`} — ${reason}`)
     .join("\n");
 
-/** Creates a logger for `reactCompilerPreset` that collects optimization failures and a plugin that reports them at the end of the build. */
+/**
+ * Creates a logger for `reactCompilerPreset` that collects optimization failures and a plugin that reports them at the
+ * end of the build.
+ */
 export function reactCompilerOptimizationFailures(): { logger: Logger; plugin: Plugin } {
   const failures: Array<CompilerOptimizationFailure> = [];
   return {

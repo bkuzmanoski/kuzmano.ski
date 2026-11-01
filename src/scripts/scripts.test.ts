@@ -13,9 +13,9 @@ import webShareScript from "#/scripts/web-share.ts?inline-script";
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
 import { runScript } from "#/test-utils/script.ts";
 
-// These tests evaluate the bundled scripts exactly as the browser receives them, covering the
-// plugin, tree-shaking, minification, and runtime behavior. Attribute names are intentionally
-// defined inline because they must match the strings used by the stylesheet.
+// These tests evaluate the bundled scripts exactly as the browser receives them, covering the plugin, tree-shaking,
+// minification, and runtime behavior. Attribute names are intentionally defined inline because they must match the
+// strings used by the stylesheet.
 
 const themeColorMedia = () =>
   [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')].map((meta) => meta.getAttribute("media"));
@@ -35,8 +35,9 @@ function startupThemeColors() {
 
 beforeEach(() => {
   document.documentElement.removeAttribute("data-appearance");
-  document.documentElement.removeAttribute("data-theme-color");
   document.documentElement.style.removeProperty("--theme-chroma-scale");
+  document.documentElement.style.removeProperty("--theme-hue");
+  document.documentElement.style.removeProperty("--color-accent");
   document.documentElement.removeAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE);
   document.documentElement.removeAttribute("data-web-share");
   document.documentElement.style.removeProperty("--device-pixel-ratio");
@@ -102,7 +103,7 @@ describe("theme tint", () => {
     localStorage.setItem("theme-chroma-scale", "1.5");
     runScript(themeTintScript);
 
-    expect(document.documentElement.getAttribute("data-theme-color")).toBe("green");
+    expect(rootStyleProperty("--color-accent")).toBe("var(--accent-green)");
     expect(rootStyleProperty("--theme-chroma-scale")).toBe("1.5");
   });
 
@@ -111,7 +112,7 @@ describe("theme tint", () => {
     localStorage.setItem("theme-chroma-scale", "9");
     runScript(themeTintScript);
 
-    expect(document.documentElement.hasAttribute("data-theme-color")).toBe(false);
+    expect(rootStyleProperty("--color-accent")).toBe("");
     expect(rootStyleProperty("--theme-chroma-scale")).toBe("");
   });
 
@@ -229,16 +230,18 @@ describe("device pixel ratio", () => {
 });
 
 describe("storage failures", () => {
+  const root = () => document.documentElement;
+
   test.for([
-    ["startup sequence", startupSequenceScript, STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE],
-    ["appearance", appearanceScript, "data-appearance"],
-    ["theme tint", themeTintScript, "data-theme-color"],
-  ] as const)("the %s script does not throw when storage access fails", ([, script, attribute]) => {
+    ["startup sequence", startupSequenceScript, () => root().hasAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE)],
+    ["appearance", appearanceScript, () => root().hasAttribute("data-appearance")],
+    ["theme tint", themeTintScript, () => root().style.getPropertyValue("--color-accent") !== ""],
+  ] as const)("the %s script does not throw when storage access fails", ([, script, hasApplied]) => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("Storage access denied.");
     });
 
     expect(() => runScript(script)).not.toThrow();
-    expect(document.documentElement.hasAttribute(attribute)).toBe(false);
+    expect(hasApplied()).toBe(false);
   });
 });

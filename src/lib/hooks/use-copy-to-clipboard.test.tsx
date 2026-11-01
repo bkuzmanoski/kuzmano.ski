@@ -17,7 +17,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// Starts two copies, of which the second starts while the first's write is pending.
+/** Starts two copies, of which the second starts while the first's write is pending. */
 function startTwoCopies() {
   const firstWrite = deferWrite(writeText);
   const secondWrite = deferWrite(writeText);

@@ -10,8 +10,8 @@ export const dateFormatterOf = (format: DateFormat, locale = format.locale): Int
   new Intl.DateTimeFormat(locale, format.options);
 
 /**
- * Writes an ISO 8601 calendar date (`YYYY-MM-DD` or `YYYY-MM`) in `format`. Returns `isoString`
- * unchanged when it does not parse.
+ * Writes an ISO 8601 calendar date (`YYYY-MM-DD` or `YYYY-MM`) in `format`. Returns `isoString` unchanged when it does
+ * not parse.
  */
 export function formatDate(isoString: string, format: Intl.DateTimeFormat): string {
   const timestamp = Date.parse(isoString);
@@ -41,7 +41,7 @@ export function calendarDateIn(timeZone: string, instant: Date): string {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
-// The offset from UTC that `timeZone` observes at `instant`, as `Z` or `±hh:mm`.
+/** The offset from UTC that `timeZone` observes at `instant`, as `Z` or `±hh:mm`. */
 function utcOffsetIn(timeZone: string, instant: number): string {
   const offsetName = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
     .formatToParts(instant)
@@ -60,8 +60,8 @@ const offsetMilliseconds = (offset: string) =>
 export function midnightTimestampIn(timeZone: string, date: string): string {
   const utcMidnight = Date.parse(`${date}T00:00:00Z`);
 
-  // A daylight saving transition between midnight UTC and local midnight changes the offset,
-  // so the offset is read again at the local midnight the first reading implies.
+  // A daylight saving transition between midnight UTC and local midnight changes the offset, so the offset is read
+  // again at the local midnight the first reading implies.
   const offset = utcOffsetIn(timeZone, utcMidnight - offsetMilliseconds(utcOffsetIn(timeZone, utcMidnight)));
 
   return `${date}T00:00:00${offset}`;

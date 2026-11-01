@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { createElement } from "react";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { PAGE_SLUGS } from "#/config/content.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
@@ -8,6 +8,16 @@ import { fakeCoverImage } from "#/test-utils/collection.ts";
 import { collections, pages } from "./catalog.ts";
 import { contentRoute } from "./route-data.ts";
 
+import type * as tanstackRouter from "@tanstack/react-router";
+
+const useParams = vi.hoisted(() => vi.fn());
+const preloadFont = vi.hoisted(() => vi.fn());
+
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof tanstackRouter>()),
+  useParams,
+}));
+vi.mock("#/lib/fonts.ts", () => ({ preloadFont }));
 vi.mock("./catalog.ts", async () => {
   const { PAGES_DIRECTORY_NAME: pagesDirectoryName, PAGE_SLUGS: slugs } = await import("#/config/content.ts");
   const { fakeCollection, fakeCollectionEntries, fakeContentIndex, fakeEntry } =
@@ -24,7 +34,6 @@ vi.mock("./catalog.ts", async () => {
     },
   });
 });
-
 vi.mock("virtual:entry-cover-images", async () => {
   const { PAGES_DIRECTORY_NAME: pagesDirectoryName, PAGE_SLUGS: slugs } = await import("#/config/content.ts");
   const collectionFakes = await import("#/test-utils/collection.ts");
@@ -37,6 +46,14 @@ vi.mock("virtual:entry-cover-images", async () => {
   };
 });
 
+beforeEach(() => {
+  preloadFont.mockClear();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
 const CONTENT_PRELOADED_FONT_FILE_NAMES = [
   "Archivo-Variable.woff2",
@@ -45,15 +62,12 @@ const CONTENT_PRELOADED_FONT_FILE_NAMES = [
 ];
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });
-const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } }); // A one-segment route: a page, or a collection listing.
-const preloadedFontFileNames = () =>
-  [...document.head.querySelectorAll('link[rel="preload"][as="font"]')].map(
-    (link) => link.getAttribute("href")?.split("/").at(-1)?.split("?")[0],
-  );
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
+/** A one-segment route: a page, or a collection listing. */
+const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } });
+
+const preloadedFontFileNames = () =>
+  preloadFont.mock.calls.map(([href]: Array<string>) => href?.split("/").at(-1)?.split("?")[0]);
 
 test("a page exposes its cover image", async () => {
   expect((await loadSegment(DECLARED_PAGE_SLUG)).coverImage).toEqual(fakeCoverImage(DECLARED_PAGE_SLUG));
@@ -96,9 +110,19 @@ test("a collection listing is indexable", async () => {
   expect((await loadSegment("collection")).noindex).toBeUndefined();
 });
 
-test("the content route's component preloads the display, body, and bitmap fonts", () => {
+test.each([
+  ["a page", { segment: DECLARED_PAGE_SLUG }],
+  ["a collection entry", { segment: "collection", slug: "published" }],
+])("the content route's component preloads the display, body, and bitmap fonts for %s", (_kind, params) => {
+  useParams.mockReturnValue(params);
   render(createElement(contentRoute.component));
   expect(preloadedFontFileNames()).toEqual(CONTENT_PRELOADED_FONT_FILE_NAMES);
+});
+
+test("the content route's component does not preload a font for a collection listing", () => {
+  useParams.mockReturnValue({ segment: "collection" });
+  render(createElement(contentRoute.component));
+  expect(preloadFont).not.toHaveBeenCalled();
 });
 
 test("an entry's route data does not include the URLs of the fonts its route preloads", async () => {

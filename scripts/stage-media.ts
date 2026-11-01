@@ -6,33 +6,38 @@ import { parseArgs } from "node:util";
 
 import { isImageDerivativeFileName } from "../build/content/media/derivatives.ts";
 import { buildMediaIndex } from "../build/content/media/media-index.ts";
-import { CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, STYLESHEET_FILE_PATH, fromRoot } from "../build/paths.ts";
+import { CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, fromRoot } from "../build/paths.ts";
 
 import { runCommand } from "./helpers/external-commands.ts";
 
-// Keeps a commit's `/media` aligned with its staged content by staging required derivatives and removing stale
-// ones. It runs `prepare-media` against an index checkout because the working tree may contain uncommitted content.
+// Keeps a commit's `/media` aligned with its staged content by staging required derivatives and removing stale ones. It
+// runs `prepare-media` against an index checkout because the working tree may contain uncommitted content.
 //
-// The pre-commit hook runs this after lint-staged because lint-staged would stage every tracked-file change it
-// makes, including removal of derivatives still required by unstaged working-tree content.
+// The pre-commit hook runs this after lint-staged because lint-staged would stage every tracked-file change it makes,
+// including removal of derivatives still required by unstaged working-tree content.
 
 const ROOT_DIRECTORY_ABSOLUTE_PATH = fromRoot("");
 
-// When the pre-commit hook passes `--if-media-inputs-staged`, this runs only if a staged change touches one of these
-// paths. Changes elsewhere in the media pipeline, such as reference parsing, can also affect required derivatives.
-// The build reports those changes; running without this option stages the resulting derivatives.
-const MEDIA_INPUT_PATHS = [CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, STYLESHEET_FILE_PATH, "build/content/media"];
+/**
+ * When the pre-commit hook passes `--if-media-inputs-staged`, this runs only if a staged change touches one of these
+ * paths. Changes elsewhere in the media pipeline, such as reference parsing, can also affect required derivatives. The
+ * build reports those changes; running without this option stages the resulting derivatives.
+ */
+const MEDIA_INPUT_PATHS = [CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, "build/content/media"];
 
 const REGULAR_FILE_MODES = new Set(["100644", "100755"]);
 
 const runGit = (gitArguments: Array<string>, environment: NodeJS.ProcessEnv = process.env) =>
   runCommand("git", gitArguments, { cwd: ROOT_DIRECTORY_ABSOLUTE_PATH, env: environment });
 const mediaPathOf = (fileName: string) => join(MEDIA_DIRECTORY_PATH, fileName);
-const canonicalPathOf = (path: string) => (existsSync(path) ? realpathSync(path) : path); // Resolves symbolic links, so two spellings of one index file compare equal.
+
+/** Resolves symbolic links, so two spellings of one index file compare equal. */
+const canonicalPathOf = (path: string) => (existsSync(path) ? realpathSync(path) : path);
+
 const isHiddenFileName = (fileName: string) => fileName.startsWith(".");
 const nulSeparatedFieldsIn = (output: string) => output.split("\0").filter((field) => field !== "");
 
-// Reads a line of `git ls-files --stage`, which has the form `<mode> <object ID> <stage>\t<path>`.
+/** Reads a line of `git ls-files --stage`, which has the form `<mode> <object ID> <stage>\t<path>`. */
 function indexEntryOf(line: string) {
   const [mode = "", objectId = ""] = line.slice(0, line.indexOf("\t")).split(" ");
   return { mode, objectId, path: line.slice(line.indexOf("\t") + 1) };
@@ -66,13 +71,15 @@ async function stagedMediaFileNames() {
     .filter((fileName) => !isHiddenFileName(fileName));
 }
 
-// Returns the environments to run each staging command in, one per index it updates.
-//
-// Plain commits, `git commit -a`, and commands outside a commit use the default index, which may be locked as
-// `index.lock`. For `git commit <paths>`, Git runs hooks with a temporary index and later copies only the named paths
-// to the default index, held as `index.lock` until the commit finishes. Media is staged in both indexes so the change
-// remains in the default index. Because Git does not document this behavior, an unknown active index without an
-// `index.lock` causes staging to fail.
+/**
+ * Returns the environments to run each staging command in, one per index it updates.
+ *
+ * Plain commits, `git commit -a`, and commands outside a commit use the default index, which Git may lock as
+ * `index.lock`. For `git commit <paths>`, Git runs hooks with a temporary index and later copies only the named paths
+ * to the default index, held as `index.lock` until the commit finishes. The script stages media in both indexes so the
+ * change remains in the default index. Because Git does not document this behavior, an unknown active index without an
+ * `index.lock` causes staging to fail.
+ */
 async function indexEnvironments(): Promise<Array<NodeJS.ProcessEnv>> {
   const { GIT_INDEX_FILE: activeIndexFileVariable, ...environmentWithoutIndexFile } = process.env;
   const { stdout } = await runGit(
@@ -97,12 +104,14 @@ async function indexEnvironments(): Promise<Array<NodeJS.ProcessEnv>> {
   return [process.env, { ...process.env, GIT_INDEX_FILE: defaultIndexLockFilePath }];
 }
 
-// Materializes the index beneath `snapshotDirectoryPath`, cloning unchanged regular files from the working tree and
-// checking all remaining entries out of the index.
-//
-// `git diff` compares clean-filtered, line-ending-normalized content, so files it considers unchanged may still not
-// match the index byte-for-byte. This also applies to files modified during the commit. Each clone is hashed as it is
-// copied and replaced with the index version when its hash differs from the index object ID.
+/**
+ * Materializes the index beneath `snapshotDirectoryPath`, cloning unchanged regular files from the working tree and
+ * checking all remaining entries out of the index.
+ *
+ * `git diff` compares clean-filtered, line-ending-normalized content, so files it considers unchanged may still not
+ * match the index byte-for-byte. This also applies to files modified during the commit. The function hashes each clone
+ * as it copies it, and replaces the clone with the index version when its hash differs from the index object ID.
+ */
 async function writeIndexSnapshot(snapshotDirectoryPath: string) {
   const [{ stdout: indexListing }, { stdout: unstagedChangeListing }] = await Promise.all([
     runGit(["ls-files", "--stage", "-z"]),
@@ -119,8 +128,8 @@ async function writeIndexSnapshot(snapshotDirectoryPath: string) {
 
   await Promise.all([...cloneDirectoryPaths].map((directoryPath) => mkdir(directoryPath, { recursive: true })));
 
-  // `git diff` does not report every file missing from the working tree (e.g., one marked assume-unchanged or outside
-  // a sparse checkout), so a file that fails to clone is checked out instead.
+  // `git diff` does not report every file missing from the working tree (e.g., one marked assume-unchanged or outside a
+  // sparse checkout), so a file that fails to clone is checked out instead.
   const isClonedResults = await Promise.all(
     cloneCandidateEntries.map(({ path }) =>
       copyFile(fromRoot(path), join(snapshotDirectoryPath, path), constants.COPYFILE_FICLONE).then(
@@ -159,11 +168,13 @@ async function writeIndexSnapshot(snapshotDirectoryPath: string) {
   }
 }
 
-// Updates each index's additions and removals in one `update-index` call. Git writes via a lock file and rename, so
-// a failed update leaves that index unchanged.
-//
-// During `git commit <paths>`, Git updates the temporary index before the default index. If either update fails, the
-// commit aborts and Git discards the temporary index, leaving neither index partially updated.
+/**
+ * Updates each index's additions and removals in one `update-index` call. Git writes via a lock file and rename, so a
+ * failed update leaves that index unchanged.
+ *
+ * During `git commit <paths>`, Git updates the temporary index before the default index. If either update fails, the
+ * commit aborts and Git discards the temporary index, leaving neither index partially updated.
+ */
 async function updateIndexes(
   indexEnvironmentList: Array<NodeJS.ProcessEnv>,
   addedFileNames: Array<string>,
@@ -186,7 +197,7 @@ async function updateIndexes(
   }
 }
 
-// Returns derivative file names required by staged content, or reports an error and returns `null`.
+/** Returns derivative file names required by staged content, or reports an error and returns `null`. */
 async function requiredDerivativeFileNamesIn(snapshotDirectoryPath: string) {
   const snapshotMediaDirectoryPath = join(snapshotDirectoryPath, MEDIA_DIRECTORY_PATH);
 
@@ -194,8 +205,8 @@ async function requiredDerivativeFileNamesIn(snapshotDirectoryPath: string) {
   await symlink(fromRoot("node_modules"), join(snapshotDirectoryPath, "node_modules"));
 
   // Reuses working-tree derivatives so `prepare-media` needs to encode only missing files. Only files with derivative
-  // names are copied, because `prepare-media` removes only those as stale, and any file left in the snapshot is
-  // staged as required.
+  // names are copied, because `prepare-media` removes only those as stale, and any file left in the snapshot is staged
+  // as required.
   const workingTreeDerivativeFileNames = (await fileNamesIn(fromRoot(MEDIA_DIRECTORY_PATH))).filter(
     (fileName) => isImageDerivativeFileName(fileName) && !existsSync(join(snapshotMediaDirectoryPath, fileName)),
   );

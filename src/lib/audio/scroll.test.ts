@@ -191,8 +191,8 @@ describe("silenceScrollIntoView", () => {
       scrollTo(parent, DETENT_PX * frame);
     }
 
-    // Safari animates the scroll that reveals a focused element, so it arrives afterwards as a
-    // run of scroll events rather than as one move that could have been recorded beforehand.
+    // Safari animates the scroll that reveals a focused element, so it arrives afterwards as a run of scroll events
+    // rather than as one move that could have been recorded beforehand.
     expect(detents()).toBe(0);
   });
 
@@ -268,7 +268,7 @@ describe("stepScrollForPress", () => {
     expect(playClickSound).not.toHaveBeenCalled();
   });
 
-  test("plays a click sound, and not a detent, for a press at the scroll boundary", () => {
+  test("plays the click sound, and not a detent, for a press at the scroll boundary", () => {
     const element = fakeScrollViewport();
 
     stepScrollForPress(element, -40, false);
@@ -277,7 +277,7 @@ describe("stepScrollForPress", () => {
     expect(detents()).toBe(0);
   });
 
-  test("plays neither a click sound nor a detent for a repeat at the scroll boundary", () => {
+  test("plays neither the click sound nor a detent for a repeat at the scroll boundary", () => {
     const element = fakeScrollViewport();
 
     stepScrollForPress(element, -40, true);

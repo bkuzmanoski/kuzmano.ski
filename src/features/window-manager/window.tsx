@@ -79,19 +79,22 @@ function keyboardScrollDelta(event: KeyboardEvent, viewport: HTMLElement): numbe
 function TitleBarButton({
   icon,
   label,
+  isTitleBarSilent,
   className,
   onClick,
 }: {
   icon: ReactNode;
   label: string;
+  /** `true` when a press on the title bar does not play the press sound. */
+  isTitleBarSilent: boolean;
   className?: string;
   onClick: () => void;
 }) {
   const [isPressed, setIsPressed] = useState(false);
 
-  // iOS sends the touch press to the title bar when it retargets the tap to this button.
-  // The title bar already plays the press sound, so playing one here would play it twice.
-  const pressSoundHandlers = usePressSound({ playOnClickWithoutPress: false });
+  // iOS sends the touch press to the title bar when it retargets the tap to this button. This button plays the press
+  // sound of that tap only when the title bar does not, so the tap does not play it twice.
+  const pressSoundHandlers = usePressSound({ playsOnClickWithoutPress: isTitleBarSilent });
 
   return (
     <Tooltip label={label} margin={6} className={cx(styles.control, className)}>
@@ -137,9 +140,11 @@ export function Window({
   onResize,
   onFitContentHeight,
   onDrag,
+  header,
   children,
 }: {
-  contentKey: string; // Used to invalidate scroll position when the content changes.
+  /** Used to invalidate scroll position when the content changes. */
+  contentKey: string;
   title: string;
   x: number;
   y: number;
@@ -149,14 +154,22 @@ export function Window({
   focused: boolean;
   maximized: boolean;
   hidden: boolean;
-  unplaced: boolean; // The desktop has not been measured so CSS places the window (see `/src/features/window-manager/window.module.css`).
+  /**
+   * `true` until the window manager measures the desktop, while CSS places the window (see
+   * `/src/features/window-manager/window.module.css`).
+   */
+  unplaced: boolean;
   onClose: () => void;
   onZoom: (() => void) | null;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
-  onResize: ((width: number, height: number) => void) | null; // `null` on a fixed-size window, which also hides the resize control from its scrollbar.
-  onFitContentHeight: ((height: number) => void) | null; // Set on a window that is as tall as its content, which ignores `height` and reports the height it renders at.
+  /** `null` on a fixed-size window, which also hides the resize control from its scrollbar. */
+  onResize: ((width: number, height: number) => void) | null;
+  /** Set on a window that is as tall as its content, which ignores `height` and reports the height it renders at. */
+  onFitContentHeight: ((height: number) => void) | null;
   onDrag: (drag: WindowDrag | null) => void;
+  /** Rendered between the title bar and the scroll pane. */
+  header?: ReactNode;
   children: ReactNode;
 }) {
   const inactiveDescriptionId = useId();
@@ -191,8 +204,8 @@ export function Window({
     return () => observer.disconnect();
   }, [fitsContentHeight]);
 
-  // The desktop is inert until the startup sequence completes, and focusing an element in inert content
-  // has no effect, so the focused window takes the focus only once the startup sequence has completed.
+  // The desktop is inert until the startup sequence completes, and focusing an element in inert content has no effect,
+  // so the focused window takes the focus only once the startup sequence has completed.
   useRestorableFocus(windowRef, { isActive: focused && !hidden && isStartupSequenceComplete, contentKey });
 
   function reportDrag(drag: WindowDrag) {
@@ -229,22 +242,17 @@ export function Window({
       }
     },
   });
-
   const zoomHandlers = useDoublePress({
-    onDoublePress: (event) => {
-      if (!onZoom || (event.target as HTMLElement).closest("button")) {
-        return;
-      }
-
+    acceptsDoublePress: (event) =>
+      Boolean(onZoom) && !(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current),
+    onDoublePress: () => {
       if (maximized) {
         playClickSound();
-        onZoom();
-      } else if (!hasMovedWindowRef.current) {
-        onZoom();
       }
+
+      onZoom?.();
     },
   });
-
   const resizeHandlers = usePointerDrag({
     start: (event) => {
       playClickSound();
@@ -321,8 +329,8 @@ export function Window({
       data-maximized={maximized || undefined}
       onFocus={onFocus}
       onKeyDown={(event) => {
-        // Scrolls the window's content for page-scrolling keys that reach the focused window
-        // instead of its content's scroll container.
+        // Scrolls the window's content for page-scrolling keys that reach the focused window instead of its content's
+        // scroll container.
 
         const viewport = viewportRef.current;
 
@@ -359,15 +367,21 @@ export function Window({
       {/* An inactive window's contents are inert, so the window itself is its only tab stop and
           neither the Tab key nor a screen reader reaches the content its scrim covers. */}
       <div className={styles.contents} inert={!focused}>
-        <header className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
+        <div className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
           {focused && <div className={styles.bars} aria-hidden />}
-          <span className={styles.title}>{title}</span>
+          <span
+            className={styles.title}
+            aria-hidden="true" // The window's `aria-label` provides the title to a screen reader.
+          >
+            {title}
+          </span>
           {focused && (
             <>
               <TitleBarButton
                 className={styles.controlClose}
                 icon={<CloseWindowControl />}
                 label="Close"
+                isTitleBarSilent={maximized}
                 onClick={onClose}
               />
               {onZoom && (
@@ -375,12 +389,14 @@ export function Window({
                   className={styles.controlZoom}
                   icon={<ZoomWindowControl />}
                   label="Zoom"
+                  isTitleBarSilent={maximized}
                   onClick={onZoom}
                 />
               )}
             </>
           )}
-        </header>
+        </div>
+        {header}
         <ScrollPane
           key={contentKey}
           id={contentId}

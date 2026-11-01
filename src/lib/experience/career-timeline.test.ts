@@ -95,7 +95,8 @@ describe("roleDatesLabelPartsOf", () => {
 });
 
 describe("roleDatesLabelOf", () => {
-  // en-AU abbreviates a month to three letters, except June and July, which it writes in full, and September, which it writes as "Sept".
+  // en-AU abbreviates a month to three letters, except June and July, which it writes in full, and September, which it
+  // writes as "Sept".
 
   test("formats a role's dates from its first month to its last month when it has ended", () => {
     expect(roleDatesLabelOf(role({ start: "2015-01", end: "2018-06" }), MONTH_FORMAT)).toBe("Jan 2015–June 2018");

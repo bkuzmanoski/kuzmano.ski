@@ -20,7 +20,7 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-// The grace period is keyed on the parent of a control's wrapper, so a group is two wrappers sharing one.
+/** The tooltip keys its grace period on the parent of a control's wrapper, so a group is two wrappers sharing one. */
 function createGroup() {
   const group = document.createElement("div");
   const wrapper = () => group.appendChild(document.createElement("span"));
@@ -172,8 +172,8 @@ describe("the group grace period", () => {
   test("hiding a tooltip that a later one replaced does not schedule the expiry of the grace period", () => {
     const { first, second } = createGroup();
 
-    // The replacement registers before the tooltip it replaces hides, so the earlier hide must not
-    // schedule an expiry against the grace period the replacement now owns.
+    // The replacement registers before the tooltip it replaces hides, so the earlier hide must not schedule an expiry
+    // against the grace period the replacement now owns.
     resetGroupGracePeriod("first", first);
     resetGroupGracePeriod("second", second);
     startGroupGracePeriod("first");

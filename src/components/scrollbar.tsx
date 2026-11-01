@@ -8,17 +8,22 @@ import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.
 import type { DragDelta } from "#/lib/hooks/use-pointer-drag.ts";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
+import { useTrailingClick } from "#/lib/hooks/use-trailing-click.ts";
 import { clamp } from "#/lib/math.ts";
-import { isPointerClick, isPrimaryPress } from "#/lib/press.ts";
+import { isPrimaryPress } from "#/lib/press.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./scrollbar.module.css";
 
 import type { ReactNode, RefObject } from "react";
 
-export const ARROW_STEP_PX = 40; // The distance one press on a scrollbar arrow scrolls the viewport.
+/** The distance one press on a scrollbar arrow scrolls the viewport. */
+export const ARROW_STEP_PX = 40;
+
 export const ARROW_STEP_REPEAT_INTERVAL_MS = 70;
-export const ARROW_STEP_REPEAT_DELAY_MS = 400; // Delay repeating so an ordinary press does not step twice.
+
+/** How long a held scrollbar arrow waits before it repeats its step, so an ordinary press does not step twice. */
+export const ARROW_STEP_REPEAT_DELAY_MS = 400;
 
 function ScrollArrow({
   direction,
@@ -27,25 +32,18 @@ function ScrollArrow({
 }: {
   direction: "up" | "down";
   hidden: boolean;
-  onStep: (isRepeat: boolean) => void; // `isRepeat` is `true` for each step after the first while the arrow is held.
+  /** `isRepeat` is `true` for each step after the first while the user holds the arrow down. */
+  onStep: (isRepeat: boolean) => void;
 }) {
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimer = useTimer();
-  const arrowRef = useRef<HTMLButtonElement>(null);
-  const hasUnconsumedPressRef = useRef(false);
+  const trailingClick = useTrailingClick();
   const holdControllerRef = useRef<AbortController | null>(null);
 
   // Keep the hold alive until the pointer is released, even if it leaves the arrow's bounds.
-  function endHold(event: PointerEvent) {
+  function endHold() {
     holdControllerRef.current?.abort();
     holdControllerRef.current = null;
-
-    const wasReleasedOnArrow = event.target instanceof Node && arrowRef.current?.contains(event.target);
-
-    if (event.type === "pointercancel" || !wasReleasedOnArrow) {
-      hasUnconsumedPressRef.current = false;
-    }
-
     setIsPressed(false);
     repeatTimer.cancel();
   }
@@ -74,29 +72,27 @@ function ScrollArrow({
 
   return (
     <button
-      ref={arrowRef}
       type="button"
       tabIndex={-1}
       className={cx(styles.arrow, direction === "up" ? styles.arrowUp : styles.arrowDown)}
       style={hidden ? { visibility: "hidden" } : undefined} // Hidden rather than removed, so the arrow keeps its space in the scrollbar.
       aria-label={direction === "up" ? "Scroll up" : "Scroll down"}
-      // A pointer click normally follows a `pointerdown` that already stepped and only clears that
-      // press. A click from an assistive technology has no preceding `pointerdown`, so it steps here.
-      // iOS can retarget a tap's click to the arrow without retargeting its pointer events, in which
-      // case the click has no corresponding press and must step here as well.
+      // A click that ends a press does not step, as its `pointerdown` already stepped. That includes the press Chrome
+      // simulates for a screen reader's activate action. The action in Safari and Firefox has no preceding
+      // `pointerdown`, and iOS can retarget a tap's click to the arrow without retargeting its pointer events, so each
+      // of those steps here.
       onClick={(event) => {
-        if (!isPointerClick(event) || !hasUnconsumedPressRef.current) {
+        if (!trailingClick.consume(event)) {
           onStep(false);
         }
-
-        hasUnconsumedPressRef.current = false;
       }}
+      onPointerUp={trailingClick.onPointerUp}
       onPointerDown={(event) => {
         if (!isPrimaryPress(event)) {
           return;
         }
 
-        hasUnconsumedPressRef.current = true;
+        trailingClick.recordPress();
         beginHold();
         setIsPressed(true);
         onStep(false);
@@ -166,8 +162,8 @@ export function Scrollbar({
     onDragMove: dragScroll,
   });
 
-  // A press on the track jumps to the pressed point, placing the thumb's center under the pointer.
-  // The point pressed becomes the scrolled position and continues from there as a drag.
+  // A press on the track jumps to the pressed point, placing the thumb's center under the pointer. The point pressed
+  // becomes the scrolled position and continues from there as a drag.
   const trackHandlers = usePointerDrag({
     preventDefault: true,
     threshold: DRAG_THRESHOLD_PX,

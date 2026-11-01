@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { createClientStore } from "./client-store.ts";
 
-// The contract is about which snapshot React takes when, so the hook needs a real render to observe.
+/** The contract is about which snapshot React takes when, so the hook needs a real render to observe. */
 function createStoreProbe(serverValue: string, read: () => string) {
   const store = createClientStore(serverValue, read);
   const Probe = () => <output>{store.useValue()}</output>;
@@ -56,8 +56,8 @@ describe("useValue", () => {
     container.innerHTML = renderToString(<Probe />);
     document.body.append(container);
 
-    // A hydration pass that took the client snapshot would render "client" over
-    // markup containing "server", which React recovers from and reports here.
+    // A hydration pass that took the client snapshot would render "client" over markup containing "server", which React
+    // recovers from and reports here.
     const onRecoverableError = vi.fn();
 
     act(() => {

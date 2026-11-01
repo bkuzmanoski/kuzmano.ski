@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { THEME_DEFAULTS } from "virtual:theme-defaults";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { resetThemeTint, setAppearance, setSoundEffects } from "#/lib/settings/settings.ts";
+import { DEFAULT_THEME_CHROMA_SCALE } from "#/lib/settings/theme-tint.ts";
 import { releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
 
 import { ControlPanelBody } from "./control-panel-body.tsx";
@@ -50,7 +50,7 @@ test("choosing a theme color applies and stores it", () => {
   chooseThemeColor("Green");
 
   expect(screen.getByRole("button", { name: "Theme colour: Green" })).toBeTruthy();
-  expect(root.getAttribute("data-theme-color")).toBe("green");
+  expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-green)");
   expect(localStorage.getItem("theme-color")).toBe("green");
 });
 
@@ -73,11 +73,11 @@ test("pressing the `Use Defaults` button returns every setting to its default an
 
   expect(screen.getByRole("radio", { name: "System", checked: true })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Theme colour: Purple" })).toBeTruthy();
-  expect(saturationSlider().getAttribute("value")).toBe(String(THEME_DEFAULTS.chromaScale));
+  expect(saturationSlider().getAttribute("value")).toBe(String(DEFAULT_THEME_CHROMA_SCALE));
   expect(screen.getByRole("radio", { name: "On", checked: true })).toBeTruthy();
   expect(root.hasAttribute("data-appearance")).toBe(false);
-  expect(root.hasAttribute("data-theme-color")).toBe(false);
-  expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe("");
+  expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-purple)");
+  expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe(String(DEFAULT_THEME_CHROMA_SCALE));
   expect(localStorage.length).toBe(0);
 });
 

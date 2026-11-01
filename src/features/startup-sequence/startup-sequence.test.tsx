@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playKeyDownSound, playKeyPressSound, playKeyUpSound, playStartupChimeSound } from "#/lib/audio/sounds.ts";
@@ -28,6 +28,9 @@ beforeEach(() => {
   vi.useFakeTimers();
 });
 afterEach(() => vi.useRealTimers());
+
+const illustration = (container: HTMLElement) =>
+  container.querySelector('img[alt="Illustration of a classic Mac 128K."]')!;
 
 async function renderWaitingForInput() {
   const view = render(<StartupSequence />);
@@ -129,6 +132,25 @@ test("a tap primes audio, plays the key press sound, and begins the startup sequ
   expect(primeAudio).toHaveBeenCalledOnce();
   expect(playKeyPressSound).toHaveBeenCalledOnce();
   expect(playStartupChimeSound).toHaveBeenCalledOnce();
+});
+
+test("the illustration is hidden from assistive technology while the loading cover shows the loading indicator and the begin prompt", async () => {
+  const { container } = render(<StartupSequence />);
+
+  expect(illustration(container).closest("[aria-hidden]")).not.toBeNull();
+
+  await act(async () => {
+    vi.advanceTimersByTime(MIN_LOADING_DURATION_MS);
+    await Promise.resolve();
+  });
+
+  expect(screen.getByText("Press any key to begin")).toBeDefined();
+  expect(illustration(container).closest("[aria-hidden]")).not.toBeNull();
+});
+
+test("the begin prompt is one element containing only its text", async () => {
+  await renderWaitingForInput();
+  expect(screen.getByText("Press any key to begin").childElementCount).toBe(0);
 });
 
 test("unmounting stops listening for the begin gesture", async () => {

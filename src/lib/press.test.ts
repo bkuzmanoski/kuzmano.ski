@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { MAX_CLICK_DELAY_MS, swallowNextPress } from "./press.ts";
+import { MAX_CLICK_DELAY_MS, isPointerClick, swallowNextPress } from "./press.ts";
 
 beforeEach(() => vi.useFakeTimers());
 
@@ -14,21 +14,34 @@ function pressTarget() {
   const target = document.createElement("button");
   const onClick = vi.fn();
   const onMouseDown = vi.fn();
+  const onDoubleClick = vi.fn();
 
   target.addEventListener("click", onClick);
   target.addEventListener("mousedown", onMouseDown);
+  target.addEventListener("dblclick", onDoubleClick);
   document.body.append(target);
 
   return {
     onClick,
     onMouseDown,
+    onDoubleClick,
     click: () => target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })),
     mouseDown: () => target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })),
+    doubleClick: () => target.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true })),
     press: () => target.dispatchEvent(new Event("pointerdown", { bubbles: true })),
   };
 }
 
-test("the focus change of the swallowed press is prevented, while its mouse down event is still dispatched to its target", () => {
+test("`isPointerClick` returns `false` for a `click` event with a `detail` of `1` and an empty `pointerType`", () => {
+  expect(isPointerClick(Object.assign(new MouseEvent("click", { detail: 1 }), { pointerType: "" }))).toBe(false); // Firefox dispatches this `click` for a screen reader's activate action.
+});
+
+test("`isPointerClick` returns `true` for a `click` event with a `pointerType` of `mouse`, or without a `pointerType`", () => {
+  expect(isPointerClick(Object.assign(new MouseEvent("click", { detail: 1 }), { pointerType: "mouse" }))).toBe(true);
+  expect(isPointerClick(new MouseEvent("click", { detail: 1 }))).toBe(true);
+});
+
+test("swallowing the next press prevents its focus change, while its mouse down event still reaches its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -37,7 +50,7 @@ test("the focus change of the swallowed press is prevented, while its mouse down
   expect(target.onMouseDown).toHaveBeenCalledTimes(1);
 });
 
-test("the click that ends the press is swallowed before it is dispatched to its target", () => {
+test("swallowing the next press stops the click that ends it before the click reaches its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -46,7 +59,7 @@ test("the click that ends the press is swallowed before it is dispatched to its 
   expect(target.onClick).not.toHaveBeenCalled();
 });
 
-test("the focus change of a press that follows the swallowed one is not prevented", () => {
+test("swallowing the next press does not prevent the focus change of the press after it", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -56,7 +69,7 @@ test("the focus change of a press that follows the swallowed one is not prevente
   expect(target.mouseDown()).toBe(true);
 });
 
-test("only one click is swallowed", () => {
+test("a second click after the swallowed press reaches its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -66,7 +79,28 @@ test("only one click is swallowed", () => {
   expect(target.onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a click after the next pointer down event is not swallowed", () => {
+test("swallowing the next press stops the double click that follows its click before the double click reaches its target", () => {
+  const target = pressTarget();
+
+  swallowNextPress();
+  target.click();
+  target.doubleClick();
+
+  expect(target.onDoubleClick).not.toHaveBeenCalled();
+});
+
+test("a double click after the next pointer down event reaches its target", () => {
+  const target = pressTarget();
+
+  swallowNextPress();
+  target.click();
+  target.press();
+  target.doubleClick();
+
+  expect(target.onDoubleClick).toHaveBeenCalledOnce();
+});
+
+test("a click after the next pointer down event reaches its target", () => {
   const target = pressTarget();
 
   swallowNextPress();
@@ -76,7 +110,7 @@ test("a click after the next pointer down event is not swallowed", () => {
   expect(target.onClick).toHaveBeenCalledTimes(1);
 });
 
-test("a click once `MAX_CLICK_DELAY_MS` has passed is not swallowed", () => {
+test("a click once `MAX_CLICK_DELAY_MS` has passed reaches its target", () => {
   const target = pressTarget();
 
   swallowNextPress();

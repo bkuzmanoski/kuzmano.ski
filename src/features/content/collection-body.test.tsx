@@ -2,15 +2,22 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { EntryCoverImagesContext } from "#/lib/content/entry-cover-images.ts";
-import type { CoverImage } from "#/lib/content/media.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
-import { fakeCollection, fakeCollectionEntries, fakeCoverImage, fakeEntry } from "#/test-utils/collection.ts";
+import type { Collection } from "#/site/catalog.ts";
+import { collection as COLLECTION, collectionEntries as COLLECTION_ENTRIES } from "#/test-utils/catalog.ts";
+import { fakeCollection, fakeEntry } from "#/test-utils/collection.ts";
+import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
 
-import { CollectionEntryList, EMPTY_COLLECTION_MESSAGE, UNCATEGORIZED_LABEL } from "./collection-entry-list.tsx";
+import {
+  CollectionBody,
+  CollectionColumnHeadings,
+  EMPTY_COLLECTION_MESSAGE,
+  UNCATEGORIZED_LABEL,
+} from "./collection-body.tsx";
 
+vi.mock("#/site/catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
 vi.mock("#/lib/window-manager/context.ts", async () =>
-  (await import("#/test-utils/window-manager.ts")).windowManagerMock({ actions: { open } }),
+  (await import("#/test-utils/window-manager.ts")).windowManagerMock({ actions: { open }, content: openWindows }),
 );
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playHoverSound }),
@@ -20,34 +27,43 @@ vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
 );
 
 const open = vi.hoisted(() => vi.fn());
+const openWindows = vi.hoisted(() => vi.fn<() => { entry?: { route: string; title: string } }>(() => ({})));
 const playHoverSound = vi.hoisted(() => vi.fn());
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
 
-const COLLECTION_ENTRIES = fakeCollectionEntries("newest", "middle", "oldest");
-const COLLECTION = fakeCollection(COLLECTION_ENTRIES);
-const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
-const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
-
 beforeEach(() => {
   open.mockClear();
+  openWindows.mockReset();
+  openWindows.mockReturnValue({});
   playHoverSound.mockClear();
   scrollIntoViewSilently.mockClear();
   vi.mocked(playClickSound).mockClear();
 });
 
+const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
+const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
+const targetOf = (collection: Collection) => ({ id: "collection" as const, title: collection.title, collection });
+
+function showEntryInWindow(slug: string | null) {
+  openWindows.mockReturnValue(slug === null ? {} : { entry: { route: COLLECTION.routeOf(slug), title: slug } });
+}
+
 function renderList(activeSlug: string | null) {
-  render(<CollectionEntryList activeSlug={activeSlug} collection={COLLECTION} />);
+  showEntryInWindow(activeSlug);
+  render(<CollectionBody target={targetOf(COLLECTION)} />);
   return screen.getAllByRole("link");
 }
 
-// The part of `Window` the list registers with, repeated here so the suite does not render the window's chrome.
+/** The part of `Window` the list registers with, repeated here so the suite does not render the window's chrome. */
 function renderListInWindow(activeSlug: string | null) {
+  showEntryInWindow(activeSlug);
+
   const keyDownHandlers = createWindowKeyDownHandlers();
 
   render(
     <section tabIndex={0} aria-label="Window" onKeyDown={keyDownHandlers.handle}>
       <WindowKeyDownContext value={keyDownHandlers}>
-        <CollectionEntryList activeSlug={activeSlug} collection={COLLECTION} />
+        <CollectionBody target={targetOf(COLLECTION)} />
       </WindowKeyDownContext>
     </section>,
   );
@@ -55,66 +71,67 @@ function renderListInWindow(activeSlug: string | null) {
   return { windowRegion: screen.getByRole("region"), links: screen.getAllByRole("link") };
 }
 
-function renderEntryWithCoverImage(slug: string, coverImage: CoverImage) {
-  const collectionWithCoverImage = fakeCollection([fakeEntry(slug)]);
-  return render(
-    <EntryCoverImagesContext value={{ [collectionWithCoverImage.entryKeyOf(slug)]: coverImage }}>
-      <CollectionEntryList activeSlug={null} collection={collectionWithCoverImage} />
-    </EntryCoverImagesContext>,
-  );
-}
-
-test("the cover image thumbnail does not contribute to the entry link's accessible name", () => {
-  const { container } = renderEntryWithCoverImage("newest", fakeCoverImage("newest"));
-
-  expect(container.querySelector("img")?.getAttribute("alt")).toBe("");
-  expect(screen.getByRole("link", { name: "newest" })).toBeDefined();
-});
-
-test("an entry shows its description and its category, or `Uncategorized` when its frontmatter omits one", () => {
+test("an entry shows its category, or `Uncategorized` when its frontmatter omits one, and omits its description", () => {
   const categorizedCollection = fakeCollection([
     fakeEntry("categorized", { description: "A description.", category: "Category" }),
     fakeEntry("uncategorized", { description: "Another description." }),
   ]);
 
-  render(<CollectionEntryList activeSlug={null} collection={categorizedCollection} />);
+  render(<CollectionBody target={targetOf(categorizedCollection)} />);
 
   const [categorizedRow, uncategorizedRow] = screen.getAllByRole("link");
 
-  expect(categorizedRow?.textContent).toContain("A description.");
   expect(categorizedRow?.textContent).toContain("Category");
-  expect(uncategorizedRow?.textContent).toContain("Another description.");
+  expect(categorizedRow?.textContent).not.toContain("A description.");
   expect(uncategorizedRow?.textContent).toContain(UNCATEGORIZED_LABEL);
+  expect(uncategorizedRow?.textContent).not.toContain("Another description.");
 });
 
-test("a categorized entry's link is named by its title and described by its description, category, and date", () => {
-  render(
-    <CollectionEntryList
-      activeSlug={null}
-      collection={fakeCollection([fakeEntry("entry", { description: "A description.", category: "Category" })])}
-    />,
-  );
-  expect(screen.getByRole("link", { name: "entry", description: /^A description\. Category \S/ })).toBeDefined();
+test("the `lang` attribute of an entry's date names the browser's locale when its language differs from that of the document", () => {
+  vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
+  renderList(null);
+
+  expect(document.querySelector("time")?.getAttribute("lang")).toBe("de-DE");
 });
 
-test("an uncategorized entry's link is named by its title and described by its description and date", () => {
-  render(
-    <CollectionEntryList
-      activeSlug={null}
-      collection={fakeCollection([fakeEntry("entry", { description: "A description." })])}
-    />,
-  );
-  expect(screen.getByRole("link", { name: "entry", description: /^A description\. \S/ })).toBeDefined();
+test("the active entry has the `aria-current` attribute and renders a different icon from the other entries", () => {
+  const [activeLink, otherLink] = renderList(COLLECTION_ENTRIES[0]!.slug);
+
+  expect(activeLink?.getAttribute("aria-current")).toBe("true");
+  expect(otherLink?.hasAttribute("aria-current")).toBe(false);
+  expect(activeLink?.querySelector("svg")?.innerHTML).not.toBe(otherLink?.querySelector("svg")?.innerHTML);
+});
+
+test("a categorized entry's link is named by its title and described by its category and date", () => {
+  render(<CollectionBody target={targetOf(fakeCollection([fakeEntry("entry", { category: "Category" })]))} />);
+  expect(screen.getByRole("link", { name: "entry", description: /^Category \S/ })).toBeDefined();
+});
+
+test("an uncategorized entry's link is named by its title and described by its date", () => {
+  render(<CollectionBody target={targetOf(fakeCollection([fakeEntry("entry")]))} />);
+  expect(screen.getByRole("link", { name: "entry", description: /^\S/ })).toBeDefined();
   expect(screen.queryByRole("link", { description: new RegExp(UNCATEGORIZED_LABEL) })).toBeNull();
 });
 
+test("the list sets the `role` attribute to `list`, and each entry's link hides its contents from assistive technology", () => {
+  const [link] = renderList(null);
+
+  expect(screen.getByRole("list").getAttribute("role")).toBe("list");
+  expect([...link!.children].every((cell) => cell.getAttribute("aria-hidden") === "true")).toBe(true);
+});
+
 test("the column headings are hidden from assistive technology", () => {
-  render(<CollectionEntryList activeSlug={null} collection={COLLECTION} />);
+  render(<CollectionColumnHeadings collection={COLLECTION} />);
   expect(screen.getByText("Title").closest("[aria-hidden='true']")).not.toBeNull();
 });
 
+test("the column headings render `null` for a collection without entries", () => {
+  const { container } = render(<CollectionColumnHeadings collection={{ ...COLLECTION, list: () => [] }} />);
+  expect(container.firstChild).toBeNull();
+});
+
 test("a collection without entries shows the empty collection message instead of a list", () => {
-  render(<CollectionEntryList activeSlug={null} collection={{ ...COLLECTION, list: () => [] }} />);
+  render(<CollectionBody target={targetOf({ ...COLLECTION, list: () => [] })} />);
 
   expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
   expect(screen.queryByRole("list")).toBeNull();
@@ -125,7 +142,7 @@ test("the list is a single tab stop, on the active entry", () => {
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
-test("the tab stop falls on the first entry when none is active", () => {
+test("the tab stop falls on the first entry when no entry is active", () => {
   const links = renderList(null);
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links[0]]);
 });
@@ -135,9 +152,11 @@ test("the arrow keys move the focus along the list", () => {
 
   links[0]!.focus();
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
+
   expect(document.activeElement).toBe(links[1]);
 
   fireEvent.keyDown(links[1]!, { key: "ArrowUp" });
+
   expect(document.activeElement).toBe(links[0]);
 });
 
@@ -220,15 +239,15 @@ test("the Enter and Space keys open the focused entry", () => {
   expect(open).toHaveBeenLastCalledWith(routeOf(LAST_INDEX));
 });
 
-test("pressing an entry with the mouse plays a click sound", () => {
+test("pressing an entry with the mouse plays the click sound", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
-  fireEvent.pointerDown(links[1]!, { pointerType: "mouse" });
+  pressWithMouse(links[1]!);
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a tap plays a click sound on its `click` event, but not when scrolling cancels it", () => {
+test("a tap plays the click sound on its `click` event, but not when scrolling cancels it", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
@@ -251,7 +270,7 @@ test("a press on an entry prevents the native focus, then focuses the entry and 
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
 
-  expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The default behavior was prevented.
+  expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The link prevented the default behavior.
   expect(document.activeElement).toBe(links[1]);
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
@@ -268,27 +287,81 @@ test.each([
 
   scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
 
-  expect(fireEvent.mouseDown(links[1]!, press)).toBe(false); // Only the native focus is prevented, not the link's own click.
+  expect(fireEvent.mouseDown(links[1]!, press)).toBe(false); // The link prevented only the native focus, not its own click.
   expect(focus).not.toHaveBeenCalled();
   expect(document.activeElement).not.toBe(links[1]);
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
-test("a press opens the entry rather than following the link", () => {
+test("a plain press only focuses the entry, so the browser does not follow the link", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
-  const click = fireEvent.click(links[1]!);
 
-  expect(click).toBe(false); // The default behavior was prevented.
-  expect(open).toHaveBeenCalledWith(routeOf(1));
+  fireEvent.mouseDown(links[1]!, { button: 0, detail: 1 });
+
+  expect(document.activeElement).toBe(links[1]);
+  expect(fireEvent.click(links[1]!, { detail: 1 })).toBe(false); // The link prevented the default behavior.
+  expect(open).not.toHaveBeenCalled();
 });
+
+test("a plain double press opens the entry", () => {
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
+
+  fireEvent.doubleClick(links[1]!);
+
+  expect(open).toHaveBeenCalledExactlyOnceWith(routeOf(1));
+});
+
+test("a double tap opens the entry and plays the click sound, and a single tap does not open it", () => {
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
+  const tap = () => {
+    fireEvent.pointerDown(links[1]!, { pointerType: "touch" });
+    fireEvent.pointerUp(links[1]!, { pointerType: "touch" });
+  };
+
+  tap();
+
+  expect(open).not.toHaveBeenCalled();
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  tap();
+
+  expect(open).toHaveBeenCalledExactlyOnceWith(routeOf(1));
+  expect(playClickSound).toHaveBeenCalledOnce();
+
+  fireEvent.click(links[1]!, { detail: 2 }); // The `click` of the second tap, which `useDoublePress` swallows.
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test.each(SCREEN_READER_ACTIVATIONS)(
+  "a screen reader's activate action in %s opens the entry without playing the click sound",
+  (_browser, activate) => {
+    const links = renderList(COLLECTION_ENTRIES[0]!.slug);
+
+    expect(activate(links[1]!)).toBe(false); // The link prevented the default behavior.
+    expect(open).toHaveBeenCalledExactlyOnceWith(routeOf(1));
+    expect(playClickSound).not.toHaveBeenCalled();
+  },
+);
 
 test("a modified or middle press follows the link rather than opening the entry", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
   for (const modifier of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }]) {
-    expect(fireEvent.click(links[1]!, modifier)).toBe(true);
+    expect(fireEvent.click(links[1]!, { detail: 1, ...modifier })).toBe(true);
   }
 
-  expect(fireEvent.click(links[1]!, { button: 1 })).toBe(true);
+  expect(fireEvent.click(links[1]!, { detail: 1, button: 1 })).toBe(true);
+  expect(open).not.toHaveBeenCalled();
+});
+
+test("a modified double press follows the link once, and does not also open the entry", () => {
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
+
+  expect(fireEvent.click(links[1]!, { detail: 1, metaKey: true })).toBe(true);
+  expect(fireEvent.click(links[1]!, { detail: 2, metaKey: true })).toBe(false); // The link prevented the default behavior of the repeated click.
+
+  fireEvent.doubleClick(links[1]!, { metaKey: true });
+
   expect(open).not.toHaveBeenCalled();
 });

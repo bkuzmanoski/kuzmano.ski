@@ -7,13 +7,14 @@ import { clamp } from "../math.ts";
 
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
 
-// Marks an item as belonging to one list, by that list's own id. Spread from `itemProps`
-// rather than set by the caller, so an item cannot be navigable but unreachable. The id
-// prevents a list from claiming the items of another nested inside it: a container search
-// reaches the whole subtree, so the mark has to identify which list the item belongs to.
+/**
+ * Marks an item as belonging to one list, by that list's own ID. Spread from `itemProps` rather than set by the caller,
+ * so an item cannot be navigable but unreachable. The id prevents a list from claiming the items of another nested
+ * inside it: a container search reaches the whole subtree, so the mark has to identify which list the item belongs to.
+ */
 const ITEM_ATTRIBUTE = "data-list-item";
 
-// Where each key moves the focus, from the item that received it.
+/** Where each key moves the focus, from the item that received it. */
 const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number) | undefined> = {
   ArrowUp: (index) => index - 1,
   ArrowDown: (index) => index + 1,
@@ -21,8 +22,10 @@ const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number)
   End: (_index, lastIndex) => lastIndex,
 };
 
-// Where each key moves the focus from outside the list. Each arrow key focuses the item at the end
-// of the list it points away from, as a combobox's arrow keys do when they open its popup.
+/**
+ * Where each key moves the focus from outside the list. Each arrow key focuses the item at the end of the list it
+ * points away from, like a combobox's arrow keys when they open its popup.
+ */
 const OUTSIDE_KEY_TARGETS: Record<string, ((lastIndex: number) => number) | undefined> = {
   ArrowUp: (lastIndex) => lastIndex,
   ArrowDown: () => 0,
@@ -35,8 +38,8 @@ function itemAt(list: HTMLElement | null, listId: string, index: number) {
 
   let matchedIndex = -1;
 
-  // The id is compared rather than selected on: `useId` values are
-  // opaque so this lookup must not assume they are selector-safe.
+  // The id is compared rather than selected on: `useId` values are opaque so this lookup must not assume they are
+  // selector-safe.
   for (const item of items) {
     if (item.getAttribute(ITEM_ATTRIBUTE) === listId && ++matchedIndex === index) {
       return item;
@@ -54,10 +57,9 @@ function focusItem(item: HTMLElement) {
 /**
  * Keyboard navigation for a vertical list.
  *
- * The items are read back from `listRef` rather than collected as they mount: the DOM
- * already holds them, in order, for exactly as long as they are rendered. A registry of
- * its own would have to be filled by a ref on every item, emptied as items unmount, and
- * kept from being read past its end once the list shrinks.
+ * The items are read back from `listRef` rather than collected as they mount: the DOM already holds them, in order, for
+ * exactly as long as they are rendered. A registry of its own would have to be filled by a ref on every item, emptied
+ * as items unmount, and kept from being read past its end once the list shrinks.
  */
 export function useListNavigation(
   listRef: RefObject<HTMLElement | null>,
@@ -92,9 +94,8 @@ export function useListNavigation(
       tabIndex: index === tabStopIndex ? 0 : -1,
       onFocus: () => setFocusedIndex(index),
       onMouseDown: (event: MouseEvent<HTMLElement>) => {
-        // A handler merged ahead of this one (see `mergeHandlers`) may prevent the default
-        // to opt a press out of this hook's own handling, e.g. one the browser should
-        // keep, such as a link opened in a new tab.
+        // A handler merged ahead of this one (see `mergeHandlers`) may prevent the default to opt a press out of this
+        // hook's own handling (e.g., a press that opens a link in a new tab).
         if (event.defaultPrevented) {
           return;
         }
@@ -128,9 +129,8 @@ export function useListNavigation(
     };
   }
 
-  // Moves the focus into the list for a key pressed while an element outside it, such as the window
-  // that contains it, has the focus. It prevents the default of a key it moves the focus for, and
-  // ignores the event otherwise.
+  // Moves the focus into the list for a key pressed while an element outside it, such as the window that contains it,
+  // has the focus. It prevents the default of a key it moves the focus for, and ignores the event otherwise.
   function onKeyDownOutsideList(event: KeyboardEvent) {
     const targetIndex = OUTSIDE_KEY_TARGETS[event.key]?.(count - 1);
     const item = targetIndex === undefined ? null : itemAt(listRef.current, listId, targetIndex);

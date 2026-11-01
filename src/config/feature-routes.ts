@@ -4,7 +4,8 @@ interface FeatureRouteSpec {
   route: string;
   title: string;
   description: string;
-  isIndexed: boolean; // `false` marks the document noindex and leaves the route out of the sitemap.
+  /** `false` marks the document noindex and leaves the route out of the sitemap. */
+  isIndexed: boolean;
 }
 
 /** Routes for UI rather than content files, keyed by the ID of the window each one opens. */

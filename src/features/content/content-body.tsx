@@ -27,7 +27,7 @@ import { Video } from "./video.tsx";
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
 
-// The elements and components any entry can use without importing them. These load with every page.
+/** The elements and components any entry can use without importing them. These load with every page. */
 const MDX_COMPONENTS: MDXComponents = {
   h2: (props: ComponentProps<"h2">) => <EntrySectionHeading level={2} {...props} />,
   h3: (props: ComponentProps<"h3">) => <EntrySectionHeading level={3} {...props} />,
@@ -43,8 +43,10 @@ const MDX_COMPONENTS: MDXComponents = {
   Waitlist,
 };
 
-// React calls the body's ref callback before this one, so the rail clearances, which
-// move the elements after them, are set before the fragment target is scrolled to.
+/**
+ * React calls the body's ref callback before this one, so the body sets the rail clearances, which move the elements
+ * after them, before this callback scrolls to the fragment target.
+ */
 function revealInitialFragmentTarget(article: HTMLElement | null) {
   if (article) {
     revealFragmentTarget(article, window.location.hash);
@@ -52,8 +54,8 @@ function revealInitialFragmentTarget(article: HTMLElement | null) {
 }
 
 export function ContentBody({ route, target }: { route: string; target: EntryTarget }) {
-  // Read the module with `use()` rather than the route loader, as loader data must be serializable.
-  // The content index memoizes the promise `load` returns, so each render reads the same one.
+  // Read the module with `use()` rather than the route loader, as loader data must be serializable. The content index
+  // memoizes the promise `load` returns, so each render reads the same one.
   const { default: MDXContent, stylesheetClassNames } = use(contentIndexOf(target).load(target.slug));
 
   return (

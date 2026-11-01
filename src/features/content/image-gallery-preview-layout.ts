@@ -8,14 +8,19 @@ import type { DragEvent, PointerEvent as ReactPointerEvent, RefObject } from "re
 const AREA_CENTER: Position = { x: 0, y: 0 };
 const UNZOOMED: Transform = { scale: 1, x: 0, y: 0 };
 const SCROLL_ZOOM_RATE_PER_PX = 0.002;
-const PINCH_SCROLL_ZOOM_RATE_PER_PX = 0.01; // Trackpad pinch deltas are smaller than that of a scroll event.
-const SCROLL_LINE_HEIGHT_PX = 16; // The distance of a line for a wheel event with deltas in lines.
+
+/** Trackpad pinch deltas are smaller than that of a scroll event. */
+const PINCH_SCROLL_ZOOM_RATE_PER_PX = 0.01;
+
+/** The distance of a line for a wheel event with deltas in lines. */
+const SCROLL_LINE_HEIGHT_PX = 16;
 
 interface PreviewImageLayout {
   naturalSize: Size;
   fittedSize: Size;
   areaSize: Size;
-  maxScale: number; // The scale at which the fitted size reaches the natural size.
+  /** The scale at which the fitted size reaches the natural size. */
+  maxScale: number;
 }
 
 interface ZoomGesture {
@@ -25,15 +30,19 @@ interface ZoomGesture {
 }
 
 interface PreviewImageState {
-  layout: PreviewImageLayout | null; // `null` until the image's natural size is known.
+  /** `null` until the image's natural size is known. */
+  layout: PreviewImageLayout | null;
   zoom: Transform;
   pointers: Map<number, Position>;
   gesture: ZoomGesture | null;
-  hasPinched: boolean; // Whether the current or previous gesture included a pinch.
+  /** Whether the current or previous gesture included a pinch. */
+  hasPinched: boolean;
 }
 
-// Returns `zoom` at `scale`, moved so the point of the image that was at `from` is at `to`, and kept
-// from uncovering the image area along an axis the image fills.
+/**
+ * Returns `zoom` at `scale`, moved so the point of the image that was at `from` is at `to`, and kept from uncovering
+ * the image area along an axis the image fills.
+ */
 function zoomedBy(zoom: Transform, from: Position, to: Position, scale: number, layout: PreviewImageLayout) {
   const nextScale = clamp(scale, 1, layout.maxScale);
   const ratio = nextScale / zoom.scale;
@@ -47,7 +56,7 @@ function zoomedBy(zoom: Transform, from: Position, to: Position, scale: number, 
   };
 }
 
-// The midpoint of the pointers, and the distance between the first two, or `null` for a single pointer.
+/** The midpoint of the pointers, and the distance between the first two, or `null` for a single pointer. */
 function touchesOf(pointers: Map<number, Position>) {
   const [first, second] = [...pointers.values()];
 
@@ -84,9 +93,9 @@ function render(state: PreviewImageState, previewImage: HTMLElement) {
   const { naturalSize, fittedSize } = state.layout;
   const { scale, x, y } = state.zoom;
 
-  // Rounded rather than floored, so a scale computed as the natural size over the fitted size reaches the natural
-  // size despite floating-point error. The fitted size of each side is floored separately, so the height at the
-  // largest scale can round past the natural height.
+  // Rounded rather than floored, so a scale computed as the natural size over the fitted size reaches the natural size
+  // despite floating-point error. The fitted size of each side is floored separately, so the height at the largest
+  // scale can round past the natural height.
   const width = Math.min(naturalSize.width, Math.round(fittedSize.width * scale));
   const height = Math.min(naturalSize.height, Math.round(fittedSize.height * scale));
 
@@ -172,9 +181,9 @@ function moveGesture(state: PreviewImageState, previewImage: HTMLElement) {
 }
 
 /**
- * Lays out the preview image at whole-pixel dimensions, using its natural size when possible or scaled down to
- * fit the image area. This matches the stylesheet's whole-pixel centering. Until the natural dimensions are
- * available, the stylesheet determines the image bounds.
+ * Lays out the preview image at whole-pixel dimensions, using its natural size when possible or scaled down to fit the
+ * image area. This matches the stylesheet's whole-pixel centering. Until the natural dimensions are available, the
+ * stylesheet determines the image bounds.
  */
 export function usePreviewImageLayout(
   previewRef: RefObject<HTMLDialogElement | null>,

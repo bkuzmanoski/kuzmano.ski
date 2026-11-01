@@ -6,17 +6,17 @@ import { Route as rootRoute } from "#/routes/__root.tsx";
 
 import type { RootRouteOptions } from "@tanstack/react-router";
 
-// The shell renders the document itself and cannot mount in the testing library's container.
-// These tests cover routing, not the document, so the shell is omitted. The cast is needed
-// because `options` uses the type shared by all routes rather than the root route's type.
+// The shell renders the document itself and cannot mount in the testing library's container. These tests cover routing,
+// not the document, so the shell is omitted. The cast is needed because `options` uses the type shared by all routes
+// rather than the root route's type.
 (rootRoute.options as RootRouteOptions).shellComponent = undefined;
 
 /**
  * Renders the real route tree at `route`, allowing load errors to surface during rendering.
  *
- * Because this loads every route module, tests that mock a module used by the desktop must mock
- * all of its dependencies. For isolated component tests that only need router context for links,
- * use `renderInRouterContext` from `./router-context`, which provides a router without routes.
+ * Because this loads every route module, tests that mock a module used by the desktop must mock all of its
+ * dependencies. For isolated component tests that only need router context for links, use `renderInRouterContext` from
+ * `./router-context`, which provides a router without routes.
  */
 export function renderRoute(route: string) {
   const history = createMemoryHistory({ initialEntries: [route] });

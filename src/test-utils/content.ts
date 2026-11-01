@@ -3,8 +3,8 @@ import type { Collection, Entry } from "#/site/catalog.ts";
 
 // Real site content, for tests that verify the site's actual content or publication state.
 //
-// Tests that only need entries should use `./collection` instead. Tests of catalog consumers should
-// mock `./catalog`. Unlike this file, both are unaffected by content additions or publication.
+// Tests that only need entries should use `./collection` instead. Tests of catalog consumers should mock `./catalog`.
+// Unlike this file, both are unaffected by content additions or publication.
 
 interface SiteCollection {
   collection: Collection;

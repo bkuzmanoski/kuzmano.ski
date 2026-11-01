@@ -9,7 +9,7 @@ import type { DirectoryItem, DirectoryReader } from "./listing.ts";
 const fileItem = (name: string): DirectoryItem => ({ name, type: "file" });
 const directoryItem = (name: string): DirectoryItem => ({ name, type: "directory" });
 
-// Tree keys are paths relative to the content directory, joined to match `contentListingFrom`.
+/** Tree keys are paths relative to the content directory, joined to match `contentListingFrom`. */
 const readerFor =
   (tree: Record<string, Array<DirectoryItem>>): DirectoryReader =>
   (directoryPathSegments) =>

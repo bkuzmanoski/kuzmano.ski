@@ -64,12 +64,12 @@ export type BundledChunk = Pick<Rollup.OutputChunk, "fileName" | "facadeModuleId
 };
 
 /**
- * Returns the chunks and stylesheets each entry loads, keyed by entry key: its body chunk, the chunk of
- * the stylesheet beside it, and the chunks those import statically, with the stylesheets of all of them.
+ * Returns the chunks and stylesheets each entry loads, keyed by entry key: its body chunk, the chunk of the stylesheet
+ * beside it, and the chunks those import statically, with the stylesheets of all of them.
  *
- * The chunk of the hydration entry, `/src/client.tsx`, and the chunks it imports statically are left out,
- * along with their stylesheets, since every document already loads them. A component an entry imports is
- * bundled into the entry's body chunk or a chunk the body chunk imports.
+ * Leaves out the chunk of the hydration entry, `/src/client.tsx`, the chunks it imports statically, and their
+ * stylesheets, as every document already loads them. The bundler places a component an entry imports in the entry's
+ * body chunk or in a chunk the body chunk imports.
  */
 export function entryBodyChunksIn(chunks: Array<BundledChunk>, base: string): Record<EntryKey, EntryBodyChunks> {
   const chunksByFileName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
@@ -124,8 +124,8 @@ export function entryBodyChunksIn(chunks: Array<BundledChunk>, base: string): Re
  * Captures the chunks and stylesheets each entry loads in the client build and exposes them through
  * `virtual:entry-body-chunks`.
  *
- * Server builds link them from the document, so an entry's code is preloaded and its stylesheets
- * apply before hydration; client and development builds receive an empty map.
+ * Server builds link them from the document, so an entry's code is preloaded and its stylesheets apply before
+ * hydration; client and development builds receive an empty map.
  */
 export function entryBodyChunksPlugin(): Array<Plugin> {
   let entryBodyChunks: Record<EntryKey, EntryBodyChunks> = {};

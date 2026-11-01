@@ -4,13 +4,12 @@ import type { Size } from "../geometry.ts";
 import type { RefObject } from "react";
 
 /**
- * Reports an element's size on mount and on every change. The callback runs from
- * the observer itself, so a caller that only forwards a measurement somewhere else
- * does not have to hold it in state and re-render to pass it on.
+ * Reports an element's size on mount and on every change. The callback runs from the observer itself, so a caller that
+ * only forwards a measurement somewhere else does not have to hold it in state and re-render to pass it on.
  */
 export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (size: Size) => void): void {
-  // Always the latest callback, so a caller does not have to keep one stable
-  // to avoid tearing the observer down and rebuilding it on every render.
+  // Always the latest callback, so a caller does not have to keep one stable to avoid tearing the observer down and
+  // rebuilding it on every render.
   const reportResize = useEffectEvent(onResize);
 
   useEffect(() => {
@@ -27,8 +26,8 @@ export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (
 
     const observer = new ResizeObserver(measure);
 
-    // A background tab's viewport can change before it becomes visible, and hidden documents don't
-    // run observer callbacks. Let the observer provide the initial measurement when it does.
+    // A background tab's viewport can change before it becomes visible, and hidden documents don't run observer
+    // callbacks. Let the observer provide the initial measurement when it does.
     if (document.visibilityState === "visible") {
       measure();
     }
@@ -40,15 +39,15 @@ export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (
 }
 
 /**
- * Tracks the size of an element. The size is {0, 0} until the element is
- * measured, so a caller that positions against it must handle the first pass.
+ * Tracks the size of an element. The size is {0, 0} until the element is measured, so a caller that positions against
+ * it must handle the first pass.
  */
 export function useElementSize(ref: RefObject<HTMLElement | null>): Size {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
 
   useElementResize(ref, ({ width, height }) =>
-    // Keep the same object when the size did not change, so the
-    // value can be an effect dependency without causing a loop.
+    // Keep the same object when the size did not change, so the value can be an effect dependency without causing a
+    // loop.
     setSize((current) => (current.width === width && current.height === height ? current : { width, height })),
   );
 

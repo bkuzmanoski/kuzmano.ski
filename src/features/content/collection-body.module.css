@@ -1,0 +1,191 @@
+.columnHeadings,
+.listView {
+  --collection-body-max-width: 800px;
+  --collection-body-centering-inset: max(0px, (100cqi - var(--collection-body-max-width)) / 2);
+  --collection-body-icon-width: 12px;
+  --collection-body-icon-height: 16px;
+  --collection-body-icon-gap: 10px;
+
+  container: collection-body / inline-size;
+  font: var(--font-ui);
+
+  @supports (width: round(down, 1px, 1px)) {
+    --collection-body-centering-inset: max(
+      0px,
+      round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px)
+    ); /* Rounded down to a whole pixel so text stays pixel aligned on 1x displays. */
+  }
+}
+
+.columnHeadings {
+  --collection-body-scrollbar-width: var(--layout-scrollbar-gutter-width);
+
+  user-select: none;
+
+  position: relative;
+
+  flex: none;
+
+  height: 32px; /* 28px, +1px per rule, +2px between them. */
+  padding-block: 1px 3px; /* The extra space above centers Helvetica's capitals, which sit above the center of the line box. */
+  padding-inline: var(--window-safe-area-inline-start, 0)
+    calc(var(--window-safe-area-inline-end, 0px) + var(--collection-body-scrollbar-width));
+  border-block-end: 1px solid var(--color-border);
+
+  @mixin scroll-pane-scrollbar-hidden {
+    --collection-body-scrollbar-width: 0px;
+  }
+
+  &::after {
+    pointer-events: none;
+    content: "";
+
+    position: absolute;
+    inset-block-end: 2px;
+    inset-inline: 0;
+
+    border-block-start: 1px solid var(--color-border);
+  }
+}
+
+.listView {
+  --collection-body-row-padding-block: 6px;
+  --collection-body-padding-block: calc(
+    var(--layout-gutter) - var(--collection-body-row-padding-block) - (1lh - var(--collection-body-icon-height)) / 2
+  ); /* The icon, rather than the taller line box, sits a gutter from the column headings and the end of the list. */
+
+  padding-inline-end: var(--scroll-pane-reserved-scrollbar-width, 0);
+}
+
+.columnHeadingsRow,
+.listItem {
+  display: flex;
+  gap: var(--layout-gutter);
+  align-items: center;
+  padding-inline: calc(var(--layout-gutter) + var(--collection-body-centering-inset));
+}
+
+.columnHeadingsRow {
+  height: 100%;
+}
+
+.list {
+  padding-block: var(--collection-body-padding-block);
+  padding-inline: 0;
+  list-style: none;
+}
+
+.listItem {
+  touch-action: manipulation; /* A double tap opens the entry, so the browser must not claim the gesture for zooming. */
+  cursor: default;
+  user-select: none;
+
+  /* Offset the scroll pane's `scroll-padding-block`, so scrolling a row into view places its edge at the pane's
+   * edge. */
+  scroll-margin-block: calc(-1 * var(--layout-gutter))
+    calc(var(--window-safe-area-block-end, 0px) - var(--layout-gutter));
+
+  position: relative;
+
+  padding-block: var(--collection-body-row-padding-block);
+
+  &:focus .title {
+    @mixin highlight;
+  }
+
+  /* Scrolling the first or last row into view includes the list's padding, so the row reaches the end of the list. A
+   * press on a clipped row scrolls the row into view on `mousedown`, which can leave the pointer over the padding. The
+   * row's press area extends over the padding, so its second press still lands on the row and opens the entry. */
+  .list > li:first-child & {
+    scroll-margin-block-start: calc(var(--collection-body-padding-block) - var(--layout-gutter));
+
+    &::before {
+      content: "";
+
+      position: absolute;
+      inset-block-end: 100%;
+      inset-inline: 0;
+
+      height: var(--collection-body-padding-block);
+    }
+  }
+
+  .list > li:last-child & {
+    scroll-margin-block-end: calc(
+      var(--collection-body-padding-block) - var(--layout-gutter) + var(--window-safe-area-block-end, 0px)
+    );
+
+    &::after {
+      content: "";
+
+      position: absolute;
+      inset-block-start: 100%;
+      inset-inline: 0;
+
+      height: var(--collection-body-padding-block);
+    }
+  }
+}
+
+.titleColumn {
+  display: flex;
+  flex: 1;
+  gap: var(--collection-body-icon-gap);
+  align-items: center;
+
+  min-width: 0;
+
+  .columnHeadingsRow & {
+    padding-inline-start: calc(var(--collection-body-icon-width) + var(--collection-body-icon-gap));
+  }
+}
+
+.icon {
+  flex: none;
+  width: var(--collection-body-icon-width);
+  height: var(--collection-body-icon-height);
+}
+
+.title,
+.categoryColumn,
+.dateColumn {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  margin: -1px -4px;
+  padding: 1.5px 4px 0.5px; /* Helvetica baseline alignment. */
+  font-weight: bold;
+}
+
+.categoryColumn,
+.dateColumn {
+  flex: none;
+  width: 112px;
+  margin-block-end: -0.5px;
+  padding-block-start: 0.5px;
+}
+
+.uncategorized {
+  color: var(--color-foreground-disabled);
+}
+
+@container collection-body (width < 560px) {
+  .dateColumn {
+    display: none;
+  }
+}
+
+@container collection-body (width < 400px) {
+  .categoryColumn {
+    display: none;
+  }
+}
+
+@media print {
+  .columnHeadings {
+    --collection-body-scrollbar-width: 0px;
+  }
+}

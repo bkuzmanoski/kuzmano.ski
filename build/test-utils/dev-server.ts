@@ -1,8 +1,8 @@
 import type { Connect, Plugin, ViteDevServer } from "vite";
 
 /**
- * Calls a plugin's `configureServer` hook with a fake dev server made from `server`, and returns the
- * middleware the hook registers.
+ * Calls a plugin's `configureServer` hook with a fake dev server made from `server`, and returns the middleware the
+ * hook registers.
  *
  * Throws, naming the plugin, when the hook does not register a middleware.
  */
@@ -42,8 +42,8 @@ export interface DevServerRequest {
 }
 
 /**
- * Sends a request for `url` to a dev server middleware, and resolves once the middleware ends
- * the response or passes the request on. Rejects with the error the middleware passes on.
+ * Sends a request for `url` to a dev server middleware, and resolves once the middleware ends the response or passes
+ * the request on. Rejects with the error the middleware passes on.
  */
 export async function devServerRequestFor(
   middleware: Connect.NextHandleFunction,

@@ -31,7 +31,8 @@ function clipPath(rawWidth: number, rawHeight: number, rawRadius: number, rawBow
 
 export interface ScreenParameters {
   box: Rect;
-  inscribedBox: Rect; // `box` inset by the edge bow, so a rounded rectangle of `radius` on it lies inside `clipPath`.
+  /** `box` inset by the edge bow, so a rounded rectangle of `radius` on it lies inside `clipPath`. */
+  inscribedBox: Rect;
   inset: Inset;
   radius: number;
   clipPath: string;

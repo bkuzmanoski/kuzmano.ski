@@ -2,8 +2,10 @@ import { useEffect } from "react";
 
 import { isEditableTarget } from "../keys.ts";
 
-// Below this the difference between the two viewports is rounding, or a browser toolbar
-// mid-collapse, rather than a keyboard. Treating it as zero keeps the desktop still.
+/**
+ * Below this the difference between the two viewports is rounding, or a browser toolbar mid-collapse, rather than a
+ * keyboard. Treating it as zero keeps the desktop still.
+ */
 const KEYBOARD_THRESHOLD_PX = 24;
 
 function setKeyboardInset(inset: number) {
@@ -15,8 +17,8 @@ function setKeyboardInset(inset: number) {
 }
 
 /**
- * Publishes the height the software keyboard covers as `--keyboard-inset` on `<html>`,
- * for the desktop to subtract from its own height.
+ * Publishes the height the software keyboard covers as `--keyboard-inset` on `<html>`, for the desktop to subtract from
+ * its own height.
  */
 export function useKeyboardInset(): void {
   useEffect(() => {
@@ -27,8 +29,8 @@ export function useKeyboardInset(): void {
     }
 
     const update = () => {
-      // A pinch zoom shrinks the visual viewport the same way a keyboard does, and panning
-      // a zoomed page is the visitor's own gesture, so the hook ignores both while zoomed in.
+      // A pinch zoom shrinks the visual viewport the same way a keyboard does, and panning a zoomed page is the
+      // visitor's own gesture, so the hook ignores both while zoomed in.
       if (viewport.scale > 1) {
         setKeyboardInset(0);
         return;

@@ -11,10 +11,14 @@ const HANDLE_ID = "handle";
 const PRESS = { x: 100, y: 50 };
 const POINTER_ID = 1;
 const SECOND_POINTER_ID = 2;
-const FRAME_MS = 16; // A move is reported on the animation frame after the pointer event.
 
-// `start` returns a value of the caller's choosing and the hook passes that same value to every
-// move, so the tests assert on its identity rather than its shape.
+/** The hook reports a move on the animation frame after the pointer event. */
+const FRAME_MS = 16;
+
+/**
+ * `start` returns a value of the caller's choosing and the hook passes that same value to every move, so the tests
+ * assert on its identity rather than its shape.
+ */
 const START_VALUE = { origin: "press" };
 
 const start = vi.fn(() => START_VALUE);
@@ -26,8 +30,10 @@ interface HandleProps {
   canStart?: (event: ReactPointerEvent) => boolean;
 }
 
-// The hook returns a press handler and nothing else; the rest of a gesture arrives on `window`. A
-// bare element that spreads the handler is therefore the whole of a consumer.
+/**
+ * The hook returns a press handler and nothing else; the rest of a gesture arrives on `window`. A bare element that
+ * spreads the handler is therefore the whole of a consumer.
+ */
 function Handle({ threshold, canStart }: HandleProps) {
   return <div data-testid={HANDLE_ID} {...usePointerDrag({ threshold, canStart, start, onDragMove, onEnd })} />;
 }
@@ -90,8 +96,8 @@ test("a pointer that travels any distance reports its first move on a handle wit
   press();
   dragBy({ dy: 1 });
 
-  // The threshold exists for handles that also respond to a click; a handle with no
-  // threshold drags as soon as the pointer travels at all.
+  // The threshold exists for handles that also respond to a click; a handle with no threshold drags as soon as the
+  // pointer travels at all.
   expect(onDragMove).toHaveBeenCalledWith({ dx: 0, dy: 1 }, START_VALUE);
 });
 

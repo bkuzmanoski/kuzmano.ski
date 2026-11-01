@@ -12,16 +12,19 @@ const MENU_BAR_SELECTOR = '[aria-label="Main menu"]';
 const WINDOW_CONTENT_SELECTOR = "#window-content";
 const LOADING_INDICATOR_SELECTOR = "[data-loading-indicator]";
 
-// When the children of a Suspense boundary throw, React's server renderer marks the boundary with a
-// `<!--$!-->` comment and streams its fallback in their place in a response with a `200` status code.
-// The browser then renders the children again, so the prerendered markup is the fallback rather than
-// the content.
+/**
+ * When the children of a Suspense boundary throw, React's server renderer marks the boundary with a `<!--$!-->` comment
+ * and streams its fallback in their place in a response with a `200` status code. The browser then renders the children
+ * again, so the prerendered markup is the fallback rather than the content.
+ */
 const ERRORED_SUSPENSE_BOUNDARY_COMMENT = "$!";
 
-// TanStack Start waits for every Suspense boundary to resolve only for a bot's request, and the prerender
-// request is not one. A boundary still suspended when the shell is sent is marked with a `<!--$?-->` comment
-// around its fallback, and React streams its content, or its error, later with a script that replaces the
-// fallback in the browser. The prerendered markup keeps the comment and the fallback in either case.
+/**
+ * TanStack Start waits for every Suspense boundary to resolve only for a bot's request, and the prerender request is
+ * not one. React marks a boundary still suspended when it sends the shell with a `<!--$?-->` comment around its
+ * fallback, and streams its content, or its error, later with a script that replaces the fallback in the browser. The
+ * prerendered markup keeps the comment and the fallback in either case.
+ */
 const PENDING_SUSPENSE_BOUNDARY_COMMENT = "$?";
 
 function documentTitleOf(tree: Nodes): string | null {
@@ -29,8 +32,10 @@ function documentTitleOf(tree: Nodes): string | null {
   return titleElement ? toString(titleElement) || null : null;
 }
 
-// Every window is a `<section>` named by its title in an `aria-label` attribute. Its title bar renders the
-// same `title` prop as text, so only the attribute is checked.
+/**
+ * Every window is a `<section>` named by its title in an `aria-label` attribute. Its title bar renders the same `title`
+ * prop as text, so this function checks only the attribute.
+ */
 function windowTitlesOf(tree: Nodes): Array<string> {
   return selectAll("section[aria-label]", tree).map((section) => String(section.properties.ariaLabel));
 }

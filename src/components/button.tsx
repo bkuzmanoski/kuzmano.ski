@@ -16,10 +16,10 @@ export type IconButtonVariant = "standalone" | "strip";
 /**
  * Renders a `<button>`, or an `<a>` when an `href` is supplied.
  *
- * `holdPressed` extends the pressed state beyond `:active` for controls whose action is handled
- * asynchronously. When provided, the control remains in the pressed state from `pointerdown`
- * until `click` is handled, closing the gap between `:active` ending on pointer release and the
- * action handler taking effect. Safari renders this gap; Chrome does not.
+ * `holdPressed` extends the pressed state beyond `:active` for controls whose action is handled asynchronously. When
+ * provided, the control remains in the pressed state from `pointerdown` until `click` is handled, closing the gap
+ * between `:active` ending on pointer release and the action handler taking effect. Safari renders this gap; Chrome
+ * does not.
  *
  * A control with `aria-disabled` remains focusable while behaving as disabled when pressed.
  */
@@ -52,8 +52,8 @@ export function Button(
           }
         },
         onPointerLeave: (event: PointerEvent) => {
-          // Leaving while pressed does not trigger a click to clear the pressed state.
-          // Taps can also trigger `pointerleave`, but with `buttons` set to zero.
+          // Leaving while pressed does not trigger a click to clear the pressed state. Taps can also trigger
+          // `pointerleave`, but with `buttons` set to zero.
           if (event.buttons !== 0) {
             setIsPressing(false);
           }

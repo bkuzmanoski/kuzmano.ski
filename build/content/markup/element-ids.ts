@@ -7,9 +7,8 @@ import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 /**
  * Throws if two elements in an entry have the same ID.
  *
- * Reads the `id` attribute of HTML elements and of JSX elements authored with a string, which
- * covers heading slugs, footnotes and their references, and IDs the entry writes itself. Must
- * run after the plugins that emit IDs.
+ * Reads the `id` attribute of HTML elements and of JSX elements authored with a string, which covers heading slugs,
+ * footnotes and their references, and IDs the entry writes itself. Must run after the plugins that emit IDs.
  */
 export function rehypeElementIds() {
   return function transform(tree: ContentParent, file: EntryVFile) {

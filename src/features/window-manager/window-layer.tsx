@@ -1,5 +1,6 @@
 import { memo, useMemo, useRef, useState } from "react";
 
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
@@ -16,10 +17,9 @@ import type { WindowClose } from "#/lib/window-manager/use-close-window.ts";
 import { WindowCloseContext } from "#/lib/window-manager/use-close-window.ts";
 import { WINDOW_DOM_ORDER, isUnmeasured } from "#/lib/window-manager/window.ts";
 import type { WindowGeometry, WindowId } from "#/lib/window-manager/window.ts";
-import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 
 import { DragOutline } from "./drag-outline.tsx";
-import { WindowBody } from "./window-body.tsx";
+import { WindowBody, WindowHeader } from "./window-body.tsx";
 import styles from "./window-layer.module.css";
 import { Window } from "./window.tsx";
 import { ZoomRect } from "./zoom-rect.tsx";
@@ -41,7 +41,7 @@ function outlineRect(geometry: WindowGeometry, surface: Size, drag: WindowDrag):
     : resizeWindow(geometry, surface, drag);
 }
 
-// The layer below re-renders on every pointer frame, but the windows that did not change compare equal here.
+/** The layer below re-renders on every pointer frame, but the windows that did not change compare equal here. */
 const DesktopWindow = memo(function OpenWindow({
   id,
   route,
@@ -73,8 +73,8 @@ const DesktopWindow = memo(function OpenWindow({
 }) {
   const { close, registerCloseGuard, focus, move, resize, fitContentHeight, toggleZoom } = useWindowActions();
 
-  // Memoized because the body registers its close guard against this object, so changing its
-  // identity would re-register the guard on every render.
+  // Memoized because the body registers its close guard against this object, so changing its identity would re-register
+  // the guard on every render.
   const windowClose = useMemo<WindowClose>(
     () => ({
       forceClose: () => close(id, { force: true }),
@@ -107,6 +107,7 @@ const DesktopWindow = memo(function OpenWindow({
       onResize={isResizable ? (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight) : null}
       onFitContentHeight={sizing === "fitContentHeight" ? (nextHeight) => fitContentHeight(id, nextHeight) : null}
       onDrag={(drag) => onDrag(drag && { id, drag })}
+      header={<WindowHeader route={route} />}
     >
       <WindowCloseContext value={windowClose}>
         <WindowBody route={route} />
@@ -116,9 +117,8 @@ const DesktopWindow = memo(function OpenWindow({
 });
 
 /**
- * The surface that hosts the open windows, stacked back to front by `zIndex`.
- * `children` is the router outlet. It does not render visible output but keeps
- * the matched route mounted for SSR and head tags.
+ * The surface that hosts the open windows, stacked back to front by `zIndex`. `children` is the router outlet. It does
+ * not render visible output but keeps the matched route mounted for SSR and head tags.
  */
 export function WindowLayer({ children }: { children: ReactNode }) {
   const surface = useSurface();
@@ -128,13 +128,12 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const focusedWindow = useFocusedWindow();
   const { focusDesktop, measure } = useWindowActions();
 
-  // The zoom-rect growing from an icon towards the window it opened. That window stays hidden until
-  // the zoom-rect has landed on it.
+  // The zoom-rect growing from an icon towards the window it opened. That window stays hidden until the zoom-rect has
+  // landed on it.
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
 
-  // The window being moved or resized, which remains stationary while an outline shows its
-  // proposed position. The drag is stored here rather than in the window, so its update on
-  // each pointer frame does not re-render every window.
+  // The window being moved or resized, which remains stationary while an outline shows its proposed position. The drag
+  // is stored here rather than in the window, so its update on each pointer frame does not re-render every window.
   const [windowDrag, setWindowDrag] = useState<WindowDragState | null>(null);
   const surfaceRef = useRef<HTMLElement>(null);
 
@@ -145,7 +144,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const draggedGeometry = windowDrag ? geometry[windowDrag.id] : undefined;
 
   return (
-    // The main landmark, since the desktop and its windows are the page's content.
+    // The main landmark as the desktop and its windows are the page's content.
     <main
       ref={surfaceRef}
       className={styles.windowLayer}

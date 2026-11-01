@@ -1,4 +1,5 @@
-// Imports only types because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
+// Imports only types because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`) and
+// `/vite.config.ts` loads it through `/build`.
 import type { StyleWithVars } from "./style.ts";
 
 /** The `--accent-*` colors declared in `/src/styles.css` in the order the theme color options list them. */

@@ -26,7 +26,8 @@ export function Slider({
   step: number;
   disabled?: boolean;
   className?: string;
-  valueTextOf?: (value: number) => string; // Returns `aria-valuetext` when the numeric value alone is not descriptive.
+  /** Returns `aria-valuetext` when the numeric value alone is not descriptive. */
+  valueTextOf?: (value: number) => string;
   onChange: (value: number) => void;
   "aria-labelledby"?: string;
 }) {

@@ -8,13 +8,12 @@ import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { CLIENT_ENVIRONMENT } from "../../environments.ts";
 import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
-import { MEDIA_DIRECTORY_PATH, STYLESHEET_FILE_PATH, fromContent, fromRoot, requestPathOf } from "../../paths.ts";
-import { layoutMetricsFrom } from "../../stylesheet/layout-metrics.ts";
+import { MEDIA_DIRECTORY_PATH, fromContent, fromRoot, requestPathOf } from "../../paths.ts";
 
 import { createImageDerivativeStore, imageDerivativeAuditBetween } from "./derivative-store.ts";
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
 import { isContentMedia } from "./formats.ts";
-import { buildMediaIndex, coverImageSizeIn } from "./media-index.ts";
+import { buildMediaIndex } from "./media-index.ts";
 import { contentMediaProblemReport, renditionSizeProblems } from "./problems.ts";
 import { rootRelativePathOf } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
@@ -40,8 +39,10 @@ interface IndexChange {
   hasChangedCoverImages: boolean;
 }
 
-// Warns once per active development problem. Index rebuilds replace tracked problems; problems detected
-// outside the index remain tracked for the server's lifetime.
+/**
+ * Warns once per active development problem. Index rebuilds replace tracked problems; problems detected outside the
+ * index remain tracked for the server's lifetime.
+ */
 function createProblemReporter(warn: (problem: string) => void) {
   const reportedProblems = new Set<string>();
 
@@ -76,26 +77,24 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
 } {
   const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));
   const contentDirectoryAbsolutePath = fromContent();
-  const stylesheetAbsolutePath = fromRoot(STYLESHEET_FILE_PATH);
-  // Shared by every index build, so a rebuild rereads only the files updated since the last one.
-  const mediaFileReader = createMediaFileReader();
+  const mediaFileReader = createMediaFileReader(); // Shared by every index build, so a rebuild rereads only the files updated since the last one.
 
   let indexBuild: Promise<MediaIndex> | null = null;
-  let latestIndexChange: { trigger: string; indexChange: Promise<IndexChange | null> } | null = null;
+  let latestIndexChange: { trigger: string; indexChange: Promise<IndexChange> } | null = null;
   let logger: Logger | undefined; // Set by `configResolved`, which Vite calls before any hook that reports a problem.
 
   const problemReporter = createProblemReporter((problem) => logger?.warn(problem, { timestamp: true }));
 
-  // Every caller awaits the same build until a file update clears it, so an entry compiled after
-  // the update resolves against an index that includes it.
+  // Every caller awaits the same build until a file update clears it, so an entry compiled after the update resolves
+  // against an index that includes it.
   const ensureIndex = () => {
     if (indexBuild) {
       return indexBuild;
     }
 
     const currentIndexBuild: Promise<MediaIndex> = buildMediaIndex(mediaFileReader).catch((cause: unknown) => {
-      // Clearing only this failed build lets later requests retry without discarding a
-      // rebuild that a newer file update has already started.
+      // Clearing only this failed build lets later requests retry without discarding a rebuild that a newer file update
+      // has already started.
       if (indexBuild === currentIndexBuild) {
         indexBuild = null;
       }
@@ -117,32 +116,14 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     return { index, hasChangedCoverImages: !isDeepStrictEqual(previousIndex?.coverImages, index.coverImages) };
   }
 
-  async function changeIndexForStylesheet(readStylesheet: () => string | Promise<string>) {
-    const coverImageSize = coverImageSizeIn(layoutMetricsFrom(await readStylesheet()));
-    return coverImageSize === (await ensureIndex()).coverImageSize ? null : rebuildIndex();
-  }
-
-  // Resolves to the current index when the update does not change which body images have alternates,
-  // so the rechecked reference problems are still reported.
+  // Resolves to the current index when the update does not change which body images have alternates, so the rechecked
+  // reference problems are still reported.
   async function changeIndexForEntry(absolutePath: string, readSource: () => string | Promise<string>) {
     const source = await readSource();
     const index = await ensureIndex();
     const { requiresRebuild } = index.recheckReferences(absolutePath, source);
 
     return requiresRebuild ? rebuildIndex() : { index, hasChangedCoverImages: false };
-  }
-
-  // Resolves to `null` when the update leaves the index unchanged.
-  function changeIndexFor(
-    file: string,
-    type: "create" | "update" | "delete",
-    read: () => string | Promise<string>,
-  ): Promise<IndexChange | null> {
-    if (file === stylesheetAbsolutePath) {
-      return changeIndexForStylesheet(read);
-    }
-
-    return isEntryFile(file) && type === "update" ? changeIndexForEntry(file, read) : rebuildIndex();
   }
 
   const mediaForEntry: MediaForEntry = async (absolutePath) => (await ensureIndex()).mediaForEntry(absolutePath);
@@ -181,8 +162,7 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
           return;
         }
 
-        // A request arriving before the first index build finishes waits for it
-        // rather than falling through to a 404.
+        // A request arriving before the first index build finishes waits for it rather than falling through to a 404.
         ensureIndex()
           .then(async ({ renditionsByUrl }) => {
             const rendition = renditionsByUrl.get(decodedRequestPath);
@@ -208,13 +188,7 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
       });
     },
     async hotUpdate({ file, type, timestamp, modules, read }) {
-      const isStylesheet = file === stylesheetAbsolutePath;
-
-      if (!isStylesheet && !file.startsWith(`${contentDirectoryAbsolutePath}/`)) {
-        return;
-      }
-
-      if (!isStylesheet && !isContentMedia(file) && !isEntryFile(file)) {
+      if (!file.startsWith(`${contentDirectoryAbsolutePath}/`) || (!isContentMedia(file) && !isEntryFile(file))) {
         return;
       }
 
@@ -223,24 +197,21 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
       const trigger = `${timestamp}:${type}:${file}`;
 
       if (latestIndexChange?.trigger !== trigger) {
-        latestIndexChange = { trigger, indexChange: changeIndexFor(file, type, read) };
+        latestIndexChange = {
+          trigger,
+          indexChange: isEntryFile(file) && type === "update" ? changeIndexForEntry(file, read) : rebuildIndex(),
+        };
       }
 
-      const indexChange = await latestIndexChange.indexChange;
-
-      if (!indexChange) {
-        return;
-      }
-
-      const { index, hasChangedCoverImages } = indexChange;
+      const { index, hasChangedCoverImages } = await latestIndexChange.indexChange;
 
       if (this.environment.name === CLIENT_ENVIRONMENT) {
         problemReporter.replaceIndexProblems(index.problems());
       }
 
-      // A reference names a file in its own entry's media directory, so an update to a body media file changes
-      // only that entry's compiled output. The cover image module is invalidated only when its value changed,
-      // so an update to one entry's body media invalidates that entry alone.
+      // A reference names a file in its own entry's media directory, so an update to a body media file changes only
+      // that entry's compiled output. The cover image module is invalidated only when its value changed, so an update
+      // to one entry's body media invalidates that entry alone.
       const staleEntryAbsolutePath = index.entryAbsolutePathsByMediaDirectoryPath.get(
         relative(contentDirectoryAbsolutePath, dirname(file)),
       );
@@ -284,9 +255,9 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
         );
       }
     },
-    // Copies each file into the output rather than emitting it into the bundle, which would hold every
-    // image and video in memory until the bundle is written. `buildStart` has already failed the build
-    // on a missing derivative, so every file is present.
+    // Copies each file into the output rather than emitting it into the bundle, which would hold every image and video
+    // in memory until the bundle is written. `buildStart` has already failed the build on a missing derivative, so
+    // every file is present.
     async writeBundle() {
       const { root, build } = this.environment.config;
       const outputDirectoryAbsolutePath = resolve(root, build.outDir);

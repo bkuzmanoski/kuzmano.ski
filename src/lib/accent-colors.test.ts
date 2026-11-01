@@ -12,6 +12,11 @@ describe("ACCENT_COLOR_NAMES", () => {
     const declaredAccentColorNames = [...stylesheet.matchAll(/^\s*--accent-([a-z]+):/gm)].map((match) => match[1]);
     expect([...ACCENT_COLOR_NAMES].sort()).toEqual(declaredAccentColorNames.sort());
   });
+
+  test("has an `--accent-*-hue` custom property in `/src/styles.css` for each accent", () => {
+    const declaredHueNames = [...stylesheet.matchAll(/^\s*--accent-([a-z]+)-hue:/gm)].map((match) => match[1]);
+    expect([...ACCENT_COLOR_NAMES].sort()).toEqual(declaredHueNames.sort());
+  });
 });
 
 describe("accentColorOf", () => {

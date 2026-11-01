@@ -55,13 +55,15 @@ const linkParagraph = (value: string, href: string): Element => ({
   children: [{ type: "element", tagName: "a", properties: { href }, children: [{ type: "text", value }] }],
 });
 
-// Rewrites markup for output in a feed.
-//
-// Components can use the following attributes to control how their markup is rendered:
-//
-// - `data-feed-omit` removes the element entirely
-// - `data-feed-text` replaces the element with a paragraph containing component-provided text; for links,
-//   the paragraph text links to the element's `href`
+/**
+ * Rewrites markup for output in a feed.
+ *
+ * Components can use the following attributes to control how the feed renders their markup:
+ *
+ * - `data-feed-omit` removes the element entirely
+ * - `data-feed-text` replaces the element with a paragraph containing component-provided text; for links, the paragraph
+ *   text links to the element's `href`
+ */
 function replaceUIMarkup(article: Element) {
   visit(article, "element", (element, index, parent) => {
     if (!parent || index === undefined) {
@@ -163,11 +165,13 @@ function prepareMediaForReaders(article: Element) {
   });
 }
 
-// Sanitizing removes the attributes from the wrappers used for syntax highlighting
-// and UI, leaving elements that contain nothing but their children.
-//
-// A wrapper is replaced by its own children, so this returns a new list of nodes rather than
-// visiting the tree in place.
+/**
+ * Sanitizing removes the attributes from the wrappers used for syntax highlighting and UI, leaving elements that
+ * contain nothing but their children.
+ *
+ * This replaces a wrapper with its own children, so it returns a new list of nodes rather than visiting the tree in
+ * place.
+ */
 function unwrapPlainWrappers(children: Array<ElementContent>): Array<ElementContent> {
   return children.flatMap((child) => {
     if (child.type !== "element") {
@@ -211,7 +215,7 @@ function resolveRelativeUrls(article: Element, url: string) {
   });
 }
 
-// The ID a URL's fragment names when the URL is the entry's own, or `null` for any other URL.
+/** The ID a URL's fragment names when the URL is the entry's own, or `null` for any other URL. */
 function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
   try {
     const target = new URL(href);
@@ -223,10 +227,12 @@ function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
   }
 }
 
-// A heading's ID is a fragment a user can link to from outside the feed, so it is preserved. Any other
-// ID is preserved only when an element in the article references it: a link names it as its fragment, or
-// a table cell lists it in its `headers` attribute. An ID a component generates for an attribute the
-// sanitizer removes, such as `aria-labelledby`, is not referenced by any element in the feed.
+/**
+ * A heading's ID is a fragment a user can link to from outside the feed, so this function preserves it. It preserves
+ * any other ID only when an element in the article references it (a link names it as its fragment, or a table cell
+ * lists it in its `headers` attribute). No element in the feed references an ID a component generates for an attribute
+ * the sanitizer removes, such as `aria-labelledby`.
+ */
 function removeUnreferencedIds(article: Element, url: string) {
   const entryUrl = new URL(url);
   const referencedIds = new Set<string>();
@@ -257,8 +263,8 @@ function removeUnreferencedIds(article: Element, url: string) {
 /**
  * Reads an entry's body from its prerendered document as the HTML a feed reader can show.
  *
- * Reusing the prerendered markup keeps the feed's text identical to the document's and avoids a
- * second render. `FEED_SCHEMA` selects the elements and attributes that belong in the feed.
+ * Reusing the prerendered markup keeps the feed's text identical to that of the document and avoids a second render.
+ * `FEED_SCHEMA` selects the elements and attributes that belong in the feed.
  */
 export function articleContentOf(html: string, url: string): string {
   const articles = selectAll("article", fromHtml(html));

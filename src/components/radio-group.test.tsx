@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { RadioGroup } from "./radio-group.tsx";
 
@@ -58,22 +59,14 @@ test("clicking an unchecked radio button calls `onChange` with its option's valu
 
 test("pressing a radio button with the mouse plays the click sound", () => {
   renderRadioGroup();
-  fireEvent.pointerDown(screen.getByRole("radio", { name: "Second" }), {
-    pointerType: "mouse",
-    button: 0,
-    isPrimary: true,
-  });
+  pressWithMouse(screen.getByRole("radio", { name: "Second" }));
 
   expect(playClickSound).toHaveBeenCalledOnce();
 });
 
 test("pressing a radio button with the mouse does not play the click sound when its option's `isSilent` is `true`", () => {
   renderRadioGroup({ options: [OPTIONS[0], { ...OPTIONS[1], isSilent: true }] });
-  fireEvent.pointerDown(screen.getByRole("radio", { name: "Second" }), {
-    pointerType: "mouse",
-    button: 0,
-    isPrimary: true,
-  });
+  pressWithMouse(screen.getByRole("radio", { name: "Second" }));
   fireEvent.click(screen.getByRole("radio", { name: "Second" }));
 
   expect(playClickSound).not.toHaveBeenCalled();

@@ -1,4 +1,4 @@
-import { notFound } from "@tanstack/react-router";
+import { notFound, useParams } from "@tanstack/react-router";
 import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 
 import displayFontUrl from "#/assets/fonts/Archivo-Variable.woff2?url";
@@ -16,6 +16,17 @@ import type { ContentIndex, Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
 
 const CONTENT_PRELOADED_FONT_URLS: ReadonlyArray<string> = [displayFontUrl, bodyFontUrl, bitmapFontUrl];
+
+function ContentRouteComponent() {
+  const { segment = "", slug } = useParams({ strict: false });
+
+  // A collection listing sets its text in `--font-ui`, which does not require a preload.
+  if (resolveContent(segment, slug).kind !== "collection") {
+    CONTENT_PRELOADED_FONT_URLS.forEach(preloadFont);
+  }
+
+  return null; // The window layer renders the content.
+}
 
 function entryDocumentMetadata(
   frontmatter: Frontmatter | null,
@@ -77,8 +88,5 @@ export const contentRoute = {
     }
   },
   head: ({ loaderData }: { loaderData?: DocumentMetadata }) => (loaderData ? documentHead(loaderData) : {}),
-  component: () => {
-    CONTENT_PRELOADED_FONT_URLS.forEach(preloadFont);
-    return null; // The window layer renders the content.
-  },
+  component: ContentRouteComponent,
 };

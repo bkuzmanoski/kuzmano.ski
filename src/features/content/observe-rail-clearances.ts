@@ -4,8 +4,11 @@ const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
 const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
 const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote";
 const MASTHEAD_SELECTOR = "[data-entry-masthead]";
+
+/** Matches the element `content-body.module.css` anchors the masthead to, including that rule's `:not()`. */
 const MASTHEAD_SUBJECT_SELECTOR =
-  '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])'; // Matches the element `content-body.module.css` anchors the masthead to, including that rule's `:not()`.
+  '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])';
+
 const RAIL_SPANNING_ELEMENT_SELECTOR = 'h2, [data-content-span]:not([data-content-span="text"])';
 
 const paddingBoxTopOf = (element: Element) =>
@@ -58,8 +61,8 @@ function updateRailClearances(body: HTMLElement) {
     }
 
     if (element.matches(MASTHEAD_SELECTOR)) {
-      // The masthead moves with its subject, so it counts only toward the elements after the subject
-      // (clearing the subject of the masthead would move both down on every update).
+      // The masthead moves with its subject, so it counts only toward the elements after the subject (clearing the
+      // subject of the masthead would move both down on every update).
       mastheadBottoms = railItemBottomsIn(element, body);
       continue;
     }
@@ -93,15 +96,15 @@ export function observeRailClearances(body: HTMLElement | null) {
   let frame = 0;
   let isObserving = true;
 
-  // Measured before the ref callback returns, as well as on resize, so that the article's ref callback,
-  // which React calls after this one, scrolls to a fragment target where the clearances place it.
+  // Measured before the ref callback returns, as well as on resize, so that the article's ref callback, which React
+  // calls after this one, scrolls to a fragment target where the clearances place it.
   //
-  // Note: After a client-side navigation, this performs the new entry's first layout, which the frame
-  // would otherwise perform, so Chrome reports a forced reflow that deferring the update would not remove.
+  // Note: After a client-side navigation, this performs the new entry's first layout, which the frame would otherwise
+  // perform, so Chrome reports a forced reflow that deferring the update would not remove.
   updateRailClearances(body);
 
-  // Deferred to the next frame, so the resize the update causes is observed in that frame rather than
-  // while the observer is still delivering this one.
+  // Deferred to the next frame, so the resize the update causes is observed in that frame rather than while the
+  // observer is still delivering this one.
   const scheduleUpdate = () => {
     if (isObserving) {
       cancelAnimationFrame(frame);

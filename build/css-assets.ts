@@ -10,9 +10,17 @@ import { SOURCE_DIRECTORY_PATH, fromRoot, toRootRelative } from "./paths.ts";
 
 import type { Plugin } from "vite";
 
-const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i; // References that do not resolve to local files: schemes, absolute paths, and fragments.
-const QUERY_OR_FRAGMENT = /(?<!\\)[?#]/; // Matches the first unescaped query or fragment delimiter. Escaped `\?` and `\#` remain part of the path. Escaped backslashes are not distinguished.
-const CSS_ESCAPE = /\\(?:([\da-f]{1,6})[ \t\n]?|([^\da-f]))/gi; // Matches a CSS escape: a one-to-six-digit code point or a literal character.
+/** References that do not resolve to local files: schemes, absolute paths, and fragments. */
+const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
+
+/**
+ * Matches the first unescaped query or fragment delimiter. Escaped `\?` and `\#` remain part of the path. The pattern
+ * does not distinguish escaped backslashes.
+ */
+const QUERY_OR_FRAGMENT = /(?<!\\)[?#]/;
+
+/** Matches a CSS escape: a one-to-six-digit code point or a literal character. */
+const CSS_ESCAPE = /\\(?:([\da-f]{1,6})[ \t\n]?|([^\da-f]))/gi;
 
 function filePathOf(reference: string): string {
   return (reference.split(QUERY_OR_FRAGMENT)[0] ?? "").replace(
@@ -31,8 +39,8 @@ export function urlsIn(value: string): Array<string> {
       return;
     }
 
-    // `url()` holds an unquoted reference in a `word` node and a quoted one in a `string` node,
-    // so a quoted value keeps any bracket it contains rather than ending the reference.
+    // `url()` holds an unquoted reference in a `word` node and a quoted one in a `string` node, so a quoted value keeps
+    // any bracket it contains rather than ending the reference.
     const [argument] = node.nodes;
     const reference = argument?.type === "word" || argument?.type === "string" ? argument.value : "";
 

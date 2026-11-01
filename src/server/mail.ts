@@ -13,9 +13,9 @@ export interface OutgoingMessage {
 }
 
 /**
- * `throttled` and `exhausted` mean the account's send quota has run out and may recover on retry.
- * Every other failure is a misconfiguration that cannot recover this way, so it collapses to
- * `unavailable` and the diagnosis is left to the log.
+ * `throttled` and `exhausted` mean the account's send quota has run out and may recover on retry. Every other failure
+ * is a misconfiguration that cannot recover this way, so it collapses to `unavailable` and the diagnosis is left to the
+ * log.
  */
 export type DeliveryResult = "sent" | "throttled" | "exhausted" | "unavailable";
 

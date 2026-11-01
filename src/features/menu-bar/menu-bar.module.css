@@ -1,6 +1,6 @@
 .menuBar {
-  /* A touch dragged from a menu title into the menu chooses the item it is released over, so the browser must
-   * not claim the gesture for panning and cancel it. Set on the menu bar so it covers the menus inside it. */
+  /* A touch dragged from a menu title into the menu chooses the item it is released over, so the browser must not claim
+   * the gesture for panning and cancel it. Set on the menu bar so it covers the menus inside it. */
   touch-action: none;
 
   transform: translateY(-100%);
@@ -106,9 +106,8 @@
   }
 }
 
-/* A short viewport only means "no space" on a phone in landscape. `pointer` describes
- * the primary input rather than any attached one, so this targets a tablet with a mouse
- * but does not affect a touchscreen laptop.
+/* A short viewport only means "no space" on a phone in landscape. `pointer` describes the primary input rather than any
+ * attached one, so this targets a tablet with a mouse but does not affect a touchscreen laptop.
  *
  * 744px is the horizontal resolution of an iPad mini in portrait. */
 @media (width < 744px), ((height < 744px) and (pointer: coarse)) {

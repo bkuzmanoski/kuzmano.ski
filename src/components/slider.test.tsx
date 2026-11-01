@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound, playSliderStepSound } from "#/lib/audio/sounds.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { Slider } from "./slider.tsx";
 
@@ -50,7 +51,7 @@ test("changing the value calls `onChange` with the new value as a number and pla
 
 test("pressing a slider with the mouse plays the click sound", () => {
   renderSlider();
-  fireEvent.pointerDown(screen.getByRole("slider"), { pointerType: "mouse", button: 0, isPrimary: true });
+  pressWithMouse(screen.getByRole("slider"));
 
   expect(playClickSound).toHaveBeenCalledOnce();
 });

@@ -41,8 +41,8 @@ export function usePointerDrag<T>({
   const pendingDeltaRef = useRef<{ delta: DragDelta; value: T } | null>(null);
   const frameRef = useRef<number | null>(null);
 
-  // The listeners a drag registers outlive the render that registered them, so the gesture is
-  // reported through the handlers the caller holds now rather than the ones it held at the press.
+  // The listeners a drag registers outlive the render that registered them, so the gesture is reported through the
+  // handlers the caller holds now rather than the ones it held at the press.
   const handlersRef = useRef({ onDragMove, onEnd });
 
   useEffect(() => {
@@ -78,8 +78,8 @@ export function usePointerDrag<T>({
     handlersRef.current.onEnd?.(activeDrag.moved);
   }
 
-  // Unmounting drops a drag still in progress without flushing the pending move or calling `onEnd`, so a
-  // caller that commits in `onEnd` records nothing for it. This assumes the handle outlives the gesture.
+  // Unmounting drops a drag still in progress without flushing the pending move or calling `onEnd`, so a caller that
+  // commits in `onEnd` records nothing for it. This assumes the handle outlives the gesture.
   useEffect(
     () => () => {
       cancelFrame();
@@ -98,8 +98,8 @@ export function usePointerDrag<T>({
       event.preventDefault();
     }
 
-    // A press that arrives with a drag still in flight closes that one out first, so the gesture
-    // it starts is the only one running and the listeners of the previous one are removed.
+    // A press that arrives with a drag still in flight closes that one out first, so the gesture it starts is the only
+    // one running and the listeners of the previous one are removed.
     if (activeDragRef.current) {
       finish(activeDragRef.current);
     }
@@ -117,9 +117,9 @@ export function usePointerDrag<T>({
       controller,
     };
 
-    // Capture lets these listeners observe pointer events even when a handler below stops them.
-    // Install them before requesting pointer capture, which can throw if the pointer is no longer
-    // active. Once the drag starts, these listeners must be in place to end it.
+    // Capture lets these listeners observe pointer events even when a handler below stops them. Install them before
+    // requesting pointer capture, which can throw if the pointer is no longer active. Once the drag starts, these
+    // listeners must be in place to end it.
     const listenerOptions = { capture: true, signal: controller.signal };
 
     window.addEventListener("pointermove", onWindowPointerMove, listenerOptions);

@@ -1,85 +1,131 @@
 import { useRef } from "react";
 
+import { useMousePressStart } from "../hooks/use-mouse-press-start.ts";
 import { isActivationKey } from "../keys.ts";
+import { isBrowserHandledClick } from "../link.ts";
 import { isPointerClick, isPrimaryPress } from "../press.ts";
 
 import { playClickSound } from "./sounds.ts";
 
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
+interface PressSoundOptions {
+  /**
+   * Defers the sound of a touch press until its `click`. In a scrollable region, a touch press may become a scroll,
+   * which ends with `pointercancel`, or stop a scroll in motion, which ends with `pointerup` but no `click`.
+   */
+  defersTouchPressSound?: boolean;
+  /**
+   * Plays the sound for a `click` without a `pointerdown` on the control. A control inside UI that already plays the
+   * sound of a retargeted tap sets it to `false`, so the tap does not play the sound twice.
+   */
+  playsOnClickWithoutPress?: boolean;
+  /** Does not play the sound for a press or `click` that `isBrowserHandledClick` identifies. */
+  silencesBrowserHandledPress?: boolean;
+}
+
 /**
- * Plays one sound for each press that reaches a control.
+ * Plays the click sound once for each press on a control.
  *
- * The sound normally plays on `pointerdown`, so it coincides with the press. On iOS, a tap
- * near a small control can be retargeted to that control for the compatibility mouse events
- * and `click`, while the touch pointer events remain on the element under the finger. The
- * `click` must therefore play the sound when no `pointerdown` reached the control.
+ * Plays the sound of a touch or pen press on `pointerdown`, so it coincides with the press. Plays the sound of a mouse
+ * press on the `mousedown` the browser dispatches with `pointerdown`, as only that `mousedown` separates the press from
+ * a screen reader's activate action in Chrome (see `isSimulatedMouseDown`). A touch press cannot wait for `mousedown`,
+ * which the browser dispatches only after a tap ends, and not at all after a drag.
  *
- * The press remains recorded until `click`, rather than `pointerup`, so leaving and re-entering
- * the control does not play it twice.
+ * Plays the sound on `click` for a key press, and for a `click` without a `pointerdown` on the control. A tap near a
+ * small control on iOS can produce such a `click`, because the browser can retarget the tap's compatibility mouse
+ * events and `click` to the control while its touch pointer events stay on the element under the finger.
  *
- * `scrollSafe` defers touch presses until `click`, because a touch press in a scrollable region
- * may become a scroll and end with `pointercancel`, or may stop a scroll still in motion, which
- * ends with `pointerup` but no `click`. Mouse and pen presses play on `pointerdown`.
+ * Does not play the sound for a screen reader's activate action, as a screen reader provides its own feedback.
  *
- * Disable `playOnClickWithoutPress` for controls inside UI that already handles the retargeted
- * tap. Otherwise the original target and this control can both play a sound for the same tap.
- *
- * A single instance can be shared by multiple controls; only one press is tracked at a time.
+ * The hook records a press until its `click`, rather than `pointerup`, so leaving and re-entering the control does not
+ * play the sound twice. Multiple controls can share an instance, which tracks one press at a time.
  */
-export function usePressSound({
-  scrollSafe = false,
-  playOnClickWithoutPress = true,
-}: { scrollSafe?: boolean; playOnClickWithoutPress?: boolean } = {}) {
-  const pressPendingRef = useRef(false);
-  const touchPressPendingRef = useRef(false); // Tracks a scroll-safe touch press until its `click` plays the sound.
-  const keyPendingRef = useRef(false);
+export function usePressSoundPlayer({
+  defersTouchPressSound = false,
+  playsOnClickWithoutPress = true,
+  silencesBrowserHandledPress = false,
+}: PressSoundOptions = {}) {
+  const isPressPendingRef = useRef(false);
+  const isTouchPressPendingRef = useRef(false); // Tracks a deferred touch press until its `click` plays the sound.
+  const isKeyPendingRef = useRef(false);
+  const mousePressStart = useMousePressStart();
+
+  const isSilentPress = (event: MouseEvent) => silencesBrowserHandledPress && isBrowserHandledClick(event);
 
   return {
-    onPointerDown: (event: PointerEvent) => {
-      if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled")) {
-        return;
-      }
+    handlers: {
+      onPointerDown: (event: PointerEvent) => {
+        if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled") || isSilentPress(event)) {
+          return;
+        }
 
-      if (scrollSafe && event.pointerType === "touch") {
-        touchPressPendingRef.current = true;
-        return;
-      }
+        const isMousePress = mousePressStart.recordPointerDown(event);
 
-      pressPendingRef.current = true;
+        if (defersTouchPressSound && event.pointerType === "touch") {
+          isTouchPressPendingRef.current = true;
+          return;
+        }
 
-      // A touch whose `click` iOS retargeted to another control leaves its pending sound behind,
-      // which would play a second time on this press's `click`.
-      touchPressPendingRef.current = false;
+        isPressPendingRef.current = true;
 
-      playClickSound();
+        // A touch whose `click` iOS retargeted to another control leaves its pending sound behind, which would play a
+        // second time on this press's `click`.
+        isTouchPressPendingRef.current = false;
+
+        if (!isMousePress) {
+          playClickSound();
+        }
+      },
+      onMouseDown: (event: MouseEvent) => {
+        if (mousePressStart.consumeMouseDown(event)) {
+          playClickSound();
+        }
+      },
+      onPointerCancel: () => {
+        isPressPendingRef.current = false;
+        isTouchPressPendingRef.current = false;
+      },
+      onKeyDown: (event: KeyboardEvent) => {
+        if (isActivationKey(event.key) && !event.repeat) {
+          isKeyPendingRef.current = true;
+        }
+      },
+      onBlur: () => {
+        isKeyPendingRef.current = false;
+      },
+      onClick: (event: MouseEvent) => {
+        const shouldPlayPressSound =
+          !isSilentPress(event) &&
+          (isPointerClick(event)
+            ? isTouchPressPendingRef.current || (playsOnClickWithoutPress && !isPressPendingRef.current)
+            : isKeyPendingRef.current);
+
+        if (shouldPlayPressSound) {
+          playClickSound();
+        }
+
+        isPressPendingRef.current = false;
+        isTouchPressPendingRef.current = false;
+        isKeyPendingRef.current = false;
+      },
     },
-    onPointerCancel: () => {
-      pressPendingRef.current = false;
-      touchPressPendingRef.current = false;
-    },
-    onKeyDown: (event: KeyboardEvent) => {
-      if (isActivationKey(event.key) && !event.repeat) {
-        keyPendingRef.current = true;
-      }
-    },
-    onBlur: () => {
-      keyPendingRef.current = false;
-    },
-    onClick: (event: MouseEvent) => {
-      const isPointerActivation = isPointerClick(event);
-
-      const isPressSoundDue = isPointerActivation
-        ? touchPressPendingRef.current || (playOnClickWithoutPress && !pressPendingRef.current)
-        : keyPendingRef.current;
-
-      if (isPressSoundDue) {
+    /**
+     * Plays the sound of a deferred touch press whose `click` will not arrive (e.g., the second tap of a double tap,
+     * which `useDoublePress` swallows).
+     */
+    playPendingTouchPressSound: () => {
+      if (isTouchPressPendingRef.current) {
+        isTouchPressPendingRef.current = false;
         playClickSound();
       }
-
-      pressPendingRef.current = false;
-      touchPressPendingRef.current = false;
-      keyPendingRef.current = false;
     },
   };
+}
+
+/**
+ * Returns the event handlers of `usePressSoundPlayer`, for a control that does not call `playPendingTouchPressSound`.
+ */
+export function usePressSound(options?: PressSoundOptions) {
+  return usePressSoundPlayer(options).handlers;
 }

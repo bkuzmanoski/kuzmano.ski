@@ -55,8 +55,8 @@
   position: relative;
   flex: 1;
 
-  /* Use the inherited focus state instead of a style query. Safari can resolve a style query
-   * on a pseudo-element against the previous value, leaving the pattern one state behind. */
+  /* Use the inherited focus state instead of a style query. Safari can resolve a style query on a pseudo-element
+   * against the previous value, leaving the pattern one state behind. */
   &.filled::before {
     @mixin dither-13;
 

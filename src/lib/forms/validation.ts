@@ -1,5 +1,4 @@
-// React-agnostic so that the same rules run in the browser to
-// guide the user and on the server to enforce the contract.
+// React-agnostic so that the same rules run in the browser to guide the user and on the server to enforce the contract.
 
 export type Rule<TValue> = (value: TValue) => string | null;
 export type Schema<TValues> = { readonly [K in keyof TValues]: ReadonlyArray<Rule<TValues[K]>> };
@@ -17,12 +16,14 @@ export const maxLength =
   (value) =>
     isWithinLengthLimit(value, limit) ? null : message;
 
-// The shape of accepted email addresses: a dot-atom local part and a dotted domain of
-// letter-digit-hyphen labels and a strict subset of RFC 5322. Quoted local parts,
-// comments, and address literals are legal but rejected.
-//
-// This catches a typo before the message is sent. Whether an email address can
-// receive mail is left for the mail server to determine.
+/**
+ * The shape of an accepted email address, a strict subset of RFC 5322 with a dot-atom local part and a dotted domain of
+ * letter-digit-hyphen labels. The pattern rejects quoted local parts, comments, and address literals, which RFC 5322
+ * allows.
+ *
+ * This catches a typo before the form sends the message. The mail server determines whether an email address can
+ * receive mail.
+ */
 const ATOM = String.raw`[A-Za-z0-9!#$%&'*+/=?^_\`{|}~-]+`;
 const LABEL = String.raw`[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?`;
 const EMAIL = new RegExp(String.raw`^${ATOM}(?:\.${ATOM})*@(?:${LABEL}\.)+[A-Za-z]{2,63}$`);

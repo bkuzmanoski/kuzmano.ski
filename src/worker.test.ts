@@ -8,13 +8,16 @@ import { LLMS_TXT_LINK_HEADER } from "#/site/metadata.ts";
 import type { AssetsBinding, WorkerEnv } from "cloudflare:workers";
 
 const RENDERED_DOCUMENT = "<!DOCTYPE html><title>Rendered</title>";
-const RENDERED_ACCEPT_HEADER = "x-rendered-accept"; // Reports the `Accept` header the router was given.
+
+/** The response header in which the stubbed router reports the `Accept` header it received. */
+const RENDERED_ACCEPT_HEADER = "x-rendered-accept";
+
 const PAGE_TOKEN_COUNT = 607;
 const COLLECTION_TOKEN_COUNT = 145;
 const STALE_TOKEN_COUNT = 42;
 
-// The build emits a count for each Markdown file, so the paths in this map are also
-// the documents that have a Markdown representation (see `/build/markdown/plugin.ts`).
+// The build emits a count for each Markdown file, so the paths in this map are also the documents that have a Markdown
+// representation (see `/build/markdown/plugin.ts`).
 vi.mock("virtual:markdown-token-counts", () => ({
   MARKDOWN_TOKEN_COUNTS: {
     "/page.md": PAGE_TOKEN_COUNT,
@@ -61,14 +64,17 @@ const FILES: Record<string, { body: string; contentType: string } | undefined> =
   "/stale": { body: DOCUMENT, contentType: "text/html; charset=utf-8" },
   "/media/image.webp": { body: "bytes", contentType: "image/webp" },
 };
-const PARTIAL_BODY_LENGTH = 8; // Bytes the Asset Worker returns for a `Range` request below.
+
+/** Bytes the Asset Worker returns for a `Range` request below. */
+const PARTIAL_BODY_LENGTH = 8;
+
 const PARTIAL_RANGE = `bytes=0-${PARTIAL_BODY_LENGTH - 1}`;
 
 const etagOf = (path: string) => `"${path}"`;
 
 let requestedPaths: Array<string> = [];
 
-// Mimics Asset Worker behavior: redirect trailing slashes and return `304` for matching ETags.
+/** Mimics the Asset Worker, which redirects trailing slashes and returns `304` for matching ETags. */
 const assets: AssetsBinding = {
   fetch: (request) => {
     const { pathname } = new URL(request.url);

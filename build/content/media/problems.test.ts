@@ -80,43 +80,22 @@ describe("renditionSizeProblems", () => {
 });
 
 describe("coverImageProblems", () => {
-  const THUMBNAIL_SHORTEST_SIDE_PX = 128; // Below the 144px social card minimum.
-  const LARGE_THUMBNAIL_SHORTEST_SIDE_PX = 200;
-
   test("accepts a cover image that meets every requirement", () => {
-    expect(coverImageProblems(coverImage(), THUMBNAIL_SHORTEST_SIDE_PX)).toEqual([]);
+    expect(coverImageProblems(coverImage())).toEqual([]);
   });
 
-  test("reports a cover image one pixel under the social card minimum on its shortest side", () => {
-    expect(
-      coverImageProblems(coverImage({ dimensions: { width: 800, height: 143 } }), THUMBNAIL_SHORTEST_SIDE_PX),
-    ).toEqual([
+  test("reports a cover image one pixel under the social media card minimum on its shortest side", () => {
+    expect(coverImageProblems(coverImage({ dimensions: { width: 800, height: 143 } }))).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 144px minimum on its shortest side (800x143px).`,
     ]);
   });
 
-  test("accepts a cover image of exactly the social card minimum on its shortest side", () => {
-    expect(
-      coverImageProblems(coverImage({ dimensions: { width: 800, height: 144 } }), THUMBNAIL_SHORTEST_SIDE_PX),
-    ).toEqual([]);
-  });
-
-  test("reports a cover image one pixel under the thumbnail's shortest side length, when that is larger than the social card minimum", () => {
-    expect(
-      coverImageProblems(coverImage({ dimensions: { width: 800, height: 199 } }), LARGE_THUMBNAIL_SHORTEST_SIDE_PX),
-    ).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 200px minimum on its shortest side (800x199px).`,
-    ]);
-  });
-
-  test("accepts a cover image of exactly the thumbnail's shortest side length, when that is larger than the social card minimum", () => {
-    expect(
-      coverImageProblems(coverImage({ dimensions: { width: 800, height: 200 } }), LARGE_THUMBNAIL_SHORTEST_SIDE_PX),
-    ).toEqual([]);
+  test("accepts a cover image of exactly the social media card minimum on its shortest side", () => {
+    expect(coverImageProblems(coverImage({ dimensions: { width: 800, height: 144 } }))).toEqual([]);
   });
 
   test("reports a cover image one byte over the maximum size", () => {
-    expect(coverImageProblems(coverImage({ bytes: megabytesInBytes(5) + 1 }), THUMBNAIL_SHORTEST_SIDE_PX)).toEqual([
+    expect(coverImageProblems(coverImage({ bytes: megabytesInBytes(5) + 1 }))).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" exceeds the 5MB limit (5MB).`,
     ]);
   });
@@ -198,11 +177,11 @@ describe("posterImageProblems", () => {
     expect(posterImageProblems(posterImage(640, 360), video)).toEqual([]);
   });
 
-  test("accepts a poster image whose aspect ratio differs from the video's by less than 1%", () => {
+  test("accepts a poster image whose aspect ratio differs from that of the video by less than 1%", () => {
     expect(posterImageProblems(posterImage(640, 363), video)).toEqual([]); // 0.83% narrower.
   });
 
-  test("reports a poster image whose aspect ratio differs from the video's by more than 1%", () => {
+  test("reports a poster image whose aspect ratio differs from that of the video by more than 1%", () => {
     expect(posterImageProblems(posterImage(640, 364), video)).toEqual([
       expect.stringContaining("must match the aspect ratio"),
     ]); // 1.10% narrower.

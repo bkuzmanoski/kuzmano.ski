@@ -14,8 +14,8 @@ export type ResolvedContent =
 /**
  * The content served at `/<segment>` or `/<segment>/<slug>`.
  *
- * The window resolver and the document loader both call this, so a route cannot open one
- * window and describe another. A feature route wins over content of the same name.
+ * The window resolver and the document loader both call this, so a route cannot open one window and describe another. A
+ * feature route wins over content of the same name.
  */
 export function resolveContent(segment: string, slug?: string): ResolvedContent {
   const collection = collections[segment];

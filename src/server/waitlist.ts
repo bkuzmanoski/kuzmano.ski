@@ -9,15 +9,21 @@ import { errorMessageOf, logServerEvent, reportMissingBinding } from "./log.ts";
 import type { ServerLogEvent } from "./log.ts";
 
 const NOTION_API_URL = "https://api.notion.com/v1";
-const NOTION_VERSION = "2026-03-11"; // Pinned: Notion changes the shape of a request between versions.
-const DATA_SOURCE_PROPERTY_NAMES = { emailAddress: "Email", list: "List", source: "Source" }; // The properties the waitlist data source must define (see `/README.md`).
+
+/** The Notion API version, pinned because Notion changes the shape of a request between versions. */
+const NOTION_VERSION = "2026-03-11";
+
+/** The properties the waitlist data source must define (see `/README.md`). */
+const DATA_SOURCE_PROPERTY_NAMES = { emailAddress: "Email", list: "List", source: "Source" };
+
 const REQUEST_TIMEOUT_MS = 5_000;
-const RETRYABLE_STATUS_CODES = new Set([429, 529]); // Rate limited; overloaded.
+
+/** Rate limited; overloaded. */
+const RETRYABLE_STATUS_CODES = new Set([429, 529]);
 
 /**
- * `throttled` means Notion is rate limiting or overloaded, so the join may succeed on a retry.
- * Every other failure is a misconfiguration that cannot recover, so it collapses to `unavailable`
- * and the diagnosis is left to the log.
+ * `throttled` means Notion is rate limiting or overloaded, so the join may succeed on a retry. Every other failure is a
+ * misconfiguration that cannot recover, so it collapses to `unavailable` and the diagnosis is left to the log.
  */
 export type MembershipResult = "recorded" | "throttled" | "unavailable";
 

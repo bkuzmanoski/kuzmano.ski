@@ -20,8 +20,10 @@ const startFetch = createStartHandler(defaultStreamHandler);
 const fetchAssetAt = (assets: AssetsBinding, request: Request, path: string) =>
   assets.fetch(new Request(new URL(path, request.url), request));
 
-// Treat `304 Not Modified` as a file response, not a miss. Otherwise, a conditional request for
-// Markdown could receive the rendered document instead of confirming its cached Markdown file.
+/**
+ * Treats `304 Not Modified` as a file response rather than a miss. Otherwise, a conditional request for Markdown could
+ * receive the rendered document instead of confirming its cached Markdown file.
+ */
 const isFileResponse = (file: Response) => file.ok || file.status === 304;
 
 function asMarkdownResponse(file: Response, path: string): Response {
@@ -42,7 +44,7 @@ function asMarkdownResponse(file: Response, path: string): Response {
   return new Response(file.body, { status: file.status, headers });
 }
 
-// Adds `Vary: Accept` so shared caches distinguish response representations.
+/** Adds `Vary: Accept` so shared caches distinguish response representations. */
 function varyingOnAccept(response: Response): Response {
   const responseVaryingOnAccept = new Response(response.body, response);
 
@@ -87,8 +89,8 @@ async function respondTo(request: Request, env?: WorkerEnv): Promise<Response> {
   const assets = env?.[ASSETS_BINDING];
   const { pathname } = new URL(request.url);
 
-  // The Asset Worker has no file under an API path, so an API request goes straight to the router
-  // rather than first costing a request to the Asset Worker.
+  // The Asset Worker has no file under an API path, so an API request goes straight to the router rather than first
+  // costing a request to the Asset Worker.
   if (!assets || !["GET", "HEAD"].includes(request.method) || pathname.startsWith(API_PATH_PREFIX)) {
     return await startFetch(request);
   }

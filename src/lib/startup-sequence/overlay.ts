@@ -4,8 +4,8 @@
 export const STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE = "data-startup-sequence-overlay";
 
 /**
- * Marks the `theme-color` pair for the startup screen's backdrop, which `/src/app/root-document.tsx`
- * renders ahead of the desktop's until the startup sequence has run.
+ * Marks the `theme-color` pair for the startup screen's backdrop, which `/src/app/root-document.tsx` renders ahead of
+ * the desktop's until the startup sequence has run.
  */
 export const STARTUP_SEQUENCE_THEME_COLOR_ATTRIBUTE = "data-startup-sequence-theme-color";
 export const STARTUP_SEQUENCE_THEME_COLOR_SELECTOR = `meta[${STARTUP_SEQUENCE_THEME_COLOR_ATTRIBUTE}]`;

@@ -6,10 +6,7 @@ import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
 
-const COVER_IMAGE: CoverImage = {
-  social: { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 },
-  thumbnail: { kind: "image", src: mediaRoute("collection/entry.cover.webp"), width: 128, height: 128, alternates: [] },
-};
+const COVER_IMAGE: CoverImage = { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 };
 
 const pluginServing = (coverImages: Record<EntryKey, CoverImage>) => {
   const plugin = entryCoverImagesPlugin(() => Promise.resolve(coverImages));

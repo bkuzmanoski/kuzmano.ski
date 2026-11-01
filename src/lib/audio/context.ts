@@ -15,8 +15,8 @@ export const NON_GESTURE_KEYS = new Set([
 ]);
 
 /**
- * Small lead time for scheduled audio. Web Audio renders ahead of `currentTime`,
- * so scheduling exactly at `currentTime` can already be late when rendered.
+ * Small lead time for scheduled audio. Web Audio renders ahead of `currentTime`, so scheduling exactly at `currentTime`
+ * can already be late when rendered.
  */
 export const LEAD_TIME_S = 0.02;
 
@@ -28,12 +28,16 @@ let runningPromise: Promise<void> | null = null;
 
 const hasUserActivation = () => (navigator as Partial<Navigator>).userActivation?.hasBeenActive ?? true;
 
-// Checks only for the standard `running` state. WebKit also reports `interrupted`,
-// which should be handled like any other non-running state.
+/**
+ * Checks only for the standard `running` state. WebKit also reports `interrupted`, which this treats like any other
+ * non-running state.
+ */
 const isRunning = (context: AudioContext) => context.state === "running";
 
-// Returns the shared audio context, creating it only after user activation.
-// Creating it earlier leaves the context suspended by autoplay policy.
+/**
+ * Returns the shared audio context, creating it only after user activation. Creating it earlier leaves the context
+ * suspended by autoplay policy.
+ */
 function openAudioContext(): AudioContext | null {
   if (audioContext) {
     return audioContext;
@@ -50,9 +54,10 @@ function openAudioContext(): AudioContext | null {
   return audioContext;
 }
 
-// Requests that a context resume if it is not already running. Each call resumes
-// independently. A resume can remain pending when issued before iOS accepts the
-// gesture, so calls are intentionally not deduplicated.
+/**
+ * Requests that a context resume if it is not already running. Each call resumes independently. A resume can remain
+ * pending when issued before iOS accepts the gesture, so calls are intentionally not deduplicated.
+ */
 function ensureResumed(context: AudioContext): void {
   if (!isRunning(context)) {
     void context.resume().catch(() => {
@@ -61,9 +66,10 @@ function ensureResumed(context: AudioContext): void {
   }
 }
 
-// Resolves when the context becomes running. Waits for the state transition
-// rather than a particular `resume()` promise,  since a resume issued by an
-// earlier gesture may never settle.
+/**
+ * Resolves when the context becomes running. Waits for the state transition rather than a particular `resume()`
+ * promise, as a resume issued by an earlier gesture may never settle.
+ */
 function whenAudioRunning(context: AudioContext): Promise<void> {
   if (isRunning(context)) {
     return Promise.resolve();
@@ -95,7 +101,7 @@ export function getGainNode(context: AudioContext): GainNode {
   return outputGainNode;
 }
 
-// Resumes the audio context when a backgrounded tab becomes visible again.
+/** Resumes the audio context when a backgrounded tab becomes visible again. */
 function resumeAudioOnReturn(): void {
   if (!audioContext || document.visibilityState !== "visible" || getSettings().soundEffects !== "on") {
     return;
@@ -110,8 +116,8 @@ export const needsAudioPriming = (): boolean =>
 /**
  * Primes the audio context for later playback.
  *
- * Must be called synchronously from a trusted user gesture because browsers
- * restrict audio activation to the gesture that triggers it.
+ * Must be called synchronously from a trusted user gesture because browsers restrict audio activation to the gesture
+ * that triggers it.
  */
 export function primeAudio(): void {
   if (getSettings().soundEffects !== "on") {
@@ -148,8 +154,8 @@ export function useAudioUnlock() {
 /**
  * Calls `play` with the audio context once the context is running, when sound effects are on.
  *
- * `play` runs synchronously when the context is already running. Otherwise the context is
- * resumed and `play` waits for its `running` state.
+ * `play` runs synchronously when the context is already running. Otherwise the context is resumed and `play` waits for
+ * its `running` state.
  */
 export function schedulePlayback(play: (context: AudioContext) => void) {
   if (getSettings().soundEffects !== "on") {

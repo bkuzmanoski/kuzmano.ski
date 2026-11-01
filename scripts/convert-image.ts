@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import {
-  BODY_IMAGE_DERIVATIVES,
+  BODY_IMAGE_ALTERNATES,
   IMAGE_ENCODING_OPTIONS,
   encodeImageDerivative,
   imageDerivativeExtensionOf,
@@ -69,7 +69,7 @@ async function convert(inputFilePath: string, qualityByFormat: Arguments["qualit
 
   console.log(`${inputFilePath} (${fileSize((await stat(inputFilePath)).size)})`);
 
-  for (const derivative of BODY_IMAGE_DERIVATIVES.alternates) {
+  for (const derivative of BODY_IMAGE_ALTERNATES) {
     const outputFilePath = outputFilePathOf(inputFilePath, derivative);
     const encodedBytes = await encodeImageDerivative(resolve(inputFilePath), {
       ...derivative,

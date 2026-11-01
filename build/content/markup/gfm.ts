@@ -10,12 +10,10 @@ import { gfmTable } from "micromark-extension-gfm-table";
 import type { Processor } from "unified";
 
 /**
- * Parses and serializes GFM tables, autolink literals, strikethrough, and footnotes. The MDX pipeline
- * and the Markdown pass both use this plugin, so an entry is parsed the same way for its document and
- * its Markdown representation.
+ * Parses and serializes GFM tables, autolink literals, strikethrough, and footnotes. The MDX pipeline and the Markdown
+ * pass both use this plugin, so an entry is parsed the same way for its document and its Markdown representation.
  *
- * This composes the individual extensions rather than using `remark-gfm`, which also enables task
- * lists.
+ * This composes the individual extensions rather than using `remark-gfm`, which also enables task lists.
  */
 export function remarkGfmSubset(this: Processor) {
   const data = this.data();

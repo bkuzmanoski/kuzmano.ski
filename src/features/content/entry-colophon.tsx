@@ -1,15 +1,14 @@
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { cx } from "#/lib/class-names.ts";
 import { entrySiblings } from "#/lib/content/entry-siblings.ts";
-import { formatDate } from "#/lib/datetime.ts";
 import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { entryAlternateRepresentationsOf } from "#/site/alternate-representations.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
-import { languageAttributeInDocumentFor } from "#/site/language.ts";
 import type { CollectionEntryTarget } from "#/site/windows.ts";
 
 import { ContentLink } from "./content-link.tsx";
 import styles from "./entry-colophon.module.css";
+import { FormattedDate } from "./formatted-date.tsx";
 
 type SiblingDirection = "newer" | "older";
 
@@ -33,9 +32,7 @@ function SiblingLink({
       {/* The spaces separate the parts of that name (they are not rendered). */}
       <span className={styles.siblingDirection}>{SIBLING_DIRECTION_LABELS[direction]}</span>{" "}
       <span className={styles.siblingTitle}>{entry.title}</span>{" "}
-      <time className={styles.siblingDate} dateTime={entry.date} lang={languageAttributeInDocumentFor(dateFormat)}>
-        {formatDate(entry.date, dateFormat)}
-      </time>
+      <FormattedDate date={entry.date} format={dateFormat} className={styles.siblingDate} />
     </ContentLink>
   );
 }

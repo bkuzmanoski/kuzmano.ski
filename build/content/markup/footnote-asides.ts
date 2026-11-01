@@ -11,7 +11,8 @@ interface FootnoteVFile extends EntryVFile {
 }
 
 interface FootnoteDefinition extends ContentNode {
-  label?: string | null; // The label as authored, where `identifier` is normalized.
+  /** The label as authored, rather than the normalized `identifier`. */
+  label?: string | null;
   children: Array<ContentNode>;
 }
 
@@ -26,12 +27,19 @@ interface NumberedFootnote {
 }
 
 const BACK_LINK_TEXT = "↩︎";
-const WRITTEN_REFERENCE_PATTERN = /(\\*)\[\^([^\]\s]+)\]/g; // A `[^label]` in an entry's source, with the run of backslashes before it, which escapes the bracket when its length is odd.
+/**
+ * A `[^label]` in an entry's source, with the run of backslashes before it, which escapes the bracket when its length
+ * is odd.
+ */
+const WRITTEN_REFERENCE_PATTERN = /(\\*)\[\^([^\]\s]+)\]/g;
 
-// Each run of characters other than ASCII letters, digits, hyphens, and underscores in a label becomes
-// one hyphen, so the fragment of a reference's `href` attribute matches the footnote's ID without
-// percent-decoding. The transform throws for two labels that become the same ID.
+/**
+ * Each run of characters other than ASCII letters, digits, hyphens, and underscores in a label becomes one hyphen, so
+ * the fragment of a reference's `href` attribute matches the footnote's ID without percent-decoding. The transform
+ * throws for two labels that become the same ID.
+ */
 const idOf = (identifier: string) => identifier.toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+
 const footnoteIdOf = (identifier: string) => `fn-${idOf(identifier)}`;
 const footnoteReferenceIdOf = (identifier: string, occurrence: number) =>
   `fnref-${idOf(identifier)}${occurrence > 1 ? `-${occurrence}` : ""}`;
@@ -126,16 +134,15 @@ function assertReferencesDefined(tree: ContentParent, file: FootnoteVFile) {
 }
 
 /**
- * Converts an entry's GFM footnotes to rail asides. Numbers each footnote by its first reference and
- * replaces every reference with `<sup><a id="fnref-<label>" href="#fn-<label>" aria-label="Footnote N">`.
- * Repeated references receive IDs suffixed with `-2`, `-3`, and so on. Moves each definition into a
- * `Footnote` element with the ID `fn-<label>`, inserting it at the root after the block containing its
- * first reference and any existing `Rail` elements. Appends links back to every reference to the
- * footnote's final paragraph.
+ * Converts an entry's GFM footnotes to rail asides. Numbers each footnote by its first reference and replaces every
+ * reference with `<sup><a id="fnref-<label>" href="#fn-<label>" aria-label="Footnote N">`. Repeated references receive
+ * IDs suffixed with `-2`, `-3`, and so on. Moves each definition into a `Footnote` element with the ID `fn-<label>`,
+ * inserting it at the root after the block containing its first reference and any existing `Rail` elements. Appends
+ * links back to every reference to the footnote's final paragraph.
  *
- * Throws when a reference has no definition, a label is defined twice, two labels share an ID, a definition
- * has no reference or is not at the entry root, or a reference appears inside a footnote, link, or heading.
- * Also throws, naming the entry, when it renders a `Footnote` itself.
+ * Throws when a reference has no definition, a label is defined twice, two labels share an ID, a definition has no
+ * reference or is not at the entry root, or a reference appears inside a footnote, link, or heading. Also throws,
+ * naming the entry, when it renders a `Footnote` itself.
  */
 export function remarkFootnoteAsides() {
   return function transform(tree: ContentParent, file: FootnoteVFile) {
@@ -154,7 +161,8 @@ export function remarkFootnoteAsides() {
     });
 
     visit(tree, "footnoteDefinition", (node: FootnoteDefinition, _index, parent: ContentParent | undefined) => {
-      // A definition inside another block would leave that block empty, and one inside another definition would be removed with it.
+      // A definition inside another block would leave that block empty, and one inside another definition would be
+      // removed with it.
       if (parent !== undefined && parent !== tree) {
         throw new Error(
           `${entryPath} defines the footnote "[^${node.label ?? node.identifier}]" inside ${containerDescriptionOf(parent)}.`,

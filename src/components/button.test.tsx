@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { Button } from "./button.tsx";
 
@@ -108,14 +109,14 @@ test("a press and the click that follows it play a single click sound", () => {
 
   const button = screen.getByRole("button", { name: "Press" });
 
-  fireEvent.pointerDown(button, MOUSE);
+  pressWithMouse(button);
   fireEvent.pointerUp(button, MOUSE);
   fireEvent.click(button, CLICK);
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a tap whose touch pointer events do not reach the button still plays a click sound", () => {
+test("a tap whose touch pointer events do not reach the button still plays the click sound", () => {
   render(<Button>Press</Button>);
 
   fireEvent.click(screen.getByRole("button", { name: "Press" }), CLICK);
@@ -123,7 +124,7 @@ test("a tap whose touch pointer events do not reach the button still plays a cli
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a button and a link activated with the keyboard each play a click sound", () => {
+test("a button and a link activated with the keyboard each play the click sound", () => {
   render(
     <>
       <Button>Button</Button>
@@ -141,7 +142,7 @@ test("a button and a link activated with the keyboard each play a click sound", 
   expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
-test("a press or an activation key press on a button with the `aria-disabled` attribute does not play a click sound or call its `onClick` prop", () => {
+test("a press or an activation key press on a button with the `aria-disabled` attribute does not play the click sound or call its `onClick` prop", () => {
   const onClick = vi.fn();
 
   render(

@@ -9,6 +9,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import {
   useFocusedWindow,
@@ -18,7 +19,6 @@ import {
 } from "#/lib/window-manager/context.ts";
 import type { WindowActions } from "#/lib/window-manager/context.ts";
 import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
-import { WINDOW_LAYOUT } from "#/site/window-layout.ts";
 import type * as SiteWindows from "#/site/windows.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
 
@@ -26,10 +26,10 @@ import { WindowManagerProvider } from "./window-manager-provider.tsx";
 
 import type { RouterHistory } from "@tanstack/react-router";
 
-// `routes.test.ts` covers the two effects below through the real route tree. This suite renders the
-// provider over a route tree whose components render `null`, so each effect can be asserted without a
-// document, window, or content body. The catalog is faked because `resolveRoute` reads it;
-// `resolveRoute` itself stays real, wrapped in a spy so one test can count the calls to it.
+// `routes.test.ts` covers the two effects below through the real route tree. This suite renders the provider over a
+// route tree whose components render `null`, so each effect can be asserted without a document, window, or content
+// body. The catalog is faked because `resolveRoute` reads it; `resolveRoute` itself stays real, wrapped in a spy so one
+// test can count the calls to it.
 vi.mock("#/site/catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
 
 const resolveRoute = vi.hoisted(() => vi.fn());
@@ -51,7 +51,7 @@ let openWindows: WindowRecord<WindowContent>;
 let focusedWindow: WindowId | null;
 let notFoundRoute: string | null;
 
-// Recorded in an effect so every assertion reads the state of the provider's latest commit.
+/** Recorded in an effect so every assertion reads the state of the provider's latest commit. */
 function Probe() {
   const actions = useWindowActions();
   const content = useWindowContent();
@@ -172,9 +172,9 @@ test("the URL the provider navigated to itself is not resolved a second time", a
   act(() => actions().focus("entry"));
   await settle(ENTRY_ROUTE, history);
 
-  // The provider's own navigation arrives back as a URL change. `expectedRouteRef` records the route it
-  // navigated to, so the URL-to-focus effect skips that one; without it, every internal navigation would
-  // be resolved a second time and dispatched back into the state it came from.
+  // The provider's own navigation arrives back as a URL change. `expectedRouteRef` records the route it navigated to,
+  // so the URL-to-focus effect skips that one; without it, every internal navigation would be resolved a second time
+  // and dispatched back into the state it came from.
   expect(resolveRoute).not.toHaveBeenCalled();
   expect(openRoutes()).toHaveLength(2);
 });

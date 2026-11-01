@@ -3,13 +3,12 @@ import { elementNameOf, hasAttribute, setMissingAttributes } from "./tree.ts";
 import type { ContentParent } from "./tree.ts";
 
 /**
- * Numbers the `<h2>`, `<figure>`, and `<table>` elements that are direct children of an entry's root,
- * each kind counted from 1, as `data-section-number`, `data-figure-number`, and `data-table-number`.
+ * Numbers the `<h2>`, `<figure>`, and `<table>` elements that are direct children of an entry's root, each kind counted
+ * from 1, as `data-section-number`, `data-figure-number`, and `data-table-number`.
  *
- * A figure marked `data-content-unnumbered` is not numbered, and a table inside a figure is not a
- * child of the root, so neither is counted. A section number is zero-padded to two digits, as
- * `decimal-leading-zero` is. Only what the entry writes is numbered, so an element a component renders
- * at the root has no label.
+ * A figure marked `data-content-unnumbered` is not numbered, and a table inside a figure is not a child of the root, so
+ * neither is counted. A section number is zero-padded to two digits, like `decimal-leading-zero`. Only what the entry
+ * writes is numbered, so an element a component renders at the root has no label.
  */
 export function rehypeNumberedElements() {
   return function transform(tree: ContentParent) {

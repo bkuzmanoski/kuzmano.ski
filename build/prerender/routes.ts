@@ -19,11 +19,13 @@ interface PrerenderRoute {
   sitemap?: { lastmod?: string; exclude?: boolean };
 }
 
-// A route claimed by content.
+/** A route claimed by content. */
 interface ContentRoute {
-  name: string; // The file or directory name, which becomes a URL segment as authored.
+  /** The file or directory name, which becomes a URL segment as authored. */
+  name: string;
   path: string;
-  sourcePath: string; // Authored content file or directory, used in validation errors.
+  /** Authored content file or directory, used in validation errors. */
+  sourcePath: string;
 }
 
 const RESERVED_ROUTES: Array<string> = [...FEATURE_ROUTES, collectionRoute(MEDIA_SEGMENT)];
@@ -62,8 +64,8 @@ function rejectAny(offendingPaths: Array<string>, message: (offendingPaths: stri
  * Validates the authored content and returns the complete list of routes to prerender.
  *
  * The built-in discovery options cannot produce a complete, duplicate-free list:
- * `autoStaticPathsDiscovery` misses dynamic routes, while `crawlLinks` misses
- * unlinked routes. Using both emits index routes twice.
+ * `autoStaticPathsDiscovery` misses dynamic routes, while `crawlLinks` misses unlinked routes. Using both emits index
+ * routes twice.
  */
 export function routesFor(
   content: AuthoredContent,
@@ -77,8 +79,8 @@ export function routesFor(
     (offendingPaths) => `URL-unsafe content file or folder name(s): ${offendingPaths}.`,
   );
 
-  // Checked before the `COLLECTIONS` lookups below so a collection taking a reserved route is
-  // reported for that conflict instead of for missing a title.
+  // Checked before the `COLLECTIONS` lookups below so a collection taking a reserved route is reported for that
+  // conflict instead of for missing a title.
   rejectAny(
     claimedRoutes.filter(({ path }) => RESERVED_ROUTES.includes(path)).map(({ sourcePath }) => sourcePath),
     (offendingPaths) => `Content shadowing reserved route(s): ${offendingPaths}.`,
@@ -114,8 +116,8 @@ export function routesFor(
 
   const contentDirectories = [{ ...pages, name: PAGES_DIRECTORY_NAME }, ...collections];
 
-  // An entry-named subdirectory contains that entry's media; nested content directories
-  // are unsupported because they do not have a corresponding route.
+  // An entry-named subdirectory contains that entry's media; nested content directories are unsupported because they do
+  // not have a corresponding route.
   rejectAny(
     contentDirectories.flatMap(({ name, entries, subdirectoryNames }) =>
       subdirectoryNames

@@ -30,8 +30,10 @@ const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
     children: [],
   }));
 
-// Returns renderable media references in document order. Unresolved or incompatible references remain
-// unchanged. Trees without a path have no renderable references.
+/**
+ * Returns renderable media references in document order. Unresolved or incompatible references remain unchanged. Trees
+ * without a path have no renderable references.
+ */
 async function renderableReferencesIn(
   tree: ContentParent,
   file: EntryVFile,
@@ -51,8 +53,10 @@ async function renderableReferencesIn(
   });
 }
 
-// Sets an authored element's `width` and `height` attributes to its media's intrinsic dimensions, so the
-// element reserves its box before the file loads.
+/**
+ * Sets an authored element's `width` and `height` attributes to its media's intrinsic dimensions, so the element
+ * reserves its box before the file loads.
+ */
 function setIntrinsicDimensionsUnlessSized(node: ContentNode, { width, height }: SizedMedia) {
   const isSized = hasAttribute(node, "width") || hasAttribute(node, "height") || hasSpreadAttribute(node);
 
@@ -61,10 +65,12 @@ function setIntrinsicDimensionsUnlessSized(node: ContentNode, { width, height }:
   }
 }
 
-// Removes the `data-content-*` attributes from an authored `<img>` and returns them as properties for
-// the `<picture>` that wraps it. The content styles lay out the entry's direct children by these
-// attributes, and the `<picture>` is the direct child once the image is wrapped. An attribute whose
-// value is an expression remains on the `<img>`, since a hast property cannot contain an expression.
+/**
+ * Removes the `data-content-*` attributes from an authored `<img>` and returns them as properties for the `<picture>`
+ * that wraps it. The content styles lay out the entry's direct children by these attributes, and the `<picture>` is the
+ * direct child once it wraps the image. An attribute with an expression as its value stays on the `<img>`, since a hast
+ * property cannot contain an expression.
+ */
 function extractLayoutAttributes(image: ContentNode): Record<string, string> {
   const layoutProperties: Record<string, string> = {};
 
@@ -100,9 +106,9 @@ export function rehypeMedia(mediaForEntry: MediaForEntry) {
         setMissingAttributes(reference.video, { poster: media.posterImage.src });
         setIntrinsicDimensionsUnlessSized(reference.video, media);
       } else if (media.kind === "image") {
-        // A hast `img` node originates from Markdown, which cannot set an image's attributes, so the build
-        // sets them. An authored `<img>` remains `mdx-jsx` and is given only its intrinsic dimensions, since
-        // the entry can write its `loading` and `decoding` attributes itself.
+        // A hast `img` node originates from Markdown, which cannot set an image's attributes, so the build sets them.
+        // An authored `<img>` remains `mdx-jsx` and the build sets only its intrinsic dimensions as the entry can write
+        // its `loading` and `decoding` attributes itself.
 
         if (isAuthoredImageSource(reference)) {
           setIntrinsicDimensionsUnlessSized(reference.node, media);

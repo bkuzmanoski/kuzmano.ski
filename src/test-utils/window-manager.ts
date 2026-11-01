@@ -1,5 +1,5 @@
-// Imports only types from `#/lib/window-manager/context.ts` because the `vi.mock` factories for that
-// module import this one (a value import from it hangs the suite).
+// Imports only types from `#/lib/window-manager/context.ts` because the `vi.mock` factories for that module import this
+// one (a value import from it hangs the suite).
 import type { WindowActions } from "#/lib/window-manager/context.ts";
 import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
 

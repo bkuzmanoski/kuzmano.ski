@@ -7,13 +7,14 @@ import {
 } from "#/lib/settings/theme.ts";
 import { readStored } from "#/lib/storage.ts";
 
-// Runs in the document head before first paint (prior to hydration) so the stored theme tint
-// (the theme color and chroma scale) is applied from the first paint.
+// Runs in the document head before first paint (prior to hydration) so the stored theme tint (the theme color and
+// chroma scale) is applied from the first paint.
 
 const storedThemeTint = readStoredThemeTint();
 
-// The build renders desktop background `theme-color` values for the stylesheet's default tint. When a tint is stored,
-// replace them with the values `watchDesktopBackgroundThemeColors` computed for the last applied tint.
+// The build renders desktop background `theme-color` values for the default tint (`DEFAULT_THEME_TINT_PROPERTIES` in
+// `/src/lib/settings/theme-tint.ts`). When a tint is stored, replace them with the values
+// `watchDesktopBackgroundThemeColors` computed for the last applied tint.
 if (storedThemeTint !== null) {
   applyThemeTint(storedThemeTint);
 

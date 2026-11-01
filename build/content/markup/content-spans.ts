@@ -11,9 +11,10 @@ const SPAN_ATTRIBUTE_NAME = "data-content-span";
 
 const isContentSpan = isOneOf(CONTENT_SPANS);
 
-// Reads the attribute from authored JSX, or from a hast element such as the `<picture>` that
-// `rehypeMedia` moves an authored `<img>`'s layout attributes to. Returns `undefined` when the
-// element does not have the attribute.
+/**
+ * Reads the attribute from authored JSX, or from a hast element such as the `<picture>` that `rehypeMedia` moves an
+ * authored `<img>`'s layout attributes to. Returns `undefined` when the element does not have the attribute.
+ */
 function spanAttributeOf(node: ContentNode): { value?: unknown } | undefined {
   if (node.attributes) {
     return node.attributes.find(({ name }) => name === SPAN_ATTRIBUTE_NAME);

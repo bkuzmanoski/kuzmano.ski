@@ -120,8 +120,8 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
 }
 
 function StartupSequenceContent() {
-  // Held for the whole run, so the durations the stylesheet animates over and the
-  // timers for each phase do not disagree if the reduced motion preference changes.
+  // Held for the whole run, so the durations the stylesheet animates over and the timers for each phase do not disagree
+  // if the reduced motion preference changes.
   const [motion] = useState<Motion>(() =>
     getPrefersReducedMotion() ? REDUCED_MOTION_DURATION_MS : MOTION_DURATION_MS,
   );
@@ -306,6 +306,7 @@ function StartupSequenceContent() {
             isRevealingDesktop && styles.leaving,
           )}
           style={illustrationStyle}
+          aria-hidden={isLoadingCoverUp || undefined}
         >
           <picture className={styles.bodyMacintoshIllustration}>
             <source srcSet={bodyMacintoshIllustrationAvifUrl} type="image/avif" />
@@ -335,10 +336,7 @@ function StartupSequenceContent() {
             {coverContent === "loadingIndicator" ? (
               <LoadingIndicator />
             ) : (
-              <div className={styles.prompt}>
-                {beginPrompt}
-                <span className={styles.block} aria-hidden />
-              </div>
+              <div className={styles.prompt}>{beginPrompt}</div>
             )}
           </div>
         </>

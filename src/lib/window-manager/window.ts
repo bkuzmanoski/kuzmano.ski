@@ -24,7 +24,10 @@ export interface WindowGeometry extends Rect {
 export type WindowSizing = "resizable" | "fixed" | "fitContentHeight";
 
 export interface WindowSpec {
-  defaultSize: Size; // A `"fitContentHeight"` window is placed by this height until its content height is reported.
+  /**
+   * The window manager places a `"fitContentHeight"` window by this height until the window reports its content height.
+   */
+  defaultSize: Size;
   sizing: WindowSizing;
 }
 

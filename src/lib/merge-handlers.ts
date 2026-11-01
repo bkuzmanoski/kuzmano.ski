@@ -5,8 +5,8 @@ type Handler = (event: SyntheticEvent) => void;
 /**
  * Combines two bags of event handler props. Handlers run in the order the bags are given.
  *
- * Every handler still runs once if one of them prevents the default: a later handler that
- * wants to stand aside for an earlier one can read `event.defaultPrevented`.
+ * Every handler still runs once if one of them prevents the default: a later handler that wants to stand aside for an
+ * earlier one can read `event.defaultPrevented`.
  */
 export function mergeHandlers<TFirst extends object, TSecond extends object>(
   first: TFirst,

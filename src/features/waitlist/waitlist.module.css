@@ -18,7 +18,7 @@
   }
 
   & .title {
-    font: var(--font-heading-3);
+    font: var(--content-body-font-heading-3);
   }
 
   & .description {
@@ -26,7 +26,7 @@
     flex-direction: column;
     gap: 8px;
 
-    font: var(--font-body-small);
+    font: var(--content-body-font-body-small);
     color: var(--color-foreground-secondary);
   }
 

@@ -4,10 +4,9 @@ import { Tooltip } from "./tooltip.tsx";
 import type { ReactNode } from "react";
 
 /**
- * The tooltip and screen-reader announcement for a copy control. A control whose copy is announced by
- * a status region it shares with other controls, such as an entry's copy status, sets
- * `announcesConfirmation` to `false`, so a page does not contain a status region per control. It is
- * required, so each control states which region announces its copy.
+ * The tooltip and screen-reader announcement for a copy control. A control whose copy is announced by a status region
+ * it shares with other controls, such as an entry's copy status, sets `announcesConfirmation` to `false`, so a page
+ * does not contain a status region per control. It is required, so each control states which region announces its copy.
  */
 export function CopyTooltip({
   label,

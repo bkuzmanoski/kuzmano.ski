@@ -12,7 +12,7 @@ const setUserActivation = (hasBeenActive: boolean) =>
     configurable: true,
   });
 
-// The module keeps its context for the session, so each test loads a fresh module instance.
+/** The module keeps its context for the session, so each test loads a fresh module instance. */
 const loadContextModule = async () => await import("./context.ts");
 
 beforeEach(() => {
@@ -116,8 +116,8 @@ describe("schedulePlayback", () => {
 
     const context = FakeAudioContext.instances[0]!;
 
-    // Some iOS gestures can leave resume() pending even though a later gesture
-    // can successfully start the context. Waiting for that promise would strand audio.
+    // Some iOS gestures can leave resume() pending even though a later gesture can successfully start the context.
+    // Waiting for that promise would strand audio.
     context.resumeResult = new Promise<void>(() => undefined);
 
     schedulePlayback(play);

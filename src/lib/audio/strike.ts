@@ -12,7 +12,7 @@ export interface Strike {
   dampingHz: number;
 }
 
-// Seedable PRNG, so a strike renders the same noise burst every time.
+/** Seedable PRNG, so a strike renders the same noise burst every time. */
 function mulberry32(seed: number): () => number {
   let state = seed;
 

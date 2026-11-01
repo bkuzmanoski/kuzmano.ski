@@ -12,7 +12,8 @@ export interface FeedMetadata {
   title: string;
   description: string;
   path: string;
-  route: string; // The route whose content the feed syndicates.
+  /** The route whose content the feed syndicates. */
+  route: string;
   collections: Array<CollectionSegment>;
 }
 
@@ -33,7 +34,7 @@ const COLLECTION_FEEDS: Array<FeedMetadata> = Object.entries(COLLECTIONS).map(([
   collections: [segment as CollectionSegment],
 }));
 
-/** The feed of the collection at `route`, or `null` for a route that is not a collection's. */
+/** The feed of the collection at `route`, or `null` for a route that is not a collection route. */
 export const collectionFeedOf = (route: string): FeedMetadata | null =>
   COLLECTION_FEEDS.find((feed) => feed.route === route) ?? null;
 

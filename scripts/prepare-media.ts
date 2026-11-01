@@ -6,8 +6,8 @@ import { contentMediaProblemReport, fileSize } from "../build/content/media/prob
 import { rootRelativePathOf } from "../build/content/media/renditions.ts";
 import { MEDIA_DIRECTORY_PATH, fromRoot } from "../build/paths.ts";
 
-// Validates content media, encodes missing derivatives into the media directory,
-// and removes derivatives that are no longer required.
+// Validates content media, encodes missing derivatives into the media directory, and removes derivatives that are no
+// longer required.
 
 try {
   const derivativeStore = createImageDerivativeStore(fromRoot(MEDIA_DIRECTORY_PATH));

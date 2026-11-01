@@ -4,8 +4,10 @@ import type { Config } from "stylelint";
 
 const [cleanOrder, cleanOrderOptions] = cleanOrderConfig.rules["order/order"] as [Array<unknown>, object];
 
-// Blockless mixins come before declarations so declarations can override them. Block mixins wrap rules
-// in a condition (see `/src/mixins.css`), so they remain in place like `@container`.
+/**
+ * Blockless mixins come before declarations so declarations can override them. Block mixins wrap rules in a condition
+ * (see `/src/mixins.css`), so they remain in place like `@container`.
+ */
 const order = cleanOrder.map((item) =>
   typeof item === "object" && item !== null && "name" in item && item.name === "mixin"
     ? { ...item, hasBlock: false }

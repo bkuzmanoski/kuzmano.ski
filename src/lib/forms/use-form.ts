@@ -15,7 +15,8 @@ interface FieldHandlers {
 export interface Form<TValues extends FieldValues<TValues>> {
   values: TValues;
   handlers: Record<keyof TValues, FieldHandlers>;
-  visibleErrors: Errors<TValues>; // An empty visibleErrors does not indicate validity; check `isValid` instead.
+  /** An empty visibleErrors does not indicate validity; check `isValid` instead. */
+  visibleErrors: Errors<TValues>;
   isValid: boolean;
   isDirty: boolean;
   setValue: (name: keyof TValues, value: string) => void;
@@ -30,18 +31,16 @@ export interface Form<TValues extends FieldValues<TValues>> {
  *
  * A field reports its error once visited, or once a submission has been attempted.
  *
- * A field is bound from two places: `handlers[name]`, which is fixed for the life
- * of the form, and `values[name]`, which changes only when that field changes. A
- * caller that spreads both onto a control gives the React Compiler two narrow
- * dependencies to watch, so typing in one field does not rerender the others.
+ * A field is bound from two places: `handlers[name]`, which is fixed for the life of the form, and `values[name]`,
+ * which changes only when that field changes. A caller that spreads both onto a control gives the React Compiler two
+ * narrow dependencies to watch, so typing in one field does not rerender the others.
  *
- * `initialValues` and `schema` must be module constants, not call-site literals.
- * Both are compared by identity by `reset`, by `handlers`, and by the memo scopes
- * the React Compiler builds around this hook.
+ * `initialValues` and `schema` must be module constants, not call-site literals. Both are compared by identity by
+ * `reset`, by `handlers`, and by the memo scopes the React Compiler builds around this hook.
  *
- * Values are validated as typed, while the server validates them trimmed (see
- * `parseSubmission` in `/src/lib/contact/message.ts`). Every rule either trims first
- * or measures length, so the client is stricter than the server.
+ * Values are validated as typed, while the server validates them trimmed (see `parseSubmission` in
+ * `/src/lib/contact/message.ts`). Every rule either trims first or measures length, so the client is stricter than the
+ * server.
  */
 export function useForm<TValues extends FieldValues<TValues>>({
   initialValues,

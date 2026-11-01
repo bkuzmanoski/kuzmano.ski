@@ -186,7 +186,7 @@
 
 @define-mixin content-subtitle {
   margin-block-start: 4px;
-  font: var(--font-body-small);
+  font: var(--content-body-font-body-small);
   color: var(--color-foreground-secondary);
 }
 
@@ -208,7 +208,7 @@
 }
 
 @define-mixin bitmap-label {
-  font: var(--font-bitmap);
+  font: var(--content-body-font-bitmap);
   color: var(--color-foreground-secondary);
   text-transform: uppercase;
   letter-spacing: 1px; /* Use whole pixels so letters remain aligned to device pixels. */
@@ -291,6 +291,13 @@
   white-space: nowrap;
 
   clip-path: inset(50%);
+}
+
+@define-mixin scroll-pane-scrollbar-hidden {
+  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
+  @container not style(--window-safe-area-inline-end: 0px) {
+    @mixin-content;
+  }
 }
 
 /* A device without an input that can both hover and point precisely (e.g., a phone or tablet without a mouse). */

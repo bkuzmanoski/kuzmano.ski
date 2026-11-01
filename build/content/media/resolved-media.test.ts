@@ -21,15 +21,17 @@ vi.mock("node:fs/promises", () => ({ default: { readFile, stat }, readFile, stat
 const IMAGE_FILE_PATH = "collection/entry/image.png";
 const VIDEO_FILE_PATH = "collection/entry/video.mp4";
 
-// Real files from ffmpeg: `h264.mp4` is a video alone, `aac-h264.mp4` puts an audio track before
-// its video track, and `hevc.mp4` is in a format the site does not serve.
+/**
+ * FFmpeg-generated fixtures: `h264.mp4` contains only video, `aac-h264.mp4` places an audio track before its video
+ * track, and `hevc.mp4` uses a format the site does not serve.
+ */
 const fixture = (fileName: string) => readFileSync(join(fromRoot("build/test-utils/fixtures"), fileName));
 
 const solidImage = (width: number, height: number) =>
   sharp({ create: { width, height, channels: 3, background: "#000000" } });
 const pngBytes = (width: number, height: number) => solidImage(width, height).png().toBuffer();
 
-// Inserts a `tEXt` chunk after a PNG's `IHDR` chunk.
+/** Inserts a `tEXt` chunk after a PNG's `IHDR` chunk. */
 function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffer {
   const typeAndData = Buffer.from(`tEXt${keyword}\0${text}`, "latin1");
   const length = Buffer.alloc(4);
@@ -45,7 +47,7 @@ const fileStats = (size: number, mtimeNs: number) => ({ size: BigInt(size), mtim
 
 const hashOf = (image: ResolvedImage | UnreadableImage) => ("problem" in image ? null : image.hash);
 
-// Moves a file's top-level `moov` box after the boxes that follow it, as an encoder without `+faststart` writes it.
+/** Moves a file's top-level `moov` box after the boxes that follow it, as an encoder without `+faststart` writes it. */
 function withMovieBoxLast(bytes: Buffer): Buffer {
   const topLevelBoxes: Array<{ type: string; bytes: Buffer }> = [];
 

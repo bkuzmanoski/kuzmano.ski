@@ -1,4 +1,5 @@
-const DRIVER_QUANTIZATION_STEPS = 127; // Eight bits, signed, across the full swing of the cone.
+/** Eight bits, signed, across the full swing of the cone. */
+const DRIVER_QUANTIZATION_STEPS = 127;
 
 /** The sample rate used by the Macintosh 128K sound driver, in Hz. */
 export const DRIVER_SAMPLE_RATE = 22254.54;

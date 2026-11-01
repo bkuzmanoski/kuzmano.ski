@@ -18,7 +18,8 @@ interface FocusRecord {
   element: HTMLElement;
 }
 
-const isAllowedFocusTarget = (element: HTMLElement) => !(isTouchOnly() && isEditableTarget(element)); // Focusing a text field on a touch-only device would open its software keyboard.
+/** Focusing a text field on a touch-only device would open its software keyboard. */
+const isAllowedFocusTarget = (element: HTMLElement) => !(isTouchOnly() && isEditableTarget(element));
 
 function focusTarget(container: HTMLElement, record: FocusRecord | null, contentKey: string): HTMLElement {
   if (record?.contentKey === contentKey && container.contains(record.element) && isAllowedFocusTarget(record.element)) {
@@ -71,16 +72,16 @@ export function useRestorableFocus(
   useEffect(() => {
     const container = ref.current;
 
-    // Focus already inside the container is left alone: a press that landed on
-    // a control has focused that control, and a restore must not overrule it.
+    // Focus already inside the container is left alone: a press that landed on a control has focused that control, and
+    // a restore must not overrule it.
     if (!isActive || !container || container.contains(document.activeElement)) {
       return;
     }
 
     focusTarget(container, lastFocusedRef.current, contentKey).focus({ preventScroll: true });
 
-    // The remembered element may no longer be focusable, in which case the
-    // call above was a no-op and the container itself receives focus.
+    // The remembered element may no longer be focusable, in which case the call above was a no-op and the container
+    // itself receives focus.
     if (!container.contains(document.activeElement)) {
       container.focus({ preventScroll: true });
     }

@@ -21,8 +21,8 @@ interface CopyButtonAppearance {
 }
 
 /**
- * A control that copies `value`, confirms the copy, and announces it from a status region of its own.
- * Where several controls share one status region, each renders a `ControlledCopyButton` instead.
+ * A control that copies `value`, confirms the copy, and announces it from a status region of its own. Where several
+ * controls share one status region, each renders a `ControlledCopyButton` instead.
  */
 export function CopyButton({
   value,
@@ -50,10 +50,9 @@ export function CopyButton({
 }
 
 /**
- * A copy control whose copy, confirmation, and failure alert are owned by its caller, which passes the
- * status of the latest copy the control made as `copyStatus`, or `null` when there is none to display.
- * `onDidHide` is called when the control's tooltip is hidden, for the caller to end the confirmation
- * the tooltip was showing.
+ * A copy control whose copy, confirmation, and failure alert are owned by its caller, which passes the status of the
+ * latest copy the control made as `copyStatus`, or `null` when there is none to display. `onDidHide` is called when the
+ * control's tooltip is hidden, for the caller to end the confirmation the tooltip was showing.
  */
 export function ControlledCopyButton({
   copyStatus,
@@ -94,8 +93,8 @@ export function ControlledCopyButton({
         holdPressed={isCopying || hasCopied}
         aria-label={label}
         onClick={() => {
-          // Copying again would show the copy icon and its label until the new write finished, then
-          // restart the confirmation, so a press while a copy is pending or confirmed is ignored.
+          // Copying again would show the copy icon and its label until the new write finished, then restart the
+          // confirmation, so a press while a copy is pending or confirmed is ignored.
           if (!isCopying && !hasCopied) {
             onCopy();
           }

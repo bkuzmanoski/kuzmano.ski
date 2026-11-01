@@ -2,10 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
-import { MAX_CLICK_DELAY_MS } from "#/lib/press.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
 
 import { DesktopIcons } from "./desktop-icons.tsx";
 
@@ -104,18 +104,41 @@ test("closing the last window by a keyboard action focuses the icon that is the 
   expect(icon(0).tabIndex).toBe(0);
 });
 
-test("closing the last window `MAX_CLICK_DELAY_MS` after a pointer press focuses the icon that is the tab stop", () => {
-  const setFocusedWindow = renderIcons();
+test.each(SCREEN_READER_ACTIVATIONS)(
+  "closing the last window by a screen reader's activate action in %s focuses the icon that is the tab stop",
+  (_browser, activate) => {
+    const setFocusedWindow = renderIcons();
 
-  openWindow(setFocusedWindow, "entry");
-  fireEvent.pointerDown(document.body);
+    openWindow(setFocusedWindow, "entry");
+    render(<button type="button">Close</button>);
+    activate(screen.getByRole("button", { name: "Close" }));
+    setFocusedWindow(null);
 
-  const now = vi.spyOn(performance, "now").mockReturnValue(performance.now() + MAX_CLICK_DELAY_MS);
+    expect(document.activeElement).toBe(icon(0));
+  },
+);
 
-  setFocusedWindow(null);
-  now.mockRestore();
+test("holding the Enter key opens the icon's window once", () => {
+  render(<DesktopIcons onZoomRect={vi.fn()} />);
+  fireEvent.keyDown(icon(0), { key: "Enter" });
+  fireEvent.keyDown(icon(0), { key: "Enter", repeat: true });
 
-  expect(document.activeElement).toBe(icon(0));
+  expect(open).toHaveBeenCalledOnce();
+});
+
+test("holding Alt and the O key opens the icon's window once", () => {
+  render(<DesktopIcons onZoomRect={vi.fn()} />);
+  fireEvent.keyDown(icon(0), { code: "KeyO", altKey: true });
+  fireEvent.keyDown(icon(0), { code: "KeyO", altKey: true, repeat: true });
+
+  expect(open).toHaveBeenCalledOnce();
+});
+
+test("the Enter key with a modifier key does not open the icon's window, or prevent the key's default action", () => {
+  render(<DesktopIcons onZoomRect={vi.fn()} />);
+
+  expect(fireEvent.keyDown(icon(0), { key: "Enter", metaKey: true })).toBe(true);
+  expect(open).not.toHaveBeenCalled();
 });
 
 test("closing the last window by a pointer press leaves the focus on the body when no icon is selected", () => {

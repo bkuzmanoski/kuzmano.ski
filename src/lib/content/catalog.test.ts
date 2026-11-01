@@ -36,7 +36,7 @@ describe("createCatalog", () => {
     expect(collections.collection!.has("page")).toBe(false);
   });
 
-  test("a directory without a configured collection is omitted from the catalog", () => {
+  test("the catalog omits a directory without a configured collection", () => {
     const { collections, pages } = catalogOf();
 
     expect(collections.unconfigured).toBeUndefined();
@@ -66,16 +66,16 @@ describe("createCatalog", () => {
     });
   });
 
-  test("entries are listed newest first", () => {
+  test("the collection listing orders entries newest first", () => {
     expect(slugsOf(catalogOf())).toEqual(["newest", "middle", "oldest"]);
   });
 
-  test("the collection listing is built once and reused", () => {
+  test("the catalog builds the collection listing once and reuses it", () => {
     const collection = catalogOf().collections.collection!;
     expect(collection.list()).toBe(collection.list());
   });
 
-  test("a draft entry is omitted from the collection listing", () => {
+  test("the collection listing omits a draft entry", () => {
     const documents = {
       ...DOCUMENTS,
       "collection/draft.mdx": { frontmatter: frontmatterOf("Draft", { date: "2026-09-19", draft: true }) },
@@ -85,7 +85,7 @@ describe("createCatalog", () => {
     expect(slugsOf(catalogOf(documents, { includeDrafts: true }))).toEqual(["draft", "newest", "middle", "oldest"]);
   });
 
-  test("a draft entry is still resolved by slug when the index contains it", () => {
+  test("the catalog still resolves a draft entry by slug when the index contains it", () => {
     const collection = catalogOf({ "collection/draft.mdx": { frontmatter: frontmatterOf("Draft", { draft: true }) } })
       .collections.collection!;
 
@@ -93,7 +93,7 @@ describe("createCatalog", () => {
     expect(collection.frontmatterOf("draft")?.title).toBe("Draft");
   });
 
-  test("an entry's frontmatter is looked up by slug, or `null` when the index does not contain it", () => {
+  test("the catalog looks up an entry's frontmatter by slug, or returns `null` when the index does not contain it", () => {
     const collection = catalogOf().collections.collection!;
 
     expect(collection.frontmatterOf("newest")?.title).toBe("Newest");

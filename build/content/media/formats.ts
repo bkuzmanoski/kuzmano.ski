@@ -15,7 +15,11 @@ export const IMAGE_MEDIA_TYPES = {
 
 const VIDEO_MEDIA_TYPES = { ".mp4": "video/mp4" } as const;
 const MEDIA_TYPES: Record<string, string | undefined> = { ...IMAGE_MEDIA_TYPES, ...VIDEO_MEDIA_TYPES };
-const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"]; // Images in these formats have derivatives. Images in other formats are served as authored.
+
+/** The build generates derivatives only for these image formats; the site serves all others as authored. */
+const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
+/** Open Graph crawlers can render these formats when the site serves cover images as authored `og:image` assets. */
+const COVER_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
 
 const FILE_EXTENSION = /\.[^./]*$/;
 
@@ -25,6 +29,7 @@ export const withoutExtension = (filePath: string) =>
   filePath.slice(0, filePath.length - authoredExtensionOf(filePath).length);
 export const mediaTypeOf = (filePath: string): string | null => MEDIA_TYPES[extensionOf(filePath)] ?? null;
 export const isEncodableImage = (filePath: string) => ENCODABLE_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
+export const isSupportedCoverImage = (filePath: string) => COVER_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
 export const coverImageStemOf = (slug: string) => `${slug}${COVER_IMAGE_STEM_SUFFIX}`;
 export const posterImageStemOf = (videoFilePath: string) =>
   `${withoutExtension(videoFilePath)}${VIDEO_POSTER_IMAGE_STEM_SUFFIX}`;

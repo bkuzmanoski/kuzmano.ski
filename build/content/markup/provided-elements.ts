@@ -11,9 +11,8 @@ interface MarkedContentNode extends ContentNode {
 /**
  * Allows specified authored JSX elements to resolve through the MDX component provider.
  *
- * MDX marks JSX elements as explicit, which bypasses the provider. Removing that mark
- * enables provider components, such as a custom `<video>`, while preserving the authored
- * element when no provider component exists.
+ * MDX marks JSX elements as explicit, which bypasses the provider. Removing that mark enables provider components, such
+ * as a custom `<video>`, while preserving the authored element when no provider component exists.
  *
  * Run after `rehypeMedia`, which reads and rewrites element attributes.
  */

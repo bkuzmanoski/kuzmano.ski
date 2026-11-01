@@ -1,19 +1,23 @@
 import { Children, isValidElement, useId } from "react";
 
 import { CopyTooltip } from "#/components/copy-tooltip.tsx";
-import { playClickSound } from "#/lib/audio/sounds.ts";
+import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
+import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 
 import { useEntryClipboard } from "./entry-clipboard.ts";
 import styles from "./entry-section-heading.module.css";
 
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import type { ComponentProps, MouseEvent, ReactElement, ReactNode } from "react";
 
-type HeadingLevel = 2 | 3; // The levels an entry can use (see `heading-levels` in `/content/.markdownlint-cli2.jsonc`).
-type HeadingLinkElement = ReactElement<{ "data-heading-link": string; href?: string }>; // The link the build appends to a heading, marked `data-heading-link`, whose `href` is the heading's fragment.
+/** The levels an entry can use (see `heading-levels` in `/content/.markdownlint-cli2.jsonc`). */
+type HeadingLevel = 2 | 3;
+
+/** The link the build appends to a heading, marked `data-heading-link`, whose `href` is the heading's fragment. */
+type HeadingLinkElement = ReactElement<{ "data-heading-link": string; href?: string }>;
 
 const isHeadingLinkElement = (child: ReactNode): child is HeadingLinkElement =>
   isValidElement<{ "data-heading-link"?: string }>(child) && child.props["data-heading-link"] !== undefined;
@@ -33,6 +37,7 @@ function HeadingLink({
   const labelEndId = useId();
   const renderedEntry = useRenderedEntry();
   const entryClipboard = useEntryClipboard();
+  const pressSoundHandlers = usePressSound({ defersTouchPressSound: true, silencesBrowserHandledPress: true });
 
   const copyStatus = entryClipboard?.copyStatusOf(fragment) ?? null;
   const hasCopied = copyStatus === "copied";
@@ -53,19 +58,20 @@ function HeadingLink({
           className={styles.headingLink}
           aria-labelledby={`${labelStartId} ${headingId} ${labelEndId}`}
           data-heading-link
-          onClick={(event) => {
-            if (isBrowserHandledClick(event) || renderedEntry === null || entryClipboard === null) {
-              return;
-            }
+          {...mergeHandlers(renderedEntry && entryClipboard ? pressSoundHandlers : {}, {
+            onClick: (event: MouseEvent) => {
+              if (isBrowserHandledClick(event) || renderedEntry === null || entryClipboard === null) {
+                return;
+              }
 
-            event.preventDefault();
-            playClickSound();
+              event.preventDefault();
 
-            // A press while a copy is pending or confirmed is ignored (see also `ControlledCopyButton`).
-            if (copyStatus !== "copying" && !hasCopied) {
-              entryClipboard.copyToClipboard(fragment, canonicalUrl(renderedEntry.route) + fragment, "link");
-            }
-          }}
+              // A press while a copy is pending or confirmed is ignored (see also `ControlledCopyButton`).
+              if (copyStatus !== "copying" && !hasCopied) {
+                entryClipboard.copyToClipboard(fragment, canonicalUrl(renderedEntry.route) + fragment, "link");
+              }
+            },
+          })}
         >
           <span id={labelStartId} hidden>
             Copy link to

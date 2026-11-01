@@ -12,9 +12,8 @@ export const RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID = resolvedModuleIdOf(MODUL
 /**
  * Exposes build-time Markdown token counts through `virtual:markdown-token-counts`.
  *
- * The Worker reads this map to identify which paths have a Markdown representation, and to report a
- * token count without reading the body. In development, the map remains empty because `./plugin.ts`
- * renders and counts tokens per request.
+ * The Worker reads this map to identify which paths have a Markdown representation, and to report a token count without
+ * reading the body. In development, the map remains empty because `./plugin.ts` renders and counts tokens per request.
  */
 export const markdownTokenCountsPlugin = (loadTokenCounts: () => Promise<MarkdownTokenCounts>): Plugin =>
   jsonValueModulePlugin({

@@ -3,9 +3,8 @@ import { useEffect, useEffectEvent } from "react";
 import { isEditableTarget } from "../keys.ts";
 
 /**
- * A global keyboard shortcut. Modifier is Option/Alt. `code` is the
- * physical key from KeyboardEvent.code. `key` is not used because
- * Option changes the character that `key` reports on macOS.
+ * A global keyboard shortcut. Modifier is Option/Alt. `code` is the physical key from KeyboardEvent.code. `key` is not
+ * used because Option changes the character that `key` reports on macOS.
  */
 export interface KeyboardShortcut {
   code: string;

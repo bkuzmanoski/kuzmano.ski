@@ -16,6 +16,7 @@ import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts.ts";
 import type { KeyboardShortcut } from "#/lib/hooks/use-global-shortcuts.ts";
+import { useMenuButtonPress } from "#/lib/hooks/use-menu-button-press.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { cycle } from "#/lib/math.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
@@ -40,12 +41,44 @@ import { joinedWithSeparators } from "./menu-items.ts";
 import { Menu } from "./menu.tsx";
 
 import type { MenuItem } from "./menu-items.ts";
-import type { ComponentType, KeyboardEvent, PointerEvent, ReactNode } from "react";
+import type { ComponentProps, ComponentType, KeyboardEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
   const shortcutNumber = DESTINATION_ORDER.indexOf(id) + 1;
   return { code: `Digit${shortcutNumber}`, label: String(shortcutNumber) };
 };
+
+function MenuTitle({
+  label,
+  icon: Icon,
+  isOpen,
+  onPress,
+  onActivate,
+  ...buttonProps
+}: {
+  label: string;
+  icon?: ComponentType<{ className?: string }> | undefined;
+  isOpen: boolean;
+  onPress: (anchor: HTMLButtonElement) => void;
+  onActivate: (anchor: HTMLButtonElement) => void;
+} & Pick<ComponentProps<"button">, "ref" | "id" | "onKeyDown" | "onPointerDown" | "onPointerEnter">) {
+  const menuButtonPressHandlers = useMenuButtonPress({
+    onPress: ({ currentTarget }) => onPress(currentTarget),
+    onActivate: ({ currentTarget }) => onActivate(currentTarget),
+  });
+  return (
+    <button
+      type="button"
+      className={cx(styles.title, isOpen && styles.open)}
+      aria-label={Icon ? label : undefined}
+      aria-expanded={isOpen}
+      aria-haspopup="menu"
+      {...mergeHandlers(menuButtonPressHandlers, buttonProps)}
+    >
+      {Icon ? <Icon className={styles.titleIcon} /> : label}
+    </button>
+  );
+}
 
 function StatusButton({
   label,
@@ -132,8 +165,10 @@ function SoundStatus() {
 }
 
 interface SiteTime {
-  dateTime: string; // The displayed minute as a valid global date and time string, in UTC.
-  timeText: string; // The hour, minute, and day period, without the time zone.
+  /** The displayed minute as a valid global date and time string, in UTC. */
+  dateTime: string;
+  /** The hour, minute, and day period, without the time zone. */
+  timeText: string;
   timeZoneName: string;
 }
 
@@ -293,21 +328,21 @@ export function MenuBar() {
   function openMenuAt(
     label: string,
     anchor: HTMLButtonElement,
-    { pointerHeld = false, focusesFirstItem = false } = {},
+    { isPointerHeld: isHeld = false, focusesFirstItem = false } = {},
   ) {
-    setIsPointerHeld(pointerHeld);
+    setIsPointerHeld(isHeld);
     setOpenMenu({ label, anchor, focusesFirstItem });
   }
 
-  // On touch, the press that dismisses an open menu can also open the next menu.
-  // There is no hover to switch menus first, so the new menu replaces the old one
-  // before its outside-press handler runs. Closing by label leaves the replacement open.
+  // On touch, the press that dismisses an open menu can also open the next menu. There is no hover to switch menus
+  // first, so the new menu replaces the old one before its outside-press handler runs. Closing by label leaves the
+  // replacement open.
   function closeMenu(label: string) {
     setOpenMenu((current) => (current?.label === label ? null : current));
   }
 
-  // Arrow keys always move along the menu bar. With a menu open, the adjacent menu
-  // replaces it and receives focus; otherwise only the title receives focus.
+  // Arrow keys always move along the menu bar. With a menu open, the adjacent menu replaces it and receives focus;
+  // otherwise only the title receives focus.
   function openAdjacentMenu(fromLabel: string, direction: 1 | -1) {
     const index = menus.findIndex((menu) => menu.label === fromLabel);
     const label = menus[cycle(menus.length, index, direction)]!.label;
@@ -325,30 +360,19 @@ export function MenuBar() {
     }
   }
 
-  // The browser's mousedown focus is prevented by the markup below. The menu mounts and
-  // focuses itself, so the default focus action must be delayed until after that focus;
-  // otherwise it steals focus back from the menu and arrow-key navigation stops.
-  //
-  // Touch input is implicitly captured by the title it lands on, so other titles never
-  // receive `pointerenter` while the finger is held. Releasing the capture lets the
-  // pointer move between titles and change the open menu like a held mouse.
-  function onTitlePointerDown(event: PointerEvent<HTMLButtonElement>, label: string) {
-    if (!isPrimaryPress(event)) {
-      return;
-    }
-
-    const anchor = event.currentTarget;
-
-    titlePressPointerIdRef.current = event.pointerId;
-
-    if (anchor.hasPointerCapture(event.pointerId)) {
-      anchor.releasePointerCapture(event.pointerId);
-    }
-
-    playClickSound();
+  // Focuses the title before the menu mounts, as the title prevents the default action of its `mousedown`.
+  function onTitlePress(anchor: HTMLButtonElement, label: string) {
     anchor.focus({ focusVisible: false });
     setIsPointerHeld(true);
     setOpenMenu((current) => (current?.label === label ? null : { label, anchor, focusesFirstItem: false }));
+  }
+
+  function onTitleActivate(anchor: HTMLButtonElement, label: string) {
+    if (openMenu?.label === label) {
+      closeMenu(label);
+    } else {
+      openMenuAt(label, anchor, { focusesFirstItem: true });
+    }
   }
 
   function onTitleKeyDown(event: KeyboardEvent<HTMLButtonElement>, label: string) {
@@ -381,34 +405,36 @@ export function MenuBar() {
       <nav className={styles.menus} aria-label="Main menu">
         {menus.map(({ label, icon: Icon, items }, menuIndex) => (
           <div key={label} className={styles.item}>
-            <button
+            <MenuTitle
               ref={(node) => {
                 titleElementsRef.current[label] = node;
               }}
               id={`${titleIdPrefix}-${menuIndex}`}
-              type="button"
-              className={cx(styles.title, openMenu?.label === label && styles.open)}
-              aria-label={Icon ? label : undefined}
-              aria-expanded={openMenu?.label === label}
-              aria-haspopup="menu"
+              label={label}
+              icon={Icon}
+              isOpen={openMenu?.label === label}
+              onPress={(anchor) => onTitlePress(anchor, label)}
+              onActivate={(anchor) => onTitleActivate(anchor, label)}
               onKeyDown={(event) => onTitleKeyDown(event, label)}
-              onMouseDown={(event) => event.preventDefault()}
-              onPointerDown={(event) => onTitlePointerDown(event, label)}
+              onPointerDown={(event) => {
+                if (isPrimaryPress(event)) {
+                  titlePressPointerIdRef.current = event.pointerId;
+                }
+              }}
               onPointerEnter={(event) => {
-                // Touch emits `pointerenter` before `pointerdown`; ignore it unless it belongs to a touch drag
-                // that began on a menu title, preventing the newly opened menu from immediately closing.
+                // The browser dispatches `pointerenter` before `pointerdown` for a new touch, so opening a menu here
+                // would let the touch's `pointerdown` close it again. This handler opens a menu for a touch only when
+                // the touch began with a press on a menu title.
                 if (
                   openMenu !== null &&
                   openMenu.label !== label &&
                   (event.pointerType !== "touch" || event.pointerId === titlePressPointerIdRef.current)
                 ) {
                   playHoverSound();
-                  openMenuAt(label, event.currentTarget, { pointerHeld: event.buttons > 0 });
+                  openMenuAt(label, event.currentTarget, { isPointerHeld: event.buttons > 0 });
                 }
               }}
-            >
-              {Icon ? <Icon className={styles.titleIcon} /> : label}
-            </button>
+            />
             {openMenu?.label === label && (
               <Menu
                 anchor={openMenu.anchor}

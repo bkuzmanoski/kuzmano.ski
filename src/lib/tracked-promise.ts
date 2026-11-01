@@ -6,13 +6,13 @@ export type TrackedPromise<T> = Promise<T> & {
 };
 
 /**
- * Records a promise's outcome on the promise itself so `use()` can read a settled value
- * synchronously without suspending.
+ * Records a promise's outcome on the promise itself so `use()` can read a settled value synchronously without
+ * suspending.
  *
- * A promise that has already resolved does not expose its value synchronously through the standard
- * Promise API. React therefore needs the outcome recorded on the promise to know that it is
- * settled when `use()` reads it. This matters during hydration because a suspension can cause
- * React to replace the server-rendered content with a Suspense fallback.
+ * A promise that has already resolved does not expose its value synchronously through the standard Promise API. React
+ * therefore needs the outcome recorded on the promise to know that it is settled when `use()` reads it. This matters
+ * during hydration because a suspension can cause React to replace the server-rendered content with a Suspense
+ * fallback.
  *
  * The promise is mutated rather than wrapped, so the caller must pass this same promise to `use()`.
  */

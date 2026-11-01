@@ -1,13 +1,11 @@
-import { THEME_DEFAULTS } from "virtual:theme-defaults";
-
 import { createClientStore } from "../client-store.ts";
 import { isOneOf } from "../guards.ts";
 import { readStored, removeStored, writeStored } from "../storage.ts";
 
 import { notifyColorChange } from "./color-change.ts";
+import { DEFAULT_THEME_CHROMA_SCALE, DEFAULT_THEME_COLOR } from "./theme-tint.ts";
 import {
   APPEARANCE_STORAGE_KEY,
-  DEFAULT_THEME_COLOR,
   THEME_CHROMA_SCALE_STORAGE_KEY,
   THEME_COLOR_STORAGE_KEY,
   applyAppearance,
@@ -54,7 +52,7 @@ const SETTINGS_STORAGE_KEYS: ReadonlySet<string> = new Set([
 const DEFAULT_SETTINGS: Settings = {
   appearance: "system",
   themeColor: DEFAULT_THEME_COLOR,
-  themeChromaScale: THEME_DEFAULTS.chromaScale,
+  themeChromaScale: DEFAULT_THEME_CHROMA_SCALE,
   soundEffects: "on",
 };
 

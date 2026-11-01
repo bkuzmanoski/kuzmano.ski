@@ -37,15 +37,19 @@ import type { ContentNode, ContentParent, EntryVFile } from "../content/markup/t
 
 export interface MarkdownEntry {
   path?: string;
-  url?: string; // The entry's URL, for a component that needs to link back to it.
-  readEntryDataModule?: EntryDataModuleReader; // Called only for an entry that renders a component rendered from entry data.
+  /** The entry's URL, for a component that needs to link back to it. */
+  url?: string;
+  /** Called only for an entry that renders a component rendered from entry data. */
+  readEntryDataModule?: EntryDataModuleReader;
 }
 
 /** Converts an entry's MDX source to its Markdown representation. */
 export type MarkdownRenderer = (source: string, entry?: MarkdownEntry) => Promise<string>;
 
-// What the transforms read from each entry's file, since it differs between entries rendered by the
-// same processor. `entryDataExports` is written by `readEntryData`.
+/**
+ * What the transforms read from each entry's file as it differs between entries that the same processor renders.
+ * `readEntryData` writes `entryDataExports`.
+ */
 interface MarkdownFileData extends Pick<MarkdownEntry, "url" | "readEntryDataModule"> {
   entryDataExports?: Map<ContentNode, EntryDataExport>;
 }
@@ -55,7 +59,8 @@ interface MarkdownVFile extends EntryVFile {
 }
 
 interface MarkdownContext {
-  url?: string; // The entry's URL, for a component that needs to link back to it.
+  /** The entry's URL, for a component that needs to link back to it. */
+  url?: string;
   entryDataExportOf: (element: ContentNode) => EntryDataExport;
 }
 
@@ -115,8 +120,10 @@ const CAPTIONED_IMAGES_MARKDOWN: ComponentMarkdown = {
 const waitlistFallbackParagraphFor = (url: string): ContentNode =>
   paragraphOf([textNode(FALLBACK_TEXT_BEFORE_URL), { type: "link", url, children: [textNode(url)] }]);
 
-// Fallback Markdown for React components embedded in the content, keyed by element name.
-// A component without fallback Markdown is replaced by its children.
+/**
+ * Fallback Markdown for React components embedded in the content, keyed by element name. The build replaces a component
+ * without fallback Markdown with its children.
+ */
 const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   Callout: ASIDE_MARKDOWN,
   ContributionGraph: {
@@ -181,8 +188,10 @@ const componentMarkdownOf = (node: ContentNode): ComponentMarkdown | undefined =
     ? COMPONENT_MARKDOWN[node.name]
     : undefined;
 
-// Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}` other
-// than a literal, which `replaceLiteralExpressions` has already replaced with its text.
+/**
+ * Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}` other than a literal,
+ * which `replaceLiteralExpressions` has already replaced with its text.
+ */
 const EXPRESSION_NODE_TYPES = new Set(["mdxFlowExpression", "mdxTextExpression"]);
 const DISCARDED_NODE_TYPES = new Set(["mdxjsEsm", ...EXPRESSION_NODE_TYPES]);
 const MDX_NODE_TYPES = new Set([...DISCARDED_NODE_TYPES, ...JSX_ELEMENT_NODE_TYPES]);
@@ -207,8 +216,10 @@ const BLOCK_ELEMENT_NAMES = new Set([
 const isBlockElementInParagraph = (node: ContentNode) =>
   node.type === "mdxJsxTextElement" && BLOCK_ELEMENT_NAMES.has(node.name ?? "");
 
-// MDX unwraps paragraphs that contain only a JSX element. This makes a component with block fallback
-// Markdown on its own line, such as `<Rail label="Aside">An aside.</Rail>`, render as a block.
+/**
+ * MDX unwraps paragraphs that contain only a JSX element. This makes a component with block fallback Markdown on its
+ * own line, such as `<Rail label="Aside">An aside.</Rail>`, render as a block.
+ */
 function soleBlockComponentIn(paragraph: ContentNode): ContentNode | undefined {
   const renderedChildren = (paragraph.children ?? []).filter((child) => child.type !== "text" || child.value?.trim());
   const [onlyChild, ...otherChildren] = renderedChildren;
@@ -272,12 +283,13 @@ function literalTextOf(expression: ContentNode): string | null {
   return otherQuasis.length === 0 && typeof cooked === "string" ? cooked : null;
 }
 
-// Replaces each literal `{expression}` with the text it renders, such as `{"⌘"}` in a `<kbd>` or
-// `{"{"}` in a table cell, where MDX would otherwise parse the character itself as syntax. An
-// expression authored as a block becomes a paragraph. This runs before the transforms that read the
-// text of an inline code element or a table cell, and after `replacePreformattedElements`, which
-// reads the text of the expressions in a `<pre>` itself so that it can separate them by lines rather
-// than paragraphs.
+/**
+ * Replaces each literal `{expression}` with the text it renders, such as `{"⌘"}` in a `<kbd>` or `{"{"}` in a table
+ * cell, where MDX would otherwise parse the character itself as syntax. An expression authored as a block becomes a
+ * paragraph. This runs before the transforms that read the text of an inline code element or a table cell, and after
+ * `replacePreformattedElements`, which reads the text of the expressions in a `<pre>` itself so that it can separate
+ * them by lines rather than paragraphs.
+ */
 function replaceLiteralExpressions() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
@@ -348,8 +360,10 @@ function codeLanguageIn(pre: ContentNode): string | null {
   return language;
 }
 
-// Replaces each `<pre>` with a fenced code block of its text. This runs before `stripMdx`, which would
-// replace the `<code>` inside it with an inline code span and join its lines.
+/**
+ * Replaces each `<pre>` with a fenced code block of its text. This runs before `stripMdx`, which would replace the
+ * `<code>` inside it with an inline code span and join its lines.
+ */
 function replacePreformattedElements() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
@@ -364,14 +378,17 @@ function replacePreformattedElements() {
   };
 }
 
-// The blocks each code fence attribute is emitted as before its fence (see `/build/content/markup/code-fence-attributes.ts`).
+/**
+ * The blocks the build emits before a code fence for each attribute it sets (see
+ * `/build/content/markup/code-fence-attributes.ts`).
+ */
 const CODE_FENCE_ATTRIBUTE_MARKDOWN: Record<CodeFenceAttributeName, (value: string) => Array<ContentNode>> = {
   gist: (gistId) => [
     paragraphOf([{ type: "link", url: githubGistUrlOf(gistId), children: [textNode(`${GITHUB_GIST_LINK_TEXT}.`)] }]),
   ],
 };
 
-// Replaces the meta string of each code fence with the Markdown of the attributes it sets.
+/** Replaces the meta string of each code fence with the Markdown of the attributes it sets. */
 function replaceCodeFenceAttributes() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node, index, parent) => {
@@ -432,8 +449,10 @@ function blockFallbacksAuthoredInlineIn(tree: ContentNode): Set<string> {
   return componentNames;
 }
 
-// Throws for a component with a block as its fallback Markdown authored inside a sentence, where the
-// serializer would emit its replacement into the prose around it rather than as a block of its own.
+/**
+ * Throws for a component with a block as its fallback Markdown authored inside a sentence, where the serializer would
+ * emit its replacement into the prose around it rather than as a block of its own.
+ */
 function assertBlockFallbacks() {
   return function assert(tree: ContentNode, file: EntryVFile) {
     const authoredInline = blockFallbacksAuthoredInlineIn(tree);
@@ -466,9 +485,9 @@ function replacementsFor(node: ContentNode, context: MarkdownContext): Array<Con
       return componentMarkdown.block(node, context);
     }
 
-    // A component authored as a block with only an inline fallback produces phrasing where a block is
-    // expected. `remark-stringify` cannot separate it from the following block, collapsing the
-    // document onto one line, so it is wrapped in a paragraph.
+    // A component authored as a block with only an inline fallback produces phrasing where a block is expected.
+    // `remark-stringify` cannot separate it from the following block, collapsing the document onto one line, so it is
+    // wrapped in a paragraph.
     return [paragraphOf(componentMarkdown.inline(node, context))];
   }
 
@@ -493,7 +512,7 @@ function readEntryData() {
   };
 }
 
-// Replaces MDX nodes with plain Markdown nodes that `remark-stringify` can serialize.
+/** Replaces MDX nodes with plain Markdown nodes that `remark-stringify` can serialize. */
 function stripMdx() {
   return function transform(tree: ContentNode, file: MarkdownVFile) {
     const { url, entryDataExports } = markdownFileDataOf(file);
@@ -515,9 +534,8 @@ function stripMdx() {
       visitedNodes.push(node);
     });
 
-    // `visit` visits parents before their descendants, so reversing this list processes children
-    // first. This ensures a component promoted in place of its parent is already replaced, rather
-    // than leaving nested MDX behind.
+    // `visit` visits parents before their descendants, so reversing this list processes children first. This ensures a
+    // component promoted in place of its parent is already replaced, rather than leaving nested MDX behind.
     for (const node of visitedNodes.reverse()) {
       if (node.children) {
         node.children = node.children.flatMap((child) => replacementsFor(child, context));
@@ -538,8 +556,10 @@ function mdxNodeTypesIn(tree: ContentNode): Set<string> {
   return mdxNodeTypes;
 }
 
-// Ensures the Markdown tree contains no MDX nodes. Any MDX that survives `stripMdx`
-// would be serialized as JSX and appear verbatim in the Markdown.
+/**
+ * Ensures the Markdown tree contains no MDX nodes. `remark-stringify` would serialize any MDX that survives `stripMdx`
+ * as JSX, which would appear verbatim in the Markdown.
+ */
 function assertMarkdownOnly() {
   return function assert(tree: ContentNode, file: EntryVFile) {
     const remainingMdxNodeTypes = mdxNodeTypesIn(tree);
@@ -553,8 +573,8 @@ function assertMarkdownOnly() {
 }
 
 /**
- * Returns a renderer that converts an entry's MDX source to its Markdown representation, resolving the
- * entry's media through `mediaForEntry`.
+ * Returns a renderer that converts an entry's MDX source to its Markdown representation, resolving the entry's media
+ * through `mediaForEntry`.
  */
 export function markdownRendererFor(mediaForEntry: MediaForEntry = NO_MEDIA_FOR_ENTRY): MarkdownRenderer {
   const processor = unified()

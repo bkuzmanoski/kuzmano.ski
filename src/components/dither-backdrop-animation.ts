@@ -25,8 +25,12 @@ const POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX = 90;
 const POINTER_HIGHLIGHT_STRENGTH = 0.45;
 const POINTER_HIGHLIGHT_EASING_PER_FRAME = 0.2;
 const FRAME_DURATION_AT_60HZ_MS = 1_000 / 60;
-const POINTER_HIGHLIGHT_SETTLED_STRENGTH_DIFFERENCE = 0.002; // Snap the pointer highlight's strength to its target when the remaining difference is below this threshold.
-const POINTER_HIGHLIGHT_SETTLED_DISTANCE_DITHER_PIXELS = 0.5; // Snap to the pointer within this distance so the animation loop can stop.
+
+/** The difference from its target below which the pointer highlight's strength snaps to the target. */
+const POINTER_HIGHLIGHT_SETTLED_STRENGTH_DIFFERENCE = 0.002;
+
+/** The distance from the pointer within which the pointer highlight snaps to it, so the animation loop can stop. */
+const POINTER_HIGHLIGHT_SETTLED_DISTANCE_DITHER_PIXELS = 0.5;
 
 export function composeBackdropDitherField(width: number, height: number): DitherField {
   const density = new Float32Array(width * height);
@@ -47,7 +51,8 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
     return () => undefined;
   }
 
-  // Round each dither cell to whole device pixels. `parseFloat` only correctly reads pixel lengths, so `--dither-cell` must use px units.
+  // Round each dither cell to whole device pixels. `parseFloat` only correctly reads pixel lengths, so `--dither-cell`
+  // must use px units.
   const ditherCellPx = Number.parseFloat(getComputedStyle(container).getPropertyValue("--dither-cell"));
 
   if (!(ditherCellPx > 0)) {

@@ -5,9 +5,8 @@ import { API_ROUTES } from "#/api-routes.ts";
 import type * as Catalog from "#/site/catalog.ts";
 import { renderRoute } from "#/test-utils/router.tsx";
 
-// Content that cannot be read fails when the route loads, and again when the desktop
-// resolves the window for it. The desktop cannot recover from this. These tests use
-// the real route tree to cover that path.
+// Content that cannot be read fails when the route loads, and again when the desktop resolves the window for it. The
+// desktop cannot recover from this. These tests use the real route tree to cover that path.
 
 vi.mock("#/site/catalog.ts", async (importOriginal) => {
   const actualCatalog = await importOriginal<typeof Catalog>();

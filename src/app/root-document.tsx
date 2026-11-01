@@ -3,11 +3,13 @@ import { useEffect } from "react";
 import { THEME_COLORS } from "virtual:theme-colors";
 
 import chromeFontUrl from "#/assets/fonts/ChicagoFLF-Adjusted.woff2?url";
+import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";
 import { preloadFont } from "#/lib/fonts.ts";
 import { watchDesktopBackgroundThemeColors } from "#/lib/settings/desktop-background-theme-colors.ts";
 import { watchStoredSettings } from "#/lib/settings/settings.ts";
+import { DEFAULT_THEME_TINT_PROPERTIES } from "#/lib/settings/theme-tint.ts";
 import {
   COLOR_SCHEMES,
   DESKTOP_BACKGROUND_THEME_COLOR_ATTRIBUTE,
@@ -16,6 +18,7 @@ import {
 } from "#/lib/settings/theme.ts";
 import type { ColorScheme } from "#/lib/settings/theme.ts";
 import { STARTUP_SEQUENCE_THEME_COLOR_ATTRIBUTE } from "#/lib/startup-sequence/overlay.ts";
+import type { StyleWithVars } from "#/lib/style.ts";
 import appearanceScript from "#/scripts/appearance.ts?inline-script";
 import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
 import startupSequenceScript from "#/scripts/startup-sequence.ts?inline-script";
@@ -23,6 +26,11 @@ import themeTintScript from "#/scripts/theme-tint.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
 
 import type { ReactNode } from "react";
+
+const DOCUMENT_STYLE: StyleWithVars = {
+  "--layout-window-layer-padding": `${WINDOW_LAYOUT.padding}px`,
+  ...DEFAULT_THEME_TINT_PROPERTIES,
+};
 
 function ThemeColorPair({ colors, markAttribute }: { colors: Record<ColorScheme, string>; markAttribute: string }) {
   return COLOR_SCHEMES.map((colorScheme) => (
@@ -46,7 +54,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
   return (
     // `suppressHydrationWarning` is needed because `appearanceScript`, `themeTintScript`, `startupSequenceScript`,
     // `webShareScript`, and `devicePixelRatioScript` set attributes on `<html>` before hydration.
-    <html lang={DOCUMENT_LANGUAGE} suppressHydrationWarning>
+    <html lang={DOCUMENT_LANGUAGE} style={DOCUMENT_STYLE} suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* The `theme-color` pairs are declared here because `HeadContent` de-duplicates meta tags

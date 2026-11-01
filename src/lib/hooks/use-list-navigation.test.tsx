@@ -27,9 +27,11 @@ function List({
 }: {
   count: number;
   activeIndex: number;
-  guardedIndex?: number; // An item with its own onMouseDown, merged ahead of the hook's.
+  /** An item with its own onMouseDown, merged ahead of the hook's handler. */
+  guardedIndex?: number;
   label?: string;
-  children?: ReactNode; // A nested list, rendered inside the first item as a sublist would be.
+  /** A nested list, rendered inside the first item as a sublist would be. */
+  children?: ReactNode;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, { count, activeIndex, onActivate: vi.fn() });
@@ -94,7 +96,7 @@ test("a press on an item prevents its default behavior, focuses the item without
 
   scrollIntoViewSilently.mockClear();
 
-  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The default behavior was prevented.
+  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The hook prevented the default behavior.
   expect(focus).toHaveBeenCalledWith({ preventScroll: true });
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[2]);
 });
@@ -105,7 +107,7 @@ test("a press on an item does not focus the item or scroll it into view when a m
 
   scrollIntoViewSilently.mockClear();
 
-  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The default behavior was prevented by the guard, not this hook.
+  expect(fireEvent.mouseDown(links[2]!, { button: 0 })).toBe(false); // The guard prevented the default behavior, not this hook.
   expect(focus).not.toHaveBeenCalled();
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
@@ -167,7 +169,7 @@ test.each([
     outsideControl.focus();
     scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the active item into view.
 
-    expect(fireEvent.keyDown(outsideControl, { key })).toBe(false); // The default behavior was prevented.
+    expect(fireEvent.keyDown(outsideControl, { key })).toBe(false); // The hook prevented the default behavior.
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(document.activeElement).toBe(links[expectedIndex]);
     expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[expectedIndex]);

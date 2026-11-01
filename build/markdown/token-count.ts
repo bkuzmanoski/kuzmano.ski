@@ -1,6 +1,6 @@
 /**
- * The paths that have a Markdown representation, each mapped to the estimated token count
- * of the file served from it. A path absent from the map has no Markdown representation.
+ * The paths that have a Markdown representation, each mapped to the estimated token count of the file served from it. A
+ * path absent from the map has no Markdown representation.
  */
 export type MarkdownTokenCounts = Record<string, number>;
 

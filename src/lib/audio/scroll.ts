@@ -3,7 +3,9 @@ import { clamp } from "../math.ts";
 import { playClickSound, playScrollDetentSound } from "./sounds.ts";
 
 export const IDLE_DURATION_MS = 250;
-export const DETENT_PX = 40; // Content distance between detents.
+
+/** Content distance between detents. */
+export const DETENT_PX = 40;
 
 const STEP_SPEED_PX_PER_S = 450;
 const SPEED_SMOOTHING = 0;
@@ -20,12 +22,12 @@ const gestures = new WeakMap<Element, ScrollGesture>();
 const viewportHeights = new WeakMap<Element, number>();
 const contentHeights = new WeakMap<Element, number>();
 
-// Ignore overscroll so it cannot produce detents.
+/** Returns the scroll position of `element` clamped to its scroll range, so overscroll does not produce detents. */
 function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
-// Start with a full detent so the first real movement plays a sound immediately.
+/** Starts a gesture a full detent along, so the first real movement plays a sound immediately. */
 function openGesture(top: number, at: number, silent = false): ScrollGesture {
   return { top, at, speed: 0, distance: DETENT_PX, silent };
 }
@@ -56,8 +58,7 @@ export function recordScrollIntoView(element: Element) {
 /**
  * Silences every scrolling ancestor while the browser brings `element` into view.
  *
- * Safari animates this scroll, so it produces a series of scroll events rather than
- * a single completed move.
+ * Safari animates this scroll, so it produces a series of scroll events rather than a single completed move.
  */
 export function silenceScrollIntoView(element: Element) {
   forEachScrollingAncestor(element, silenceScrollAt);
@@ -90,8 +91,8 @@ export function stepScroll(element: Element, delta: number) {
 }
 
 /**
- * Scrolls `element` by `delta` for one press of a control that steps it, such as a scrollbar
- * arrow or an arrow key, and plays that press's sound.
+ * Scrolls `element` by `delta` for one press of a control that steps it, such as a scrollbar arrow or an arrow key, and
+ * plays that press's sound.
  */
 export function stepScrollForPress(element: Element, delta: number, isRepeat: boolean) {
   if (!stepScroll(element, delta) && !isRepeat) {
@@ -112,8 +113,8 @@ export function playScrollSound(element: Element) {
   const elapsedMs = now - gesture.at;
   const movedDistance = Math.abs(top - gesture.top);
 
-  // A long pause starts a new gesture, so saved positions and layout changes
-  // do not inherit the previous gesture's accumulated distance.
+  // A long pause starts a new gesture, so saved positions and layout changes do not inherit the previous gesture's
+  // accumulated distance.
   if (elapsedMs > IDLE_DURATION_MS) {
     gestures.set(element, openGesture(top, now));
     return;
@@ -136,14 +137,14 @@ export function playScrollSound(element: Element) {
 
   gesture.speed = gesture.speed > 0 ? gesture.speed * SPEED_SMOOTHING + speed * (1 - SPEED_SMOOTHING) : speed;
 
-  // Keep the remainder so detents stay evenly spaced across event boundaries,
-  // but never carry more than one detent into the next event.
+  // Keep the remainder so detents stay evenly spaced across event boundaries, but never carry more than one detent into
+  // the next event.
   gesture.distance = Math.min(gesture.distance - DETENT_PX, DETENT_PX);
 
   playScrollDetentSound(gesture.speed);
 }
 
-// Records `height` and reports whether it differs from the element's previous height in `heights`.
+/** Records `height` and reports whether it differs from the element's previous height in `heights`. */
 function recordHeight(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
 
@@ -152,10 +153,12 @@ function recordHeight(element: Element, heights: WeakMap<Element, number>, heigh
   return previousHeight !== undefined && previousHeight !== height;
 }
 
-// Plays a scroll sound unless the caller found that the element's size changed since its previous scroll.
-//
-// A size change identifies a scroll caused by layout rather than user input. Such scrolls are recorded
-// without a sound. The caller supplies the result because the relevant measurements differ by context.
+/**
+ * Plays a scroll sound unless the caller found that the element's size changed since its previous scroll.
+ *
+ * A size change identifies a scroll caused by layout rather than user input. This function records such a scroll
+ * without a sound. The caller supplies the result because the relevant measurements differ by context.
+ */
 function playScrollSoundUnlessResized(element: Element, isResized: boolean) {
   if (isResized) {
     recordScrollAt(element);
@@ -168,9 +171,9 @@ function playScrollSoundUnlessResized(element: Element, isResized: boolean) {
 /**
  * Plays a sound for user scrolling in a viewport with resizable dimensions and content.
  *
- * Viewport resizing, content changes, scroll anchoring, and clamping can all move the viewport
- * without user input. When a scroll event follows a change to `clientHeight` or `scrollHeight`, it
- * is treated as layout-driven and recorded without playing a sound.
+ * Viewport resizing, content changes, scroll anchoring, and clamping can all move the viewport without user input. When
+ * a scroll event follows a change to `clientHeight` or `scrollHeight`, it is treated as layout-driven and recorded
+ * without playing a sound.
  */
 export function playPaneScrollSound(element: Element) {
   const isViewportResized = recordHeight(element, viewportHeights, element.clientHeight);
@@ -182,9 +185,9 @@ export function playPaneScrollSound(element: Element) {
 /**
  * Plays a sound for user scrolling in an input whose content can also change size.
  *
- * Editing can change the content height and cause the browser to scroll the caret into view.
- * The resulting scroll event occurs after the edit, with a different `scrollHeight`, allowing
- * it to be identified as layout-driven and recorded without a sound.
+ * Editing can change the content height and cause the browser to scroll the caret into view. The resulting scroll event
+ * occurs after the edit, with a different `scrollHeight`, allowing it to be identified as layout-driven and recorded
+ * without a sound.
  */
 export function playInputScrollSound(element: Element) {
   playScrollSoundUnlessResized(element, recordHeight(element, contentHeights, element.scrollHeight));

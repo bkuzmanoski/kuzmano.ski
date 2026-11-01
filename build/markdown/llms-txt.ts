@@ -103,8 +103,10 @@ const LLMS_TXT_HEADERS_RULE: HeadersRule = {
 };
 
 export interface LlmsTxtPluginOptions {
-  loadForBuild: () => Promise<string>; // Emitted from the render the build emits the Markdown files from.
-  loadForDevRequest: (server: ViteDevServer) => Promise<string>; // Served from a fresh render, so a request reflects the content on disk.
+  /** Emitted from the render the build emits the Markdown files from. */
+  loadForBuild: () => Promise<string>;
+  /** Served from a fresh render, so a request reflects the content on disk. */
+  loadForDevRequest: (server: ViteDevServer) => Promise<string>;
   addHeadersRules: AddHeadersRules;
 }
 

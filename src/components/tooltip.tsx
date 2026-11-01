@@ -24,9 +24,11 @@ interface TooltipChildProps {
   "aria-label"?: string;
 }
 
-// A control whose `aria-label` attribute is the tooltip's label already has the name the tooltip
-// shows, so describing it by the tooltip as well would read the same words twice. A control named
-// otherwise is described, since its name need not include the label.
+/**
+ * A control whose `aria-label` attribute is the tooltip's label already has the name the tooltip shows, so describing
+ * it by the tooltip as well would read the same words twice. The tooltip describes a control with any other name as
+ * that name might not include the label.
+ */
 const isNamedByLabel = (props: TooltipChildProps, label: string) => props["aria-label"] === label;
 
 export function Tooltip({
@@ -69,8 +71,8 @@ export function Tooltip({
   if (showsState !== wasShowingState) {
     setWasShowingState(showsState);
 
-    // The control takes the tooltip over from the pointer while it displays its state. When it
-    // stops, the tooltip goes with it unless a pointer is still on the control to keep it visible.
+    // The control takes the tooltip over from the pointer while it displays its state. When it stops, the tooltip goes
+    // with it unless a pointer is still on the control to keep it visible.
     setIsOpen(showsState || isPointerHovering);
   }
 
@@ -91,8 +93,8 @@ export function Tooltip({
     };
   }, [isVisible, id]);
 
-  // The Escape key hides a visible tooltip while the pointer and the focus stay on the control. The
-  // event is not stopped, so the press that hides a tooltip in a menu also closes the menu.
+  // The Escape key hides a visible tooltip while the pointer and the focus stay on the control. The event is not
+  // stopped, so the press that hides a tooltip in a menu also closes the menu.
   useEffect(() => {
     if (!isVisible) {
       return;
@@ -157,8 +159,8 @@ export function Tooltip({
         }
       }}
       onPointerEnter={(event) => {
-        // iOS raises a synthesized mouse event after a tap. No pointer has arrived to hover,
-        // so acting on it would surface a tooltip after the tap that dismissed it.
+        // iOS raises a synthesized mouse event after a tap. No pointer has arrived to hover, so acting on it would
+        // surface a tooltip after the tap that dismissed it.
         const isSynthesizedAfterTouch = event.pointerType !== "touch" && lastPointerTypeRef.current === "touch";
 
         lastPointerTypeRef.current = event.pointerType;
@@ -171,8 +173,8 @@ export function Tooltip({
 
         setIsPointerHovering(isHovering);
 
-        // The grace period is a hover affordance. A touch pointer has not traveled from a neighboring
-        // control, and showing on contact would pre-empt the press it is about to make.
+        // The grace period is a hover affordance. A touch pointer has not traveled from a neighboring control, and
+        // showing on contact would pre-empt the press it is about to make.
         const skipsHoverDelay = isHovering && isGroupInGracePeriod(wrapperRef.current);
 
         show(skipsHoverDelay ? 0 : HOVER_DELAY_MS);
@@ -184,9 +186,9 @@ export function Tooltip({
         timer.cancel();
         lastPointerTypeRef.current = event.pointerType;
 
-        // Only a pointer that was hovering can leave one. A touch lifting, and the synthesized
-        // mouse event iOS raises around a tap, are the tap finishing rather than a pointer moving
-        // away, and must not hide a tooltip the press has just shown.
+        // Only a pointer that was hovering can leave one. A touch lifting, and the synthesized mouse event iOS raises
+        // around a tap, are the tap finishing rather than a pointer moving away, and must not hide a tooltip the press
+        // has just shown.
         if (!wasHovering) {
           return;
         }
@@ -203,7 +205,13 @@ export function Tooltip({
         ? cloneElement(children, { "aria-describedby": isVisible ? id : undefined })
         : children}
       {isVisible && (
-        <span ref={tipRef} id={id} className={styles.tip} role="tooltip">
+        <span
+          ref={tipRef}
+          id={id}
+          className={styles.tip}
+          role="tooltip"
+          aria-hidden="true" // Hidden from assistive technology because the control already exposes the label in its name or description.
+        >
           {label}
         </span>
       )}

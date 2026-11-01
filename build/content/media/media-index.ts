@@ -2,27 +2,12 @@ import { readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
 
 import type { EntryKey } from "#/lib/content/entry-file.ts";
-import type {
-  ContentImage,
-  ContentMedia,
-  CoverImage,
-  Dimensions,
-  PictureSource,
-  SizedMedia,
-} from "#/lib/content/media.ts";
-import { metricIn } from "#/lib/layout-metrics.ts";
-import type { LayoutMetrics } from "#/lib/layout-metrics.ts";
+import type { ContentMedia, CoverImage, Dimensions, PictureSource, SizedMedia } from "#/lib/content/media.ts";
 
-import { readLayoutMetrics } from "../../stylesheet/layout-metrics.ts";
 import { mediaDirectoryFileNameOf, mediaReferencesInSource } from "../markup/media-references.ts";
 
 import { mediaReferenceProblems, readAuthoredMedia } from "./authored-media.ts";
-import {
-  BODY_IMAGE_DERIVATIVES,
-  POSTER_IMAGE_DERIVATIVE,
-  imageDerivativeDimensionsOf,
-  thumbnailImageDerivativesFor,
-} from "./derivatives.ts";
+import { BODY_IMAGE_ALTERNATES, POSTER_IMAGE_DERIVATIVE } from "./derivatives.ts";
 import { isEncodableImage } from "./formats.ts";
 import {
   coverImageProblems,
@@ -35,27 +20,28 @@ import { authoredRendition, imageDerivativeRendition } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
 
 import type { AuthoredEntryMedia, AuthoredVideo } from "./authored-media.ts";
-import type { PictureDerivatives } from "./derivatives.ts";
 import type { MediaRendition } from "./renditions.ts";
-import type { MediaFileReader, ResolvedImage } from "./resolved-media.ts";
+import type { MediaFileReader } from "./resolved-media.ts";
 import type { MediaReference } from "../markup/media-references.ts";
 import type { MediaForReference } from "../markup/media-rewrite.ts";
 
 export interface MediaIndex {
-  coverImageSize: number;
   coverImages: Record<EntryKey, CoverImage>;
   renditionsByUrl: Map<string, MediaRendition>;
   entryAbsolutePathsByMediaDirectoryPath: Map<string, string>;
   mediaForEntry: (absolutePath: string) => MediaForReference;
-  // Replaces an entry's reference problems with those of its edited source. An edit that changes
-  // which body images have alternates changes the renditions, so it requires a rebuild instead.
+  /**
+   * Replaces an entry's reference problems with those of its edited source. An edit that changes which body images have
+   * alternates changes the renditions, so it requires a rebuild instead.
+   */
   recheckReferences: (absolutePath: string, source: string) => { requiresRebuild: boolean };
   problems: () => Array<string>;
 }
 
-// Index data contributed by a media file or video-poster pair.
+/** Index data contributed by a media file or video-poster pair. */
 interface BodyMediaResolution {
-  mediaByFileName: Array<[fileName: string, media: ContentMedia]>; // A reference names the media by its file name.
+  /** A reference names the media by its file name. */
+  mediaByFileName: Array<[fileName: string, media: ContentMedia]>;
   renditions: Array<MediaRendition>;
   problems: Array<string>;
 }
@@ -64,13 +50,13 @@ interface ResolvedEntryMedia {
   entry: AuthoredEntryMedia;
   coverImage: CoverImage | null;
   mediaByFileName: Map<string, ContentMedia>;
-  bodyImageFileNamesWithAlternates: Set<string>; // Compared when the entry's source is rechecked.
+  /** `recheckReferences` compares these with the edited source's. */
+  bodyImageFileNamesWithAlternates: Set<string>;
   renditions: Array<MediaRendition>;
   mediaProblems: Array<string>;
-  referenceProblems: Array<string>; // Replaced when the entry's source is rechecked.
+  /** `recheckReferences` replaces these with the edited source's. */
+  referenceProblems: Array<string>;
 }
-
-export const coverImageSizeIn = (layoutMetrics: LayoutMetrics) => metricIn(layoutMetrics, "coverImageSize");
 
 const pictureSourceOf = ({ url, type }: MediaRendition): PictureSource => ({ srcSet: url, type });
 const sizedMediaOf = ({ url }: MediaRendition, dimensions: Dimensions): SizedMedia => ({ src: url, ...dimensions });
@@ -92,30 +78,7 @@ function bodyImageFileNamesWithAlternatesIn(
   );
 }
 
-function pictureOf(
-  image: ResolvedImage,
-  { alternates, fallback }: PictureDerivatives,
-): { picture: ContentImage; fallbackRendition: MediaRendition; renditions: Array<MediaRendition> } {
-  const fallbackRendition = fallback === null ? authoredRendition(image) : imageDerivativeRendition(image, fallback);
-  const fallbackDimensions =
-    fallback === null ? image.dimensions : imageDerivativeDimensionsOf(image.dimensions, fallback);
-  const alternateRenditions = alternates.map((derivative) => imageDerivativeRendition(image, derivative));
-
-  return {
-    picture: {
-      kind: "image",
-      ...sizedMediaOf(fallbackRendition, fallbackDimensions),
-      alternates: alternateRenditions.map(pictureSourceOf),
-    },
-    fallbackRendition,
-    renditions: [fallbackRendition, ...alternateRenditions],
-  };
-}
-
 export async function buildMediaIndex(reader: MediaFileReader = createMediaFileReader()): Promise<MediaIndex> {
-  const coverImageSize = coverImageSizeIn(await readLayoutMetrics());
-  const thumbnailShortestSideLength = coverImageSize * 2; // Twice the size it is rendered at for high-density displays.
-  const thumbnailDerivatives = thumbnailImageDerivativesFor(thumbnailShortestSideLength);
   const { entryMedia, problems: authoredMediaProblems } = readAuthoredMedia();
 
   async function resolveCoverImage(coverImageFilePath: string) {
@@ -125,13 +88,12 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       return { coverImage: null, renditions: [], problems: [coverImage.problem] };
     }
 
-    const socialImageRendition = authoredRendition(coverImage);
-    const thumbnail = pictureOf(coverImage, thumbnailDerivatives);
+    const coverImageRendition = authoredRendition(coverImage);
 
     return {
-      coverImage: { social: sizedMediaOf(socialImageRendition, coverImage.dimensions), thumbnail: thumbnail.picture },
-      renditions: [socialImageRendition, ...thumbnail.renditions],
-      problems: [...coverImageProblems(coverImage, thumbnailShortestSideLength), ...imageMetadataProblems(coverImage)],
+      coverImage: sizedMediaOf(coverImageRendition, coverImage.dimensions),
+      renditions: [coverImageRendition],
+      problems: [...coverImageProblems(coverImage), ...imageMetadataProblems(coverImage)],
     };
   }
 
@@ -146,14 +108,23 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       return { mediaByFileName: [], renditions: [], problems: [bodyImage.problem] };
     }
 
-    const { picture, fallbackRendition, renditions } = pictureOf(
-      bodyImage,
-      hasAlternates ? BODY_IMAGE_DERIVATIVES : { ...BODY_IMAGE_DERIVATIVES, alternates: [] },
-    );
+    const fallbackRendition = authoredRendition(bodyImage);
+    const alternateRenditions = hasAlternates
+      ? BODY_IMAGE_ALTERNATES.map((derivative) => imageDerivativeRendition(bodyImage, derivative))
+      : [];
 
     return {
-      mediaByFileName: [[fileName, picture]],
-      renditions,
+      mediaByFileName: [
+        [
+          fileName,
+          {
+            kind: "image",
+            ...sizedMediaOf(fallbackRendition, bodyImage.dimensions),
+            alternates: alternateRenditions.map(pictureSourceOf),
+          },
+        ],
+      ],
+      renditions: [fallbackRendition, ...alternateRenditions],
       problems: [...imageMetadataProblems(bodyImage), ...renditionSizeProblems(fallbackRendition, bodyImage.bytes)],
     };
   }
@@ -250,7 +221,6 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
   }
 
   return {
-    coverImageSize,
     coverImages,
     renditionsByUrl,
     entryAbsolutePathsByMediaDirectoryPath: new Map(

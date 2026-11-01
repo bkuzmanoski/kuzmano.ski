@@ -1,37 +1,15 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { ACCENT_COLOR_NAMES } from "../accent-colors.ts";
-
-import {
-  DEFAULT_THEME_COLOR,
-  applyAppearance,
-  applyDesktopBackgroundThemeColor,
-  applyThemeTint,
-  themeChromaScaleFrom,
-} from "./theme.ts";
+import { DEFAULT_THEME_CHROMA_SCALE, DEFAULT_THEME_COLOR } from "./theme-tint.ts";
+import { applyAppearance, applyDesktopBackgroundThemeColor, applyThemeTint, themeChromaScaleFrom } from "./theme.ts";
 
 const root = document.documentElement;
 
 afterEach(() => {
   vi.unstubAllGlobals();
   root.removeAttribute("data-appearance");
-  root.removeAttribute("data-theme-color");
   root.removeAttribute("style");
   document.head.replaceChildren();
-});
-
-describe("data-theme-color", () => {
-  test("`/src/styles.css` declares a `data-theme-color` rule for each accent color other than the default, and only those", () => {
-    const stylesheet = readFileSync(join(process.cwd(), "src/styles.css"), "utf8");
-    const declaredThemeColors = [...stylesheet.matchAll(/\[data-theme-color="([a-z]+)"\]/g)].map((match) => match[1]);
-
-    expect(declaredThemeColors.sort()).toEqual(
-      ACCENT_COLOR_NAMES.filter((accentColorName) => accentColorName !== DEFAULT_THEME_COLOR).sort(),
-    );
-  });
 });
 
 describe("applyAppearance", () => {
@@ -69,30 +47,25 @@ describe("applyAppearance", () => {
 });
 
 describe("applyThemeTint", () => {
-  test("sets the `data-theme-color` attribute and the `--theme-chroma-scale` custom property of the root element", () => {
+  test("sets the `--theme-hue`, `--color-accent`, and `--theme-chroma-scale` custom properties of the root element", () => {
     applyThemeTint({ themeColor: "green", chromaScale: 1.5 });
 
-    expect(root.getAttribute("data-theme-color")).toBe("green");
+    expect(root.style.getPropertyValue("--theme-hue")).toBe("var(--accent-green-hue)");
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-green)");
     expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe("1.5");
   });
 
-  test("removes the `data-theme-color` attribute for the default theme color", () => {
-    applyThemeTint({ themeColor: "green" });
-    applyThemeTint({ themeColor: "purple" });
-
-    expect(root.hasAttribute("data-theme-color")).toBe(false);
-  });
-
-  test("removes the attribute and the custom property for `null`, and leaves either unchanged for `undefined`", () => {
+  test("resets each custom property to its default for `null`, and leaves it unchanged for `undefined`", () => {
     applyThemeTint({ themeColor: "green", chromaScale: 1.5 });
     applyThemeTint({ chromaScale: null });
 
-    expect(root.getAttribute("data-theme-color")).toBe("green");
-    expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe("");
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-green)");
+    expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe(String(DEFAULT_THEME_CHROMA_SCALE));
 
     applyThemeTint({ themeColor: null });
 
-    expect(root.hasAttribute("data-theme-color")).toBe(false);
+    expect(root.style.getPropertyValue("--theme-hue")).toBe(`var(--accent-${DEFAULT_THEME_COLOR}-hue)`);
+    expect(root.style.getPropertyValue("--color-accent")).toBe(`var(--accent-${DEFAULT_THEME_COLOR})`);
   });
 });
 

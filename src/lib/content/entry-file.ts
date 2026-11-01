@@ -1,10 +1,10 @@
 // Has no imports because `/vite.config.ts` loads this module through `/build`.
 
-export const MDX_EXTENSION = ".mdx";
-
 declare const entryKeyBrand: unique symbol;
 
 export type EntryKey = string & { readonly [entryKeyBrand]: "EntryKey" };
+
+const MDX_EXTENSION = ".mdx";
 
 export const entryKey = (directoryName: string, slug: string) => `${directoryName}/${slug}` as EntryKey;
 export const isEntryFile = (filePath: string) => filePath.endsWith(MDX_EXTENSION);

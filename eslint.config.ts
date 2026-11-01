@@ -19,8 +19,10 @@ interface ImportPattern {
   allowTypeImports?: boolean;
 }
 
-// Convention: use `#/` across layers and relative paths within a layer. Every layer except `/src/lib` is
-// one directory deep, so `../` escapes it. `/src/lib` is handled separately.
+/**
+ * Rejects a relative import that leaves its layer, since imports use `#/` across layers and relative paths within one.
+ * Every layer except `/src/lib` is one directory deep, so `../` escapes it. A separate restriction covers `/src/lib`.
+ */
 const CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION: ImportPattern = {
   regex: String.raw`^\.\./`,
   message: "Relative imports must remain within their feature; use `#/` to access another layer.",
@@ -31,8 +33,10 @@ const SERVER_MODULE_IMPORT_RESTRICTION: ImportPattern = {
   message: "`/src/server` may only be imported by the Worker entry or an API handler in `/src/routes/api`.",
 };
 
-// Flat config replaces rule options instead of merging them, so the final matching block
-// controls a file's checks. Each call below repeats patterns from the blocks it overrides.
+/**
+ * Flat config replaces rule options instead of merging them, so the final matching block controls a file's checks. Each
+ * call below repeats patterns from the blocks it overrides.
+ */
 const restrictImports = (...patterns: Array<ImportPattern>): Linter.RulesRecord => ({
   "@typescript-eslint/no-restricted-imports": [
     "error",
@@ -99,6 +103,7 @@ export default defineConfig(
                 "./fixtures",
                 "./geometry.ts",
                 "./match-media.ts",
+                "./press.ts",
                 "./resize-observer.ts",
                 "./router-context.tsx",
                 "./timers.ts",
@@ -114,8 +119,8 @@ export default defineConfig(
               from: ["./src/app", "./src/components", "./src/features", "./src/routes"],
             },
             { target: "./src/features", from: ["./src/app", "./src/routes"] },
-            // Layers must not import the composition root, hydration entry, or route tree as that would
-            // pull in the entire app graph and load React in `/src/scripts`.
+            // Layers must not import the composition root, hydration entry, or route tree as that would pull in the
+            // entire app graph and load React in `/src/scripts`.
             {
               target: [
                 "./src/app",
@@ -127,8 +132,8 @@ export default defineConfig(
                 "./src/scripts",
                 "./src/server",
                 "./src/site",
-                // Exception: `/src/test-utils` intentionally mounts the real router
-                // Exception: `/src/api-routes.ts` only enumerates route paths.
+                // The list leaves out `/src/test-utils`, which mounts the real router, and `/src/api-routes.ts`, which
+                // only enumerates route paths.
               ],
               from: ["./src/client.tsx", "./src/router.tsx", "./src/routeTree.gen.ts"],
             },
@@ -159,16 +164,15 @@ export default defineConfig(
         "error",
         { allow: [{ from: "package", package: "@tanstack/router-core", name: ["NotFoundError", "AnyRedirect"] }] },
       ],
-      // `ignoreIfStatements` avoids introducing `??=` in transformations that React Compiler
-      // cannot lower. `||=` is not a workaround: `react-hooks/todo` rejects both operators
-      // inside components and hooks. `ignorePrimitives.boolean` preserves `||` for booleans,
-      // where replacing it with `??` changes the result for `false`.
+      // `ignoreIfStatements` avoids introducing `??=` in transformations that React Compiler cannot lower. `||=` is not
+      // a workaround: `react-hooks/todo` rejects both operators inside components and hooks. `ignorePrimitives.boolean`
+      // preserves `||` for booleans, where replacing it with `??` changes the result for `false`.
       "@typescript-eslint/prefer-nullish-coalescing": [
         "error",
         { ignoreIfStatements: true, ignorePrimitives: { boolean: true } },
       ],
-      // Compiler diagnostics that `recommended-latest` leaves off. Each one identifies a React Compiler
-      // optimization failure, so the function is not compiled and re-renders without memoization.
+      // Compiler diagnostics that `recommended-latest` leaves off. Each one identifies a React Compiler optimization
+      // failure, so the function is not compiled and re-renders without memoization.
       "react-hooks/capitalized-calls": "error",
       "react-hooks/hooks": "error",
       "react-hooks/invariant": "error",
@@ -189,7 +193,8 @@ export default defineConfig(
       "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
     },
   },
-  // Each block below must come after the blocks it overrides because later matching flat-config entries take precedence.
+  // Each block below must come after the blocks it overrides because later matching flat-config entries take
+  // precedence.
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
@@ -247,9 +252,9 @@ export default defineConfig(
     ),
   },
   {
-    // `/build/markdown` evaluates an entry's data file in the process running Vite, so code the file
-    // imported from `/src` would run there too. `server/` is left out of the pattern that allows types,
-    // since a type import it matches is not checked against the server pattern.
+    // `/build/markdown` evaluates an entry's data file in the process running Vite, so code the file imported from
+    // `/src` would run there too. `server/` is left out of the pattern that allows types, as a type import it matches
+    // is not checked against the server pattern.
     files: ["content/**/*.ts"],
     rules: restrictImports(
       {
@@ -267,8 +272,8 @@ export default defineConfig(
   {
     files: ["src/api-routes.ts"],
     rules: restrictImports(
-      // Every layer may read `/src/api-routes.ts`, so importing the route tree's value would pull
-      // every route into each `lib/*/client.ts` caller.
+      // Every layer may read `/src/api-routes.ts`, so importing the route tree's value would pull every route into each
+      // `lib/*/client.ts` caller.
       {
         regex: String.raw`^(#/|\./)routeTree\.gen\.ts$`,
         allowTypeImports: true,

@@ -1,4 +1,3 @@
-import { THEME_DEFAULTS } from "virtual:theme-defaults";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { subscribeToColorChange } from "./color-change.ts";
@@ -12,6 +11,7 @@ import {
   setThemeColor,
   watchStoredSettings,
 } from "./settings.ts";
+import { DEFAULT_THEME_CHROMA_SCALE } from "./theme-tint.ts";
 
 const root = document.documentElement;
 const stopListeningFunctions: Array<() => void> = [];
@@ -56,11 +56,11 @@ describe("resetSettings", () => {
     expect(getSettings()).toEqual({
       appearance: "system",
       themeColor: "purple",
-      themeChromaScale: THEME_DEFAULTS.chromaScale,
+      themeChromaScale: DEFAULT_THEME_CHROMA_SCALE,
       soundEffects: "on",
     });
     expect(root.hasAttribute("data-appearance")).toBe(false);
-    expect(root.hasAttribute("data-theme-color")).toBe(false);
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-purple)");
     expect(localStorage.length).toBe(0);
   });
 });
@@ -80,7 +80,7 @@ describe("watchStoredSettings", () => {
       soundEffects: "off",
     });
     expect(root.getAttribute("data-appearance")).toBe("dark");
-    expect(root.getAttribute("data-theme-color")).toBe("green");
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-green)");
     expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe("1.5");
   });
 
@@ -91,7 +91,7 @@ describe("watchStoredSettings", () => {
     setSoundEffects("off");
     watch();
 
-    expect(root.getAttribute("data-theme-color")).toBe("green");
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-green)");
 
     localStorage.clear();
     window.dispatchEvent(new StorageEvent("storage", { key: null }));
@@ -99,12 +99,12 @@ describe("watchStoredSettings", () => {
     expect(getSettings()).toEqual({
       appearance: "system",
       themeColor: "purple",
-      themeChromaScale: THEME_DEFAULTS.chromaScale,
+      themeChromaScale: DEFAULT_THEME_CHROMA_SCALE,
       soundEffects: "on",
     });
     expect(root.hasAttribute("data-appearance")).toBe(false);
-    expect(root.hasAttribute("data-theme-color")).toBe(false);
-    expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe("");
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-purple)");
+    expect(root.style.getPropertyValue("--theme-chroma-scale")).toBe(String(DEFAULT_THEME_CHROMA_SCALE));
   });
 
   test("notifies the color change listeners of a setting another tab stores", () => {
@@ -132,6 +132,6 @@ describe("watchStoredSettings", () => {
     storeFromAnotherTab("theme-color", "green");
 
     expect(getSettings().themeColor).toBe("purple");
-    expect(root.hasAttribute("data-theme-color")).toBe(false);
+    expect(root.style.getPropertyValue("--color-accent")).toBe("var(--accent-purple)");
   });
 });

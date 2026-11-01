@@ -1,7 +1,7 @@
 import { NON_GESTURE_KEYS, needsAudioPriming } from "../audio/context.ts";
 import { loadKeySounds } from "../audio/sounds.ts";
 
-// Note: `phaseFlags` derives its flags from a phase's position. Phases must be defined in sequence order.
+/** The phases in sequence order, which `phaseFlags` derives each phase's flags from. */
 const PHASES = [
   "loading",
   "waiting-for-input",
@@ -15,7 +15,7 @@ const PHASES = [
 
 export type Phase = (typeof PHASES)[number];
 
-// The motion the stylesheet animates over.
+/** The motion the stylesheet animates over. */
 export const MOTION_DURATION_MS = {
   macintoshReveal: 900,
   stageZoom: 1200,
@@ -27,7 +27,7 @@ export const MOTION_DURATION_MS = {
 
 export type Motion = typeof MOTION_DURATION_MS;
 
-// Substituted under a reduced motion preference.
+/** Substituted under a reduced motion preference. */
 export const REDUCED_MOTION_DURATION_MS: Motion = {
   ...MOTION_DURATION_MS,
   stageZoom: 0,
@@ -41,7 +41,8 @@ export const HOLD_DURATION_MS = {
   logo: 1400,
 };
 
-export const MIN_LOADING_DURATION_MS = 1000; // The shortest time the loading indicator is shown for (to avoid a flash on warm loads).
+/** The shortest time the startup sequence shows the loading indicator for, so it does not flash on a warm load. */
+export const MIN_LOADING_DURATION_MS = 1000;
 
 export function phaseFlags(phase: Phase) {
   const phaseIndex = PHASES.indexOf(phase);
@@ -118,7 +119,7 @@ export async function whenFontReady(): Promise<void> {
   }
 }
 
-// Keypress sounds play only from the begin prompt, which only appears if audio needs priming.
+/** Keypress sounds play only from the begin prompt, which only appears if audio needs priming. */
 export const whenKeySoundsReady = (): Promise<unknown> => (needsAudioPriming() ? loadKeySounds() : Promise.resolve());
 
 export function whenIllustrationReady(...images: Array<HTMLImageElement | null>): Promise<unknown> {

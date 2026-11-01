@@ -14,7 +14,8 @@ export const collectionRoute = (segment: string) => `/${segment}`;
 export const mediaRoute = (mediaPath: string) => `/${MEDIA_SEGMENT}/${mediaPath}`;
 export const markdownPath = (path: string) => `${path}.md`;
 
-const segmentsOf = (path: string) => path.split("/").filter(Boolean); // Dropping empty parts ignores leading, trailing, and repeated slashes.
+/** Dropping empty parts ignores leading, trailing, and repeated slashes. */
+const segmentsOf = (path: string) => path.split("/").filter(Boolean);
 
 export const isRootPath = (path: string) => segmentsOf(path).length === 0;
 

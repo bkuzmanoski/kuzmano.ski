@@ -24,12 +24,9 @@ export const { collections, pages } = catalog;
 
 export type {
   Collection,
-  ContentImage,
   ContentIndex,
-  CoverImage,
   Entry,
   EntryBodyChunks,
   Frontmatter,
-  PictureSource,
   MDXModule,
 } from "#/lib/content/catalog.ts";

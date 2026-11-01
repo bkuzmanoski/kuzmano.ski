@@ -32,8 +32,10 @@ const VALID_SUBMISSION = {
   message: "Hello.",
 };
 
-// Use the exported route handler to exercise the endpoint as it is served.
-// This route exports a handler record rather than a handler factory.
+/**
+ * The exported route handler, so the tests exercise the endpoint as the site serves it. This route exports a handler
+ * record rather than a handler factory.
+ */
 const { GET, POST } = Route.options.server!.handlers as unknown as {
   GET: (context: { request: Request }) => Promise<Response>;
   POST: (context: { request: Request }) => Promise<Response>;
@@ -45,25 +47,25 @@ const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
   POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
-test("the contact email address is served to a same-origin request", async () => {
+test("the endpoint serves the contact email address to a same-origin request", async () => {
   const response = await get();
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual({ emailAddress: EMAIL_ADDRESS });
 });
 
-test("the contact email address is served with a `Cache-Control: no-store` header", async () => {
+test("the endpoint serves the contact email address with a `Cache-Control: no-store` header", async () => {
   expect((await get()).headers.get("cache-control")).toBe("no-store");
 });
 
-test("a request from another site is refused before the contact email address is looked up", async () => {
+test("the endpoint refuses a request from another site before it looks up the contact email address", async () => {
   const response = await get({ site: "cross-site" });
 
   expect(response.status).toBe(403);
   expect(readContactEmailAddress).not.toHaveBeenCalled();
 });
 
-test("requests to read and send are counted against separate rate limits", async () => {
+test("the endpoint counts requests to read and send against separate rate limits", async () => {
   await get({ headers: { "cf-connecting-ip": "203.0.113.7" } });
 
   expect(isWithinRateLimit).toHaveBeenCalledWith(CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, "203.0.113.7");
@@ -82,7 +84,7 @@ test("a missing contact email address responds with a 502 status code and an emp
   await expect(response.text()).resolves.toBe("");
 });
 
-test("a well-formed submission is delivered, with its sender as the reply-to address", async () => {
+test("the endpoint delivers a well-formed submission, with its sender as the reply-to address", async () => {
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);
@@ -91,14 +93,14 @@ test("a well-formed submission is delivered, with its sender as the reply-to add
   );
 });
 
-test("a cross-origin request is refused, and a message is not delivered", async () => {
+test("the endpoint refuses a cross-origin request, and does not deliver a message", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
   expect(deliverMessage).not.toHaveBeenCalled();
 });
 
-test("a malformed submission is refused, and a message is not delivered", async () => {
+test("the endpoint refuses a malformed submission, and does not deliver a message", async () => {
   expect((await post({ ...VALID_SUBMISSION, from: undefined })).status).toBe(400);
   expect(deliverMessage).not.toHaveBeenCalled();
 });

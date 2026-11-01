@@ -5,8 +5,8 @@ import { DEFAULT_ACTIVATION_FLASH_DURATION_MS } from "#/lib/hooks/use-activation
 import { advanceTimersBy } from "./timers.ts";
 
 /**
- * Makes `document.elementFromPoint` return `element`, which `useMenuInteraction` hit-tests pointer events
- * against. Remove it after each test with `Reflect.deleteProperty(document, "elementFromPoint")`.
+ * Makes `document.elementFromPoint` return `element`, which `useMenuInteraction` hit-tests pointer events against.
+ * Remove it after each test with `Reflect.deleteProperty(document, "elementFromPoint")`.
  */
 export function stubElementFromPoint(element: Element) {
   Object.defineProperty(document, "elementFromPoint", { configurable: true, value: () => element });

@@ -27,8 +27,10 @@ const VALID_SUBMISSION = {
   source: "/collection/entry",
 };
 
-// Use the exported route handler to exercise the endpoint as it is served.
-// This route exports a handler record rather than a handler factory.
+/**
+ * The exported route handler, so the tests exercise the endpoint as the site serves it. This route exports a handler
+ * record rather than a handler factory.
+ */
 const { POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
@@ -36,7 +38,7 @@ const { POST } = Route.options.server!.handlers as unknown as {
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
   POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
-test("a well-formed submission is recorded, with its email address, list, and source route", async () => {
+test("the endpoint records a well-formed submission, with its email address, list, and source route", async () => {
   const response = await post(VALID_SUBMISSION);
 
   expect(response.status).toBe(204);
@@ -47,19 +49,19 @@ test("a well-formed submission is recorded, with its email address, list, and so
   });
 });
 
-test("a cross-origin request is refused, and a membership is not recorded", async () => {
+test("the endpoint refuses a cross-origin request, and does not record a membership", async () => {
   const response = await post(VALID_SUBMISSION, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
   expect(recordMembership).not.toHaveBeenCalled();
 });
 
-test("submissions are counted against the waitlist's own rate limit", async () => {
+test("the endpoint counts submissions against the waitlist's own rate limit", async () => {
   await post(VALID_SUBMISSION, { headers: { "cf-connecting-ip": "203.0.113.1" } });
   expect(isWithinRateLimit).toHaveBeenCalledWith(WAITLIST_RATELIMIT_BINDING, "203.0.113.1");
 });
 
-test("a malformed submission is refused, and a membership is not recorded", async () => {
+test("the endpoint refuses a malformed submission, and does not record a membership", async () => {
   expect((await post({ ...VALID_SUBMISSION, source: "https://elsewhere.example" })).status).toBe(400);
   expect(recordMembership).not.toHaveBeenCalled();
 });

@@ -1,7 +1,8 @@
 export const HTML_MEDIA_TYPE = "text/html";
-export const PLAIN_TEXT_MEDIA_TYPE = "text/plain";
 export const FEED_MEDIA_TYPE = "application/atom+xml";
 export const MARKDOWN_MEDIA_TYPE = "text/markdown";
+
+const PLAIN_TEXT_MEDIA_TYPE = "text/plain";
 
 const servedAsUtf8 = (mediaType: string) => `${mediaType}; charset=utf-8`;
 

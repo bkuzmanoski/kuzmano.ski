@@ -10,13 +10,14 @@ import type { ReactNode } from "react";
 /**
  * Shares clipboard state with an entry's copy controls and renders their status region and failure alert.
  *
- * Keying confirmations by copy ID causes subsequent copies to be announced as new status updates. The
- * provider clears confirmations so they are removed even if the originating control unmounts.
+ * Keying confirmations by copy ID causes subsequent copies to be announced as new status updates. The provider clears
+ * confirmations so they are removed even if the originating control unmounts.
  */
 export function EntryClipboardProvider({ children }: { children: ReactNode }) {
   const { latestClipboardCopy, copy, clearConfirmation, dismissFailure } = useCopyToClipboard<{
     copyControlId: string;
-    entity: string; // What the control copies, as shown in the failure alert.
+    /** What the control copies, as shown in the failure alert. */
+    entity: string;
   }>();
 
   const entryClipboard: EntryClipboard = {

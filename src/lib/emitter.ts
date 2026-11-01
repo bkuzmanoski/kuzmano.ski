@@ -1,6 +1,6 @@
 /**
- * The listener half of a `useSyncExternalStore` store. State stays in the
- * owning module, since each store differs in how it reads and derives it.
+ * The listener half of a `useSyncExternalStore` store. State stays in the owning module as each store differs in how it
+ * reads and derives it.
  *
  * Use `client-store.ts` in components that run on the client.
  */

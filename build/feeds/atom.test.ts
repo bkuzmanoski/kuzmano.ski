@@ -13,12 +13,16 @@ import type { FeedEntry } from "./atom.ts";
 const NULL = String.fromCharCode(0);
 const FORM_FEED = String.fromCharCode(12);
 const LONE_SURROGATE = String.fromCharCode(0xd800);
-const EMOJI = "\u{1F5FA}\u{FE0F}"; // A surrogate pair followed by a variation selector.
+
+/** A surrogate pair followed by a variation selector. */
+const EMOJI = "\u{1F5FA}\u{FE0F}";
 
 const feed = (entries: Array<FeedEntry>) => atomFeed(feedDocument({ entries }));
 
-// A feed is read by an XML parser, so the assertions below read it back through one
-// rather than matching the character references the serializer happens to emit.
+/**
+ * An XML parser reads a feed, so the assertions below read it back through one rather than matching the character
+ * references the serializer happens to emit.
+ */
 const parseXml = (xml: string) => {
   const document = new DOMParser().parseFromString(xml, "text/xml");
 

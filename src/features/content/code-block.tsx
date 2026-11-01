@@ -32,8 +32,8 @@ function languageOf(children: ReactNode): string | null {
 /**
  * Renders a code block with a copy control and, when `data-gist-id` is present, a GitHub Gist link.
  *
- * Copy text is read from the rendered `<pre>` on demand. Passing it as a prop would duplicate each
- * block's text because the highlighter already renders it as styled spans (see `/build/content/mdx.ts`).
+ * Copy text is read from the rendered `<pre>` on demand. Passing it as a prop would duplicate each block's text because
+ * the highlighter already renders it as styled spans (see `/build/content/mdx.ts`).
  */
 export function CodeBlock({
   style,

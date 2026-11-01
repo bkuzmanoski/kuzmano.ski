@@ -48,7 +48,7 @@ const { GET } = Route.options.server!.handlers as unknown as {
 const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
   GET({ request: getRequestFromSite(ENDPOINT_URL, options) });
 
-test("the calendar is served to a same-origin request as JSON", async () => {
+test("the endpoint serves the calendar to a same-origin request as JSON", async () => {
   const response = await get();
 
   expect(response.status).toBe(200);
@@ -57,7 +57,7 @@ test("the calendar is served to a same-origin request as JSON", async () => {
   expect(fetchGitHubContributionCalendar).toHaveBeenCalledWith(GITHUB_USERNAME);
 });
 
-test("a request from another site is refused before the cache or the calendar is read", async () => {
+test("the endpoint refuses a request from another site before it reads the cache or the calendar", async () => {
   const response = await get({ site: "cross-site" });
 
   expect(response.status).toBe(403);
@@ -65,12 +65,12 @@ test("a request from another site is refused before the cache or the calendar is
   expect(fetchGitHubContributionCalendar).not.toHaveBeenCalled();
 });
 
-test("requests are not counted against a rate limit", async () => {
+test("the endpoint does not count requests against a rate limit", async () => {
   await get();
   expect(isWithinRateLimit).not.toHaveBeenCalled();
 });
 
-test("the calendar is stored in the data center's cache, and returned, with a `max-age` of an hour", async () => {
+test("the endpoint stores the calendar in the data center's cache, and returns it with a `max-age` of an hour", async () => {
   const response = await get();
 
   expect(response.headers.get("cache-control")).toBe("public, max-age=3600");

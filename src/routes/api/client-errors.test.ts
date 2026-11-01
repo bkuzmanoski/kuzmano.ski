@@ -23,8 +23,10 @@ const VALID_REPORT = {
   stack: "at Component (entry.tsx:12)",
 };
 
-// Use the exported route handler to exercise the endpoint as it is served.
-// This route exports a handler record rather than a handler factory.
+/**
+ * The exported route handler, so the tests exercise the endpoint as the site serves it. This route exports a handler
+ * record rather than a handler factory.
+ */
 const { POST } = Route.options.server!.handlers as unknown as {
   POST: (context: { request: Request }) => Promise<Response>;
 };
@@ -32,14 +34,14 @@ const { POST } = Route.options.server!.handlers as unknown as {
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
   POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });
 
-test("a well-formed report is logged as a client error", async () => {
+test("the endpoint logs a well-formed report as a client error", async () => {
   const response = await post(VALID_REPORT);
 
   expect(response.status).toBe(204);
   expect(console.error).toHaveBeenCalledWith({ event: "client_error", ...VALID_REPORT });
 });
 
-test("a report without a kind is logged with an unknown kind", async () => {
+test("the endpoint logs a report without a kind with an unknown kind", async () => {
   await post({ ...VALID_REPORT, kind: undefined });
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ kind: "unknown" }));
 });
@@ -48,26 +50,26 @@ test.each([
   ["a report without a message", { ...VALID_REPORT, message: undefined }],
   ["a report without a route", { ...VALID_REPORT, route: undefined }],
   ["a report whose route does not start with `/`", { ...VALID_REPORT, route: "https://elsewhere.example" }],
-])("%s is refused", async (_label, body) => {
+])("the endpoint refuses %s with a 400 status code", async (_label, body) => {
   expect((await post(body)).status).toBe(400);
   expect(console.error).not.toHaveBeenCalled();
 });
 
-test("a message longer than the maximum message length is truncated rather than refused", async () => {
+test("the endpoint truncates a message longer than the maximum message length rather than refusing the report", async () => {
   const response = await post({ ...VALID_REPORT, message: "a".repeat(600) });
 
   expect(response.status).toBe(204);
   expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ message: "a".repeat(500) }));
 });
 
-test("a cross-origin request is refused, and a client error is not logged", async () => {
+test("the endpoint refuses a cross-origin request, and does not log a client error", async () => {
   const response = await post(VALID_REPORT, { origin: "https://elsewhere.example" });
 
   expect(response.status).toBe(403);
   expect(console.error).not.toHaveBeenCalled();
 });
 
-test("reports are not counted against a Worker rate limit", async () => {
+test("the endpoint does not count reports against a Worker rate limit", async () => {
   await post(VALID_REPORT);
   expect(isWithinRateLimit).not.toHaveBeenCalled(); // A Cloudflare rule rate limits this route before a request reaches the Worker.
 });

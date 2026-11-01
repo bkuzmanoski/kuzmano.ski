@@ -20,7 +20,7 @@ const CLICK: Strike = {
   fadeSeconds: 0.002,
 };
 
-// Shared by hover, scroll detents, and slider steps.
+/** Shared by hover, scroll detents, and slider steps. */
 const DETENT: Strike = {
   durationSeconds: 0.01,
   seed: 0xfee1e7,
@@ -65,13 +65,19 @@ const SUCCESS: Tone = {
 const DETENT_INTERVAL_S = 0.03;
 const DETENT_PLAYBACK = { level: 0.2, rate: 1 };
 
-const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000; // The speed, in pixels per second, at which a detent is at full strength.
+/** The speed, in pixels per second, at which a detent is at full strength. */
+const SCROLL_DETENT_FULL_SPEED_PX_PER_S = 2000;
+
 const SCROLL_DETENT_LEVEL = { quiet: 0.1, loud: 0.2 };
 const SCROLL_DETENT_RATE = { slow: 1.0, fast: 1.05 };
 
 const KEY_LEVEL = 1.25;
-const KEY_UP_MIN_DELAY_S = 0.04; // Ensures key up follows key down, even when both wait for the same audio resume.
-const KEY_UP_TAP_DELAY_S = 0.1175; // Timing of the key-up sound within the original keypress recording.
+
+/** Ensures key up follows key down, even when both wait for the same audio resume. */
+const KEY_UP_MIN_DELAY_S = 0.04;
+
+/** Timing of the key-up sound within the original keypress recording. */
+const KEY_UP_TAP_DELAY_S = 0.1175;
 
 const STARTUP_CHIME_LEVEL = 0.5;
 const ERROR_LEVEL = 0.5;

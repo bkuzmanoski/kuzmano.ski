@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { SOCIAL_IMAGE } from "#/config/site.ts";
+import { OPEN_GRAPH_IMAGE } from "#/config/site.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
 
 import { LLMS_TXT_PATH, canonicalUrl, documentHead } from "./metadata.ts";
@@ -34,13 +34,13 @@ test("a document with a cover image emits it as the Open Graph image, with its d
   const coverImage = fakeCoverImage("entry");
   const document = { ...DOCUMENT, coverImage };
 
-  expect(propertyContentsOf(document, "og:image")).toEqual([canonicalUrl(coverImage.social.src)]);
+  expect(propertyContentsOf(document, "og:image")).toEqual([canonicalUrl(coverImage.src)]);
   expect(propertyContentsOf(document, "og:image:width")).toEqual(["512"]);
   expect(propertyContentsOf(document, "og:image:height")).toEqual(["512"]);
 });
 
 test("a document without a cover image emits the site image, without dimensions", () => {
-  expect(propertyContentsOf(DOCUMENT, "og:image")).toEqual([canonicalUrl(SOCIAL_IMAGE)]);
+  expect(propertyContentsOf(DOCUMENT, "og:image")).toEqual([canonicalUrl(OPEN_GRAPH_IMAGE)]);
   expect(propertyContentsOf(DOCUMENT, "og:image:width")).toEqual([]);
   expect(propertyContentsOf(DOCUMENT, "og:image:height")).toEqual([]);
 });
@@ -50,7 +50,7 @@ test("a document emits a `describedby` link to `/llms.txt`", () => {
   expect(links).toContainEqual({ rel: "describedby", href: canonicalUrl(LLMS_TXT_PATH) });
 });
 
-test("a document with body chunks links each of their stylesheets, at a precedence after the site's, and preloads each of their modules", () => {
+test("a document with body chunks links each of their stylesheets, at a precedence after the site's stylesheets, and preloads each of their modules", () => {
   const bodyChunks = {
     moduleUrls: ["/assets/entry.js", "/assets/entry.module.js"],
     stylesheetUrls: ["/assets/entry.css", "/assets/entry.module.css"],

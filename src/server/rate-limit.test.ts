@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "./bindings.ts";
 import { isWithinRateLimit } from "./rate-limit.ts";
@@ -19,30 +19,32 @@ beforeEach(() => {
   env.current = { [SEND_EMAIL_RATELIMIT_BINDING]: { limit: rateLimit } };
 });
 
-test("the sender's key is counted against the binding's budget", async () => {
-  rateLimit.mockResolvedValue({ success: true });
+describe("isWithinRateLimit", () => {
+  test("counts the sender's key against the binding's budget", async () => {
+    rateLimit.mockResolvedValue({ success: true });
 
-  await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
-  expect(rateLimit).toHaveBeenCalledWith({ key: "203.0.113.1" });
-});
+    await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
+    expect(rateLimit).toHaveBeenCalledWith({ key: "203.0.113.1" });
+  });
 
-test("a key over its budget is outside the rate limit", async () => {
-  rateLimit.mockResolvedValue({ success: false });
-  await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(false);
-});
+  test("returns `false` for a key over its budget", async () => {
+    rateLimit.mockResolvedValue({ success: false });
+    await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(false);
+  });
 
-test("each binding's rate limit is counted separately", async () => {
-  rateLimit.mockResolvedValue({ success: false });
+  test("counts each binding's rate limit separately", async () => {
+    rateLimit.mockResolvedValue({ success: false });
 
-  await expect(isWithinRateLimit(CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
-  expect(rateLimit).not.toHaveBeenCalled();
-});
+    await expect(isWithinRateLimit(CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
+    expect(rateLimit).not.toHaveBeenCalled();
+  });
 
-test.each([
-  ["there is no binding", () => (env.current = {})],
-  ["the environment is unreachable", () => (env.fails = true)],
-  ["the binding itself throws", () => rateLimit.mockRejectedValue(new Error("Unavailable."))],
-])("a key is within the rate limit when %s", async (_label, arrange) => {
-  arrange();
-  await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
+  test.each([
+    ["there is no binding", () => (env.current = {})],
+    ["the environment is unreachable", () => (env.fails = true)],
+    ["the binding itself throws", () => rateLimit.mockRejectedValue(new Error("Unavailable."))],
+  ])("returns `true` when %s", async (_label, arrange) => {
+    arrange();
+    await expect(isWithinRateLimit(SEND_EMAIL_RATELIMIT_BINDING, "203.0.113.1")).resolves.toBe(true);
+  });
 });

@@ -10,9 +10,11 @@ import type { MouseEvent, PointerEvent, ReactNode, SyntheticEvent } from "react"
 
 const INPUT_FIELD_SURFACES = "label, input, textarea";
 
-// Restricts a press handler to the field's own surfaces. A field can also contain a control
-// that plays its own press sound, such as the `Scrollbar` paired with a `TextArea`, which
-// would otherwise play a second sound for the same press.
+/**
+ * Restricts a press handler to the field's own surfaces. A field can also contain a control that plays its own press
+ * sound, such as the `Scrollbar` paired with a `TextArea`, which would otherwise play a second sound for the same
+ * press.
+ */
 function onInputFieldSurface<T extends SyntheticEvent>(handler: (event: T) => void) {
   return (event: T) => {
     if ((event.target as Element).closest(INPUT_FIELD_SURFACES)) {
@@ -34,16 +36,16 @@ export function InputField({
   className?: string;
   children: ReactNode;
 }) {
-  const pressSound = usePressSound({ scrollSafe: true });
+  const pressSoundHandlers = usePressSound({ defersTouchPressSound: true });
   const forwardedClickTargetRef = useRef<HTMLElement | null>(null);
 
   function onPointerDown(event: PointerEvent) {
-    // Clicking a label causes the browser to dispatch a second `click` on its control, with the same
-    // `detail`, in Chrome. Since the label click already settles the press, ignore the forwarded click to
-    // avoid playing a sound without a matching press. Clear the expected click on the next press because
-    // label clicks are not always forwarded (for example, when their default action is prevented).
+    // Clicking a label causes the browser to dispatch a second `click` on its control, with the same `detail`, in
+    // Chrome. Since the label click already settles the press, ignore the forwarded click to avoid playing a sound
+    // without a matching press. Clear the expected click on the next press because label clicks are not always
+    // forwarded (e.g., when a handler prevents their default action).
     forwardedClickTargetRef.current = null;
-    onInputFieldSurface(pressSound.onPointerDown)(event);
+    onInputFieldSurface(pressSoundHandlers.onPointerDown)(event);
   }
 
   function onClick(event: MouseEvent) {
@@ -56,14 +58,15 @@ export function InputField({
 
     forwardedClickTargetRef.current = control && !control.matches(":disabled") ? control : null; // A disabled control does not receive a forwarded click.
 
-    onInputFieldSurface(pressSound.onClick)(event);
+    onInputFieldSurface(pressSoundHandlers.onClick)(event);
   }
 
   return (
     <div
       className={cx(styles.inputField, className)}
       onPointerDown={onPointerDown}
-      onPointerCancel={pressSound.onPointerCancel}
+      onMouseDown={onInputFieldSurface(pressSoundHandlers.onMouseDown)}
+      onPointerCancel={pressSoundHandlers.onPointerCancel}
       onClick={onClick}
     >
       <label className={labelHidden ? styles.hidden : styles.label} htmlFor={binding.control.id}>

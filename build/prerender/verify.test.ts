@@ -7,7 +7,7 @@ import { documentTitle } from "#/site/metadata.ts";
 
 import { verifyPrerenderedDocument } from "./verify.ts";
 
-// The parts of a prerendered document that the verifier checks, with `body` as the window content.
+/** The parts of a prerendered document that the verifier checks, with `body` as the window content. */
 const pageHtml = (body: string) => `<title>${documentTitle("Collection")}</title>
 <nav aria-label="Main menu"></nav>
 <section aria-label="Collection">

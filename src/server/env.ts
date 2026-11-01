@@ -12,8 +12,8 @@ async function proxiedEnv(): Promise<cloudflareWorkers.WorkerEnv> {
 /**
  * The `cloudflare:workers` module, or `null` outside Workers.
  *
- * `vite dev` runs this module in Node, where that specifier does not resolve, so it is
- * imported dynamically rather than statically.
+ * `vite dev` runs this module in Node, where that specifier does not resolve, so it is imported dynamically rather than
+ * statically.
  */
 async function workersModule(): Promise<typeof cloudflareWorkers | null> {
   try {
@@ -26,8 +26,8 @@ async function workersModule(): Promise<typeof cloudflareWorkers | null> {
 /**
  * The bindings this request runs against, wherever it is running. Rejects if there are none.
  *
- * On Workers they come from `cloudflare:workers`. Under `vite dev`, the platform proxy supplies
- * the same bindings instead.
+ * On Workers they come from `cloudflare:workers`. Under `vite dev`, the platform proxy supplies the same bindings
+ * instead.
  */
 export async function workerEnv(): Promise<cloudflareWorkers.WorkerEnv> {
   const workers = await workersModule();
@@ -47,9 +47,8 @@ export async function workerEnv(): Promise<cloudflareWorkers.WorkerEnv> {
 }
 
 /**
- * Extends the current request until `promise` settles, for work that continues after the response
- * is sent. Outside Workers, the process outlives the request, so `promise` runs to completion
- * without it.
+ * Extends the current request until `promise` settles, for work that continues after the response is sent. Outside
+ * Workers, the process outlives the request, so `promise` runs to completion without it.
  */
 export async function extendRequestUntil(promise: Promise<unknown>): Promise<void> {
   (await workersModule())?.waitUntil(promise);

@@ -5,8 +5,8 @@ import type { EntryKey } from "#/lib/content/entry-file.ts";
 
 import { fromContent } from "../paths.ts";
 
-// Lists the content directory tree that the authored content and authored media readers take as
-// input. Centralizing traversal ensures both readers apply the same inclusion rules.
+// Lists the content directory tree that the authored content and authored media readers take as input. Centralizing
+// traversal ensures both readers apply the same inclusion rules.
 
 export const URL_SAFE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -28,17 +28,24 @@ export type ContentListing = Array<ContentDirectoryListing>;
 export interface ListedEntry {
   slug: string;
   key: EntryKey;
-  entryFilePath: string; // Relative to the content directory.
+  /** Relative to the content directory. */
+  entryFilePath: string;
   absolutePath: string;
-  mediaDirectoryPath: string; // Relative to the content directory. Derived whether or not the directory exists.
+  /** Relative to the content directory. Derived whether or not the directory exists. */
+  mediaDirectoryPath: string;
 }
 
 const isHiddenDirectoryItem = (name: string) => name.startsWith(".");
+
+/**
+ * Returns the names of the visible items of `type`, sorted, since the order `readdir` returns depends on the
+ * filesystem.
+ */
 const namesIn = (items: Array<DirectoryItem>, type: DirectoryItem["type"]) =>
   items
     .filter((item) => item.type === type && !isHiddenDirectoryItem(item.name))
     .map((item) => item.name)
-    .sort(); // Sort filesystem-dependent `readdir` results for deterministic output.
+    .sort();
 
 export function contentListingFrom(read: DirectoryReader): ContentListing {
   const directoryOf = (directoryName: string): ContentDirectoryListing => {
@@ -79,7 +86,7 @@ const readDirectory: DirectoryReader = (directoryPathSegments) =>
         return [{ name: dirent.name, type: "directory" }];
       }
 
-      return []; // Drops symbolic links and other special files, since content is only regular files and directories.
+      return []; // Drops symbolic links and other special files as content is only regular files and directories.
     },
   );
 

@@ -12,9 +12,9 @@ import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useElementSize } from "#/lib/hooks/use-element-size.ts";
-import { useFollowsPointerPress } from "#/lib/hooks/use-follows-pointer-press.ts";
+import { useIsFromPointerPress } from "#/lib/hooks/use-is-from-pointer-press.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
-import { isArrowKey } from "#/lib/keys.ts";
+import { activateOnKeyPress, isArrowKey } from "#/lib/keys.ts";
 import type { ArrowKey } from "#/lib/keys.ts";
 import { followLink } from "#/lib/link.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
@@ -49,7 +49,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const focusedWindow = useFocusedWindow();
   const notFoundRoute = useNotFoundRoute();
   const { open, focusDesktop } = useWindowActions();
-  const followsPointerPress = useFollowsPointerPress();
+  const isFromPointerPress = useIsFromPointerPress();
   const positions = useIconPositions();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const flash = useActivationFlash<string>();
@@ -57,9 +57,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
 
-  // Only a press on the empty desktop clears the selection. A press on a window or on
-  // the menu bar leaves it standing. The desktop stops showing a selection when it does
-  // not hold keyboard focus.
+  // Only a press on the empty desktop clears the selection. A press on a window or on the menu bar leaves it standing.
+  // The desktop stops showing a selection when it does not hold keyboard focus.
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
       if (event.target instanceof HTMLElement && event.target.dataset.desktop !== undefined) {
@@ -72,8 +71,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
 
-  // Read from the DOM rather than from a ref map, so an icon does not have
-  // to take a ref callback that its parent rebuilds on every render.
+  // Read from the DOM rather than from a ref map, so an icon does not have to take a ref callback that its parent
+  // rebuilds on every render.
   const iconElement = (id: string) => layerRef.current?.querySelector<HTMLAnchorElement>(`[data-icon="${id}"]`);
 
   /** The box of an element in the layer's own coordinates. */
@@ -94,9 +93,9 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       })
     : [];
 
-  // The handlers below read the layout through this ref rather than capturing it from render.
-  // Both the placements and container are rebuilt on every frame of a drag, so capturing either
-  // would recreate the handlers and re-render every icon they are passed to.
+  // The handlers below read the layout through this ref rather than capturing it from render. Both the placements and
+  // container are rebuilt on every frame of a drag, so capturing either would recreate the handlers and re-render every
+  // icon they are passed to.
   const layoutRef = useRef({ placements, container: effectiveContainerSize });
 
   useEffect(() => {
@@ -117,8 +116,8 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       return;
     }
 
-    // The zoom rect grows toward a window that is not on the desktop yet, unless the visitor prefers
-    // reduced motion. A window that is already open only changes what it shows.
+    // The zoom rect grows toward a window that is not on the desktop yet, unless the visitor prefers reduced motion. A
+    // window that is already open only changes what it shows.
     const windowId = resolveWindow(iconDefinition.route)?.id;
     const element = iconElement(iconDefinition.id);
 
@@ -152,25 +151,33 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       return;
     }
 
-    const isEnterOrSpace = event.key === "Enter" || event.key === " ";
-    const isAltO = event.altKey && event.code === "KeyO";
-
-    if (isEnterOrSpace || isAltO) {
-      event.preventDefault();
+    function openWithKeyboard() {
       playClickSound();
       openIcon(iconDefinition);
     }
+
+    if (activateOnKeyPress(event, openWithKeyboard)) {
+      return;
+    }
+
+    if (event.altKey && event.code === "KeyO") {
+      event.preventDefault();
+
+      if (!event.repeat) {
+        openWithKeyboard();
+      }
+    }
   }
 
-  // The focus falls to the body when the focused element is removed with its window or its alert,
-  // or is made inert with its window. A selected icon is focused again whatever closed the window.
-  // Focusing the icon that is the tab stop selects it, so it is focused only after a keyboard
-  // action; after a pointer press, the arrow keys already move the selection from the body.
+  // The focus falls to the body when the focused element is removed with its window or its alert, or is made inert with
+  // its window. A selected icon is focused again whatever closed the window. Focusing the icon that is the tab stop
+  // selects it, so it is focused only after a keyboard action; after a pointer press, the arrow keys already move the
+  // selection from the body.
   const restoreFocusToDesktop = useEffectEvent(() => {
     const { activeElement } = document;
     const isFocusLost =
       activeElement === null || activeElement === document.body || activeElement.closest("[inert]") !== null;
-    const iconId = followsPointerPress() ? selectedIconId : tabStop;
+    const iconId = isFromPointerPress() ? selectedIconId : tabStop;
 
     if (isFocusLost && iconId) {
       iconElement(iconId)?.focus({ preventScroll: true });
@@ -179,10 +186,9 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   const isDesktopActive = focusedWindow === null && notFoundRoute === null;
 
-  // The effect runs only when `isDesktopActive` changes, so the comparison with the previous value
-  // skips just the run on mount: a page that loads on the empty desktop leaves the focus on the body
-  // rather than selecting an icon. Comparing, rather than skipping the first run, also holds when
-  // Strict Mode runs the effect twice on mount.
+  // The effect runs only when `isDesktopActive` changes, so the comparison with the previous value skips just the run
+  // on mount: a page that loads on the empty desktop leaves the focus on the body rather than selecting an icon.
+  // Comparing, rather than skipping the first run, also holds when Strict Mode runs the effect twice on mount.
   const wasDesktopActiveRef = useRef(isDesktopActive);
 
   useEffect(() => {

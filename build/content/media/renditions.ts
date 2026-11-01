@@ -14,7 +14,8 @@ import type { ResolvedImage, ResolvedMediaFile } from "./resolved-media.ts";
 interface AuthoredRendition {
   origin: "authored";
   url: string;
-  type: string; // Media type of the served bytes.
+  /** Media type of the served bytes. */
+  type: string;
   resolvedMediaFile: ResolvedMediaFile;
 }
 

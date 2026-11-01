@@ -11,8 +11,8 @@ function stub(value: unknown): unknown {
 /**
  * Mocks an audio module by stubbing every export, then applying `overrides`.
  *
- * The factory has to reach the original module through a dynamic import because `vi.mock` is
- * hoisted above the file's own imports:
+ * The factory has to reach the original module through a dynamic import because `vi.mock` is hoisted above the file's
+ * own imports:
  *
  * ```ts
  * vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
@@ -53,8 +53,10 @@ export class FakeAudioContext {
   sampleRate: number;
   resumeCount = 0;
 
-  // What the next `resume()` returns. Set it to a rejected promise, or to one that
-  // never settles, to stand in for a gesture the browser declined to honor.
+  /**
+   * What the next `resume()` returns. Set it to a rejected promise, or to one that never settles, to stand in for a
+   * gesture the browser declined to honor.
+   */
   resumeResult: Promise<void> = Promise.resolve();
 
   private listeners = new Set<() => void>();

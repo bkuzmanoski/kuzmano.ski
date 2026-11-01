@@ -16,8 +16,8 @@ export const SCROLL_PANE_VIEWPORT_SELECTOR = "[data-scroll-pane-viewport]";
 /**
  * A scrolling viewport paired with the window's own scrollbar.
  *
- * The pane reads its layout from the `--window-safe-area-*` properties the window sets, so it extends
- * into the safe-area insets with the window that contains it.
+ * The pane reads its layout from the `--window-safe-area-*` properties the window sets, so it extends into the
+ * safe-area insets with the window that contains it.
  */
 export function ScrollPane({
   id,
@@ -27,9 +27,11 @@ export function ScrollPane({
   children,
 }: {
   id: string;
-  viewportRef?: Ref<HTMLDivElement>; // Attached to the scrolling viewport, rather than the pane that also contains the scrollbar.
+  /** Attached to the scrolling viewport, rather than the pane that also contains the scrollbar. */
+  viewportRef?: Ref<HTMLDivElement>;
   resizeControl?: ReactNode;
-  fitsContentHeight?: boolean; // Sizes the pane to its content for a window that is as tall as its content.
+  /** Sizes the pane to its content for a window that is as tall as its content. */
+  fitsContentHeight?: boolean;
   children: ReactNode;
 }) {
   const contentContainerRef = useRef<HTMLDivElement>(null);

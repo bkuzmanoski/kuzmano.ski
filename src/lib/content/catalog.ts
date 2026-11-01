@@ -14,8 +14,8 @@ export interface Entry extends Frontmatter {
 }
 
 /**
- * The classes an entry's stylesheet (`<slug>.module.css`) can define: `entry` on the entry's
- * `<article>`, and `title` on its `<h1>`.
+ * The classes an entry's stylesheet (`<slug>.module.css`) can define: `entry` on the entry's `<article>`, and `title`
+ * on its `<h1>`.
  */
 export interface EntryStylesheetClassNames {
   entry?: string;
@@ -24,12 +24,13 @@ export interface EntryStylesheetClassNames {
 
 export interface MDXModule {
   default: MDXContent;
-  stylesheetClassNames?: EntryStylesheetClassNames; // Absent when the entry has no stylesheet.
+  /** Absent when the entry has no stylesheet. */
+  stylesheetClassNames?: EntryStylesheetClassNames;
 }
 
 /**
- * The client chunks and stylesheets loaded by an entry: its body chunk, the chunk of its stylesheet,
- * and the chunks those import, other than the chunks the document loads for every page.
+ * The client chunks and stylesheets loaded by an entry: its body chunk, the chunk of its stylesheet, and the chunks
+ * those import, other than the chunks the document loads for every page.
  */
 export interface EntryBodyChunks {
   moduleUrls: Array<string>;
@@ -41,8 +42,10 @@ export interface ContentIndex {
   has: (slug: string) => boolean;
   entryKeyOf: (slug: string) => EntryKey;
   frontmatterOf: (slug: string) => Frontmatter | null;
-  bodyChunksOf: (slug: string) => EntryBodyChunks | null; // For a document to load the body and its stylesheets before hydration.
-  load: (slug: string) => Promise<MDXModule>; // The compiled body, in a chunk of its own.
+  /** For a document to load the body and its stylesheets before hydration. */
+  bodyChunksOf: (slug: string) => EntryBodyChunks | null;
+  /** The compiled body, in a chunk of its own. */
+  load: (slug: string) => Promise<MDXModule>;
 }
 
 /** A content index that enumerates what it holds, most recent first. */
@@ -60,7 +63,8 @@ interface CollectionMetadata {
 }
 
 export interface ContentSource {
-  rootDirectoryPath: string; // The directory the content glob read from, without a trailing slash.
+  /** The directory the content glob read from, without a trailing slash. */
+  rootDirectoryPath: string;
   frontmatterModules: Record<string, { default: unknown }>;
   bodyModules: Record<string, () => Promise<{ default: MDXContent }>>;
   stylesheetModules: Record<string, () => Promise<{ default: EntryStylesheetClassNames }>>;
@@ -176,4 +180,4 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
 }
 
 export type { Frontmatter };
-export type { ContentImage, CoverImage, PictureSource } from "./media.ts";
+export type { CoverImage } from "./media.ts";

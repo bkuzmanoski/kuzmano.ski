@@ -29,7 +29,8 @@ import type { Plugin } from "vite";
 
 interface RenderedMarkdown {
   content: AuthoredContent;
-  files: Map<string, string>; // Each file's Markdown, keyed by the path it is served from.
+  /** Each file's Markdown, keyed by the path the site serves it from. */
+  files: Map<string, string>;
   tokenCounts: MarkdownTokenCounts;
 }
 
@@ -42,8 +43,8 @@ function requestedMarkdownPathFor(requestPath: string, acceptHeader: string | un
 }
 
 /**
- * Emits Markdown representations for every entry and collection, exposes estimated token counts
- * for Markdown files through `virtual:markdown-token-counts`, and emits `llms.txt` from the same render.
+ * Emits Markdown representations for every entry and collection, exposes estimated token counts for Markdown files
+ * through `virtual:markdown-token-counts`, and emits `llms.txt` from the same render.
  */
 export function markdownPlugin({
   mediaForEntry = NO_MEDIA_FOR_ENTRY,
@@ -68,9 +69,9 @@ export function markdownPlugin({
 
   let renderedMarkdown: Promise<RenderedMarkdown> | null = null;
 
-  // Whichever environment builds first renders the content; the other awaits the same render. Three
-  // build-time hooks reach this: the Markdown files and `llms.txt` emitted in the client environment,
-  // and the token counts loaded in the server environment. `vite dev` renders per request instead.
+  // Whichever environment builds first renders the content; the other awaits the same render. Three build-time hooks
+  // reach this: the Markdown files and `llms.txt` emitted in the client environment, and the token counts loaded in the
+  // server environment. `vite dev` renders per request instead.
   const ensureRenderedMarkdown = () => (renderedMarkdown ??= renderMarkdown(readEntryDataModule));
 
   const markdownEmitPlugin: Plugin = {
@@ -85,9 +86,9 @@ export function markdownPlugin({
       const readEntryDataModuleInDev = entryDataModuleReaderThrough(server);
 
       server.middlewares.use((request, response, next) => {
-        // Rewrite Markdown-preferring requests to accept HTML before passing them to the router,
-        // which responds only to HTML-accepting requests. This matches `asHtmlRequest` in
-        // `/src/worker.ts` and lets routes without Markdown render instead of returning `500`.
+        // Rewrite Markdown-preferring requests to accept HTML before passing them to the router, which responds only to
+        // HTML-accepting requests. This matches `asHtmlRequest` in `/src/worker.ts` and lets routes without Markdown
+        // render instead of returning `500`.
         const passToRouter = () => {
           if (prefersMarkdown(request.headers.accept)) {
             request.headers.accept = HTML_MEDIA_TYPE;
@@ -120,8 +121,8 @@ export function markdownPlugin({
           return;
         }
 
-        // The document's path is served as both HTML and Markdown, so a shared cache has to key on
-        // `Accept`. Appended rather than set, to keep the `Vary` the dev server adds for `Origin`.
+        // The document's path is served as both HTML and Markdown, so a shared cache has to key on `Accept`. Appended
+        // rather than set, to keep the `Vary` the dev server adds for `Origin`.
         if (requestedMarkdownPath !== requestPath) {
           response.appendHeader("vary", "Accept");
         }

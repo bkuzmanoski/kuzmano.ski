@@ -82,7 +82,8 @@
 
   transition: transform var(--startup-sequence-stage-zoom-ms) cubic-bezier(0.55, 0, 0.25, 1);
 
-  /* Only the zoom in is animated; a re-frame while the stage is zoomed out (e.g., via a viewport resize) is immediate. */
+  /* Only the zoom in is animated; a re-frame while the stage is zoomed out (e.g., via a viewport resize) is
+   * immediate. */
   &.zoomedOut {
     transform: var(--startup-sequence-zoom-out);
     transition: none;
@@ -179,7 +180,8 @@
     }
   }
 
-  /* Occupies the viewport from the first frame and is revealed with a clip path to avoid per-frame layout caused by animating the display's `inset`. */
+  /* Occupies the viewport from the first frame and is revealed with a clip path to avoid per-frame layout caused by
+   * animating the display's `inset`. */
   & .desktopBackground {
     position: absolute;
     inset: var(--startup-sequence-viewport-inset);
@@ -209,7 +211,8 @@
     mask-size: 100% 0%;
   }
 
-  /* The struck grade is repeated so that it only begins interpolating to the settled grade once the raster has opened. */
+  /* The struck grade is repeated so that it only begins interpolating to the settled grade once the raster has
+   * opened. */
   45% {
     filter: var(--startup-sequence-crt-grade-struck);
   }
@@ -410,7 +413,10 @@
   & .prompt {
     font: var(--font-chrome);
 
-    & .block {
+    /* A pseudo-element rather than an element so that the prompt is one text element to a screen reader. */
+    &::after {
+      content: "";
+
       display: inline-block;
 
       width: 0.6em;

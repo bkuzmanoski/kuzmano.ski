@@ -3,16 +3,18 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { DOUBLE_PRESS_INTERVAL_MS, useDoublePress } from "./use-double-press.ts";
 
+const acceptsDoublePress = vi.fn<() => boolean>();
 const onDoublePress = vi.fn();
 
 let now = 0;
 
 function Target() {
-  return <div data-testid="target" {...useDoublePress({ onDoublePress })} />;
+  return <div data-testid="target" {...useDoublePress({ acceptsDoublePress, onDoublePress })} />;
 }
 
 beforeEach(() => {
   now = 0;
+  acceptsDoublePress.mockReset().mockReturnValue(true);
   onDoublePress.mockClear();
   vi.spyOn(performance, "now").mockImplementation(() => now);
   render(<Target />);
@@ -44,6 +46,38 @@ describe("pointer input", () => {
     press();
 
     expect(onDoublePress).toHaveBeenCalledTimes(1);
+  });
+
+  test("a touch double press prevents the `click` and `dblclick` events that follow it from reaching the page", () => {
+    const pageEvent = vi.fn();
+
+    document.body.addEventListener("click", pageEvent);
+    document.body.addEventListener("dblclick", pageEvent);
+    press();
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
+    press();
+    fireEvent.click(target());
+    fireEvent.doubleClick(target());
+    document.body.removeEventListener("click", pageEvent);
+    document.body.removeEventListener("dblclick", pageEvent);
+
+    expect(pageEvent).not.toHaveBeenCalled();
+    expect(onDoublePress).toHaveBeenCalledOnce();
+  });
+
+  test("a touch double press for which `acceptsDoublePress` returns `false` does not call `onDoublePress`, and lets the `click` event that follows it reach the page", () => {
+    const pageClick = vi.fn();
+
+    acceptsDoublePress.mockReturnValue(false);
+    document.body.addEventListener("click", pageClick);
+    press();
+    setNow(DOUBLE_PRESS_INTERVAL_MS);
+    press();
+    fireEvent.click(target());
+    document.body.removeEventListener("click", pageClick);
+
+    expect(onDoublePress).not.toHaveBeenCalled();
+    expect(pageClick).toHaveBeenCalledOnce();
   });
 
   test("two pen presses within the interval fire a single double press", () => {
@@ -132,5 +166,12 @@ describe("mouse", () => {
   test("a native double click fires a double press without preceding pointer events", () => {
     fireEvent.doubleClick(target());
     expect(onDoublePress).toHaveBeenCalledTimes(1);
+  });
+
+  test("a native double click for which `acceptsDoublePress` returns `false` does not call `onDoublePress`", () => {
+    acceptsDoublePress.mockReturnValue(false);
+    fireEvent.doubleClick(target());
+
+    expect(onDoublePress).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,6 @@ export default {
     { files: "*.jsonc", options: { trailingComma: "none" } },
     { files: "*.svg", options: { parser: "html" } },
   ],
-  plugins: ["./prettier.mdx.ts"],
+  plugins: ["./prettier.mdx.ts", "./prettier.comments.ts"],
   printWidth: 120,
 } satisfies Config;

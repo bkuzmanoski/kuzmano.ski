@@ -81,8 +81,8 @@ function entriesFor(
 }
 
 /**
- * Builds one feed's Atom document from a content tree and a source of prerendered documents. Feeds
- * built with the same `articleContents` read each entry's document once.
+ * Builds one feed's Atom document from a content tree and a source of prerendered documents. Feeds built with the same
+ * `articleContents` read each entry's document once.
  */
 export async function feedXmlFor(
   feed: FeedMetadata,
@@ -109,11 +109,11 @@ export async function feedXmlFor(
 }
 
 /**
- * Creates the plugin that emits an Atom feed for the site and for each collection from prerendered
- * content, and the `captureDocument` callback that records each prerendered document for it.
+ * Creates the plugin that emits an Atom feed for the site and for each collection from prerendered content, and the
+ * `captureDocument` callback that records each prerendered document for it.
  *
- * `captureDocument` is called from the prerenderer's `onSuccess`, which runs before the plugin's
- * `buildApp` handler reads what it recorded.
+ * `captureDocument` is called from the prerenderer's `onSuccess`, which runs before the plugin's `buildApp` handler
+ * reads what it recorded.
  */
 export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): {
   plugin: Plugin;
@@ -148,8 +148,8 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
         );
         const authoredContent = readAuthoredContent();
 
-        // Every published entry was prerendered, so a route with no document means the build
-        // lost one. Emitting the feed without it would publish an entry with an empty body.
+        // Every published entry was prerendered, so a route with no document means the build lost one. Emitting the
+        // feed without it would publish an entry with an empty body.
         const documentOf: DocumentSource = (route) =>
           prerenderedDocuments.has(route)
             ? Promise.resolve(prerenderedDocuments.get(route))
@@ -177,8 +177,8 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
 
         const origin = `http://${request.headers.host ?? "localhost"}`;
 
-        // The dev server renders feed entries from source instead of prerendered content. Unavailable routes
-        // produce empty entries; responses without exactly one `<article>` reject so the error is visible.
+        // The dev server renders feed entries from source instead of prerendered content. Unavailable routes produce
+        // empty entries; responses without exactly one `<article>` reject so the error is visible.
         const documentOf: DocumentSource = (route) =>
           fetch(`${origin}${route}`)
             .then((fetchedResponse) => (fetchedResponse.ok ? fetchedResponse.text() : undefined))

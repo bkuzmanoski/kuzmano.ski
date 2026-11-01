@@ -18,8 +18,8 @@ export interface PromptAlert {
 export const NO_ALERT: PromptAlert = { variant: "information", message: "", primaryLabel: "OK" };
 
 /**
- * `directEmailAddress` is offered as a fallback when a send fails outright. It is `null`
- * until the window has read it, so an alert raised before it arrives omits it.
+ * `directEmailAddress` is offered as a fallback when a send fails outright. It is `null` until the window has read it,
+ * so an alert raised before it arrives omits it.
  */
 export function alertFor(prompt: Prompt, directEmailAddress: string | null): PromptAlert {
   switch (prompt.kind) {

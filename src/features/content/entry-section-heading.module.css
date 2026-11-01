@@ -38,11 +38,11 @@
 }
 
 .headingLinkPosition[data-heading-level="2"] {
-  font: var(--font-heading-2);
+  font: var(--content-body-font-heading-2);
 }
 
 .headingLinkPosition[data-heading-level="3"] {
-  font: var(--font-heading-3);
+  font: var(--content-body-font-heading-3);
 }
 
 .headingLink {

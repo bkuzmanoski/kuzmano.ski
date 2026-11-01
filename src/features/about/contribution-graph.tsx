@@ -16,7 +16,11 @@ import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import styles from "./contribution-graph.module.css";
 
-const PENDING_CALENDAR_WEEK_COUNT = 53; // The number of weeks GitHub's calendar spans in most years, which sizes the graph while the calendar is being read.
+/**
+ * The number of weeks GitHub's calendar spans in most years, which sizes the graph while the calendar loads.
+ */
+const PENDING_CALENDAR_WEEK_COUNT = 53;
+
 const MONTH_FORMAT: DateFormat = {
   locale: SITE_LOCALE,
   options: { month: "short", timeZone: "UTC" },
@@ -24,7 +28,9 @@ const MONTH_FORMAT: DateFormat = {
 const REVEAL_START_VISIBLE_FRACTION = 0.2;
 const REVEAL_END_ROUNDING_ALLOWANCE_PX = 1;
 const REVEAL_END_MAX_PROPERTY = "--contribution-graph-reveal-end-max";
-const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block"; // The condition of the `@supports` rule that reveals the weeks on scroll.
+
+/** The condition of the `@supports` rule that reveals the weeks on scroll. */
+const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block";
 
 const doesOverflow = (scrollContainer: HTMLElement | null) =>
   scrollContainer !== null && scrollContainer.scrollWidth > scrollContainer.clientWidth;

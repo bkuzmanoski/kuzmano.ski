@@ -24,8 +24,8 @@ export const listOf = (
 });
 
 /**
- * The blocks an authored element contains. MDX parses an element authored on one line as phrasing,
- * which this wraps in a paragraph, and one authored across lines as blocks.
+ * The blocks an authored element contains. MDX parses an element authored on one line as phrasing, which this wraps in
+ * a paragraph, and one authored across lines as blocks.
  */
 export function blocksIn(element: ContentNode): Array<ContentNode> {
   const children = element.children ?? [];
@@ -49,12 +49,12 @@ export const MARKDOWN_SERIALIZER_OPTIONS = {
   emphasis: "_",
 } as const;
 
-// Without the GFM extensions an entry is serialized with, so the `~` in a token note is not escaped.
+/** Serializes without the GFM extensions an entry's serializer uses, so it does not escape the `~` in a token note. */
 const markdownSerializer = unified().use(remarkStringify, MARKDOWN_SERIALIZER_OPTIONS).freeze();
 
 /**
- * Serializes mdast blocks as a Markdown file, escaping any character in a `text` node that Markdown
- * would otherwise parse as syntax.
+ * Serializes mdast blocks as a Markdown file, escaping any character in a `text` node that Markdown would otherwise
+ * parse as syntax.
  */
 export const markdownFrom = (blocks: Array<ContentNode>): string =>
   markdownSerializer.stringify({ type: "root", children: blocks } as Parameters<

@@ -15,8 +15,8 @@ const QUALITY_PARAMETER = /^q=(\d(?:\.\d{0,3})?)$/;
 const TRAILING_SLASH = /.\/$/;
 const FILE_NAME_EXTENSION = /\.[^/]*$/;
 
-// Returns a media type's declared quality, or 0 when it is absent. Ignores wildcards so browsers'
-// trailing `*/*` does not select `text/markdown`.
+// Returns a media type's declared quality, or 0 when it is absent. Ignores wildcards so browsers' trailing `*/*` does
+// not select `text/markdown`.
 function qualityFor(mediaType: string, acceptHeader: string): number {
   let quality = 0;
 

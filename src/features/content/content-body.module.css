@@ -20,6 +20,7 @@
 }
 
 :where(.content) {
+  /* Layout metrics */
   --content-body-layout-measure: 616px; /* ~70 characters of the body face. */
   --content-body-layout-rail-width: 120px;
   --content-body-layout-rail-gap: 24px;
@@ -30,7 +31,22 @@
   --content-body-layout-space-x-loose: 68px;
   --content-body-layout-label-offset: 5px; /* Lowers a bitmap label beside body text from the top of its box to the text's cap line. */
 
-  font: var(--font-body);
+  /* Typography */
+  --content-body-font-family-display: Archivo, ui-sans-serif, sans-serif;
+  --content-body-font-heading-1: 700 semi-condensed 42px/48px var(--content-body-font-family-display);
+  --content-body-font-heading-2: 600 semi-condensed 25px/32px var(--content-body-font-family-display);
+  --content-body-font-heading-3: 600 semi-condensed 19px/24px var(--content-body-font-family-display);
+  --content-body-font-blockquote: italic 500 semi-condensed 25px/32px var(--content-body-font-family-display);
+  --content-body-font-family-body: "Source Serif 4", ui-serif, serif;
+  --content-body-font-lede: 400 20px/32px var(--content-body-font-family-body);
+  --content-body-font-body: 400 17px/28px var(--content-body-font-family-body);
+  --content-body-font-body-small: 400 15px/22px var(--content-body-font-family-body);
+  --content-body-font-caption: 400 14px/20px var(--content-body-font-family-body);
+  --content-body-font-bitmap: 400 12px/16px "Quanta Strike 12", ui-sans-serif, sans-serif;
+  --content-body-font-code: 450 14px/20px "Source Code Pro", ui-monospace, monospace;
+  --content-body-font-code-feature-settings: "cv01", "cv02", "cv04", "cv12", "cv17";
+
+  font: var(--content-body-font-body);
   font-feature-settings:
     "liga" 1,
     "calt" 1;
@@ -49,7 +65,7 @@
   padding-inline-start: 12px;
   border-inline-start: 1px solid var(--color-accent);
 
-  font: var(--font-caption);
+  font: var(--content-body-font-caption);
   color: var(--color-foreground-secondary);
 
   & > * {
@@ -95,13 +111,13 @@
       minmax(0, 1fr) [wide-end]
       var(--layout-gutter) [pane-end];
 
-    /* `--content-body-end-rail-clearance` is set from JS when a rail item extends past the last
-     * element (see `observe-rail-clearances.ts`). */
+    /* `--content-body-end-rail-clearance` is set from JS when a rail item extends past the last element (see
+     * `observe-rail-clearances.ts`). */
     padding-block: var(--content-body-padding-block)
       calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
 
-    /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel
-     * so bitmap labels stay pixel aligned on 1x displays. */
+    /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel so bitmap labels
+     * stay pixel aligned on 1x displays. */
     @supports (width: round(down, 1px, 1px)) {
       --content-body-wide-start-track: max(
         0px,
@@ -162,9 +178,9 @@
     }
 
     /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
-     * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span`
-     * of `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). The rules run from the smallest space
-     * to the largest, so where the space after one element and before the next differ, the larger applies. */
+     * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span` of
+     * `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). The rules run from the smallest space to the
+     * largest, so where the space after one element and before the next differ, the larger applies. */
     & > * + * {
       margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
     }
@@ -393,8 +409,7 @@
     }
   }
 
-  /* Element defaults, except within a `data-content-default-styles="off"` subtree that is not turned
-   * back `on`. */
+  /* Element defaults, except within a `data-content-default-styles="off"` subtree that is not turned back `on`. */
   &
     :not(
       :where(
@@ -411,20 +426,20 @@
     }
 
     &:where(h1) {
-      font: var(--font-heading-1);
+      font: var(--content-body-font-heading-1);
       letter-spacing: -0.01em;
     }
 
     &:where(h1 + p) {
-      font: var(--font-lede);
+      font: var(--content-body-font-lede);
     }
 
     &:where(h2) {
-      font: var(--font-heading-2);
+      font: var(--content-body-font-heading-2);
     }
 
     &:where(h3) {
-      font: var(--font-heading-3);
+      font: var(--content-body-font-heading-3);
     }
 
     &:where(sup) {
@@ -453,9 +468,9 @@
     }
 
     &:where(:not(pre) > :is(code, kbd)) {
-      font: var(--font-code);
+      font: var(--content-body-font-code);
       font-size: 1em;
-      font-feature-settings: var(--font-code-feature-settings);
+      font-feature-settings: var(--content-body-font-code-feature-settings);
       overflow-wrap: break-word;
     }
 
@@ -586,7 +601,7 @@
 
       position: relative;
       padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));
-      font: var(--font-blockquote);
+      font: var(--content-body-font-blockquote);
       letter-spacing: 0.01em;
 
       &::before {
@@ -649,7 +664,7 @@
     }
 
     &:where(figcaption, caption) {
-      font: var(--font-caption);
+      font: var(--content-body-font-caption);
       font-style: italic;
       color: var(--color-foreground-secondary);
     }
@@ -687,7 +702,7 @@
       padding-inline: 0 16px;
       border-block-end: 1px solid var(--color-border-secondary);
 
-      font: var(--font-body-small);
+      font: var(--content-body-font-body-small);
       font-variant-numeric: tabular-nums;
       vertical-align: baseline;
     }
@@ -697,8 +712,8 @@
     }
 
     &:where(img, video) {
-      /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned.
-       * Without `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
+      /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned. Without
+       * `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
       --content-body-image-max-width: round(
         down,
         80cqh * attr(width type(<number>)) / attr(height type(<number>)),
@@ -707,8 +722,8 @@
 
       display: block;
 
-      /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome.
-       * Without typed `attr()` the ratio falls back to `auto`. */
+      /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome. Without typed
+       * `attr()` the ratio falls back to `auto`. */
       aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
       width: 100%;
       max-width: var(--content-body-image-max-width);
@@ -759,7 +774,7 @@
 
         height: 75px; /* To the bottom of the mark rather than its line, which a rail item after it is placed below. */
 
-        font: 800 156px/1 var(--font-family-display);
+        font: 800 156px/1 var(--content-body-font-family-display);
         color: var(--content-body-blockquote-mark-color);
         text-align: end;
 

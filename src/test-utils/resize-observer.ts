@@ -3,8 +3,8 @@ import { vi } from "vitest";
 /**
  * Replaces `ResizeObserver` with a controllable fake.
  *
- * The returned function invokes callbacks with no entries for observers watching `target`. When no
- * target is provided, it invokes callbacks for all observers that are watching at least one element.
+ * The returned function invokes callbacks with no entries for observers watching `target`. When no target is provided,
+ * it invokes callbacks for all observers that are watching at least one element.
  */
 export function stubResizeObserver() {
   const observedTargets = new Map<() => void, Set<Element>>();

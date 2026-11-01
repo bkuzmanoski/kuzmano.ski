@@ -25,8 +25,8 @@ function readCachedContactEmailAddress(): string | null {
 }
 
 /**
- * Reads the published contact email address from the current session, or from the
- * server if the session does not have it. Returns `null` when it cannot be read.
+ * Reads the published contact email address from the current session, or from the server if the session does not have
+ * it. Returns `null` when it cannot be read.
  */
 export async function readContactEmailAddress(signal?: AbortSignal): Promise<string | null> {
   const cachedEmailAddress = readCachedContactEmailAddress();

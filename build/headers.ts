@@ -6,9 +6,9 @@ import { requestPathOf } from "./paths.ts";
 
 import type { Plugin } from "vite";
 
-// Cloudflare applies the rules in `_headers` to static assets. Each plugin declares the rules for
-// the files it emits, and `headersFile` emits them all at once. The dev server applies the same
-// rules to its responses, since it does not read `_headers`.
+// Cloudflare applies the rules in `_headers` to static assets. Each plugin declares the rules for the files it emits,
+// and `headersFile` emits them all at once. The dev server applies the same rules to its responses as it does not read
+// `_headers`.
 
 export const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
@@ -42,10 +42,9 @@ export const headersRuleText = ({ description, pathPatterns, headers }: HeadersR
   ].join("\n");
 
 /**
- * Checks that a path pattern uses only the `_headers` syntax `headersMatchingPathIn` matches: a path
- * from the root, where `*` matches any run of characters, including `/`. Throws, naming the pattern,
- * for a `:name` placeholder or a pattern that names a host, which Cloudflare supports and the dev
- * server would not match.
+ * Checks that a path pattern uses only the `_headers` syntax `headersMatchingPathIn` matches: a path from the root,
+ * where `*` matches any run of characters, including `/`. Throws, naming the pattern, for a `:name` placeholder or a
+ * pattern that names a host, which Cloudflare supports and the dev server would not match.
  */
 function assertMatchablePathPattern(pathPattern: string) {
   if (!pathPattern.startsWith("/") || pathPattern.includes(":")) {
@@ -61,8 +60,8 @@ const pathPatternRegExpFrom = (pathPattern: string) =>
   new RegExp(`^${pathPattern.split("*").map(escapedForRegExp).join(".*")}$`);
 
 /**
- * Adds the regular expression `headersMatchingPathIn` uses to test request paths to a rule.
- * Throws if the rule has no path patterns or any pattern uses syntax the dev server cannot match.
+ * Adds the regular expression `headersMatchingPathIn` uses to test request paths to a rule. Throws if the rule has no
+ * path patterns or any pattern uses syntax the dev server cannot match.
  */
 export function matchableHeadersRuleFrom(rule: HeadersRule): MatchableHeadersRule {
   if (rule.pathPatterns.length === 0) {
@@ -78,9 +77,8 @@ export function matchableHeadersRuleFrom(rule: HeadersRule): MatchableHeadersRul
 }
 
 /**
- * Returns the headers the rules apply to a request path, as Cloudflare applies `_headers`: every rule
- * with a matching path pattern contributes its headers, and a header two rules set has their values
- * joined with a comma.
+ * Returns the headers the rules apply to a request path, as Cloudflare applies `_headers`: every rule with a matching
+ * path pattern contributes its headers, and a header two rules set has their values joined with a comma.
  */
 export function headersMatchingPathIn(rules: Iterable<MatchableHeadersRule>, requestPath: string): Map<string, string> {
   const headers = new Map<string, string>();
@@ -101,11 +99,13 @@ export function headersMatchingPathIn(rules: Iterable<MatchableHeadersRule>, req
   return headers;
 }
 
-const byCodeUnits = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0); // Compares code units rather than using `localeCompare`, so the order does not depend on the build machine's locale.
+/**
+ * Compares code units rather than using `localeCompare`, so the order does not depend on the build machine's locale.
+ */
+const byCodeUnits = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * Returns the text of a `_headers` file containing the rules sorted by their first path pattern and
- * then by their text.
+ * Returns the text of a `_headers` file containing the rules sorted by their first path pattern and then by their text.
  *
  * Sorting makes the file independent of the order the plugins registered their rules in.
  */
@@ -121,20 +121,21 @@ export function headersFileTextFrom(rules: Iterable<HeadersRule>): string {
   return `${sortedRuleTexts.join("\n\n")}\n`;
 }
 
-// A rule describes the file at its paths, so a response without that file, such as a `404` under `/media/`,
-// does not get the rule's headers, and is not cached as `immutable`.
+/**
+ * A rule describes the file at its paths, so a response without that file, such as a `404` under `/media/`, does not
+ * get the rule's headers, and a cache does not store it as `immutable`.
+ */
 const isServedFileStatusCode = (statusCode: number) => (statusCode >= 200 && statusCode < 300) || statusCode === 304;
 
 /**
- * Creates the function plugins register `_headers` rules through, and the plugin that emits the file
- * into the client build and applies the rules to the dev server's responses.
+ * Creates the function plugins register `_headers` rules through, and the plugin that emits the file into the client
+ * build and applies the rules to the dev server's responses.
  *
- * A plugin registers its rules from the client environment's `buildStart`, which the build finishes
- * for every plugin before any `generateBundle` runs, so the file is emitted once and includes every
- * rule whatever order the plugins are listed in. `vite dev` calls `buildStart` for the client
- * environment as well, before the server listens. A rule registered twice is kept once, and a rule
- * `headersMatchingPathIn` cannot match is refused when it is registered, so the dev server sets the
- * headers Cloudflare sets on every path.
+ * A plugin registers its rules from the client environment's `buildStart`, which the build finishes for every plugin
+ * before any `generateBundle` runs, so the file is emitted once and includes every rule whatever order the plugins are
+ * listed in. `vite dev` calls `buildStart` for the client environment as well, before the server listens. A rule
+ * registered twice is kept once, and a rule `headersMatchingPathIn` cannot match is refused when it is registered, so
+ * the dev server sets the headers Cloudflare sets on every path.
  *
  * The plugin registers the rule for the hashed files Vite emits to `build.assetsDir` itself.
  */
@@ -184,9 +185,9 @@ export function headersFile(): { addHeadersRules: AddHeadersRules; plugin: Plugi
       },
       configureServer: {
         // Registered before every other plugin's middleware, including those of `enforce: "pre"` plugins, so the
-        // headers are set before any of them responds. They are set up front because Vite's static file server
-        // keeps a header already on the response in place of its own, such as its `cache-control: no-cache`. A
-        // later middleware's `setHeader` replaces a rule's value, and an error status removes the rule's headers.
+        // headers are set before any of them responds. They are set up front because Vite's static file server keeps a
+        // header already on the response in place of its own, such as its `cache-control: no-cache`. A later
+        // middleware's `setHeader` replaces a rule's value, and an error status removes the rule's headers.
         order: "pre",
         handler(server) {
           server.middlewares.use((request, response, next) => {
@@ -203,8 +204,8 @@ export function headersFile(): { addHeadersRules: AddHeadersRules; plugin: Plugi
 
               const writeHead = response.writeHead.bind(response);
 
-              // Node calls `writeHead` itself when a middleware writes a response without calling it, so this
-              // also applies to a status set through `statusCode`.
+              // Node calls `writeHead` itself when a middleware writes a response without calling it, so this also
+              // applies to a status set through `statusCode`.
               response.writeHead = ((...writeHeadArguments: Parameters<typeof writeHead>) => {
                 if (!isServedFileStatusCode(writeHeadArguments[0])) {
                   for (const [name, value] of ruleHeaders) {

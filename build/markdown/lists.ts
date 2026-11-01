@@ -6,11 +6,12 @@ import { blocksIn, listOf, paragraphOf, textNode } from "./nodes.ts";
 
 import type { ContentNode, ContentParent } from "../content/markup/tree.ts";
 
-// Emits the `<ul>`, `<ol>`, and `<dl>` elements in an entry as Markdown lists in
-// its Markdown representation.
+// Emits the `<ul>`, `<ol>`, and `<dl>` elements in an entry as Markdown lists in its Markdown representation.
 
-// MDX parses an element authored on one line as phrasing inside a paragraph, so the
-// items of a list are found through the paragraphs between them.
+/**
+ * MDX parses an element authored on one line as phrasing inside a paragraph, so this function finds the items of a list
+ * through the paragraphs between them.
+ */
 function listChildrenIn(list: ContentNode, names: ReadonlySet<string>): Array<ContentNode> {
   return (list.children ?? []).flatMap((child) => {
     if (child.type === "paragraph") {
@@ -50,8 +51,8 @@ const termPhrasingIn = (term: ContentNode): Array<ContentNode> =>
   blocksIn(term).flatMap((block) => (block.type === "paragraph" ? (block.children ?? []) : []));
 
 /**
- * A group's terms in bold, then a colon and its descriptions' blocks. The first block, when it is a
- * paragraph, continues the terms' line, so a one-line description reads `**Term**: Description.`.
+ * A group's terms in bold, then a colon and its descriptions' blocks. The first block, when it is a paragraph,
+ * continues the terms' line, so a one-line description reads `**Term**: Description.`.
  */
 function descriptionListItemFrom({ terms, descriptions }: DescriptionGroup): Array<ContentNode> {
   const blocks = descriptions.flatMap(blocksIn);
@@ -88,8 +89,8 @@ function listMarkdownNodeFrom(list: ContentNode): ContentNode {
 const LIST_NAMES = new Set(["ul", "ol", "dl"]);
 
 /**
- * Replaces each `<ul>`, `<ol>`, and `<dl>` authored as a block with a Markdown list: one item per
- * `<li>`, or per group of `<dt>` elements and the `<dd>` elements after them.
+ * Replaces each `<ul>`, `<ol>`, and `<dl>` authored as a block with a Markdown list: one item per `<li>`, or per group
+ * of `<dt>` elements and the `<dd>` elements after them.
  */
 export function remarkAuthoredLists() {
   return function transform(tree: ContentParent) {

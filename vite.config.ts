@@ -20,9 +20,7 @@ import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
 import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
-import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
-import { themeDefaultsPlugin } from "./build/stylesheet/theme-defaults.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 import { SITE_URL } from "./src/config/site.ts";
@@ -53,8 +51,6 @@ export default defineConfig(({ command }) => {
       robotsPlugin(),
       siteIconsPlugin(),
       inlineScriptsPlugin(),
-      layoutMetricsPlugin(),
-      themeDefaultsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
       ...mediaPlugins,
@@ -87,9 +83,10 @@ export default defineConfig(({ command }) => {
           rolldownOptions: {
             output: {
               codeSplitting: {
-                // Keep stable framework dependencies in a separately cached chunk. Dependencies used by only one MDX entry
-                // remain in that entry's body chunk. Exclude TanStack Start: its client entry imports the router, and grouping
-                // a module also groups its dependencies, which would otherwise pull the entire site into this chunk.
+                // Keep stable framework dependencies in a separately cached chunk. Dependencies used by only one MDX
+                // entry remain in that entry's body chunk. Exclude TanStack Start: its client entry imports the router,
+                // and grouping a module also groups its dependencies, which would otherwise pull the entire site into
+                // this chunk.
                 groups: [
                   {
                     name: "framework",

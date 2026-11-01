@@ -34,8 +34,10 @@ import styles from "./contact-body.module.css";
 
 export const SENDING_MESSAGE = "Sending message…";
 
-// The screen reader text around the character count is an English sentence, so its numbers
-// are formatted in the document's language rather than the browser's locale.
+/**
+ * The screen reader text around the character count is an English sentence, so this formats its numbers in the
+ * document's language rather than the browser's locale.
+ */
 const SCREEN_READER_NUMBER_FORMAT = new Intl.NumberFormat(DOCUMENT_LANGUAGE);
 
 export function ContactBody() {
@@ -73,8 +75,8 @@ export function ContactBody() {
     return true;
   });
 
-  // A textarea does not contain child boxes for the metrics' resize observer to watch,
-  // so its scroll height is remeasured whenever the value it renders changes.
+  // A textarea does not contain child boxes for the metrics' resize observer to watch, so its scroll height is
+  // remeasured whenever the value it renders changes.
   useEffect(measureMessage, [form.values.message, measureMessage]);
 
   async function send() {

@@ -11,12 +11,12 @@ export interface CareerTimelineLastRoleHeightElements {
 const LAST_ROLE_HEIGHT_PROPERTY = "--career-timeline-last-role-height";
 
 /**
- * Sets `--career-timeline-last-role-height` on the career timeline to the height of the last role in the
- * list, so that where the rail is collapsed, the sticky chart column begins scrolling out of view along
- * with the last role (see `career-timeline.module.css`). The property is removed while no role is listed.
+ * Sets `--career-timeline-last-role-height` on the career timeline to the height of the last role in the list, so that
+ * where the rail is collapsed, the sticky chart column begins scrolling out of view along with the last role (see
+ * `career-timeline.module.css`). The property is removed while no role is listed.
  *
- * The last role is measured when it resizes, and again when `listState` changes, which reorders or filters
- * the roles and so can make another role the last.
+ * The last role is measured when it resizes, and again when `listState` changes, which reorders or filters the roles
+ * and so can make another role the last.
  */
 export function useCareerTimelineLastRoleHeight(
   { careerTimeline, list }: CareerTimelineLastRoleHeightElements,

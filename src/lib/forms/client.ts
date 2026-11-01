@@ -15,8 +15,7 @@ export function invalidResult<TFields>(body: unknown): InvalidResult<TFields> {
 }
 
 /**
- * Returns the message for the first field with an error, or `fallback` when there are no field
- * errors.
+ * Returns the message for the first field with an error, or `fallback` when there are no field errors.
  *
  * `validate` fills errors in schema order, so the first message is for the earliest field to fix.
  */
@@ -29,17 +28,19 @@ export type SubmissionOutcome<TFields> =
   { status: "accepted" } | InvalidResult<TFields> | { status: "failed"; message: string };
 
 interface PostOptions {
-  messages?: Record<number, string>; // The message to show for a refusal the form handles itself, keyed by status.
-  fallbackMessage: string; // The message to show when no response arrived, or its status is not in `messages`.
+  /** The message to show for a refusal the form handles itself, keyed by status. */
+  messages?: Record<number, string>;
+  /** The message to show when no response arrived, or its status is not in `messages`. */
+  fallbackMessage: string;
   signal?: AbortSignal;
 }
 
 /**
  * Posts a submission as JSON and reads the response, without throwing.
  *
- * A `400` includes field errors and always produces an invalid result; every other refusal
- * produces a message to show. Statuses are listed per form rather than shared, because the same
- * status can mean different things to different endpoints.
+ * A `400` includes field errors and always produces an invalid result; every other refusal produces a message to show.
+ * Statuses are listed per form rather than shared, because the same status can mean different things to different
+ * endpoints.
  */
 export async function postSubmission<TFields>(
   endpoint: string,

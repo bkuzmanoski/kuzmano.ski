@@ -12,7 +12,10 @@ import { elementNameOf, hasAttribute, hasSpreadAttribute, isJsxElement } from ".
 import type { ContentNode } from "./tree.ts";
 
 const URL_ATTRIBUTES = new Set(["src", "poster"]);
-const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]); // MDX keeps an attribute name as authored, so either spelling can appear.
+
+/** MDX keeps an attribute name as authored, so either spelling can appear. */
+const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]);
+
 const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
 
 const isRelativeReference = (reference: string) => reference.length > 0 && !NON_FILE_REFERENCE.test(reference);
@@ -25,12 +28,18 @@ export function mediaDirectoryFileNameOf(reference: string): string | null {
 /** A relative media reference, the kind of media its markup can render, and how to rewrite it. */
 export interface MediaReference {
   reference: string;
-  expected: MediaKind | null; // `null` when the markup renders either kind, such as a component's `src`.
-  canRenderAlternates: boolean; // Whether the markup can be wrapped in a `<picture>` that offers the image's alternates.
-  node: ContentNode; // The Markdown image, definition, or element.
-  attribute: string | null; // `null` for Markdown URLs.
-  video: ContentNode | null; // The video playing this source, if any.
-  replace: (url: string) => void; // Preserves other `srcset` candidates and descriptors.
+  /** `null` when the markup renders either kind, such as a component's `src`. */
+  expected: MediaKind | null;
+  /** Whether a `<picture>` that offers the image's alternates can wrap the markup. */
+  canRenderAlternates: boolean;
+  /** The Markdown image, definition, or element. */
+  node: ContentNode;
+  /** `null` for Markdown URLs. */
+  attribute: string | null;
+  /** The video playing this source, if any. */
+  video: ContentNode | null;
+  /** Preserves other `srcset` candidates and descriptors. */
+  replace: (url: string) => void;
 }
 
 interface StringAttribute {
@@ -40,7 +49,8 @@ interface StringAttribute {
 }
 
 /**
- * Whether a Markdown image, image reference, or `<img>` can be wrapped in a `<picture>` that offers its image's alternates.
+ * Whether a Markdown image, image reference, or `<img>` can be wrapped in a `<picture>` that offers its image's
+ * alternates.
  *
  * A `<picture>` cannot contain another. An `<img>` with a `srcset`, which a spread attribute can also set, chooses
  * among its own candidates, and a `<source>` would take precedence over them.

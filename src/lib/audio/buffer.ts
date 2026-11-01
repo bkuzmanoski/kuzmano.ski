@@ -1,9 +1,8 @@
 import { getGainNode } from "./context.ts";
 
 /**
- * Renders a mono buffer from `sample`, the kernel that produces the raw signal.
- * Applies the shared attack and fade envelope and normalizes the peak to 1 before
- * `quantize`, if given, coarsens the samples.
+ * Renders a mono buffer from `sample`, the kernel that produces the raw signal. Applies the shared attack and fade
+ * envelope and normalizes the peak to 1 before `quantize`, if given, coarsens the samples.
  */
 export function renderBuffer(
   context: AudioContext,
@@ -77,9 +76,8 @@ export function playBuffer(
 /**
  * Caches each rendered spec and replays its buffer on subsequent plays.
  *
- * Specs are keyed by identity, so they must be module-level constants; a new spec at the call
- * site would render again on every play. Buffers are also tied to the audio context they were
- * rendered with, which is stable for the session.
+ * Specs are keyed by identity, so they must be module-level constants; a new spec at the call site would render again
+ * on every play. Buffers are also tied to the audio context they were rendered with, which is stable for the session.
  */
 export function bufferCache<TSpec extends object>(render: (context: AudioContext, spec: TSpec) => AudioBuffer) {
   const buffers = new Map<TSpec, AudioBuffer>();

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
+import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
 
 import { PopupMenu } from "./popup-menu.tsx";
 
@@ -24,7 +25,9 @@ const OPTIONS = [
   { value: "third", label: "Third" },
 ] as const;
 const PRESS_ORIGIN = { clientX: 10, clientY: 10 };
-const POINT_PAST_DRAG_THRESHOLD = { clientX: 100, clientY: 100 }; // Past the drag threshold from `PRESS_ORIGIN`.
+
+/** Past the drag threshold from `PRESS_ORIGIN`. */
+const POINT_PAST_DRAG_THRESHOLD = { clientX: 100, clientY: 100 };
 
 const button = () => screen.getByRole("button", { name: /^A menu / });
 const listbox = () => screen.queryByRole("listbox", { name: "A menu" });
@@ -36,7 +39,7 @@ function renderPopupMenu(onChange: (value: string) => void = () => undefined) {
 
 function pressButton(pointerType = "mouse") {
   fireEvent.pointerDown(button(), { pointerType, button: 0, isPrimary: true, ...PRESS_ORIGIN });
-  fireEvent.mouseDown(button(), { button: 0 });
+  fireEvent.mouseDown(button(), { button: 0, detail: 1, ...PRESS_ORIGIN });
 }
 
 test("a pop-up menu renders a collapsed button with a `listbox` popup, named by its `aria-label` prop followed by the chosen option", () => {
@@ -179,6 +182,17 @@ test("a click on the button without a preceding press opens the options", () => 
 
   expect(listbox()).not.toBeNull();
 });
+
+test.each(SCREEN_READER_ACTIVATIONS)(
+  "a screen reader's activate action in %s opens the options without playing the click sound",
+  (_browser, activate) => {
+    renderPopupMenu();
+    activate(button());
+
+    expect(listbox()).not.toBeNull();
+    expect(playClickSound).not.toHaveBeenCalled();
+  },
+);
 
 test("pressing and releasing an option chooses it once the options are open", () => {
   const onChange = vi.fn();

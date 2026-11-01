@@ -2,9 +2,8 @@ export const HIDE_DELAY_MS = 100;
 export const GRACE_PERIOD_MS = 600;
 
 /**
- * How long a control displays transient state through its tooltip. The control owns the timing,
- * since only it knows what the state is; the value is shared so that they all display it for the
- * same length of time.
+ * How long a control displays transient state through its tooltip. The control owns the timing, as only it knows what
+ * the state is; the value is shared so that they all display it for the same length of time.
  */
 export const STATE_DISPLAY_DURATION_MS = 1_200;
 
@@ -29,9 +28,8 @@ export function resetGroupGracePeriod(id: string, wrapper: Element | null) {
 /**
  * Starts the expiry of the grace period `id` owns, ignoring a tooltip that no longer owns one.
  *
- * A tooltip that replaces another registers before the one it replaces hides, so without this the
- * earlier tooltip would schedule an expiry against the replacement's grace period and end it while
- * the replacement is still on screen.
+ * A tooltip that replaces another registers before the one it replaces hides, so without this the earlier tooltip would
+ * schedule an expiry against the replacement's grace period and end it while the replacement is still on screen.
  */
 export function startGroupGracePeriod(id: string) {
   if (gracePeriodOwnerId !== id) {
@@ -48,9 +46,8 @@ export function startGroupGracePeriod(id: string) {
 /**
  * Records the tooltip on screen, hiding whichever was there before it.
  *
- * A tooltip a control shows to report its own state appears without a pointer having
- * traveled to it, so there is no hand-over to take the previous one down. Without this,
- * two controls tapped in turn would overlap.
+ * A tooltip a control shows to report its own state appears without a pointer having traveled to it, so there is no
+ * hand-over to take the previous one down. Without this, two controls tapped in turn would overlap.
  */
 export function registerShownTooltip(id: string, hideAction: () => void) {
   if (shownTooltip !== null && shownTooltip.id !== id) {

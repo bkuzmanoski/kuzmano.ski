@@ -7,7 +7,7 @@ import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../../environments.ts";
 import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
-import { STYLESHEET_FILE_PATH, fromContent, fromRoot } from "../../paths.ts";
+import { fromContent } from "../../paths.ts";
 import { devServerMiddlewareOf } from "../../test-utils/dev-server.ts";
 import { headersRulesAddedAtBuildStartBy } from "../../test-utils/headers.ts";
 
@@ -38,13 +38,7 @@ const IMAGE_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry
 const COVER_IMAGE_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.cover.png`;
 const ENTRY_STYLESHEET_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.module.css`;
 const SECOND_ENTRY_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/second-entry.mdx`;
-const STYLESHEET_ABSOLUTE_PATH = fromRoot(STYLESHEET_FILE_PATH);
-
-const COVER_IMAGE_SIZE_PX = 64;
-const COVER_IMAGE: CoverImage = {
-  social: { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 },
-  thumbnail: { kind: "image", src: mediaRoute("collection/entry.cover.webp"), width: 128, height: 128, alternates: [] },
-};
+const COVER_IMAGE: CoverImage = { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 };
 
 type FileChangeType = "create" | "update" | "delete";
 
@@ -73,7 +67,6 @@ type HotUpdate = (
 ) => Promise<Array<{ id: string }> | undefined>;
 
 const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
-  coverImageSize: COVER_IMAGE_SIZE_PX,
   coverImages: {},
   renditionsByUrl: new Map(),
   entryAbsolutePathsByMediaDirectoryPath: new Map([
@@ -86,10 +79,6 @@ const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
   ...overrides,
 });
 
-const stylesheetDeclaringCoverImageSize = (pixels: number) => `:root {
-  --layout-cover-image-size: ${pixels}px;
-}
-`;
 const mediaIndexWithCoverImage = () => mediaIndex({ coverImages: { ["collection/entry" as EntryKey]: COVER_IMAGE } });
 const mediaIndexResolvingTo = (src: string) =>
   mediaIndex({ mediaForEntry: () => () => ({ kind: "image", src, width: 1, height: 1, alternates: [] }) });
@@ -278,34 +267,6 @@ describe("contentMedia", () => {
     await Promise.all([clientFileUpdate, serverFileUpdate]);
   });
 
-  test("rebuilds the index when an update to the site stylesheet changes the cover image size", async () => {
-    const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
-    const changedCoverImageSize = COVER_IMAGE_SIZE_PX + 8;
-
-    await buildInitialIndex();
-
-    const fileUpdate = updateFile({
-      file: STYLESHEET_ABSOLUTE_PATH,
-      source: stylesheetDeclaringCoverImageSize(changedCoverImageSize),
-    });
-
-    await staleModuleIdsAfterRebuild(fileUpdate, mediaIndex({ coverImageSize: changedCoverImageSize }));
-
-    expect(indexBuilds).toHaveLength(2);
-  });
-
-  test("does not rebuild the index when an update to the site stylesheet does not change the cover image size", async () => {
-    const { updateFile, buildInitialIndex } = setUpContentMedia();
-
-    await buildInitialIndex();
-    await updateFile({
-      file: STYLESHEET_ABSOLUTE_PATH,
-      source: stylesheetDeclaringCoverImageSize(COVER_IMAGE_SIZE_PX),
-    });
-
-    expect(indexBuilds).toHaveLength(1);
-  });
-
   test("invalidates only the entry whose media directory contains an updated media file", async () => {
     const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
 
@@ -343,8 +304,8 @@ describe("contentMedia", () => {
 
     await buildInitialIndex();
 
-    // Vite calls the server environment's hook after the client environment's hook has
-    // returned, by which time the index has already been rebuilt.
+    // Vite calls the server environment's hook after the client environment's hook has returned, by which time the
+    // index has already been rebuilt.
     const timestamp = nextTimestamp();
     const clientFileUpdate = updateFile({ file: COVER_IMAGE_ABSOLUTE_PATH, timestamp });
     const clientStaleModuleIds = await staleModuleIdsAfterRebuild(clientFileUpdate, mediaIndexWithCoverImage());

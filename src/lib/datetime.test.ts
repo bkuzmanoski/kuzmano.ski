@@ -5,7 +5,7 @@ import { calendarDateIn, formatDate, formatPlaybackTime, midnightTimestampIn } f
 describe("formatDate", () => {
   const dayFormat = new Intl.DateTimeFormat("en-AU", {
     year: "numeric",
-    month: "long", // A long month name, since the abbreviations ICU writes for en-AU differ between ICU versions.
+    month: "long", // A long month name as the abbreviations ICU writes for en-AU differ between ICU versions.
     day: "numeric",
     timeZone: "UTC",
   });

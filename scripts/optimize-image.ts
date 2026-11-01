@@ -36,7 +36,8 @@ interface Arguments extends OptimizationOptions {
 interface ImageOptimization {
   imageFilePath: string;
   format: ImageFormat;
-  orientation: number; // The Exif orientation, where 1 is upright.
+  /** The Exif orientation, where 1 is upright. */
+  orientation: number;
 }
 
 const JPEG_TRANSFORMATION_ARGUMENTS_BY_ORIENTATION: Record<number, Array<string> | undefined> = {

@@ -7,16 +7,14 @@ import { playInputScrollSound, silenceScrollAt } from "./scroll.ts";
 import type { KeyboardEvent, UIEvent } from "react";
 
 /**
- * Plays a sound for user scrolling in an input without playing one for scrolling caused
- * by caret movement.
+ * Plays a sound for user scrolling in an input without playing one for scrolling caused by caret movement.
  *
- * A key moves the caret before the browser scrolls the input, so the handler marks keys
- * that may cause scrolling. The next scroll event consumes that mark and silences the
- * scroll sound until scrolling settles. If no scroll occurs, the mark is cleared on the
- * next frame.
+ * A key moves the caret before the browser scrolls the input, so the handler marks keys that may cause scrolling. The
+ * next scroll event consumes that mark and silences the scroll sound until scrolling settles. If no scroll occurs, the
+ * mark is cleared on the next frame.
  *
- * This is separate from `playInputScrollSound` because it correlates key and scroll events;
- * `playInputScrollSound` handles each scroll event independently.
+ * This is separate from `playInputScrollSound` because it correlates key and scroll events; `playInputScrollSound`
+ * handles each scroll event independently.
  */
 export function useInputScrollSound<T extends HTMLElement>() {
   const caretScrollRef = useRef(false);

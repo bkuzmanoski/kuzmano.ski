@@ -15,5 +15,8 @@ export const FEATURE_ROUTES: Array<string> = FEATURE_ROUTE_IDS.map((id) => FEATU
 export const featureRouteFor = (segment: string): string | undefined =>
   FEATURE_ROUTES.find((route) => route === pageRoute(segment));
 
-/** Returns whether `PAGE_SLUGS` declares a page. Undeclared published pages are served with `noindex` and omitted from the sitemap. */
+/**
+ * Returns whether `PAGE_SLUGS` declares a page. Undeclared published pages are served with `noindex` and omitted from
+ * the sitemap.
+ */
 export const isDeclaredPageSlug = isOneOf(PAGE_SLUGS);

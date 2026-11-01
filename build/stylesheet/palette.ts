@@ -6,12 +6,12 @@ import postcssRelativeColorSyntax from "@csstools/postcss-relative-color-syntax"
 import postcss from "postcss";
 import valueParser from "postcss-value-parser";
 
+import { DEFAULT_THEME_TINT_PROPERTIES } from "#/lib/settings/theme-tint.ts";
 import type { ColorScheme } from "#/lib/settings/theme.ts";
 
 import { STYLESHEET_FILE_PATH, fromRoot } from "../paths.ts";
 
-import { rootCustomPropertiesIn } from "./custom-properties.ts";
-
+import type { Rule } from "postcss";
 import type { FunctionNode, Node } from "postcss-value-parser";
 
 export type SchemeColor = Record<ColorScheme, string>;
@@ -99,7 +99,7 @@ function resolveLightDark(
   return resolveIndirections(schemeArgument, properties, scheme, trail);
 }
 
-// Resolves CSS indirections while leaving color syntax for `COLOR_PLUGINS`.
+/** Resolves CSS indirections while leaving color syntax for `COLOR_PLUGINS`. */
 function resolveIndirections(
   nodes: Array<Node>,
   properties: Map<string, string>,
@@ -214,9 +214,39 @@ function hexFrom(computed: string, authored: string): string {
   return hexColor;
 }
 
+/**
+ * Returns custom properties declared directly in top-level `:root` rules.
+ *
+ * Later declarations override earlier ones. Ignores conditional and nested rules, and throws if the stylesheet does not
+ * have a top-level `:root` rule.
+ */
+export function rootCustomPropertiesIn(css: string): Map<string, string> {
+  const properties = new Map<string, string>();
+  const stylesheetRoot = postcss.parse(css, { from: STYLESHEET_FILE_PATH });
+  const rootRules = stylesheetRoot.nodes.filter(
+    (node): node is Rule => node.type === "rule" && node.selector === ":root",
+  );
+
+  if (rootRules.length === 0) {
+    throw new Error(`No \`:root\` block found in ${STYLESHEET_FILE_PATH}.`);
+  }
+
+  for (const node of rootRules.flatMap((rule) => rule.nodes)) {
+    if (node.type === "decl" && node.prop.startsWith("--")) {
+      properties.set(node.prop, node.value);
+    }
+  }
+
+  return properties;
+}
+
 /** Resolves the palette from stylesheet source. */
 export async function paletteFrom(css: string): Promise<Palette> {
-  const properties = rootCustomPropertiesIn(css, STYLESHEET_FILE_PATH);
+  const properties = rootCustomPropertiesIn(css);
+
+  for (const [property, value] of Object.entries(DEFAULT_THEME_TINT_PROPERTIES)) {
+    properties.set(property, value);
+  }
 
   const hexOf = async (name: string, scheme: ColorScheme) => {
     const declaredValue = properties.get(name)?.trim();

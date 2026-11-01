@@ -11,7 +11,11 @@ import type { Rule, RuleOnError } from "markdownlint";
 
 interface ProseCharacter {
   character: string;
-  offset: number | null; // `null` when the character is not checked (e.g. a placeholder, or one authored as an escape or character reference).
+  /**
+   * `null` when the rule does not check the character (e.g., a placeholder, or one authored as an escape or character
+   * reference).
+   */
+  offset: number | null;
 }
 
 interface OpenQuotationCounts {

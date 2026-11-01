@@ -3,11 +3,13 @@ import { clamp } from "../math.ts";
 import type { Rgb } from "../color.ts";
 import type { Rect } from "../geometry.ts";
 
+/** In row-major order. */
 const BAYER_MATRIX_8X8 = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54,
   22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29,
   53, 21,
-] as const; // In row-major order.
+] as const;
+
 const BAYER_MATRIX_SIZE = 8;
 const BAYER_LEVEL_COUNT = BAYER_MATRIX_SIZE * BAYER_MATRIX_SIZE;
 const POINTER_HIGHLIGHT_REACH_STANDARD_DEVIATIONS = 3;
@@ -15,7 +17,8 @@ const POINTER_HIGHLIGHT_REACH_STANDARD_DEVIATIONS = 3;
 export interface DitherField {
   width: number;
   height: number;
-  density: Float32Array; // Density per pixel, row-major, 0 to 1.
+  /** Density per pixel, row-major, 0 to 1. */
+  density: Float32Array;
 }
 
 export interface PointerHighlight {
@@ -74,7 +77,8 @@ export function revealProgressAt(elapsedMs: number, durationMs: number, stepCoun
 
 export interface RenderDitherFieldOptions {
   color: Rgb;
-  revealProgress?: number; // From 0, at which every pixel is transparent, to 1. The densest pixels are revealed first.
+  /** From 0, at which every pixel is transparent, to 1. The reveal starts with the densest pixels. */
+  revealProgress?: number;
   pointerHighlight?: PointerHighlight | null;
   region?: Rect;
 }

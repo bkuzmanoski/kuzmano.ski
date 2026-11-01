@@ -3,8 +3,8 @@ import { useEffect, useEffectEvent } from "react";
 const ACTIVITY_EVENTS = ["keydown", "pointerdown", "pointermove", "wheel"] as const;
 
 /**
- * Calls `onIdle` once `delayMs` has passed without any sign of the visitor. Listens in the
- * capture phase so activity counts even where a handler below stops the event.
+ * Calls `onIdle` once `delayMs` has passed without any sign of the visitor. Listens in the capture phase so activity
+ * counts even where a handler below stops the event.
  */
 export function useIdleTimeout(delayMs: number, isEnabled: boolean, onIdle: () => void) {
   const reportIdle = useEffectEvent(onIdle);
@@ -14,7 +14,7 @@ export function useIdleTimeout(delayMs: number, isEnabled: boolean, onIdle: () =
       return;
     }
 
-    const activityListeners = new AbortController();
+    const activityController = new AbortController();
 
     let timer = setTimeout(reportIdle, delayMs);
 
@@ -24,12 +24,12 @@ export function useIdleTimeout(delayMs: number, isEnabled: boolean, onIdle: () =
     }
 
     for (const type of ACTIVITY_EVENTS) {
-      document.addEventListener(type, restart, { capture: true, passive: true, signal: activityListeners.signal });
+      document.addEventListener(type, restart, { capture: true, passive: true, signal: activityController.signal });
     }
 
     return () => {
       clearTimeout(timer);
-      activityListeners.abort();
+      activityController.abort();
     };
   }, [delayMs, isEnabled]);
 }

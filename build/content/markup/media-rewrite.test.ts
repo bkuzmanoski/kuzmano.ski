@@ -77,11 +77,13 @@ const entryMedia: MediaForReference = (reference) => {
 const mediaForEntry: MediaForEntry = (absolutePath) =>
   Promise.resolve(absolutePath === ENTRY_ABSOLUTE_PATH ? entryMedia : () => null);
 
-// Compile source through the same MDX pipeline shape used by `mdx.ts`.
-//
-// Explicitly authored JSX produces `mdxJsxFlowElement` and `mdxJsxTextElement` nodes. Markdown images produce a
-// hast `element`. Using `fromHtml` would not cover either JSX node type. Keep `rehypeMedia` first, as in
-// `mdx.ts`. Later plugins only add heading links and syntax highlighting.
+/**
+ * Compiles source through the same MDX pipeline shape as `mdx.ts`.
+ *
+ * Explicitly authored JSX produces `mdxJsxFlowElement` and `mdxJsxTextElement` nodes. Markdown images produce a hast
+ * `element`. Using `fromHtml` would not cover either JSX node type. `rehypeMedia` runs first, as in `mdx.ts`. Later
+ * plugins only add heading links and syntax highlighting.
+ */
 async function compiledTree(source: string, resolve: MediaForEntry = mediaForEntry): Promise<ContentParent> {
   let transformedTree: ContentParent = { type: "root", children: [] };
 

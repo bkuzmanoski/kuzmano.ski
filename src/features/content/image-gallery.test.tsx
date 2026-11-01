@@ -6,6 +6,7 @@ import zoomRectStyles from "#/features/window-manager/zoom-rect.module.css";
 import { ZOOM_RECT_DURATION_MS } from "#/features/window-manager/zoom-rect.tsx";
 import { playClickSound, playHoverSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
+import { pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import styles from "./image-gallery.module.css";
@@ -29,8 +30,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // A swipe swallows the click of its press until the next press starts (see `swallowNextPress`),
-  // so a press here keeps it from swallowing a click in the next test.
+  // A swipe swallows the click of its press until the next press starts (see `swallowNextPress`), so a press here keeps
+  // it from swallowing a click in the next test.
   fireEvent.pointerDown(document.body);
 });
 
@@ -59,7 +60,10 @@ const thumbnail = (name: string) => screen.getByRole("tab", { name });
 const altOf = (element: HTMLElement) => element.querySelector("img")?.getAttribute("alt") ?? null;
 const galleryControls = () => screen.getByRole("tablist").closest<HTMLElement>("[data-feed-omit]")!;
 const galleryButton = (name: string) => within(galleryControls()).getByRole("button", { name });
-const preview = () => document.querySelector("dialog")!; // A closed `<dialog>` does not have the `dialog` role in the accessibility tree.
+
+/** A closed `<dialog>` does not have the `dialog` role in the accessibility tree. */
+const preview = () => document.querySelector("dialog")!;
+
 const previewButton = (name: string) => within(preview()).getByRole("button", { name, hidden: true });
 const previewImageName = () => within(preview()).getByRole("img", { hidden: true }).getAttribute("alt");
 const previewImageElement = () => within(preview()).getByRole("img", { hidden: true });
@@ -324,6 +328,14 @@ test.each([
   expect(shownImageName()).toBe("First image");
 });
 
+test("a press on the shown image with the mouse plays the click sound once", () => {
+  renderGallery();
+  pressWithMouse(stage());
+  fireEvent.click(stage(), { detail: 1 });
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
 test("a swipe across the shown image does not open the preview or play the click sound", () => {
   renderGallery();
   swipeAcross(stage(), { dx: -SWIPE_DISTANCE_PX });
@@ -333,7 +345,7 @@ test("a swipe across the shown image does not open the preview or play the click
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("an arrow key pressed with the Command key held leaves the shown image unchanged, and its default action is not prevented", () => {
+test("an arrow key pressed with the Command key held leaves the shown image unchanged, and the gallery does not prevent its default action", () => {
   renderGallery();
 
   const isDefaultAllowed = fireEvent.keyDown(shownSlide(), { key: "ArrowRight", metaKey: true });
@@ -383,7 +395,7 @@ test("holding the Space key in the gallery opens the preview once, and plays the
   expect(playKeyDownSound).toHaveBeenCalledOnce();
 });
 
-test("pressing the Space key on the `Next image` button leaves the preview closed, and its default action is not prevented", () => {
+test("pressing the Space key on the `Next image` button leaves the preview closed, and the gallery does not prevent its default action", () => {
   renderGallery();
 
   const isDefaultAllowed = fireEvent.keyDown(galleryButton("Next image"), { key: " " });
@@ -558,8 +570,8 @@ describe("the size of the image in the preview", () => {
 describe("zooming the image in the preview", () => {
   const SCROLL_TO_DOUBLE_PX = Math.log(2) / 0.002; // The distance scrolled that zooms the image in to twice its fitted size.
 
-  // Opens a 1200x800 image preview, fitted to 600x400 in an image area centered at (300, 200).
-  // At its natural size, it overflows the image area by 300 pixels on each horizontal side and 200 vertically.
+  // Opens a 1200x800 image preview, fitted to 600x400 in an image area centered at (300, 200). At its natural size, it
+  // overflows the image area by 300 pixels on each horizontal side and 200 vertically.
   const openPreviewOfFittedImage = () => {
     const previewImageArea = renderGallery().container.querySelector<HTMLElement>(`.${styles.previewImage}`)!;
 
@@ -589,7 +601,7 @@ describe("zooming the image in the preview", () => {
     expect(offsetOf(previewImageArea)).toEqual(["0px", "0px"]);
   });
 
-  test("scrolling over the image after the preview closes leaves its size unchanged, and its default action is not prevented", () => {
+  test("scrolling over the image after the preview closes leaves its size unchanged, and the gallery does not prevent the scroll's default action", () => {
     const previewImageArea = openPreviewOfFittedImage();
     const scroll = () =>
       fireEvent.wheel(previewImageArea, { deltaY: SCROLL_TO_DOUBLE_PX / 2, clientX: 400, clientY: 200 });
@@ -748,8 +760,8 @@ describe("when reduced motion is not preferred", () => {
 
   afterEach(() => vi.useRealTimers());
 
-  // The stage is at (100, 200) and the preview's frame at (20, 40), so in the preview's coordinates
-  // the stage is at (80, 160), and the frame fills the preview.
+  // The stage is at (100, 200) and the preview's frame at (20, 40), so in the preview's coordinates the stage is at
+  // (80, 160), and the frame fills the preview.
   const STAGE_IN_PREVIEW = { left: "80px", top: "160px", width: "300px", height: "200px" };
   const FRAME_IN_PREVIEW = { left: "0px", top: "0px", width: "800px", height: "600px" };
 

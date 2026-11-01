@@ -9,9 +9,7 @@ import { mdxPlugin } from "./build/content/mdx.ts";
 import { entryCoverImagesPlugin } from "./build/content/media/entry-cover-images.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
-import { layoutMetricsPlugin } from "./build/stylesheet/layout-metrics.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
-import { themeDefaultsPlugin } from "./build/stylesheet/theme-defaults.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
 
@@ -20,12 +18,10 @@ export default defineConfig({
   plugins: [
     workersRuntimePlugin(),
     inlineScriptsPlugin(),
-    layoutMetricsPlugin(),
-    themeDefaultsPlugin(),
     svgr({ svgrOptions }),
     frontmatterPlugin(),
     // Enables content catalog resolution (see `/src/site/catalog.ts`) for tests that load the real content catalog.
-    // Does not serve cover images; tests provide them through `EntryCoverImagesContext` or by mocking the module.
+    // Does not serve cover images; tests that need them mock the module.
     entryCoverImagesPlugin(() => Promise.resolve({})),
     mdxPlugin({ syntaxHighlight: false }),
     entryBodyChunksPlugin(),
@@ -37,10 +33,10 @@ export default defineConfig({
   ],
   test: {
     restoreMocks: true,
-    // Creating a jsdom accounts for most test-file runtime, so source tests use `vmThreads`, which creates
-    // one jsdom per worker rather than per file. Tooling tests use the default pool because native modules
-    // (Sharp and Vite bindings) reject VM-created `RegExp` values when validating Node built-in arguments.
-    // They run in Node unless a test file specifies `@vitest-environment jsdom`.
+    // Creating a jsdom accounts for most test-file runtime, so source tests use `vmThreads`, which creates one jsdom
+    // per worker rather than per file. Tooling tests use the default pool because native modules (Sharp and Vite
+    // bindings) reject VM-created `RegExp` values when validating Node built-in arguments. They run in Node unless a
+    // test file specifies `@vitest-environment jsdom`.
     projects: [
       {
         test: {

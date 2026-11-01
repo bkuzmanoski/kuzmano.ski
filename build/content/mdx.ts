@@ -26,15 +26,17 @@ import type { Plugin } from "vite";
 
 type ShikiTransformer = NonNullable<RehypeShikiOptions["transformers"]>[number];
 
-// Removes Shiki's inline `<pre>` colors so the stylesheet can define them instead.
+/** Removes Shiki's inline `<pre>` colors so the stylesheet can define them instead. */
 const PRE_STYLE_REMOVAL_TRANSFORMER: ShikiTransformer = {
   pre(node) {
     delete node.properties.style;
   },
 };
 
-// Preserves a code fence's meta string on Shiki's replacement `<code>` element so
-// `rehypeCodeFenceAttributes` can read it from both highlighted and unhighlighted blocks.
+/**
+ * Preserves a code fence's meta string on Shiki's replacement `<code>` element so `rehypeCodeFenceAttributes` can read
+ * it from both highlighted and unhighlighted blocks.
+ */
 const META_STRING_PRESERVATION_TRANSFORMER: ShikiTransformer = {
   code(node) {
     const meta = this.options.meta?.__raw;
@@ -80,8 +82,8 @@ export function mdxCompileOptionsFor({
               theme: shikiTheme,
               langs: [],
               lazy: true,
-              // `addLanguageClass` adds a `language-<name>` class to the highlighted `<code>`, which `CodeBlock`
-              // reads for its label (see `/src/features/content/code-block.tsx`).
+              // `addLanguageClass` adds a `language-<name>` class to the highlighted `<code>`, which `CodeBlock` reads
+              // for its label (see `/src/features/content/code-block.tsx`).
               addLanguageClass: true,
               transformers: [PRE_STYLE_REMOVAL_TRANSFORMER, META_STRING_PRESERVATION_TRANSFORMER],
             },

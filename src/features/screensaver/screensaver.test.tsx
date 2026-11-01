@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import { FADE_IN_DURATION_MS, sleep, wake } from "#/lib/screensaver/lifecycle.ts";
+import { pressWithMouse } from "#/test-utils/press.ts";
 
 import { Screensaver } from "./screensaver.tsx";
 
@@ -77,8 +78,8 @@ test("a pointer move with a button pressed does not dismiss the screensaver", ()
 
   fireEvent.pointerMove(screensaver, TOUCH_MOVE);
 
-  // The screensaver stays up for the rest of a tap, so the tap's final `click` is
-  // dispatched to it rather than to what is under it.
+  // The screensaver stays up for the rest of a tap, so the tap's final `click` is dispatched to it rather than to what
+  // is under it.
   expect(screensaver.childElementCount).toBeGreaterThan(0);
 });
 
@@ -98,7 +99,7 @@ test("input before the fade-in duration has elapsed does not dismiss the screens
 test("pressing the mouse button on the screensaver plays the click sound", () => {
   const screensaver = raise();
 
-  fireEvent.pointerDown(screensaver, { pointerType: "mouse" });
+  pressWithMouse(screensaver);
 
   expect(playClickSound).toHaveBeenCalledOnce();
 });
@@ -153,7 +154,7 @@ test("a key press while the screensaver fades in is withheld from the focused co
   expect(onKeyDown).not.toHaveBeenCalled();
 });
 
-test("a browser shortcut that dismisses the screensaver is withheld from the focused control underneath, but its default action is not prevented", () => {
+test("the screensaver withholds a browser shortcut that dismisses it from the focused control underneath, but does not prevent its default action", () => {
   const { control, onKeyDown } = renderControlUnderneath();
 
   raise();
@@ -162,7 +163,7 @@ test("a browser shortcut that dismisses the screensaver is withheld from the foc
   expect(onKeyDown).not.toHaveBeenCalled();
 });
 
-test("a function key that dismisses the screensaver is withheld from the focused control underneath, but its default action is not prevented", () => {
+test("the screensaver withholds a function key that dismisses it from the focused control underneath, but does not prevent its default action", () => {
   const { control, onKeyDown } = renderControlUnderneath();
 
   raise();

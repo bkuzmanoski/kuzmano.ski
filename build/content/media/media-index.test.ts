@@ -25,22 +25,19 @@ import type * as authoredMedia from "./authored-media.ts";
 import type { AuthoredEntryMedia } from "./authored-media.ts";
 import type { MediaFileReader, ResolvedImage, ResolvedVideo, UnreadableImage } from "./resolved-media.ts";
 
-const { readAuthoredMedia, readFile, readLayoutMetrics } = vi.hoisted(() => ({
+const { readAuthoredMedia, readFile } = vi.hoisted(() => ({
   readAuthoredMedia: vi.fn(),
   readFile: vi.fn(),
-  readLayoutMetrics: vi.fn(),
 }));
 
 vi.mock("./authored-media.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof authoredMedia>()),
   readAuthoredMedia,
 }));
-vi.mock("../../stylesheet/layout-metrics.ts", () => ({ readLayoutMetrics }));
 vi.mock("node:fs/promises", () => ({ default: { readFile }, readFile }));
 
 const ENTRY_MEDIA = authoredEntryMedia();
 const AUTHORED_COVER_IMAGE_DIMENSIONS = { width: 1200, height: 630 };
-const RENDERED_COVER_IMAGE_SIZE_PX = 64;
 const SOURCE_WITH_IMAGE_IN_PICTURE = `<picture>
   <img src="./image.png" alt="An image" />
 </picture>
@@ -51,7 +48,6 @@ const VIDEO_WITHOUT_POSTER_IMAGE = { videoFileName: VIDEO_FILE_NAME, posterImage
 const HASHED_URL = /\.[0-9a-f]{16}\./;
 
 interface ContentFixture {
-  coverImageSize?: number;
   entryMedia?: Array<AuthoredEntryMedia>;
   problems?: Array<string>;
   source?: string;
@@ -61,7 +57,6 @@ interface ContentFixture {
 }
 
 function indexOf({
-  coverImageSize = RENDERED_COVER_IMAGE_SIZE_PX,
   entryMedia = [ENTRY_MEDIA],
   problems = [],
   source = ENTRY_SOURCE,
@@ -79,7 +74,6 @@ function indexOf({
     ...images,
   };
 
-  readLayoutMetrics.mockResolvedValue({ coverImageSize });
   readAuthoredMedia.mockReturnValue({ entryMedia, problems });
   readFile.mockResolvedValue(source);
 
@@ -95,62 +89,12 @@ const mediaFor = (index: Awaited<ReturnType<typeof buildMediaIndex>>, reference:
   index.mediaForEntry(ENTRY_ABSOLUTE_PATH)(reference);
 
 describe("buildMediaIndex", () => {
-  test("returns the layout metrics' cover image size", async () => {
-    const { coverImageSize } = await indexOf();
-    expect(coverImageSize).toBe(RENDERED_COVER_IMAGE_SIZE_PX);
-  });
+  test("resolves a cover image to its authored URL and dimensions, without derivative renditions", async () => {
+    const { coverImages, renditionsByUrl } = await indexOf();
+    const coverImageUrl = mediaRoute(`collection/entry.cover.${MEDIA_FILE_HASH}.png`);
 
-  test("resolves a cover image to a social image at its authored URL, and to a WebP thumbnail with an AVIF alternate and a shortest side of twice the cover image size", async () => {
-    const { coverImages } = await indexOf();
-    const coverImage = coverImages[ENTRY_MEDIA.key]!;
-
-    expect(coverImage.social).toEqual({
-      src: mediaRoute(`collection/entry.cover.${MEDIA_FILE_HASH}.png`),
-      ...AUTHORED_COVER_IMAGE_DIMENSIONS,
-    });
-    expect(coverImage.thumbnail).toMatchObject({
-      kind: "image",
-      width: 244, // The landscape cover image's width at twice the cover image size, rather than its shortest side.
-      height: RENDERED_COVER_IMAGE_SIZE_PX * 2,
-    });
-    expect(coverImage.thumbnail.src).toContain(mediaRoute("collection/entry.cover."));
-    expect(coverImage.thumbnail.src).toMatch(/\.thumbnail\.webp$/);
-    expect(coverImage.thumbnail.alternates).toHaveLength(1);
-    expect(coverImage.thumbnail.alternates[0]?.type).toBe("image/avif");
-    expect(coverImage.thumbnail.alternates[0]?.srcSet).toMatch(/\.thumbnail\.avif$/);
-  });
-
-  test("lists a problem for a cover image whose shortest side is below twice the cover image size, when that is larger than the social card minimum", async () => {
-    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 800, height: 150 } });
-    const index = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage }, coverImageSize: 100 });
-
-    expect(index.problems()).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than the 200px minimum on its shortest side (800x150px).`,
-    ]);
-  });
-
-  test("does not list a problem for a cover image whose shortest side is above the social card minimum, when that is larger than twice the cover image size", async () => {
-    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 800, height: 150 } });
-    const index = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
-
-    expect(index.problems()).toEqual([]);
-  });
-
-  test("resolves a portrait cover image to a thumbnail with a width of twice the cover image size", async () => {
-    const portraitCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 630, height: 1200 } });
-    const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: portraitCoverImage } });
-
-    expect(coverImages[ENTRY_MEDIA.key]?.thumbnail).toMatchObject({
-      width: RENDERED_COVER_IMAGE_SIZE_PX * 2,
-      height: 244,
-    });
-  });
-
-  test("resolves a cover image to a thumbnail at its authored dimensions when its shortest side is below twice the cover image size", async () => {
-    const smallCoverImage = resolvedImage({ path: COVER_IMAGE_FILE_PATH, dimensions: { width: 200, height: 100 } });
-    const { coverImages } = await indexOf({ images: { [COVER_IMAGE_FILE_PATH]: smallCoverImage } });
-
-    expect(coverImages[ENTRY_MEDIA.key]?.thumbnail).toMatchObject({ width: 200, height: 100 });
+    expect(coverImages[ENTRY_MEDIA.key]).toEqual({ src: coverImageUrl, ...AUTHORED_COVER_IMAGE_DIMENSIONS });
+    expect([...renditionsByUrl.keys()].filter((url) => url.includes(".cover."))).toEqual([coverImageUrl]);
   });
 
   test("resolves a body image reference to its authored URL with AVIF and WebP alternates", async () => {
@@ -286,11 +230,8 @@ describe("buildMediaIndex", () => {
     const index = await indexOf();
     const bodyImage = mediaFor(index, "./image.png");
     const video = mediaFor(index, "./video.mp4");
-    const coverImage = index.coverImages[ENTRY_MEDIA.key]!;
     const urls = [
-      coverImage.social.src,
-      coverImage.thumbnail.src,
-      ...coverImage.thumbnail.alternates.map(({ srcSet }) => srcSet),
+      index.coverImages[ENTRY_MEDIA.key]!.src,
       bodyImage!.src,
       ...(bodyImage?.kind === "image" ? bodyImage.alternates.map(({ srcSet }) => srcSet) : []),
       video!.src,
@@ -401,10 +342,7 @@ describe("buildMediaIndex", () => {
     const coverImageStems = [...index.renditionsByUrl.keys()].map((url) => url.split(".cover.")[0]);
 
     expect(Object.keys(index.coverImages)).toEqual([firstEntry.key, secondEntry.key]);
-    expect(coverImageStems).toEqual([
-      ...Array<string>(3).fill(mediaRoute("collection/entry")),
-      ...Array<string>(3).fill(mediaRoute("collection/second-entry")),
-    ]);
+    expect(coverImageStems).toEqual([mediaRoute("collection/entry"), mediaRoute("collection/second-entry")]);
     expect(index.problems()).toEqual([
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is smaller than`),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/second-entry.cover.png" is smaller than`),

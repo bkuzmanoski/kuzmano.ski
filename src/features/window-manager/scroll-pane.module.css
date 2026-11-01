@@ -8,16 +8,14 @@
   &:has(> [data-collapsed]) {
     --scroll-pane-reserved-scrollbar-width: var(--layout-scrollbar-gutter-width);
 
-    /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
-    @container not style(--window-safe-area-inline-end: 0px) {
-      --scroll-pane-reserved-scrollbar-width: 0px; /* The scrollbar is hidden when there is a safe-area inset (see below). */
+    @mixin scroll-pane-scrollbar-hidden {
+      --scroll-pane-reserved-scrollbar-width: 0px;
     }
   }
 }
 
 .scrollbar {
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
-  @container not style(--window-safe-area-inline-end: 0px) {
+  @mixin scroll-pane-scrollbar-hidden {
     display: none;
   }
 }
@@ -26,9 +24,8 @@
   scrollbar-width: none;
   scroll-padding-block: var(--layout-gutter);
 
-  /* A size container, so content can size itself to the visible height of the pane with `cqh`.
-   * The pane's size comes from the window rather than from its contents, so size containment
-   * does not change its layout. */
+  /* A size container, so content can size itself to the visible height of the pane with `cqh`. The pane's size comes
+   * from the window rather than from its contents, so size containment does not change its layout. */
   container: pane / size;
   overflow-y: auto;
   overscroll-behavior: none;
@@ -42,9 +39,8 @@
 
   outline: none;
 
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
-  @container not style(--window-safe-area-inline-end: 0px) {
-    scrollbar-width: thin; /* The custom scrollbar is hidden when there is a safe-area inset (see above). */
+  @mixin scroll-pane-scrollbar-hidden {
+    scrollbar-width: thin;
   }
 }
 
@@ -55,6 +51,10 @@
 @media print {
   .scrollPane {
     display: block;
+
+    &:has(> [data-collapsed]) {
+      --scroll-pane-reserved-scrollbar-width: 0px;
+    }
   }
 
   .contentContainer {

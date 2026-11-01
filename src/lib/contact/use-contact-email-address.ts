@@ -5,9 +5,9 @@ import { readContactEmailAddress } from "./client.ts";
 /**
  * The published contact email address, or `null` if it has not been read.
  *
- * The lookup runs after mount rather than during render, so the email address
- * is absent from the prerendered page. After the first read, it is served from
- * the session cache, so reopening the window does not trigger a network request.
+ * The lookup runs after mount rather than during render, so the email address is absent from the prerendered page.
+ * After the first read, it is served from the session cache, so reopening the window does not trigger a network
+ * request.
  */
 export function useContactEmailAddress(): string | null {
   const [emailAddress, setEmailAddress] = useState<string | null>(null);

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { paletteFrom, readPalette } from "./palette.ts";
+import { DEFAULT_THEME_CHROMA_SCALE } from "#/lib/settings/theme-tint.ts";
+
+import { paletteFrom, readPalette, rootCustomPropertiesIn } from "./palette.ts";
 
 import type { Palette } from "./palette.ts";
 
@@ -30,6 +32,13 @@ describe("paletteFrom", () => {
 
     expect(palette.foreground.light).toBe("#aabbcc");
     expect(palette.foreground.dark).toBe("#aabbcc");
+  });
+
+  test("resolves the `--theme-chroma-scale` custom property to the default chroma scale", async () => {
+    const scaled = await lightValueOf("oklch(50% calc(0.1 * var(--theme-chroma-scale)) 30deg)", {
+      "--theme-chroma-scale": "0",
+    });
+    await expect(lightValueOf(`oklch(50% ${0.1 * DEFAULT_THEME_CHROMA_SCALE} 30deg)`)).resolves.toBe(scaled);
   });
 
   test("expands a three-digit hex literal", async () => {
@@ -137,8 +146,6 @@ describe("color notations", () => {
   });
 
   test("resolves a relative color", async () => {
-    // No code here reads `from`, or the `l c h` keywords: the PostCSS plugins do. A notation the
-    // stylesheet starts using later resolves the same way, without a change to this module.
     await expect(lightValueOf("oklch(from #1e90ff l 0 h)")).resolves.toBe("#909090");
   });
 
@@ -208,5 +215,46 @@ describe("readPalette", () => {
 
     expect(palette.foreground.light).not.toBe(palette.foreground.dark);
     expect(palette.background.light).not.toBe(palette.background.dark);
+  });
+});
+
+describe("rootCustomPropertiesIn", () => {
+  test("returns the custom properties declared in `:root`, keyed by name", () => {
+    expect(rootCustomPropertiesIn(":root { --color-foreground: #000000; --layout-gutter: 16px; }")).toEqual(
+      new Map([
+        ["--color-foreground", "#000000"],
+        ["--layout-gutter", "16px"],
+      ]),
+    );
+  });
+
+  test("returns the last value authored for a property declared twice", () => {
+    expect(
+      rootCustomPropertiesIn(":root { --layout-gutter: 16px; --layout-gutter: 20px; }").get("--layout-gutter"),
+    ).toBe("20px");
+  });
+
+  test("omits a declaration in a rule nested inside `:root`", () => {
+    const css = ':root { --layout-gutter: 16px; &[data-appearance="dark"] { --layout-gutter: 99px; } }';
+    expect(rootCustomPropertiesIn(css).get("--layout-gutter")).toBe("16px");
+  });
+
+  test("omits a declaration in a `:root` inside an at-rule", () => {
+    const css = ":root { --layout-gutter: 16px; } @media (width < 600px) { :root { --layout-gutter: 8px; } }";
+    expect(rootCustomPropertiesIn(css).get("--layout-gutter")).toBe("16px");
+  });
+
+  test("omits a declaration that is not a custom property", () => {
+    expect(rootCustomPropertiesIn(":root { color: red; --layout-gutter: 16px; }")).toEqual(
+      new Map([["--layout-gutter", "16px"]]),
+    );
+  });
+
+  test("throws when the stylesheet does not have a `:root` block, naming the source", () => {
+    expect(() => rootCustomPropertiesIn("body { color: red; }")).toThrow("No `:root` block found in src/styles.css.");
+  });
+
+  test("throws when a `:root` block is not properly closed", () => {
+    expect(() => rootCustomPropertiesIn(":root { --layout-gutter: 16px;")).toThrow("Unclosed block");
   });
 });

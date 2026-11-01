@@ -21,8 +21,8 @@
     transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 2); /* Follow menu bar and icons reveal. */
   }
 
-  /* The property is inherited rather than a class so that content deep in the window can
-   * read the state through a style query (see `/src/components/scrollbar.module.css`). */
+  /* The property is inherited rather than a class so that content deep in the window can read the state through a style
+   * query (see `/src/components/scrollbar.module.css`). */
   &:not(.focused) {
     --window-focused: 0;
 
@@ -40,13 +40,14 @@
   }
 
   &.fitsContentHeight {
-    /* Fits the window within the surface's padding as `createWindowPlacer` in `/src/lib/window-manager/layout.ts` does. */
+    /* Fits the window within the surface's padding as `createWindowPlacer` in `/src/lib/window-manager/layout.ts`
+     * does. */
     max-height: calc(100% - 2 * var(--layout-window-layer-padding));
   }
 
-  /* A window the server rendered has no position as the window layer has not yet been measured.
-   * These values mirror the default position and size for the initial window placed by the
-   * window manager (see `defaultRect` in `/src/lib/window-manager/layout.ts`). */
+  /* A window the server rendered has no position as the window layer has not yet been measured. These values mirror the
+   * default position and size for the initial window placed by the window manager (see `defaultRect` in
+   * `/src/lib/window-manager/layout.ts`). */
   &.unplaced {
     top: 50%;
     top: round(down, 50%, 1px);

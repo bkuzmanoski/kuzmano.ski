@@ -19,9 +19,9 @@ export const SITE_LOCALE = "en-AU";
 export const SITE_TIME_ZONE = "Australia/Sydney";
 
 // Document metadata
-export const NOT_FOUND_DOCUMENT_TITLE = "Page not found (404)";
-export const SOCIAL_IMAGE = "/logo512.png";
+export const OPEN_GRAPH_IMAGE = "/logo512.png";
 export const CONTENT_SIGNAL = "ai-train=no, search=yes, ai-input=yes";
+export const NOT_FOUND_DOCUMENT_TITLE = "Page not found (404)";
 
 // Feeds
 export const FEED_MAX_ENTRIES = 20;

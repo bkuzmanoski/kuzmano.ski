@@ -10,7 +10,7 @@ const RATE_LIMIT_FALLBACK_KEY = "unknown";
 
 const rateLimitKeyOf = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
 
-// Whether the sender of `request` has exceeded `rateLimit`. Always `false` for an endpoint without a rate limit.
+/** Whether the sender of `request` has exceeded `rateLimit`. Always `false` for an endpoint without a rate limit. */
 const exceedsRateLimit = async (request: Request, rateLimit?: RateLimitBindingName) =>
   rateLimit !== undefined && !(await isWithinRateLimit(rateLimit, rateLimitKeyOf(request)));
 
@@ -23,8 +23,8 @@ export const jsonResponse = (body: unknown, status: number) =>
 /**
  * Returns a response refusing a GET, or `null` when the endpoint may serve it.
  *
- * The result is a response or `null` rather than a `ReceivedSubmission`, because a GET has no
- * submitted fields to return alongside it.
+ * The result is a response or `null` rather than a `ReceivedSubmission`, because a GET has no submitted fields to
+ * return alongside it.
  */
 export async function refusalForGet(request: Request, rateLimit?: RateLimitBindingName): Promise<Response | null> {
   if (!isSameOriginFetch(request)) {

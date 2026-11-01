@@ -12,7 +12,7 @@ vi.mock("./scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { playInputScrollSound, silenceScrollAt }),
 );
 
-// A real control, so the handlers see the actual events React delivers.
+/** A real control, so the handlers see the actual events React delivers. */
 function Input() {
   return <textarea aria-label="Field" {...useInputScrollSound<HTMLTextAreaElement>()} />;
 }

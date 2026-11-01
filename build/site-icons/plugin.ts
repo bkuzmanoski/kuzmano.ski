@@ -18,7 +18,7 @@ const SITE_ASSET_FILE_NAMES = [
   WEB_APP_MANIFEST_FILE_NAME,
 ];
 
-// The files every icon and the web app manifest are generated from.
+/** The files the plugin generates every icon and the web app manifest from. */
 const INPUT_FILE_ABSOLUTE_PATHS = [fromRoot(ICON_ARTWORK_FILE_PATH), fromRoot(STYLESHEET_FILE_PATH)];
 
 interface GeneratedFile {
@@ -79,7 +79,8 @@ export function siteIconsPlugin(): Plugin {
         const requestPath = requestPathOf(request);
         const fileName = SITE_ASSET_FILE_NAMES.find((candidate) => requestPath === `/${candidate}`);
 
-        // Generate files only for icon requests so invalid artwork or stylesheets do not break unrelated dev-server requests.
+        // Generate files only for icon requests so invalid artwork or stylesheets do not break unrelated dev-server
+        // requests.
         if (fileName === undefined) {
           next();
           return;
@@ -100,8 +101,8 @@ export function siteIconsPlugin(): Plugin {
           .catch(next);
       });
     },
-    // Under `vite dev`, an edit to an input clears the generated files, so the next icon request
-    // generates them from the edited input.
+    // Under `vite dev`, an edit to an input clears the generated files, so the next icon request generates them from
+    // the edited input.
     watchChange(id) {
       if (INPUT_FILE_ABSOLUTE_PATHS.includes(id)) {
         generatedFilesPromise = null;

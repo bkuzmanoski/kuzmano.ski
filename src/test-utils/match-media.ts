@@ -3,10 +3,9 @@ import { vi } from "vitest";
 type ChangeListener = (event: MediaQueryListEvent) => void;
 
 /**
- * Stubs `matchMedia` with one media query list whose `matches` is `false`, for every query. Returns
- * a function that sets `matches` and calls each `change` listener with an event that has the same
- * `matches`. A listener added with `once` is removed before it is called, as a real media query list
- * removes it.
+ * Stubs `matchMedia` with one media query list whose `matches` is `false`, for every query. Returns a function that
+ * sets `matches` and calls each `change` listener with an event that has the same `matches`. A listener added with
+ * `once` is removed before it is called, as a real media query list removes it.
  */
 export function stubMatchMedia() {
   const listeners = new Map<ChangeListener, { once: boolean }>();

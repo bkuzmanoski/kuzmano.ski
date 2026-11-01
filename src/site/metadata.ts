@@ -1,6 +1,6 @@
 // Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
 import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
-import { AUTHOR_NAME, SITE_URL, SOCIAL_IMAGE } from "#/config/site.ts";
+import { AUTHOR_NAME, OPEN_GRAPH_IMAGE, SITE_URL } from "#/config/site.ts";
 import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
@@ -9,12 +9,16 @@ import type { AlternateRepresentations } from "./alternate-representations.ts";
 
 /** Alternate representations are advertised as `rel="alternate"` links and omitted when `null`. */
 export interface DocumentMetadata extends Partial<AlternateRepresentations> {
-  title: string; // The document's own title, without the site suffix `documentTitle` adds.
+  /** The document's own title, without the site suffix `documentTitle` adds. */
+  title: string;
   description: string;
   path: string;
-  kind?: "website" | "article"; // Open Graph type. Dated, authored entries are "article"; everything else is "website".
-  bodyChunks?: EntryBodyChunks | null; // Linked so the entry's stylesheets apply to the first paint and its body is available to hydration.
-  coverImage?: CoverImage | null; // Used as `og:image` in place of the site image.
+  /** Open Graph type. Dated, authored entries are "article"; everything else is "website". */
+  kind?: "website" | "article";
+  /** Linked so the entry's stylesheets apply to the first paint and its body is available to hydration. */
+  bodyChunks?: EntryBodyChunks | null;
+  /** Used as `og:image` in place of the site image. */
+  coverImage?: CoverImage | null;
   noindex?: boolean;
 }
 
@@ -22,7 +26,9 @@ export const canonicalUrl = (path: string) => `${SITE_URL}${path}`;
 
 export const LLMS_TXT_FILE_NAME = "llms.txt";
 export const LLMS_TXT_PATH = `/${LLMS_TXT_FILE_NAME}`;
-export const LLMS_TXT_LINK_HEADER = `<${canonicalUrl(LLMS_TXT_PATH)}>; rel="describedby"`; // Absolute, like the `describedby` link in the `<head>`.
+
+/** Absolute, like the `describedby` link in the `<head>`. */
+export const LLMS_TXT_LINK_HEADER = `<${canonicalUrl(LLMS_TXT_PATH)}>; rel="describedby"`;
 
 export const documentTitle = (title: string) => `${title}—${AUTHOR_NAME}`;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
@@ -30,8 +36,8 @@ export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 /**
  * The head tags for a document.
  *
- * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a
- * route overrides a tag from the root by re-declaring it under the same key.
+ * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a route overrides a tag from
+ * the root by re-declaring it under the same key.
  */
 export function documentHead({
   title,
@@ -46,7 +52,7 @@ export function documentHead({
 }: DocumentMetadata) {
   const url = canonicalUrl(path);
   const fullTitle = path === "/" ? AUTHOR_NAME : documentTitle(title);
-  const socialImage = coverImage?.social ?? { src: SOCIAL_IMAGE, width: undefined, height: undefined };
+  const openGraphImage = coverImage ?? { src: OPEN_GRAPH_IMAGE, width: undefined, height: undefined };
 
   return {
     meta: [
@@ -58,11 +64,11 @@ export function documentHead({
       { property: "og:title", content: fullTitle },
       ...(description ? [{ property: "og:description", content: description }] : []),
       { property: "og:url", content: url },
-      { property: "og:image", content: canonicalUrl(socialImage.src) },
-      ...(socialImage.width && socialImage.height
+      { property: "og:image", content: canonicalUrl(openGraphImage.src) },
+      ...(openGraphImage.width && openGraphImage.height
         ? [
-            { property: "og:image:width", content: String(socialImage.width) },
-            { property: "og:image:height", content: String(socialImage.height) },
+            { property: "og:image:width", content: String(openGraphImage.width) },
+            { property: "og:image:height", content: String(openGraphImage.height) },
           ]
         : []),
       { name: "twitter:card", content: "summary" },

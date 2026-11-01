@@ -5,9 +5,35 @@
 
   font-display: block;
 
-  /* The font file's ascent is lowered from 988 to 950 units, so ascent less descent equals the cap height
-   * and the caps are centered in a line box of any height. (`ascent-override` is not supported by Safari). */
+  /* The font file's ascent is lowered from 988 to 950 units, so ascent less descent equals the cap height and the caps
+   * are centered in a line box of any height. (`ascent-override` is not supported by Safari). */
   src: url("./assets/fonts/ChicagoFLF-Adjusted.woff2") format("woff2");
+}
+
+/* On macOS, Safari and Chrome add to Helvetica's ascent while Firefox does not, causing Firefox to render `--font-ui`
+ * 1px higher. Only Firefox uses these faces (see below). Safari ignores `ascent-override`, Chrome adds to the
+ * overridden ascent, and `local()` fails in other browsers, which fall back to the next family in
+ * `--font-family-ui`. */
+@font-face {
+  font-family: "Helvetica Adjusted";
+  font-weight: 400;
+  font-style: normal;
+
+  ascent-override: 89%;
+  descent-override: 23%;
+  line-gap-override: 0%;
+  src: local("Helvetica");
+}
+
+@font-face {
+  font-family: "Helvetica Adjusted";
+  font-weight: 700;
+  font-style: normal;
+
+  ascent-override: 89%;
+  descent-override: 23%;
+  line-gap-override: 0%;
+  src: local("Helvetica Bold"), local("Helvetica-Bold");
 }
 
 @font-face {
@@ -84,17 +110,13 @@
   --layer-screensaver: 500;
   --layer-startup-sequence: 600;
 
-  /* Layout metrics
-   *
-   * `--layout-*` pixel values are exposed to TypeScript via `virtual:layout-metrics`.
-   */
+  /* Layout metrics */
   --layout-safe-area-top: env(safe-area-inset-top, 0px);
   --layout-safe-area-right: env(safe-area-inset-right, 0px);
   --layout-safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --layout-safe-area-left: env(safe-area-inset-left, 0px);
   --layout-menu-bar-height: 32px;
-  --layout-window-layer-padding: 12px; /* Kept clear around a window as it is placed. */
-  --layout-cover-image-size: 48px;
+  --layout-window-layer-padding: 0px; /* Set from JS. */
   --layout-gutter: 16px;
   --layout-title-bar-height: 28px; /* Excludes the bottom border. */
   --layout-title-bar-inset-inline: 4px;
@@ -111,23 +133,10 @@
   --font-family-ui: Helvetica, Arial, ui-sans-serif, sans-serif;
   --font-ui: normal 15px/20px var(--font-family-ui);
   --font-ui-large: normal 16.5px/24px var(--font-family-ui);
-  --font-family-display: Archivo, ui-sans-serif, sans-serif;
-  --font-heading-1: 700 semi-condensed 42px/48px var(--font-family-display);
-  --font-heading-2: 600 semi-condensed 25px/32px var(--font-family-display);
-  --font-heading-3: 600 semi-condensed 19px/24px var(--font-family-display);
-  --font-blockquote: italic 500 semi-condensed 25px/32px var(--font-family-display);
-  --font-family-body: "Source Serif 4", ui-serif, serif;
-  --font-lede: 400 20px/32px var(--font-family-body);
-  --font-body: 400 17px/28px var(--font-family-body);
-  --font-body-small: 400 15px/22px var(--font-family-body);
-  --font-caption: 400 14px/20px var(--font-family-body);
-  --font-bitmap: 400 12px/16px "Quanta Strike 12", ui-sans-serif, sans-serif;
-  --font-code: 450 14px/20px "Source Code Pro", ui-monospace, monospace;
-  --font-code-feature-settings: "cv01", "cv02", "cv04", "cv12", "cv17";
 
-  /* Theme  */
-  --theme-hue: var(--accent-purple-hue);
-  --theme-chroma-scale: 1; /* Must match the `Saturation` slider step in `/src/lib/settings/theme-tint.ts`. */
+  /* Theme */
+  --theme-hue: 0deg; /* Set from JS. */
+  --theme-chroma-scale: 0; /* Set from JS. */
 
   /* Neutral colors
    *
@@ -140,7 +149,6 @@
   --neutral-280: oklch(28% calc(0.018 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-305: oklch(30.5% calc(0.0197 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-330: oklch(33% calc(0.0213 * var(--theme-chroma-scale)) var(--theme-hue));
-  --neutral-345: oklch(34.5% calc(0.0222 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-390: oklch(39% calc(0.0248 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-465: oklch(46.5% calc(0.0281 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-540: oklch(54% calc(0.0299 * var(--theme-chroma-scale)) var(--theme-hue));
@@ -220,7 +228,7 @@
   --color-startup-sequence-foreground: var(--neutral-925);
   --color-startup-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
-  --color-accent: var(--accent-purple); /* The default theme color. */
+  --color-accent: transparent; /* Set from JS. */
   --color-success: var(--accent-green);
   --color-warning: var(--accent-orange);
   --color-error: var(--accent-red);
@@ -240,36 +248,6 @@
 
   color-scheme: light dark;
 
-  &[data-theme-color="orange"] {
-    --theme-hue: var(--accent-orange-hue);
-    --color-accent: var(--accent-orange);
-  }
-
-  &[data-theme-color="green"] {
-    --theme-hue: var(--accent-green-hue);
-    --color-accent: var(--accent-green);
-  }
-
-  &[data-theme-color="turquoise"] {
-    --theme-hue: var(--accent-turquoise-hue);
-    --color-accent: var(--accent-turquoise);
-  }
-
-  &[data-theme-color="red"] {
-    --theme-hue: var(--accent-red-hue);
-    --color-accent: var(--accent-red);
-  }
-
-  &[data-theme-color="pink"] {
-    --theme-hue: var(--accent-pink-hue);
-    --color-accent: var(--accent-pink);
-  }
-
-  &[data-theme-color="blue"] {
-    --theme-hue: var(--accent-blue-hue);
-    --color-accent: var(--accent-blue);
-  }
-
   @media not (forced-colors: active) {
     &[data-appearance="light"] {
       color-scheme: light;
@@ -278,6 +256,12 @@
     &[data-appearance="dark"] {
       color-scheme: dark;
     }
+  }
+}
+
+@supports (-moz-appearance: none) {
+  :root {
+    --font-family-ui: "Helvetica Adjusted", Helvetica, Arial, ui-sans-serif, sans-serif;
   }
 }
 

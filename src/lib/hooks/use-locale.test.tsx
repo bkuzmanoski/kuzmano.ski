@@ -24,8 +24,8 @@ describe("useLocale", () => {
     container.innerHTML = renderToString(<LocaleProbe />);
     document.body.append(container);
 
-    // A hydration render in the browser's locale would not match the prerendered markup,
-    // which React recovers from and reports here.
+    // A hydration render in the browser's locale would not match the prerendered markup, which React recovers from and
+    // reports here.
     const onRecoverableError = vi.fn();
 
     act(() => {
