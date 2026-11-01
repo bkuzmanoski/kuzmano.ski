@@ -15,7 +15,7 @@
     grid-column: text;
     align-self: end;
 
-    font: 800 64px/68px var(--font-family-display);
+    font: 800 64px/68px var(--content-body-font-family-display);
     text-wrap: balance;
     letter-spacing: -0.02em;
 
@@ -30,7 +30,7 @@
 
 .entry [data-content-body] > h1 + [data-content-span="pane"] + p {
   margin-block-start: var(--content-body-layout-space-loose);
-  font: var(--font-lede);
+  font: var(--content-body-font-lede);
 }
 
 .entry [data-image-row] img {
