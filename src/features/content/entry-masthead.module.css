@@ -1,17 +1,16 @@
 .masthead {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 16px;
   justify-content: space-between;
 
   @mixin entry-masthead-in-rail {
     flex-direction: column;
-    gap: 16px;
 
     & .facts {
       flex-direction: column;
       gap: 4px;
       align-items: start;
+      white-space: normal;
 
       & > * + *::before {
         display: none;
@@ -26,13 +25,16 @@
   @mixin bitmap-label;
 
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px var(--entry-masthead-facts-divider-column-gap);
+  gap: var(--entry-masthead-facts-divider-column-gap);
   align-items: center;
 
+  min-width: 0;
+
+  white-space: nowrap;
+
   & > * + *::before {
-    content: "\25b8";
-    content: "\25b8" / "";
+    content: "\2022";
+    content: "\2022" / "";
     margin-inline-end: var(--entry-masthead-facts-divider-column-gap);
     color: var(--color-border-secondary);
   }
@@ -42,8 +44,14 @@
   @mixin content-link;
 }
 
+.category {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .actions {
   display: flex;
+  flex: none;
   gap: 4px;
 }
 

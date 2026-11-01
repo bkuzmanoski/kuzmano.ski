@@ -29,7 +29,7 @@ export function EntryMasthead({ target: { collection, slug } }: { target: Collec
           {collection.title}
         </ContentLink>
         {frontmatter && <FormattedDate date={frontmatter.date} format={dateFormat} />}
-        {frontmatter?.category !== undefined && <span>{frontmatter.category}</span>}
+        {frontmatter?.category !== undefined && <span className={styles.category}>{frontmatter.category}</span>}
       </p>
       <div className={styles.actions}>
         <ControlledCopyButton
