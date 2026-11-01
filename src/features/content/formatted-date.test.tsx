@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { FormattedDate } from "./formatted-date.tsx";
 
@@ -31,5 +31,26 @@ describe("FormattedDate", () => {
   test("omits the `lang` attribute when the format's language is the same as that of the document", () => {
     render(<FormattedDate date={DATE} format={new Intl.DateTimeFormat("en-GB", DATE_FORMAT_OPTIONS)} />);
     expect(timeElement().hasAttribute("lang")).toBe(false);
+  });
+
+  test("hydrating over prerendered text that differs from the formatted date leaves the text unchanged and does not report a recoverable error", () => {
+    const prerenderedText = "2 Jan. 2024";
+    const container = document.createElement("div");
+
+    container.innerHTML = `<time datetime="${DATE}">${prerenderedText}</time>`;
+    document.body.append(container);
+
+    const prerenderedTimeElement = timeElement();
+    const onRecoverableError = vi.fn();
+
+    render(<FormattedDate date={DATE} format={new Intl.DateTimeFormat("en-GB", DATE_FORMAT_OPTIONS)} />, {
+      container,
+      hydrate: true,
+      onRecoverableError,
+    });
+
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(timeElement()).toBe(prerenderedTimeElement);
+    expect(timeElement().textContent).toBe(prerenderedText);
   });
 });
