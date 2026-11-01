@@ -30,6 +30,7 @@ import {
   phaseFlags,
   sequence,
   startOfPhaseMs,
+  whenDisplayGlassLayerReady,
   whenFontReady,
   whenIllustrationReady,
   whenKeySoundsReady,
@@ -48,6 +49,8 @@ import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./startup-sequence.module.css";
 
+import type { Ref } from "react";
+
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
 const cssParallaxTransform = ({ translate, scale }: typeof KEYBOARD_PARALLAX) =>
@@ -57,7 +60,15 @@ const viewportSize = (): Size => ({ width: window.innerWidth, height: window.inn
 
 type CoverContent = "loadingIndicator" | "beginPrompt";
 
-function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
+function Display({
+  metrics,
+  phase,
+  glassLayerImageRef,
+}: {
+  metrics: StageMetrics;
+  phase: Phase;
+  glassLayerImageRef: Ref<HTMLImageElement>;
+}) {
   const { display, scale, viewport } = metrics;
   const {
     isLoadingCoverUp,
@@ -68,7 +79,6 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
     isGlassHidden,
     isRevealingDesktop,
   } = phaseFlags(phase);
-
   const screenParameters = screenParametersFor(display, DISPLAY_BEZEL_INSET, scale);
   const displayMaskStyle: StyleWithVars = {
     left: display.x,
@@ -107,6 +117,7 @@ function Display({ metrics, phase }: { metrics: StageMetrics; phase: Phase }) {
       {isRevealingDesktop && <div className={styles.desktopBackground} />}
       {/* An image instead of inline SVG as WebKit repaints inline filters when the layer changes, dropping frames during reveals. */}
       <img
+        ref={glassLayerImageRef}
         alt=""
         src={displayGlassLayerMacintoshIllustrationSvgUrl}
         className={cx(
@@ -131,6 +142,7 @@ function StartupSequenceContent() {
   const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
   const bodyImageRef = useRef<HTMLImageElement>(null);
   const keyboardImageRef = useRef<HTMLImageElement>(null);
+  const glassLayerImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -174,6 +186,7 @@ function StartupSequenceContent() {
       whenFontReady(),
       whenKeySoundsReady(),
       whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
+      whenDisplayGlassLayerReady(glassLayerImageRef.current),
       new Promise((resolve) => timers.push(setTimeout(resolve, MIN_LOADING_DURATION_MS))),
     ];
 
@@ -297,7 +310,7 @@ function StartupSequenceContent() {
         )}
         style={stageStyle}
       >
-        <Display metrics={metrics} phase={phase} />
+        <Display metrics={metrics} phase={phase} glassLayerImageRef={glassLayerImageRef} />
         <div
           className={cx(
             styles.illustration,
