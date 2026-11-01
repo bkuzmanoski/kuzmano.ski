@@ -8,8 +8,8 @@
   grid-template-rows: 1fr;
 
   min-height: 320px;
-  margin-block-start: 2px;
-  margin-inline: 2px;
+  margin-block-start: 1px;
+  margin-inline: 1px;
 
   & > p {
     grid-column: text;
