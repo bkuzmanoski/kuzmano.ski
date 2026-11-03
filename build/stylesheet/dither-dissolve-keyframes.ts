@@ -7,6 +7,10 @@ import type { AtRule } from "postcss";
 export const DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME = "dither-dissolve-keyframes";
 export const DITHER_DISSOLVE_STEP_COUNT = 16;
 
+const HOLD_STEP = DITHER_DISSOLVE_STEP_COUNT / 2;
+const HOLD_START_FRACTION = 1 / 3;
+const HOLD_END_FRACTION = 2 / 3;
+
 /** A `mask-image` of one tile of the Bayer matrix, filled in the same cells as a dither field of `density`. */
 function ditherMaskImageOf(density: number): string {
   let path = "";
@@ -31,6 +35,17 @@ function ditherMaskImageOf(density: number): string {
   return `url("data:image/svg+xml,${svg.replaceAll("<", "%3C").replaceAll(">", "%3E")}")`;
 }
 
+/** The fraction of the animation at which `step` starts. Spaces the steps of the reveal and of the fill evenly. */
+function offsetOf(step: number): number {
+  if (step <= HOLD_STEP) {
+    return (step / HOLD_STEP) * HOLD_START_FRACTION;
+  }
+
+  const fillStepCount = DITHER_DISSOLVE_STEP_COUNT - HOLD_STEP - 1;
+
+  return HOLD_END_FRACTION + ((step - HOLD_STEP - 1) / fillStepCount) * (1 - HOLD_END_FRACTION);
+}
+
 /** Emits `@keyframes dither-dissolve` before `mixin`. */
 export function ditherDissolveKeyframes(mixin: AtRule): void {
   const { source } = mixin;
@@ -40,9 +55,6 @@ export function ditherDissolveKeyframes(mixin: AtRule): void {
   const keyframes = postcss.atRule({ name: "keyframes", params: "dither-dissolve", source });
 
   for (let step = 0; step <= DITHER_DISSOLVE_STEP_COUNT; step += 1) {
-    // Ease-out spacing places earlier steps closer together.
-    const offset = 1 - Math.sqrt(1 - step / DITHER_DISSOLVE_STEP_COUNT);
-
     // Preload later masks while the initial frame is displayed as Firefox otherwise briefly hides an element while each
     // asynchronously loaded mask becomes available.
     const [maskImage, maskComposite] =
@@ -50,7 +62,7 @@ export function ditherDissolveKeyframes(mixin: AtRule): void {
 
     keyframes.append(
       postcss
-        .rule({ selector: `${(offset * 100).toFixed(2)}%`, source })
+        .rule({ selector: `${(offsetOf(step) * 100).toFixed(2)}%`, source })
         .append(
           postcss.decl({ prop: "mask-image", value: maskImage, source }),
           postcss.decl({ prop: "mask-composite", value: maskComposite, source }),

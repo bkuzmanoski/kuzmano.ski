@@ -111,13 +111,13 @@ describe("ditherDissolveKeyframes", () => {
     });
   });
 
-  test("widens the gap between consecutive steps from the first step to the last", async () => {
+  test("holds the step at half density longer than any other step", async () => {
     const { keyframes } = await emittedKeyframes();
     const gaps = keyframes
       .slice(1)
       .map(({ offsetPercent }, index) => offsetPercent - (keyframes[index]?.offsetPercent ?? 0));
 
-    expect(gaps).toEqual([...gaps].sort((a, b) => a - b));
-    expect(gaps.at(-1)).toBeGreaterThan(gaps.at(0) ?? Infinity);
+    expect(gaps.indexOf(Math.max(...gaps))).toBe(DITHER_DISSOLVE_STEP_COUNT / 2);
+    expect(gaps.filter((gap) => gap === Math.max(...gaps))).toHaveLength(1);
   });
 });

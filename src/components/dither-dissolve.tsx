@@ -63,7 +63,7 @@ export function DitherDissolveText({
           unitIndex === null ? (
             text
           ) : (
-            <span key={partIndex} className={styles.dissolve} style={unitStyleOf(unitIndex)}>
+            <span key={partIndex} className={styles.unit} style={unitStyleOf(unitIndex)}>
               {text}
             </span>
           ),
