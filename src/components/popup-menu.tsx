@@ -3,9 +3,9 @@ import { createPortal } from "react-dom";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
-import type { Position } from "#/lib/geometry.ts";
 import { useMenuButtonPress } from "#/lib/hooks/use-menu-button-press.ts";
 import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
+import type { OpeningPress } from "#/lib/hooks/use-menu-interaction.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
@@ -25,8 +25,7 @@ export interface PopupMenuOption<TValue extends string> {
 interface OpenState {
   button: HTMLButtonElement;
   buttonRect: DOMRect;
-  isPointerHeld: boolean;
-  pressOrigin: Position | null;
+  openingPress: OpeningPress;
 }
 
 function PopupMenuOptionLabel({ option }: { option: PopupMenuOption<string> }) {
@@ -67,8 +66,7 @@ function PopupMenuOptions<TValue extends string>({
     items: options.map((option) => ({ label: option.label, isEnabled: true })),
     anchor: openState.button,
     listRef,
-    isPointerHeld: openState.isPointerHeld,
-    pressOrigin: openState.pressOrigin,
+    openingPress: openState.openingPress,
     initialFocusedItemIndex: chosenOptionIndex,
     onActivate: (index) => {
       const option = options[index];
@@ -159,15 +157,13 @@ export function PopupMenu<TValue extends string>({
     options.findIndex((option) => option.value === value),
   );
 
-  const toggle = (button: HTMLButtonElement, openingPress: Omit<OpenState, "button" | "buttonRect">) =>
-    setOpenState((current) =>
-      current ? null : { button, buttonRect: button.getBoundingClientRect(), ...openingPress },
-    );
+  const toggle = (button: HTMLButtonElement, openingPress: OpeningPress) =>
+    setOpenState((current) => (current ? null : { button, buttonRect: button.getBoundingClientRect(), openingPress }));
 
   const menuButtonPressHandlers = useMenuButtonPress({
     onPress: (event) =>
-      toggle(event.currentTarget, { isPointerHeld: true, pressOrigin: { x: event.clientX, y: event.clientY } }),
-    onActivate: (event) => toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null }),
+      toggle(event.currentTarget, { isPointerHeld: true, origin: { x: event.clientX, y: event.clientY } }),
+    onActivate: (event) => toggle(event.currentTarget, { isPointerHeld: false, origin: null }),
   });
 
   return (
@@ -191,7 +187,7 @@ export function PopupMenu<TValue extends string>({
             if (OPEN_OPTIONS_KEYS.has(event.key) && openState === null) {
               event.preventDefault();
               playClickSound();
-              toggle(event.currentTarget, { isPointerHeld: false, pressOrigin: null });
+              toggle(event.currentTarget, { isPointerHeld: false, origin: null });
             }
           },
         })}

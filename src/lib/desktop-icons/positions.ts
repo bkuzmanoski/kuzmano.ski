@@ -1,6 +1,7 @@
 import { createClientStore } from "../client-store.ts";
+import { removeStored } from "../storage.ts";
 
-import { loadPositions, savePositions } from "./icon.ts";
+import { defaultPositions, loadPositions, savePositions } from "./icon.ts";
 
 import type { IconLayout, IconPosition, IconPositions } from "./icon.ts";
 
@@ -14,5 +15,9 @@ export function createIconPositionsStore(ids: ReadonlyArray<string>, layout: Ico
     useIconPositions: useValue, // Null before the client has read them.
     moveIcon: (id: string, position: IconPosition) => setValue({ ...getValue(), [id]: position }), // Call `commitIconPositions` when the drag ends to persist the layout.
     commitIconPositions: () => savePositions(getValue() ?? {}, ICON_POSITIONS_STORAGE_KEY),
+    resetIconPositions: () => {
+      removeStored(ICON_POSITIONS_STORAGE_KEY);
+      setValue(defaultPositions(ids, layout));
+    },
   };
 }

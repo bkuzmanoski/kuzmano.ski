@@ -1,11 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import menuStyles from "#/components/menu.module.css";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
+import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
+import { ICON_POSITIONS_STORAGE_KEY } from "#/lib/desktop-icons/positions.ts";
+import { LONG_PRESS_DURATION_MS } from "#/lib/hooks/use-context-menu-press.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
+import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
 import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { DesktopIcons } from "./desktop-icons.tsx";
 
@@ -35,15 +41,38 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 );
 
 beforeEach(() => {
+  vi.useFakeTimers();
   focusedWindow = null;
   notFoundRoute = null;
   open.mockClear();
+  vi.mocked(playClickSound).mockClear();
+  vi.mocked(playHoverSound).mockClear();
   prefersReducedMotion.matches = false;
 });
 
-const ICON_LABELS = DESTINATION_ORDER.map((id) => DESTINATIONS[id].title);
+afterEach(() => {
+  vi.useRealTimers();
+  Reflect.deleteProperty(document, "elementFromPoint");
+});
 
+const ICON_LABELS = DESTINATION_ORDER.map((id) => DESTINATIONS[id].title);
+const PRESS_POINT = { clientX: 100, clientY: 200 };
+const TOUCH_PRESS = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true, ...PRESS_POINT };
+const SECONDARY_MOUSE_PRESS = { pointerType: "mouse", pointerId: 1, button: 2, isPrimary: true, ...PRESS_POINT };
+const CLEAN_UP_LABEL = "Clean Up Desktop";
+
+const desktop = () => screen.getByRole("main");
 const icon = (index: number) => screen.getByLabelText(ICON_LABELS[index]!);
+const desktopMenu = () => screen.queryByRole("menu");
+const cleanUpDesktopMenuItem = () => screen.getByRole("menuitem", { name: CLEAN_UP_LABEL });
+
+function renderDesktop() {
+  render(
+    <main data-desktop="">
+      <DesktopIcons onZoomRect={vi.fn()} />
+    </main>,
+  );
+}
 
 function renderIcons() {
   const { rerender } = render(<DesktopIcons onZoomRect={vi.fn()} />);
@@ -57,6 +86,23 @@ function renderIcons() {
 function openWindow(setFocusedWindow: (id: WindowId | null) => void, id: WindowId) {
   setFocusedWindow(id);
   (document.activeElement as HTMLElement | null)?.blur();
+}
+
+/** Drags the first icon away from its default position and returns the `left` style of that default position. */
+function dragFirstIconAway() {
+  const defaultLeft = icon(0).style.left;
+
+  fireEvent.pointerDown(icon(0), { ...TOUCH_PRESS, clientX: 0, clientY: 0 });
+  fireEvent.pointerMove(window, { pointerId: 1, buttons: 1, clientX: -200, clientY: 200 });
+  advanceTimersBy(16); // The drag reports its move in an animation frame.
+  fireEvent.pointerUp(window, { pointerId: 1 });
+
+  return defaultLeft;
+}
+
+function longPressDesktop() {
+  fireEvent.pointerDown(desktop(), TOUCH_PRESS);
+  advanceTimersBy(LONG_PRESS_DURATION_MS);
 }
 
 test.each([
@@ -179,4 +225,179 @@ test("closing the last window does not focus an icon when another element has th
   expect(document.activeElement).toBe(buttonElement);
 
   buttonElement.remove();
+});
+
+test("a `contextmenu` event on the desktop prevents its default action, plays the click sound, and opens a menu named `Desktop` at the press position with the `Clean Up Desktop` item", () => {
+  renderDesktop();
+
+  expect(fireEvent.contextMenu(desktop(), PRESS_POINT)).toBe(false);
+
+  const menu = screen.getByRole("menu", { name: "Desktop" });
+
+  expect(menu.parentElement!.style.getPropertyValue("--menu-press-x")).toBe("100px");
+  expect(menu.parentElement!.style.getPropertyValue("--menu-press-y")).toBe("200px");
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([CLEAN_UP_LABEL]);
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test("a `contextmenu` event on an icon does not open the desktop menu or prevent its default action", () => {
+  renderDesktop();
+
+  expect(fireEvent.contextMenu(icon(0), PRESS_POINT)).toBe(true);
+  expect(desktopMenu()).toBeNull();
+});
+
+test("the desktop menu moves the focus to itself when it opens, and closes on a press outside it", () => {
+  renderDesktop();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(document.activeElement).toBe(desktopMenu());
+
+  fireEvent.pointerDown(document.body, { pointerType: "mouse", button: 0, isPrimary: true });
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("a `contextmenu` event on the desktop menu prevents its default action without closing the menu", () => {
+  renderDesktop();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(fireEvent.contextMenu(cleanUpDesktopMenuItem(), PRESS_POINT)).toBe(false);
+  expect(desktopMenu()).not.toBeNull();
+});
+
+test("the Down arrow key moves the highlight in the desktop menu, the Right arrow key does not close it, and the Escape key closes it", () => {
+  renderDesktop();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  fireEvent.keyDown(desktopMenu()!, { key: "ArrowDown" });
+
+  expect(desktopMenu()!.getAttribute("aria-activedescendant")).toBe(cleanUpDesktopMenuItem().id);
+
+  fireEvent.keyDown(desktopMenu()!, { key: "ArrowRight" });
+
+  expect(desktopMenu()).not.toBeNull();
+
+  fireEvent.keyDown(desktopMenu()!, { key: "Escape" });
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("the Enter key in the desktop menu plays the click sound and, after the item's activation flash, resets the icon positions and closes the menu", () => {
+  renderDesktop();
+
+  const defaultLeft = dragFirstIconAway();
+
+  vi.mocked(playClickSound).mockClear();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  fireEvent.keyDown(desktopMenu()!, { key: "ArrowDown" });
+  fireEvent.keyDown(desktopMenu()!, { key: "Enter" });
+
+  expect(playClickSound).toHaveBeenCalledTimes(2); // The menu opening and the item activating.
+  expect(icon(0).style.left).not.toBe(defaultLeft);
+
+  runActivationFlash();
+
+  expect(icon(0).style.left).toBe(defaultLeft);
+  expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).toBeNull();
+  expect(desktopMenu()).toBeNull();
+});
+
+test("a secondary press that opens the desktop menu resets the icon positions when it moves to the item and releases there", () => {
+  renderDesktop();
+
+  const defaultLeft = dragFirstIconAway();
+
+  expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).not.toBeNull();
+
+  fireEvent.pointerDown(desktop(), SECONDARY_MOUSE_PRESS);
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  movePointerOver(cleanUpDesktopMenuItem());
+  releasePointerOver(cleanUpDesktopMenuItem(), { button: 2 });
+  runActivationFlash();
+
+  expect(icon(0).style.left).toBe(defaultLeft);
+  expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).toBeNull();
+});
+
+test("the desktop menu stays open without activating the item when the secondary press that opened it releases where it began", () => {
+  renderDesktop();
+  fireEvent.pointerDown(desktop(), SECONDARY_MOUSE_PRESS);
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  releasePointerOver(cleanUpDesktopMenuItem(), { button: 2, ...PRESS_POINT });
+  runActivationFlash();
+
+  expect(desktopMenu()).not.toBeNull();
+});
+
+test("a long press on the desktop plays the click sound and opens the desktop menu", () => {
+  renderDesktop();
+  longPressDesktop();
+
+  expect(screen.getByRole("menu", { name: "Desktop" })).toBeTruthy();
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test("a long press that opens the desktop menu plays the hover sound and highlights the item when it slides to it, and resets the icon positions when it releases there", () => {
+  renderDesktop();
+
+  const defaultLeft = dragFirstIconAway();
+
+  vi.mocked(playClickSound).mockClear();
+  longPressDesktop();
+  movePointerOver(cleanUpDesktopMenuItem());
+
+  expect(playHoverSound).toHaveBeenCalledOnce();
+  expect(desktopMenu()!.getAttribute("aria-activedescendant")).toBe(cleanUpDesktopMenuItem().id);
+
+  releasePointerOver(cleanUpDesktopMenuItem());
+
+  expect(playClickSound).toHaveBeenCalledTimes(2); // The menu opening and the item activating.
+
+  runActivationFlash();
+
+  expect(icon(0).style.left).toBe(defaultLeft);
+  expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).toBeNull();
+});
+
+test("the desktop menu stays open without activating the item when the long press that opened it releases where it began", () => {
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(cleanUpDesktopMenuItem(), PRESS_POINT);
+  runActivationFlash();
+
+  expect(desktopMenu()).not.toBeNull();
+});
+
+test("the desktop menu stays open when the long press that opened it releases outside the menu, and closes on the next press outside it", () => {
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+
+  expect(desktopMenu()).not.toBeNull();
+
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("the desktop menu closes when the secondary press that opened it releases outside the menu", () => {
+  renderDesktop();
+  fireEvent.pointerDown(desktop(), SECONDARY_MOUSE_PRESS);
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  releasePointerOver(document.body, { button: 2, clientX: 0, clientY: 0 });
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("a long press opens the desktop menu above the press point, and a secondary mouse press opens it below", () => {
+  renderDesktop();
+  longPressDesktop();
+
+  expect(desktopMenu()!.classList).toContain(menuStyles.abovePoint);
+
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent.pointerDown(desktop(), SECONDARY_MOUSE_PRESS);
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(desktopMenu()!.classList).not.toContain(menuStyles.abovePoint);
 });

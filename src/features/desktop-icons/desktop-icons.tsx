@@ -1,5 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
+import type { MenuItem } from "#/components/menu-items.ts";
+import { Menu } from "#/components/menu.tsx";
 import { ICON_LAYOUT } from "#/config/desktop.ts";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
@@ -11,6 +13,8 @@ import { createIconPositionsStore } from "#/lib/desktop-icons/positions.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
+import { useContextMenuPress } from "#/lib/hooks/use-context-menu-press.ts";
+import type { ContextMenuPress } from "#/lib/hooks/use-context-menu-press.ts";
 import { useElementSize } from "#/lib/hooks/use-element-size.ts";
 import { useIsFromPointerPress } from "#/lib/hooks/use-is-from-pointer-press.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -42,7 +46,15 @@ const ICONS: Array<Icon> = DESTINATION_ORDER.map((id) => ({
 const ICON_IDS = ICONS.map((iconDefinition) => iconDefinition.id);
 const ICONS_BY_ID = new Map(ICONS.map((iconDefinition) => [iconDefinition.id, iconDefinition]));
 
-const { useIconPositions, moveIcon, commitIconPositions } = createIconPositionsStore(ICON_IDS, ICON_LAYOUT);
+const { useIconPositions, moveIcon, commitIconPositions, resetIconPositions } = createIconPositionsStore(
+  ICON_IDS,
+  ICON_LAYOUT,
+);
+
+const DESKTOP_MENU_ITEMS: Array<MenuItem> = [{ kind: "action", label: "Clean Up Desktop", action: resetIconPositions }];
+
+const isEmptyDesktop = (target: EventTarget | null) =>
+  target instanceof HTMLElement && target.dataset.desktop !== undefined;
 
 export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: WindowId; from: Rect }) => void }) {
   const content = useWindowContent();
@@ -54,14 +66,20 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const flash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
+  const [desktopMenu, setDesktopMenu] = useState<{ press: ContextMenuPress; focusesFirstItem: boolean } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
 
-  // Only a press on the empty desktop clears the selection. A press on a window or on the menu bar leaves it standing.
+  useContextMenuPress({
+    isTarget: isEmptyDesktop,
+    onPress: (press) => setDesktopMenu({ press, focusesFirstItem: !isFromPointerPress() }),
+  });
+
+  // Only a press on the empty desktop clears the selection. A press on a window or on the menu bar does not clear it.
   // The desktop stops showing a selection when it does not hold keyboard focus.
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
-      if (event.target instanceof HTMLElement && event.target.dataset.desktop !== undefined) {
+      if (isEmptyDesktop(event.target)) {
         setSelectedIconId(null);
       }
     }
@@ -244,6 +262,20 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           onKeyDown={onIconKeyDown}
         />
       ))}
+      {desktopMenu && (
+        <Menu
+          items={DESKTOP_MENU_ITEMS}
+          opener={{
+            kind: "point",
+            position: desktopMenu.press.origin,
+            pointerType: desktopMenu.press.pointerType,
+            label: "Desktop",
+          }}
+          isPointerHeld={desktopMenu.press.isPointerHeld}
+          focusesFirstItem={desktopMenu.focusesFirstItem}
+          onClose={() => setDesktopMenu(null)}
+        />
+      )}
     </div>
   );
 }

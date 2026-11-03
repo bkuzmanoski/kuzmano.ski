@@ -1,0 +1,118 @@
+.pressPoint {
+  --menu-press-x: 0px; /* Set from JS. */
+  --menu-press-y: 0px; /* Set from JS. */
+
+  /* A touch that begins on a context menu and slides to an item activates it, so the browser must not claim the gesture
+   * for panning and cancel it. The press point holds the menu, so this rule covers the menu too. */
+  touch-action: none;
+
+  position: fixed; /* `position: fixed` makes the press point a stacking context, which confines the menu's own `z-index`. */
+  z-index: var(--layer-menu);
+  inset-block-start: var(--menu-press-y);
+  inset-inline-start: var(--menu-press-x);
+  anchor-name: --menu;
+  anchor-scope: --menu; /* Confines the name to the press point so a menu bar menu cannot anchor to it. */
+}
+
+.menu {
+  @mixin menu;
+
+  position: fixed;
+  z-index: var(--layer-menu);
+  position-anchor: --menu; /* Declared by a context menu's `.pressPoint` or by a titled menu's opener (for example, the title wrapper in `menu-bar.module.css`). */
+
+  /* The area extends from the anchor's start edges to the viewport's end edges. When the menu overflows, the browser
+   * shifts it back into the viewport, keeping it aligned with its anchor during viewport resizing. The menu does not
+   * use `position-try-fallbacks`, which keeps the last fallback that fit until it no longer fits. */
+  position-area: block-end span-inline-end;
+
+  width: max-content;
+  min-width: 220px;
+
+  /* Known issue: Firefox positions the menu at the viewport edges, ignoring these margins. */
+  margin-block-end: calc(var(--layout-safe-area-bottom) + var(--layout-viewport-margin));
+  margin-inline-end: calc(var(--layout-safe-area-right) + var(--layout-viewport-margin));
+
+  outline: none;
+
+  @supports not (anchor-name: --menu) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+}
+
+.abovePoint {
+  --menu-finger-clearance: 24px; /* Clears the pad of a fingertip, which extends past the point the browser reports. */
+
+  position-area: block-start span-all;
+  margin-block: calc(var(--layout-safe-area-top) + var(--layout-viewport-margin)) var(--menu-finger-clearance);
+  margin-inline: calc(var(--layout-safe-area-left) + var(--layout-viewport-margin))
+    calc(var(--layout-safe-area-right) + var(--layout-viewport-margin));
+
+  @supports not (anchor-name: --menu) {
+    top: auto;
+    bottom: 100%;
+    translate: -50% calc(-1 * var(--menu-finger-clearance));
+  }
+}
+
+.item {
+  @mixin menu-item;
+
+  gap: 24px;
+  justify-content: space-between;
+
+  width: 100%;
+  border: 0;
+
+  text-align: left;
+
+  background: transparent;
+
+  &.active {
+    @mixin highlight;
+  }
+
+  &.disabled {
+    color: var(--color-foreground-disabled);
+
+    @media (forced-colors: active) {
+      color: GrayText;
+    }
+  }
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+
+  & .modifierIcon {
+    transform: translateY(-1.5px);
+    display: inline-block;
+  }
+
+  @mixin without-fine-pointer {
+    display: none;
+  }
+}
+
+.menuItemIndicator {
+  width: 14px;
+  height: 14px;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+
+  height: 9px;
+  margin: 0;
+  border: 0;
+
+  &::before {
+    content: "";
+    flex: 1;
+    border-top: 1px dotted var(--color-highlight-background);
+  }
+}

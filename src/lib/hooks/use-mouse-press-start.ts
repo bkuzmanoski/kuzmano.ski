@@ -2,7 +2,7 @@ import { useRef } from "react";
 
 import { isSimulatedMouseDown } from "../press.ts";
 
-import type { MouseEvent, PointerEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
 /**
  * Identifies the `mousedown` that begins a mouse press, for a control that responds to a mouse press on `mousedown` and
@@ -18,12 +18,12 @@ export function useMousePressStart() {
   const isMouseDownExpectedRef = useRef(false);
   return {
     /** Returns whether `event` belongs to a mouse press, whose `mousedown` the browser dispatches next. */
-    recordPointerDown: (event: PointerEvent) => {
+    recordPointerDown: (event: ReactPointerEvent | PointerEvent) => {
       isMouseDownExpectedRef.current = event.pointerType === "mouse";
       return isMouseDownExpectedRef.current;
     },
     /** Returns whether `event` begins a mouse press. */
-    consumeMouseDown: (event: MouseEvent) => {
+    consumeMouseDown: (event: ReactMouseEvent | MouseEvent) => {
       const wasMouseDownExpected = isMouseDownExpectedRef.current;
 
       isMouseDownExpectedRef.current = false;

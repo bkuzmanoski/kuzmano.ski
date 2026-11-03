@@ -19,6 +19,14 @@ export interface MenuInteractionItem {
   isEnabled: boolean;
 }
 
+/** The press that opened a menu. */
+export interface OpeningPress {
+  /** Whether the press is still down when the menu opens, so its release can choose an item. */
+  isPointerHeld: boolean;
+  /** `null` when the press was not at a known point, which treats any release as having moved. */
+  origin: Position | null;
+}
+
 /**
  * The index of the item under a point, or -1 if the point is not over one. The point is hit-tested rather than read
  * from an event's target, because on iOS a tap near an item can be retargeted to it for the compatibility mouse events
@@ -43,30 +51,34 @@ export function useMenuInteraction({
   items,
   anchor,
   listRef,
-  isPointerHeld,
-  pressOrigin,
+  openingPress,
   initialFocusedItemIndex,
   isBrowserHandledRelease,
+  activatesOnNonPrimaryRelease = false,
   onActivate,
   onClose,
 }: {
   items: ReadonlyArray<MenuInteractionItem>;
   anchor: HTMLElement | null;
   listRef: RefObject<HTMLElement | null>;
-  isPointerHeld: boolean;
-  /** `null` when the press that opened the menu was not at a known point, which treats any release as having moved. */
-  pressOrigin: Position | null;
+  openingPress: OpeningPress;
   /** `-1` if no item should have focus when the menu is first opened. */
   initialFocusedItemIndex: number;
   /** Whether the browser handles a release on the item, preventing menu activation. */
   isBrowserHandledRelease?: (index: number, event: PointerEvent) => boolean;
+  /**
+   * Whether releasing any button activates an item instead of only the primary button. Context menus enable this so the
+   * user can release a secondary press held while opening the menu over an item.
+   */
+  activatesOnNonPrimaryRelease?: boolean;
   onActivate: (index: number) => void;
   onClose: () => void;
 }) {
   const flash = useActivationFlash<number>();
   const typeaheadTimer = useTimer();
   const [focusedItemIndex, setFocusedItemIndex] = useState(initialFocusedItemIndex);
-  const isStickyRef = useRef(!isPointerHeld);
+  const pressOrigin = openingPress.origin;
+  const isStickyRef = useRef(!openingPress.isPointerHeld);
   const isOpeningPressStationaryRef = useRef(pressOrigin !== null); // True until the opening press crosses the drag threshold or a new press begins.
   const focusedItemIndexRef = useRef(focusedItemIndex);
   const typeaheadRef = useRef("");
@@ -198,14 +210,14 @@ export function useMenuInteraction({
       return;
     }
 
-    if (!wasSticky && isOpeningPressStationaryRef.current && !hasMovedFromPressOrigin(event)) {
+    if (isOpeningPressStationaryRef.current && !hasMovedFromPressOrigin(event)) {
       return; // Ignore the release that opened the menu.
     }
 
     const index = indexAt(event.clientX, event.clientY);
 
     if (index >= 0) {
-      if (!isPrimaryPress(event) || isBrowserHandledRelease?.(index, event)) {
+      if ((!activatesOnNonPrimaryRelease && !isPrimaryPress(event)) || isBrowserHandledRelease?.(index, event)) {
         return;
       }
 

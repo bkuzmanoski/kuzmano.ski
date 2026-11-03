@@ -1,11 +1,14 @@
 import { memo, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-download.svg?react";
 import ExternalLinkMenuItemIndicator from "#/assets/images/menu-item-indicator-external-link.svg?react";
 import { cx } from "#/lib/class-names.ts";
+import type { Position } from "#/lib/geometry.ts";
 import { useIsMacOS } from "#/lib/hooks/use-is-macos.ts";
 import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.ts";
+import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./menu.module.css";
 
@@ -22,6 +25,12 @@ const ACCESSORY_DESCRIPTIONS: Record<MenuItemAccessory, string> = {
 };
 
 type MenuAction = Extract<MenuItem, { kind: "action" }>;
+
+export type MenuOpener =
+  /** A menu that drops down from its title, which names it and takes back the focus. */
+  | { kind: "title"; title: HTMLElement; labelledBy: string }
+  /** A context menu that opens at the point pressed. */
+  | { kind: "point"; position: Position; pointerType: string; label: string };
 
 const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
 const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
@@ -111,28 +120,29 @@ const MenuItemRow = memo(function MenuRow({
 
 export function Menu({
   items,
-  anchor,
-  labelledBy,
+  opener,
   isPointerHeld,
   focusesFirstItem,
   onOpenAdjacentMenu,
   onClose,
 }: {
   items: Array<MenuItem>;
-  anchor: HTMLElement | null;
-  labelledBy: string;
+  opener: MenuOpener;
   isPointerHeld: boolean;
   /**
    * `true` for a menu opened with the keyboard or a `click` that does not end a press on its title, so the arrow keys
    * move from an item rather than from the menu itself. Read only when the menu mounts.
    */
   focusesFirstItem: boolean;
-  onOpenAdjacentMenu: (direction: 1 | -1) => void;
+  /** `undefined` for a menu without adjacent menus. */
+  onOpenAdjacentMenu?: (direction: 1 | -1) => void;
   onClose: () => void;
 }) {
   const itemIdPrefix = useId();
   const isMacOS = useIsMacOS();
   const menuRef = useRef<HTMLDivElement>(null);
+  const isContextMenu = opener.kind === "point";
+  const opensAbovePoint = isContextMenu && opener.pointerType !== "mouse";
 
   const menuInteractionItems = items.map((item) => ({
     label: item.kind === "action" ? item.label : "",
@@ -141,12 +151,17 @@ export function Menu({
 
   const { focusedItemIndex, isHighlighted, onClick, onKeyDown } = useMenuInteraction({
     items: menuInteractionItems,
-    anchor,
+    anchor: isContextMenu ? null : opener.title,
     listRef: menuRef,
-    isPointerHeld,
-    pressOrigin: null, // The menu opens below its title rather than over the point pressed.
+    openingPress: {
+      // A menu above a finger or pen stays open when it lifts, as it lifts away from the menu, like a touch device's
+      // own context menus. A sticky menu still activates an item the press slides to and releases on.
+      isPointerHeld: isPointerHeld && !opensAbovePoint,
+      origin: isContextMenu ? opener.position : null, // A menu with a title opens below it rather than over the point pressed.
+    },
     initialFocusedItemIndex: focusesFirstItem ? menuInteractionItems.findIndex((item) => item.isEnabled) : -1,
     isBrowserHandledRelease: (index, event) => isLink(items[index]) && isBrowserHandledClick(event),
+    activatesOnNonPrimaryRelease: isContextMenu,
     onActivate: (index) => {
       const item = items[index];
 
@@ -163,19 +178,21 @@ export function Menu({
     onClose,
   });
 
-  return (
+  const menu = (
     <div
       ref={menuRef}
       role="menu"
       tabIndex={-1}
-      className={styles.menu}
-      aria-labelledby={labelledBy}
+      className={cx(styles.menu, opensAbovePoint && styles.abovePoint)}
+      aria-label={isContextMenu ? opener.label : undefined}
+      aria-labelledby={isContextMenu ? undefined : opener.labelledBy}
       aria-activedescendant={focusedItemIndex >= 0 ? `${itemIdPrefix}-${focusedItemIndex}` : undefined}
       onClick={onClick}
+      onContextMenu={isContextMenu ? (event) => event.preventDefault() : undefined}
       onKeyDown={(event) => {
         if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
           event.preventDefault();
-          onOpenAdjacentMenu(event.key === "ArrowRight" ? 1 : -1);
+          onOpenAdjacentMenu?.(event.key === "ArrowRight" ? 1 : -1);
         } else {
           onKeyDown(event);
         }
@@ -196,5 +213,21 @@ export function Menu({
         ),
       )}
     </div>
+  );
+
+  if (!isContextMenu) {
+    return menu;
+  }
+
+  const pressPointStyle: StyleWithVars = {
+    "--menu-press-x": `${opener.position.x}px`,
+    "--menu-press-y": `${opener.position.y}px`,
+  };
+
+  return createPortal(
+    <div className={styles.pressPoint} style={pressPointStyle}>
+      {menu}
+    </div>,
+    document.body,
   );
 }

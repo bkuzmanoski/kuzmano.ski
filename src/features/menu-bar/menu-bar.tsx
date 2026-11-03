@@ -5,6 +5,9 @@ import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effe
 import SoundEffectsOnMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-on.svg?react";
 import ToggleAppearanceLightDarkMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-light-dark.svg?react";
 import ToggleAppearanceSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-system.svg?react";
+import { joinedWithSeparators } from "#/components/menu-items.ts";
+import type { MenuItem } from "#/components/menu-items.ts";
+import { Menu } from "#/components/menu.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
@@ -37,10 +40,7 @@ import { DESTINATIONS } from "#/site/navigation.ts";
 import { isFeatureWindow, windowAlternateRepresentationsOf } from "#/site/windows.ts";
 
 import styles from "./menu-bar.module.css";
-import { joinedWithSeparators } from "./menu-items.ts";
-import { Menu } from "./menu.tsx";
 
-import type { MenuItem } from "./menu-items.ts";
 import type { ComponentProps, ComponentType, KeyboardEvent, ReactNode } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
@@ -437,9 +437,8 @@ export function MenuBar() {
             />
             {openMenu?.label === label && (
               <Menu
-                anchor={openMenu.anchor}
-                labelledBy={`${titleIdPrefix}-${menuIndex}`}
                 items={items}
+                opener={{ kind: "title", title: openMenu.anchor, labelledBy: `${titleIdPrefix}-${menuIndex}` }}
                 isPointerHeld={isPointerHeld}
                 focusesFirstItem={openMenu.focusesFirstItem}
                 onOpenAdjacentMenu={(direction) => openAdjacentMenu(label, direction)}

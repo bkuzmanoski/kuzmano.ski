@@ -42,6 +42,7 @@
   font-style: normal;
 
   font-display: swap;
+
   font-stretch: 75% 100%;
   src: url("./assets/fonts/Archivo-Variable.woff2") format("woff2");
 }
@@ -52,6 +53,7 @@
   font-style: italic;
 
   font-display: swap;
+
   font-stretch: 75% 100%;
   src: url("./assets/fonts/Archivo-Variable-Italic.woff2") format("woff2");
 }
@@ -122,7 +124,7 @@
   --layout-title-bar-inset-inline: 4px;
   --layout-scrollbar-width: 20px; /* Excludes the leading border. */
   --layout-scrollbar-gutter-width: calc(var(--layout-scrollbar-width) + 1px); /* Includes the leading border. */
-  --layout-tooltip-viewport-margin: 8px; /* The gap between a tooltip and the viewport edges. */
+  --layout-viewport-margin: 8px; /* The gap between a tooltip or menu and the viewport edges. */
   --layout-shadow-length: 3px;
 
   /* Transitions */

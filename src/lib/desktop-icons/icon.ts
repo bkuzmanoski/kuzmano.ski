@@ -29,7 +29,7 @@ export interface IconPlacement extends Position {
   id: string;
 }
 
-function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout): IconPositions {
+export function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout): IconPositions {
   const positions: IconPositions = {};
 
   ids.forEach((id, index) => {

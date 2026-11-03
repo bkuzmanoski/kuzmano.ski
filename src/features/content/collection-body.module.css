@@ -54,6 +54,10 @@
     var(--layout-gutter) - var(--collection-body-row-padding-block) - (1lh - var(--collection-body-icon-height)) / 2
   ); /* The icon, rather than the taller line box, sits a gutter from the column headings and the end of the list. */
 
+  /* On iOS, a long press selects nearby text and displays the loupe, even over empty space. Because the list fills the
+   * pane, this also applies to the blank area below its rows. */
+  user-select: none;
+  min-height: 100cqh;
   padding-inline-end: var(--scroll-pane-reserved-scrollbar-width, 0);
 }
 
@@ -78,7 +82,6 @@
 .listItem {
   touch-action: manipulation; /* A double tap opens the entry, so the browser must not claim the gesture for zooming. */
   cursor: default;
-  user-select: none;
 
   /* Offset the scroll pane's `scroll-padding-block`, so scrolling a row into view places its edge at the pane's
    * edge. */
@@ -88,6 +91,8 @@
   position: relative;
 
   padding-block: var(--collection-body-row-padding-block);
+
+  -webkit-touch-callout: default;
 
   &:focus .title {
     @mixin highlight;
@@ -187,5 +192,9 @@
 @media print {
   .columnHeadings {
     --collection-body-scrollbar-width: 0px;
+  }
+
+  .listView {
+    min-height: 0; /* The scroll pane is no longer a size container, so `cqh` would resolve relative to the page. */
   }
 }

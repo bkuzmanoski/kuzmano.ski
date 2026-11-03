@@ -17,6 +17,11 @@
 @define-mixin menu {
   @mixin panel;
 
+  /* A long press can end with the finger over a context menu (e.g., near the top of the viewport, where the menu has no
+   * room above the finger), and iOS then selects nearby text and displays the loupe. `menu-item` sets it on the items,
+   * but the finger can land on the menu's padding or border. */
+  user-select: none;
+
   padding: 4px 0;
   border-color: var(
     --color-highlight-background /* Matches the background of an open menu title in `menu-bar.module.css`. */
@@ -276,6 +281,8 @@
 
 /* Removed from view but retained in the accessibility tree. */
 @define-mixin visually-hidden {
+  user-select: none;
+
   position: absolute;
 
   overflow: hidden;

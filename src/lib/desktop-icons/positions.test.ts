@@ -43,3 +43,25 @@ describe("commitIconPositions", () => {
     expect(savedPositions.first).toEqual({ top: 320, right: 320 });
   });
 });
+
+describe("resetIconPositions", () => {
+  test("removes the saved positions from local storage, and makes `useIconPositions` return the default positions", () => {
+    const { useIconPositions, moveIcon, commitIconPositions, resetIconPositions } = createIconPositionsStore(
+      ICON_IDS,
+      ICON_LAYOUT,
+    );
+    const { result } = renderHook(() => useIconPositions());
+    const defaultFirstPosition = result.current!.first;
+
+    act(() => moveIcon("first", { top: 320, right: 320 }));
+    commitIconPositions();
+
+    expect(result.current!.first).toEqual({ top: 320, right: 320 });
+    expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).not.toBeNull();
+
+    act(() => resetIconPositions());
+
+    expect(result.current!.first).toEqual(defaultFirstPosition);
+    expect(localStorage.getItem(ICON_POSITIONS_STORAGE_KEY)).toBeNull();
+  });
+});

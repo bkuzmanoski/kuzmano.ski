@@ -3,6 +3,14 @@
    * stays below this value. A child set to it stacks above all of them. */
   --window-layer-z-above-windows: 1000;
 
+  /* Known issue: Chrome treats a touch sliding from the desktop toward its context menu as a pan and cancels it. On
+   * Android, this causes the menu item to be tapped instead of activated on release. Setting `touch-action` here would
+   * preserve the gesture, but prevent one-finger panning over the desktop and window chrome on a zoomed page. */
+
+  /* iOS displays the text-selection loupe during a long press on the desktop, even though the desktop contains no text.
+   * Children restore `user-select: text` so window content does not inherit `none` from this element. */
+  user-select: none;
+
   position: relative;
   z-index: var(--layer-desktop);
 
@@ -10,6 +18,10 @@
 
   min-height: 0;
   margin: 0 var(--layout-safe-area-right) var(--layout-safe-area-bottom) var(--layout-safe-area-left);
+
+  & > * {
+    user-select: text;
+  }
 }
 
 @media print {
