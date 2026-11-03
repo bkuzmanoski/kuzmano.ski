@@ -1,17 +1,10 @@
 import { clamp } from "../math.ts";
 
+import { thresholdAt } from "./bayer-matrix.ts";
+
 import type { Rgb } from "../color.ts";
 import type { Rect } from "../geometry.ts";
 
-/** In row-major order. */
-const BAYER_MATRIX_8X8 = [
-  0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54,
-  22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29,
-  53, 21,
-] as const;
-
-const BAYER_MATRIX_SIZE = 8;
-const BAYER_LEVEL_COUNT = BAYER_MATRIX_SIZE * BAYER_MATRIX_SIZE;
 const POINTER_HIGHLIGHT_REACH_STANDARD_DEVIATIONS = 3;
 
 export interface DitherField {
@@ -27,10 +20,6 @@ export interface PointerHighlight {
   standardDeviation: number;
   strength: number;
 }
-
-export const thresholdAt = (x: number, y: number): number =>
-  ((BAYER_MATRIX_8X8[(y % BAYER_MATRIX_SIZE) * BAYER_MATRIX_SIZE + (x % BAYER_MATRIX_SIZE)] ?? 0) + 0.5) /
-  BAYER_LEVEL_COUNT;
 
 export function pointerHighlightRegionIn(ditherField: DitherField, pointerHighlight: PointerHighlight): Rect | null {
   if (pointerHighlight.strength <= 0) {

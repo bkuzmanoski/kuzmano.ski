@@ -16,6 +16,7 @@ Object.defineProperty(Document.prototype, "fonts", {
   value: { ready: Promise.resolve(), load: () => Promise.resolve([]) },
 });
 Document.prototype.elementFromPoint = () => null;
+Element.prototype.getAnimations = () => [];
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.setPointerCapture = vi.fn();
 Element.prototype.releasePointerCapture = vi.fn();

@@ -32,6 +32,8 @@ const REVEAL_END_MAX_PROPERTY = "--contribution-graph-reveal-end-max";
 /** The condition of the `@supports` rule that reveals the weeks on scroll. */
 const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block";
 
+type RevealTimeline = "document" | "view";
+
 const doesOverflow = (scrollContainer: HTMLElement | null) =>
   scrollContainer !== null && scrollContainer.scrollWidth > scrollContainer.clientWidth;
 
@@ -60,7 +62,7 @@ export function ContributionGraph() {
   const monthFormat = useDateFormat(MONTH_FORMAT);
   const totalFormat = useNumberFormat(SITE_LOCALE);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [isFigureInView, setIsFigureInView] = useState(false);
+  const [revealTimeline, setRevealTimeline] = useState<RevealTimeline>();
   const [isOverflowing, setIsOverflowing] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const figureRef = useRef<HTMLElement>(null);
@@ -74,8 +76,10 @@ export function ContributionGraph() {
   useLayoutEffect(() => {
     const figure = figureRef.current;
 
+    // Measure before assigning a timeline as Safari transfers view-timeline animation progress to the document
+    // timeline, revealing every week at once.
     if (!isCalendarPending && figure) {
-      setIsFigureInView(visibleFractionOf(figure) >= REVEAL_START_VISIBLE_FRACTION);
+      setRevealTimeline(visibleFractionOf(figure) >= REVEAL_START_VISIBLE_FRACTION ? "document" : "view");
     }
   }, [isCalendarPending]);
 
@@ -116,7 +120,6 @@ export function ContributionGraph() {
   const weekCount = contributionCalendar?.weeks.length ?? PENDING_CALENDAR_WEEK_COUNT;
   const graphStyle: StyleWithVars = { "--contribution-graph-reveal-start": `${REVEAL_START_VISIBLE_FRACTION * 100}%` };
   const plotStyle: StyleWithVars = { "--contribution-graph-week-count": weekCount };
-  const revealTimeline = contributionCalendar && (isFigureInView ? "document" : "view");
   const busiestCount = contributionCalendar ? busiestCountIn(contributionCalendar.weeks) : 0;
   const monthLabels = contributionCalendar ? monthLabelsFor(contributionCalendar.weeks, monthFormat) : [];
 

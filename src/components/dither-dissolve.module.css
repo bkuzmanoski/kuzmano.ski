@@ -1,0 +1,39 @@
+@mixin dither-dissolve-keyframes;
+
+/* `--dither-dissolve-duration`, `--dither-dissolve-stagger`, `--dither-dissolve-delay`, and
+ * `--dither-dissolve-pixel-dots` custom properties can be set in an entry's stylesheet or a parent's `style`
+ * attribute. */
+.dissolve {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    @mixin dither-dot;
+
+    mask-clip: no-clip; /* Prevents the mask from clipping a glyph that overflows its unit's box. */
+    mask-size: calc(
+      8 * var(--dither-dissolve-pixel-dots, 1) * var(--dither-dot)
+    ); /* The tile is `BAYER_MATRIX_SIZE` dither pixels wide. */
+
+    /* Uses `step-end` to avoid cross-fading consecutive mask images. Fills backward only so completed units render
+     * unmasked; Safari may retain the final mask when the animation fills forward. */
+    animation: dither-dissolve var(--dither-dissolve-duration, 600ms) step-end backwards;
+    animation-delay: calc(
+      var(--dither-dissolve-delay, 0ms) + var(--dither-dissolve-unit-index, 0) *
+        var(--dither-dissolve-stagger, var(--dither-dissolve-default-stagger, 0ms))
+    );
+  }
+}
+
+.characterUnits {
+  --dither-dissolve-default-stagger: 28ms;
+}
+
+.wordUnits {
+  --dither-dissolve-default-stagger: 90ms;
+}
+
+.accessibleText {
+  @mixin visually-hidden;
+
+  &::before {
+    content: attr(data-text);
+  }
+}

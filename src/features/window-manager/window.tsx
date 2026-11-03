@@ -1,4 +1,4 @@
-import { useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 
 import ActiveWindowControl from "#/assets/images/window-control-active.svg?react";
 import CloseWindowControl from "#/assets/images/window-control-close.svg?react";
@@ -18,6 +18,7 @@ import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restor
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress, swallowNextPress } from "#/lib/press.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
+import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
@@ -175,6 +176,7 @@ export function Window({
   const inactiveDescriptionId = useId();
   const fallbackContentId = useId();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
+  const [isAwaitingStartupReveal, setIsAwaitingStartupReveal] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isResizePressed, setIsResizePressed] = useState(false);
   const [keyDownHandlers] = useState(createWindowKeyDownHandlers);
@@ -203,6 +205,38 @@ export function Window({
 
     return () => observer.disconnect();
   }, [fitsContentHeight]);
+
+  // A window that rendered before the startup sequence completed waits for the opacity transition that reveals it after
+  // the menu bar and icons (see `.ready` in `window.module.css`). Under reduced motion the transition does not run, so
+  // the wait ends at once.
+  if (!isStartupSequenceComplete && !isAwaitingStartupReveal) {
+    setIsAwaitingStartupReveal(true);
+  }
+
+  useEffect(() => {
+    if (!isStartupSequenceComplete || !isAwaitingStartupReveal) {
+      return;
+    }
+
+    const revealTransition = windowRef.current
+      ?.getAnimations()
+      .find((animation) => "transitionProperty" in animation && animation.transitionProperty === "opacity");
+    let isCurrent = true;
+
+    void (revealTransition?.finished ?? Promise.resolve())
+      .catch(() => undefined) // A canceled transition also ends the wait.
+      .then(() => {
+        if (isCurrent) {
+          setIsAwaitingStartupReveal(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [isStartupSequenceComplete, isAwaitingStartupReveal]);
+
+  const isRevealed = isStartupSequenceComplete && !isAwaitingStartupReveal && !hidden;
 
   // The desktop is inert until the startup sequence completes, and focusing an element in inert content has no effect,
   // so the focused window takes the focus only once the startup sequence has completed.
@@ -323,6 +357,7 @@ export function Window({
         hidden && styles.hidden,
         unplaced && styles.unplaced,
         isStartupSequenceComplete && styles.ready,
+        !isRevealed && styles.concealed,
       )}
       aria-label={title} // Rather than `aria-labelledby` referencing the title, which Chromium ignores inside inert content.
       aria-describedby={focused ? undefined : inactiveDescriptionId}
@@ -404,7 +439,9 @@ export function Window({
           resizeControl={resizeControl}
           fitsContentHeight={fitsContentHeight}
         >
-          <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
+          <WindowRevealContext value={isRevealed}>
+            <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
+          </WindowRevealContext>
         </ScrollPane>
       </div>
     </section>

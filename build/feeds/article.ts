@@ -61,8 +61,8 @@ const linkParagraph = (value: string, href: string): Element => ({
  * Components can use the following attributes to control how the feed renders their markup:
  *
  * - `data-feed-omit` removes the element entirely
- * - `data-feed-text` replaces the element with a paragraph containing component-provided text; for links, the paragraph
- *   text links to the element's `href`
+ * - `data-feed-text` replaces the element with a paragraph containing component-provided text, which links to the
+ *   element's `href` for a link. A `<span>` becomes the text alone.
  */
 function replaceUIMarkup(article: Element) {
   visit(article, "element", (element, index, parent) => {
@@ -76,6 +76,11 @@ function replaceUIMarkup(article: Element) {
     }
 
     const fallbackText = element.properties.dataFeedText;
+
+    if (typeof fallbackText === "string" && element.tagName === "span") {
+      parent.children[index] = { type: "text", value: fallbackText };
+      return CONTINUE;
+    }
 
     if (typeof fallbackText === "string") {
       const { href } = element.properties;

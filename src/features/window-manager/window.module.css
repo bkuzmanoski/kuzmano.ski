@@ -75,6 +75,14 @@
   &.hidden {
     visibility: hidden;
   }
+
+  /* Pauses CSS animations in the content until the window appears (i.e., after the startup sequence or the zoom rect).
+   * Before hydration, the startup sequence overlay pauses them in the server-rendered window, and `concealed` takes
+   * over from hydration. */
+  &.concealed *,
+  :global(html[data-startup-sequence-overlay]) & * {
+    animation-play-state: paused;
+  }
 }
 
 /* Wraps the title bar and pane only so an inactive window can make them inert. */

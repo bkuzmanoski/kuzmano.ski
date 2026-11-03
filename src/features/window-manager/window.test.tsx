@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { cloneElement } from "react";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
@@ -9,6 +9,7 @@ import { isMacOS, isTouchOnly } from "#/lib/device.ts";
 import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { clamp } from "#/lib/math.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
+import { useIsWindowRevealed } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { nextAnimationFrame } from "#/test-utils/timers.ts";
@@ -18,6 +19,8 @@ import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window.tsx";
 
 import type { WindowDrag } from "./window.tsx";
 import type { KeyboardEvent, ReactNode } from "react";
+
+const startupSequence = vi.hoisted(() => ({ isComplete: true }));
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
@@ -29,7 +32,7 @@ vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
 );
 vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof StartupSequenceLifecycle>()),
-  useIsStartupSequenceComplete: () => true,
+  useIsStartupSequenceComplete: () => startupSequence.isComplete,
 }));
 vi.mock("#/lib/device.ts", () => ({ isMacOS: vi.fn(), isTouchOnly: vi.fn() }));
 
@@ -69,6 +72,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  startupSequence.isComplete = true;
   vi.mocked(isMacOS).mockReset();
   vi.mocked(isTouchOnly).mockReset();
 });
@@ -159,6 +163,10 @@ const scrollPane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const scrollArrows = () => [screen.getByLabelText("Scroll up"), screen.getByLabelText("Scroll down")];
 const scrollArrowVisibilities = () => scrollArrows().map((arrow) => getComputedStyle(arrow).visibility);
 const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
+
+function RevealProbe() {
+  return <p>{useIsWindowRevealed() ? "Revealed" : "Concealed"}</p>;
+}
 
 function ContentClaimingKey({ claimedKey }: { claimedKey: string }) {
   useWindowKeyDown((event: KeyboardEvent) => {
@@ -869,4 +877,57 @@ test("a press on a title bar control plays the press sound once", () => {
   fireEvent.click(close, { detail: 1 });
 
   expect(playClickSound).toHaveBeenCalledTimes(1);
+});
+
+test("the content reads `useIsWindowRevealed` as `false` while the window is hidden and as `true` once it is not", () => {
+  const { rerender } = render(cloneElement(windowShowing("a", <RevealProbe />), { hidden: true }));
+
+  expect(screen.getByText("Concealed")).toBeDefined();
+
+  rerender(windowShowing("a", <RevealProbe />));
+
+  expect(screen.getByText("Revealed")).toBeDefined();
+});
+
+test("the content of a window rendered before the startup sequence completes reads `useIsWindowRevealed` as `false` until the window's opacity transition finishes", async () => {
+  let finishRevealTransition: () => void = () => undefined;
+
+  const finished = new Promise<void>((resolve) => {
+    finishRevealTransition = resolve;
+  });
+
+  vi.spyOn(Element.prototype, "getAnimations").mockReturnValue([
+    { transitionProperty: "opacity", finished } as unknown as Animation,
+  ]);
+
+  startupSequence.isComplete = false;
+
+  const { rerender } = render(windowShowing("a", <RevealProbe />));
+
+  startupSequence.isComplete = true;
+
+  rerender(windowShowing("a", <RevealProbe />));
+
+  expect(screen.getByText("Concealed")).toBeDefined();
+
+  await act(async () => {
+    finishRevealTransition();
+    await finished;
+  });
+
+  expect(screen.getByText("Revealed")).toBeDefined();
+});
+
+test("the content of a window rendered before the startup sequence completes reads `useIsWindowRevealed` as `true` once it completes when the window has no opacity transition", async () => {
+  startupSequence.isComplete = false;
+
+  const { rerender } = render(windowShowing("a", <RevealProbe />));
+
+  expect(screen.getByText("Concealed")).toBeDefined();
+
+  startupSequence.isComplete = true;
+
+  rerender(windowShowing("a", <RevealProbe />));
+
+  expect(await screen.findByText("Revealed")).toBeDefined();
 });

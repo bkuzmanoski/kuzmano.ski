@@ -23,10 +23,13 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   },
 }));
 
-/** At a dither cell of 2px and a device pixel ratio of 1, the component is 1000x400 dither pixels. */
+/** At a device pixel ratio of 1 a dither pixel is 1px, so the component is 2000x800 dither pixels. */
 const COMPONENT_WIDTH_PX = 2_000;
 const COMPONENT_HEIGHT_PX = 800;
-const DITHER_FIELD_WIDTH_DITHER_PIXELS = 1_000;
+const DITHER_FIELD_WIDTH_DITHER_PIXELS = 2_000;
+
+/** At a device pixel ratio of 0.5 a dither dot rounds up to one device pixel (2 CSS pixels). */
+const ZOOMED_OUT_DEVICE_PIXEL_RATIO = 0.5;
 
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const mediaQueryListeners = new Set<() => void>();
@@ -209,7 +212,7 @@ test("a resize that changes the width of the dither field puts the whole dither 
   putImageData.mockClear();
   resizeContainer(elements.container, 1_000, COMPONENT_HEIGHT_PX);
 
-  expect(elements.canvas.width).toBe(500);
+  expect(elements.canvas.width).toBe(1_000);
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(putImageData.mock.lastCall).toHaveLength(3);
 });
@@ -218,6 +221,7 @@ test("a resize that leaves the size of the dither field in dither pixels unchang
   const elements = containerElements();
 
   startAnimation(elements);
+  changeDevicePixelRatio(ZOOMED_OUT_DEVICE_PIXEL_RATIO);
   putImageData.mockClear();
   resizeContainer(elements.container, COMPONENT_WIDTH_PX + 1, COMPONENT_HEIGHT_PX);
 
@@ -228,6 +232,7 @@ test("a resize to a size between whole dither pixels sizes the canvas to the who
   const elements = containerElements();
 
   startAnimation(elements);
+  changeDevicePixelRatio(ZOOMED_OUT_DEVICE_PIXEL_RATIO);
   resizeContainer(elements.container, 1_003, 803);
 
   expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual(["1002px", "802px"]);
@@ -238,9 +243,9 @@ test("a change to the device pixel ratio that changes the size of a dither pixel
 
   startAnimation(elements);
   putImageData.mockClear();
-  changeDevicePixelRatio(1.1); // At a ratio of 1.1, a 2px dither cell rounds to 2 device pixels (2 / 1.1 CSS pixels).
+  changeDevicePixelRatio(1.1); // At a ratio of 1.1, a dither dot rounds to 1 device pixel (1 / 1.1 CSS pixels).
 
-  expect(elements.canvas.width).toBe(1_100);
+  expect(elements.canvas.width).toBe(2_200);
   expect(putImageData).toHaveBeenCalledTimes(1);
 });
 
@@ -293,9 +298,9 @@ test("scrolling the container under a stationary mouse pointer moves the pointer
   elements.container.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 50 dither pixels down the container. The region put on the canvas is rounded
+  // Scrolling by 100px moves the pointer 100 dither pixels down the container. The region put on the canvas is rounded
   // out to whole pixels, so its center can differ from the pointer highlight's by one.
-  expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 50)).toBeLessThanOrEqual(1);
+  expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 100)).toBeLessThanOrEqual(1);
 });
 
 test("moving a touch pointer over the container does not request an animation frame once the reveal has finished", () => {

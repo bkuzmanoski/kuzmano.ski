@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed.ts";
+
 import { DitherBackdrop } from "./dither-backdrop.tsx";
 
 beforeEach(() => {
@@ -28,4 +30,20 @@ test("the backdrop passes its other props to its container, and adds the `classN
   expect(backdropContainer?.getAttribute("data-content-span")).toBe("pane");
   expect(backdropContainer?.classList).toContain("fixture-class");
   expect(backdropContainer?.classList.length).toBeGreaterThan(1);
+});
+
+test("the backdrop starts its animation only once the window that contains it is revealed", () => {
+  const backdropInWindow = (isWindowRevealed: boolean) => (
+    <WindowRevealContext value={isWindowRevealed}>
+      <DitherBackdrop>Fixture content.</DitherBackdrop>
+    </WindowRevealContext>
+  );
+  const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  const { rerender } = render(backdropInWindow(false));
+
+  expect(getContext).not.toHaveBeenCalled();
+
+  rerender(backdropInWindow(true));
+
+  expect(getContext).toHaveBeenCalled();
 });

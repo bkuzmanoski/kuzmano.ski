@@ -127,6 +127,11 @@ describe("articleContentOf", () => {
     expect(body).toBe('<p>A body.</p><p><a href="https://example.com/destination">A link.</a></p>');
   });
 
+  test("replaces a `<span>` that has a `data-feed-text` attribute with the attribute's value", () => {
+    const body = articleContentOf(articleDocument('<p>A <span data-feed-text="body"></span>.</p>'), ENTRY_URL);
+    expect(body).toBe("<p>A body.</p>");
+  });
+
   test("moves each footnote into an `<li>` with its ID, in an `<ol>` after an `<hr>` at the end of the article, without its rail label", () => {
     const body = articleContentOf(
       articleDocument(`<p>A sentence.<sup><a href="#fn-1" id="fnref-1" aria-label="Footnote 1">1</a></sup></p>

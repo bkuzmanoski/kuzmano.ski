@@ -187,12 +187,7 @@ Standard HTML routes also serve their Markdown representation when a request's
 Each collection and the site as a whole are syndicated via Atom feeds.
 
 Components can use the `data-feed-omit` attribute to exclude their markup from
-feeds, or `data-feed-text` to replace it with a paragraph of alternative text,
-which links to the element's `href` when the element is a link.
-
-Use `data-feed-omit` on a component to exclude its markup from feeds. Use
-`data-feed-text` to replace it with a paragraph of text. For links, the latter
-becomes an `<a>` that links to the element's `href`.
+feeds, or `data-feed-text` to replace the element with alternative text.
 
 ## APIs
 

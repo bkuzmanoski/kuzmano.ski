@@ -1,5 +1,6 @@
 import { rgbOfCssColor } from "#/lib/color.ts";
 import { subscribeToDevicePixelRatioChange } from "#/lib/device.ts";
+import { cssPixelsPerDitherDot } from "#/lib/dither/dither-dot.ts";
 import { dirtyRegionBetween, renderDitherField, revealProgressAt } from "#/lib/dither/dither-field.ts";
 import type { DitherField, PointerHighlight } from "#/lib/dither/dither-field.ts";
 import { getPrefersReducedMotion, subscribeToPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -19,7 +20,7 @@ interface DitherFieldLayout {
 export const BACKDROP_TOP_DENSITY = 0.5;
 
 const BACKDROP_FALLOFF_EXPONENT = 1.5;
-const DITHER_CELL_SIZE_PX = 2;
+const DITHER_PIXEL_SIZE_DOTS = 1;
 const REVEAL_DURATION_MS = 1_400;
 const REVEAL_STEP_COUNT = 14;
 const POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX = 90;
@@ -67,14 +68,12 @@ export function startDitherBackdropAnimation({ container, canvas }: DitherBackdr
   const pointerHighlight: PointerHighlight = {
     x: 0,
     y: 0,
-    standardDeviation: POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX / DITHER_CELL_SIZE_PX,
+    standardDeviation: 0, // Set by `composeDitherField` in dither pixels.
     strength: 0,
   };
 
   const composeDitherField = (): boolean => {
-    const devicePixelsPerDitherPixel = Math.max(1, Math.round(DITHER_CELL_SIZE_PX * devicePixelRatio)); // Round each dither cell to whole device pixels.
-    const cssPixelsPerDitherPixel = devicePixelsPerDitherPixel / devicePixelRatio;
-    // Rounded down to whole dither pixels, so the canvas never extends past the container into its margin.
+    const cssPixelsPerDitherPixel = DITHER_PIXEL_SIZE_DOTS * cssPixelsPerDitherDot(devicePixelRatio);
     const layout: DitherFieldLayout = {
       width: Math.max(1, Math.floor(container.clientWidth / cssPixelsPerDitherPixel)),
       height: Math.max(1, Math.floor(container.clientHeight / cssPixelsPerDitherPixel)),

@@ -77,13 +77,19 @@ const cellsIn = (container: HTMLElement) => [
 const plotWeekCountIn = (container: HTMLElement) =>
   container.querySelector<HTMLElement>(`.${styles.plot}`)?.style.getPropertyValue("--contribution-graph-week-count");
 
-function placeFigure(topPx: number) {
+function placeFigure(topPx: number, onMeasureFigure?: (figure: Element) => void) {
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
     if (this.matches(SCROLL_PANE_VIEWPORT_SELECTOR)) {
       return new DOMRect(0, 0, 800, SCROLL_PANE_HEIGHT_PX);
     }
 
-    return this.tagName === "FIGURE" ? new DOMRect(0, topPx, 800, FIGURE_HEIGHT_PX) : new DOMRect();
+    if (this.tagName !== "FIGURE") {
+      return new DOMRect();
+    }
+
+    onMeasureFigure?.(this);
+
+    return new DOMRect(0, topPx, 800, FIGURE_HEIGHT_PX);
   });
 }
 
@@ -373,6 +379,20 @@ describe("ContributionGraph", () => {
     const { container } = renderInRouterContext(<ContributionGraph />);
 
     expect(container.querySelector("figure")?.hasAttribute("data-reveal-timeline")).toBe(false);
+  });
+
+  test("leaves the `data-reveal-timeline` attribute unset while it measures the figure as the calendar arrives", () => {
+    useContributionCalendar.mockReturnValue(undefined);
+
+    const { rerender } = renderInRouterContext(contributionGraphInScrollPane());
+
+    const revealTimelinesAtMeasurement: Array<string | null> = [];
+
+    placeFigure(0, (figure) => revealTimelinesAtMeasurement.push(figure.getAttribute("data-reveal-timeline")));
+    useContributionCalendar.mockReturnValue(contributionCalendar());
+    rerender(contributionGraphInScrollPane());
+
+    expect(revealTimelinesAtMeasurement).toEqual([null]);
   });
 
   test("sets the `data-reveal-timeline` attribute to `view` when less than 20% of the figure is in view as the calendar arrives", () => {
