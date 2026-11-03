@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -341,4 +341,50 @@ test("the scrolling that follows the jump from a track press plays scroll sounds
 
   expect(viewport.scrollTop).toBe(0);
   expect(playScrollDetentSound).toHaveBeenCalledTimes(1);
+});
+
+test("a touch on the scrollbar hides the overflow of the viewport until the touch ends", () => {
+  const { viewport, thumb } = renderScrollbar();
+
+  fireEvent.pointerDown(thumb, { button: 0, pointerType: "touch" });
+
+  expect(viewport.style.overflowY).toBe("hidden");
+
+  fireEvent.pointerUp(document.body, { pointerType: "touch" });
+
+  expect(viewport.style.overflowY).toBe("");
+});
+
+test("a canceled touch on the scrollbar restores the overflow of the viewport", () => {
+  const { viewport, scrollDownButton } = renderScrollbar();
+
+  fireEvent.pointerDown(scrollDownButton, { button: 0, pointerType: "touch" });
+  fireEvent.pointerCancel(scrollDownButton, { pointerType: "touch" });
+
+  expect(viewport.style.overflowY).toBe("");
+});
+
+test("a mouse press on the scrollbar does not hide the overflow of the viewport", () => {
+  const { viewport, thumb } = renderScrollbar();
+
+  fireEvent.pointerDown(thumb, { button: 0, pointerType: "mouse" });
+
+  expect(viewport.style.overflowY).toBe("");
+});
+
+test("a touch on the scrollbar still scrolls the viewport with its overflow hidden", () => {
+  const { viewport, track } = renderScrollbar();
+
+  fireEvent.pointerDown(track, { button: 0, pointerType: "touch", clientY: thumbCenterAt(0.5) });
+
+  expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX / 2);
+});
+
+test("unmounting the scrollbar during a touch restores the overflow of the viewport", () => {
+  const { viewport, thumb } = renderScrollbar();
+
+  fireEvent.pointerDown(thumb, { button: 0, pointerType: "touch" });
+  cleanup();
+
+  expect(viewport.style.overflowY).toBe("");
 });

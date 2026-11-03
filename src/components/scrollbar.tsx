@@ -15,7 +15,7 @@ import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./scrollbar.module.css";
 
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode, PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 /** The distance one press on a scrollbar arrow scrolls the viewport. */
 export const ARROW_STEP_PX = 40;
@@ -121,6 +121,38 @@ export function Scrollbar({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
+  const viewportHoldRef = useRef<{ viewport: HTMLElement; controller: AbortController } | null>(null);
+
+  function releaseViewport() {
+    const viewportHold = viewportHoldRef.current;
+
+    viewportHoldRef.current = null;
+    viewportHold?.controller.abort();
+    viewportHold?.viewport.style.removeProperty("overflow-y");
+  }
+
+  // On iOS, momentum scrolling can continue after touching the scrollbar and overwrite its `scrollTop` updates.
+  // Temporarily hiding the viewport's overflow stops that momentum without preventing scrollbar interaction.
+  function holdViewport(event: ReactPointerEvent) {
+    const viewport = viewportRef.current;
+
+    if (event.pointerType !== "touch" || !viewport) {
+      return; // Keep overflow visible for mouse input as hiding it would conceal classic scrollbars and reflow the content.
+    }
+
+    releaseViewport();
+
+    const controller = new AbortController();
+
+    viewportHoldRef.current = { viewport, controller };
+    viewport.style.overflowY = "hidden";
+
+    window.addEventListener("pointerup", releaseViewport, { signal: controller.signal });
+    window.addEventListener("pointercancel", releaseViewport, { signal: controller.signal });
+  }
+
+  // The scrollbar can unmount during a touch, and the viewport can outlive it.
+  useEffect(() => () => releaseViewport(), []);
 
   const hasOverflow = metrics.scrollHeight > metrics.clientHeight + 1;
   const scrollRange = metrics.scrollHeight - metrics.clientHeight;
@@ -200,7 +232,11 @@ export function Scrollbar({
   const isCollapsed = !hasOverflow && !resizeControl;
 
   return (
-    <div className={cx(styles.scrollbar, className)} data-collapsed={isCollapsed || undefined}>
+    <div
+      className={cx(styles.scrollbar, className)}
+      data-collapsed={isCollapsed || undefined}
+      onPointerDownCapture={holdViewport}
+    >
       <ScrollArrow direction="up" hidden={!hasOverflow} onStep={(isRepeat) => step(-ARROW_STEP_PX, isRepeat)} />
       <div
         ref={trackRef}
