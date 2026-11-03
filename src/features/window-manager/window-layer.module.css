@@ -19,11 +19,10 @@
   min-height: 0;
   margin: 0 var(--layout-safe-area-right) var(--layout-safe-area-bottom) var(--layout-safe-area-left);
 
-  /* Safari 26+ uses the background of a fixed or sticky element near the viewport edge to fill the inset behind its
-   * toolbar. This includes elements sticky within a window (such as the chart in
-   * `/src/features/experience/career-timeline.module.css`) and persists after they scroll away. Safari's hit test
-   * ignores `pointer-events` and non-fixed, non-sticky elements, so this fixed cover absorbs the hit without receiving
-   * touches. Safari then resolves the hit to this non-fixed, non-sticky host instead. */
+  /* Safari 26+ uses the background of fixed or sticky elements near the viewport edge to fill the inset behind its
+   * toolbar (e.g., the chart in `/src/features/experience/career-timeline.module.css`). That background remains after
+   * the element scrolls out of view. Safari's hit testing ignores `pointer-events` and non-fixed, non-sticky elements,
+   * so this fixed cover absorbs the hit without receiving touches and resolves it to this host instead. */
   &::after {
     pointer-events: none;
     content: "";
