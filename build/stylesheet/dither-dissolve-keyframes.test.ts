@@ -2,18 +2,21 @@ import postcss from "postcss";
 import postcssMixins from "postcss-mixins";
 import { describe, expect, test } from "vitest";
 
+import { BAYER_MATRIX_SIZE } from "#/lib/dither/bayer-matrix.ts";
 import { renderDitherField } from "#/lib/dither/dither-field.ts";
 
-import { ditherDissolveKeyframes } from "./dither-dissolve-keyframes.ts";
+import {
+  DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME,
+  DITHER_DISSOLVE_STEP_COUNT,
+  ditherDissolveKeyframes,
+} from "./dither-dissolve-keyframes.ts";
 
 import type { AtRule, Declaration, Rule } from "postcss";
 
-const TILE_SIZE = 8;
-
 const emittedKeyframes = async () => {
   const { root } = await postcss([
-    postcssMixins({ mixins: { "dither-dissolve-keyframes": ditherDissolveKeyframes } }),
-  ]).process("@mixin dither-dissolve-keyframes;", { from: undefined });
+    postcssMixins({ mixins: { [DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME]: ditherDissolveKeyframes } }),
+  ]).process(`@mixin ${DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME};`, { from: undefined });
   const atRule = root.first as AtRule;
   const rules = (atRule.nodes ?? []) as Array<Rule>;
 
@@ -45,18 +48,22 @@ const filledCellsOfMaskImage = (maskImage: string) => {
   return [...filledCells].sort();
 };
 const filledCellsOfDitherField = (density: number) => {
-  const rgba = new Uint8ClampedArray(TILE_SIZE * TILE_SIZE * 4);
+  const rgba = new Uint8ClampedArray(BAYER_MATRIX_SIZE * BAYER_MATRIX_SIZE * 4);
   const filledCells: Array<string> = [];
 
   renderDitherField(
-    { width: TILE_SIZE, height: TILE_SIZE, density: new Float32Array(TILE_SIZE * TILE_SIZE).fill(density) },
+    {
+      width: BAYER_MATRIX_SIZE,
+      height: BAYER_MATRIX_SIZE,
+      density: new Float32Array(BAYER_MATRIX_SIZE * BAYER_MATRIX_SIZE).fill(density),
+    },
     { color: [0, 0, 0] },
     rgba,
   );
 
-  for (let y = 0; y < TILE_SIZE; y += 1) {
-    for (let x = 0; x < TILE_SIZE; x += 1) {
-      if (rgba[(y * TILE_SIZE + x) * 4 + 3] === 255) {
+  for (let y = 0; y < BAYER_MATRIX_SIZE; y += 1) {
+    for (let x = 0; x < BAYER_MATRIX_SIZE; x += 1) {
+      if (rgba[(y * BAYER_MATRIX_SIZE + x) * 4 + 3] === 255) {
         filledCells.push(`${x},${y}`);
       }
     }
@@ -86,9 +93,9 @@ describe("ditherDissolveKeyframes", () => {
     const { keyframes } = await emittedKeyframes();
     const steps = keyframes.slice(0, -1);
 
-    expect(steps).toHaveLength(16);
+    expect(steps).toHaveLength(DITHER_DISSOLVE_STEP_COUNT);
     steps.forEach(({ maskImage }, step) => {
-      expect(filledCellsOfMaskImage(maskImage)).toEqual(filledCellsOfDitherField(step / 16));
+      expect(filledCellsOfMaskImage(maskImage)).toEqual(filledCellsOfDitherField(step / DITHER_DISSOLVE_STEP_COUNT));
     });
   });
 

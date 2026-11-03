@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { MOUSE_PRESS_INIT, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { playClickSound } from "../audio/sounds.ts";
@@ -26,8 +27,9 @@ afterEach(() => {
 });
 
 const POSITION = { clientX: 100, clientY: 200 };
-const TOUCH_PRESS = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true, ...POSITION };
-const MOUSE_PRESS = { pointerType: "mouse", pointerId: 1, button: 0, isPrimary: true, ...POSITION };
+const ORIGIN = { x: POSITION.clientX, y: POSITION.clientY };
+const TOUCH_PRESS = { ...TOUCH_PRESS_INIT, ...POSITION };
+const MOUSE_PRESS = { ...MOUSE_PRESS_INIT, ...POSITION };
 
 function Target() {
   useContextMenuPress({ isTarget: (target) => target === document.querySelector("[data-target]"), onPress });
@@ -50,7 +52,7 @@ test("a `contextmenu` event on the target prevents its default action, plays the
   expect(fireEvent.contextMenu(target, POSITION)).toBe(false);
   expect(playClickSound).toHaveBeenCalledOnce();
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: false,
     pointerType: "mouse",
   });
@@ -70,7 +72,7 @@ test("a `contextmenu` event during a press on the target reports the pointer as 
   fireEvent.contextMenu(target, POSITION);
 
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: true,
     pointerType: "mouse",
   });
@@ -84,7 +86,7 @@ test("a `contextmenu` event after the release of a press on the target reports t
   fireEvent.contextMenu(target, POSITION);
 
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: false,
     pointerType: "mouse",
   });
@@ -99,7 +101,7 @@ test("a mouse press on the target with the Alt key held opens the menu on `mouse
   expect(fireEvent.mouseDown(target, { ...POSITION, altKey: true, detail: 1 })).toBe(false);
   expect(playClickSound).toHaveBeenCalledOnce();
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: true,
     pointerType: "mouse",
   });
@@ -132,7 +134,7 @@ test("a touch press on the target with the Alt key held opens the menu on `point
   fireEvent.pointerDown(target, { ...TOUCH_PRESS, altKey: true });
 
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: true,
     pointerType: "touch",
   });
@@ -150,7 +152,7 @@ test("a long press on the target plays the click sound and opens the menu with t
 
   expect(playClickSound).toHaveBeenCalledOnce();
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: true,
     pointerType: "touch",
   });
@@ -178,11 +180,11 @@ test("a long press that drifts within its tolerance opens the menu at the pointe
   const { target } = renderTarget();
 
   fireEvent.pointerDown(target, TOUCH_PRESS);
-  fireEvent.pointerMove(target, { ...TOUCH_PRESS, clientX: 100 + LONG_PRESS_TOLERANCE_PX });
+  fireEvent.pointerMove(target, { ...TOUCH_PRESS, clientX: POSITION.clientX + LONG_PRESS_TOLERANCE_PX });
   advanceTimersBy(LONG_PRESS_DURATION_MS);
 
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100 + LONG_PRESS_TOLERANCE_PX, y: 200 },
+    origin: { ...ORIGIN, x: ORIGIN.x + LONG_PRESS_TOLERANCE_PX },
     isPointerHeld: true,
     pointerType: "touch",
   });
@@ -192,7 +194,7 @@ test("a touch press that drifts beyond the long press tolerance does not open th
   const { target } = renderTarget();
 
   fireEvent.pointerDown(target, TOUCH_PRESS);
-  fireEvent.pointerMove(target, { ...TOUCH_PRESS, clientX: 100 + LONG_PRESS_TOLERANCE_PX + 1 });
+  fireEvent.pointerMove(target, { ...TOUCH_PRESS, clientX: POSITION.clientX + LONG_PRESS_TOLERANCE_PX + 1 });
   advanceTimersBy(LONG_PRESS_DURATION_MS);
 
   expect(onPress).not.toHaveBeenCalled();
@@ -241,7 +243,7 @@ test("a `contextmenu` event during a long press opens the menu once with the poi
 
   expect(playClickSound).toHaveBeenCalledOnce();
   expect(onPress).toHaveBeenCalledExactlyOnceWith({
-    origin: { x: 100, y: 200 },
+    origin: ORIGIN,
     isPointerHeld: true,
     pointerType: "touch",
   });

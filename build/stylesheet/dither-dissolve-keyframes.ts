@@ -4,7 +4,8 @@ import { BAYER_MATRIX_SIZE, thresholdAt } from "#/lib/dither/bayer-matrix.ts";
 
 import type { AtRule } from "postcss";
 
-const DITHER_DISSOLVE_STEP_COUNT = 16;
+export const DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME = "dither-dissolve-keyframes";
+export const DITHER_DISSOLVE_STEP_COUNT = 16;
 
 /** A `mask-image` of one tile of the Bayer matrix, filled in the same cells as a dither field of `density`. */
 function ditherMaskImageOf(density: number): string {

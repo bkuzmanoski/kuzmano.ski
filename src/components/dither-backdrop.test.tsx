@@ -5,8 +5,12 @@ import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed
 
 import { DitherBackdrop } from "./dither-backdrop.tsx";
 
+import type { MockInstance } from "vitest";
+
+let getContext: MockInstance<HTMLCanvasElement["getContext"]>;
+
 beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null); // jsdom lacks a 2D canvas context and logs when one is requested. These tests cover the no-canvas state.
+  getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null); // jsdom lacks a 2D canvas context and logs when one is requested. These tests cover the no-canvas state.
 });
 
 test("the backdrop renders its children", () => {
@@ -38,7 +42,6 @@ test("the backdrop starts its animation only once the window that contains it is
       <DitherBackdrop>Fixture content.</DitherBackdrop>
     </WindowRevealContext>
   );
-  const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
   const { rerender } = render(backdropInWindow(false));
 
   expect(getContext).not.toHaveBeenCalled();

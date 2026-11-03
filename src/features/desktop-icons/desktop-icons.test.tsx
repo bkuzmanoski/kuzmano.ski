@@ -10,8 +10,8 @@ import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
-import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
-import { advanceTimersBy } from "#/test-utils/timers.ts";
+import { MOUSE_PRESS_INIT, SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
+import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
 
 import { DesktopIcons } from "./desktop-icons.tsx";
 
@@ -57,8 +57,8 @@ afterEach(() => {
 
 const ICON_LABELS = DESTINATION_ORDER.map((id) => DESTINATIONS[id].title);
 const PRESS_POINT = { clientX: 100, clientY: 200 };
-const TOUCH_PRESS = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true, ...PRESS_POINT };
-const SECONDARY_MOUSE_PRESS = { pointerType: "mouse", pointerId: 1, button: 2, isPrimary: true, ...PRESS_POINT };
+const TOUCH_PRESS = { ...TOUCH_PRESS_INIT, ...PRESS_POINT };
+const SECONDARY_MOUSE_PRESS = { ...MOUSE_PRESS_INIT, button: 2, ...PRESS_POINT };
 const CLEAN_UP_LABEL = "Clean Up Desktop";
 
 const desktop = () => screen.getByRole("main");
@@ -94,7 +94,7 @@ function dragFirstIconAway() {
 
   fireEvent.pointerDown(icon(0), { ...TOUCH_PRESS, clientX: 0, clientY: 0 });
   fireEvent.pointerMove(window, { pointerId: 1, buttons: 1, clientX: -200, clientY: 200 });
-  advanceTimersBy(16); // The drag reports its move in an animation frame.
+  advanceTimersToNextFrame(); // The drag reports its move in an animation frame.
   fireEvent.pointerUp(window, { pointerId: 1 });
 
   return defaultLeft;
@@ -234,8 +234,8 @@ test("a `contextmenu` event on the desktop prevents its default action, plays th
 
   const menu = screen.getByRole("menu", { name: "Desktop" });
 
-  expect(menu.parentElement!.style.getPropertyValue("--menu-press-x")).toBe("100px");
-  expect(menu.parentElement!.style.getPropertyValue("--menu-press-y")).toBe("200px");
+  expect(menu.parentElement!.style.getPropertyValue("--menu-press-x")).toBe(`${PRESS_POINT.clientX}px`);
+  expect(menu.parentElement!.style.getPropertyValue("--menu-press-y")).toBe(`${PRESS_POINT.clientY}px`);
   expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([CLEAN_UP_LABEL]);
   expect(playClickSound).toHaveBeenCalledOnce();
 });
@@ -253,7 +253,7 @@ test("the desktop menu moves the focus to itself when it opens, and closes on a 
 
   expect(document.activeElement).toBe(desktopMenu());
 
-  fireEvent.pointerDown(document.body, { pointerType: "mouse", button: 0, isPrimary: true });
+  pressWithMouse(document.body);
 
   expect(desktopMenu()).toBeNull();
 });

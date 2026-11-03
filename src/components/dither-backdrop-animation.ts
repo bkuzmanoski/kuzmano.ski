@@ -17,10 +17,10 @@ interface DitherFieldLayout {
   cssPixelsPerDitherPixel: number;
 }
 
+export const DITHER_PIXEL_SIZE_DOTS = 1;
 export const BACKDROP_TOP_DENSITY = 0.5;
 
 const BACKDROP_FALLOFF_EXPONENT = 1.5;
-const DITHER_PIXEL_SIZE_DOTS = 1;
 const REVEAL_DURATION_MS = 1_400;
 const REVEAL_STEP_COUNT = 14;
 const POINTER_HIGHLIGHT_STANDARD_DEVIATION_PX = 90;

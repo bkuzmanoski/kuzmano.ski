@@ -7,7 +7,7 @@ import { ZOOM_RECT_DURATION_MS } from "#/features/window-manager/zoom-rect.tsx";
 import { playClickSound, playHoverSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
 import { pressWithMouse } from "#/test-utils/press.ts";
-import { advanceTimersBy } from "#/test-utils/timers.ts";
+import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
 
 import styles from "./image-gallery.module.css";
 import { ImageGallery, SWIPE_DISTANCE_PX } from "./image-gallery.tsx";
@@ -777,12 +777,11 @@ describe("when reduced motion is not preferred", () => {
     const { left, top, width, height } = element?.style ?? {};
     return { left, top, width, height };
   };
-  const advanceTwoFrames = () =>
-    act(() => {
-      // `ZoomRect` starts growing two animation frames after it mounts.
-      vi.advanceTimersToNextFrame();
-      vi.advanceTimersToNextFrame();
-    });
+  const advanceTwoFrames = () => {
+    // `ZoomRect` starts growing two animation frames after it mounts.
+    advanceTimersToNextFrame();
+    advanceTimersToNextFrame();
+  };
 
   test("opening the preview grows a zoom rect from the stage to the preview's frame, and sets the `data-image-gallery-zoom-rect` attribute of the preview to `in` until the zoom rect has finished", () => {
     renderGalleryInFrames();

@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { cssPixelsPerDitherDot } from "#/lib/dither/dither-dot.ts";
 import { notifyColorChange } from "#/lib/settings/color-change.ts";
 import { stubResizeObserver } from "#/test-utils/resize-observer.ts";
 
 import {
   BACKDROP_TOP_DENSITY,
+  DITHER_PIXEL_SIZE_DOTS,
   composeBackdropDitherField,
   startDitherBackdropAnimation,
 } from "./dither-backdrop-animation.ts";
@@ -23,13 +25,15 @@ vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
   },
 }));
 
-/** At a device pixel ratio of 1 a dither pixel is 1px, so the component is 2000x800 dither pixels. */
 const COMPONENT_WIDTH_PX = 2_000;
 const COMPONENT_HEIGHT_PX = 800;
-const DITHER_FIELD_WIDTH_DITHER_PIXELS = 2_000;
+
+/** At a device pixel ratio of 1 a dither dot is 1px. */
+const DITHER_FIELD_WIDTH_DITHER_PIXELS = COMPONENT_WIDTH_PX / DITHER_PIXEL_SIZE_DOTS;
 
 /** At a device pixel ratio of 0.5 a dither dot rounds up to one device pixel (2 CSS pixels). */
 const ZOOMED_OUT_DEVICE_PIXEL_RATIO = 0.5;
+const ZOOMED_OUT_DITHER_PIXEL_SIZE_PX = DITHER_PIXEL_SIZE_DOTS * cssPixelsPerDitherDot(ZOOMED_OUT_DEVICE_PIXEL_RATIO);
 
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const mediaQueryListeners = new Set<() => void>();
@@ -210,9 +214,9 @@ test("a resize that changes the width of the dither field puts the whole dither 
 
   startAnimation(elements);
   putImageData.mockClear();
-  resizeContainer(elements.container, 1_000, COMPONENT_HEIGHT_PX);
+  resizeContainer(elements.container, COMPONENT_WIDTH_PX / 2, COMPONENT_HEIGHT_PX);
 
-  expect(elements.canvas.width).toBe(1_000);
+  expect(elements.canvas.width).toBe(DITHER_FIELD_WIDTH_DITHER_PIXELS / 2);
   expect(putImageData).toHaveBeenCalledTimes(1);
   expect(putImageData.mock.lastCall).toHaveLength(3);
 });
@@ -233,9 +237,16 @@ test("a resize to a size between whole dither pixels sizes the canvas to the who
 
   startAnimation(elements);
   changeDevicePixelRatio(ZOOMED_OUT_DEVICE_PIXEL_RATIO);
-  resizeContainer(elements.container, 1_003, 803);
+  resizeContainer(
+    elements.container,
+    501 * ZOOMED_OUT_DITHER_PIXEL_SIZE_PX + 1,
+    401 * ZOOMED_OUT_DITHER_PIXEL_SIZE_PX + 1,
+  );
 
-  expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual(["1002px", "802px"]);
+  expect([elements.canvas.style.width, elements.canvas.style.height]).toEqual([
+    `${501 * ZOOMED_OUT_DITHER_PIXEL_SIZE_PX}px`,
+    `${401 * ZOOMED_OUT_DITHER_PIXEL_SIZE_PX}px`,
+  ]);
 });
 
 test("a change to the device pixel ratio that changes the size of a dither pixel puts the dither field on the canvas at the new width", () => {
@@ -245,7 +256,7 @@ test("a change to the device pixel ratio that changes the size of a dither pixel
   putImageData.mockClear();
   changeDevicePixelRatio(1.1); // At a ratio of 1.1, a dither dot rounds to 1 device pixel (1 / 1.1 CSS pixels).
 
-  expect(elements.canvas.width).toBe(2_200);
+  expect(elements.canvas.width).toBe(Math.round(DITHER_FIELD_WIDTH_DITHER_PIXELS * 1.1));
   expect(putImageData).toHaveBeenCalledTimes(1);
 });
 
@@ -279,12 +290,14 @@ test("moving a mouse pointer over the container requests an animation frame that
 test("scrolling the container under a stationary mouse pointer moves the pointer highlight down the container by the distance scrolled", () => {
   const elements = containerElements();
 
+  const scrollDistancePx = 100;
+
   let containerTopPx = 0;
   let timeMs = 0;
 
   vi.spyOn(performance, "now").mockImplementation(() => (timeMs += 16)); // Each frame runs 16ms after the one before, so the pointer highlight eases at its real rate.
   vi.spyOn(elements.container, "getBoundingClientRect").mockImplementation(
-    () => new DOMRect(0, containerTopPx, 2_000, 800),
+    () => new DOMRect(0, containerTopPx, COMPONENT_WIDTH_PX, COMPONENT_HEIGHT_PX),
   );
   startAnimation(elements);
   runAnimationFramesUntilIdle(); // Finishes the reveal, which puts the whole dither field on the canvas.
@@ -294,13 +307,15 @@ test("scrolling the container under a stationary mouse pointer moves the pointer
 
   const pointerHighlightCenterBeforeScroll = lastPutRegionCenterY();
 
-  containerTopPx = -100;
+  containerTopPx = -scrollDistancePx;
   elements.container.parentElement!.dispatchEvent(new Event("scroll"));
   runAnimationFramesUntilIdle();
 
-  // Scrolling by 100px moves the pointer 100 dither pixels down the container. The region put on the canvas is rounded
-  // out to whole pixels, so its center can differ from the pointer highlight's by one.
-  expect(Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - 100)).toBeLessThanOrEqual(1);
+  // The region put on the canvas is rounded out to whole pixels, so its center can differ from the pointer highlight's
+  // by one.
+  expect(
+    Math.abs(lastPutRegionCenterY() - pointerHighlightCenterBeforeScroll - scrollDistancePx / DITHER_PIXEL_SIZE_DOTS),
+  ).toBeLessThanOrEqual(1);
 });
 
 test("moving a touch pointer over the container does not request an animation frame once the reveal has finished", () => {

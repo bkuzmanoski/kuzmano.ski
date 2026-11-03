@@ -1,8 +1,14 @@
 import { createEvent, fireEvent } from "@testing-library/react";
 
+/** The `PointerEvent` fields of a primary press with a mouse, without a position. */
+export const MOUSE_PRESS_INIT = { pointerType: "mouse", pointerId: 1, button: 0, isPrimary: true };
+
+/** The `PointerEvent` fields of a primary press with a touch, without a position. */
+export const TOUCH_PRESS_INIT = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true };
+
 /** The events of a press with a mouse, up to the release. */
 export function pressWithMouse(element: Element) {
-  fireEvent.pointerDown(element, { pointerType: "mouse", button: 0, isPrimary: true });
+  fireEvent.pointerDown(element, MOUSE_PRESS_INIT);
   return fireEvent.mouseDown(element, { button: 0, detail: 1 });
 }
 

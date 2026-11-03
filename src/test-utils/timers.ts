@@ -7,6 +7,12 @@ export const advanceTimersBy = (durationMs: number) =>
     vi.advanceTimersByTime(durationMs);
   });
 
+/** Advances the fake timers to the next animation frame inside `act` so the updates its callbacks make are rendered. */
+export const advanceTimersToNextFrame = () =>
+  act(() => {
+    vi.advanceTimersToNextFrame();
+  });
+
 /** Resolves after the next animation frame, inside `act`, so the updates its callbacks make are rendered. */
 export const nextAnimationFrame = () =>
   act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
