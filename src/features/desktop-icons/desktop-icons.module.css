@@ -3,7 +3,10 @@
 
   position: absolute;
   z-index: 0;
-  inset: 0;
+
+  /* Extends behind the software keyboard, so the measured height that places the icons stays the same while the
+   * keyboard is open (see `/src/lib/hooks/use-keyboard-inset.ts`). */
+  inset: 0 0 calc(-1 * var(--keyboard-inset, 0px));
 
   opacity: 0;
 

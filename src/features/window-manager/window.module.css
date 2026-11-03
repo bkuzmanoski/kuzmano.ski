@@ -11,6 +11,11 @@
   display: flex;
   flex-direction: column;
 
+  /* Fits the title bar and the scrollbar's arrows and resize control, which do not shrink. Below this height they
+   * overflow the window's border onto the desktop (e.g., on a phone in landscape with the software keyboard open). The
+   * desktop clips a window this tall at its bottom edge instead. */
+  min-height: calc(var(--layout-title-bar-height) + 1px + 3 * var(--layout-scrollbar-gutter-width) + 2px);
+
   color: var(--color-foreground);
 
   opacity: 0;
