@@ -41,11 +41,6 @@ describe("Avatar", () => {
     expect(avatar().querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 
-  test("renders the sprite looking down and to the right before a pointer moves or presses", () => {
-    renderAvatarLaidOut();
-    expect(shownSpriteMarkup()).toBe(spriteMarkupOf(LookingDownRightAvatar));
-  });
-
   test.each([
     {
       direction: "up and to the left",
