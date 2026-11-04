@@ -15,7 +15,7 @@ const SPRITES_BY_GAZE_DIRECTION = {
   "down-left": LookingDownLeftAvatar,
   "down-right": LookingDownRightAvatar,
 } satisfies Record<GazeDirection, unknown>;
-const INITIAL_GAZE_DIRECTION: GazeDirection = "down-right";
+const INITIAL_GAZE_DIRECTION: GazeDirection = "down-left";
 
 function gazeDirectionToward({ clientX, clientY }: PointerEvent, avatarRect: DOMRect): GazeDirection {
   const isAbove = clientY < avatarRect.top + avatarRect.height / 2;
