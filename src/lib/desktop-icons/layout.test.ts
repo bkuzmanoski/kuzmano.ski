@@ -71,7 +71,7 @@ describe("resolveIconPlacements", () => {
   });
 
   test("places icons that overlap each other at their saved positions", () => {
-    // Icons a visitor stacked deliberately stay at their saved positions rather than being moved into slots.
+    // Icons a user stacked deliberately stay at their saved positions rather than being moved into slots.
     const iconPositions: IconPositions = {
       first: { top: 24, right: 32 },
       second: { top: 40, right: 48 },

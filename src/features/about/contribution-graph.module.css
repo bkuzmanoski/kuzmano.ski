@@ -1,13 +1,11 @@
 .graph {
   --contribution-graph-reveal-start: 0%; /* Set from JS. */
   --contribution-graph-reveal-end-max: 0%; /* Set from JS. */
-  --contribution-graph-cell: calc(13 * var(--dither-dot));
-  --contribution-graph-gap: calc(3 * var(--dither-dot));
+  --contribution-graph-cell: calc(13 * var(--layout-bitmap-pixel));
+  --contribution-graph-gap: calc(3 * var(--layout-bitmap-pixel));
   --contribution-graph-step: calc(
     var(--contribution-graph-cell) + var(--contribution-graph-gap)
   ); /* Includes the gap after the day cell. */
-
-  @mixin dither-dot;
 }
 
 .scrollContainerFrame {
@@ -15,7 +13,9 @@
 
   @supports (width: round(down, 1px, 1px)) {
     /* A width of 4n + 1 dots starts and ends the field on a column of dots. */
-    inline-size: calc(round(down, 100% - var(--dither-dot), 4 * var(--dither-dot)) + var(--dither-dot));
+    inline-size: calc(
+      round(down, 100% - var(--layout-bitmap-pixel), 4 * var(--layout-bitmap-pixel)) + var(--layout-bitmap-pixel)
+    );
   }
 
   &:has(> :focus-visible) {
@@ -24,7 +24,7 @@
 }
 
 .scrollContainer {
-  --contribution-graph-padding-block-end: calc(var(--contribution-graph-step) - 8 * var(--dither-dot));
+  --contribution-graph-padding-block-end: calc(var(--contribution-graph-step) - 8 * var(--layout-bitmap-pixel));
 
   direction: rtl;
   overflow-x: auto;
@@ -138,7 +138,7 @@
   grid-template-rows: 1lh;
   gap: var(--contribution-graph-gap);
 
-  padding-block-start: calc(12 * var(--dither-dot));
+  padding-block-start: calc(12 * var(--layout-bitmap-pixel));
 }
 
 .month {
@@ -154,8 +154,8 @@
 }
 
 .monthLabel {
-  block-size: calc(15 * var(--dither-dot));
-  margin-inline-end: var(--dither-dot);
+  block-size: calc(15 * var(--layout-bitmap-pixel));
+  margin-inline-end: var(--layout-bitmap-pixel);
   background: var(--color-background);
 }
 

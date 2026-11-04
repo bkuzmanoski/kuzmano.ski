@@ -1,7 +1,7 @@
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { cx } from "#/lib/class-names.ts";
 import { entrySiblings } from "#/lib/content/entry-siblings.ts";
-import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
+import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import { entryAlternateRepresentationsOf } from "#/site/alternate-representations.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
 import type { CollectionEntryTarget } from "#/site/windows.ts";

@@ -13,8 +13,8 @@ export function pressWithMouse(element: Element) {
 }
 
 // The events each browser dispatches for a screen reader's activate action, which differ from a press with a pointing
-// device (see `isPointerClick` and `isSimulatedMouseDown` in `/src/lib/press.ts`). Each helper returns `false` when a
-// listener prevents the default action of the `click`.
+// device (see `isPointerClick` and `isSimulatedMouseDown` in `/src/lib/press/press.ts`). Each helper returns `false`
+// when a listener prevents the default action of the `click`.
 
 /** A whole press with a `pointerType` of `mouse`, in which only the `click` has a `detail` of `1`. */
 export function activateWithScreenReaderInChrome(element: Element) {

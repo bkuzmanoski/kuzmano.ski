@@ -1,8 +1,7 @@
 import { usePressSound } from "../audio/use-press-sound.ts";
-import { isPrimaryPress, releaseImplicitPointerCapture } from "../press.ts";
-
-import { useMousePressStart } from "./use-mouse-press-start.ts";
-import { useTrailingClick } from "./use-trailing-click.ts";
+import { isPrimaryPress, releaseImplicitPointerCapture } from "../press/press.ts";
+import { useMousePressStart } from "../press/use-mouse-press-start.ts";
+import { useTrailingClick } from "../press/use-trailing-click.ts";
 
 import type { MouseEvent, PointerEvent } from "react";
 

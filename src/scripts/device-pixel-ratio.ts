@@ -1,6 +1,5 @@
-// Runs in the document head before first paint (prior to hydration) so the dither patterns are rendered at a whole
-// number of device pixels from the first paint (see `dither-fill` in `/src/mixins.css`). The value is updated whenever
-// the device pixel ratio changes.
+// Runs in the document head before first paint (prior to hydration) so that bitmap pixels land on whole device pixels
+// from the first paint (see `--layout-bitmap-pixel` in `/src/styles.css`).
 
 function setDevicePixelRatio() {
   const ratio = window.devicePixelRatio;

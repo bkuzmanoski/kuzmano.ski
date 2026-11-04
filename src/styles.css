@@ -126,6 +126,9 @@
   --layout-scrollbar-gutter-width: calc(var(--layout-scrollbar-width) + 1px); /* Includes the leading border. */
   --layout-viewport-margin: 8px; /* The gap between a tooltip or menu and the viewport edges. */
   --layout-shadow-length: 3px;
+  --layout-bitmap-pixel: calc(
+    max(1, round(var(--device-pixel-ratio, 1))) / var(--device-pixel-ratio, 1) * 1px
+  ); /* 1px rounded to a whole number of device pixels (at least one). */
 
   /* Transitions */
   --duration-desktop-reveal-step: 0ms; /* Set from JS. */
@@ -230,6 +233,9 @@
   --color-startup-sequence-foreground: var(--neutral-925);
   --color-startup-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
+  --color-avatar-foreground: light-dark(var(--color-foreground), var(--neutral-190)); /* A positive, not inverted. */
+  --color-avatar-background: light-dark(var(--color-background), var(--color-foreground));
+  --color-avatar-outline: light-dark(transparent, var(--neutral-390));
   --color-accent: transparent; /* Set from JS. */
   --color-success: var(--accent-green);
   --color-warning: var(--accent-orange);

@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useState } from "react";
+import { flushSync } from "react-dom";
 
 import type { Size } from "../geometry.ts";
 import type { RefObject } from "react";
@@ -24,7 +25,8 @@ export function useElementResize(ref: RefObject<HTMLElement | null>, onResize: (
       reportResize({ width, height });
     };
 
-    const observer = new ResizeObserver(measure);
+    // Flush updates before paint so layouts derived from this size stay in sync with the element.
+    const observer = new ResizeObserver(() => flushSync(measure));
 
     // A background tab's viewport can change before it becomes visible, and hidden documents don't run observer
     // callbacks. Let the observer provide the initial measurement when it does.

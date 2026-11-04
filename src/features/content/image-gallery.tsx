@@ -12,12 +12,12 @@ import { cx } from "#/lib/class-names.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
-import type { DragDelta } from "#/lib/hooks/use-pointer-drag.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import { clamp } from "#/lib/math.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
-import { swallowNextPress } from "#/lib/press.ts";
+import { swallowNextPress } from "#/lib/press/press.ts";
+import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import { usePreviewImageLayout } from "./image-gallery-preview-layout.ts";
 import styles from "./image-gallery.module.css";

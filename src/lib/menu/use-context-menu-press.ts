@@ -1,10 +1,9 @@
 import { useEffect, useEffectEvent, useRef } from "react";
 
 import { playClickSound } from "../audio/sounds.ts";
-import { isPrimaryPress } from "../press.ts";
-
-import { useMousePressStart } from "./use-mouse-press-start.ts";
-import { useTimer } from "./use-timer.ts";
+import { useTimer } from "../hooks/use-timer.ts";
+import { isPrimaryPress } from "../press/press.ts";
+import { useMousePressStart } from "../press/use-mouse-press-start.ts";
 
 import type { OpeningPress } from "./use-menu-interaction.ts";
 import type { Position } from "../geometry.ts";

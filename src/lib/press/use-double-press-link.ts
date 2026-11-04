@@ -1,8 +1,8 @@
 import { useRef } from "react";
 
 import { isBrowserHandledClick, isFollowingLink } from "../link.ts";
-import { isPointerClick, isRepeatClick, isSimulatedMouseDown } from "../press.ts";
 
+import { isPointerClick, isRepeatClick, isSimulatedMouseDown } from "./press.ts";
 import { useDoublePress } from "./use-double-press.ts";
 
 import type { MouseEvent as ReactMouseEvent } from "react";

@@ -313,15 +313,12 @@ test("the message character count's status changes only when the count crosses t
   expect(liveRegionsWithText().map((region) => region.textContent)).not.toEqual([thresholdStatus]);
 });
 
-test("the `To:` field is a read-only input with the email address as its value, out of the tab order", async () => {
+test("the `To:` row shows the email address as text rather than in a form field", async () => {
   render(<ContactBody />);
   await readEmailAddress();
 
-  const toField = screen.getByLabelText<HTMLInputElement>("To:");
-
-  expect(toField.readOnly).toBe(true);
-  expect(toField.tabIndex).toBe(-1);
-  expect(toField.value).toBe(CONTACT_EMAIL_ADDRESS);
+  expect(screen.getByText(CONTACT_EMAIL_ADDRESS).closest("input, textarea, label")).toBeNull();
+  expect(screen.queryByLabelText("To:")).toBeNull();
 });
 
 test("a successful submission shows a confirmation, plays the message sent sound, and clears the form", async () => {

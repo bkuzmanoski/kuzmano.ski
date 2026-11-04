@@ -3,9 +3,9 @@ import { useRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { DETENT_PX, playPaneScrollSound } from "#/lib/audio/scroll.ts";
-import { DRAG_THRESHOLD_PX } from "#/lib/hooks/use-pointer-drag.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
+import { DRAG_THRESHOLD_PX } from "#/lib/press/use-pointer-drag.ts";
 import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 

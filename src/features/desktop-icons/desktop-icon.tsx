@@ -14,11 +14,11 @@ import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { iconHref } from "#/lib/desktop-icons/icon.ts";
 import type { Icon as IconDefinition, IconKind } from "#/lib/desktop-icons/icon.ts";
-import { useDoublePressLink } from "#/lib/hooks/use-double-press-link.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
+import { isPrimaryPress } from "#/lib/press/press.ts";
+import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import styles from "./desktop-icon.module.css";
 

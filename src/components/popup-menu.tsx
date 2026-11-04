@@ -3,9 +3,9 @@ import { createPortal } from "react-dom";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
-import { useMenuButtonPress } from "#/lib/hooks/use-menu-button-press.ts";
-import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
-import type { OpeningPress } from "#/lib/hooks/use-menu-interaction.ts";
+import { useMenuButtonPress } from "#/lib/menu/use-menu-button-press.ts";
+import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
+import type { OpeningPress } from "#/lib/menu/use-menu-interaction.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 

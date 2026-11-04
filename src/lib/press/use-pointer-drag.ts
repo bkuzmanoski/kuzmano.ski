@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { isPrimaryPress } from "../press.ts";
+import { isPrimaryPress } from "./press.ts";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 

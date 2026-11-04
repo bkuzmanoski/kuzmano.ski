@@ -627,12 +627,10 @@
     }
 
     &:where(hr) {
-      --content-body-hr-square-size: calc(8 * var(--dither-dot));
-      --content-body-hr-square-gap: calc(12 * var(--dither-dot));
+      --content-body-hr-square-size: calc(8 * var(--layout-bitmap-pixel));
+      --content-body-hr-square-gap: calc(12 * var(--layout-bitmap-pixel));
       --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
       --content-body-hr-middle-square-position: 50%;
-
-      @mixin dither-dot;
 
       height: var(--content-body-hr-square-size);
 
@@ -659,7 +657,7 @@
       }
 
       @supports (width: round(down, 1px, 1px)) {
-        --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--dither-dot)));
+        --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--layout-bitmap-pixel)));
       }
     }
 

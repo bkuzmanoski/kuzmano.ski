@@ -42,7 +42,7 @@ export function sleep() {
 }
 
 /**
- * Puts the desktop to sleep once the visitor has gone idle, unless an alert is waiting on them as an alert opened with
+ * Puts the desktop to sleep once the user has gone idle, unless an alert is waiting on them as an alert opened with
  * `showModal()` sits in the browser's top layer, above any stacking context the screensaver can claim.
  */
 export function sleepOnIdle() {

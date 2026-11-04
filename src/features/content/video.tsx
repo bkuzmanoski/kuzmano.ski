@@ -11,10 +11,11 @@ import { Tooltip } from "#/components/tooltip.tsx";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
+import { focusWithTabIndexUntilBlur } from "#/lib/focus.ts";
 import { useClientValue, useIsHydrated } from "#/lib/hooks/use-client-value.ts";
-import { usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
 import { clamp } from "#/lib/math.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
+import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import styles from "./video.module.css";
 
@@ -223,7 +224,6 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
       ref={containerRef}
       className={cx(styles.video, className)}
       style={style}
-      tabIndex={-1}
       data-content-panel
       {...layoutAttributes}
       onKeyDown={onKeyDown}
@@ -234,7 +234,10 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         controls={!hasSiteControls}
         onPointerDown={(event) => {
           onPointerDown?.(event);
-          containerRef.current?.focus({ preventScroll: true });
+
+          if (containerRef.current) {
+            focusWithTabIndexUntilBlur(containerRef.current, { preventScroll: true }); // The container has no name of its own, so it is focusable only from a press on the video, after which it receives the keys that control playback.
+          }
         }}
         onClick={(event) => {
           onClick?.(event);

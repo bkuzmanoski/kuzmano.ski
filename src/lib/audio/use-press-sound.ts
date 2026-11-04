@@ -1,9 +1,9 @@
 import { useRef } from "react";
 
-import { useMousePressStart } from "../hooks/use-mouse-press-start.ts";
 import { isActivationKey } from "../keys.ts";
 import { isBrowserHandledClick } from "../link.ts";
-import { isPointerClick, isPrimaryPress } from "../press.ts";
+import { isPointerClick, isPrimaryPress } from "../press/press.ts";
+import { useMousePressStart } from "../press/use-mouse-press-start.ts";
 
 import { playClickSound } from "./sounds.ts";
 

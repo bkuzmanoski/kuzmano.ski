@@ -10,7 +10,7 @@ import {
   visibleCareerTimelinePlacementAt,
 } from "#/lib/experience/career-timeline.ts";
 import type { CareerTimelineDirection } from "#/lib/experience/career-timeline.ts";
-import { usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
+import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import { axisFractionAt, readCareerTimelineLayout } from "./career-timeline-layout.ts";
 

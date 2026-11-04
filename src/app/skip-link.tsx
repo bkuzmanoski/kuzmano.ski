@@ -1,4 +1,5 @@
 import { FOCUSED_WINDOW_CONTENT_ID } from "#/features/window-manager/window.tsx";
+import { focusWithTabIndexUntilBlur } from "#/lib/focus.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
 import { useFocusedWindow } from "#/lib/window-manager/context.ts";
 
@@ -24,7 +25,7 @@ export function SkipLink() {
 
         if (target) {
           event.preventDefault();
-          target.focus();
+          focusWithTabIndexUntilBlur(target); // The content has no name of its own, so it is focusable only from the skip link's activation.
         }
       }}
     >

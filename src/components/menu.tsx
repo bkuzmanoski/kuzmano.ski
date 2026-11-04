@@ -5,9 +5,9 @@ import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-downl
 import ExternalLinkMenuItemIndicator from "#/assets/images/menu-item-indicator-external-link.svg?react";
 import { cx } from "#/lib/class-names.ts";
 import type { Position } from "#/lib/geometry.ts";
-import { useIsMacOS } from "#/lib/hooks/use-is-macos.ts";
-import { useMenuInteraction } from "#/lib/hooks/use-menu-interaction.ts";
+import { useIsApplePlatform } from "#/lib/hooks/use-is-apple-platform.ts";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.ts";
+import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./menu.module.css";
@@ -44,11 +44,11 @@ function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
   }
 }
 
-function ShortcutHint({ label, isMacOS }: { label: string; isMacOS: boolean }) {
+function ShortcutHint({ label, isApplePlatform }: { label: string; isApplePlatform: boolean }) {
   return (
     // Hidden from assistive technology, which reads the shortcut from the item's `aria-keyshortcuts` attribute.
     <span className={styles.shortcut} aria-hidden>
-      {isMacOS ? (
+      {isApplePlatform ? (
         <>
           <span className={styles.modifierIcon}>{CHAR_OPTION_KEY}</span>
           {CHAR_NBSP}
@@ -70,13 +70,13 @@ const MenuItemRow = memo(function MenuRow({
   index,
   id,
   isActive,
-  isMacOS,
+  isApplePlatform,
 }: {
   item: MenuAction;
   index: number;
   id: string;
   isActive: boolean;
-  isMacOS: boolean;
+  isApplePlatform: boolean;
 }) {
   const itemProps = {
     id,
@@ -95,7 +95,7 @@ const MenuItemRow = memo(function MenuRow({
           {ACCESSORY_DESCRIPTIONS[item.accessory]}
         </span>
       )}
-      {item.shortcut && <ShortcutHint label={item.shortcut.label} isMacOS={isMacOS} />}
+      {item.shortcut && <ShortcutHint label={item.shortcut.label} isApplePlatform={isApplePlatform} />}
       {item.accessory === "download" && <DownloadMenuItemIndicator className={styles.menuItemIndicator} />}
       {item.accessory === "external-link" && <ExternalLinkMenuItemIndicator className={styles.menuItemIndicator} />}
     </>
@@ -139,7 +139,7 @@ export function Menu({
   onClose: () => void;
 }) {
   const itemIdPrefix = useId();
-  const isMacOS = useIsMacOS();
+  const isApplePlatform = useIsApplePlatform();
   const menuRef = useRef<HTMLDivElement>(null);
   const isContextMenu = opener.kind === "point";
   const opensAbovePoint = isContextMenu && opener.pointerType !== "mouse";
@@ -208,7 +208,7 @@ export function Menu({
             index={index}
             id={`${itemIdPrefix}-${index}`}
             isActive={isHighlighted(index)}
-            isMacOS={isMacOS}
+            isApplePlatform={isApplePlatform}
           />
         ),
       )}

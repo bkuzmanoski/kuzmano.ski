@@ -8,6 +8,18 @@
     width: 64px;
     font: var(--font-chrome);
   }
+
+  & .value {
+    @mixin text-field-value;
+
+    overflow: hidden;
+    flex: 1;
+
+    min-width: 0;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .hidden,

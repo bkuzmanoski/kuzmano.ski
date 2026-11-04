@@ -42,7 +42,6 @@ export function ScrollPane({
       <div
         ref={mergeRefs(viewportRef, contentContainerRef)}
         id={id}
-        tabIndex={-1}
         className={cx(styles.contentContainer, fitsContentHeight && styles.fitsContentHeight)}
         data-scroll-pane-viewport
         onFocus={(event) => silenceScrollIntoView(event.target)}

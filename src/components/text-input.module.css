@@ -1,21 +1,13 @@
 .control {
-  flex: 1;
+  @mixin text-field-value;
 
+  flex: 1;
   padding: 0;
   border: 0;
-
-  font: var(--font-ui-large);
-  color: var(--color-foreground);
-
   background: transparent;
 
   &::placeholder {
     color: var(--color-foreground-disabled);
-  }
-
-  &::selection {
-    color: var(--color-background);
-    background: var(--color-foreground);
   }
 
   &:focus {

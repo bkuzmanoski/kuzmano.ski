@@ -1,13 +1,12 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { playClickSound, playHoverSound } from "../audio/sounds.ts";
+import { useActivationFlash } from "../hooks/use-activation-flash.ts";
+import { useTimer } from "../hooks/use-timer.ts";
 import { isFollowingLink } from "../link.ts";
 import { cycle } from "../math.ts";
-import { isPointerClick, isPrimaryPress } from "../press.ts";
-
-import { useActivationFlash } from "./use-activation-flash.ts";
-import { DRAG_THRESHOLD_PX } from "./use-pointer-drag.ts";
-import { useTimer } from "./use-timer.ts";
+import { isPointerClick, isPrimaryPress } from "../press/press.ts";
+import { DRAG_THRESHOLD_PX } from "../press/use-pointer-drag.ts";
 
 import type { Position } from "../geometry.ts";
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";

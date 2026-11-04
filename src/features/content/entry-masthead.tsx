@@ -4,7 +4,7 @@ import { ControlledCopyButton } from "#/components/copy-button.tsx";
 import { ShareButton } from "#/components/share-button.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
-import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
+import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 import type { CollectionEntryTarget } from "#/site/windows.ts";
 

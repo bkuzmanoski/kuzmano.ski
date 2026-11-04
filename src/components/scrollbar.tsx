@@ -4,13 +4,13 @@ import ArrowScrollbarIcon from "#/assets/images/scrollbar-icon-arrow.svg?react";
 import { recordScrollAt, silenceScrollAt, stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
-import type { DragDelta } from "#/lib/hooks/use-pointer-drag.ts";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
-import { useTrailingClick } from "#/lib/hooks/use-trailing-click.ts";
 import { clamp } from "#/lib/math.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
+import { isPrimaryPress } from "#/lib/press/press.ts";
+import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { useTrailingClick } from "#/lib/press/use-trailing-click.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./scrollbar.module.css";
@@ -242,7 +242,6 @@ export function Scrollbar({
         ref={trackRef}
         className={cx(styles.track, hasOverflow && styles.filled)}
         role="scrollbar"
-        aria-label="Vertical scrollbar"
         aria-orientation="vertical"
         aria-controls={viewportId}
         aria-valuemax={100}

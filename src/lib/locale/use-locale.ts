@@ -1,4 +1,4 @@
-import { useClientValue } from "./use-client-value.ts";
+import { useClientValue } from "../hooks/use-client-value.ts";
 
 /**
  * The locale to format dates and numbers in.

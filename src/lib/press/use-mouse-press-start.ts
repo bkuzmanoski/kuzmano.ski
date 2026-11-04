@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { isSimulatedMouseDown } from "../press.ts";
+import { isSimulatedMouseDown } from "./press.ts";
 
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 

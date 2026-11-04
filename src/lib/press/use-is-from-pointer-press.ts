@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { isPointerClick, isSimulatedMouseDown } from "../press.ts";
+import { isPointerClick, isSimulatedMouseDown } from "./press.ts";
 
 /**
  * Returns a function that reports whether the latest input is a press with a pointing device, which means a

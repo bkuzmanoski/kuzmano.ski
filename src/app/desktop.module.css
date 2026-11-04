@@ -3,15 +3,16 @@
   display: flex;
   flex-direction: column;
 
-  /* The software keyboard covers part of the viewport without shrinking it, so the desktop subtracts the space it takes
-   * (see `/src/lib/hooks/use-keyboard-inset.ts`). */
-  height: calc(100dvh - var(--keyboard-inset, 0px));
+  /* The software keyboard covers part of the viewport without shrinking it, so the desktop takes the height of the
+   * visual viewport while the keyboard is shown (see
+   * `/src/lib/software-keyboard/use-viewport-height-above-software-keyboard.ts`). */
+  height: var(--viewport-height-above-software-keyboard, 100dvh);
 
   /* On iOS, the browser toolbar can leave a gap between the dynamic viewport and the bottom of the screen. Extend the
    * maximized window by 1px so its bottom border fills the gap. When there is no gap, the extra pixel is clipped by the
    * viewport. */
   &:has([data-maximized]) {
-    height: calc(100dvh - var(--keyboard-inset, 0px) + 1px);
+    height: calc(var(--viewport-height-above-software-keyboard, 100dvh) + 1px);
     border-bottom: 1px solid var(--color-border);
   }
 }

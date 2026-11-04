@@ -10,15 +10,14 @@ import { stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
-import { isMacOS } from "#/lib/device.ts";
+import { isApplePlatform } from "#/lib/device.ts";
 import { containsPoint } from "#/lib/geometry.ts";
-import { useDoublePress } from "#/lib/hooks/use-double-press.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/hooks/use-pointer-drag.ts";
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
-import { isPrimaryPress, swallowNextPress } from "#/lib/press.ts";
+import { isPrimaryPress, swallowNextPress } from "#/lib/press/press.ts";
+import { useDoublePress } from "#/lib/press/use-double-press.ts";
+import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
-import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
@@ -32,19 +31,19 @@ export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 /** Where a window is being dragged to, reported while the gesture runs so an outline can show the proposed position. */
 export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
 
-const MACOS_OPTION_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "PageUp", ArrowDown: "PageDown" };
-const MACOS_COMMAND_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "Home", ArrowDown: "End" };
+const APPLE_OPTION_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "PageUp", ArrowDown: "PageDown" };
+const APPLE_COMMAND_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "Home", ArrowDown: "End" };
 
 function scrollKeyOf(event: KeyboardEvent): string | null {
   if (!event.altKey && !event.ctrlKey && !event.metaKey) {
     return event.key;
   }
 
-  if (!isMacOS() || event.ctrlKey || (event.altKey && event.metaKey)) {
+  if (!isApplePlatform() || event.ctrlKey || (event.altKey && event.metaKey)) {
     return null;
   }
 
-  return (event.altKey ? MACOS_OPTION_ARROW_SCROLL_KEYS : MACOS_COMMAND_ARROW_SCROLL_KEYS)[event.key] ?? null;
+  return (event.altKey ? APPLE_OPTION_ARROW_SCROLL_KEYS : APPLE_COMMAND_ARROW_SCROLL_KEYS)[event.key] ?? null;
 }
 
 function keyboardScrollDelta(event: KeyboardEvent, viewport: HTMLElement): number | null {
@@ -328,6 +327,7 @@ export function Window({
           tabIndex={-1}
           className={cx(styles.controlResize, isResizePressed && styles.pressed)}
           aria-label="Resize"
+          aria-hidden="true" // The control resizes only by dragging, so a screen reader's activate action has no effect. Zoom resizes the window instead.
           {...PRESERVE_FOCUS_PROPS}
           {...resizeHandlers}
         >
@@ -361,6 +361,10 @@ export function Window({
       )}
       aria-label={title} // Rather than `aria-labelledby` referencing the title, which Chromium ignores inside inert content.
       aria-describedby={focused ? undefined : inactiveDescriptionId}
+      // On iOS, VoiceOver skips regions themselves and stops only on their descendants. Inactive windows have no
+      // accessible descendants outside their inert content, so exposing the window as a button gives it its own stop
+      // and activates it when VoiceOver focuses it.
+      role={focused ? undefined : "button"}
       data-maximized={maximized || undefined}
       onFocus={onFocus}
       onKeyDown={(event) => {
@@ -439,9 +443,7 @@ export function Window({
           resizeControl={resizeControl}
           fitsContentHeight={fitsContentHeight}
         >
-          <WindowRevealContext value={isRevealed}>
-            <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
-          </WindowRevealContext>
+          <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
         </ScrollPane>
       </div>
     </section>

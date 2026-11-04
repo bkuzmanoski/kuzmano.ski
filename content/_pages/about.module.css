@@ -1,39 +1,7 @@
-.entry [data-content-body] {
-  padding-block-start: 0;
-}
-
-.entry [data-content-span="pane"] {
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-template-rows: 1fr;
-
-  min-height: 320px;
-  margin-block: 0 20px;
-
-  & > p {
-    grid-column: text;
-    align-self: end;
-
-    font: 800 semi-condensed 64px/72px var(--content-body-font-family-display);
-    text-wrap: balance;
-    letter-spacing: -0.01em;
-
-    @mixin content-rail-collapsed {
-      font-size: 56px;
-      line-height: 64px;
-    }
-  }
-}
-
-.entry [data-content-body] > h1 + [data-content-span="pane"] + p {
-  margin-block-start: var(--content-body-layout-space-loose);
-  font: var(--content-body-font-lede);
+.title {
+  @mixin visually-hidden;
 }
 
 .entry [data-image-row] img {
   image-rendering: pixelated;
-}
-
-.title {
-  @mixin visually-hidden;
 }

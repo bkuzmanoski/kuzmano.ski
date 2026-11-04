@@ -21,7 +21,7 @@ import {
   yearsIn,
 } from "#/lib/experience/career-timeline.ts";
 import type { CareerTimelineDirection, Experience, MonthSpan } from "#/lib/experience/career-timeline.ts";
-import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
+import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import { careerTimelinePlacementAttributesOf } from "./career-timeline-layout.ts";

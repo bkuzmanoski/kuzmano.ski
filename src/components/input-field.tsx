@@ -79,3 +79,15 @@ export function InputField({
     </div>
   );
 }
+
+export function StaticField({ label, value, children }: { label: string; value: string; children?: ReactNode }) {
+  return (
+    // Use a `<div>` as `children` may render a `<dialog>` (e.g., a `CopyButton` failure alert), which cannot be nested
+    // inside a `<p>`.
+    <div className={styles.inputField}>
+      <span className={styles.label}>{label}</span>
+      <span className={styles.value}>{value}</span>
+      {children}
+    </div>
+  );
+}

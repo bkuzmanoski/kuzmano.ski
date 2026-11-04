@@ -13,14 +13,14 @@ import { createIconPositionsStore } from "#/lib/desktop-icons/positions.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
-import { useContextMenuPress } from "#/lib/hooks/use-context-menu-press.ts";
-import type { ContextMenuPress } from "#/lib/hooks/use-context-menu-press.ts";
 import { useElementSize } from "#/lib/hooks/use-element-size.ts";
-import { useIsFromPointerPress } from "#/lib/hooks/use-is-from-pointer-press.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import { activateOnKeyPress, isArrowKey } from "#/lib/keys.ts";
 import type { ArrowKey } from "#/lib/keys.ts";
 import { followLink } from "#/lib/link.ts";
+import type { ContextMenuPress } from "#/lib/menu/use-context-menu-press.ts";
+import { useContextMenuPress } from "#/lib/menu/use-context-menu-press.ts";
+import { useIsFromPointerPress } from "#/lib/press/use-is-from-pointer-press.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import {
   useFocusedWindow,
@@ -134,7 +134,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
       return;
     }
 
-    // The zoom rect grows toward a window that is not on the desktop yet, unless the visitor prefers reduced motion. A
+    // The zoom rect grows toward a window that is not on the desktop yet, unless the user prefers reduced motion. A
     // window that is already open only changes what it shows.
     const windowId = resolveWindow(iconDefinition.route)?.id;
     const element = iconElement(iconDefinition.id);

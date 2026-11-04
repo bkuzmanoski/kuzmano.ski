@@ -5,7 +5,7 @@ import { cx } from "#/lib/class-names.ts";
 import { activateOnKeyPress } from "#/lib/keys.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
+import { isPrimaryPress } from "#/lib/press/press.ts";
 
 import styles from "./button.module.css";
 

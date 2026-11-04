@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import { Alert } from "#/components/alert.tsx";
 import { Button } from "#/components/button.tsx";
 import { CopyButton } from "#/components/copy-button.tsx";
-import { InputField } from "#/components/input-field.tsx";
+import { InputField, StaticField } from "#/components/input-field.tsx";
 import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { Scrollbar } from "#/components/scrollbar.tsx";
 import { TextArea, TextInput } from "#/components/text-input.tsx";
@@ -24,9 +24,9 @@ import { useContactEmailAddress } from "#/lib/contact/use-contact-email-address.
 import { firstMessage } from "#/lib/forms/client.ts";
 import { useForm } from "#/lib/forms/use-form.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
-import { useLocale } from "#/lib/hooks/use-locale.ts";
 import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
+import { useLocale } from "#/lib/locale/use-locale.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useCloseGuard, useCloseWindow } from "#/lib/window-manager/use-close-window.ts";
 
@@ -46,7 +46,6 @@ export function ContactBody() {
   const characterCountId = useId();
   const characterCount = MESSAGE_MAX_LENGTH - form.values.message.length;
   const isCharacterCountVisible = characterCount <= CHARACTER_COUNT_VISIBLE_FROM;
-  const toField = useInputField();
   const fromField = useInputField(form.visibleErrors.from);
   const messageField = useInputField(form.visibleErrors.message, {
     describedBy: isCharacterCountVisible ? characterCountId : undefined,
@@ -178,16 +177,9 @@ export function ContactBody() {
       >
         <div className={styles.fields} inert={isSending}>
           <div className={styles.header}>
-            <InputField label="To:" binding={toField}>
-              <TextInput
-                {...toField.control}
-                readOnly
-                tabIndex={-1}
-                spellCheck={false}
-                value={contactEmailAddress ?? AUTHOR_NAME}
-              />
+            <StaticField label="To:" value={contactEmailAddress ?? AUTHOR_NAME}>
               <CopyButton value={contactEmailAddress} entity="email address" />
-            </InputField>
+            </StaticField>
             <InputField label="From:" binding={fromField}>
               <TextInput
                 {...fromField.control}

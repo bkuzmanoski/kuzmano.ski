@@ -26,7 +26,7 @@ if (!COLLECTION || !INITIAL_PAGE) {
 const COLLECTION_ENTRY = COLLECTION.list()[0]!;
 const COLLECTION_ENTRY_ROUTE = COLLECTION.routeOf(COLLECTION_ENTRY.slug);
 
-const openWindows = () => screen.queryAllByRole("region");
+const openWindows = () => [...document.querySelectorAll("main > section")];
 
 /** Only the focused window renders its title bar controls. */
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;

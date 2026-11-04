@@ -1,7 +1,8 @@
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { INITIAL_WINDOW_ROUTE } from "#/config/navigation.ts";
+import { FOCUSED_WINDOW_CONTENT_ID } from "#/features/window-manager/window.tsx";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { collection, configuredPages } from "#/test-utils/catalog.ts";
 import { renderRoute } from "#/test-utils/router.tsx";
@@ -35,6 +36,8 @@ function completeStartupSequence() {
   }
 }
 
+const INITIAL_PAGE_TITLE = configuredPages[INITIAL_WINDOW_ROUTE.slice(1)]!.title;
+
 const menuBarNavigation = () => screen.findByRole("navigation", { name: "Main menu", hidden: true });
 
 test("the desktop is inert while the startup sequence covers it", async () => {
@@ -53,11 +56,19 @@ test("the initial window takes the focus once the startup sequence has completed
   startupSequence.isComplete = false;
   renderRoute("/");
 
-  const window = await screen.findByRole("region", { name: configuredPages[INITIAL_WINDOW_ROUTE.slice(1)]!.title });
+  const window = await screen.findByRole("region", { name: INITIAL_PAGE_TITLE });
 
   expect(document.activeElement).not.toBe(window);
 
   act(completeStartupSequence);
 
   expect(document.activeElement).toBe(window);
+});
+
+test("the skip link focuses the focused window's content", async () => {
+  renderRoute("/");
+  await screen.findByRole("region", { name: INITIAL_PAGE_TITLE });
+  fireEvent.click(screen.getByRole("link", { name: "Jump to content" }));
+
+  expect(document.activeElement).toBe(document.getElementById(FOCUSED_WINDOW_CONTENT_ID));
 });

@@ -19,11 +19,11 @@ import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts.ts";
 import type { KeyboardShortcut } from "#/lib/hooks/use-global-shortcuts.ts";
-import { useMenuButtonPress } from "#/lib/hooks/use-menu-button-press.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { cycle } from "#/lib/math.ts";
+import { useMenuButtonPress } from "#/lib/menu/use-menu-button-press.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
-import { isPrimaryPress } from "#/lib/press.ts";
+import { isPrimaryPress } from "#/lib/press/press.ts";
 import { sleep } from "#/lib/screensaver/lifecycle.ts";
 import {
   APPEARANCE_LABELS,

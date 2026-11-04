@@ -153,10 +153,7 @@
 }
 
 .preview {
-  --image-gallery-preview-title-bar-height: calc(16 * var(--dither-dot)); /* Excludes the bottom border. */
-
-  /* The title bar is sized in dither dots, so its fill and its close button stay aligned at any device pixel ratio. */
-  @mixin dither-dot;
+  --image-gallery-preview-title-bar-height: calc(16 * var(--layout-bitmap-pixel)); /* Excludes the bottom border. */
 
   position: fixed;
   inset: calc(var(--layout-safe-area-top) + var(--layout-menu-bar-height) + var(--layout-window-layer-padding))
@@ -207,7 +204,7 @@
   flex: none;
 
   height: calc(var(--image-gallery-preview-title-bar-height) + 1px); /* Includes the bottom border. */
-  padding: calc(3 * var(--dither-dot));
+  padding: calc(3 * var(--layout-bitmap-pixel));
   border-block-end: 1px solid var(--color-border);
 
   &::before,
@@ -220,7 +217,7 @@
 
   &::before {
     flex: none;
-    width: calc(4 * var(--dither-dot));
+    width: calc(4 * var(--layout-bitmap-pixel));
   }
 
   &::after {
@@ -233,9 +230,9 @@
 
   align-self: center;
 
-  width: calc(10 * var(--dither-dot));
-  height: calc(10 * var(--dither-dot));
-  margin-inline: calc(3 * var(--dither-dot));
+  width: calc(10 * var(--layout-bitmap-pixel));
+  height: calc(10 * var(--layout-bitmap-pixel));
+  margin-inline: calc(3 * var(--layout-bitmap-pixel));
   border: 1px solid var(--color-border);
 
   background: var(--color-background);
@@ -243,7 +240,7 @@
   &::before {
     content: "";
     position: absolute;
-    inset: calc(-3 * var(--dither-dot));
+    inset: calc(-3 * var(--layout-bitmap-pixel));
   }
 
   &:focus-visible {

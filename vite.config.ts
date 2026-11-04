@@ -20,10 +20,6 @@ import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
 import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
-import {
-  DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME,
-  ditherDissolveKeyframes,
-} from "./build/stylesheet/dither-dissolve-keyframes.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
@@ -40,10 +36,7 @@ export default defineConfig(({ command }) => {
     css: {
       postcss: {
         plugins: [
-          postcssMixins({
-            mixinsFiles: "src/mixins.css",
-            mixins: { [DITHER_DISSOLVE_KEYFRAMES_MIXIN_NAME]: ditherDissolveKeyframes },
-          }),
+          postcssMixins({ mixinsFiles: "src/mixins.css" }),
           postcssPresetEnv({
             features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
           }),

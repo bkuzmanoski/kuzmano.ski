@@ -5,7 +5,7 @@ import menuStyles from "#/components/menu.module.css";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { ICON_POSITIONS_STORAGE_KEY } from "#/lib/desktop-icons/positions.ts";
-import { LONG_PRESS_DURATION_MS } from "#/lib/hooks/use-context-menu-press.ts";
+import { LONG_PRESS_DURATION_MS } from "#/lib/menu/use-context-menu-press.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";

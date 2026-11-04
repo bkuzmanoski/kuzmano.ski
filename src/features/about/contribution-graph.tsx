@@ -7,10 +7,10 @@ import type { DateFormat } from "#/lib/datetime.ts";
 import { intersectionOf, intersectionRatioOf } from "#/lib/geometry.ts";
 import { busiestCountIn, contributionLevelOf, monthLabelsFor, weekdayOf } from "#/lib/github/contributions.ts";
 import { useContributionCalendar } from "#/lib/github/use-contribution-calendar.ts";
-import { useDateFormat } from "#/lib/hooks/use-date-format.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
-import { useNumberFormat } from "#/lib/hooks/use-number-format.ts";
 import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
+import { useDateFormat } from "#/lib/locale/use-date-format.ts";
+import { useNumberFormat } from "#/lib/locale/use-number-format.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import { languageAttributeInDocumentFor } from "#/site/language.ts";
 

@@ -1,20 +1,20 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { cloneElement } from "react";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import type * as Scroll from "#/lib/audio/scroll.ts";
 import { playClickSound, playScrollDetentSound } from "#/lib/audio/sounds.ts";
-import { isMacOS, isTouchOnly } from "#/lib/device.ts";
+import { isApplePlatform, isTouchOnly } from "#/lib/device.ts";
 import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { clamp } from "#/lib/math.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
-import { useIsWindowRevealed } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { nextAnimationFrame } from "#/test-utils/timers.ts";
 
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "./scroll-pane.tsx";
+import styles from "./window.module.css";
 import { FOCUSED_WINDOW_CONTENT_ID, Window } from "./window.tsx";
 
 import type { WindowDrag } from "./window.tsx";
@@ -34,7 +34,7 @@ vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof StartupSequenceLifecycle>()),
   useIsStartupSequenceComplete: () => startupSequence.isComplete,
 }));
-vi.mock("#/lib/device.ts", () => ({ isMacOS: vi.fn(), isTouchOnly: vi.fn() }));
+vi.mock("#/lib/device.ts", () => ({ isApplePlatform: vi.fn(), isTouchOnly: vi.fn() }));
 
 const BASE_PANE_HEIGHT_PX = 100;
 
@@ -73,7 +73,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   startupSequence.isComplete = true;
-  vi.mocked(isMacOS).mockReset();
+  vi.mocked(isApplePlatform).mockReset();
   vi.mocked(isTouchOnly).mockReset();
 });
 
@@ -162,11 +162,8 @@ const windowTitleBar = () => screen.getByText("Window").parentElement!;
 const scrollPane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const scrollArrows = () => [screen.getByLabelText("Scroll up"), screen.getByLabelText("Scroll down")];
 const scrollArrowVisibilities = () => scrollArrows().map((arrow) => getComputedStyle(arrow).visibility);
+const areContentAnimationsPaused = () => document.querySelector("section")!.classList.contains(styles.concealed!);
 const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
-
-function RevealProbe() {
-  return <p>{useIsWindowRevealed() ? "Revealed" : "Concealed"}</p>;
-}
 
 function ContentClaimingKey({ claimedKey }: { claimedKey: string }) {
   useWindowKeyDown((event: KeyboardEvent) => {
@@ -275,9 +272,9 @@ test.each([
   ["the Down arrow key with the Command key", 700, { key: "ArrowDown", metaKey: true }],
   ["the Up arrow key with the Command key", 0, { key: "ArrowUp", metaKey: true }],
 ])(
-  "on macOS, pressing %s while the window itself has the focus scrolls its content to %i",
+  "on an Apple platform, pressing %s while the window itself has the focus scrolls its content to %i",
   (_label, expectedTop, init) => {
-    vi.mocked(isMacOS).mockReturnValue(true);
+    vi.mocked(isApplePlatform).mockReturnValue(true);
     render(windowShowing("tall", TALL_PANE_ELEMENT));
     scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
@@ -294,9 +291,9 @@ test.each([
   ["the Page Down key with the Option key", { key: "PageDown", altKey: true }],
   ["the Space key with the Command key", { key: " ", metaKey: true }],
 ])(
-  "on macOS, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
+  "on an Apple platform, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
   (_label, init) => {
-    vi.mocked(isMacOS).mockReturnValue(true);
+    vi.mocked(isApplePlatform).mockReturnValue(true);
     render(windowShowing("tall", TALL_PANE_ELEMENT));
     scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
@@ -311,9 +308,9 @@ test.each([
   ["the Down arrow key with the Option key", { key: "ArrowDown", altKey: true }],
   ["the Down arrow key with the Command key", { key: "ArrowDown", metaKey: true }],
 ])(
-  "outside macOS, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
+  "outside Apple platforms, pressing %s while the window itself has the focus does not scroll its content or prevent the key's default action",
   (_label, init) => {
-    vi.mocked(isMacOS).mockReturnValue(false);
+    vi.mocked(isApplePlatform).mockReturnValue(false);
     render(windowShowing("tall", TALL_PANE_ELEMENT));
     scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
@@ -416,8 +413,8 @@ test("pressing a key not claimed by a handler the window's content registered st
   expect(scrollPane().scrollTop).toBe(INITIAL_SCROLL_TOP_PX + PAGE_SCROLL_DISTANCE_PX);
 });
 
-test("on macOS, pressing the Down arrow key with the Option key scrolls the content by a page when a handler the content registered claims the Down arrow key", () => {
-  vi.mocked(isMacOS).mockReturnValue(true);
+test("on an Apple platform, pressing the Down arrow key with the Option key scrolls the content by a page when a handler the content registered claims the Down arrow key", () => {
+  vi.mocked(isApplePlatform).mockReturnValue(true);
   render(windowShowing("tall", <ContentClaimingKey claimedKey="ArrowDown" />));
   scrollPane().scrollTop = INITIAL_SCROLL_TOP_PX;
 
@@ -487,7 +484,7 @@ test("the window does not restore focus to its resize control", () => {
   const focusableElement = screen.getByRole("button", { name: "Button" });
 
   focusableElement.focus();
-  screen.getByRole("button", { name: "Resize" }).focus();
+  screen.getByLabelText("Resize").focus();
   switchAwayAndBack(rerender, "tall", BUTTON_ELEMENT);
 
   expect(document.activeElement).toBe(focusableElement);
@@ -496,7 +493,7 @@ test("the window does not restore focus to its resize control", () => {
 test("an inactive window's title bar and content are inert, while the window itself remains a tab stop", () => {
   render(windowShowing("tall", BUTTON_ELEMENT, false));
 
-  const windowElement = screen.getByRole("region", { name: "Window" });
+  const windowElement = screen.getByRole("button", { name: "Window" });
 
   expect(windowTitleBar().closest("[inert]")).not.toBeNull();
   expect(screen.getByRole("button", { name: "Button" }).closest("[inert]")).not.toBeNull();
@@ -506,7 +503,7 @@ test("an inactive window's title bar and content are inert, while the window its
 
 test("an inactive window is described as an inactive window, and an active window has no description", () => {
   const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false));
-  const windowElement = screen.getByRole("region", { name: "Window" });
+  const windowElement = screen.getByRole("button", { name: "Window" });
 
   expect(descriptionTextOf(windowElement)).toBe("Inactive window");
 
@@ -515,10 +512,19 @@ test("an inactive window is described as an inactive window, and an active windo
   expect(windowElement.hasAttribute("aria-describedby")).toBe(false);
 });
 
+test("an inactive window has the button role and an active window has the region role", () => {
+  const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false));
+  const windowElement = screen.getByRole("button", { name: "Window" });
+
+  rerender(windowShowing("tall", BUTTON_ELEMENT));
+
+  expect(screen.getByRole("region", { name: "Window" })).toBe(windowElement);
+});
+
 test("focusing an inactive window activates it, and its contents are no longer inert once it is active", () => {
   const onFocus = vi.fn();
   const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false, { onFocus }));
-  const windowElement = screen.getByRole("region", { name: "Window" });
+  const windowElement = screen.getByRole("button", { name: "Window" });
 
   windowElement.focus();
 
@@ -533,7 +539,7 @@ test("focusing an inactive window activates it, and its contents are no longer i
 
 test("a press on an inactive window prevents the default focus behavior, while a press on an active window does not", () => {
   const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false));
-  const windowElement = screen.getByRole("region", { name: "Window" });
+  const windowElement = screen.getByRole("button", { name: "Window" });
 
   fireEvent.pointerDown(windowElement);
 
@@ -547,7 +553,7 @@ test("a press on an inactive window prevents the default focus behavior, while a
 
 test("a press on a window plays the click sound only when it is a primary press and the window is inactive", () => {
   const { rerender } = render(windowShowing("tall", BUTTON_ELEMENT, false));
-  const windowElement = screen.getByRole("region", { name: "Window" });
+  const windowElement = screen.getByRole("button", { name: "Window" });
 
   vi.mocked(playClickSound).mockClear();
   fireEvent.pointerDown(windowElement, { button: 2 });
@@ -580,8 +586,8 @@ test("a press on an inactive window does not trigger a click on the content unde
   const target = screen.getByRole("button", { name: "Button" });
 
   // The press activates the window, so the click that ends it is dispatched to the content the scrim was covering (see
-  // `swallowNextPress` in `/src/lib/press.ts`).
-  fireEvent.pointerDown(screen.getByRole("region", { name: "Window" }));
+  // `swallowNextPress` in `/src/lib/press/press.ts`).
+  fireEvent.pointerDown(screen.getByRole("button", { name: "Window" }));
   rerender(
     windowShowing(
       "tall",
@@ -604,7 +610,7 @@ test("a press on the chrome of a window keeps the focus within it unchanged", ()
   focusableElement.focus();
 
   expect(fireEvent.mouseDown(screen.getByRole("button", { name: "Zoom" }))).toBe(false);
-  expect(fireEvent.mouseDown(screen.getByRole("button", { name: "Resize" }))).toBe(false);
+  expect(fireEvent.mouseDown(screen.getByLabelText("Resize"))).toBe(false);
   expect(document.activeElement).toBe(focusableElement);
 
   switchAwayAndBack(rerender, "tall", BUTTON_ELEMENT);
@@ -657,7 +663,7 @@ test("a fixed-size window has neither a zoom control nor a resize control", () =
   render(unresizableWindow("short", SHORT_PANE_ELEMENT));
 
   expect(screen.queryByRole("button", { name: "Zoom" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "Resize" })).toBeNull();
+  expect(screen.queryByLabelText("Resize")).toBeNull();
 });
 
 test("the scrollbar of a fixed-size window collapses when its content does not overflow", () => {
@@ -686,8 +692,15 @@ test("a window that fits its content height reports its rendered height and omit
 test("the scrollbar of a resizable window does not collapse when its content does not overflow", () => {
   render(windowShowing("short", SHORT_PANE_ELEMENT));
 
-  expect(screen.queryByRole("button", { name: "Resize" })).not.toBeNull();
+  expect(screen.queryByLabelText("Resize")).not.toBeNull();
   expect(isScrollbarCollapsed()).toBe(false); // The scrollbar contains the resize control, so it stays open.
+});
+
+test("the resize control is hidden from assistive technology", () => {
+  render(windowShowing("short", SHORT_PANE_ELEMENT));
+
+  expect(screen.queryByLabelText("Resize")).not.toBeNull();
+  expect(screen.queryByRole("button", { name: "Resize" })).toBeNull();
 });
 
 test("dragging the title bar reports the position being chosen and moves the window there once the drag ends", async () => {
@@ -756,7 +769,7 @@ test("dragging the resize control reports the size being chosen and applies it o
 
   render(windowShowing("tall", TALL_PANE_ELEMENT, true, { onResize, onDrag }));
 
-  const control = screen.getByRole("button", { name: "Resize" });
+  const control = screen.getByLabelText("Resize");
 
   fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
   fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
@@ -774,7 +787,7 @@ test("dragging the resize control reports the size being chosen and applies it o
 test("the resize control clears its pressed state when the pointer moves outside it", async () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
 
-  const control = screen.getByRole("button", { name: "Resize" });
+  const control = screen.getByLabelText("Resize");
 
   vi.spyOn(control, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 16, 16));
   fireEvent.pointerDown(control, { clientX: 8, clientY: 8, button: 0 });
@@ -807,7 +820,7 @@ test("a resize drag commits and clears its preview when `pointerup` is dispatche
 
   render(windowShowing("tall", TALL_PANE_ELEMENT, true, { onResize, onDrag }));
 
-  const control = screen.getByRole("button", { name: "Resize" });
+  const control = screen.getByLabelText("Resize");
 
   fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
   fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
@@ -827,7 +840,7 @@ test("a resize drag commits and clears its preview on a `pointermove` without pr
 
   render(windowShowing("tall", TALL_PANE_ELEMENT, true, { onResize, onDrag }));
 
-  const control = screen.getByRole("button", { name: "Resize" });
+  const control = screen.getByLabelText("Resize");
 
   fireEvent.pointerDown(control, { clientX: 0, clientY: 0, button: 0 });
   fireEvent.pointerMove(control, { clientX: -50, clientY: 100, buttons: 1 });
@@ -879,17 +892,17 @@ test("a press on a title bar control plays the press sound once", () => {
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("the content reads `useIsWindowRevealed` as `false` while the window is hidden and as `true` once it is not", () => {
-  const { rerender } = render(cloneElement(windowShowing("a", <RevealProbe />), { hidden: true }));
+test("a window pauses the animations in its content while it is hidden, and runs them once it is not", () => {
+  const { rerender } = render(cloneElement(windowShowing("a", BUTTON_ELEMENT), { hidden: true }));
 
-  expect(screen.getByText("Concealed")).toBeDefined();
+  expect(areContentAnimationsPaused()).toBe(true);
 
-  rerender(windowShowing("a", <RevealProbe />));
+  rerender(windowShowing("a", BUTTON_ELEMENT));
 
-  expect(screen.getByText("Revealed")).toBeDefined();
+  expect(areContentAnimationsPaused()).toBe(false);
 });
 
-test("the content of a window rendered before the startup sequence completes reads `useIsWindowRevealed` as `false` until the window's opacity transition finishes", async () => {
+test("a window rendered before the startup sequence completes pauses the animations in its content until its opacity transition finishes", async () => {
   let finishRevealTransition: () => void = () => undefined;
 
   const finished = new Promise<void>((resolve) => {
@@ -902,32 +915,32 @@ test("the content of a window rendered before the startup sequence completes rea
 
   startupSequence.isComplete = false;
 
-  const { rerender } = render(windowShowing("a", <RevealProbe />));
+  const { rerender } = render(windowShowing("a", BUTTON_ELEMENT));
 
   startupSequence.isComplete = true;
 
-  rerender(windowShowing("a", <RevealProbe />));
+  rerender(windowShowing("a", BUTTON_ELEMENT));
 
-  expect(screen.getByText("Concealed")).toBeDefined();
+  expect(areContentAnimationsPaused()).toBe(true);
 
   await act(async () => {
     finishRevealTransition();
     await finished;
   });
 
-  expect(screen.getByText("Revealed")).toBeDefined();
+  expect(areContentAnimationsPaused()).toBe(false);
 });
 
-test("the content of a window rendered before the startup sequence completes reads `useIsWindowRevealed` as `true` once it completes when the window has no opacity transition", async () => {
+test("a window rendered before the startup sequence completes runs the animations in its content once it completes when the window has no opacity transition", async () => {
   startupSequence.isComplete = false;
 
-  const { rerender } = render(windowShowing("a", <RevealProbe />));
+  const { rerender } = render(windowShowing("a", BUTTON_ELEMENT));
 
-  expect(screen.getByText("Concealed")).toBeDefined();
+  expect(areContentAnimationsPaused()).toBe(true);
 
   startupSequence.isComplete = true;
 
-  rerender(windowShowing("a", <RevealProbe />));
+  rerender(windowShowing("a", BUTTON_ELEMENT));
 
-  expect(await screen.findByText("Revealed")).toBeDefined();
+  await waitFor(() => expect(areContentAnimationsPaused()).toBe(false));
 });
