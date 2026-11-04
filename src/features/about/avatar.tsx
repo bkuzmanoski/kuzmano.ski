@@ -28,7 +28,7 @@ function gazeDirectionToward({ clientX, clientY }: PointerEvent, avatarRect: DOM
   return isLeft ? "down-left" : "down-right";
 }
 
-export function Avatar({ alt }: { alt: string }) {
+export function Avatar({ alt = "" }: { alt: string }) {
   const avatarRef = useRef<HTMLSpanElement>(null);
   const [gazeDirection, setGazeDirection] = useState<GazeDirection>(INITIAL_GAZE_DIRECTION);
 
