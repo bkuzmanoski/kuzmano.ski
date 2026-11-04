@@ -160,7 +160,7 @@ describe("useViewportHeightAboveSoftwareKeyboard", () => {
     expect(setProperty).not.toHaveBeenCalled();
   });
 
-  test("scrolls the window back to the top when the visual viewport scrolls", () => {
+  test("scrolls the window back to the top when the visual viewport scrolls while a text field has the focus", () => {
     const viewport = stubViewport();
 
     renderHook(() => useViewportHeightAboveSoftwareKeyboard());
@@ -168,6 +168,39 @@ describe("useViewportHeightAboveSoftwareKeyboard", () => {
     viewport.scroll();
 
     expect(viewport.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  test("scrolls the window back to the top when the visual viewport resizes as the software keyboard hides after a text field loses the focus", () => {
+    const viewport = stubViewport();
+
+    renderHook(() => useViewportHeightAboveSoftwareKeyboard());
+    viewport.resizeTo(LAYOUT_HEIGHT_PX - 300);
+    textInput.blur();
+    vi.stubGlobal("scrollY", 120);
+    viewport.resizeTo(LAYOUT_HEIGHT_PX);
+
+    expect(viewport.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  test("leaves the scroll position of the window unchanged when the visual viewport scrolls while the focused element is not editable and the software keyboard is hidden", () => {
+    const viewport = stubViewport();
+
+    textInput.blur();
+    renderHook(() => useViewportHeightAboveSoftwareKeyboard());
+    vi.stubGlobal("scrollY", 120);
+    viewport.scroll();
+
+    expect(viewport.scrollTo).not.toHaveBeenCalled();
+  });
+
+  test("leaves the scroll position of the window unchanged when the visual viewport scrolls while the user has zoomed the page in", () => {
+    const viewport = stubViewport({ scale: 2 });
+
+    renderHook(() => useViewportHeightAboveSoftwareKeyboard());
+    vi.stubGlobal("scrollY", 120);
+    viewport.scroll();
+
+    expect(viewport.scrollTo).not.toHaveBeenCalled();
   });
 
   test("removes the `--viewport-height-above-software-keyboard` custom property from `<html>` on unmount", () => {

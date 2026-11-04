@@ -62,6 +62,7 @@ export function useViewportHeightAboveSoftwareKeyboard(): void {
     const update = () => {
       const height = viewportHeightAboveSoftwareKeyboard();
       const isScrolled = window.scrollY !== 0; // Reads `scrollY` before the custom property changes so the browser does not recalculate the style of the whole document to return it.
+      const isTextEntryActive = isEditableTarget(document.activeElement) || isSoftwareKeyboardShown(); // Read before `publish` clears the property so the window still scrolls to the top when the viewport resizes after the keyboard hides on blur.
       const isIncrease =
         height !== null &&
         isSoftwareKeyboardShown() &&
@@ -76,7 +77,9 @@ export function useViewportHeightAboveSoftwareKeyboard(): void {
         );
       }
 
-      if (isScrolled) {
+      // iOS may scroll the window to keep the focused field above the software keyboard. Do not reset the scroll
+      // position while zoomed in, as the user may be panning the page manually.
+      if (isScrolled && isTextEntryActive && !isVisualViewportZoomedIn(viewport)) {
         window.scrollTo(0, 0);
       }
     };
