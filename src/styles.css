@@ -236,9 +236,9 @@
   --color-startup-sequence-foreground: var(--neutral-925);
   --color-startup-sequence-backdrop: #000;
   --color-screensaver-backdrop: var(--neutral-215);
-  --color-avatar-foreground: light-dark(var(--color-foreground), var(--neutral-190)); /* A positive, not inverted. */
+  --color-avatar-foreground: light-dark(var(--color-foreground), var(--neutral-190));
   --color-avatar-background: light-dark(var(--color-background), var(--color-foreground));
-  --color-avatar-outline: light-dark(transparent, var(--neutral-390));
+  --color-avatar-outline: light-dark(transparent, var(--color-border));
   --color-accent: transparent; /* Set from JS. */
   --color-success: var(--accent-green);
   --color-warning: var(--accent-orange);

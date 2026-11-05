@@ -3,11 +3,8 @@
   --color-icon-background: var(--color-avatar-background);
 
   display: block;
-
-  /* The inline padding reserves room for the outline where the shoulders meet the sides of the sprite. */
-  width: calc((34 * 2 + 2) * var(--layout-bitmap-pixel));
-  height: calc(34 * 2 * var(--layout-bitmap-pixel));
-  padding-inline: var(--layout-bitmap-pixel);
+  width: calc((34 * 2) * var(--layout-bitmap-pixel));
+  height: calc((34 * 2) * var(--layout-bitmap-pixel));
 }
 
 .sprite {
@@ -17,8 +14,9 @@
   width: 100%;
   height: 100%;
 
-  /* Clips the outline at the bottom of the sprite, where the torso continues past it, but not at its sides. */
-  clip-path: inset(0 calc(-1 * var(--layout-bitmap-pixel)) 0);
+  clip-path: inset(
+    calc(-1 * var(--layout-bitmap-pixel)) calc(-1 * var(--layout-bitmap-pixel)) 0
+  ); /* Clips the outline at the bottom of the sprite where the torso continues past it. */
 
   shape-rendering: crispedges;
 
