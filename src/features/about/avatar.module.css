@@ -14,10 +14,6 @@
   width: 100%;
   height: 100%;
 
-  clip-path: inset(
-    calc(-1 * var(--layout-bitmap-pixel)) calc(-1 * var(--layout-bitmap-pixel)) 0
-  ); /* Clips the outline at the bottom of the sprite where the torso continues past it. */
-
   shape-rendering: crispedges;
 
   /* Outlines each sprite's silhouette with a one-bitmap-pixel border at any scale. */
