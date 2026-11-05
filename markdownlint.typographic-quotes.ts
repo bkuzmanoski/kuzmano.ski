@@ -18,6 +18,11 @@ interface ProseCharacter {
   offset: number | null;
 }
 
+interface TypographicQuotesConfig {
+  /** The names of component props that hold prose, which the rule checks in addition to `PROSE_ATTRIBUTE_NAMES`. */
+  prose_attributes?: Array<string>;
+}
+
 interface OpenQuotationCounts {
   double: number;
   single: number;
@@ -37,7 +42,7 @@ const DIGIT_PATTERN = /\d/;
 const WHITESPACE_PATTERN = /\s/;
 const PLACEHOLDER_CHARACTER = "x";
 const PHRASING_CONTAINER_TYPES = new Set(["paragraph", "heading", "tableCell"]);
-const PROSE_ATTRIBUTE_NAMES = new Set(["alt", "title", "label", "caption", "aria-label", "action", "confirmation"]);
+const PROSE_ATTRIBUTE_NAMES = ["alt", "title", "label", "aria-label"];
 const LITERAL_ELEMENT_NAMES = new Set(["code", "kbd", "pre", "samp"]);
 
 export const AMBIGUOUS_QUOTE_DETAIL =
@@ -234,14 +239,18 @@ function titleRangeIn(source: string, node: ContentNode): { start: number; end: 
   return null;
 }
 
-function proseRunsIn(source: string, tree: ContentNode): Array<Array<ProseCharacter>> {
+function proseRunsIn(
+  source: string,
+  tree: ContentNode,
+  proseAttributeNames: ReadonlySet<string>,
+): Array<Array<ProseCharacter>> {
   const proseRuns: Array<Array<ProseCharacter>> = [];
 
   const addProseAttributeValues = (node: ContentNode) => {
     for (const { type, name, value, position } of node.attributes ?? []) {
       if (
         type !== "mdxJsxAttribute" ||
-        !PROSE_ATTRIBUTE_NAMES.has(name ?? "") ||
+        !proseAttributeNames.has(name ?? "") ||
         typeof value !== "string" ||
         position?.start.offset === undefined ||
         position.end.offset === undefined
@@ -379,6 +388,8 @@ const typographicQuotesRule: Rule = {
   tags: ["typography"],
   parser: "none",
   function: (params, onError) => {
+    const config = params.config as TypographicQuotesConfig; // `config` is the rule's own entry in `.markdownlint-cli2.jsonc`, typed as `any`.
+    const proseAttributeNames = new Set([...PROSE_ATTRIBUTE_NAMES, ...(config.prose_attributes ?? [])]);
     const source = params.lines.join("\n");
 
     let tree: ContentNode;
@@ -391,7 +402,7 @@ const typographicQuotesRule: Rule = {
 
     const replacements = new Map<number, string | null>();
 
-    for (const proseRun of proseRunsIn(source, tree)) {
+    for (const proseRun of proseRunsIn(source, tree, proseAttributeNames)) {
       for (const [offset, replacement] of typographicQuotesIn(proseRun)) {
         replacements.set(offset, replacement);
       }

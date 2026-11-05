@@ -6,10 +6,10 @@ import { describe, expect, test } from "vitest";
 
 import typographicQuotesRule, { AMBIGUOUS_QUOTE_DETAIL } from "./markdownlint.typographic-quotes.ts";
 
-async function typographicQuoteErrorsIn(source: string) {
+async function typographicQuoteErrorsIn(source: string, config: object | true = true) {
   const results = await lint({
     strings: { entry: source },
-    config: { default: false, "typographic-quotes": true },
+    config: { default: false, "typographic-quotes": config },
     customRules: [typographicQuotesRule],
   });
   return results.entry ?? [];
@@ -142,6 +142,14 @@ A footnote.[^1]
       await typographicQuoteErrorsIn(`<a href="/page?query='a'" data-content-span='a "b"'>A link</a>
 `),
     ).toEqual([]);
+  });
+
+  test("fixes quotes in the values of the props specified in `prose_attributes`", async () => {
+    const source = `<Component speech="It's" list="It's" />
+`;
+    expect(applyFixes(source, await typographicQuoteErrorsIn(source, { prose_attributes: ["speech"] })))
+      .toBe(`<Component speech="It’s" list="It's" />
+`);
   });
 
   test("ignores the text inside a `<code>`, `<kbd>`, `<pre>`, or `<samp>` element", async () => {
