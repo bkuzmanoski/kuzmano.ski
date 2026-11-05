@@ -3,7 +3,7 @@
 }
 
 .entry [data-content-body] > p:first-of-type {
-  margin-block-end: var(--content-body-layout-space);
+  margin-block-end: var(--content-body-layout-space-relaxed);
   font: var(--content-body-font-lede);
 }
 
