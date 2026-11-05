@@ -3,7 +3,7 @@ import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 
 import displayFontUrl from "#/assets/fonts/Archivo-Variable.woff2?url";
 import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
-import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable.woff2?url";
+import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable-Opsz14-Subset.woff2?url";
 import { preloadFont } from "#/lib/fonts.ts";
 
 import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";

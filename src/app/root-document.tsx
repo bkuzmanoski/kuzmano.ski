@@ -2,7 +2,7 @@ import { HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { THEME_COLORS } from "virtual:theme-colors";
 
-import chromeFontUrl from "#/assets/fonts/ChicagoFLF-Adjusted.woff2?url";
+import chromeFontUrl from "#/assets/fonts/ChicagoFLF-Ascent950.woff2?url";
 import { WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DOCUMENT_LANGUAGE } from "#/config/site.ts";
 import { watchFaviconColorScheme } from "#/lib/favicon.ts";

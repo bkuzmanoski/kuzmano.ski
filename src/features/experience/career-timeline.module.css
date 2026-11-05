@@ -87,8 +87,6 @@
   margin-block-end: var(--career-timeline-year-label-height);
 
   font: var(--content-body-font-bitmap); /* Resolves the `ch` unit in the year label width. */
-
-  -webkit-tap-highlight-color: transparent;
 }
 
 .axis {

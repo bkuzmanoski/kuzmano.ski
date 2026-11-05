@@ -57,7 +57,7 @@ afterEach(() => {
 const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
 const CONTENT_PRELOADED_FONT_FILE_NAMES = [
   "Archivo-Variable.woff2",
-  "SourceSerif4-Variable.woff2",
+  "SourceSerif4-Variable-Opsz14-Subset.woff2",
   "QuantaStrike12-Regular.woff2",
 ];
 

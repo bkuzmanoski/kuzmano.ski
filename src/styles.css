@@ -7,7 +7,7 @@
 
   /* The font file's ascent is lowered from 988 to 950 units, so ascent less descent equals the cap height and the caps
    * are centered in a line box of any height. (`ascent-override` is not supported by Safari). */
-  src: url("./assets/fonts/ChicagoFLF-Adjusted.woff2") format("woff2");
+  src: url("./assets/fonts/ChicagoFLF-Ascent950.woff2") format("woff2");
 }
 
 /* On macOS, Safari and Chrome add to Helvetica's ascent while Firefox does not, causing Firefox to render `--font-ui`
@@ -58,13 +58,16 @@
   src: url("./assets/fonts/Archivo-Variable-Italic.woff2") format("woff2");
 }
 
+/* Both Source Serif 4 files come from Adobe's 4.005 release with the optical size axis fixed at 14. They keep the
+ * characters of Google Fonts' Latin subset, plus the arrow (U+2197) and narrow no-break space (U+202F) that adorn an
+ * external link. */
 @font-face {
   font-family: "Source Serif 4";
   font-weight: 200 900;
   font-style: normal;
 
   font-display: swap;
-  src: url("./assets/fonts/SourceSerif4-Variable.woff2") format("woff2");
+  src: url("./assets/fonts/SourceSerif4-Variable-Opsz14-Subset.woff2") format("woff2");
 }
 
 @font-face {
@@ -73,7 +76,7 @@
   font-style: italic;
 
   font-display: swap;
-  src: url("./assets/fonts/SourceSerif4-Variable-Italic.woff2") format("woff2");
+  src: url("./assets/fonts/SourceSerif4-Variable-Italic-Opsz14-Subset.woff2") format("woff2");
 }
 
 @font-face {
@@ -302,6 +305,8 @@ html {
   text-size-adjust: 100%;
   background-color: var(--color-desktop-background);
 
+  -webkit-tap-highlight-color: transparent;
+
   &[data-startup-sequence-overlay]::before {
     content: "";
 
@@ -356,7 +361,6 @@ hr {
   background: transparent;
   outline: none;
 
-  -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
 

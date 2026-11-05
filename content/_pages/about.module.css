@@ -2,6 +2,11 @@
   @mixin visually-hidden;
 }
 
+.entry [data-content-body] > p:first-of-type {
+  margin-block-end: var(--content-body-layout-space);
+  font: var(--content-body-font-lede);
+}
+
 .entry [data-image-row] img {
   image-rendering: pixelated;
 }

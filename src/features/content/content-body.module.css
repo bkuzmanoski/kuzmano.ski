@@ -460,11 +460,11 @@
       font-weight: 450;
     }
 
-    &:where(a[target="_blank"])::after {
-      content: "\202f\2197";
-      content: "\202f\2197" / "";
-      font-size: 0.75em;
-      line-height: 0; /* The fallback font of the arrow would otherwise add to the line's height. */
+    /* Archivo has no arrow glyph, so an external link in Archivo omits the arrow adornment. */
+    &:where(a[target="_blank"]):not(:where(h1, h2, h3, blockquote) *)::after {
+      /* The text variation selector (U+FE0E) prevents iOS from drawing the arrow as an emoji in a fallback font. */
+      content: "\202f\2197\fe0e";
+      content: "\202f\2197\fe0e" / "";
     }
 
     &:where(:not(pre) > :is(code, kbd)) {
