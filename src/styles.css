@@ -129,9 +129,7 @@
   --layout-scrollbar-gutter-width: calc(var(--layout-scrollbar-width) + 1px); /* Includes the leading border. */
   --layout-viewport-margin: 8px; /* The gap between a tooltip or menu and the viewport edges. */
   --layout-shadow-length: 3px;
-  --layout-bitmap-pixel: calc(
-    max(1, round(var(--device-pixel-ratio, 1))) / var(--device-pixel-ratio, 1) * 1px
-  ); /* 1px rounded to a whole number of device pixels (at least one). */
+  --layout-bitmap-pixel: 1px; /* Set from JS. 1px without JavaScript. */
 
   /* Transitions */
   --duration-desktop-reveal-step: 0ms; /* Set from JS. */
@@ -217,7 +215,7 @@
   --color-foreground-disabled: light-dark(var(--neutral-645), var(--neutral-565));
   --color-background: light-dark(var(--neutral-990), var(--neutral-280));
   --color-background-secondary: light-dark(var(--neutral-970), var(--neutral-305));
-  --color-background-dither-pattern: light-dark(var(--neutral-820), var(--neutral-390));
+  --color-dither-pattern: light-dark(var(--neutral-820), var(--neutral-390));
   --color-scrim: color-mix(in srgb, var(--color-background) 60%, transparent);
   --color-border: var(--neutral-540);
   --color-border-secondary: light-dark(var(--neutral-820), var(--neutral-390));
@@ -238,7 +236,9 @@
   --color-screensaver-backdrop: var(--neutral-215);
   --color-avatar-foreground: light-dark(var(--color-foreground), var(--neutral-190));
   --color-avatar-background: light-dark(var(--color-background), var(--color-foreground));
-  --color-avatar-outline: light-dark(transparent, var(--color-border));
+  --color-avatar-speech-bubble-foreground: light-dark(var(--color-foreground), var(--color-background));
+  --color-avatar-speech-bubble-background: var(--color-avatar-background);
+  --color-avatar-speech-bubble-border: var(--color-foreground);
   --color-accent: transparent; /* Set from JS. */
   --color-success: var(--accent-green);
   --color-warning: var(--accent-orange);

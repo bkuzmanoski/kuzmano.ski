@@ -18,6 +18,7 @@ import { isPrimaryPress, swallowNextPress } from "#/lib/press/press.ts";
 import { useDoublePress } from "#/lib/press/use-double-press.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
+import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
@@ -443,7 +444,9 @@ export function Window({
           resizeControl={resizeControl}
           fitsContentHeight={fitsContentHeight}
         >
-          <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
+          <WindowRevealContext value={isRevealed}>
+            <WindowKeyDownContext value={keyDownHandlers}>{children}</WindowKeyDownContext>
+          </WindowRevealContext>
         </ScrollPane>
       </div>
     </section>

@@ -25,3 +25,21 @@ export function computedColorOf(color: string, colorScheme?: ColorScheme): strin
 
   return computedColor;
 }
+
+export type Rgb = readonly [number, number, number];
+
+/** Returns the RGB bytes rendered for `color` on a canvas, excluding alpha, or `null` if no 2D context is available. */
+export function rgbOf(color: string): Rgb | null {
+  const context = document.createElement("canvas").getContext("2d");
+
+  if (!context) {
+    return null;
+  }
+
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+
+  const [red = 0, green = 0, blue = 0] = context.getImageData(0, 0, 1, 1).data;
+
+  return [red, green, blue];
+}

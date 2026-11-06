@@ -133,7 +133,7 @@ describe("observeRailClearances", () => {
 
   test("sets `--content-body-rail-clearance` on a section heading to how far a masthead placed in the rail extends past the top of its row", () => {
     const body = createBody(`
-      <div data-entry-masthead>A masthead.</div>
+      <header data-entry-masthead>A masthead.</header>
       <h1>A title</h1>
       <p>A lede.</p>
       <h2>A heading</h2>
@@ -158,7 +158,7 @@ describe("observeRailClearances", () => {
 
   test("leaves `--content-body-rail-clearance` unset on a heading directly after the title, which the masthead is placed beside", () => {
     const body = createBody(`
-      <div data-entry-masthead>A masthead.</div>
+      <header data-entry-masthead>A masthead.</header>
       <h1>A title</h1>
       <h2>A heading</h2>
       <h2>Another heading</h2>
@@ -184,7 +184,7 @@ describe("observeRailClearances", () => {
 
   test("ignores a masthead in the normal flow rather than in the rail", () => {
     const body = createBody(`
-      <div data-entry-masthead>A masthead.</div>
+      <header data-entry-masthead>A masthead.</header>
       <h1>A title</h1>
       <h2>A heading</h2>
     `);

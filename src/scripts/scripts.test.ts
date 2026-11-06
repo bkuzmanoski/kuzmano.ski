@@ -6,7 +6,7 @@ import {
 } from "#/lib/startup-sequence/overlay.ts";
 import { STARTUP_SEQUENCE_STORAGE_KEY } from "#/lib/startup-sequence/session.ts";
 import appearanceScript from "#/scripts/appearance.ts?inline-script";
-import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
+import bitmapPixelScript from "#/scripts/bitmap-pixel.ts?inline-script";
 import startupSequenceScript from "#/scripts/startup-sequence.ts?inline-script";
 import themeTintScript from "#/scripts/theme-tint.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
@@ -40,7 +40,7 @@ beforeEach(() => {
   document.documentElement.style.removeProperty("--color-accent");
   document.documentElement.removeAttribute(STARTUP_SEQUENCE_OVERLAY_ATTRIBUTE);
   document.documentElement.removeAttribute("data-web-share");
-  document.documentElement.style.removeProperty("--device-pixel-ratio");
+  document.documentElement.style.removeProperty("--layout-bitmap-pixel");
   sessionStorage.removeItem(STARTUP_SEQUENCE_STORAGE_KEY);
   localStorage.clear();
   document.head.replaceChildren();
@@ -193,39 +193,26 @@ describe("Web Share support", () => {
   });
 });
 
-describe("device pixel ratio", () => {
-  const devicePixelRatioProperty = () => document.documentElement.style.getPropertyValue("--device-pixel-ratio");
+describe("bitmap pixel", () => {
+  const bitmapPixelProperty = () => document.documentElement.style.getPropertyValue("--layout-bitmap-pixel");
 
-  test("sets the `--device-pixel-ratio` custom property of `<html>` to the device pixel ratio", () => {
+  test("sets the `--layout-bitmap-pixel` custom property of `<html>` to 1px rounded to a whole number of device pixels", () => {
     stubMatchMedia();
-    vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1.1);
-    runScript(devicePixelRatioScript);
+    vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1.5);
+    runScript(bitmapPixelScript);
 
-    expect(devicePixelRatioProperty()).toBe("1.1");
+    expect(bitmapPixelProperty()).toBe(`${2 / 1.5}px`);
   });
 
-  test("updates the `--device-pixel-ratio` custom property when the device pixel ratio changes", () => {
+  test("updates the `--layout-bitmap-pixel` custom property when the device pixel ratio changes", () => {
     const changeResolution = stubMatchMedia();
     const devicePixelRatio = vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1);
 
-    runScript(devicePixelRatioScript);
-    devicePixelRatio.mockReturnValue(2);
+    runScript(bitmapPixelScript);
+    devicePixelRatio.mockReturnValue(1.5);
     changeResolution(false);
 
-    expect(devicePixelRatioProperty()).toBe("2");
-  });
-
-  test("updates the `--device-pixel-ratio` custom property on a second change of the device pixel ratio", () => {
-    const changeResolution = stubMatchMedia();
-    const devicePixelRatio = vi.spyOn(window, "devicePixelRatio", "get").mockReturnValue(1);
-
-    runScript(devicePixelRatioScript);
-    devicePixelRatio.mockReturnValue(2);
-    changeResolution(false);
-    devicePixelRatio.mockReturnValue(3);
-    changeResolution(false);
-
-    expect(devicePixelRatioProperty()).toBe("3");
+    expect(bitmapPixelProperty()).toBe(`${2 / 1.5}px`);
   });
 });
 

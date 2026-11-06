@@ -9,6 +9,7 @@ import { isApplePlatform, isTouchOnly } from "#/lib/device.ts";
 import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { clamp } from "#/lib/math.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
+import { useIsWindowRevealed } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import { descriptionTextOf } from "#/test-utils/accessibility.ts";
 import { nextAnimationFrame } from "#/test-utils/timers.ts";
@@ -164,6 +165,10 @@ const scrollArrows = () => [screen.getByLabelText("Scroll up"), screen.getByLabe
 const scrollArrowVisibilities = () => scrollArrows().map((arrow) => getComputedStyle(arrow).visibility);
 const areContentAnimationsPaused = () => document.querySelector("section")!.classList.contains(styles.concealed!);
 const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
+
+function RevealProbe() {
+  return <p>{useIsWindowRevealed() ? "Revealed" : "Concealed"}</p>;
+}
 
 function ContentClaimingKey({ claimedKey }: { claimedKey: string }) {
   useWindowKeyDown((event: KeyboardEvent) => {
@@ -943,4 +948,16 @@ test("a window rendered before the startup sequence completes runs the animation
   rerender(windowShowing("a", BUTTON_ELEMENT));
 
   await waitFor(() => expect(areContentAnimationsPaused()).toBe(false));
+});
+
+test("`useIsWindowRevealed` returns `false` while a window's content animations are paused and `true` when they run", () => {
+  const { rerender } = render(cloneElement(windowShowing("a", <RevealProbe />), { hidden: true }));
+
+  expect(areContentAnimationsPaused()).toBe(true);
+  expect(screen.getByText("Concealed")).toBeDefined();
+
+  rerender(windowShowing("a", <RevealProbe />));
+
+  expect(areContentAnimationsPaused()).toBe(false);
+  expect(screen.getByText("Revealed")).toBeDefined();
 });

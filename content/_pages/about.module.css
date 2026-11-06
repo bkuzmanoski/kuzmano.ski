@@ -1,10 +1,9 @@
-.title {
-  @mixin visually-hidden;
+.entry {
+  @mixin content-body-large;
 }
 
-.entry [data-content-body] > p:first-of-type {
-  margin-block-end: var(--content-body-layout-space-relaxed);
-  font: var(--content-body-font-lede);
+.title {
+  @mixin visually-hidden;
 }
 
 .entry [data-image-row] img {

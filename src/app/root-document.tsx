@@ -20,7 +20,7 @@ import type { ColorScheme } from "#/lib/settings/theme.ts";
 import { STARTUP_SEQUENCE_THEME_COLOR_ATTRIBUTE } from "#/lib/startup-sequence/overlay.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import appearanceScript from "#/scripts/appearance.ts?inline-script";
-import devicePixelRatioScript from "#/scripts/device-pixel-ratio.ts?inline-script";
+import bitmapPixelScript from "#/scripts/bitmap-pixel.ts?inline-script";
 import startupSequenceScript from "#/scripts/startup-sequence.ts?inline-script";
 import themeTintScript from "#/scripts/theme-tint.ts?inline-script";
 import webShareScript from "#/scripts/web-share.ts?inline-script";
@@ -53,7 +53,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
 
   return (
     // `suppressHydrationWarning` is needed because `appearanceScript`, `themeTintScript`, `startupSequenceScript`,
-    // `webShareScript`, and `devicePixelRatioScript` set attributes on `<html>` before hydration.
+    // `webShareScript`, and `bitmapPixelScript` set attributes on `<html>` before hydration.
     <html lang={DOCUMENT_LANGUAGE} style={DOCUMENT_STYLE} suppressHydrationWarning>
       <head>
         <HeadContent />
@@ -72,7 +72,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeTintScript }} />
         <script dangerouslySetInnerHTML={{ __html: startupSequenceScript }} />
         <script dangerouslySetInnerHTML={{ __html: webShareScript }} />
-        <script dangerouslySetInnerHTML={{ __html: devicePixelRatioScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bitmapPixelScript }} />
       </head>
       <body>
         {children}

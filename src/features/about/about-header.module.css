@@ -1,0 +1,27 @@
+[data-content-body] > .header {
+  display: grid;
+  grid-template-columns: subgrid;
+  margin-block-start: calc(-1 * var(--content-body-padding-block));
+
+  & > * {
+    grid-column: text;
+    margin-block: 0;
+  }
+
+  & > .backdrop {
+    display: grid;
+    grid-column: pane;
+    grid-template-columns: subgrid;
+    padding-block-start: calc(var(--content-body-padding-block) + var(--content-body-layout-space-loose));
+  }
+
+  & .avatar {
+    grid-column: text;
+  }
+
+  & > p {
+    @mixin content-heading-1;
+
+    margin-block-start: var(--content-body-layout-space-relaxed);
+  }
+}

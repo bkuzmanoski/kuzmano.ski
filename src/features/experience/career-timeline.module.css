@@ -45,7 +45,7 @@
     z-index: -1;
     inset: 0;
 
-    color: var(--color-background-dither-pattern);
+    color: var(--color-dither-pattern);
   }
 }
 
@@ -124,7 +124,7 @@
   color: var(--career-timeline-discipline-accent-color);
 
   &[data-hidden] {
-    color: var(--color-background-dither-pattern);
+    color: var(--color-dither-pattern);
   }
 
   @media (forced-colors: active) {

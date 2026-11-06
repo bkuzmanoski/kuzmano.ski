@@ -1,26 +1,111 @@
 .avatar {
+  --avatar-pixel: calc(3 * var(--layout-bitmap-pixel));
   --color-icon-foreground: var(--color-avatar-foreground);
   --color-icon-background: var(--color-avatar-background);
 
-  display: block;
-  width: calc((34 * 2) * var(--layout-bitmap-pixel));
-  height: calc((34 * 2) * var(--layout-bitmap-pixel));
+  position: relative;
 }
 
-.sprite {
-  overflow: visible;
+.graphic {
   display: block;
-
-  width: 100%;
-  height: 100%;
-
+  width: calc(31 * var(--avatar-pixel));
+  height: calc(37 * var(--avatar-pixel));
   shape-rendering: crispedges;
 
-  /* Outlines each sprite's silhouette with a one-bitmap-pixel border at any scale. */
-  & > path:first-child {
-    paint-order: stroke;
-    stroke: var(--color-avatar-outline);
-    stroke-width: calc(2 * var(--layout-bitmap-pixel)); /* The fill covers the stroke's inner half. */
-    vector-effect: non-scaling-stroke;
+  & > [data-gaze-direction] {
+    display: none;
   }
+}
+
+.graphic[data-gaze-direction="up-left"] [data-gaze-direction="up-left"],
+.graphic[data-gaze-direction="up-right"] [data-gaze-direction="up-right"],
+.graphic[data-gaze-direction="down-left"] [data-gaze-direction="down-left"],
+.graphic[data-gaze-direction="down-right"] [data-gaze-direction="down-right"] {
+  display: inline;
+}
+
+.speechBubble {
+  --avatar-speech-bubble-tail-tip-x: calc(27 * var(--avatar-pixel)); /* From the left of the avatar. */
+  --avatar-speech-bubble-tail-tip-y: calc(4 * var(--avatar-pixel)); /* From the top of the avatar. */
+  --avatar-speech-bubble-tail-inset: calc(8 * var(--layout-bitmap-pixel)); /* Clears the corner radius. */
+  --avatar-speech-bubble-tail-size: calc(8 * var(--layout-bitmap-pixel));
+  --avatar-speech-bubble-left: calc(var(--avatar-speech-bubble-tail-tip-x) - var(--avatar-speech-bubble-tail-inset));
+
+  pointer-events: none;
+
+  position: absolute;
+  z-index: 1;
+  bottom: calc(
+    100% - var(--avatar-speech-bubble-tail-tip-y) + var(--avatar-speech-bubble-tail-size) - var(--layout-bitmap-pixel)
+  );
+  left: var(--avatar-speech-bubble-left);
+
+  width: max-content;
+  max-width: calc(100% - var(--avatar-speech-bubble-left));
+
+  opacity: 0;
+
+  &::before,
+  &::after {
+    content: "";
+
+    position: absolute;
+    top: calc(100% - var(--layout-bitmap-pixel));
+    left: var(--avatar-speech-bubble-tail-inset);
+
+    width: var(--avatar-speech-bubble-tail-size);
+    height: var(--avatar-speech-bubble-tail-size);
+  }
+
+  &::before {
+    background: var(--color-avatar-speech-bubble-border);
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+  }
+
+  &::after {
+    background: var(--color-avatar-speech-bubble-background);
+
+    /* Insets the fill one bitmap pixel from the vertical edge, and √2 bitmap pixels horizontally from the diagonal,
+     * which leaves the diagonal border one bitmap pixel thick. */
+    clip-path: polygon(
+      var(--layout-bitmap-pixel) 0,
+      calc(100% - 1.4142 * var(--layout-bitmap-pixel)) 0,
+      var(--layout-bitmap-pixel) calc(100% - 2.4142 * var(--layout-bitmap-pixel))
+    );
+  }
+
+  &[data-shown] {
+    opacity: 1;
+  }
+
+  @media (forced-colors: active) {
+    &::before,
+    &::after {
+      forced-color-adjust: none;
+    }
+
+    &::before {
+      background: CanvasText;
+    }
+
+    &::after {
+      background: Canvas;
+    }
+  }
+}
+
+.speech {
+  overflow: hidden;
+
+  padding-block: calc(4 * var(--layout-bitmap-pixel)) calc(3 * var(--layout-bitmap-pixel)); /* Helvetica baseline alignment. */
+  padding-inline: calc(8 * var(--layout-bitmap-pixel));
+  border: var(--layout-bitmap-pixel) solid var(--color-avatar-speech-bubble-border);
+  border-radius: 4px;
+
+  font: var(--font-ui);
+  color: var(--color-avatar-speech-bubble-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  background: var(--color-avatar-speech-bubble-background);
 }

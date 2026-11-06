@@ -23,7 +23,7 @@ export function EntryMasthead({ target: { collection, slug } }: { target: Collec
   const url = canonicalUrl(collection.routeOf(slug));
 
   return (
-    <div className={styles.masthead} data-entry-masthead data-content-default-styles="off" data-feed-omit>
+    <header className={styles.masthead} data-entry-masthead data-content-default-styles="off" data-feed-omit>
       <p className={styles.facts}>
         <ContentLink href={collection.route} className={styles.collectionLink}>
           {collection.title}
@@ -43,6 +43,6 @@ export function EntryMasthead({ target: { collection, slug } }: { target: Collec
         />
         <ShareButton url={url} title={frontmatter?.title} disabled={!isHydrated} className={styles.shareButton} />
       </div>
-    </div>
+    </header>
   );
 }

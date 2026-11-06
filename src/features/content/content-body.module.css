@@ -29,7 +29,8 @@
   --content-body-layout-space-relaxed: 32px;
   --content-body-layout-space-loose: 44px;
   --content-body-layout-space-x-loose: 68px;
-  --content-body-layout-label-offset: 5px; /* Lowers a bitmap label beside body text from the top of its box to the text's cap line. */
+  --content-body-layout-label-offset: 5px; /* Lowers a bitmap label beside body text to its cap line. */
+  --content-body-layout-label-offset-large: 6px; /* Lowers a bitmap label beside large body text to its cap line. */
 
   /* Typography */
   --content-body-font-family-display: Archivo, ui-sans-serif, sans-serif;
@@ -38,7 +39,7 @@
   --content-body-font-heading-3: 600 semi-condensed 19px/24px var(--content-body-font-family-display);
   --content-body-font-blockquote: italic 500 semi-condensed 25px/32px var(--content-body-font-family-display);
   --content-body-font-family-body: "Source Serif 4", ui-serif, serif;
-  --content-body-font-lede: 400 20px/32px var(--content-body-font-family-body);
+  --content-body-font-body-large: 400 20px/32px var(--content-body-font-family-body);
   --content-body-font-body: 400 17px/28px var(--content-body-font-family-body);
   --content-body-font-body-small: 400 15px/22px var(--content-body-font-family-body);
   --content-body-font-caption: 400 14px/20px var(--content-body-font-family-body);
@@ -234,7 +235,7 @@
 
     & > :where(h1 + p) + [data-rail-asides],
     & > :where([data-entry-masthead]) {
-      --content-body-first-line-offset: 6px;
+      --content-body-first-line-offset: var(--content-body-layout-label-offset-large);
     }
 
     & > :where(table, figure:has(> table:first-child)),
@@ -426,12 +427,11 @@
     }
 
     &:where(h1) {
-      font: var(--content-body-font-heading-1);
-      letter-spacing: -0.01em;
+      @mixin content-heading-1;
     }
 
     &:where(h1 + p) {
-      font: var(--content-body-font-lede);
+      font: var(--content-body-font-body-large);
     }
 
     &:where(h2) {

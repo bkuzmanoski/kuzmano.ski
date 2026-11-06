@@ -200,10 +200,20 @@
   }
 }
 
+@define-mixin content-heading-1 {
+  font: var(--content-body-font-heading-1);
+  letter-spacing: -0.01em;
+}
+
 @define-mixin content-subtitle {
   margin-block-start: 4px;
   font: var(--content-body-font-body-small);
   color: var(--color-foreground-secondary);
+}
+
+@define-mixin content-body-large {
+  --content-body-font-body: var(--content-body-font-body-large);
+  --content-body-layout-label-offset: var(--content-body-layout-label-offset-large);
 }
 
 @define-mixin content-link {

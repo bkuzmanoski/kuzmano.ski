@@ -1,97 +1,147 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { createRef } from "react";
 import { describe, expect, test, vi } from "vitest";
 
-import LookingDownLeftAvatar from "#/assets/images/avatar-looking-down-left.svg?react";
-import LookingDownRightAvatar from "#/assets/images/avatar-looking-down-right.svg?react";
-import LookingUpLeftAvatar from "#/assets/images/avatar-looking-up-left.svg?react";
-import LookingUpRightAvatar from "#/assets/images/avatar-looking-up-right.svg?react";
 import { TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 
+import styles from "./avatar.module.css";
 import { Avatar } from "./avatar.tsx";
 
-import type { ComponentType } from "react";
+const SPEECH = "A line of speech.";
 
-/** A point on each side of the center of the avatar that `renderAvatarLaidOut` lays out, which is at 134, 134. */
-const ABOVE_OR_LEFT_OF_CENTER_PX = 120;
-const BELOW_OR_RIGHT_OF_CENTER_PX = 150;
+const GRAPHIC_RECT = new DOMRect(100, 100, 68, 68);
+const GRAPHIC_CENTER_PX = GRAPHIC_RECT.x + GRAPHIC_RECT.width / 2;
+const ABOVE_OR_LEFT_OF_CENTER_PX = GRAPHIC_CENTER_PX - 16;
+const BELOW_OR_RIGHT_OF_CENTER_PX = GRAPHIC_CENTER_PX + 16;
 
-const avatar = () => screen.getByRole("img", { name: "A name" });
+const graphic = () => screen.getByRole("img");
 const renderAvatarLaidOut = () => {
-  render(<Avatar alt="A name" />);
-  vi.spyOn(avatar(), "getBoundingClientRect").mockReturnValue(new DOMRect(100, 100, 68, 68));
+  render(<Avatar />);
+  vi.spyOn(graphic(), "getBoundingClientRect").mockReturnValue(GRAPHIC_RECT);
 };
-const shownSpriteMarkup = () => avatar().querySelector("svg")!.innerHTML;
-const spriteMarkupOf = (Sprite: ComponentType) => {
-  const { container, unmount } = render(<Sprite />);
-  const markup = container.querySelector("svg")!.innerHTML;
-
-  unmount();
-
-  return markup;
-};
+const gazeDirection = () => graphic().getAttribute("data-gaze-direction");
+const speechBubbleIn = (container: HTMLElement) => container.querySelector<HTMLElement>(`.${styles.speechBubble}`);
+const renderAvatarWithSpeech = () => speechBubbleIn(render(<Avatar speech={SPEECH} />).container)!;
 
 describe("Avatar", () => {
-  test("renders an image named by its `alt` prop", () => {
-    render(<Avatar alt="A name" />);
-    expect(screen.queryByRole("img", { name: "A name" })).not.toBeNull();
+  test("attaches the `graphicRef` prop to the graphic", () => {
+    const graphicRef = createRef<SVGSVGElement>();
+
+    render(<Avatar graphicRef={graphicRef} />);
+
+    expect(graphicRef.current).toBe(graphic());
   });
 
-  test("hides its sprite from assistive technology", () => {
-    renderAvatarLaidOut();
-    expect(avatar().querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+  test("adds the `className` prop to the class of its root", () => {
+    const { container } = render(<Avatar className="fixture-class" />);
+    const root = container.firstElementChild;
+
+    expect(root?.classList).toContain("fixture-class");
+    expect(root?.classList).toContain(styles.avatar);
+  });
+
+  test("renders the `speech` prop in a speech bubble", () => {
+    expect(renderAvatarWithSpeech().textContent).toBe(SPEECH);
+  });
+
+  test("describes the graphic with the `speech` prop", () => {
+    render(<Avatar speech={SPEECH} />);
+    expect(screen.queryByRole("img", { description: SPEECH })).not.toBeNull();
+  });
+
+  test("hides the speech bubble from assistive technology", () => {
+    expect(renderAvatarWithSpeech().getAttribute("aria-hidden")).toBe("true");
+  });
+
+  test("omits the speech bubble when the `speech` prop is unset", () => {
+    const { container } = render(<Avatar />);
+    expect(speechBubbleIn(container)).toBeNull();
+  });
+
+  test("shows the speech bubble while a mouse pointer is over the graphic", () => {
+    const speechBubble = renderAvatarWithSpeech();
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(false);
+
+    fireEvent.pointerEnter(graphic(), { pointerType: "mouse" });
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(true);
+
+    fireEvent.pointerLeave(graphic(), { pointerType: "mouse" });
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(false);
+  });
+
+  test("shows the speech bubble from a touch press on the graphic until a press outside it", () => {
+    const speechBubble = renderAvatarWithSpeech();
+
+    fireEvent.pointerDown(graphic(), TOUCH_PRESS_INIT);
+    fireEvent.pointerUp(graphic(), TOUCH_PRESS_INIT);
+    fireEvent.pointerLeave(graphic(), TOUCH_PRESS_INIT);
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(true);
+
+    fireEvent.pointerDown(graphic(), TOUCH_PRESS_INIT);
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(true);
+
+    fireEvent.pointerDown(document.body, TOUCH_PRESS_INIT);
+
+    expect(speechBubble.hasAttribute("data-shown")).toBe(false);
+  });
+
+  test("renders the graphic outside the tab order", () => {
+    render(<Avatar speech={SPEECH} />);
+    expect(graphic().tabIndex).toBe(-1);
   });
 
   test.each([
     {
-      direction: "up and to the left",
       position: "above and to the left",
       clientX: ABOVE_OR_LEFT_OF_CENTER_PX,
       clientY: ABOVE_OR_LEFT_OF_CENTER_PX,
-      Sprite: LookingUpLeftAvatar,
-      OppositeSprite: LookingDownRightAvatar,
+      expectedGazeDirection: "up-left",
+      oppositeGazeDirection: "down-right",
     },
     {
-      direction: "up and to the right",
       position: "above and to the right",
       clientX: BELOW_OR_RIGHT_OF_CENTER_PX,
       clientY: ABOVE_OR_LEFT_OF_CENTER_PX,
-      Sprite: LookingUpRightAvatar,
-      OppositeSprite: LookingDownLeftAvatar,
+      expectedGazeDirection: "up-right",
+      oppositeGazeDirection: "down-left",
     },
     {
-      direction: "down and to the left",
       position: "below and to the left",
       clientX: ABOVE_OR_LEFT_OF_CENTER_PX,
       clientY: BELOW_OR_RIGHT_OF_CENTER_PX,
-      Sprite: LookingDownLeftAvatar,
-      OppositeSprite: LookingUpRightAvatar,
+      expectedGazeDirection: "down-left",
+      oppositeGazeDirection: "up-right",
     },
     {
-      direction: "down and to the right",
       position: "below and to the right",
       clientX: BELOW_OR_RIGHT_OF_CENTER_PX,
       clientY: BELOW_OR_RIGHT_OF_CENTER_PX,
-      Sprite: LookingDownRightAvatar,
-      OppositeSprite: LookingUpLeftAvatar,
+      expectedGazeDirection: "down-right",
+      oppositeGazeDirection: "up-left",
     },
   ])(
-    "renders the sprite looking $direction after a pointer moves $position of the center of the avatar",
-    ({ clientX, clientY, Sprite, OppositeSprite }) => {
+    "sets the `data-gaze-direction` attribute of the graphic to `$expectedGazeDirection` after a pointer moves $position of the graphic's center",
+    ({ clientX, clientY, expectedGazeDirection, oppositeGazeDirection }) => {
       const oppositeClientX = ABOVE_OR_LEFT_OF_CENTER_PX + BELOW_OR_RIGHT_OF_CENTER_PX - clientX;
       const oppositeClientY = ABOVE_OR_LEFT_OF_CENTER_PX + BELOW_OR_RIGHT_OF_CENTER_PX - clientY;
 
       renderAvatarLaidOut();
       fireEvent.pointerMove(document, { clientX: oppositeClientX, clientY: oppositeClientY });
 
-      expect(shownSpriteMarkup()).toBe(spriteMarkupOf(OppositeSprite));
+      expect(gazeDirection()).toBe(oppositeGazeDirection);
 
       fireEvent.pointerMove(document, { clientX, clientY });
 
-      expect(shownSpriteMarkup()).toBe(spriteMarkupOf(Sprite));
+      expect(gazeDirection()).toBe(expectedGazeDirection);
     },
   );
 
-  test("renders the sprite looking up and to the left after a touch press above and to the left of the center of the avatar", () => {
+  test("sets the `data-gaze-direction` attribute of the graphic to `up-left` after a touch press above and to the left of the graphic's center", () => {
     renderAvatarLaidOut();
     fireEvent.pointerDown(document, {
       ...TOUCH_PRESS_INIT,
@@ -99,6 +149,6 @@ describe("Avatar", () => {
       clientY: ABOVE_OR_LEFT_OF_CENTER_PX,
     });
 
-    expect(shownSpriteMarkup()).toBe(spriteMarkupOf(LookingUpLeftAvatar));
+    expect(gazeDirection()).toBe("up-left");
   });
 });
