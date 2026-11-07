@@ -1,9 +1,9 @@
 // Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
-import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { AUTHOR_NAME, OPEN_GRAPH_IMAGE, SITE_URL } from "#/config/site.ts";
 import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
+import { FEED_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/lib/media-types.ts";
 
 import type { AlternateRepresentations } from "./alternate-representations.ts";
 

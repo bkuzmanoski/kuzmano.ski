@@ -93,6 +93,16 @@ describe("createCatalog", () => {
     expect(collection.frontmatterOf("draft")?.title).toBe("Draft");
   });
 
+  test("a collection looks up the URL of the entry icon of an entry by slug, or returns `null` for an entry without an entry icon", () => {
+    const collection = catalogOf({
+      ...DOCUMENTS,
+      "collection/newest.mdx": { ...NEWEST_DOCUMENT, entryIconUrl: "/media/collection/newest.icon.svg" },
+    }).collections.collection!;
+
+    expect(collection.entryIconUrlOf("newest")).toBe("/media/collection/newest.icon.svg");
+    expect(collection.entryIconUrlOf("middle")).toBeNull();
+  });
+
   test("the catalog looks up an entry's frontmatter by slug, or returns `null` when the index does not contain it", () => {
     const collection = catalogOf().collections.collection!;
 

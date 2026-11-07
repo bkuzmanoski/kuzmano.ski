@@ -1,7 +1,13 @@
 import { listedEntry } from "./listing.ts";
 
 import type { AuthoredEntryMedia } from "../content/media/authored-media.ts";
-import type { Mp4Metadata, ResolvedImage, ResolvedMediaFile, ResolvedVideo } from "../content/media/resolved-media.ts";
+import type {
+  Mp4Metadata,
+  ResolvedEntryIcon,
+  ResolvedImage,
+  ResolvedMediaFile,
+  ResolvedVideo,
+} from "../content/media/resolved-media.ts";
 
 /** A truncated SHA-256 of the length the media file reader produces. */
 export const MEDIA_FILE_HASH = "0f1e2d3c4b5a6978";
@@ -13,6 +19,7 @@ export const BODY_IMAGE_FILE_NAME = "image.png";
 export const VIDEO_FILE_NAME = "video.mp4";
 export const POSTER_IMAGE_FILE_NAME = "video.poster.png";
 export const COVER_IMAGE_FILE_PATH = "collection/entry.cover.png";
+export const ENTRY_ICON_FILE_PATH = "collection/entry.icon.svg";
 export const BODY_IMAGE_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${BODY_IMAGE_FILE_NAME}`;
 export const VIDEO_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${VIDEO_FILE_NAME}`;
 export const POSTER_IMAGE_FILE_PATH = `${ENTRY.mediaDirectoryPath}/${POSTER_IMAGE_FILE_NAME}`;
@@ -46,7 +53,15 @@ export const resolvedImage = ({
   dimensions,
   embeddedMetadataNames,
 });
-
+export const resolvedEntryIcon = ({
+  isOpaque = false,
+  hasViewBox = true,
+  ...overrides
+}: Partial<ResolvedEntryIcon> = {}): ResolvedEntryIcon => ({
+  ...resolvedMediaFile({ path: ENTRY_ICON_FILE_PATH, ...overrides }),
+  isOpaque,
+  hasViewBox,
+});
 export const resolvedVideo = ({
   mp4Metadata = H264_MP4_METADATA,
   ...overrides
@@ -55,10 +70,11 @@ export const resolvedVideo = ({
   mp4Metadata,
 });
 
-/** An entry with a cover image, one body image, and a video paired with its poster image. */
+/** An entry with a cover image, an entry icon, one body image, and a video paired with its poster image. */
 export const authoredEntryMedia = (overrides: Partial<AuthoredEntryMedia> = {}): AuthoredEntryMedia => ({
   ...ENTRY,
   coverImageFilePath: COVER_IMAGE_FILE_PATH,
+  entryIconFilePath: ENTRY_ICON_FILE_PATH,
   bodyImageFileNames: [BODY_IMAGE_FILE_NAME],
   videos: [{ videoFileName: VIDEO_FILE_NAME, posterImageFileName: POSTER_IMAGE_FILE_NAME }],
   ...overrides,

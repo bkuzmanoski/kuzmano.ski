@@ -2,6 +2,7 @@ import { expect, test, vi } from "vitest";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../environments.ts";
 import { CONTENT_DIRECTORY_PATH, fromContent, fromRoot } from "../paths.ts";
+import { hookOf } from "../test-utils/plugin-hooks.ts";
 
 import {
   entryBodyChunksIn,
@@ -14,6 +15,8 @@ import {
 import type { BundledChunk } from "./entry-body-chunks.ts";
 import type * as listing from "./listing.ts";
 import type { ContentListing } from "./listing.ts";
+import type { LoadHook } from "../test-utils/plugin-hooks.ts";
+import type { Plugin } from "vite";
 
 vi.mock("./listing.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof listing>()),
@@ -33,7 +36,6 @@ const CONTENT_LISTING: ContentListing = [
 ];
 
 type GenerateBundle = (this: unknown, options: unknown, bundle: Record<string, unknown>) => void;
-type Load = (this: unknown, id: string) => Promise<string | null>;
 
 const chunkOf = (fileName: string, chunk: Partial<BundledChunk> = {}): BundledChunk => ({
   fileName,
@@ -43,8 +45,8 @@ const chunkOf = (fileName: string, chunk: Partial<BundledChunk> = {}): BundledCh
   ...chunk,
 });
 const stylesheetsOf = (...fileNames: Array<string>) => ({ viteMetadata: { importedCss: new Set(fileNames) } });
-const loadedModuleFor = (load: Load, name: string, command: string) =>
-  load.call({ environment: { name, config: { command } } }, VIRTUAL_MODULE_ID);
+const loadedModuleFor = (plugin: Plugin, name: string, command: string) =>
+  hookOf<LoadHook>(plugin, "load").call({ environment: { name, config: { command } } }, VIRTUAL_MODULE_ID);
 
 test("an entry's module ID becomes the key composed from its directory and slug", () => {
   expect(entryKeyOf(fromContent("collection/entry.mdx"))).toBe("collection/entry");
@@ -151,7 +153,7 @@ test("the virtual module exports the body chunks captured from the client build 
     throw new Error(message);
   };
 
-  (capture!.generateBundle as GenerateBundle).call(
+  hookOf<GenerateBundle>(capture!, "generateBundle").call(
     { environment: { config: { base: "/" } }, error: throwError },
     {},
     {
@@ -164,19 +166,18 @@ test("the virtual module exports the body chunks captured from the client build 
     },
   );
 
-  await expect(loadedModuleFor(provider!.load as Load, SERVER_ENVIRONMENT, "build")).resolves.toBe(
+  await expect(loadedModuleFor(provider!, SERVER_ENVIRONMENT, "build")).resolves.toBe(
     'export const ENTRY_BODY_CHUNKS = {"collection/entry-1":{"moduleUrls":["/assets/entry-1.js"],"stylesheetUrls":[]}};',
   );
 });
 
 test("the virtual module exports an empty map outside the SSR build", async () => {
   const [, provider] = entryBodyChunksPlugin();
-  const load = provider!.load as Load;
 
-  await expect(loadedModuleFor(load, CLIENT_ENVIRONMENT, "build")).resolves.toBe(
+  await expect(loadedModuleFor(provider!, CLIENT_ENVIRONMENT, "build")).resolves.toBe(
     "export const ENTRY_BODY_CHUNKS = {};",
   );
-  await expect(loadedModuleFor(load, SERVER_ENVIRONMENT, "serve")).resolves.toBe(
+  await expect(loadedModuleFor(provider!, SERVER_ENVIRONMENT, "serve")).resolves.toBe(
     "export const ENTRY_BODY_CHUNKS = {};",
   );
 });

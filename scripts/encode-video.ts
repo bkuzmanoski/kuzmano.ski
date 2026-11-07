@@ -2,6 +2,8 @@ import { stat } from "node:fs/promises";
 import { extname } from "node:path";
 import { parseArgs } from "node:util";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { isVideo, posterImageStemOf, withoutExtension } from "../build/content/media/formats.ts";
 import { fileSize } from "../build/content/media/problems.ts";
 import { writeFileAtomically } from "../build/files.ts";
@@ -135,6 +137,6 @@ try {
     await encode(inputFilePath, mp4FilePath, encodingOptions);
   }
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(errorMessageOf(error));
   process.exit(1);
 }

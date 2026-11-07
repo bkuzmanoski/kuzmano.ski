@@ -1,6 +1,6 @@
 import { useId, useRef } from "react";
 
-import DocumentActiveCollectionBodyIcon from "#/assets/images/collection-body-icon-document-active.svg?react";
+import DocumentOpenCollectionBodyIcon from "#/assets/images/collection-body-icon-document-open.svg?react";
 import DocumentCollectionBodyIcon from "#/assets/images/collection-body-icon-document.svg?react";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
@@ -11,6 +11,7 @@ import { PRESERVE_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
+import type { StyleWithVars } from "#/lib/style.ts";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
@@ -26,6 +27,10 @@ import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description
 import type { ComponentProps } from "react";
 
 export const UNCATEGORIZED_LABEL = "Uncategorized";
+
+const entryIconStyleOf = (entryIconUrl: string): StyleWithVars => ({
+  "--collection-body-entry-icon-image": `url("${entryIconUrl}")`,
+});
 
 export function CollectionColumnHeadings({ collection }: { collection: Collection }) {
   if (collection.list().length === 0) {
@@ -45,15 +50,17 @@ export function CollectionColumnHeadings({ collection }: { collection: Collectio
 
 function CollectionEntryRow({
   entry,
+  entryIconUrl,
   href,
-  isActive,
+  isOpen,
   dateFormat,
   itemProps,
   onOpen,
 }: {
   entry: Entry;
+  entryIconUrl: string | null;
   href: string;
-  isActive: boolean;
+  isOpen: boolean;
   dateFormat: Intl.DateTimeFormat;
   itemProps: ComponentProps<"a">;
   onOpen: () => void;
@@ -62,16 +69,16 @@ function CollectionEntryRow({
   const { handlers: pressSoundHandlers, playPendingTouchPressSound } = usePressSoundPlayer({
     defersTouchPressSound: true,
   });
-
-  const descriptionIds = [entry.category !== undefined ? `${entryId}-category` : null, `${entryId}-date`];
-  const Icon = isActive ? DocumentActiveCollectionBodyIcon : DocumentCollectionBodyIcon;
-
   const doublePressLinkHandlers = useDoublePressLink({
     onOpen: () => {
       playPendingTouchPressSound();
       onOpen();
     },
   });
+
+  const descriptionIds = [entry.category !== undefined ? `${entryId}-category` : null, `${entryId}-date`];
+
+  const DocumentIcon = isOpen ? DocumentOpenCollectionBodyIcon : DocumentCollectionBodyIcon;
 
   return (
     <li>
@@ -80,7 +87,7 @@ function CollectionEntryRow({
         className={styles.listItem}
         aria-labelledby={`${entryId}-title`}
         aria-describedby={descriptionIds.filter((id) => id !== null).join(" ")}
-        aria-current={isActive || undefined}
+        aria-current={isOpen || undefined}
         {...mergeHandlers(
           mergeHandlers(pressSoundHandlers, doublePressLinkHandlers), // Merged before `itemProps` so `useListNavigation` skips modified or non-primary presses when `useDoublePressLink` prevents their `mousedown` default.
           itemProps,
@@ -90,7 +97,11 @@ function CollectionEntryRow({
           className={styles.titleColumn}
           aria-hidden="true" // The link's name and description reference the cells, which are otherwise hidden so that a screen reader treats the link as one element.
         >
-          <Icon className={styles.icon} />
+          {entryIconUrl === null ? (
+            <DocumentIcon className={styles.documentIcon} />
+          ) : (
+            <span className={styles.entryIcon} style={entryIconStyleOf(entryIconUrl)} />
+          )}
           <span id={`${entryId}-title`} className={styles.title}>
             {entry.title}
           </span>
@@ -122,7 +133,7 @@ function useOpenEntrySlug(collection: Collection): string | null {
 }
 
 export function CollectionBody({ target: { collection } }: { target: CollectionTarget }) {
-  const activeSlug = useOpenEntrySlug(collection);
+  const openSlug = useOpenEntrySlug(collection);
   const { open } = useWindowActions();
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
   const listRef = useRef<HTMLUListElement>(null);
@@ -133,7 +144,7 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
 
   const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, {
     count: entries.length,
-    activeIndex: entries.findIndex((entry) => entry.slug === activeSlug),
+    currentIndex: entries.findIndex((entry) => entry.slug === openSlug),
     onActivate: (index) => {
       const entry = entries[index];
 
@@ -182,8 +193,9 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
           <CollectionEntryRow
             key={entry.slug}
             entry={entry}
+            entryIconUrl={collection.entryIconUrlOf(entry.slug)}
             href={collection.routeOf(entry.slug)}
-            isActive={entry.slug === activeSlug}
+            isOpen={entry.slug === openSlug}
             dateFormat={dateFormat}
             itemProps={itemProps(index)}
             onOpen={() => openEntry(entry.slug)}

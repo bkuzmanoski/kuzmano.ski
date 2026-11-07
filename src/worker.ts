@@ -2,8 +2,8 @@ import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/
 import { MARKDOWN_TOKEN_COUNTS } from "virtual:markdown-token-counts";
 
 import { API_PATH_PREFIX } from "#/api-routes.ts";
-import { HTML_MEDIA_TYPE, MARKDOWN_CONTENT_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { HTML_MEDIA_TYPE, MARKDOWN_CONTENT_TYPE, MARKDOWN_MEDIA_TYPE } from "#/lib/media-types.ts";
 import { ASSETS_BINDING } from "#/server/bindings.ts";
 import {
   MARKDOWN_TOKEN_COUNT_HEADER,

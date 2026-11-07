@@ -1,8 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 
 import { jsonValueModulePlugin, resolvedModuleIdOf } from "./json-value-module.ts";
+import { hookOf } from "./test-utils/plugin-hooks.ts";
 
 import type { JsonValueModule } from "./json-value-module.ts";
+import type { LoadHook, ResolveIdHook } from "./test-utils/plugin-hooks.ts";
 
 const MODULE_ID = "virtual:probe";
 const RESOLVED_MODULE_ID = "\0virtual:probe";
@@ -27,14 +29,14 @@ const probePlugin = (overrides: Partial<JsonValueModule> = {}) =>
     ...overrides,
   });
 
-const resolveIdHook = () => probePlugin().resolveId as unknown as (source: string) => string | null;
+const resolveIdHook = () => hookOf<ResolveIdHook>(probePlugin(), "resolveId");
 const loadHook = (overrides?: Partial<JsonValueModule>) =>
-  probePlugin(overrides).load as unknown as (this: LoadContext, id: string) => Promise<string | null>;
+  hookOf<LoadHook<LoadContext>>(probePlugin(overrides), "load");
 const hotUpdateHook = (overrides?: Partial<JsonValueModule>) =>
-  probePlugin(overrides).hotUpdate as unknown as (
-    this: HotUpdateContext,
-    options: { file: string; modules: Array<string> },
-  ) => Array<unknown> | void;
+  hookOf<(this: HotUpdateContext, options: { file: string; modules: Array<string> }) => Array<unknown> | void>(
+    probePlugin(overrides),
+    "hotUpdate",
+  );
 const loadContext = () => ({ environment: ENVIRONMENT, addWatchFile: vi.fn<(file: string) => void>() });
 const hotUpdateContext = (loaded: unknown) => ({
   environment: {

@@ -9,6 +9,7 @@ export const CONTENT_DIRECTORY_PATH = "/content";
 
 export interface FakeDocument {
   frontmatter?: unknown;
+  entryIconUrl?: string;
   body?: MDXContent;
   styles?: EntryStylesheetClassNames;
   bodyChunks?: EntryBodyChunks;
@@ -33,6 +34,7 @@ export function fakeContentSource(
   const source: ContentSource = {
     rootDirectoryPath: CONTENT_DIRECTORY_PATH,
     frontmatterModules: {},
+    entryIconUrls: {},
     bodyModules: {},
     stylesheetModules: {},
     bodyChunks: {},
@@ -50,6 +52,11 @@ export function fakeContentSource(
     const body = document.body ?? fakeBody(filePath);
 
     source.frontmatterModules[filePath] = { default: document.frontmatter ?? frontmatterOf(key) };
+
+    if (document.entryIconUrl !== undefined) {
+      source.entryIconUrls[key] = document.entryIconUrl;
+    }
+
     source.bodyModules[filePath] = () => Promise.resolve({ default: body });
 
     if (document.styles) {

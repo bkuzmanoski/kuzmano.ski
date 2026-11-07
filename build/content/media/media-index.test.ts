@@ -8,12 +8,14 @@ import {
   BODY_IMAGE_FILE_PATH,
   COVER_IMAGE_FILE_PATH,
   ENTRY_ABSOLUTE_PATH,
+  ENTRY_ICON_FILE_PATH,
   ENTRY_SOURCE,
   MEDIA_FILE_HASH,
   POSTER_IMAGE_FILE_PATH,
   VIDEO_DIMENSIONS,
   VIDEO_FILE_NAME,
   authoredEntryMedia,
+  resolvedEntryIcon,
   resolvedImage,
   resolvedVideo,
 } from "../../test-utils/media.ts";
@@ -23,7 +25,13 @@ import { MAX_RENDITION_BYTES, fileSize } from "./problems.ts";
 
 import type * as authoredMedia from "./authored-media.ts";
 import type { AuthoredEntryMedia } from "./authored-media.ts";
-import type { MediaFileReader, ResolvedImage, ResolvedVideo, UnreadableImage } from "./resolved-media.ts";
+import type {
+  MediaFileReader,
+  ResolvedEntryIcon,
+  ResolvedImage,
+  ResolvedVideo,
+  UnreadableImage,
+} from "./resolved-media.ts";
 
 const { readAuthoredMedia, readFile } = vi.hoisted(() => ({
   readAuthoredMedia: vi.fn(),
@@ -52,6 +60,7 @@ interface ContentFixture {
   problems?: Array<string>;
   source?: string;
   images?: Record<string, ResolvedImage | UnreadableImage>;
+  entryIcon?: ResolvedEntryIcon | UnreadableImage;
   video?: ResolvedVideo;
   reader?: MediaFileReader;
 }
@@ -61,6 +70,7 @@ function indexOf({
   problems = [],
   source = ENTRY_SOURCE,
   images = {},
+  entryIcon = resolvedEntryIcon(),
   video,
   reader,
 }: ContentFixture = {}) {
@@ -80,6 +90,7 @@ function indexOf({
   return buildMediaIndex(
     reader ?? {
       readImage: (path) => Promise.resolve(resolvedImages[path]!),
+      readEntryIcon: () => Promise.resolve(entryIcon),
       readVideo: (path) => Promise.resolve(video ?? resolvedVideo({ path })),
     },
   );
@@ -95,6 +106,29 @@ describe("buildMediaIndex", () => {
 
     expect(coverImages[ENTRY_MEDIA.key]).toEqual({ src: coverImageUrl, ...AUTHORED_COVER_IMAGE_DIMENSIONS });
     expect([...renditionsByUrl.keys()].filter((url) => url.includes(".cover."))).toEqual([coverImageUrl]);
+  });
+
+  test("resolves an entry icon to its authored URL, without derivative renditions", async () => {
+    const { entryIconUrls, renditionsByUrl } = await indexOf();
+    const entryIconUrl = mediaRoute(`collection/entry.icon.${MEDIA_FILE_HASH}.svg`);
+
+    expect(entryIconUrls[ENTRY_MEDIA.key]).toBe(entryIconUrl);
+    expect([...renditionsByUrl.keys()].filter((url) => url.includes(".icon."))).toEqual([entryIconUrl]);
+    expect(renditionsByUrl.get(entryIconUrl)?.type).toBe("image/svg+xml");
+  });
+
+  test("lists a problem for an opaque entry icon", async () => {
+    const index = await indexOf({ entryIcon: resolvedEntryIcon({ isOpaque: true }) });
+    expect(index.problems()).toEqual([
+      expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/${ENTRY_ICON_FILE_PATH}" is opaque`),
+    ]);
+  });
+
+  test("lists an unreadable entry icon's problem, and omits its URL", async () => {
+    const index = await indexOf({ entryIcon: { problem: "An unreadable entry icon." } });
+
+    expect(index.entryIconUrls).toEqual({});
+    expect(index.problems()).toEqual(["An unreadable entry icon."]);
   });
 
   test("resolves a body image reference to its authored URL with AVIF and WebP alternates", async () => {
@@ -320,10 +354,11 @@ describe("buildMediaIndex", () => {
 
   test("lists cover images, renditions, and problems in entry order when the first entry's cover image is read last", async () => {
     // Both cover images are below the minimum size on their shortest side, so each entry produces a problem.
-    const firstEntry = authoredEntryMedia({ bodyImageFileNames: [], videos: [] });
+    const firstEntry = authoredEntryMedia({ entryIconFilePath: null, bodyImageFileNames: [], videos: [] });
     const secondEntry = authoredEntryMedia({
       ...listedEntry("collection", "second-entry"),
       coverImageFilePath: "collection/second-entry.cover.png",
+      entryIconFilePath: null,
       bodyImageFileNames: [],
       videos: [],
     });
@@ -335,6 +370,7 @@ describe("buildMediaIndex", () => {
 
         return resolvedImage({ path, dimensions: { width: 100, height: 100 } });
       },
+      readEntryIcon: () => Promise.reject(new Error("Neither entry has an entry icon.")),
       readVideo: () => Promise.reject(new Error("Neither entry has a video.")),
     };
 

@@ -6,7 +6,7 @@ import { isEncodableImage } from "./formats.ts";
 import { rootRelativePathOf } from "./renditions.ts";
 
 import type { MediaRendition } from "./renditions.ts";
-import type { ResolvedImage, ResolvedVideo } from "./resolved-media.ts";
+import type { ResolvedEntryIcon, ResolvedImage, ResolvedVideo } from "./resolved-media.ts";
 
 /** X `summary` cards drop smaller images. */
 const MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX = 144;
@@ -54,6 +54,18 @@ export function coverImageProblems({
   }
 
   return problems;
+}
+
+export function entryIconProblems({
+  path,
+  isOpaque,
+  hasViewBox,
+}: Pick<ResolvedEntryIcon, "path" | "isOpaque" | "hasViewBox">): Array<string> {
+  const quotedFilePath = quotedContentPath(path);
+  return [
+    ...(isOpaque ? [`${quotedFilePath} is opaque. Remove its background.`] : []),
+    ...(hasViewBox ? [] : [`${quotedFilePath} has no \`viewBox\` attribute on its root \`<svg>\`.`]),
+  ];
 }
 
 export function videoProblems({

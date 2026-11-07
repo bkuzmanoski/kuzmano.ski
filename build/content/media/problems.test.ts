@@ -7,6 +7,7 @@ import {
   POSTER_IMAGE_FILE_PATH,
   VIDEO_DIMENSIONS,
   VIDEO_FILE_PATH,
+  resolvedEntryIcon,
   resolvedImage,
   resolvedVideo,
 } from "../../test-utils/media.ts";
@@ -15,6 +16,7 @@ import {
   MAX_RENDITION_BYTES,
   contentMediaProblemReport,
   coverImageProblems,
+  entryIconProblems,
   fileSize,
   imageMetadataProblems,
   posterImageProblems,
@@ -97,6 +99,24 @@ describe("coverImageProblems", () => {
   test("reports a cover image one byte over the maximum size", () => {
     expect(coverImageProblems(coverImage({ bytes: megabytesInBytes(5) + 1 }))).toEqual([
       `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" exceeds the 5MB limit (5MB).`,
+    ]);
+  });
+});
+
+describe("entryIconProblems", () => {
+  test("accepts a partly transparent entry icon with a `viewBox` attribute", () => {
+    expect(entryIconProblems(resolvedEntryIcon())).toEqual([]);
+  });
+
+  test("reports an opaque entry icon", () => {
+    expect(entryIconProblems(resolvedEntryIcon({ isOpaque: true }))).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.icon.svg" is opaque. Remove its background.`,
+    ]);
+  });
+
+  test("reports an entry icon without a `viewBox` attribute", () => {
+    expect(entryIconProblems(resolvedEntryIcon({ hasViewBox: false }))).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.icon.svg" has no \`viewBox\` attribute on its root \`<svg>\`.`,
     ]);
   });
 });

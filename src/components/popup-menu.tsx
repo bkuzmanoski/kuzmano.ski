@@ -118,7 +118,7 @@ function PopupMenuOptions<TValue extends string>({
           id={`${id}-${index}`}
           role="option"
           aria-selected={index === chosenOptionIndex}
-          className={cx(styles.option, isHighlighted(index) && styles.active)}
+          className={cx(styles.option, isHighlighted(index) && styles.highlighted)}
           data-index={index}
         >
           <PopupMenuOptionLabel option={option} />

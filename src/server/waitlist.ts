@@ -1,10 +1,11 @@
 import { SITE_URL } from "#/config/site.ts";
+import { errorMessageOf } from "#/lib/errors.ts";
 import { isRecord } from "#/lib/guards.ts";
 import type { Membership } from "#/lib/waitlist/membership.ts";
 
 import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings.ts";
 import { workerEnv } from "./env.ts";
-import { errorMessageOf, logServerEvent, reportMissingBinding } from "./log.ts";
+import { logServerEvent, reportMissingBinding } from "./log.ts";
 
 import type { ServerLogEvent } from "./log.ts";
 

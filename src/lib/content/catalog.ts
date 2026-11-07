@@ -54,6 +54,7 @@ export interface Collection extends ContentIndex {
   description: string;
   route: string;
   routeOf: (slug: string) => string;
+  entryIconUrlOf: (slug: string) => string | null;
   list: () => Array<Entry>;
 }
 
@@ -66,6 +67,7 @@ export interface ContentSource {
   /** The directory the content glob read from, without a trailing slash. */
   rootDirectoryPath: string;
   frontmatterModules: Record<string, { default: unknown }>;
+  entryIconUrls: Record<EntryKey, string | undefined>;
   bodyModules: Record<string, () => Promise<{ default: MDXContent }>>;
   stylesheetModules: Record<string, () => Promise<{ default: EntryStylesheetClassNames }>>;
   bodyChunks: Record<EntryKey, EntryBodyChunks | undefined>;
@@ -160,6 +162,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
       description,
       route,
       routeOf: (slug) => entryRoute(directoryName, slug),
+      entryIconUrlOf: (slug) => source.entryIconUrls[entryKey(directoryName, slug)] ?? null,
       list() {
         entries ??= [...filePathsBySlug]
           .map(([slug, filePath]) => ({ ...frontmatterFromFilePath(filePath), slug }))

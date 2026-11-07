@@ -11,6 +11,7 @@ import { BODY_IMAGE_ALTERNATES, POSTER_IMAGE_DERIVATIVE } from "./derivatives.ts
 import { isEncodableImage } from "./formats.ts";
 import {
   coverImageProblems,
+  entryIconProblems,
   imageMetadataProblems,
   posterImageProblems,
   renditionSizeProblems,
@@ -27,6 +28,7 @@ import type { MediaForReference } from "../markup/media-rewrite.ts";
 
 export interface MediaIndex {
   coverImages: Record<EntryKey, CoverImage>;
+  entryIconUrls: Record<EntryKey, string>;
   renditionsByUrl: Map<string, MediaRendition>;
   entryAbsolutePathsByMediaDirectoryPath: Map<string, string>;
   mediaForEntry: (absolutePath: string) => MediaForReference;
@@ -49,6 +51,7 @@ interface BodyMediaResolution {
 interface ResolvedEntryMedia {
   entry: AuthoredEntryMedia;
   coverImage: CoverImage | null;
+  entryIconUrl: string | null;
   mediaByFileName: Map<string, ContentMedia>;
   /** `recheckReferences` compares these with the edited source's. */
   bodyImageFileNamesWithAlternates: Set<string>;
@@ -94,6 +97,22 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
       coverImage: sizedMediaOf(coverImageRendition, coverImage.dimensions),
       renditions: [coverImageRendition],
       problems: [...coverImageProblems(coverImage), ...imageMetadataProblems(coverImage)],
+    };
+  }
+
+  async function resolveEntryIcon(entryIconFilePath: string) {
+    const entryIcon = await reader.readEntryIcon(entryIconFilePath);
+
+    if ("problem" in entryIcon) {
+      return { entryIconUrl: null, renditions: [], problems: [entryIcon.problem] };
+    }
+
+    const entryIconRendition = authoredRendition(entryIcon);
+
+    return {
+      entryIconUrl: entryIconRendition.url,
+      renditions: [entryIconRendition],
+      problems: entryIconProblems(entryIcon),
     };
   }
 
@@ -175,11 +194,13 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
   }
 
   async function resolveEntryMedia(entry: AuthoredEntryMedia): Promise<ResolvedEntryMedia> {
-    const { absolutePath, coverImageFilePath, mediaDirectoryPath, bodyImageFileNames, videos } = entry;
+    const { absolutePath, coverImageFilePath, entryIconFilePath, mediaDirectoryPath, bodyImageFileNames, videos } =
+      entry;
     const references = mediaReferencesInSource(await readFile(absolutePath, "utf8")); // The source is read before the media because its references decide which body images have alternates.
     const bodyImageFileNamesWithAlternates = bodyImageFileNamesWithAlternatesIn(references, entry);
-    const [coverImageResolution, bodyMediaResolutions] = await Promise.all([
+    const [coverImageResolution, entryIconResolution, bodyMediaResolutions] = await Promise.all([
       coverImageFilePath === null ? null : resolveCoverImage(coverImageFilePath),
+      entryIconFilePath === null ? null : resolveEntryIcon(entryIconFilePath),
       Promise.all([
         ...bodyImageFileNames.map((fileName) =>
           resolveBodyImage(mediaDirectoryPath, fileName, bodyImageFileNamesWithAlternates.has(fileName)),
@@ -191,14 +212,17 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     return {
       entry,
       coverImage: coverImageResolution?.coverImage ?? null,
+      entryIconUrl: entryIconResolution?.entryIconUrl ?? null,
       mediaByFileName: new Map(bodyMediaResolutions.flatMap(({ mediaByFileName }) => mediaByFileName)),
       bodyImageFileNamesWithAlternates,
       renditions: [
         ...(coverImageResolution?.renditions ?? []),
+        ...(entryIconResolution?.renditions ?? []),
         ...bodyMediaResolutions.flatMap(({ renditions }) => renditions),
       ],
       mediaProblems: [
         ...(coverImageResolution?.problems ?? []),
+        ...(entryIconResolution?.problems ?? []),
         ...bodyMediaResolutions.flatMap(({ problems }) => problems),
       ],
       referenceProblems: mediaReferenceProblems(references, entry),
@@ -210,11 +234,16 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
     resolvedEntries.map((resolved) => [resolved.entry.absolutePath, resolved]),
   );
   const coverImages: Record<EntryKey, CoverImage> = {};
+  const entryIconUrls: Record<EntryKey, string> = {};
   const renditionsByUrl = new Map<string, MediaRendition>();
 
-  for (const { entry, coverImage, renditions } of resolvedEntries) {
+  for (const { entry, coverImage, entryIconUrl, renditions } of resolvedEntries) {
     if (coverImage) {
       coverImages[entry.key] = coverImage;
+    }
+
+    if (entryIconUrl !== null) {
+      entryIconUrls[entry.key] = entryIconUrl;
     }
 
     renditions.forEach((rendition) => renditionsByUrl.set(rendition.url, rendition));
@@ -222,6 +251,7 @@ export async function buildMediaIndex(reader: MediaFileReader = createMediaFileR
 
   return {
     coverImages,
+    entryIconUrls,
     renditionsByUrl,
     entryAbsolutePathsByMediaDirectoryPath: new Map(
       entryMedia.map(({ mediaDirectoryPath, absolutePath }) => [mediaDirectoryPath, absolutePath]),

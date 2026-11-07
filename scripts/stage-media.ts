@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { isImageDerivativeFileName } from "../build/content/media/derivatives.ts";
 import { buildMediaIndex } from "../build/content/media/media-index.ts";
 import { CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, fromRoot } from "../build/paths.ts";
@@ -298,6 +300,6 @@ try {
     }
   }
 } catch (cause) {
-  console.error(`Could not stage media.\n\n${cause instanceof Error ? cause.message : String(cause)}`);
+  console.error(`Could not stage media.\n\n${errorMessageOf(cause)}`);
   process.exitCode = 1;
 }

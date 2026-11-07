@@ -1,5 +1,7 @@
 import { join } from "node:path";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { createImageDerivativeStore, imageDerivativeAuditBetween } from "../build/content/media/derivative-store.ts";
 import { buildMediaIndex } from "../build/content/media/media-index.ts";
 import { contentMediaProblemReport, fileSize } from "../build/content/media/problems.ts";
@@ -59,6 +61,6 @@ try {
     process.exit(1);
   }
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(errorMessageOf(error));
   process.exit(1);
 }

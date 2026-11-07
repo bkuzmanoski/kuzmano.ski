@@ -48,15 +48,15 @@ function showEntryInWindow(slug: string | null) {
   openWindows.mockReturnValue(slug === null ? {} : { entry: { route: COLLECTION.routeOf(slug), title: slug } });
 }
 
-function renderList(activeSlug: string | null) {
-  showEntryInWindow(activeSlug);
+function renderList(openSlug: string | null) {
+  showEntryInWindow(openSlug);
   render(<CollectionBody target={targetOf(COLLECTION)} />);
   return screen.getAllByRole("link");
 }
 
 /** The part of `Window` the list registers with, repeated here so the suite does not render the window's chrome. */
-function renderListInWindow(activeSlug: string | null) {
-  showEntryInWindow(activeSlug);
+function renderListInWindow(openSlug: string | null) {
+  showEntryInWindow(openSlug);
 
   const keyDownHandlers = createWindowKeyDownHandlers();
 
@@ -94,12 +94,29 @@ test("the `lang` attribute of an entry's date names the browser's locale when it
   expect(document.querySelector("time")?.getAttribute("lang")).toBe("de-DE");
 });
 
-test("the active entry has the `aria-current` attribute and renders a different icon from the other entries", () => {
-  const [activeLink, otherLink] = renderList(COLLECTION_ENTRIES[0]!.slug);
+test("the open entry has the `aria-current` attribute and renders a different icon from the other entries", () => {
+  const [openLink, otherLink] = renderList(COLLECTION_ENTRIES[0]!.slug);
 
-  expect(activeLink?.getAttribute("aria-current")).toBe("true");
+  expect(openLink?.getAttribute("aria-current")).toBe("true");
   expect(otherLink?.hasAttribute("aria-current")).toBe(false);
-  expect(activeLink?.querySelector("svg")?.innerHTML).not.toBe(otherLink?.querySelector("svg")?.innerHTML);
+  expect(openLink?.querySelector("svg")?.innerHTML).not.toBe(otherLink?.querySelector("svg")?.innerHTML);
+});
+
+test("the list replaces the document icon of an entry with an entry icon by setting the `--collection-body-entry-icon-image` custom property to a `url()` of the entry icon's URL, and renders the document icon for an entry without an entry icon", () => {
+  const entryIconUrl = "/media/collection/with-icon.icon.svg";
+  const collection = fakeCollection([fakeEntry("with-icon"), fakeEntry("without-icon")], {
+    entryIconUrlOf: (slug) => (slug === "with-icon" ? entryIconUrl : null),
+  });
+
+  render(<CollectionBody target={targetOf(collection)} />);
+
+  const [rowWithIcon, rowWithoutIcon] = screen.getAllByRole("link");
+  const entryIcon = rowWithIcon?.querySelector<HTMLElement>("[style]");
+
+  expect(entryIcon?.style.getPropertyValue("--collection-body-entry-icon-image")).toBe(`url("${entryIconUrl}")`);
+  expect(rowWithIcon?.querySelector("svg")).toBeNull();
+  expect(rowWithoutIcon?.querySelector("svg")).not.toBeNull();
+  expect(rowWithoutIcon?.querySelector("[style]")).toBeNull();
 });
 
 test("a categorized entry's link is named by its title and described by its category and date", () => {
@@ -140,12 +157,12 @@ test("a collection without entries shows a link to its feed, which opens in a ne
   expect(screen.queryByRole("list")).toBeNull();
 });
 
-test("the list is a single tab stop, on the active entry", () => {
+test("the list is a single tab stop, on the open entry", () => {
   const links = renderList(COLLECTION_ENTRIES[LAST_INDEX]!.slug);
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links.at(-1)]);
 });
 
-test("the tab stop falls on the first entry when no entry is active", () => {
+test("the tab stop falls on the first entry when no entry is open", () => {
   const links = renderList(null);
   expect(links.filter((link) => link.tabIndex === 0)).toEqual([links[0]]);
 });
@@ -271,7 +288,7 @@ test("a tap plays the click sound on its `click` event, but not when scrolling c
 test("a press on an entry prevents the native focus, then focuses the entry and scrolls it into view silently", () => {
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
 
-  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
+  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the open entry's own scroll.
 
   expect(fireEvent.mouseDown(links[1]!, { button: 0 })).toBe(false); // The link prevented the default behavior.
   expect(document.activeElement).toBe(links[1]);
@@ -288,7 +305,7 @@ test.each([
   const links = renderList(COLLECTION_ENTRIES[0]!.slug);
   const focus = vi.spyOn(links[1]!, "focus");
 
-  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the active entry's own scroll.
+  scrollIntoViewSilently.mockClear(); // The mount effect already claimed the open entry's own scroll.
 
   expect(fireEvent.mouseDown(links[1]!, press)).toBe(false); // The link prevented only the native focus, not its own click.
   expect(focus).not.toHaveBeenCalled();

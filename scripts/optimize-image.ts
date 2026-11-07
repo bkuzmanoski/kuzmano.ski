@@ -4,6 +4,8 @@ import { parseArgs } from "node:util";
 
 import sharp from "sharp";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { fileSize } from "../build/content/media/problems.ts";
 import { writeFileAtomically } from "../build/files.ts";
 
@@ -205,6 +207,6 @@ try {
     `${imageOptimizations.length} image(s) optimized: ${fileSize(totalBytesBefore)} → ${fileSize(totalBytesAfter)} (${percentageSaved}% smaller).`,
   );
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(errorMessageOf(error));
   process.exit(1);
 }

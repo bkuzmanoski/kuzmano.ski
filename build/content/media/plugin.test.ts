@@ -10,8 +10,10 @@ import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { fromContent } from "../../paths.ts";
 import { devServerMiddlewareOf } from "../../test-utils/dev-server.ts";
 import { headersRulesAddedAtBuildStartBy } from "../../test-utils/headers.ts";
+import { hookOf } from "../../test-utils/plugin-hooks.ts";
 
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID } from "./entry-cover-images.ts";
+import { RESOLVED_ENTRY_ICON_URLS_MODULE_ID } from "./entry-icon-urls.ts";
 import { contentMedia } from "./plugin.ts";
 
 import type * as mediaIndexModule from "./media-index.ts";
@@ -36,6 +38,7 @@ const CONTENT_DIRECTORY_ABSOLUTE_PATH = fromContent();
 const ENTRY_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.mdx`;
 const IMAGE_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry/image.png`;
 const COVER_IMAGE_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.cover.png`;
+const ENTRY_ICON_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.icon.svg`;
 const ENTRY_STYLESHEET_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/entry.module.css`;
 const SECOND_ENTRY_ABSOLUTE_PATH = `${CONTENT_DIRECTORY_ABSOLUTE_PATH}/collection/second-entry.mdx`;
 const COVER_IMAGE: CoverImage = { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 };
@@ -68,6 +71,7 @@ type HotUpdate = (
 
 const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
   coverImages: {},
+  entryIconUrls: {},
   renditionsByUrl: new Map(),
   entryAbsolutePathsByMediaDirectoryPath: new Map([
     ["collection/entry", ENTRY_ABSOLUTE_PATH],
@@ -80,6 +84,8 @@ const mediaIndex = (overrides: Partial<MediaIndex> = {}): MediaIndex => ({
 });
 
 const mediaIndexWithCoverImage = () => mediaIndex({ coverImages: { ["collection/entry" as EntryKey]: COVER_IMAGE } });
+const mediaIndexWithEntryIcon = () =>
+  mediaIndex({ entryIconUrls: { ["collection/entry" as EntryKey]: mediaRoute("collection/entry.icon.svg") } });
 const mediaIndexResolvingTo = (src: string) =>
   mediaIndex({ mediaForEntry: () => () => ({ kind: "image", src, width: 1, height: 1, alternates: [] }) });
 const environmentContext = (name: string) => ({
@@ -98,7 +104,7 @@ function setUpContentMedia() {
   const { plugins, mediaForEntry } = contentMedia({ addHeadersRules: () => undefined });
   const mediaPlugin: Plugin = plugins.find((plugin) => plugin.name === "kuzmano.ski:content-media")!;
 
-  (mediaPlugin.configResolved as unknown as (config: { logger: Logger }) => void)({ logger });
+  hookOf<(config: { logger: Logger }) => void>(mediaPlugin, "configResolved")({ logger });
 
   const startDevServer = () => devServerMiddlewareOf(mediaPlugin);
   const updateFile = ({
@@ -108,7 +114,7 @@ function setUpContentMedia() {
     timestamp = nextTimestamp(),
     environmentName = CLIENT_ENVIRONMENT,
   }: FileChange) =>
-    (mediaPlugin.hotUpdate as unknown as HotUpdate).call(environmentContext(environmentName), {
+    hookOf<HotUpdate>(mediaPlugin, "hotUpdate").call(environmentContext(environmentName), {
       file,
       type,
       timestamp,
@@ -319,6 +325,28 @@ describe("contentMedia", () => {
     expect(serverStaleModules?.map(({ id }) => id)).toEqual([RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID]);
   });
 
+  test("invalidates the entry icon URL module when a file update changes the entry icon URLs", async () => {
+    const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
+
+    await buildInitialIndex();
+
+    const fileUpdate = updateFile({ file: ENTRY_ICON_ABSOLUTE_PATH, type: "create" });
+    const staleModuleIds = await staleModuleIdsAfterRebuild(fileUpdate, mediaIndexWithEntryIcon());
+
+    expect(staleModuleIds).toEqual([RESOLVED_ENTRY_ICON_URLS_MODULE_ID]);
+  });
+
+  test("does not invalidate the entry icon URL module when a file update does not change the entry icon URLs", async () => {
+    const { updateFile, buildInitialIndex, staleModuleIdsAfterRebuild } = setUpContentMedia();
+
+    await buildInitialIndex(mediaIndexWithEntryIcon());
+
+    const fileUpdate = updateFile({ file: IMAGE_ABSOLUTE_PATH });
+    const staleModuleIds = await staleModuleIdsAfterRebuild(fileUpdate, mediaIndexWithEntryIcon());
+
+    expect(staleModuleIds).toEqual([ENTRY_ABSOLUTE_PATH]);
+  });
+
   test("rechecks an updated entry's references once when each environment reports the same entry update, whichever environment reports it first", async () => {
     const { updateFile, buildInitialIndex } = setUpContentMedia();
     const recheckReferences = vi.fn<MediaIndex["recheckReferences"]>(() => ({ requiresRebuild: false }));
@@ -418,8 +446,8 @@ describe("contentMedia", () => {
 });
 
 describe("the content media plugin", () => {
-  test("adds an immutable `Cache-Control` and `Content-Signal` rule for `/media/*` to `_headers` when the client environment starts", () => {
-    expect(headersRulesAddedAtBuildStartBy(mediaPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
+  test("adds an immutable `Cache-Control` and `Content-Signal` rule for `/media/*` to `_headers` when the client environment starts", async () => {
+    expect(await headersRulesAddedAtBuildStartBy(mediaPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
       expect.objectContaining({
         pathPatterns: [mediaRoute("*")],
         headers: { "Cache-Control": IMMUTABLE_CACHE_CONTROL, "Content-Signal": CONTENT_SIGNAL },
@@ -427,7 +455,7 @@ describe("the content media plugin", () => {
     ]);
   });
 
-  test("adds rules to `_headers` from the client environment only", () => {
-    expect(headersRulesAddedAtBuildStartBy(mediaPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
+  test("adds rules to `_headers` from the client environment only", async () => {
+    expect(await headersRulesAddedAtBuildStartBy(mediaPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
   });
 });

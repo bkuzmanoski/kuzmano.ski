@@ -9,7 +9,7 @@ import { CONTENT_DIRECTORY_PATH, fromRoot } from "../../paths.ts";
 
 import { createMediaFileReader, mp4MetadataIn } from "./resolved-media.ts";
 
-import type { ResolvedImage, UnreadableImage } from "./resolved-media.ts";
+import type { ResolvedMediaFile, UnreadableImage } from "./resolved-media.ts";
 
 const { readFile, stat } = vi.hoisted(() => ({
   readFile: vi.fn<(path: string) => Promise<Buffer>>(),
@@ -18,18 +18,26 @@ const { readFile, stat } = vi.hoisted(() => ({
 
 vi.mock("node:fs/promises", () => ({ default: { readFile, stat }, readFile, stat }));
 
+const pngBytes = (width: number, height: number) => solidImage(width, height).png().toBuffer();
+const fileStats = (size: number, mtimeNs: number) => ({ size: BigInt(size), mtimeNs: BigInt(mtimeNs) });
+
+beforeEach(async () => {
+  readFile.mockReset().mockResolvedValue(await pngBytes(3, 2));
+  stat.mockReset().mockResolvedValue(fileStats(1024, 1));
+});
+
 const IMAGE_FILE_PATH = "collection/entry/image.png";
+const ENTRY_ICON_FILE_PATH = "collection/entry.icon.svg";
+const ICON_SHAPE = '<circle cx="8" cy="8" r="6" />';
+const OPAQUE_BACKGROUND = '<rect width="16" height="16" fill="white" />';
 const VIDEO_FILE_PATH = "collection/entry/video.mp4";
 
-/**
- * FFmpeg-generated fixtures: `h264.mp4` contains only video, `aac-h264.mp4` places an audio track before its video
- * track, and `hevc.mp4` uses a format the site does not serve.
- */
 const fixture = (fileName: string) => readFileSync(join(fromRoot("build/test-utils/fixtures"), fileName));
-
 const solidImage = (width: number, height: number) =>
   sharp({ create: { width, height, channels: 3, background: "#000000" } });
-const pngBytes = (width: number, height: number) => solidImage(width, height).png().toBuffer();
+const svgBytes = (rootAttributes: string, content: string) =>
+  Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" ${rootAttributes}>${content}</svg>`);
+const hashOf = (image: ResolvedMediaFile | UnreadableImage) => ("problem" in image ? null : image.hash);
 
 /** Inserts a `tEXt` chunk after a PNG's `IHDR` chunk. */
 function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffer {
@@ -42,10 +50,6 @@ function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffe
 
   return Buffer.concat([imageBytes.subarray(0, 33), length, typeAndData, checksum, imageBytes.subarray(33)]);
 }
-
-const fileStats = (size: number, mtimeNs: number) => ({ size: BigInt(size), mtimeNs: BigInt(mtimeNs) });
-
-const hashOf = (image: ResolvedImage | UnreadableImage) => ("problem" in image ? null : image.hash);
 
 /** Moves a file's top-level `moov` box after the boxes that follow it, as an encoder without `+faststart` writes it. */
 function withMovieBoxLast(bytes: Buffer): Buffer {
@@ -65,11 +69,6 @@ function withMovieBoxLast(bytes: Buffer): Buffer {
     ].map((box) => box.bytes),
   );
 }
-
-beforeEach(async () => {
-  readFile.mockReset().mockResolvedValue(await pngBytes(3, 2));
-  stat.mockReset().mockResolvedValue(fileStats(1024, 1));
-});
 
 describe("createMediaFileReader", () => {
   test("hashes an image's bytes and reads its dimensions from them", async () => {
@@ -140,6 +139,46 @@ describe("createMediaFileReader", () => {
 
     expect("problem" in unreadableImage ? unreadableImage.problem : null).toContain(
       `"${CONTENT_DIRECTORY_PATH}/collection/entry/image.png" could not be read as an image: `,
+    );
+  });
+
+  test("hashes an entry icon's bytes, and reads whether it is opaque and whether its root `<svg>` has a `viewBox` attribute", async () => {
+    const entryIconBytes = svgBytes('viewBox="0 0 16 16"', ICON_SHAPE);
+
+    readFile.mockResolvedValue(entryIconBytes);
+
+    const resolvedEntryIcon = await createMediaFileReader().readEntryIcon(ENTRY_ICON_FILE_PATH);
+
+    expect(resolvedEntryIcon).toMatchObject({
+      path: ENTRY_ICON_FILE_PATH,
+      bytes: entryIconBytes.byteLength,
+      isOpaque: false,
+      hasViewBox: true,
+    });
+    expect(hashOf(resolvedEntryIcon)).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  test("identifies an entry icon with an opaque background as opaque", async () => {
+    readFile.mockResolvedValue(svgBytes('viewBox="0 0 16 16"', `${OPAQUE_BACKGROUND}${ICON_SHAPE}`));
+    await expect(createMediaFileReader().readEntryIcon(ENTRY_ICON_FILE_PATH)).resolves.toMatchObject({
+      isOpaque: true,
+    });
+  });
+
+  test("reads the `viewBox` attribute only from an entry icon's root `<svg>`, and ignores one on a nested `<svg>`", async () => {
+    readFile.mockResolvedValue(svgBytes("", `<svg viewBox="0 0 16 16">${ICON_SHAPE}</svg>`));
+    await expect(createMediaFileReader().readEntryIcon(ENTRY_ICON_FILE_PATH)).resolves.toMatchObject({
+      hasViewBox: false,
+    });
+  });
+
+  test("reports an entry icon sharp cannot rasterize instead of throwing", async () => {
+    readFile.mockResolvedValue(Buffer.from("<svg"));
+
+    const unreadableEntryIcon = await createMediaFileReader().readEntryIcon(ENTRY_ICON_FILE_PATH);
+
+    expect("problem" in unreadableEntryIcon ? unreadableEntryIcon.problem : null).toContain(
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.icon.svg" could not be read as an image: `,
     );
   });
 

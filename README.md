@@ -73,10 +73,12 @@ An entry's media is stored beside its MDX file:
 
 - `/content/<collection>/<entry>.cover.{png,jpg}`: the entry's cover image (used
   in Open Graph previews)
+- `/content/<collection>/<entry>.icon.svg`: the entry's icon (shown in place of
+  the document icon in its collection's list)
 - `/content/<collection>/<entry>/`: images and videos used in the entry
 
 The entry references its media by file name (e.g., `./<image>.png`) and must
-reference every image and video in its media folder, apart from poster images.
+reference every image and video in its media folder apart from poster images.
 
 Media is committed as authored. The build validates it and serves each file at a
 content-hashed URL.

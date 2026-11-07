@@ -33,7 +33,7 @@ function focusTarget(container: HTMLElement, record: FocusRecord | null, content
 
 export function useRestorableFocus(
   ref: RefObject<HTMLElement | null>,
-  { isActive, contentKey }: { isActive: boolean; contentKey: string },
+  { shouldHoldFocus, contentKey }: { shouldHoldFocus: boolean; contentKey: string },
 ): void {
   const lastFocusedRef = useRef<FocusRecord | null>(null);
 
@@ -74,7 +74,7 @@ export function useRestorableFocus(
 
     // Focus already inside the container is left alone: a press that landed on a control has focused that control, and
     // a restore must not overrule it.
-    if (!isActive || !container || container.contains(document.activeElement)) {
+    if (!shouldHoldFocus || !container || container.contains(document.activeElement)) {
       return;
     }
 
@@ -85,5 +85,5 @@ export function useRestorableFocus(
     if (!container.contains(document.activeElement)) {
       container.focus({ preventScroll: true });
     }
-  }, [ref, contentKey, isActive]);
+  }, [ref, contentKey, shouldHoldFocus]);
 }

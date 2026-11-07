@@ -1,5 +1,5 @@
-import { PLAIN_TEXT_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { PLAIN_TEXT_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 
 import { CLIENT_ENVIRONMENT } from "./environments.ts";

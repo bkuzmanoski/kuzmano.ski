@@ -5,6 +5,8 @@ import { dirname, join, resolve } from "node:path";
 import { parse } from "postcss";
 import valueParser from "postcss-value-parser";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { CLIENT_ENVIRONMENT } from "./environments.ts";
 import { SOURCE_DIRECTORY_PATH, fromRoot, toRootRelative } from "./paths.ts";
 
@@ -111,8 +113,7 @@ export function cssAssetsPlugin(): Plugin {
       try {
         problems = await readStylesheetProblems();
       } catch (cause) {
-        const reason = cause instanceof Error ? cause.message : String(cause);
-        return this.error(`Could not read the stylesheets under ${SOURCE_DIRECTORY_PATH}/: ${reason}`);
+        return this.error(`Could not read the stylesheets under ${SOURCE_DIRECTORY_PATH}/: ${errorMessageOf(cause)}`);
       }
 
       if (problems.length > 0) {

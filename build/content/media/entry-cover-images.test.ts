@@ -4,30 +4,22 @@ import type { EntryKey } from "#/lib/content/entry-file.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 
+import { hookOf } from "../../test-utils/plugin-hooks.ts";
+
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
+
+import type { LoadHook } from "../../test-utils/plugin-hooks.ts";
 
 const COVER_IMAGE: CoverImage = { src: mediaRoute("collection/entry.cover.png"), width: 512, height: 512 };
 
-const pluginServing = (coverImages: Record<EntryKey, CoverImage>) => {
-  const plugin = entryCoverImagesPlugin(() => Promise.resolve(coverImages));
-
-  return {
-    resolveId: plugin.resolveId as (source: string) => string | null,
-    load: (id: string) => (plugin.load as (this: unknown, id: string) => Promise<string | null>).call({}, id),
-  };
-};
+const pluginServing = (coverImages: Record<EntryKey, CoverImage>) =>
+  entryCoverImagesPlugin(() => Promise.resolve(coverImages));
 
 describe("entryCoverImagesPlugin", () => {
-  test("resolves only the virtual module's ID", () => {
-    expect(pluginServing({}).resolveId("virtual:entry-cover-images")).toBe(RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID);
-    expect(pluginServing({}).resolveId("virtual:other-module")).toBeNull();
-  });
-
   test("exports the cover images it loads", async () => {
     const coverImages = { ["collection/entry" as EntryKey]: COVER_IMAGE };
-
-    await expect(pluginServing(coverImages).load(RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID)).resolves.toBe(
-      `export const ENTRY_COVER_IMAGES = ${JSON.stringify(coverImages)};`,
-    );
+    await expect(
+      hookOf<LoadHook>(pluginServing(coverImages), "load").call({}, RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID),
+    ).resolves.toBe(`export const ENTRY_COVER_IMAGES = ${JSON.stringify(coverImages)};`);
   });
 });

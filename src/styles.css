@@ -161,7 +161,6 @@
   --neutral-565: oklch(56.5% calc(0.0301 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-645: oklch(64.5% calc(0.0292 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-675: oklch(67.5% calc(0.0283 * var(--theme-chroma-scale)) var(--theme-hue));
-  --neutral-790: oklch(79% calc(0.0216 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-820: oklch(82% calc(0.0192 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-925: oklch(92.5% calc(0.0087 * var(--theme-chroma-scale)) var(--theme-hue));
   --neutral-970: oklch(97% calc(0.0035 * var(--theme-chroma-scale)) var(--theme-hue));
@@ -223,7 +222,7 @@
   --color-focus-ring: var(--color-border);
   --color-selection-background: color-mix(in srgb, var(--color-accent) 35%, var(--color-background));
   --color-highlight-foreground: var(--color-background);
-  --color-highlight-background: light-dark(var(--neutral-330), var(--neutral-790));
+  --color-highlight-background: var(--color-foreground);
   --color-pressed-foreground: var(--color-background);
   --color-pressed-background: var(--neutral-540);
   --color-icon-foreground: currentColor; /* Replaces `black` in icons (see `/build/svgr.ts`). */

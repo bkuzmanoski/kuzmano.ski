@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { isEntryFile } from "#/lib/content/entry-file.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
+import { errorMessageOf } from "#/lib/errors.ts";
 
 import { CLIENT_ENVIRONMENT } from "../../environments.ts";
 import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
@@ -12,6 +13,7 @@ import { MEDIA_DIRECTORY_PATH, fromContent, fromRoot, requestPathOf } from "../.
 
 import { createImageDerivativeStore, imageDerivativeAuditBetween } from "./derivative-store.ts";
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
+import { RESOLVED_ENTRY_ICON_URLS_MODULE_ID, entryIconUrlsPlugin } from "./entry-icon-urls.ts";
 import { isContentMedia } from "./formats.ts";
 import { buildMediaIndex } from "./media-index.ts";
 import { contentMediaProblemReport, renditionSizeProblems } from "./problems.ts";
@@ -34,9 +36,36 @@ const MEDIA_HEADERS_RULE: HeadersRule = {
   },
 };
 
+interface IndexValueModule {
+  resolvedModuleId: string;
+  valueOf: (index: MediaIndex) => unknown;
+  /** Creates the plugin that serves the module, reading the index from `loadIndex`. */
+  pluginFor: (loadIndex: () => Promise<MediaIndex>) => Plugin;
+}
+
+/** Pairs a virtual module's plugin with the value it exports from the index, so the plugin serves that value. */
+function indexValueModule<TValue>(
+  resolvedModuleId: string,
+  valueOf: (index: MediaIndex) => TValue,
+  pluginServing: (loadValue: () => Promise<TValue>) => Plugin,
+): IndexValueModule {
+  return {
+    resolvedModuleId,
+    valueOf,
+    pluginFor: (loadIndex) => pluginServing(async () => valueOf(await loadIndex())),
+  };
+}
+
+/** The virtual modules the plugin serves from the index. */
+const INDEX_VALUE_MODULES = [
+  indexValueModule(RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, (index) => index.coverImages, entryCoverImagesPlugin),
+  indexValueModule(RESOLVED_ENTRY_ICON_URLS_MODULE_ID, (index) => index.entryIconUrls, entryIconUrlsPlugin),
+];
+
 interface IndexChange {
   index: MediaIndex;
-  hasChangedCoverImages: boolean;
+  /** The resolved IDs of the virtual modules with a value the change altered. */
+  staleValueModuleIds: Array<string>;
 }
 
 /**
@@ -113,7 +142,12 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     const index = await ensureIndex();
     const previousIndex = await previousIndexBuild?.catch(() => null);
 
-    return { index, hasChangedCoverImages: !isDeepStrictEqual(previousIndex?.coverImages, index.coverImages) };
+    return {
+      index,
+      staleValueModuleIds: INDEX_VALUE_MODULES.filter(
+        ({ valueOf }) => !isDeepStrictEqual(previousIndex && valueOf(previousIndex), valueOf(index)),
+      ).map(({ resolvedModuleId }) => resolvedModuleId),
+    };
   }
 
   // Resolves to the current index when the update does not change which body images have alternates, so the rechecked
@@ -123,7 +157,7 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     const index = await ensureIndex();
     const { requiresRebuild } = index.recheckReferences(absolutePath, source);
 
-    return requiresRebuild ? rebuildIndex() : { index, hasChangedCoverImages: false };
+    return requiresRebuild ? rebuildIndex() : { index, staleValueModuleIds: [] };
   }
 
   const mediaForEntry: MediaForEntry = async (absolutePath) => (await ensureIndex()).mediaForEntry(absolutePath);
@@ -142,7 +176,7 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     configureServer(server) {
       ensureIndex()
         .then((index) => problemReporter.replaceIndexProblems(index.problems()))
-        .catch((cause: unknown) => logger?.error(`Content media could not be indexed: ${String(cause)}`));
+        .catch((cause: unknown) => logger?.error(`Content media could not be indexed: ${errorMessageOf(cause)}`));
 
       // Rewrite media requests so Vite's static middleware can stream them with range support.
       server.middlewares.use((request, response, next) => {
@@ -203,20 +237,20 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
         };
       }
 
-      const { index, hasChangedCoverImages } = await latestIndexChange.indexChange;
+      const { index, staleValueModuleIds } = await latestIndexChange.indexChange;
 
       if (this.environment.name === CLIENT_ENVIRONMENT) {
         problemReporter.replaceIndexProblems(index.problems());
       }
 
       // A reference names a file in its own entry's media directory, so an update to a body media file changes only
-      // that entry's compiled output. The cover image module is invalidated only when its value changed, so an update
-      // to one entry's body media invalidates that entry alone.
+      // that entry's compiled output. The plugin invalidates an index value module only when its value changes, so an
+      // update to one entry's body media invalidates that entry alone.
       const staleEntryAbsolutePath = index.entryAbsolutePathsByMediaDirectoryPath.get(
         relative(contentDirectoryAbsolutePath, dirname(file)),
       );
       const staleModules = [
-        ...(hasChangedCoverImages ? [RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID] : []),
+        ...staleValueModuleIds,
         ...(staleEntryAbsolutePath === undefined ? [] : [staleEntryAbsolutePath]),
       ]
         .map((id) => this.environment.moduleGraph.getModuleById(id))
@@ -274,7 +308,8 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     },
   };
 
-  const coverImagesPlugin = entryCoverImagesPlugin(async () => (await ensureIndex()).coverImages);
-
-  return { plugins: [mediaPlugin, coverImagesPlugin, mediaEmitPlugin], mediaForEntry };
+  return {
+    plugins: [mediaPlugin, ...INDEX_VALUE_MODULES.map(({ pluginFor }) => pluginFor(ensureIndex)), mediaEmitPlugin],
+    mediaForEntry,
+  };
 }

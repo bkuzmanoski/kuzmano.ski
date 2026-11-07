@@ -1,3 +1,4 @@
+// Has no imports because `/vite.config.ts` loads this module through `/build`.
 export const HTML_MEDIA_TYPE = "text/html";
 export const FEED_MEDIA_TYPE = "application/atom+xml";
 export const MARKDOWN_MEDIA_TYPE = "text/markdown";

@@ -3,8 +3,8 @@
 import { describe, expect, test, vi } from "vitest";
 
 import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
-import { FEED_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { FEED_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { FEEDS } from "#/site/feeds.ts";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../environments.ts";
@@ -142,8 +142,8 @@ describe("feedXmlFor", () => {
 });
 
 describe("atomFeeds", () => {
-  test("adds a `Content-Type`, `Cache-Control`, `Access-Control-Allow-Origin`, and `Content-Signal` rule for every feed path to `_headers` when the client build starts", () => {
-    expect(headersRulesAddedAtBuildStartBy(feedsPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
+  test("adds a `Content-Type`, `Cache-Control`, `Access-Control-Allow-Origin`, and `Content-Signal` rule for every feed path to `_headers` when the client build starts", async () => {
+    expect(await headersRulesAddedAtBuildStartBy(feedsPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
       expect.objectContaining({
         pathPatterns: FEEDS.map(({ path }) => path),
         headers: {
@@ -156,7 +156,7 @@ describe("atomFeeds", () => {
     ]);
   });
 
-  test("adds rules to `_headers` from the client build only", () => {
-    expect(headersRulesAddedAtBuildStartBy(feedsPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
+  test("adds rules to `_headers` from the client build only", async () => {
+    expect(await headersRulesAddedAtBuildStartBy(feedsPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
   });
 });

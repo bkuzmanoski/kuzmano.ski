@@ -1,4 +1,5 @@
 import { SITE_NAME } from "#/config/site.ts";
+import { errorMessageOf } from "#/lib/errors.ts";
 import { contributionCalendarFrom } from "#/lib/github/contributions.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
 import { isRecord } from "#/lib/guards.ts";
@@ -6,7 +7,7 @@ import { readJson } from "#/lib/json.ts";
 
 import { GITHUB_TOKEN_BINDING } from "./bindings.ts";
 import { workerEnv } from "./env.ts";
-import { errorMessageOf, logServerEvent, reportMissingBinding } from "./log.ts";
+import { logServerEvent, reportMissingBinding } from "./log.ts";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 const CONTRIBUTION_CALENDAR_QUERY = `query($login: String!) {

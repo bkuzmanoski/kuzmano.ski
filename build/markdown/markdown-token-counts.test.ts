@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 
+import { hookOf } from "../test-utils/plugin-hooks.ts";
+
 import { RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID, markdownTokenCountsPlugin } from "./markdown-token-counts.ts";
 
 import type { MarkdownTokenCounts } from "./token-count.ts";
+import type { LoadHook, ResolveIdHook } from "../test-utils/plugin-hooks.ts";
 
 const MODULE_ID = "virtual:markdown-token-counts";
 const TOKEN_COUNTS: MarkdownTokenCounts = { "/page.md": 607, "/collection.md": 145 };
@@ -11,18 +14,17 @@ const loadedModuleFor = (
   command: "build" | "serve", // The module the plugin serves depends on the command of the environment that loads it.
   loadTokenCounts: () => Promise<MarkdownTokenCounts> = () => Promise.resolve(TOKEN_COUNTS),
 ) =>
-  (
-    markdownTokenCountsPlugin(loadTokenCounts).load as unknown as (
-      this: { environment: { config: { command: string } } },
-      id: string,
-    ) => Promise<string | null>
+  hookOf<LoadHook<{ environment: { config: { command: string } } }>>(
+    markdownTokenCountsPlugin(loadTokenCounts),
+    "load",
   ).call({ environment: { config: { command } } }, RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID);
 
 describe("markdownTokenCountsPlugin", () => {
   test("resolves its own module ID", () => {
-    const resolveId = markdownTokenCountsPlugin(() => Promise.resolve(TOKEN_COUNTS)).resolveId as unknown as (
-      source: string,
-    ) => string | null;
+    const resolveId = hookOf<ResolveIdHook>(
+      markdownTokenCountsPlugin(() => Promise.resolve(TOKEN_COUNTS)),
+      "resolveId",
+    );
     expect(resolveId(MODULE_ID)).toBe(RESOLVED_MARKDOWN_TOKEN_COUNTS_MODULE_ID);
   });
 

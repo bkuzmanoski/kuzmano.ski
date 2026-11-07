@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
+
 import { CONTENT_DIRECTORY_PATH, fromContent } from "../../paths.ts";
 import { ENTRY_SOURCE, VIDEO_FILE_NAME, authoredEntryMedia } from "../../test-utils/media.ts";
 import { mediaReferencesInSource } from "../markup/media-references.ts";
@@ -30,6 +32,7 @@ describe("authoredMediaIn", () => {
         absolutePath: fromContent("collection/entry.mdx"),
         mediaDirectoryPath: "collection/entry",
         coverImageFilePath: null,
+        entryIconFilePath: null,
         bodyImageFileNames: [],
         videos: [],
       },
@@ -40,6 +43,7 @@ describe("authoredMediaIn", () => {
         absolutePath: fromContent("collection/other-entry.mdx"),
         mediaDirectoryPath: "collection/other-entry",
         coverImageFilePath: null,
+        entryIconFilePath: null,
         bodyImageFileNames: [],
         videos: [],
       },
@@ -141,6 +145,68 @@ describe("authoredMediaIn", () => {
       { slug: "entry.cover", coverImageFilePath: "collection/entry.cover.cover.png" },
     ]);
     expect(problems).toEqual([]);
+  });
+
+  test("assigns an entry icon to an entry whose slug ends with the `.cover` stem suffix", () => {
+    const { entryMedia, problems } = authoredMediaIn(
+      directoryListing({ fileNames: ["entry.cover.mdx", "entry.cover.icon.svg"] }),
+    );
+
+    expect(entryMedia[0]).toMatchObject({
+      coverImageFilePath: null,
+      entryIconFilePath: "collection/entry.cover.icon.svg",
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test("assigns a cover image and an entry icon to an entry whose slug ends with the `.icon` stem suffix", () => {
+    const { entryMedia, problems } = authoredMediaIn(
+      directoryListing({ fileNames: ["entry.icon.mdx", "entry.icon.cover.png", "entry.icon.icon.svg"] }),
+    );
+
+    expect(entryMedia[0]).toMatchObject({
+      coverImageFilePath: "collection/entry.icon.cover.png",
+      entryIconFilePath: "collection/entry.icon.icon.svg",
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test("assigns a sibling entry icon and a sibling cover image to the same entry", () => {
+    const { entryMedia, problems } = authoredMediaIn(
+      directoryListing({ fileNames: ["entry.cover.png", "entry.icon.svg", "entry.mdx"] }),
+    );
+
+    expect(entryMedia[0]).toMatchObject({
+      coverImageFilePath: "collection/entry.cover.png",
+      entryIconFilePath: "collection/entry.icon.svg",
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test("reports an entry icon in a format other than SVG, and does not assign it", () => {
+    const { entryMedia, problems } = authoredMediaIn(directoryListing({ fileNames: ["entry.icon.png", "entry.mdx"] }));
+
+    expect(entryMedia[0]?.entryIconFilePath).toBeNull();
+    expect(problems).toEqual([
+      `The image format of "${CONTENT_DIRECTORY_PATH}/collection/entry.icon.png" is not supported for entry icons.`,
+    ]);
+  });
+
+  test("reports an entry icon without a corresponding entry", () => {
+    expect(problemsIn({ fileNames: ["entry.mdx", "other-entry.icon.svg"] })).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/collection/other-entry.icon.svg" is an entry icon without a corresponding entry.`,
+    ]);
+  });
+
+  test("reports an entry icon beside a page, and does not assign it", () => {
+    const { entryMedia, problems } = authoredMediaIn(
+      directoryListing({ directoryName: PAGES_DIRECTORY_NAME, fileNames: ["page.icon.svg", "page.mdx"] }),
+    );
+
+    expect(entryMedia[0]?.entryIconFilePath).toBeNull();
+    expect(problems).toEqual([
+      `"${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/page.icon.svg" is an entry icon beside a page, and only a collection list renders entry icons.`,
+    ]);
   });
 
   test("assigns images in the directory named after an entry as its body images", () => {

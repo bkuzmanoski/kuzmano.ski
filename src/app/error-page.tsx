@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { Alert } from "#/components/alert.tsx";
 import { reportClientError } from "#/lib/client-errors/client.ts";
+import { errorMessageOf } from "#/lib/errors.ts";
 import { useDismissStartupSequence } from "#/lib/startup-sequence/use-dismiss-startup-sequence.ts";
 import { documentTitle } from "#/site/metadata.ts";
 
@@ -17,7 +18,7 @@ export function ErrorPage({ error }: ErrorComponentProps) {
 
     reportClientError({
       kind: "router-error-boundary",
-      message: error instanceof Error ? error.message : String(error),
+      message: errorMessageOf(error),
       stack: error instanceof Error ? error.stack : undefined,
       route: location.pathname,
     });

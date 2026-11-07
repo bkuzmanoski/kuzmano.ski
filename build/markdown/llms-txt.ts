@@ -1,9 +1,9 @@
 import { COLLECTIONS, PAGE_SLUGS } from "#/config/content.ts";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
-import { PLAIN_TEXT_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL, SITE_DESCRIPTION, SITE_NAME } from "#/config/site.ts";
 import { parseFrontmatter } from "#/lib/content/frontmatter.ts";
 import { markdownPath } from "#/lib/content/paths.ts";
+import { PLAIN_TEXT_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
 import { LLMS_TXT_FILE_NAME, LLMS_TXT_PATH, canonicalUrl, markdownUrl } from "#/site/metadata.ts";
 import { entryRoute, pageRoute } from "#/site/routes.ts";

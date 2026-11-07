@@ -1,6 +1,7 @@
 import type { MediaKind } from "#/lib/content/media.ts";
 
 export const COVER_IMAGE_STEM_SUFFIX = ".cover";
+export const ENTRY_ICON_STEM_SUFFIX = ".icon";
 export const VIDEO_POSTER_IMAGE_STEM_SUFFIX = ".poster";
 
 export const IMAGE_MEDIA_TYPES = {
@@ -18,8 +19,12 @@ const MEDIA_TYPES: Record<string, string | undefined> = { ...IMAGE_MEDIA_TYPES, 
 
 /** The build generates derivatives only for these image formats; the site serves all others as authored. */
 const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
+
 /** Open Graph crawlers can render these formats when the site serves cover images as authored `og:image` assets. */
 const COVER_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
+
+/** A collection list renders an entry icon as a mask from its alpha channel. */
+const ENTRY_ICON_EXTENSIONS: Array<string> = [".svg"];
 
 const FILE_EXTENSION = /\.[^./]*$/;
 
@@ -30,7 +35,7 @@ export const withoutExtension = (filePath: string) =>
 export const mediaTypeOf = (filePath: string): string | null => MEDIA_TYPES[extensionOf(filePath)] ?? null;
 export const isEncodableImage = (filePath: string) => ENCODABLE_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
 export const isSupportedCoverImage = (filePath: string) => COVER_IMAGE_EXTENSIONS.includes(extensionOf(filePath));
-export const coverImageStemOf = (slug: string) => `${slug}${COVER_IMAGE_STEM_SUFFIX}`;
+export const isSupportedEntryIcon = (filePath: string) => ENTRY_ICON_EXTENSIONS.includes(extensionOf(filePath));
 export const posterImageStemOf = (videoFilePath: string) =>
   `${withoutExtension(videoFilePath)}${VIDEO_POSTER_IMAGE_STEM_SUFFIX}`;
 

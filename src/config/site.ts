@@ -9,7 +9,8 @@ export const GITHUB_GIST_LINK_TEXT = "View GitHub Gist";
 // Site identity
 export const SITE_NAME = "kuzmano.ski";
 export const SITE_URL = "https://kuzmano.ski";
-export const SITE_DESCRIPTION = "Brian's personal website.";
+export const SITE_DESCRIPTION =
+  "Brian is a software designer and engineer with two decades of experience building software.";
 export const SITE_SOURCE_URL = `${GITHUB_PROFILE_URL}/kuzmano.ski`;
 
 // Localization

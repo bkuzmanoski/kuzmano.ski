@@ -1,4 +1,5 @@
 import { ENTRY_BODY_CHUNKS } from "virtual:entry-body-chunks";
+import { ENTRY_ICON_URLS } from "virtual:entry-icon-urls";
 
 import { COLLECTIONS, PAGES_DIRECTORY_NAME } from "#/config/content.ts";
 import { createCatalog } from "#/lib/content/catalog.ts";
@@ -13,6 +14,7 @@ const catalog = createCatalog(
       query: "?frontmatter",
       eager: true,
     }), // Frontmatter without the compiled bodies.
+    entryIconUrls: ENTRY_ICON_URLS,
     bodyModules: import.meta.glob<{ default: MDXContent }>("/content/*/*.mdx"),
     stylesheetModules: import.meta.glob<{ default: EntryStylesheetClassNames }>("/content/*/*.module.css"),
     bodyChunks: ENTRY_BODY_CHUNKS,

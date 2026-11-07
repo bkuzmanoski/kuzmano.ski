@@ -240,7 +240,7 @@ export function Window({
 
   // The desktop is inert until the startup sequence completes, and focusing an element in inert content has no effect,
   // so the focused window takes the focus only once the startup sequence has completed.
-  useRestorableFocus(windowRef, { isActive: focused && !hidden && isStartupSequenceComplete, contentKey });
+  useRestorableFocus(windowRef, { shouldHoldFocus: focused && !hidden && isStartupSequenceComplete, contentKey });
 
   function reportDrag(drag: WindowDrag) {
     dragRef.current = drag;

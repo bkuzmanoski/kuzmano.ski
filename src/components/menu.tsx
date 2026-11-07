@@ -69,19 +69,19 @@ const MenuItemRow = memo(function MenuRow({
   item,
   index,
   id,
-  isActive,
+  isHighlighted,
   isApplePlatform,
 }: {
   item: MenuAction;
   index: number;
   id: string;
-  isActive: boolean;
+  isHighlighted: boolean;
   isApplePlatform: boolean;
 }) {
   const itemProps = {
     id,
     role: "menuitem" as const,
-    className: cx(styles.item, item.disabled && styles.disabled, isActive && styles.active),
+    className: cx(styles.item, item.disabled && styles.disabled, isHighlighted && styles.highlighted),
     "aria-disabled": item.disabled || undefined,
     "aria-keyshortcuts": item.shortcut ? `Alt+${item.shortcut.label}` : undefined,
     "aria-describedby": item.accessory ? `${id}-description` : undefined,
@@ -207,7 +207,7 @@ export function Menu({
             item={item}
             index={index}
             id={`${itemIdPrefix}-${index}`}
-            isActive={isHighlighted(index)}
+            isHighlighted={isHighlighted(index)}
             isApplePlatform={isApplePlatform}
           />
         ),

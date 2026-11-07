@@ -5,6 +5,7 @@ import { MP4BoxBuffer, createFile } from "mp4box";
 import sharp from "sharp";
 
 import type { Dimensions } from "#/lib/content/media.ts";
+import { errorMessageOf } from "#/lib/errors.ts";
 
 import { fromContent, quotedContentPath } from "../../paths.ts";
 
@@ -26,6 +27,12 @@ export interface ResolvedMediaFile {
 export interface ResolvedImage extends ResolvedMediaFile {
   dimensions: Dimensions;
   embeddedMetadataNames: Array<string>;
+}
+
+/** A resolved entry icon with the properties needed to create its mask. */
+export interface ResolvedEntryIcon extends ResolvedMediaFile {
+  isOpaque: boolean;
+  hasViewBox: boolean;
 }
 
 export interface Mp4Metadata {
@@ -50,6 +57,7 @@ export interface UnreadableImage {
 
 export interface MediaFileReader {
   readImage: (path: string) => Promise<ResolvedImage | UnreadableImage>;
+  readEntryIcon: (path: string) => Promise<ResolvedEntryIcon | UnreadableImage>;
   readVideo: (path: string) => Promise<ResolvedVideo>;
 }
 
@@ -97,6 +105,9 @@ const embeddedMetadataNamesOf = ({ exif, xmp, iptc, tifftagPhotoshop, comments }
   ...(tifftagPhotoshop ? ["Photoshop"] : []),
   ...(comments?.length ? ["text"] : []), // PNG text chunks.
 ];
+const unreadableImageAt = (path: string, reason: string): UnreadableImage => ({
+  problem: `${quotedContentPath(path)} could not be read as an image: ${reason}`,
+});
 
 /**
  * Returns an `UnreadableImage` instead of throwing when sharp cannot decode the bytes, so the build reports a corrupt
@@ -104,9 +115,6 @@ const embeddedMetadataNamesOf = ({ exif, xmp, iptc, tifftagPhotoshop, comments }
  */
 async function readImage(path: string): Promise<ResolvedImage | UnreadableImage> {
   const { resolvedMediaFile, contents } = await readMediaFile(path);
-  const unreadableImage = (reason: string): UnreadableImage => ({
-    problem: `${quotedContentPath(path)} could not be read as an image: ${reason}`,
-  });
 
   try {
     const metadata = await sharp(contents).metadata();
@@ -118,9 +126,28 @@ async function readImage(path: string): Promise<ResolvedImage | UnreadableImage>
           dimensions: { width, height },
           embeddedMetadataNames: embeddedMetadataNamesOf(metadata),
         }
-      : unreadableImage("The image does not declare its dimensions.");
+      : unreadableImageAt(path, "The image does not declare its dimensions.");
   } catch (cause) {
-    return unreadableImage(cause instanceof Error ? cause.message : String(cause));
+    return unreadableImageAt(path, errorMessageOf(cause));
+  }
+}
+
+const SVG_ROOT_START_TAG = /<svg\b[^>]*>/;
+const VIEW_BOX_ATTRIBUTE = /\sviewBox\s*=/;
+
+/**
+ * Returns an `UnreadableImage` instead of throwing when sharp cannot rasterize the SVG, so the build reports a corrupt
+ * or partially saved file alongside other problems rather than in place of them.
+ */
+async function readEntryIcon(path: string): Promise<ResolvedEntryIcon | UnreadableImage> {
+  const { resolvedMediaFile, contents } = await readMediaFile(path);
+  const rootStartTag = SVG_ROOT_START_TAG.exec(contents.toString("utf8"))?.[0] ?? "";
+
+  try {
+    const { isOpaque } = await sharp(contents).stats();
+    return { ...resolvedMediaFile, isOpaque, hasViewBox: VIEW_BOX_ATTRIBUTE.test(rootStartTag) };
+  } catch (cause) {
+    return unreadableImageAt(path, errorMessageOf(cause));
   }
 }
 
@@ -155,5 +182,5 @@ export function createMediaFileReader(): MediaFileReader {
     };
   }
 
-  return { readImage: cached(readImage), readVideo: cached(readVideo) };
+  return { readImage: cached(readImage), readEntryIcon: cached(readEntryIcon), readVideo: cached(readVideo) };
 }

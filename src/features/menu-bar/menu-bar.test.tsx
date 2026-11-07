@@ -60,7 +60,7 @@ const isExpanded = (label: string) => menuTitle(label).getAttribute("aria-expand
 const menu = () => document.querySelector('[role="menu"]');
 const menuItem = (label: string) => screen.getByText(label).closest("[data-index]")!;
 const highlightedMenuItem = () =>
-  document.querySelector('[role="menuitem"][class*="active"]')?.querySelector("span")?.textContent;
+  document.querySelector('[role="menuitem"][class*="highlighted"]')?.querySelector("span")?.textContent;
 
 const openWithPointer = (label: string) => pressWithMouse(menuTitle(label));
 

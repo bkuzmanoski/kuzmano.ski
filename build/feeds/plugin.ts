@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import { FEED_CONTENT_TYPE } from "#/config/media-types.ts";
 import { AUTHOR_NAME, CONTENT_SIGNAL, FEED_ICON, FEED_LOGO, FEED_MAX_ENTRIES, SITE_TIME_ZONE } from "#/config/site.ts";
 import { parseFrontmatter } from "#/lib/content/frontmatter.ts";
+import { FEED_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { FEEDS } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 import { canonicalUrl, markdownUrl } from "#/site/metadata.ts";

@@ -21,6 +21,3 @@ export function logServerEvent(event: ServerLogEvent, fields: Record<string, unk
 export function reportMissingBinding(event: MissingBindingEvent, binding: string) {
   logServerEvent(event, { binding, message: `The worker could not access \`${binding}\`` });
 }
-
-/** The message of a thrown `Error`, or the thrown value as a string, without the `Error: ` prefix `String` adds. */
-export const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));

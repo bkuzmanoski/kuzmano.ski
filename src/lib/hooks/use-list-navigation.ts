@@ -65,11 +65,11 @@ export function useListNavigation(
   listRef: RefObject<HTMLElement | null>,
   {
     count,
-    activeIndex,
+    currentIndex,
     onActivate,
   }: {
     count: number;
-    activeIndex: number;
+    currentIndex: number;
     onActivate: (index: number) => void;
   },
 ) {
@@ -77,16 +77,16 @@ export function useListNavigation(
   const listId = useId();
 
   useEffect(() => {
-    const item = itemAt(listRef.current, listId, activeIndex);
+    const item = itemAt(listRef.current, listId, currentIndex);
 
     if (!item) {
       return;
     }
 
     scrollIntoViewSilently(item);
-  }, [listRef, listId, activeIndex]);
+  }, [listRef, listId, currentIndex]);
 
-  const tabStopIndex = clamp(focusedIndex ?? Math.max(activeIndex, 0), 0, count - 1);
+  const tabStopIndex = clamp(focusedIndex ?? Math.max(currentIndex, 0), 0, count - 1);
 
   function itemProps(index: number) {
     return {

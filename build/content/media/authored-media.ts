@@ -1,3 +1,4 @@
+import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
 import { isEntryFile } from "#/lib/content/entry-file.ts";
 import type { MediaKind } from "#/lib/content/media.ts";
 
@@ -7,13 +8,14 @@ import { mediaDirectoryFileNameOf } from "../markup/media-references.ts";
 
 import {
   COVER_IMAGE_STEM_SUFFIX,
+  ENTRY_ICON_STEM_SUFFIX,
   VIDEO_POSTER_IMAGE_STEM_SUFFIX,
   authoredExtensionOf,
-  coverImageStemOf,
   isContentMedia,
   isEncodableImage,
   isImage,
   isSupportedCoverImage,
+  isSupportedEntryIcon,
   isVideo,
   posterImageStemOf,
   withoutExtension,
@@ -32,6 +34,8 @@ export interface AuthoredVideo {
 export interface AuthoredEntryMedia extends ListedEntry {
   /** Relative to the content directory. */
   coverImageFilePath: string | null;
+  /** Relative to the content directory. */
+  entryIconFilePath: string | null;
   bodyImageFileNames: Array<string>;
   videos: Array<AuthoredVideo>;
 }
@@ -51,12 +55,9 @@ function isUrlSafeFileName(fileName: string) {
       .every((part) => URL_SAFE_NAME.test(part))
   );
 }
-
-const isNamedAfter = (fileName: string, stem: string) => withoutExtension(fileName) === stem;
-const isCoverImageFileName = (fileName: string) =>
-  !isEntryFile(fileName) && fileName.includes(`${COVER_IMAGE_STEM_SUFFIX}.`);
 const isPosterImageFileName = (fileName: string) => withoutExtension(fileName).endsWith(VIDEO_POSTER_IMAGE_STEM_SUFFIX);
-const kindWithIndefiniteArticle = (kind: MediaKind) => `${kind === "image" ? "an" : "a"} ${kind}`;
+const isNamedAfter = (fileName: string, stem: string) => withoutExtension(fileName) === stem;
+const withIndefiniteArticle = (noun: string) => `${/^[aeiou]/.test(noun) ? "an" : "a"} ${noun}`;
 
 function authoredVideosIn(mediaDirectoryPath: string, imageFileNames: Array<string>, videoFileNames: Array<string>) {
   const problems: Array<string> = [];
@@ -95,37 +96,102 @@ function authoredVideosIn(mediaDirectoryPath: string, imageFileNames: Array<stri
   return { videos, problems };
 }
 
-/** Finds the cover image named after the entry with `slug` among a directory's cover images. */
-function coverImageOf(directoryName: string, slug: string, directoryCoverImageFileNames: Array<string>) {
-  const coverImageFileNames = directoryCoverImageFileNames.filter((fileName) =>
-    isNamedAfter(fileName, coverImageStemOf(slug)),
+interface SiblingImageKind {
+  /** The singular noun the problems use for an image of this kind. */
+  noun: string;
+  stemSuffix: string;
+  isSupported: (fileName: string) => boolean;
+}
+
+const COVER_IMAGE_KIND: SiblingImageKind = {
+  noun: "cover image",
+  stemSuffix: COVER_IMAGE_STEM_SUFFIX,
+  isSupported: isSupportedCoverImage,
+};
+const ENTRY_ICON_KIND: SiblingImageKind = {
+  noun: "entry icon",
+  stemSuffix: ENTRY_ICON_STEM_SUFFIX,
+  isSupported: isSupportedEntryIcon,
+};
+const SIBLING_IMAGE_KINDS = [COVER_IMAGE_KIND, ENTRY_ICON_KIND];
+
+const stemSuffixPositionIn = (fileName: string, { stemSuffix }: SiblingImageKind) =>
+  fileName.lastIndexOf(`${stemSuffix}.`);
+
+/**
+ * Matches a file name with the stem suffix of `kind`, unless another kind's stem suffix follows it (e.g.,
+ * `entry.cover.icon.svg` is an entry icon).
+ */
+function isSiblingImageFileName(fileName: string, kind: SiblingImageKind) {
+  const stemSuffixPosition = stemSuffixPositionIn(fileName, kind);
+  return (
+    !isEntryFile(fileName) &&
+    stemSuffixPosition !== -1 &&
+    SIBLING_IMAGE_KINDS.every(
+      (otherKind) => otherKind === kind || stemSuffixPositionIn(fileName, otherKind) < stemSuffixPosition,
+    )
   );
-  const [coverImageFileName] = coverImageFileNames;
+}
+
+const isSiblingImageOf = (fileName: string, slug: string, { stemSuffix }: SiblingImageKind) =>
+  isNamedAfter(fileName, `${slug}${stemSuffix}`);
+
+/** Finds the image of `kind` named after the entry with `slug` among a directory's images of that kind. */
+function siblingImageOf(
+  directoryName: string,
+  slug: string,
+  directorySiblingImageFileNames: Array<string>,
+  kind: SiblingImageKind,
+) {
+  const { noun, isSupported } = kind;
+  const siblingImageFileNames = directorySiblingImageFileNames.filter((fileName) =>
+    isSiblingImageOf(fileName, slug, kind),
+  );
+  const [siblingImageFileName] = siblingImageFileNames;
   const problems = [
-    ...(coverImageFileNames.length > 1
+    ...(siblingImageFileNames.length > 1
       ? [
-          `${quotedContentPath(directoryName)} contains multiple cover images for ${slug}: ${coverImageFileNames.join(", ")}.`,
+          `${quotedContentPath(directoryName)} contains multiple ${noun}s for ${slug}: ${siblingImageFileNames.join(", ")}.`,
         ]
       : []),
-    ...coverImageFileNames
-      .filter((fileName) => !isSupportedCoverImage(fileName))
+    ...siblingImageFileNames
+      .filter((fileName) => !isSupported(fileName))
       .map(
         (fileName) =>
-          `The image format of ${quotedContentPath(directoryName, fileName)} is not supported for cover images.`,
+          `The image format of ${quotedContentPath(directoryName, fileName)} is not supported for ${noun}s.`,
       ),
-    ...coverImageFileNames
+    ...siblingImageFileNames
       .filter((fileName) => !isUrlSafeFileName(fileName))
       .map((fileName) => `${quotedContentPath(directoryName, fileName)} has a URL-unsafe file name.`),
   ];
   const isAssignable =
-    coverImageFileNames.length === 1 && coverImageFileName !== undefined && isSupportedCoverImage(coverImageFileName);
+    siblingImageFileNames.length === 1 && siblingImageFileName !== undefined && isSupported(siblingImageFileName);
 
-  return { coverImageFilePath: isAssignable ? `${directoryName}/${coverImageFileName}` : null, problems };
+  return { filePath: isAssignable ? `${directoryName}/${siblingImageFileName}` : null, problems };
+}
+
+/** Reports each image of `kind` in a directory without a corresponding entry. */
+function orphanSiblingImageProblems(
+  directoryName: string,
+  listedEntries: Array<ListedEntry>,
+  directorySiblingImageFileNames: Array<string>,
+  kind: SiblingImageKind,
+) {
+  return directorySiblingImageFileNames
+    .filter((fileName) => !listedEntries.some(({ slug }) => isSiblingImageOf(fileName, slug, kind)))
+    .map(
+      (fileName) =>
+        `${quotedContentPath(directoryName, fileName)} is ${withIndefiniteArticle(kind.noun)} without a corresponding entry.`,
+    );
 }
 
 export function authoredMediaIn(directoryListing: ContentDirectoryListing): AuthoredMedia {
   const { directoryName, fileNames, fileNamesBySubdirectoryName } = directoryListing;
-  const coverImageFileNames = fileNames.filter(isCoverImageFileName);
+  const coverImageFileNames = fileNames.filter((fileName) => isSiblingImageFileName(fileName, COVER_IMAGE_KIND));
+  const siblingEntryIconFileNames = fileNames.filter((fileName) => isSiblingImageFileName(fileName, ENTRY_ICON_KIND));
+  const isPagesDirectory = directoryName === PAGES_DIRECTORY_NAME;
+  const entryIconFileNames = isPagesDirectory ? [] : siblingEntryIconFileNames;
+  const pageEntryIconFileNames = isPagesDirectory ? siblingEntryIconFileNames : [];
   const listedEntries = listedEntriesIn(directoryListing);
   const entries = listedEntries.map((listedEntry) => {
     const { slug, mediaDirectoryPath } = listedEntry;
@@ -133,7 +199,18 @@ export function authoredMediaIn(directoryListing: ContentDirectoryListing): Auth
     const imageFileNames = mediaFileNames.filter(isImage);
     const videoFileNames = mediaFileNames.filter(isVideo);
     const { videos, problems: videoProblems } = authoredVideosIn(mediaDirectoryPath, imageFileNames, videoFileNames);
-    const { coverImageFilePath, problems: coverImageProblems } = coverImageOf(directoryName, slug, coverImageFileNames);
+    const { filePath: coverImageFilePath, problems: coverImageProblems } = siblingImageOf(
+      directoryName,
+      slug,
+      coverImageFileNames,
+      COVER_IMAGE_KIND,
+    );
+    const { filePath: entryIconFilePath, problems: entryIconProblems } = siblingImageOf(
+      directoryName,
+      slug,
+      entryIconFileNames,
+      ENTRY_ICON_KIND,
+    );
     const problems = [
       ...mediaFileNames
         .filter((fileName) => !isContentMedia(fileName))
@@ -142,6 +219,7 @@ export function authoredMediaIn(directoryListing: ContentDirectoryListing): Auth
         ),
       ...videoProblems,
       ...coverImageProblems,
+      ...entryIconProblems,
       ...[...imageFileNames, ...videoFileNames]
         .filter((fileName) => !isUrlSafeFileName(fileName))
         .map((fileName) => `${quotedContentPath(mediaDirectoryPath, fileName)} has a URL-unsafe file name.`),
@@ -149,22 +227,23 @@ export function authoredMediaIn(directoryListing: ContentDirectoryListing): Auth
     const entryMedia: AuthoredEntryMedia = {
       ...listedEntry,
       coverImageFilePath,
+      entryIconFilePath,
       bodyImageFileNames: imageFileNames.filter((fileName) => !isPosterImageFileName(fileName)),
       videos,
     };
 
     return { entryMedia, problems };
   });
-  const orphanCoverImageFileNames = coverImageFileNames.filter(
-    (fileName) => !listedEntries.some(({ slug }) => isNamedAfter(fileName, coverImageStemOf(slug))),
-  );
 
   return {
     entryMedia: entries.map(({ entryMedia }) => entryMedia),
     problems: [
       ...entries.flatMap(({ problems }) => problems),
-      ...orphanCoverImageFileNames.map(
-        (fileName) => `${quotedContentPath(directoryName, fileName)} is a cover image without a corresponding entry.`,
+      ...orphanSiblingImageProblems(directoryName, listedEntries, coverImageFileNames, COVER_IMAGE_KIND),
+      ...orphanSiblingImageProblems(directoryName, listedEntries, entryIconFileNames, ENTRY_ICON_KIND),
+      ...pageEntryIconFileNames.map(
+        (fileName) =>
+          `${quotedContentPath(directoryName, fileName)} is an entry icon beside a page, and only a collection list renders entry icons.`,
       ),
     ],
   };
@@ -207,7 +286,7 @@ export function mediaReferenceProblems(
 
     if (expected && kind !== expected) {
       problems.push(
-        `${quotedContentPath(entryFilePath)} references "${reference}", which is ${kindWithIndefiniteArticle(kind)}, where only ${kindWithIndefiniteArticle(expected)} can be rendered.`,
+        `${quotedContentPath(entryFilePath)} references "${reference}", which is ${withIndefiniteArticle(kind)}, where only ${withIndefiniteArticle(expected)} can be rendered.`,
       );
     }
   }

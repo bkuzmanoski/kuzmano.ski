@@ -1,8 +1,8 @@
 import { toXml } from "xast-util-to-xml";
 import { x } from "xastscript";
 
-import { FEED_MEDIA_TYPE, HTML_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/config/media-types.ts";
 import { midnightTimestampIn } from "#/lib/datetime.ts";
+import { FEED_MEDIA_TYPE, HTML_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/lib/media-types.ts";
 
 export interface FeedEntry {
   title: string;

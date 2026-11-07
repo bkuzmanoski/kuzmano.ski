@@ -23,8 +23,15 @@ interface CollectionMetadata {
 }
 
 export const COLLECTIONS = {
-  work: { title: "Work", description: "" },
-  blog: { title: "Blog", description: "" },
+  work: {
+    title: "Work",
+    description:
+      "Design, engineering, consulting, and teaching projects for clients including Kinesis, Ansarada, SAP, and Transport for NSW.",
+  },
+  blog: {
+    title: "Blog",
+    description: "Writing on UI design and software development for macOS, iOS, and the web.",
+  },
 } as const satisfies Record<string, CollectionMetadata>;
 
 export type CollectionSegment = keyof typeof COLLECTIONS;

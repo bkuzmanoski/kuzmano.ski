@@ -2,9 +2,10 @@
 .listView {
   --collection-body-max-width: 800px;
   --collection-body-centering-inset: max(0px, (100cqi - var(--collection-body-max-width)) / 2);
-  --collection-body-icon-width: 12px;
-  --collection-body-icon-height: 16px;
+  --collection-body-icon-size: 16px;
   --collection-body-icon-gap: 10px;
+  --collection-body-document-icon-width: 12px;
+  --collection-body-document-icon-height: 16px;
 
   container: collection-body / inline-size;
   font: var(--font-ui);
@@ -51,8 +52,9 @@
 .listView {
   --collection-body-row-padding-block: 6px;
   --collection-body-padding-block: calc(
-    var(--layout-gutter) - var(--collection-body-row-padding-block) - (1lh - var(--collection-body-icon-height)) / 2
-  ); /* The icon, rather than the taller line box, sits a gutter from the column headings and the end of the list. */
+    var(--layout-gutter) - var(--collection-body-row-padding-block) -
+      (1lh - var(--collection-body-document-icon-height)) / 2
+  ); /* The document icon, rather than the taller line box, sits a gutter from the column headings and the end of the list. */
 
   /* On iOS, a long press selects nearby text and displays the loupe, even over empty space. Because the list fills the
    * pane, this also applies to the blank area below its rows. */
@@ -141,14 +143,45 @@
   min-width: 0;
 
   .columnHeadingsRow & {
-    padding-inline-start: calc(var(--collection-body-icon-width) + var(--collection-body-icon-gap));
+    padding-inline-start: calc(var(--collection-body-document-icon-width) + var(--collection-body-icon-gap));
   }
 }
 
-.icon {
+.documentIcon {
   flex: none;
-  width: var(--collection-body-icon-width);
-  height: var(--collection-body-icon-height);
+  width: var(--collection-body-document-icon-width);
+  height: var(--collection-body-document-icon-height);
+}
+
+.entryIcon {
+  --collection-body-entry-icon-image: none; /* Set from JS. */
+
+  position: relative;
+
+  flex: none;
+
+  width: var(--collection-body-icon-size);
+  height: var(--collection-body-icon-size);
+
+  /* Takes up the document icon's width, centered on it, so the title stays aligned with its column heading. */
+  margin-inline: calc((var(--collection-body-document-icon-width) - var(--collection-body-icon-size)) / 2);
+
+  background: currentColor;
+  print-color-adjust: exact; /* Browsers omit backgrounds from printed pages by default, including the one that fills the mask. */
+
+  mask: var(--collection-body-entry-icon-image) center / contain no-repeat;
+
+  .listItem[aria-current] &::after {
+    @mixin dither-50 var(--color-background);
+
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  @media (forced-colors: active) {
+    forced-color-adjust: none; /* The browser would replace the `background-color` that fills the mask with a system color. */
+  }
 }
 
 .title,

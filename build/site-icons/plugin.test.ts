@@ -3,11 +3,13 @@ import { describe, expect, test, vi } from "vitest";
 import { CLIENT_ENVIRONMENT } from "../environments.ts";
 import { ICON_ARTWORK_FILE_PATH, STYLESHEET_FILE_PATH, fromRoot } from "../paths.ts";
 import { devServerMiddlewareOf, devServerRequestFor } from "../test-utils/dev-server.ts";
+import { hookOf } from "../test-utils/plugin-hooks.ts";
 
 import { siteIconsPlugin } from "./plugin.ts";
 
 import type { IconFile } from "./icon-files.ts";
 import type * as manifestModule from "./manifest.ts";
+import type { ContextHook } from "../test-utils/plugin-hooks.ts";
 
 const { iconFilesFrom } = vi.hoisted(() => ({ iconFilesFrom: vi.fn<() => Promise<Array<IconFile>>>() }));
 
@@ -42,12 +44,12 @@ function setUpSiteIcons() {
   const plugin = siteIconsPlugin();
   const middleware = devServerMiddlewareOf(plugin);
 
-  const changeFile = (file: string) => (plugin.watchChange as unknown as (id: string) => void)(file);
+  const changeFile = (file: string) => hookOf<(id: string) => void>(plugin, "watchChange")(file);
   const servedFaviconContents = async () => (await devServerRequestFor(middleware, "/favicon.svg")).body;
   const emittedFaviconContents = async () => {
     const emittedFiles: Array<EmittedFile> = [];
 
-    await (plugin.generateBundle as unknown as (this: unknown) => Promise<void>).call({
+    await hookOf<ContextHook>(plugin, "generateBundle").call({
       environment: { name: CLIENT_ENVIRONMENT },
       emitFile: (file: EmittedFile) => emittedFiles.push(file),
     });

@@ -7,6 +7,7 @@ import { entryBodyChunksPlugin } from "./build/content/entry-body-chunks.ts";
 import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
 import { entryCoverImagesPlugin } from "./build/content/media/entry-cover-images.ts";
+import { entryIconUrlsPlugin } from "./build/content/media/entry-icon-urls.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
@@ -23,6 +24,9 @@ export default defineConfig({
     // Enables content catalog resolution (see `/src/site/catalog.ts`) for tests that load the real content catalog.
     // Does not serve cover images; tests that need them mock the module.
     entryCoverImagesPlugin(() => Promise.resolve({})),
+    // Enables content catalog resolution (see `/src/site/catalog.ts`) for tests that load the real content catalog.
+    // Does not serve entry icon URLs; tests that need them mock the module.
+    entryIconUrlsPlugin(() => Promise.resolve({})),
     mdxPlugin({ syntaxHighlight: false }),
     entryBodyChunksPlugin(),
     // Enables the Worker entry to resolve `virtual:markdown-token-counts`; tests that need counts mock the module.

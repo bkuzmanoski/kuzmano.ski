@@ -1,12 +1,13 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { MARKDOWN_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { MARKDOWN_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { MARKDOWN_TOKEN_COUNT_HEADER } from "#/site/markdown-negotiation.ts";
 import { LLMS_TXT_LINK_HEADER } from "#/site/metadata.ts";
 
 import { readAuthoredContent } from "../content/authored-content.ts";
 import { devServerMiddlewareOf, devServerRequestFor } from "../test-utils/dev-server.ts";
+import { hookOf } from "../test-utils/plugin-hooks.ts";
 
 import { entryDataModuleReaderThrough, readEntryDataModule } from "./entry-data.ts";
 import { markdownFilesFor, renderedMarkdownFilesFor } from "./markdown-files.ts";
@@ -16,6 +17,7 @@ import { estimatedTokenCountIn } from "./token-count.ts";
 
 import type * as entryDataModule from "./entry-data.ts";
 import type * as authoredContentModule from "../content/authored-content.ts";
+import type { ContextHook, LoadHook } from "../test-utils/plugin-hooks.ts";
 import type { Plugin } from "vite";
 
 const PAGE_MARKDOWN = "# A title\n\nA Markdown representation.\n";
@@ -184,9 +186,7 @@ describe("reading entry data", () => {
 
   test("renders the Markdown files of a build with `readEntryDataModule`", async () => {
     const plugins = markdownPlugin({ addHeadersRules: () => undefined });
-    const generateBundle = pluginNamed(plugins, "kuzmano.ski:markdown-emit").generateBundle as (
-      this: unknown,
-    ) => Promise<void>;
+    const generateBundle = hookOf<ContextHook>(pluginNamed(plugins, "kuzmano.ski:markdown-emit"), "generateBundle");
     vi.mocked(renderedMarkdownFilesFor).mockClear();
 
     await generateBundle.call({ emitFile: () => undefined });
@@ -201,7 +201,7 @@ describe("reading entry data", () => {
 describe("building", () => {
   async function emittedPageMarkdownOf(plugins: Array<Plugin>): Promise<unknown> {
     const emittedSources = new Map<string, unknown>();
-    const generateBundle = pluginNamed(plugins, "kuzmano.ski:markdown-emit").generateBundle as () => Promise<void>;
+    const generateBundle = hookOf<ContextHook>(pluginNamed(plugins, "kuzmano.ski:markdown-emit"), "generateBundle");
 
     await generateBundle.call({
       emitFile: ({ fileName, source }: { fileName: string; source: unknown }) =>
@@ -213,10 +213,7 @@ describe("building", () => {
 
   test("emits the Markdown files and serves the token counts from one render", async () => {
     const plugins = markdownPlugin({ addHeadersRules: () => undefined });
-    const loadTokenCounts = pluginNamed(plugins, "kuzmano.ski:markdown-token-counts").load as (
-      this: unknown,
-      id: string,
-    ) => Promise<string>;
+    const loadTokenCounts = hookOf<LoadHook>(pluginNamed(plugins, "kuzmano.ski:markdown-token-counts"), "load");
     const rendersBefore = renders.count;
     const pageMarkdown = await emittedPageMarkdownOf(plugins);
     const tokenCountsModule = await loadTokenCounts.call(

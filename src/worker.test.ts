@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-import { MARKDOWN_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { MARKDOWN_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { MARKDOWN_TOKEN_COUNT_HEADER } from "#/site/markdown-negotiation.ts";
 import { LLMS_TXT_LINK_HEADER } from "#/site/metadata.ts";
 

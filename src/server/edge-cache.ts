@@ -1,5 +1,7 @@
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { extendRequestUntil } from "./env.ts";
-import { errorMessageOf, logServerEvent } from "./log.ts";
+import { logServerEvent } from "./log.ts";
 
 // Caches a route's responses in the Cloudflare data center that serves them.
 //

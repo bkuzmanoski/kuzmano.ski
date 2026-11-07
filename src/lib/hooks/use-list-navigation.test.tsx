@@ -20,13 +20,13 @@ vi.mock("../audio/sounds.ts", async (importOriginal) =>
 
 function List({
   count,
-  activeIndex,
+  currentIndex,
   guardedIndex,
   label = "Item",
   children,
 }: {
   count: number;
-  activeIndex: number;
+  currentIndex: number;
   /** An item with its own onMouseDown, merged ahead of the hook's handler. */
   guardedIndex?: number;
   label?: string;
@@ -34,7 +34,7 @@ function List({
   children?: ReactNode;
 }) {
   const listRef = useRef<HTMLUListElement>(null);
-  const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, { count, activeIndex, onActivate: vi.fn() });
+  const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, { count, currentIndex, onActivate: vi.fn() });
 
   return (
     <>
@@ -70,18 +70,18 @@ beforeEach(() => {
   playHoverSound.mockClear();
 });
 
-test("the active item is scrolled into view silently on mount", () => {
-  const { links } = renderList({ count: 3, activeIndex: 1 });
+test("the list scrolls the current item into view silently when it mounts", () => {
+  const { links } = renderList({ count: 3, currentIndex: 1 });
 
   expect(scrollIntoViewSilently).toHaveBeenCalledWith(links[1]);
 });
 
 test("a Down arrow key press focuses the next item without a native focus scroll, scrolls it into view silently, and plays the hover sound", () => {
-  const { links } = renderList({ count: 3, activeIndex: 0 });
+  const { links } = renderList({ count: 3, currentIndex: 0 });
   const focus = vi.spyOn(links[1]!, "focus");
 
   links[0]!.focus();
-  scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the active entry into view.
+  scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the current item into view.
   fireEvent.keyDown(links[0]!, { key: "ArrowDown" });
 
   expect(focus).toHaveBeenCalledWith({ preventScroll: true });
@@ -91,7 +91,7 @@ test("a Down arrow key press focuses the next item without a native focus scroll
 });
 
 test("a press on an item prevents its default behavior, focuses the item without a native focus scroll, and scrolls it into view silently", () => {
-  const { links } = renderList({ count: 3, activeIndex: 0 });
+  const { links } = renderList({ count: 3, currentIndex: 0 });
   const focus = vi.spyOn(links[2]!, "focus");
 
   scrollIntoViewSilently.mockClear();
@@ -102,7 +102,7 @@ test("a press on an item prevents its default behavior, focuses the item without
 });
 
 test("a press on an item does not focus the item or scroll it into view when a merged handler has already prevented the press's default behavior", () => {
-  const { links } = renderList({ count: 3, activeIndex: 0, guardedIndex: 2 });
+  const { links } = renderList({ count: 3, currentIndex: 0, guardedIndex: 2 });
   const focus = vi.spyOn(links[2]!, "focus");
 
   scrollIntoViewSilently.mockClear();
@@ -113,10 +113,10 @@ test("a press on an item does not focus the item or scroll it into view when a m
 });
 
 test("the tab stop stays on the list once it shrinks past the focused item", () => {
-  const { links, rerender } = renderList({ count: 3, activeIndex: 0 });
+  const { links, rerender } = renderList({ count: 3, currentIndex: 0 });
 
   fireEvent.focus(links.at(-1)!);
-  rerender(<List count={1} activeIndex={0} />);
+  rerender(<List count={1} currentIndex={0} />);
 
   const remaining = screen.getAllByRole("link");
 
@@ -124,10 +124,10 @@ test("the tab stop stays on the list once it shrinks past the focused item", () 
 });
 
 test("an End key press focuses the last remaining item after the list shrinks", () => {
-  const { links, rerender } = renderList({ count: 4, activeIndex: 0 });
+  const { links, rerender } = renderList({ count: 4, currentIndex: 0 });
 
   links[0]!.focus();
-  rerender(<List count={2} activeIndex={0} />);
+  rerender(<List count={2} currentIndex={0} />);
 
   const remaining = screen.getAllByRole("link");
 
@@ -139,8 +139,8 @@ test("an End key press focuses the last remaining item after the list shrinks", 
 
 test("an End key press focuses the last item of the outer list, not an item of a list nested inside it", () => {
   render(
-    <List count={2} activeIndex={0}>
-      <List count={3} activeIndex={0} label="Inner" />
+    <List count={2} currentIndex={0}>
+      <List count={3} currentIndex={0} label="Inner" />
     </List>,
   );
 
@@ -162,12 +162,12 @@ test.each([
 ])(
   "pressing %s outside the list focuses the item at index %i without a native focus scroll, scrolls it into view silently, and plays the hover sound",
   (_label, key, expectedIndex) => {
-    const { links } = renderList({ count: 3, activeIndex: 1 });
+    const { links } = renderList({ count: 3, currentIndex: 1 });
     const outsideControl = screen.getByRole("button", { name: "Outside Item" });
     const focus = vi.spyOn(links[expectedIndex]!, "focus");
 
     outsideControl.focus();
-    scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the active item into view.
+    scrollIntoViewSilently.mockClear(); // The mount effect already scrolled the current item into view.
 
     expect(fireEvent.keyDown(outsideControl, { key })).toBe(false); // The hook prevented the default behavior.
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
@@ -178,7 +178,7 @@ test.each([
 );
 
 test("pressing the Page Down key outside the list does not move the focus or prevent the key's default action", () => {
-  renderList({ count: 3, activeIndex: 0 });
+  renderList({ count: 3, currentIndex: 0 });
 
   const outsideControl = screen.getByRole("button", { name: "Outside Item" });
 
@@ -190,7 +190,7 @@ test("pressing the Page Down key outside the list does not move the focus or pre
 });
 
 test("pressing the Down arrow key outside a list without items does not move the focus or prevent the key's default action", () => {
-  render(<List count={0} activeIndex={-1} />);
+  render(<List count={0} currentIndex={-1} />);
 
   const outsideControl = screen.getByRole("button", { name: "Outside Item" });
 

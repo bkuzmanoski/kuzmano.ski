@@ -1,19 +1,22 @@
 import { vi } from "vitest";
 
+import { hookOf } from "./plugin-hooks.ts";
+
 import type { AddHeadersRules, HeadersRule } from "../headers.ts";
+import type { ContextHook } from "./plugin-hooks.ts";
 import type { Plugin } from "vite";
 
 /**
  * Calls the `buildStart` hook of the plugin `pluginFor` creates, in the environment named `environmentName`, and
- * returns the rules the hook adds to `_headers`.
+ * resolves to the rules the hook adds to `_headers`.
  */
-export function headersRulesAddedAtBuildStartBy(
+export async function headersRulesAddedAtBuildStartBy(
   pluginFor: (options: { addHeadersRules: AddHeadersRules }) => Plugin,
   environmentName: string,
-): Array<HeadersRule> {
+): Promise<Array<HeadersRule>> {
   const addHeadersRules = vi.fn<AddHeadersRules>();
 
-  (pluginFor({ addHeadersRules }).buildStart as (this: unknown) => void).call({
+  await hookOf<ContextHook>(pluginFor({ addHeadersRules }), "buildStart").call({
     environment: { name: environmentName },
   });
 

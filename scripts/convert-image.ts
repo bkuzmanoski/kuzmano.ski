@@ -2,6 +2,8 @@ import { stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import {
   BODY_IMAGE_ALTERNATES,
   IMAGE_ENCODING_OPTIONS,
@@ -91,6 +93,6 @@ try {
     await convert(inputFilePath, qualityByFormat);
   }
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(errorMessageOf(error));
   process.exit(1);
 }

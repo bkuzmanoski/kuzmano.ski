@@ -4,7 +4,7 @@ import { Desktop } from "#/app/desktop.tsx";
 import { ErrorPage } from "#/app/error-page.tsx";
 import { NotFound } from "#/app/not-found.tsx";
 import { RootDocument } from "#/app/root-document.tsx";
-import { FEED_MEDIA_TYPE } from "#/config/media-types.ts";
+import { FEED_MEDIA_TYPE } from "#/lib/media-types.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
 import stylesheet from "#/styles.css?url";
 

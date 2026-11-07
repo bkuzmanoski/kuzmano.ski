@@ -1,5 +1,5 @@
-import { HTML_MEDIA_TYPE, MARKDOWN_CONTENT_TYPE } from "#/config/media-types.ts";
 import { CONTENT_SIGNAL } from "#/config/site.ts";
+import { HTML_MEDIA_TYPE, MARKDOWN_CONTENT_TYPE } from "#/lib/media-types.ts";
 import {
   MARKDOWN_TOKEN_COUNT_HEADER,
   isMarkdownPath,

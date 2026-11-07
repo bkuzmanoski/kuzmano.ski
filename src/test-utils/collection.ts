@@ -65,6 +65,7 @@ export function fakeCollection(collectionEntries: Array<Entry>, overrides: Parti
     description: "A collection of entries.",
     route,
     routeOf: (slug) => `${route}/${slug}`,
+    entryIconUrlOf: () => null,
     list: () => collectionEntries,
     ...overrides,
   };

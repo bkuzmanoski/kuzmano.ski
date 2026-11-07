@@ -15,8 +15,10 @@ import {
   matchableHeadersRuleFrom,
 } from "./headers.ts";
 import { devServerMiddlewareOf } from "./test-utils/dev-server.ts";
+import { hookOf } from "./test-utils/plugin-hooks.ts";
 
 import type { HeadersRule } from "./headers.ts";
+import type { ContextHook } from "./test-utils/plugin-hooks.ts";
 
 const CACHE_RULE: HeadersRule = {
   description: "A cached path.",
@@ -62,18 +64,16 @@ interface EmittedFile {
   source: string;
 }
 
-type PluginHook = (this: unknown) => void;
-
-function callBuildStart(plugin: ReturnType<typeof headersFile>["plugin"], command: "build" | "serve" = "build") {
-  (plugin.buildStart as unknown as PluginHook).call({
+async function callBuildStart(plugin: ReturnType<typeof headersFile>["plugin"], command: "build" | "serve" = "build") {
+  await hookOf<ContextHook>(plugin, "buildStart").call({
     environment: { config: { command, build: { assetsDir: "assets" } } },
   });
 }
 
-function emittedHeadersFileText(plugin: ReturnType<typeof headersFile>["plugin"], publicDir = "") {
+async function emittedHeadersFileText(plugin: ReturnType<typeof headersFile>["plugin"], publicDir = "") {
   const emittedFiles: Array<EmittedFile> = [];
 
-  (plugin.generateBundle as unknown as PluginHook).call({
+  await hookOf<ContextHook>(plugin, "generateBundle").call({
     environment: { config: { publicDir } },
     emitFile: (file: EmittedFile) => emittedFiles.push(file),
     error: (message: string) => {
@@ -168,40 +168,40 @@ describe("headersMatchingPathIn", () => {
 });
 
 describe("headersFile", () => {
-  test("emits a `_headers` file containing each added rule once, sorted by its first path pattern", () => {
+  test("emits a `_headers` file containing each added rule once, sorted by its first path pattern", async () => {
     const { addHeadersRules, plugin } = headersFile();
 
     addHeadersRules([SIGNALED_RULE]);
     addHeadersRules([CACHE_RULE, TYPED_RULE]);
     addHeadersRules([SIGNALED_RULE]);
 
-    expect(emittedHeadersFileText(plugin)).toBe(HEADERS_FILE_TEXT);
+    expect(await emittedHeadersFileText(plugin)).toBe(HEADERS_FILE_TEXT);
   });
 
-  test("adds an immutable `Cache-Control` rule for `build.assetsDir` when a build starts", () => {
+  test("adds an immutable `Cache-Control` rule for `build.assetsDir` when a build starts", async () => {
     const { plugin } = headersFile();
 
-    callBuildStart(plugin);
+    await callBuildStart(plugin);
 
-    expect(emittedHeadersFileText(plugin)).toBe(`# Build output file names include a hash of their contents.
+    expect(await emittedHeadersFileText(plugin)).toBe(`# Build output file names include a hash of their contents.
 /assets/*
   Cache-Control: ${IMMUTABLE_CACHE_CONTROL}
 `);
   });
 
-  test("does not add a rule for `build.assetsDir` when the dev server starts", () => {
+  test("does not add a rule for `build.assetsDir` when the dev server starts", async () => {
     const { plugin } = headersFile();
 
-    callBuildStart(plugin, "serve");
+    await callBuildStart(plugin, "serve");
 
-    expect(emittedHeadersFileText(plugin)).toBe("\n");
+    expect(await emittedHeadersFileText(plugin)).toBe("\n");
   });
 
-  test("throws when rules are added after `_headers` was emitted, naming their path patterns", () => {
+  test("throws when rules are added after `_headers` was emitted, naming their path patterns", async () => {
     const { addHeadersRules, plugin } = headersFile();
 
     addHeadersRules([CACHE_RULE]);
-    emittedHeadersFileText(plugin);
+    await emittedHeadersFileText(plugin);
 
     expect(() => addHeadersRules([TYPED_RULE])).toThrow("/first.txt, /second.txt");
   });
@@ -212,7 +212,7 @@ describe("headersFile", () => {
     try {
       await writeFile(join(publicDirectoryAbsolutePath, "_headers"), headersFileTextFrom([CACHE_RULE]));
 
-      expect(() => emittedHeadersFileText(headersFile().plugin, publicDirectoryAbsolutePath)).toThrow(
+      await expect(emittedHeadersFileText(headersFile().plugin, publicDirectoryAbsolutePath)).rejects.toThrow(
         join(publicDirectoryAbsolutePath, "_headers"),
       );
     } finally {

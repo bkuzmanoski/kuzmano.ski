@@ -1,6 +1,8 @@
 import { createProcessor } from "@mdx-js/mdx";
 import { doc, getSupportInfo } from "prettier";
 
+import { errorMessageOf } from "#/lib/errors.ts";
+
 import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./build/content/markup/entry-syntax.ts";
 import { estreeOf } from "./build/content/markup/tree.ts";
 
@@ -68,7 +70,7 @@ function parseFormatted(formatted: string): ContentNode {
   try {
     return parse(formatted);
   } catch (error) {
-    throw new Error(`Formatting produces MDX that fails to parse (${String(error)}).`, { cause: error });
+    throw new Error(`Formatting produces MDX that fails to parse (${errorMessageOf(error)}).`, { cause: error });
   }
 }
 
