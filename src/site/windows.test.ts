@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { collection, collectionEntries, configuredCollections } from "#/test-utils/catalog.ts";
+import { collectionWithFeed as COLLECTION_WITH_FEED, collection, collectionEntries } from "#/test-utils/catalog.ts";
 
 import { pages } from "./catalog.ts";
 import { collectionFeedOf } from "./feeds.ts";
@@ -17,7 +17,6 @@ vi.mock("./catalog.ts", async () => {
   return siteCatalogMock({ collections: { ...siteCatalogMock().collections, ...collectionsWithFeeds } });
 });
 
-const COLLECTION_WITH_FEED = Object.values(configuredCollections)[0]!;
 const COLLECTION_WITH_FEED_ENTRY_ROUTE = COLLECTION_WITH_FEED.routeOf(COLLECTION_WITH_FEED.list()[0]!.slug);
 const COLLECTION_ENTRY = collectionEntries[0]!;
 

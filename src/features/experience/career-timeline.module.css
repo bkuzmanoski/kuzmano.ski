@@ -195,8 +195,6 @@
 .role {
   display: flex;
   flex-direction: column;
-  padding-block-start: 8px;
-  border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
 }
 
 .header {
@@ -207,7 +205,8 @@
   justify-content: space-between;
   order: -1;
 
-  padding-block-end: var(--content-body-layout-space);
+  padding-block: 8px var(--content-body-layout-space);
+  border-block-start: var(--career-timeline-role-rule-width) solid var(--career-timeline-discipline-accent-color);
 }
 
 .disciplines {
@@ -324,7 +323,8 @@
 
 @media print {
   .controls,
-  .chartColumn {
+  .chartColumn,
+  .link {
     display: none;
   }
 
@@ -336,7 +336,9 @@
     margin-block-start: 0;
   }
 
-  .role > * {
+  .header,
+  .role > h3,
+  .organizationAndDates {
     break-after: avoid;
   }
 

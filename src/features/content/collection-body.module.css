@@ -177,6 +177,23 @@
   color: var(--color-foreground-disabled);
 }
 
+.emptyState {
+  @mixin placeholder;
+}
+
+.emptyStateMessage {
+  max-width: 40ch;
+
+  font: var(--font-ui);
+  color: var(--color-foreground-secondary);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.feedLink {
+  @mixin content-link;
+}
+
 @container collection-body (width < 560px) {
   .dateColumn {
     display: none;

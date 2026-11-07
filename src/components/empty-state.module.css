@@ -1,6 +1,0 @@
-.emptyState {
-  @mixin placeholder;
-
-  font: var(--font-ui);
-  color: var(--color-foreground-secondary);
-}

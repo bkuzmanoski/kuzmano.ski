@@ -1,0 +1,17 @@
+@media print {
+  .title {
+    position: relative;
+    visibility: hidden;
+
+    &::before {
+      content: "Brian Kuzmanoski"; /* Duplicates `AUTHOR_NAME` from `/src/config/site.ts` because stylesheets cannot import it. */
+      position: absolute;
+      inset-inline: 0;
+      visibility: visible;
+    }
+  }
+
+  .entry [data-content-body] > h2 {
+    border-block-start: none;
+  }
+}

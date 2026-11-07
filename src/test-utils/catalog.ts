@@ -41,6 +41,8 @@ export const configuredCollections: Record<string, Collection> = Object.fromEntr
   ]),
 );
 
+export const collectionWithFeed = Object.values(configuredCollections)[0]!;
+
 export const configuredCatalogMock = (overrides: Partial<typeof SiteCatalog> = {}): typeof SiteCatalog => ({
   pages: fakeContentIndex(Object.values(configuredPages), PAGES_DIRECTORY_NAME),
   collections: configuredCollections,

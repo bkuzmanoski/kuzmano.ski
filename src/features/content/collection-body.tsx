@@ -2,7 +2,6 @@ import { useId, useRef } from "react";
 
 import DocumentActiveCollectionBodyIcon from "#/assets/images/collection-body-icon-document-active.svg?react";
 import DocumentCollectionBodyIcon from "#/assets/images/collection-body-icon-document.svg?react";
-import { EmptyState } from "#/components/empty-state.tsx";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { usePressSoundPlayer } from "#/lib/audio/use-press-sound.ts";
@@ -15,16 +14,18 @@ import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
+import { collectionFeedOf } from "#/site/feeds.ts";
 import type { CollectionTarget } from "#/site/windows.ts";
 import { resolveWindow } from "#/site/windows.ts";
 
 import styles from "./collection-body.module.css";
+import { ContentLink } from "./content-link.tsx";
 import { FormattedDate } from "./formatted-date.tsx";
+import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 
 import type { ComponentProps } from "react";
 
 export const UNCATEGORIZED_LABEL = "Uncategorized";
-export const EMPTY_COLLECTION_MESSAGE = "There are no entries in this collection.";
 
 export function CollectionColumnHeadings({ collection }: { collection: Collection }) {
   if (collection.list().length === 0) {
@@ -148,7 +149,26 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
   useWindowKeyDown(onKeyDownOutsideList);
 
   if (entries.length === 0) {
-    return <EmptyState message={EMPTY_COLLECTION_MESSAGE} />;
+    const feed = collectionFeedOf(collection.route);
+    return (
+      <div className={styles.emptyState}>
+        <OpensInNewTabDescriptionProvider>
+          <p className={styles.emptyStateMessage}>
+            There are no entries here yet. Check back soon
+            {feed && (
+              <>
+                , or subscribe to the{" "}
+                <ContentLink href={feed.path} className={styles.feedLink}>
+                  Atom feed
+                </ContentLink>{" "}
+                in your feed reader
+              </>
+            )}
+            .
+          </p>
+        </OpensInNewTabDescriptionProvider>
+      </div>
+    );
   }
 
   return (

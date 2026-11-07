@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
 import type { Collection } from "#/site/catalog.ts";
-import { configuredCollections } from "#/test-utils/catalog.ts";
+import { collectionWithFeed } from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeCollectionEntries, fakeEntry } from "#/test-utils/collection.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import { collectionEntryTargetOf } from "#/test-utils/windows.ts";
@@ -62,16 +62,15 @@ test("the colophon omits the navigation to the older and newer entries for the o
 });
 
 test("the colophon links to the entry's Markdown and its collection's feed", () => {
-  const configuredCollection = Object.values(configuredCollections)[0]!;
-  const entry = configuredCollection.list()[0]!;
+  const entry = collectionWithFeed.list()[0]!;
 
-  renderColophon(entry.slug, configuredCollection);
+  renderColophon(entry.slug, collectionWithFeed);
 
   expect(screen.getByRole("link", { name: "Markdown" }).getAttribute("href")).toBe(
-    `${configuredCollection.routeOf(entry.slug)}.md`,
+    `${collectionWithFeed.routeOf(entry.slug)}.md`,
   );
   expect(screen.getByRole("link", { name: "Atom feed" }).getAttribute("href")).toBe(
-    `${configuredCollection.route}/feed.xml`,
+    `${collectionWithFeed.route}/feed.xml`,
   );
 });
 

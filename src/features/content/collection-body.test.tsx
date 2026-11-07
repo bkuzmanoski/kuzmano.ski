@@ -4,16 +4,16 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 import type { Collection } from "#/site/catalog.ts";
-import { collection as COLLECTION, collectionEntries as COLLECTION_ENTRIES } from "#/test-utils/catalog.ts";
+import {
+  collection as COLLECTION,
+  collectionEntries as COLLECTION_ENTRIES,
+  collectionWithFeed as COLLECTION_WITH_FEED,
+} from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeEntry } from "#/test-utils/collection.ts";
 import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
+import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
-import {
-  CollectionBody,
-  CollectionColumnHeadings,
-  EMPTY_COLLECTION_MESSAGE,
-  UNCATEGORIZED_LABEL,
-} from "./collection-body.tsx";
+import { CollectionBody, CollectionColumnHeadings, UNCATEGORIZED_LABEL } from "./collection-body.tsx";
 
 vi.mock("#/site/catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
 vi.mock("#/lib/window-manager/context.ts", async () =>
@@ -130,10 +130,13 @@ test("the column headings render `null` for a collection without entries", () =>
   expect(container.firstChild).toBeNull();
 });
 
-test("a collection without entries shows the empty collection message instead of a list", () => {
-  render(<CollectionBody target={targetOf({ ...COLLECTION, list: () => [] })} />);
+test("a collection without entries shows a link to its feed, which opens in a new tab, instead of a list", () => {
+  renderInRouterContext(<CollectionBody target={targetOf({ ...COLLECTION_WITH_FEED, list: () => [] })} />);
 
-  expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeDefined();
+  const feedLink = screen.getByRole("link", { name: "Atom feed", description: "Opens in a new tab" });
+
+  expect(feedLink.getAttribute("href")).toBe(`${COLLECTION_WITH_FEED.route}/feed.xml`);
+  expect(feedLink.getAttribute("target")).toBe("_blank");
   expect(screen.queryByRole("list")).toBeNull();
 });
 

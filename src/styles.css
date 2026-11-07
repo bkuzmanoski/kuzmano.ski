@@ -384,4 +384,13 @@ hr {
 
 @page {
   margin: 25mm 8mm;
+
+  /* Suppress Chrome's default date, title, URL, and page number in print margins. */
+  @top-center {
+    content: "";
+  }
+
+  @bottom-center {
+    content: "";
+  }
 }

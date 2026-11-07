@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { configuredCollections } from "#/test-utils/catalog.ts";
+import { collectionWithFeed as COLLECTION_WITH_FEED } from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeCollectionEntries, fakeEntry } from "#/test-utils/collection.ts";
 
 import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";
 import { collectionFeedOf } from "./feeds.ts";
 
-const COLLECTION_WITH_FEED = Object.values(configuredCollections)[0]!;
 const COLLECTION_WITH_FEED_ENTRY = COLLECTION_WITH_FEED.list()[0]!;
 const COLLECTION_WITHOUT_FEED = fakeCollection(fakeCollectionEntries("entry"));
 

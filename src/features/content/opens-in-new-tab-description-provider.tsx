@@ -4,7 +4,7 @@ import { OpensInNewTabDescriptionIdContext } from "./opens-in-new-tab-descriptio
 
 import type { ReactNode } from "react";
 
-/** Renders a shared "Opens in a new tab" description used by links in entries. */
+/** Provides a shared "Opens in a new tab" description to wrapped links. */
 export function OpensInNewTabDescriptionProvider({ children }: { children: ReactNode }) {
   const id = useId();
   return (

@@ -193,9 +193,9 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                   </ul>
                 )}
                 {role.link && (
-                  <ContentLink className={styles.link} href={role.link.href}>
-                    {role.link.label}
-                  </ContentLink>
+                  <p className={styles.link}>
+                    <ContentLink href={role.link.href}>{role.link.label}</ContentLink>
+                  </p>
                 )}
               </li>
             );
