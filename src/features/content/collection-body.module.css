@@ -172,11 +172,15 @@
   mask: var(--collection-body-entry-icon-image) center / contain no-repeat;
 
   .listItem[aria-current] &::after {
-    @mixin dither-50 var(--color-background);
+    @mixin dither-13 var(--color-background);
 
     content: "";
     position: absolute;
     inset: 0;
+
+    /* The icon starts 2px before the document icon would, so the offset lines its dots up with the document icon's dots
+     * in the other rows. */
+    mask-position: calc(2 * var(--layout-bitmap-pixel)) 0;
   }
 
   @media (forced-colors: active) {
