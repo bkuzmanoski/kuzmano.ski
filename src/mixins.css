@@ -217,9 +217,8 @@
 }
 
 @define-mixin content-link {
-  margin-inline: -1px;
-  padding-block: 1px;
-  padding-inline: 1px;
+  margin: -1px;
+  padding: 1px;
 
   color: var(--color-accent);
   text-decoration: underline rgb(from var(--color-accent) r g b / 35%);
