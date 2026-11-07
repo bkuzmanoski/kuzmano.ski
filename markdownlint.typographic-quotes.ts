@@ -395,6 +395,8 @@ const typographicQuotesRule: Rule = {
     let tree: ContentNode;
 
     try {
+      // Matches `entryParser` parsing except for `remarkFrontmatter`: markdownlint excludes frontmatter from
+      // `params.lines`, so an initial thematic break in the remaining content could be parsed as frontmatter.
       tree = unified().use(remarkParse).use(remarkMdx).use(remarkGfmSubset).parse(source);
     } catch {
       return; // The build reports MDX that does not parse.

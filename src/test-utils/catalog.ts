@@ -22,7 +22,10 @@ export const otherCollection = fakeCollection(fakeCollectionEntries("other-entry
  */
 export const siteCatalogMock = (overrides: Partial<typeof SiteCatalog> = {}): typeof SiteCatalog => ({
   pages: fakeContentIndex([fakeEntry("page", { title: "Page" })], PAGES_DIRECTORY_NAME),
-  collections: { collection, "other-collection": otherCollection },
+  collections: new Map([
+    ["collection", collection],
+    ["other-collection", otherCollection],
+  ]),
   ...overrides,
 });
 
@@ -45,6 +48,6 @@ export const collectionWithFeed = Object.values(configuredCollections)[0]!;
 
 export const configuredCatalogMock = (overrides: Partial<typeof SiteCatalog> = {}): typeof SiteCatalog => ({
   pages: fakeContentIndex(Object.values(configuredPages), PAGES_DIRECTORY_NAME),
-  collections: configuredCollections,
+  collections: new Map(Object.entries(configuredCollections)),
   ...overrides,
 });

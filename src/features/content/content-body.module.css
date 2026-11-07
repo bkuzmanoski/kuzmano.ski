@@ -1,3 +1,5 @@
+@custom-selector :--within-rail-span :not([data-content-span="wide"], [data-content-span="pane"]);
+
 @counter-style content-body-ordered-list {
   suffix: " ";
   system: extends decimal-leading-zero;
@@ -92,704 +94,698 @@
 
 .content {
   container: content / inline-size;
+}
 
-  & :where([data-content-body]) {
-    --content-body-wide-start-track: minmax(0, 1fr); /* Rounded to a whole pixel where supported (see below). */
-    --content-body-rail-aside-gap: 12px;
+.content :where([data-content-body]) {
+  --content-body-wide-start-track: minmax(0, 1fr); /* Rounded to a whole pixel where supported (see below). */
+  --content-body-rail-aside-gap: 12px;
+  --content-body-padding-block: clamp(
+    var(--content-body-layout-space-loose),
+    (100% - var(--content-body-layout-measure)) / 2,
+    var(--content-body-layout-space-x-loose)
+  );
+
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    [pane-start] var(--layout-gutter)
+    [wide-start] var(--content-body-wide-start-track)
+    [rail-start] var(--content-body-layout-rail-track)
+    [text-start] minmax(0, var(--content-body-layout-measure)) [text-end]
+    minmax(0, 1fr) [wide-end]
+    var(--layout-gutter) [pane-end];
+
+  /* `--content-body-end-rail-clearance` is set from JS when a rail item extends past the last element (see
+   * `observe-rail-clearances.ts`). */
+  padding-block: var(--content-body-padding-block)
+    calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
+
+  /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel so bitmap labels stay
+   * pixel aligned on 1x displays. */
+  @supports (width: round(down, 1px, 1px)) {
+    --content-body-wide-start-track: max(
+      0px,
+      round(
+        down,
+        (100% - 2 * var(--layout-gutter) - var(--content-body-layout-rail-track) - var(--content-body-layout-measure)) /
+          2,
+        1px
+      )
+    );
+  }
+
+  &:where(:has(> [data-entry-masthead])) {
     --content-body-padding-block: clamp(
-      var(--content-body-layout-space-loose),
+      var(--layout-gutter),
       (100% - var(--content-body-layout-measure)) / 2,
       var(--content-body-layout-space-x-loose)
     );
+  }
 
+  & > * {
+    grid-column: text;
+    margin-block: 0;
+  }
+
+  & > :where(h2) {
     position: relative;
-    display: grid;
-    grid-template-columns:
-      [pane-start] var(--layout-gutter)
-      [wide-start] var(--content-body-wide-start-track)
-      [rail-start] var(--content-body-layout-rail-track)
-      [text-start] minmax(0, var(--content-body-layout-measure)) [text-end]
-      minmax(0, 1fr) [wide-end]
-      var(--layout-gutter) [pane-end];
 
-    /* `--content-body-end-rail-clearance` is set from JS when a rail item extends past the last element (see
-     * `observe-rail-clearances.ts`). */
-    padding-block: var(--content-body-padding-block)
-      calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
+    grid-column: rail-start / text-end;
 
-    /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel so bitmap labels
-     * stay pixel aligned on 1x displays. */
-    @supports (width: round(down, 1px, 1px)) {
-      --content-body-wide-start-track: max(
-        0px,
-        round(
-          down,
-          (
-              100% - 2 * var(--layout-gutter) - var(--content-body-layout-rail-track) -
-                var(--content-body-layout-measure)
-            ) /
-            2,
-          1px
-        )
-      );
-    }
+    padding-block-start: var(--content-body-layout-space-relaxed);
+    padding-inline-start: var(--content-body-layout-rail-track);
+    border-block-start: 1px solid var(--color-border-secondary);
+  }
 
-    &:where(:has(> [data-entry-masthead])) {
-      --content-body-padding-block: clamp(
-        var(--layout-gutter),
-        (100% - var(--content-body-layout-measure)) / 2,
-        var(--content-body-layout-space-x-loose)
-      );
-    }
+  & > :where(h1 + h2) {
+    padding-block-start: 0;
+    border-block-start: none;
+  }
 
-    & > * {
-      grid-column: text;
-      margin-block: 0;
-    }
+  & > :where(figure, table) {
+    position: relative;
+  }
 
-    & > :where(h2) {
-      position: relative;
+  & > :where([data-content-span="rail"]) {
+    grid-column: rail-start / text-end;
+  }
 
-      grid-column: rail-start / text-end;
+  & > :where([data-content-span="wide"]) {
+    grid-column: wide;
+  }
 
-      padding-block-start: var(--content-body-layout-space-relaxed);
-      padding-inline-start: var(--content-body-layout-rail-track);
-      border-block-start: 1px solid var(--color-border-secondary);
-    }
+  & > :where([data-content-span="pane"]) {
+    grid-column: pane;
+  }
 
-    & > :where(h1 + h2) {
-      padding-block-start: 0;
-      border-block-start: none;
-    }
+  /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
+   * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span` of
+   * `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). The rules run from the smallest space to the
+   * largest, so where the space after one element and before the next differ, the larger applies. */
+  & > * + * {
+    margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
+  }
 
-    & > :where(figure, table) {
-      position: relative;
-    }
+  & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"], [data-entry-masthead]) + *,
+  &
+    > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"])
+    + :where([data-rail-asides])
+    + *,
+  & > * + :where(h3, figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) {
+    margin-block-start: calc(var(--content-body-layout-space-relaxed) + var(--content-body-rail-clearance, 0px));
+  }
 
-    & > :where([data-content-span="rail"]) {
-      grid-column: rail-start / text-end;
-    }
+  & > * + :where(h2) {
+    margin-block-start: calc(
+      var(--content-body-layout-space-relaxed) + 4px + var(--content-body-rail-clearance, 0px)
+    ); /* 4px more than the space below the border for optical balance. */
+  }
 
-    & > :where([data-content-span="wide"]) {
-      grid-column: wide;
-    }
+  & > * + :where(hr, [data-content-space="loose"]),
+  & > :where(h1, h1 + p, hr, [data-content-space="loose"]) + *,
+  & > :where(h1 + p, hr, [data-content-space="loose"]) + :where([data-rail-asides]) + * {
+    margin-block-start: calc(var(--content-body-layout-space-loose) + var(--content-body-rail-clearance, 0px));
+  }
 
-    & > :where([data-content-span="pane"]) {
-      grid-column: pane;
-    }
+  & > * + [data-rail-asides] {
+    margin-block-start: var(--content-body-layout-space);
+  }
 
-    /* Each element controls its preceding space and includes `--content-body-rail-clearance` when needed.
-     * `--content-body-rail-clearance` is set from JS for section headings and elements with `data-content-span` of
-     * `rail`, `wide`, and `pane` (see `observe-rail-clearances.ts`). The rules run from the smallest space to the
-     * largest, so where the space after one element and before the next differ, the larger applies. */
-    & > * + * {
-      margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
-    }
+  & > [data-rail-asides] > * + * {
+    margin-block-start: var(--content-body-rail-aside-gap);
+  }
 
-    & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"], [data-entry-masthead]) + *,
-    &
-      > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"])
-      + :where([data-rail-asides])
-      + *,
-    & > * + :where(h3, figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) {
-      margin-block-start: calc(var(--content-body-layout-space-relaxed) + var(--content-body-rail-clearance, 0px));
-    }
+  & > :where(h2),
+  & > :where(h2, h2 + [data-heading-level]) + [data-rail-asides] {
+    --content-body-first-line-offset: calc(var(--content-body-layout-space-relaxed) + 3px);
+  }
 
-    & > * + :where(h2) {
-      margin-block-start: calc(
-        var(--content-body-layout-space-relaxed) + 4px + var(--content-body-rail-clearance, 0px)
-      ); /* 4px more than the space below the border for optical balance. */
-    }
+  & > :where(h1 + h2, h1 + h2 + [data-heading-level]) + [data-rail-asides],
+  & > :where([data-entry-masthead]):has(+ h1 + h2) {
+    --content-body-first-line-offset: 3px;
+  }
 
-    & > * + :where(hr, [data-content-space="loose"]),
-    & > :where(h1, h1 + p, hr, [data-content-space="loose"]) + *,
-    & > :where(h1 + p, hr, [data-content-space="loose"]) + :where([data-rail-asides]) + * {
-      margin-block-start: calc(var(--content-body-layout-space-loose) + var(--content-body-rail-clearance, 0px));
-    }
+  & > :where(h3, h3 + [data-heading-level]) + [data-rail-asides] {
+    --content-body-first-line-offset: 1px;
+  }
 
-    & > * + [data-rail-asides] {
-      margin-block-start: var(--content-body-layout-space);
-    }
+  & > :where(p, ul, ol, dl) + [data-rail-asides] {
+    --content-body-first-line-offset: var(--content-body-layout-label-offset);
+  }
 
-    & > [data-rail-asides] > * + * {
-      margin-block-start: var(--content-body-rail-aside-gap);
-    }
+  & > :where(h1 + p) + [data-rail-asides],
+  & > :where([data-entry-masthead]) {
+    --content-body-first-line-offset: var(--content-body-layout-label-offset-large);
+  }
 
-    & > :where(h2),
-    & > :where(h2, h2 + [data-heading-level]) + [data-rail-asides] {
-      --content-body-first-line-offset: calc(var(--content-body-layout-space-relaxed) + 3px);
-    }
+  & > :where(table, figure:has(> table:first-child)),
+  & > :where(table, figure:has(> table:first-child)) + [data-rail-asides] {
+    --content-body-first-line-offset: 6px;
+  }
 
-    & > :where(h1 + h2, h1 + h2 + [data-heading-level]) + [data-rail-asides],
-    & > :where([data-entry-masthead]):has(+ h1 + h2) {
-      --content-body-first-line-offset: 3px;
-    }
+  & > :where(figure:has(> :first-child > pre)),
+  & > :where(figure:has(> :first-child > pre), [data-content-panel]:has(> pre)) + [data-rail-asides] {
+    --content-body-first-line-offset: 7px;
+  }
 
-    & > :where(h3, h3 + [data-heading-level]) + [data-rail-asides] {
-      --content-body-first-line-offset: 1px;
-    }
+  & > :where([data-callout]) + [data-rail-asides] {
+    --content-body-first-line-offset: calc(var(--layout-gutter) + 3px);
+  }
 
-    & > :where(p, ul, ol, dl) + [data-rail-asides] {
-      --content-body-first-line-offset: var(--content-body-layout-label-offset);
-    }
+  & > :where([data-waitlist]) + [data-rail-asides] {
+    --content-body-first-line-offset: calc(var(--layout-gutter) + 2px);
+  }
 
-    & > :where(h1 + p) + [data-rail-asides],
-    & > :where([data-entry-masthead]) {
-      --content-body-first-line-offset: var(--content-body-layout-label-offset-large);
-    }
+  & > :where([data-callout][aria-labelledby]) + [data-rail-asides] {
+    --content-body-first-line-offset: -7px;
+  }
 
-    & > :where(table, figure:has(> table:first-child)),
-    & > :where(table, figure:has(> table:first-child)) + [data-rail-asides] {
-      --content-body-first-line-offset: 6px;
-    }
+  & > :where(h2, figure, table)::before {
+    @mixin bitmap-label;
 
-    & > :where(figure:has(> :first-child > pre)),
-    & > :where(figure:has(> :first-child > pre), [data-content-panel]:has(> pre)) + [data-rail-asides] {
-      --content-body-first-line-offset: 7px;
-    }
+    position: absolute;
+    top: var(--content-body-first-line-offset, 0);
+    display: block;
+    width: var(--content-body-layout-rail-width);
+  }
 
-    & > :where([data-callout]) + [data-rail-asides] {
-      --content-body-first-line-offset: calc(var(--layout-gutter) + 3px);
-    }
+  & > :where(h2[data-section-number])::before {
+    content: attr(data-section-number);
+    content: attr(data-section-number) / "";
+    inset-inline-start: 0;
+    top: calc(var(--content-body-first-line-offset) - 1px); /* From inside the border. */
+  }
 
-    & > :where([data-waitlist]) + [data-rail-asides] {
-      --content-body-first-line-offset: calc(var(--layout-gutter) + 2px);
-    }
+  & > :where(h1 + h2)::before {
+    display: none;
+  }
 
-    & > :where([data-callout][aria-labelledby]) + [data-rail-asides] {
-      --content-body-first-line-offset: -7px;
-    }
+  & > :where(figure, table)::before {
+    inset-inline-end: calc(100% + var(--content-body-layout-rail-gap));
+  }
 
-    & > :where(h2, figure, table)::before {
-      @mixin bitmap-label;
+  & > :where(figure[data-figure-number])::before {
+    content: "Fig. " attr(data-figure-number);
+    content: "Fig. " attr(data-figure-number) / "";
+  }
 
+  & > :where(table[data-table-number])::before {
+    content: "Table " attr(data-table-number);
+    content: "Table " attr(data-table-number) / "";
+    display: table-caption;
+  }
+
+  & > :where(figure, table):where([data-content-span="wide"], [data-content-span="pane"])::before {
+    position: static;
+    width: auto;
+    padding-block-end: 8px;
+  }
+
+  & > :where(figure, table)[data-content-span="pane"]::before {
+    padding-inline: var(--layout-gutter);
+  }
+
+  & > :where(figure[data-content-span="pane"]) > :where(figcaption) {
+    margin-inline: var(--layout-gutter);
+  }
+
+  & > :where([data-entry-masthead]) {
+    @mixin entry-masthead-in-rail {
       position: absolute;
-      top: var(--content-body-first-line-offset, 0);
-      display: block;
-      width: var(--content-body-layout-rail-width);
-    }
-
-    & > :where(h2[data-section-number])::before {
-      content: attr(data-section-number);
-      content: attr(data-section-number) / "";
       inset-inline-start: 0;
-      top: calc(var(--content-body-first-line-offset) - 1px); /* From inside the border. */
+      top: calc(anchor(--content-body-masthead-subject top) + var(--content-body-first-line-offset));
+      anchor-name: --content-body-rail-item;
+
+      grid-column: rail-start / text-start;
+
+      width: var(--content-body-layout-rail-width);
+
+      & + h1 {
+        margin-block-start: 0;
+      }
+    }
+  }
+
+  @mixin content-rail-anchored {
+    & > :where([style*="--content-body-rail-subject"]:not([data-rail-asides])) {
+      anchor-name: var(--content-body-rail-subject, none);
     }
 
-    & > :where(h1 + h2)::before {
-      display: none;
+    & > :where(h2, figure, table, blockquote):--within-rail-span {
+      position: static;
+      anchor-name: --content-body-labeled-element, var(--content-body-rail-subject, --content-body-labeled-element);
+      anchor-scope: --content-body-labeled-element;
+    }
+
+    & > :where([data-entry-masthead] + h1 + :is(p, h2)):--within-rail-span {
+      anchor-name: --content-body-masthead-subject, var(--content-body-rail-subject, --content-body-masthead-subject);
+    }
+
+    & > :where(h2)::before {
+      inset-inline-start: anchor(start);
     }
 
     & > :where(figure, table)::before {
-      inset-inline-end: calc(100% + var(--content-body-layout-rail-gap));
+      inset-inline-end: calc(anchor(start) + var(--content-body-layout-rail-gap));
     }
 
-    & > :where(figure[data-figure-number])::before {
-      content: "Fig. " attr(data-figure-number);
-      content: "Fig. " attr(data-figure-number) / "";
+    & > :where(h2, figure, table, blockquote):--within-rail-span::before,
+    & > :--within-rail-span + [data-rail-asides] > * {
+      top: max(
+        anchor(top) + var(--content-body-first-line-offset, 0px),
+        anchor(--content-body-rail-item bottom, 0px) + var(--content-body-layout-space)
+      );
+      anchor-name: --content-body-rail-item;
     }
 
-    & > :where(table[data-table-number])::before {
-      content: "Table " attr(data-table-number);
-      content: "Table " attr(data-table-number) / "";
-      display: table-caption;
+    & > :where(h2, figure, table, blockquote):--within-rail-span::before {
+      position-anchor: --content-body-labeled-element;
     }
 
-    & > :where(figure, table):where([data-content-span="wide"], [data-content-span="pane"])::before {
-      position: static;
-      width: auto;
-      padding-block-end: 8px;
+    & > :--within-rail-span + [data-rail-asides] {
+      display: contents;
     }
 
-    & > :where(figure, table)[data-content-span="pane"]::before {
-      padding-inline: var(--layout-gutter);
+    & > :--within-rail-span + [data-rail-asides] > * {
+      position: absolute;
+      inset-inline-start: 0;
+      position-anchor: var(--content-body-rail-subject, auto);
+
+      grid-column: rail-start / text-start;
+
+      width: var(--content-body-layout-rail-width);
     }
 
-    & > :where(figure[data-content-span="pane"]) > :where(figcaption) {
-      margin-inline: var(--layout-gutter);
+    & > :--within-rail-span + [data-rail-asides] > * + * {
+      top: calc(anchor(--content-body-rail-item bottom) + var(--content-body-rail-aside-gap));
+      margin-block-start: 0;
     }
 
-    & > :where([data-entry-masthead]) {
-      @mixin entry-masthead-in-rail {
-        position: absolute;
-        inset-inline-start: 0;
-        top: calc(anchor(--content-body-masthead-subject top) + var(--content-body-first-line-offset));
-        anchor-name: --content-body-rail-item;
+    & > :--within-rail-span + [data-rail-asides] > .railAside {
+      display: block;
+      padding-inline-start: 0;
+      border-inline-start: none;
 
-        grid-column: rail-start / text-start;
-
-        width: var(--content-body-layout-rail-width);
-
-        & + h1 {
-          margin-block-start: 0;
-        }
-      }
-    }
-
-    @mixin content-rail-anchored {
-      & > :where([style*="--content-body-rail-subject"]:not([data-rail-asides])) {
-        anchor-name: var(--content-body-rail-subject, none);
+      & > .railLabel {
+        margin-block-end: 4px;
+        margin-inline-end: 0;
       }
 
-      & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"]) {
-        position: static;
-        anchor-name: --content-body-labeled-element, var(--content-body-rail-subject, --content-body-labeled-element);
-        anchor-scope: --content-body-labeled-element;
-      }
-
-      & > :where([data-entry-masthead] + h1 + :is(p, h2)):not([data-content-span="wide"], [data-content-span="pane"]) {
-        anchor-name: --content-body-masthead-subject, var(--content-body-rail-subject, --content-body-masthead-subject);
-      }
-
-      & > :where(h2)::before {
-        inset-inline-start: anchor(start);
-      }
-
-      & > :where(figure, table)::before {
-        inset-inline-end: calc(anchor(start) + var(--content-body-layout-rail-gap));
-      }
-
-      & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before,
-      & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
-        top: max(
-          anchor(top) + var(--content-body-first-line-offset, 0px),
-          anchor(--content-body-rail-item bottom, 0px) + var(--content-body-layout-space)
-        );
-        anchor-name: --content-body-rail-item;
-      }
-
-      & > :where(h2, figure, table, blockquote):not([data-content-span="wide"], [data-content-span="pane"])::before {
-        position-anchor: --content-body-labeled-element;
-      }
-
-      & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] {
-        display: contents;
-      }
-
-      & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * {
-        position: absolute;
-        inset-inline-start: 0;
-        position-anchor: var(--content-body-rail-subject, auto);
-
-        grid-column: rail-start / text-start;
-
-        width: var(--content-body-layout-rail-width);
-      }
-
-      & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > * + * {
-        top: calc(anchor(--content-body-rail-item bottom) + var(--content-body-rail-aside-gap));
-        margin-block-start: 0;
-      }
-
-      & > :not([data-content-span="wide"], [data-content-span="pane"]) + [data-rail-asides] > .railAside {
-        display: block;
-        padding-inline-start: 0;
-        border-inline-start: none;
-
-        & > .railLabel {
-          margin-block-end: 4px;
-          margin-inline-end: 0;
-        }
-
-        & > :not(.railLabel) + * {
-          margin-block-start: 4px;
-        }
-      }
-    }
-
-    @mixin content-rail-collapsed {
-      --content-body-layout-rail-track: 0px;
-
-      & > :where(h2) {
-        padding-inline-start: 0;
-      }
-
-      & > :where(h2, figure, table)::before {
-        display: none;
+      & > :not(.railLabel) + * {
+        margin-block-start: 4px;
       }
     }
   }
 
-  /* Element defaults, except within a `data-content-default-styles="off"` subtree that is not turned back `on`. */
-  &
-    :not(
-      :where(
-        [data-content-default-styles="off"] :not([data-content-default-styles="on"] *),
-        [data-content-default-styles="on"] [data-content-default-styles="off"] *
-      )
-    ) {
-    &:where(h1, h2, h3, p, li, figcaption, dt, dd) {
-      text-wrap: pretty;
+  @mixin content-rail-collapsed {
+    --content-body-layout-rail-track: 0px;
+
+    & > :where(h2) {
+      padding-inline-start: 0;
     }
 
-    &:where(h1, h2, h3):focus {
-      outline: none;
+    & > :where(h2, figure, table)::before {
+      display: none;
+    }
+  }
+}
+
+/* Element defaults unless `data-content-default-styles="off"` disables them. A nested `"on"` subtree restores them, but
+ * a further nested `off` subtree remains disabled. */
+.content
+  :not(
+    :where(
+      [data-content-default-styles="off"] :not([data-content-default-styles="on"] *),
+      [data-content-default-styles="on"] [data-content-default-styles="off"] *
+    )
+  ) {
+  &:where(h1, h2, h3, p, li, figcaption, dt, dd) {
+    text-wrap: pretty;
+  }
+
+  &:where(h1, h2, h3):focus {
+    outline: none;
+  }
+
+  &:where(h1) {
+    @mixin content-heading-1;
+  }
+
+  &:where(h1 + p) {
+    font: var(--content-body-font-body-large);
+  }
+
+  &:where(h2) {
+    font: var(--content-body-font-heading-2);
+  }
+
+  &:where(h3) {
+    font: var(--content-body-font-heading-3);
+  }
+
+  &:where(sup) {
+    line-height: 0; /* Keeps a superscript, such as a footnote reference, from adding to the height of its line. */
+  }
+
+  &:where(strong):not(:where(h1, h2, h3, blockquote) *) {
+    font-weight: 600;
+  }
+
+  &:where(a:not([data-heading-link])) {
+    @mixin content-link;
+
+    -webkit-touch-callout: default;
+  }
+
+  &:where(a:not([data-heading-link])):not(:where(h1, h2, h3, blockquote, strong) *) {
+    font-weight: 450;
+  }
+
+  /* Archivo has no arrow glyph, so an external link in Archivo omits the arrow adornment. */
+  &:where(a[target="_blank"]):not(:where(h1, h2, h3, blockquote) *)::after {
+    /* The text variation selector (U+FE0E) prevents iOS from drawing the arrow as an emoji in a fallback font. */
+    content: "\202f\2197\fe0e";
+    content: "\202f\2197\fe0e" / "";
+  }
+
+  &:where(:not(pre) > :is(code, kbd)) {
+    font: var(--content-body-font-code);
+    font-size: 1em;
+    font-feature-settings: var(--content-body-font-code-feature-settings);
+    overflow-wrap: break-word;
+  }
+
+  &:where(:not(pre) > code) {
+    font-weight: 500;
+    color: var(--color-syntax-constant);
+  }
+
+  &:where(a code) {
+    color: inherit; /* Keeps the link's color. */
+  }
+
+  &:where(:is(h1, h2, h3, blockquote) code) {
+    /* Code in a heading or quotation is set in the surrounding face and marked by backticks instead. */
+    font: inherit;
+    font-feature-settings: inherit;
+    color: inherit;
+
+    &::before,
+    &::after {
+      content: "`";
+      content: "`" / "";
+    }
+  }
+
+  &:where(kbd) {
+    margin-inline: 2px;
+    padding: 0.5px 4px;
+    border: 1px solid var(--color-border);
+
+    background: var(--color-background-secondary);
+    box-shadow: 1px 1px 0 var(--color-border);
+  }
+
+  &:where(a:has(> img:only-child, > picture:only-child > img)) {
+    position: relative;
+
+    display: block;
+
+    width: fit-content;
+    margin-inline: auto;
+    padding: 0;
+
+    text-decoration: none;
+
+    &::after {
+      content: none;
     }
 
-    &:where(h1) {
-      @mixin content-heading-1;
+    &:focus-visible {
+      @mixin focus-stroke -2px;
     }
+  }
 
-    &:where(h1 + p) {
-      font: var(--content-body-font-body-large);
+  &:where(ul, ol) {
+    padding-inline-start: 24px;
+  }
+
+  &:where(:is(ul, ol) > li + li, li > :is(ul, ol)) {
+    margin-block-start: 8px;
+  }
+
+  &:where(ul) {
+    list-style-type: content-body-hidden; /* Avoid `list-style: none;` to preserve accessibility in Safari. */
+  }
+
+  &:where(ul) > li {
+    position: relative;
+  }
+
+  &:where(ul) > li::before {
+    @mixin bitmap-label;
+
+    content: counter(list-item, content-body-unordered-list-level-1);
+    content: counter(list-item, content-body-unordered-list-level-1) / "";
+
+    position: absolute;
+    inset-inline-start: -16px;
+
+    line-height: inherit;
+  }
+
+  &:where(ul ul) > li::before {
+    content: counter(list-item, content-body-unordered-list-level-2);
+    content: counter(list-item, content-body-unordered-list-level-2) / "";
+  }
+
+  &:where(ol) {
+    list-style-type: content-body-ordered-list;
+  }
+
+  &:where(ol) > li::marker {
+    @mixin bitmap-label;
+  }
+
+  &:where(dl) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 20px;
+    align-items: baseline;
+
+    @container content (width < 480px) {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 4px;
     }
+  }
 
-    &:where(h2) {
-      font: var(--content-body-font-heading-2);
+  &:where(dt) {
+    @mixin bitmap-label;
+
+    width: var(--content-body-layout-rail-width);
+
+    @container content (width < 480px) {
+      width: auto;
     }
+  }
 
-    &:where(h3) {
-      font: var(--content-body-font-heading-3);
+  &:where(dd + dt) {
+    @container content (width < 480px) {
+      margin-block-start: calc(var(--content-body-layout-space) - 4px);
     }
+  }
 
-    &:where(sup) {
-      line-height: 0; /* Keeps a superscript, such as a footnote reference, from adding to the height of its line. */
-    }
+  &:where(blockquote) {
+    --content-body-blockquote-band-width: 4px;
+    --content-body-blockquote-band-gap: 16px;
+    --content-body-blockquote-mark-color: var(--accent-pink);
 
-    &:where(strong):not(:where(h1, h2, h3, blockquote) *) {
-      font-weight: 600;
-    }
+    position: relative;
+    padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));
+    font: var(--content-body-font-blockquote);
+    letter-spacing: 0.01em;
 
-    &:where(a:not([data-heading-link])) {
-      @mixin content-link;
+    &::before {
+      @mixin dither-50;
 
-      -webkit-touch-callout: default;
-    }
-
-    &:where(a:not([data-heading-link])):not(:where(h1, h2, h3, blockquote, strong) *) {
-      font-weight: 450;
-    }
-
-    /* Archivo has no arrow glyph, so an external link in Archivo omits the arrow adornment. */
-    &:where(a[target="_blank"]):not(:where(h1, h2, h3, blockquote) *)::after {
-      /* The text variation selector (U+FE0E) prevents iOS from drawing the arrow as an emoji in a fallback font. */
-      content: "\202f\2197\fe0e";
-      content: "\202f\2197\fe0e" / "";
-    }
-
-    &:where(:not(pre) > :is(code, kbd)) {
-      font: var(--content-body-font-code);
-      font-size: 1em;
-      font-feature-settings: var(--content-body-font-code-feature-settings);
-      overflow-wrap: break-word;
-    }
-
-    &:where(:not(pre) > code) {
-      font-weight: 500;
-      color: var(--color-syntax-constant);
-    }
-
-    &:where(a code) {
-      color: inherit; /* Keeps the link's color. */
-    }
-
-    &:where(:is(h1, h2, h3, blockquote) code) {
-      /* Code in a heading or quotation is set in the surrounding face and marked by backticks instead. */
-      font: inherit;
-      font-feature-settings: inherit;
-      color: inherit;
-
-      &::before,
-      &::after {
-        content: "`";
-        content: "`" / "";
-      }
-    }
-
-    &:where(kbd) {
-      margin-inline: 2px;
-      padding: 0.5px 4px;
-      border: 1px solid var(--color-border);
-
-      background: var(--color-background-secondary);
-      box-shadow: 1px 1px 0 var(--color-border);
-    }
-
-    &:where(a:has(> img:only-child, > picture:only-child > img)) {
-      position: relative;
-
-      display: block;
-
-      width: fit-content;
-      margin-inline: auto;
-      padding: 0;
-
-      text-decoration: none;
-
-      &::after {
-        content: none;
-      }
-
-      &:focus-visible {
-        @mixin focus-stroke -2px;
-      }
-    }
-
-    &:where(ul, ol) {
-      padding-inline-start: 24px;
-    }
-
-    &:where(:is(ul, ol) > li + li, li > :is(ul, ol)) {
-      margin-block-start: 8px;
-    }
-
-    &:where(ul) {
-      list-style-type: content-body-hidden; /* Avoid `list-style: none;` to preserve accessibility in Safari. */
-    }
-
-    &:where(ul) > li {
-      position: relative;
-    }
-
-    &:where(ul) > li::before {
-      @mixin bitmap-label;
-
-      content: counter(list-item, content-body-unordered-list-level-1);
-      content: counter(list-item, content-body-unordered-list-level-1) / "";
+      content: "";
 
       position: absolute;
-      inset-inline-start: -16px;
+      inset-block: 0;
+      inset-inline-start: 0;
 
-      line-height: inherit;
-    }
-
-    &:where(ul ul) > li::before {
-      content: counter(list-item, content-body-unordered-list-level-2);
-      content: counter(list-item, content-body-unordered-list-level-2) / "";
-    }
-
-    &:where(ol) {
-      list-style-type: content-body-ordered-list;
-    }
-
-    &:where(ol) > li::marker {
-      @mixin bitmap-label;
-    }
-
-    &:where(dl) {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px 20px;
-      align-items: baseline;
-
-      @container content (width < 480px) {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 4px;
-      }
-    }
-
-    &:where(dt) {
-      @mixin bitmap-label;
-
-      width: var(--content-body-layout-rail-width);
-
-      @container content (width < 480px) {
-        width: auto;
-      }
-    }
-
-    &:where(dd + dt) {
-      @container content (width < 480px) {
-        margin-block-start: calc(var(--content-body-layout-space) - 4px);
-      }
-    }
-
-    &:where(blockquote) {
-      --content-body-blockquote-band-width: 4px;
-      --content-body-blockquote-band-gap: 16px;
-      --content-body-blockquote-mark-color: var(--accent-pink);
-
-      position: relative;
-      padding-inline-start: calc(var(--content-body-blockquote-band-width) + var(--content-body-blockquote-band-gap));
-      font: var(--content-body-font-blockquote);
-      letter-spacing: 0.01em;
-
-      &::before {
-        @mixin dither-50;
-
-        content: "";
-
-        position: absolute;
-        inset-block: 0;
-        inset-inline-start: 0;
-
-        width: var(--content-body-blockquote-band-width);
-
-        color: var(--color-border);
-      }
-    }
-
-    &:where(blockquote > cite) {
-      @mixin bitmap-label;
-
-      display: block;
-      margin-block-start: 12px;
-    }
-
-    &:where(hr) {
-      --content-body-hr-square-size: calc(8 * var(--layout-bitmap-pixel));
-      --content-body-hr-square-gap: calc(12 * var(--layout-bitmap-pixel));
-      --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
-      --content-body-hr-middle-square-position: 50%;
-
-      height: var(--content-body-hr-square-size);
+      width: var(--content-body-blockquote-band-width);
 
       color: var(--color-border);
+    }
+  }
 
-      mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0), linear-gradient(#000 0 0);
-      mask-repeat: no-repeat;
-      mask-position:
-        calc(var(--content-body-hr-middle-square-position) - var(--content-body-hr-square-step)) 0,
-        var(--content-body-hr-middle-square-position) 0,
-        calc(var(--content-body-hr-middle-square-position) + var(--content-body-hr-square-step)) 0;
-      mask-size: var(--content-body-hr-square-size) var(--content-body-hr-square-size);
+  &:where(blockquote > cite) {
+    @mixin bitmap-label;
 
-      &::before {
-        @mixin dither-50;
+    display: block;
+    margin-block-start: 12px;
+  }
 
-        content: "";
-        display: block;
-        height: 100%;
+  &:where(hr) {
+    --content-body-hr-square-size: calc(8 * var(--layout-bitmap-pixel));
+    --content-body-hr-square-gap: calc(12 * var(--layout-bitmap-pixel));
+    --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
+    --content-body-hr-middle-square-position: 50%;
+
+    height: var(--content-body-hr-square-size);
+
+    color: var(--color-border);
+
+    mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    mask-repeat: no-repeat;
+    mask-position:
+      calc(var(--content-body-hr-middle-square-position) - var(--content-body-hr-square-step)) 0,
+      var(--content-body-hr-middle-square-position) 0,
+      calc(var(--content-body-hr-middle-square-position) + var(--content-body-hr-square-step)) 0;
+    mask-size: var(--content-body-hr-square-size) var(--content-body-hr-square-size);
+
+    &::before {
+      @mixin dither-50;
+
+      content: "";
+      display: block;
+      height: 100%;
+    }
+
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+    }
+
+    @supports (width: round(down, 1px, 1px)) {
+      --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--layout-bitmap-pixel)));
+    }
+  }
+
+  &:where(figcaption, caption) {
+    font: var(--content-body-font-caption);
+    font-style: italic;
+    color: var(--color-foreground-secondary);
+  }
+
+  &:where(figcaption) {
+    margin-block-start: 8px;
+  }
+
+  &:where(blockquote + figcaption) {
+    margin-block-start: 12px; /* Matches the spacing of a blockquote `<cite>`. */
+  }
+
+  &:where(table) {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  &:where(caption) {
+    caption-side: bottom;
+    padding-block-start: 8px;
+    text-align: start;
+  }
+
+  &:where(th) {
+    @mixin bitmap-label;
+
+    padding-block: 6px;
+    padding-inline: 0 16px;
+    border-block-end: 1px solid var(--color-border);
+    text-align: start;
+  }
+
+  &:where(td) {
+    padding-block: 6px;
+    padding-inline: 0 16px;
+    border-block-end: 1px solid var(--color-border-secondary);
+
+    font: var(--content-body-font-body-small);
+    font-variant-numeric: tabular-nums;
+    vertical-align: baseline;
+  }
+
+  &:where(th, td):last-child {
+    padding-inline-end: 0;
+  }
+
+  &:where(img, video) {
+    /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned. Without
+     * `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
+    --content-body-image-max-width: round(down, 80cqh * attr(width type(<number>)) / attr(height type(<number>)), 1px);
+
+    display: block;
+
+    /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome. Without typed `attr()`
+     * the ratio falls back to `auto`. */
+    aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
+    width: 100%;
+    max-width: var(--content-body-image-max-width);
+    height: auto;
+    margin-inline-start: max(0px, round(down, (100% - var(--content-body-image-max-width)) / 2, 1px));
+
+    background: var(--color-background-secondary);
+  }
+
+  &:where(img, video):where([data-content-span="pane"], [data-content-span="pane"] *) {
+    max-width: none;
+    margin-inline-start: 0;
+  }
+
+  &[data-content-panel]:where([data-content-span="pane"], [data-content-span="pane"] *) {
+    border-inline: none;
+  }
+}
+
+.content :where(th, td)[align="left"] {
+  text-align: left;
+}
+
+.content :where(th, td)[align="center"] {
+  text-align: center;
+}
+
+.content :where(th, td)[align="right"] {
+  text-align: right;
+}
+
+/* Follows the element defaults to override their band metrics at equal specificity. */
+.content :where([data-content-body]) > :where(blockquote) {
+  @mixin content-rail-expanded {
+    --content-body-blockquote-band-width: var(--content-body-layout-rail-width);
+    --content-body-blockquote-band-gap: var(--content-body-layout-rail-gap);
+    --content-body-first-line-offset: -13px; /* Aligns the quotation mark with the quotation's cap line. */
+
+    grid-column: rail-start / text-end;
+    min-height: calc(2lh + 8px); /* Clear the height of the quotation mark. */
+    padding-block: 4px;
+
+    &::before {
+      content: "\201c";
+      content: "\201c" / "";
+
+      inset-block: var(--content-body-first-line-offset) auto;
+
+      height: 75px; /* To the bottom of the mark rather than its line, which a rail item after it is placed below. */
+
+      font: 800 156px/1 var(--content-body-font-family-display);
+      color: var(--content-body-blockquote-mark-color);
+      text-align: end;
+
+      background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      /* A rail item (see the rail items above). */
+      @supports (anchor-scope: all) {
+        @media (scripting: enabled) {
+          inset-inline-start: anchor(start);
+        }
       }
 
       @media (forced-colors: active) {
-        forced-color-adjust: none;
-      }
-
-      @supports (width: round(down, 1px, 1px)) {
-        --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--layout-bitmap-pixel)));
-      }
-    }
-
-    &:where(figcaption, caption) {
-      font: var(--content-body-font-caption);
-      font-style: italic;
-      color: var(--color-foreground-secondary);
-    }
-
-    &:where(figcaption) {
-      margin-block-start: 8px;
-    }
-
-    &:where(blockquote + figcaption) {
-      margin-block-start: 12px; /* Matches the spacing of a blockquote `<cite>`. */
-    }
-
-    &:where(table) {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    &:where(caption) {
-      caption-side: bottom;
-      padding-block-start: 8px;
-      text-align: start;
-    }
-
-    &:where(th) {
-      @mixin bitmap-label;
-
-      padding-block: 6px;
-      padding-inline: 0 16px;
-      border-block-end: 1px solid var(--color-border);
-      text-align: start;
-    }
-
-    &:where(td) {
-      padding-block: 6px;
-      padding-inline: 0 16px;
-      border-block-end: 1px solid var(--color-border-secondary);
-
-      font: var(--content-body-font-body-small);
-      font-variant-numeric: tabular-nums;
-      vertical-align: baseline;
-    }
-
-    &:where(th, td):last-child {
-      padding-inline-end: 0;
-    }
-
-    &:where(img, video) {
-      /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned. Without
-       * `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
-      --content-body-image-max-width: round(
-        down,
-        80cqh * attr(width type(<number>)) / attr(height type(<number>)),
-        1px
-      );
-
-      display: block;
-
-      /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome. Without typed
-       * `attr()` the ratio falls back to `auto`. */
-      aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
-      width: 100%;
-      max-width: var(--content-body-image-max-width);
-      height: auto;
-      margin-inline-start: max(0px, round(down, (100% - var(--content-body-image-max-width)) / 2, 1px));
-
-      background: var(--color-background-secondary);
-    }
-
-    &:where(img, video):where([data-content-span="pane"], [data-content-span="pane"] *) {
-      max-width: none;
-      margin-inline-start: 0;
-    }
-
-    &[data-content-panel]:where([data-content-span="pane"], [data-content-span="pane"] *) {
-      border-inline: none;
-    }
-  }
-
-  & :where(th, td)[align="left"] {
-    text-align: left;
-  }
-
-  & :where(th, td)[align="center"] {
-    text-align: center;
-  }
-
-  & :where(th, td)[align="right"] {
-    text-align: right;
-  }
-
-  /* After the element defaultes as it overrides their band metrics at the same specificity. */
-  @mixin content-rail-expanded {
-    & :where([data-content-body]) > :where(blockquote) {
-      --content-body-blockquote-band-width: var(--content-body-layout-rail-width);
-      --content-body-blockquote-band-gap: var(--content-body-layout-rail-gap);
-      --content-body-first-line-offset: -13px; /* Aligns the quotation mark with the quotation's cap line. */
-
-      grid-column: rail-start / text-end;
-      min-height: calc(2lh + 8px); /* Clear the height of the quotation mark. */
-      padding-block: 4px;
-
-      &::before {
-        content: "\201c";
-        content: "\201c" / "";
-
-        inset-block: var(--content-body-first-line-offset) auto;
-
-        height: 75px; /* To the bottom of the mark rather than its line, which a rail item after it is placed below. */
-
-        font: 800 156px/1 var(--content-body-font-family-display);
-        color: var(--content-body-blockquote-mark-color);
-        text-align: end;
-
-        background-clip: text;
-
-        -webkit-text-fill-color: transparent;
-
-        /* A rail item (see the rail items above). */
-        @supports (anchor-scope: all) {
-          @media (scripting: enabled) {
-            inset-inline-start: anchor(start);
-          }
-        }
-
-        @media (forced-colors: active) {
-          -webkit-text-fill-color: GrayText;
-        }
+        -webkit-text-fill-color: GrayText;
       }
     }
   }

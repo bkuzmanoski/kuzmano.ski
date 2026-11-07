@@ -9,15 +9,14 @@ import { LLMS_TXT_FILE_NAME, LLMS_TXT_PATH, canonicalUrl, markdownUrl } from "#/
 import { entryRoute, pageRoute } from "#/site/routes.ts";
 
 import { byNewestFirst, publishedEntries } from "../content/authored-content.ts";
-import { CLIENT_ENVIRONMENT } from "../environments.ts";
-import { requestPathOf } from "../paths.ts";
+import { generatedFilesPlugin } from "../generated-file-middleware.ts";
 
 import { asOneLine, listOf, markdownFrom, paragraphOf, textNode, textParagraph } from "./nodes.ts";
 
 import type { MarkdownTokenCounts } from "./token-count.ts";
 import type { AuthoredContent, AuthoredEntry } from "../content/authored-content.ts";
 import type { ContentNode } from "../content/markup/tree.ts";
-import type { AddHeadersRules, HeadersRule } from "../headers.ts";
+import type { HeadersRule } from "../headers.ts";
 import type { Plugin, ViteDevServer } from "vite";
 
 const PAGES_SECTION_HEADING = "Pages";
@@ -96,7 +95,7 @@ export function llmsTxtFor({ pages, collections }: AuthoredContent, tokenCounts:
   ]);
 }
 
-const LLMS_TXT_HEADERS_RULE: HeadersRule = {
+export const LLMS_TXT_HEADERS_RULE: HeadersRule = {
   description: "The index for agents declares how the content it lists may be used.",
   pathPatterns: [LLMS_TXT_PATH],
   headers: { "Content-Signal": CONTENT_SIGNAL },
@@ -107,35 +106,16 @@ export interface LlmsTxtPluginOptions {
   loadForBuild: () => Promise<string>;
   /** Served from a fresh render, so a request reflects the content on disk. */
   loadForDevRequest: (server: ViteDevServer) => Promise<string>;
-  addHeadersRules: AddHeadersRules;
 }
 
 /** Emits `llms.txt` into the client build, and serves it under `vite dev`. */
-export function llmsTxtPlugin({ loadForBuild, loadForDevRequest, addHeadersRules }: LlmsTxtPluginOptions): Plugin {
-  return {
+export const llmsTxtPlugin = ({ loadForBuild, loadForDevRequest }: LlmsTxtPluginOptions): Plugin =>
+  generatedFilesPlugin({
     name: "kuzmano.ski:llms-txt",
-    applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
-    buildStart() {
-      addHeadersRules([LLMS_TXT_HEADERS_RULE]);
-    },
-    async generateBundle() {
-      this.emitFile({ type: "asset", fileName: LLMS_TXT_FILE_NAME, source: await loadForBuild() });
-    },
-    configureServer(server) {
-      // Every document is rendered to count its tokens, so the render runs only on a request for `/llms.txt`.
-      server.middlewares.use((request, response, next) => {
-        if (requestPathOf(request) !== LLMS_TXT_PATH) {
-          next();
-          return;
-        }
-
-        loadForDevRequest(server)
-          .then((llmsTxt) => {
-            response.setHeader("content-type", PLAIN_TEXT_CONTENT_TYPE);
-            response.end(llmsTxt);
-          })
-          .catch(next);
-      });
-    },
-  };
-}
+    fileNames: [LLMS_TXT_FILE_NAME],
+    // Every document is rendered to count its tokens, so the render runs only on a request for `/llms.txt`.
+    load: async (_fileName, server) => ({
+      contentType: PLAIN_TEXT_CONTENT_TYPE,
+      contents: await (server ? loadForDevRequest(server) : loadForBuild()),
+    }),
+  });

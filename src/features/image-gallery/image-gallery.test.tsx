@@ -9,8 +9,9 @@ import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
 import { pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
 
+import { SWIPE_DISTANCE_PX } from "./image-gallery-swipe.ts";
 import styles from "./image-gallery.module.css";
-import { ImageGallery, SWIPE_DISTANCE_PX } from "./image-gallery.tsx";
+import { ImageGallery } from "./image-gallery.tsx";
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal),
@@ -60,10 +61,7 @@ const thumbnail = (name: string) => screen.getByRole("tab", { name });
 const altOf = (element: HTMLElement) => element.querySelector("img")?.getAttribute("alt") ?? null;
 const galleryControls = () => screen.getByRole("tablist").closest<HTMLElement>("[data-feed-omit]")!;
 const galleryButton = (name: string) => within(galleryControls()).getByRole("button", { name });
-
-/** A closed `<dialog>` does not have the `dialog` role in the accessibility tree. */
-const preview = () => document.querySelector("dialog")!;
-
+const preview = () => document.querySelector("dialog")!; // A closed `<dialog>` does not have the `dialog` role in the accessibility tree.
 const previewButton = (name: string) => within(preview()).getByRole("button", { name, hidden: true });
 const previewImageName = () => within(preview()).getByRole("img", { hidden: true }).getAttribute("alt");
 const previewImageElement = () => within(preview()).getByRole("img", { hidden: true });
@@ -304,6 +302,21 @@ test("pressing the Home and End keys on a thumbnail shows the first and last ima
 
   expect(shownImageName()).toBe("First image");
   expect(document.activeElement).toBe(thumbnail("First image"));
+});
+
+test("the stage stops announcing image changes while a thumbnail has the focus", () => {
+  renderGallery();
+
+  expect(stage().getAttribute("aria-live")).toBe("polite");
+
+  thumbnail("First image").focus();
+  fireEvent.keyDown(thumbnail("First image"), { key: "ArrowRight" });
+
+  expect(stage().getAttribute("aria-live")).toBe("off");
+
+  act(() => galleryButton("Next image").focus());
+
+  expect(stage().getAttribute("aria-live")).toBe("polite");
 });
 
 test("swiping left across the shown image shows the next image, and swiping right shows the previous", () => {

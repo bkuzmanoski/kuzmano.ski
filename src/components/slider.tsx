@@ -1,7 +1,7 @@
 import SliderThumb from "#/assets/images/slider-thumb.svg?react";
 import { playSliderStepSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 import { stepCountOf } from "#/lib/stepped-range.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 

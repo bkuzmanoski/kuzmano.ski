@@ -11,7 +11,8 @@ export type ClipboardCopy<TDetails extends object> = TDetails & {
 
 /**
  * Writes values to the clipboard and returns the latest copy, which a control displays while its write is pending,
- * confirmed, or failed, or `null` when there is no copy to display.
+ * confirmed, or failed, or `null` when there is no copy to display. In a secure context, where `navigator.clipboard`
+ * exists, `clipboard.writeText` rejects only for a denied write, so a failed copy means a denied permission.
  *
  * Each copy replaces the one before it, and a write's status is applied only while the copy that started the write is
  * still the latest. A write that finishes after a later copy has started therefore does not confirm or fail the later

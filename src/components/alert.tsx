@@ -2,7 +2,7 @@ import { useId, useLayoutEffect, useRef } from "react";
 
 import { playErrorSound, playSuccessSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
-import { containsPoint } from "#/lib/geometry.ts";
+import { clientPositionOf, containsPoint } from "#/lib/geometry.ts";
 
 import styles from "./alert.module.css";
 import { Button } from "./button.tsx";
@@ -18,7 +18,7 @@ export interface AlertAction {
 }
 
 function isPressOutside(event: ReactPointerEvent<HTMLDialogElement>) {
-  return !containsPoint(event.currentTarget.getBoundingClientRect(), { x: event.clientX, y: event.clientY });
+  return !containsPoint(event.currentTarget.getBoundingClientRect(), clientPositionOf(event));
 }
 
 function runAction({ onAction }: AlertAction) {

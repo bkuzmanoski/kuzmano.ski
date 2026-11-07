@@ -4,12 +4,13 @@ import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-
 import { recordScrollAt, silenceScrollAt } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import {
-  careerTimelinePlacementCenterOf,
   scrollTopForVisibleCareerTimelineCenter,
   visibleCareerTimelineCenterAfterTravel,
   visibleCareerTimelinePlacementAt,
-} from "#/lib/experience/career-timeline.ts";
+} from "#/lib/experience/career-timeline-viewport.ts";
+import { careerTimelinePlacementCenterOf } from "#/lib/experience/career-timeline.ts";
 import type { CareerTimelineDirection } from "#/lib/experience/career-timeline.ts";
+import { createFrameScheduler } from "#/lib/frame-scheduler.ts";
 import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import { axisFractionAt, readCareerTimelineLayout } from "./career-timeline-layout.ts";
@@ -68,11 +69,7 @@ export function useCareerTimelineMinimap(
       return;
     }
 
-    let animationFrameId = 0;
-
     const measureVisibleRange = () => {
-      animationFrameId = 0;
-
       const layout = readCareerTimelineLayout(scrollPane, layoutElements);
       const visiblePlacement = layout && visibleCareerTimelinePlacementAt(layout.viewport, layout.viewport.scrollTop);
 
@@ -88,23 +85,19 @@ export function useCareerTimelineMinimap(
       }
     };
 
-    const scheduleVisibleRangeMeasurement = () => {
-      if (animationFrameId === 0) {
-        animationFrameId = requestAnimationFrame(measureVisibleRange);
-      }
-    };
+    const measurement = createFrameScheduler(measureVisibleRange);
 
     measureVisibleRange();
-    scrollPane.addEventListener("scroll", scheduleVisibleRangeMeasurement, { passive: true });
+    scrollPane.addEventListener("scroll", measurement.schedule, { passive: true });
 
-    const resizeObserver = new ResizeObserver(scheduleVisibleRangeMeasurement);
+    const resizeObserver = new ResizeObserver(measurement.schedule);
 
     resizeObserver.observe(scrollPane);
     resizeObserver.observe(listElement);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      scrollPane.removeEventListener("scroll", scheduleVisibleRangeMeasurement);
+      measurement.stop();
+      scrollPane.removeEventListener("scroll", measurement.schedule);
       resizeObserver.disconnect();
     };
 

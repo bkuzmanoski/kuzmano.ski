@@ -2,7 +2,7 @@ import { markdownPath } from "#/lib/content/paths.ts";
 
 import { collectionFeedOf } from "./feeds.ts";
 import { hasMarkdownRepresentation } from "./markdown-negotiation.ts";
-import { pageRoute } from "./routes.ts";
+import { entryRouteOf } from "./routes.ts";
 
 import type { Collection, Frontmatter } from "./catalog.ts";
 import type { FeedMetadata } from "./feeds.ts";
@@ -19,16 +19,10 @@ interface RepresentedEntry {
   frontmatter: Frontmatter | null;
 }
 
-export function entryAlternateRepresentationsOf({
-  collection,
-  slug,
-  frontmatter,
-}: RepresentedEntry): AlternateRepresentations {
+export function entryAlternateRepresentationsOf(entry: RepresentedEntry): AlternateRepresentations {
   return {
-    markdownRepresentationPath: hasMarkdownRepresentation(frontmatter)
-      ? markdownPath(collection ? collection.routeOf(slug) : pageRoute(slug))
-      : null,
-    feed: collection && collectionFeedOf(collection.route),
+    markdownRepresentationPath: hasMarkdownRepresentation(entry.frontmatter) ? markdownPath(entryRouteOf(entry)) : null,
+    feed: entry.collection && collectionFeedOf(entry.collection.route),
   };
 }
 

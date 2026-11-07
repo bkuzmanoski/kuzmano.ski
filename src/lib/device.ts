@@ -1,3 +1,5 @@
+import { mediaQueryListFor } from "./media-query.ts";
+
 /** Whether the device runs macOS, iOS, or iPadOS. */
 export const isApplePlatform = () => /Mac/i.test(navigator.userAgent); // The user agent of iOS includes "like Mac OS X".
 
@@ -10,4 +12,4 @@ export const isIOS = () =>
  * Whether no available pointer can hover. Evaluate this when needed because connected input devices may change between
  * interactions.
  */
-export const isTouchOnly = () => (window as Partial<Window>).matchMedia?.("(any-hover: none)").matches ?? false;
+export const isTouchOnly = () => mediaQueryListFor("(any-hover: none)")?.matches ?? false;

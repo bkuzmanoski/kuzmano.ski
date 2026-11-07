@@ -25,6 +25,15 @@ export interface Transform {
   y: number;
 }
 
+/** The straight-line distance between two points. */
+export const distanceBetween = (a: Position, b: Position) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/** The position of a pointer or mouse event in viewport coordinates. */
+export const clientPositionOf = (event: { clientX: number; clientY: number }): Position => ({
+  x: event.clientX,
+  y: event.clientY,
+});
+
 /** Whether a point falls within a rect, counting its edges as within. */
 export function containsPoint(rect: Rect, { x, y }: Position): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;

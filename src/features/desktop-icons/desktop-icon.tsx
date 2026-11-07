@@ -10,7 +10,6 @@ import FolderSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-selec
 import FolderDesktopIcon from "#/assets/images/desktop-icon-folder.svg?react";
 import DownloadDesktopIconIndicator from "#/assets/images/desktop-icon-indicator-download.svg?react";
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { iconHref } from "#/lib/desktop-icons/icon.ts";
 import type { Icon as IconDefinition, IconKind } from "#/lib/desktop-icons/icon.ts";
@@ -19,6 +18,7 @@ import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress } from "#/lib/press/press.ts";
 import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./desktop-icon.module.css";
 
@@ -131,7 +131,7 @@ export const DesktopIcon = memo(function Icon({
           hasMovedRef.current = false;
         }
       }}
-      {...mergeHandlers(mergeHandlers(pressSoundHandlers, dragHandlers), doublePressLinkHandlers)}
+      {...mergeHandlers(pressSoundHandlers, dragHandlers, doublePressLinkHandlers)}
       onFocus={() => onSelect(iconDefinition)}
       onKeyDown={(event) => onKeyDown(event, iconDefinition)}
     >

@@ -1,3 +1,5 @@
+import { hasFileExtension } from "./content/paths.ts";
+
 import type { MouseEvent as ReactMouseEvent } from "react";
 
 /**
@@ -42,8 +44,6 @@ export function sitePathPartsOf(sitePath: string): { pathname: string; search: s
 export type LinkDestination = "fragment" | "site" | "file" | "external" | "other";
 
 const WEB_PROTOCOLS = new Set(["http:", "https:"]);
-
-const hasFileExtension = (pathname: string) => /\.[^/]+$/.test(pathname);
 
 export function linkDestinationOf(href: string): LinkDestination {
   if (href.startsWith("#")) {

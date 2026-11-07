@@ -13,7 +13,7 @@ interface SiteCollection {
 
 /** Returns the site's `segment` collection and its listing. Throws if the collection does not exist. */
 export function siteCollection(segment: string): SiteCollection {
-  const collection = collections[segment];
+  const collection = collections.get(segment);
 
   if (!collection) {
     throw new Error(`This suite expects a \`${segment}\` collection.`);

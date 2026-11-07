@@ -47,7 +47,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   document.body.replaceChildren();
 });
 

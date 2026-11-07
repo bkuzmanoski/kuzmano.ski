@@ -1,12 +1,11 @@
-import remarkFrontmatter from "remark-frontmatter";
-import remarkMdx from "remark-mdx";
-import remarkParse from "remark-parse";
 import { parseSrcset, stringifySrcset } from "srcset";
-import { unified } from "unified";
 import { visitParents } from "unist-util-visit-parents";
 
 import type { MediaKind } from "#/lib/content/media.ts";
 
+import { isFileReference } from "../../paths.ts";
+
+import { entryParser } from "./entry-syntax.ts";
 import { elementNameOf, hasAttribute, hasSpreadAttribute, isJsxElement } from "./tree.ts";
 
 import type { ContentNode } from "./tree.ts";
@@ -16,17 +15,12 @@ const URL_ATTRIBUTES = new Set(["src", "poster"]);
 /** MDX keeps an attribute name as authored, so either spelling can appear. */
 const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]);
 
-const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
-
-const isRelativeReference = (reference: string) => reference.length > 0 && !NON_FILE_REFERENCE.test(reference);
-
 export function mediaDirectoryFileNameOf(reference: string): string | null {
   const fileName = reference.replace(/^\.\//, "");
   return fileName.includes("/") ? null : fileName;
 }
 
-/** A relative media reference, the kind of media its markup can render, and how to rewrite it. */
-export interface MediaReference {
+interface MediaReferenceFields {
   reference: string;
   /** `null` when the markup renders either kind, such as a component's `src`. */
   expected: MediaKind | null;
@@ -34,13 +28,23 @@ export interface MediaReference {
   canRenderAlternates: boolean;
   /** The Markdown image, definition, or element. */
   node: ContentNode;
-  /** `null` for Markdown URLs. */
-  attribute: string | null;
-  /** The video playing this source, if any. */
-  video: ContentNode | null;
   /** Preserves other `srcset` candidates and descriptors. */
   replace: (url: string) => void;
 }
+
+/**
+ * A relative media reference, the kind of media its markup can render, and how to rewrite it. A Markdown image or
+ * definition has a URL instead of an attribute, so only an element's attribute can name a `<video>` it plays.
+ */
+export type MediaReference = MediaReferenceFields &
+  (
+    | { attribute: null; video: null }
+    | {
+        attribute: string;
+        /** The `<video>` this `src` plays, or `null` for any other attribute. */
+        video: ContentNode | null;
+      }
+  );
 
 interface StringAttribute {
   name: string;
@@ -201,9 +205,7 @@ export function mediaReferencesIn(tree: ContentNode): Array<MediaReference> {
     }
   });
 
-  return mediaReferences.filter(({ reference }) => isRelativeReference(reference));
+  return mediaReferences.filter(({ reference }) => isFileReference(reference));
 }
 
-const parser = unified().use(remarkParse).use(remarkFrontmatter).use(remarkMdx);
-
-export const mediaReferencesInSource = (source: string) => mediaReferencesIn(parser.parse(source));
+export const mediaReferencesInSource = (source: string) => mediaReferencesIn(entryParser.parse(source));

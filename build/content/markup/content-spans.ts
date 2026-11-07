@@ -1,55 +1,29 @@
 import { visit } from "unist-util-visit";
 
 import { CONTENT_SPANS } from "#/lib/content/content-spans.ts";
-import { isOneOf } from "#/lib/guards.ts";
 
-import { elementNameOf, quotedEntryPathOf } from "./tree.ts";
+import { assertAttributeOneOf, elementNameOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
 const SPAN_ATTRIBUTE_NAME = "data-content-span";
 
-const isContentSpan = isOneOf(CONTENT_SPANS);
-
 /**
- * Reads the attribute from authored JSX, or from a hast element such as the `<picture>` that `rehypeMedia` moves an
- * authored `<img>`'s layout attributes to. Returns `undefined` when the element does not have the attribute.
+ * Throws if an entry renders an element whose `data-content-span` attribute is not one of `CONTENT_SPANS`. Checks
+ * authored JSX and hast elements, such as the `<picture>` that `rehypeMedia` moves an authored `<img>`'s layout
+ * attributes to.
  */
-function spanAttributeOf(node: ContentNode): { value?: unknown } | undefined {
-  if (node.attributes) {
-    return node.attributes.find(({ name }) => name === SPAN_ATTRIBUTE_NAME);
-  }
-
-  if (node.properties && SPAN_ATTRIBUTE_NAME in node.properties) {
-    return { value: node.properties[SPAN_ATTRIBUTE_NAME] };
-  }
-
-  return undefined;
-}
-
-/** Throws if an entry renders an element whose `data-content-span` attribute is not one of `CONTENT_SPANS`. */
 export function rehypeContentSpans() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node: ContentNode) => {
-      const spanAttribute = spanAttributeOf(node);
-
-      if (spanAttribute === undefined) {
-        return;
-      }
-
-      const { value } = spanAttribute;
-
-      if (typeof value !== "string" || !isContentSpan(value)) {
-        const elementName = elementNameOf(node);
-        const writtenElement =
-          typeof value === "string"
-            ? `\`<${elementName} ${SPAN_ATTRIBUTE_NAME}="${value}">\``
-            : `\`<${elementName}>\` with a \`${SPAN_ATTRIBUTE_NAME}\` attribute ${value === null || value === undefined ? "without a value" : "authored as an expression"}`;
-
-        throw new Error(
-          `${quotedEntryPathOf(file)} renders ${writtenElement}. Expected one of: ${CONTENT_SPANS.join(", ")}.`,
-        );
-      }
+      const elementName = elementNameOf(node);
+      assertAttributeOneOf(node, SPAN_ATTRIBUTE_NAME, CONTENT_SPANS, {
+        file,
+        describeElement: (authoredValue) =>
+          authoredValue.kind === "string"
+            ? `\`<${elementName} ${SPAN_ATTRIBUTE_NAME}="${authoredValue.value}">\``
+            : `\`<${elementName}>\` with a \`${SPAN_ATTRIBUTE_NAME}\` attribute ${authoredValue.kind}`,
+      });
     });
   };
 }

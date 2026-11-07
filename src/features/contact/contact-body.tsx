@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 
 import { Alert } from "#/components/alert.tsx";
 import { Button } from "#/components/button.tsx";
@@ -16,12 +15,13 @@ import {
   characterCountDescription,
   characterCountStatus,
 } from "#/lib/contact/character-count.ts";
-import { SEND_FAILED_MESSAGE, sendMessage } from "#/lib/contact/client.ts";
+import { SEND_FAILED_MESSAGE } from "#/lib/contact/client.ts";
 import { CONTACT_SCHEMA, EMPTY_MESSAGE, MESSAGE_MAX_LENGTH } from "#/lib/contact/message.ts";
 import { NO_ALERT, alertFor } from "#/lib/contact/prompt.ts";
 import type { Prompt } from "#/lib/contact/prompt.ts";
 import { useContactEmailAddress } from "#/lib/contact/use-contact-email-address.ts";
-import { firstMessage } from "#/lib/forms/client.ts";
+import { useSendMessage } from "#/lib/contact/use-send-message.ts";
+import { focusAfterClosingAlert } from "#/lib/focus.ts";
 import { useForm } from "#/lib/forms/use-form.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
 import { INITIAL_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
@@ -50,15 +50,24 @@ export function ContactBody() {
   const messageField = useInputField(form.visibleErrors.message, {
     describedBy: isCharacterCountVisible ? characterCountId : undefined,
   });
-  const [isSending, setIsSending] = useState(false);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const fromFieldRef = useRef<HTMLInputElement>(null);
   const messageFieldRef = useRef<HTMLTextAreaElement>(null);
   const { metrics: messageMetrics, measure: measureMessage } = useScrollMetrics(messageFieldRef);
   const messageFieldScrollSound = useInputScrollSound<HTMLTextAreaElement>();
-  const sendAttemptRef = useRef<AbortController | null>(null);
   const elementFocusedAtSendRef = useRef<HTMLElement | null>(null);
+
   const visibleNumberFormat = new Intl.NumberFormat(useLocale(SITE_LOCALE));
+
+  const messageSend = useSendMessage({
+    onSent: () => {
+      form.reset();
+      setPrompt({ kind: "sent" });
+    },
+    onFailure: (failure) => setPrompt({ kind: "failed", ...failure }),
+  });
+
+  const { isSending } = messageSend;
 
   const hasUnsavedInput = form.isDirty;
   const promptAlert = prompt ? alertFor(prompt, contactEmailAddress) : NO_ALERT;
@@ -93,56 +102,23 @@ export function ContactBody() {
       return;
     }
 
-    const sendController = new AbortController();
-
-    sendAttemptRef.current = sendController;
     elementFocusedAtSendRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    setIsSending(true);
-
-    const sendResult = await sendMessage(form.values, sendController.signal);
-
-    if (sendController.signal.aborted) {
-      return;
-    }
-
-    sendAttemptRef.current = null;
-    setIsSending(false);
-
-    if (sendResult.status === "sent") {
-      form.reset();
-      setPrompt({ kind: "sent" });
-
-      return;
-    }
-
-    setPrompt(
-      sendResult.status === "invalid"
-        ? { kind: "failed", message: firstMessage(sendResult.errors, SEND_FAILED_MESSAGE) }
-        : { kind: "failed", message: sendResult.message, suggestDirectEmail: true },
-    );
-  }
-
-  function cancelSend() {
-    sendAttemptRef.current?.abort();
-    sendAttemptRef.current = null;
-    setIsSending(false);
+    await messageSend.send(form.values);
   }
 
   function closePrompt() {
     const invalidField = prompt?.kind === "incomplete" ? prompt.field : null;
+    const fieldRef = invalidField === "from" ? fromFieldRef : messageFieldRef;
 
-    flushSync(() => setPrompt(null));
-
-    if (invalidField) {
-      (invalidField === "from" ? fromFieldRef : messageFieldRef).current?.focus();
-    } else if (prompt?.kind === "failed") {
-      elementFocusedAtSendRef.current?.focus();
-    }
+    focusAfterClosingAlert(
+      () => setPrompt(null),
+      invalidField ? fieldRef.current : prompt?.kind === "failed" ? elementFocusedAtSendRef.current : null,
+    );
   }
 
   function confirmDiscard() {
-    cancelSend();
+    messageSend.cancel();
     setPrompt(null);
     forceCloseWindow();
   }

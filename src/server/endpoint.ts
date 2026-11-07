@@ -2,7 +2,7 @@ import type { ParsedSubmission } from "#/lib/forms/submission.ts";
 import { isRecord } from "#/lib/guards.ts";
 
 import { isWithinRateLimit } from "./rate-limit.ts";
-import { exceedsMaxLength, isSameOrigin, isSameOriginFetch } from "./request.ts";
+import { declaresExcessiveLength, isSameOrigin, isSameOriginFetch, readBodyWithinMaxLength } from "./request.ts";
 
 import type { RateLimitBindingName } from "./bindings.ts";
 
@@ -48,7 +48,7 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
     return refuse(403);
   }
 
-  if (exceedsMaxLength(request)) {
+  if (declaresExcessiveLength(request)) {
     return refuse(413);
   }
 
@@ -56,9 +56,9 @@ export async function readSubmission(request: Request, rateLimit?: RateLimitBind
     return refuse(429);
   }
 
-  const bodyText = await request.text();
+  const bodyText = await readBodyWithinMaxLength(request);
 
-  if (exceedsMaxLength(bodyText)) {
+  if (bodyText === null) {
     return refuse(413);
   }
 

@@ -59,7 +59,7 @@ const pluginNamed = (plugins: Array<Plugin>, name: string) => {
   return plugin;
 };
 
-const devServerPlugins = markdownPlugin({ addHeadersRules: () => undefined });
+const devServerPlugins = markdownPlugin();
 const middleware = devServerMiddlewareOf(pluginNamed(devServerPlugins, "kuzmano.ski:markdown-emit"), DEV_SERVER);
 
 const requestFor = (url: string, acceptHeader?: string, presetVary?: string) =>
@@ -185,7 +185,7 @@ describe("reading entry data", () => {
   });
 
   test("renders the Markdown files of a build with `readEntryDataModule`", async () => {
-    const plugins = markdownPlugin({ addHeadersRules: () => undefined });
+    const plugins = markdownPlugin();
     const generateBundle = hookOf<ContextHook>(pluginNamed(plugins, "kuzmano.ski:markdown-emit"), "generateBundle");
     vi.mocked(renderedMarkdownFilesFor).mockClear();
 
@@ -212,7 +212,7 @@ describe("building", () => {
   }
 
   test("emits the Markdown files and serves the token counts from one render", async () => {
-    const plugins = markdownPlugin({ addHeadersRules: () => undefined });
+    const plugins = markdownPlugin();
     const loadTokenCounts = hookOf<LoadHook>(pluginNamed(plugins, "kuzmano.ski:markdown-token-counts"), "load");
     const rendersBefore = renders.count;
     const pageMarkdown = await emittedPageMarkdownOf(plugins);

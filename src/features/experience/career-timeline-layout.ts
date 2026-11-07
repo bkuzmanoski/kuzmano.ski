@@ -1,4 +1,5 @@
-import type { CareerTimelinePlacement, CareerTimelineViewport } from "#/lib/experience/career-timeline.ts";
+import type { CareerTimelineViewport } from "#/lib/experience/career-timeline-viewport.ts";
+import type { CareerTimelinePlacement } from "#/lib/experience/career-timeline.ts";
 
 import type { RefObject } from "react";
 

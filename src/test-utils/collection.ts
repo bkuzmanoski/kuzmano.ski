@@ -48,7 +48,8 @@ export function fakeContentIndex(entries: Array<Entry>, directoryName = COLLECTI
 
       // Memoized and tracked, as the real catalog memoizes and tracks, so a body that has already loaded renders
       // without suspending again.
-      const module = modules.get(slug) ?? trackPromise(Promise.resolve({ default: fakeBody(slug) }));
+      const module =
+        modules.get(slug) ?? trackPromise(Promise.resolve({ default: fakeBody(slug), stylesheetClassNames: {} }));
 
       modules.set(slug, module);
 

@@ -4,13 +4,14 @@ import { ENTRY_COVER_IMAGES } from "virtual:entry-cover-images";
 import displayFontUrl from "#/assets/fonts/Archivo-Variable.woff2?url";
 import bitmapFontUrl from "#/assets/fonts/QuantaStrike12-Regular.woff2?url";
 import bodyFontUrl from "#/assets/fonts/SourceSerif4-Variable-Opsz14-Subset.woff2?url";
+import { isDraft } from "#/lib/content/frontmatter.ts";
 import { preloadFont } from "#/lib/fonts.ts";
 
 import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";
 import { pages } from "./catalog.ts";
 import { documentHead } from "./metadata.ts";
 import { resolveContent } from "./resolve-content.ts";
-import { collectionRoute, entryRoute, isDeclaredPageSlug, pageRoute } from "./routes.ts";
+import { collectionRoute, entryRouteOf, isDeclaredPageSlug } from "./routes.ts";
 
 import type { ContentIndex, Frontmatter } from "./catalog.ts";
 import type { DocumentMetadata } from "./metadata.ts";
@@ -55,25 +56,21 @@ export const contentRoute = {
 
     switch (content.kind) {
       case "page":
-        await loadBodyBeforeServerRender(pages, content.slug);
-        return entryDocumentMetadata(content.frontmatter, {
-          path: pageRoute(content.slug),
-          bodyChunks: pages.bodyChunksOf(content.slug),
-          coverImage: ENTRY_COVER_IMAGES[pages.entryKeyOf(content.slug)] ?? null,
-          ...entryAlternateRepresentationsOf({ ...content, collection: null }),
-          noindex: content.frontmatter?.draft === true || !isDeclaredPageSlug(content.slug),
-        });
+      case "collectionEntry": {
+        const entry = { ...content, collection: content.kind === "page" ? null : content.collection };
+        const contentIndex: ContentIndex = entry.collection ?? pages;
 
-      case "collectionEntry":
-        await loadBodyBeforeServerRender(content.collection, content.slug);
-        return entryDocumentMetadata(content.frontmatter, {
-          path: entryRoute(params.segment, content.slug),
-          kind: "article",
-          bodyChunks: content.collection.bodyChunksOf(content.slug),
-          coverImage: ENTRY_COVER_IMAGES[content.collection.entryKeyOf(content.slug)] ?? null,
-          ...entryAlternateRepresentationsOf(content),
-          noindex: content.frontmatter?.draft === true,
+        await loadBodyBeforeServerRender(contentIndex, entry.slug);
+
+        return entryDocumentMetadata(entry.frontmatter, {
+          path: entryRouteOf(entry),
+          kind: entry.collection ? "article" : "website",
+          bodyChunks: contentIndex.bodyChunksOf(entry.slug),
+          coverImage: ENTRY_COVER_IMAGES[contentIndex.entryKeyOf(entry.slug)] ?? null,
+          ...entryAlternateRepresentationsOf(entry),
+          noindex: isDraft(entry.frontmatter) || (!entry.collection && !isDeclaredPageSlug(entry.slug)),
         });
+      }
 
       case "collection":
         return {

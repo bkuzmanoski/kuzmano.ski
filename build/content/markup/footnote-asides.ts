@@ -2,7 +2,7 @@ import { visit } from "unist-util-visit";
 import { visitParents } from "unist-util-visit-parents";
 
 import { FOOTNOTE_COMPONENT_NAME, RAIL_COMPONENT_NAME } from "./rail-asides.ts";
-import { elementNameOf, isJsxElement, isWhitespaceOrComment, quotedEntryPathOf } from "./tree.ts";
+import { elementNameOf, isJsxElement, isJsxElementNamed, isWhitespaceOrComment, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
@@ -45,10 +45,10 @@ const footnoteReferenceIdOf = (identifier: string, occurrence: number) =>
   `fnref-${idOf(identifier)}${occurrence > 1 ? `-${occurrence}` : ""}`;
 
 const isLink = (node: ContentNode) =>
-  node.type === "link" || node.type === "linkReference" || (isJsxElement(node) && elementNameOf(node) === "a");
+  node.type === "link" || node.type === "linkReference" || isJsxElementNamed(node, "a");
 const isHeading = (node: ContentNode) =>
   node.type === "heading" || (isJsxElement(node) && /^h[1-6]$/.test(elementNameOf(node) ?? ""));
-const isRail = (node: ContentNode) => isJsxElement(node) && elementNameOf(node) === RAIL_COMPONENT_NAME;
+const isRail = (node: ContentNode) => isJsxElementNamed(node, RAIL_COMPONENT_NAME);
 const isFootnoteDefinition = (node: ContentNode): node is FootnoteDefinition => node.type === "footnoteDefinition";
 
 function containerDescriptionOf(container: ContentNode): string {
@@ -153,7 +153,7 @@ export function remarkFootnoteAsides() {
     assertReferencesDefined(tree, file); // Runs before the definitions are removed from the tree, so it reads the text inside them too.
 
     visit(tree, (node: ContentNode) => {
-      if (isJsxElement(node) && elementNameOf(node) === FOOTNOTE_COMPONENT_NAME) {
+      if (isJsxElementNamed(node, FOOTNOTE_COMPONENT_NAME)) {
         throw new Error(
           `${entryPath} renders a \`${FOOTNOTE_COMPONENT_NAME}\`, which the build emits for each footnote.`,
         );

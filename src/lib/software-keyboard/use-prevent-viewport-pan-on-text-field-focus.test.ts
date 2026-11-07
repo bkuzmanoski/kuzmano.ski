@@ -39,8 +39,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
   scrollIntoViewSilently.mockClear();
   document.body.replaceChildren();
   document.documentElement.removeAttribute("style");

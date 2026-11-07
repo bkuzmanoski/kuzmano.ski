@@ -59,7 +59,6 @@ const OTHER_EXPERIENCE: Experience = {
   ...EXPERIENCE,
   roles: [{ ...EXPERIENCE.roles[0]!, title: "Other Role", organization: "Other Organization" }],
 };
-
 const ENTRY_DATA_MODULE: EntryDataModule = {
   RECORD: EXPERIENCE,
   OTHER_RECORD: OTHER_EXPERIENCE,
@@ -74,8 +73,15 @@ const readEntryDataModule = vi.fn((absolutePath: string) =>
 
 const mediaForEntry: MediaForEntry = (absolutePath) =>
   Promise.resolve((reference: string) => (absolutePath === ENTRY_ABSOLUTE_PATH ? (MEDIA[reference] ?? null) : null));
-const markdownFor = markdownRendererFor();
-const markdownWithMediaFor = markdownRendererFor(mediaForEntry);
+
+const FIXTURE_COMPONENTS_REPLACED_BY_CHILDREN = new Set(["Emphasis", "Figure", "Note", "Panel", "Strong"]);
+
+const markdownFor = markdownRendererFor({
+  componentsReplacedByChildren: FIXTURE_COMPONENTS_REPLACED_BY_CHILDREN,
+});
+
+const markdownWithMediaFor = markdownRendererFor({ mediaForEntry });
+
 const entryDataMarkdownFor = (source: string) =>
   markdownFor(`${FRONTMATTER}${source}`, { path: fromContent("collection/entry.mdx"), readEntryDataModule });
 
@@ -144,7 +150,7 @@ A paragraph.`);
     expect(markdown).toContain("Body.");
   });
 
-  test("replaces a component with its children", async () => {
+  test("replaces a component in `componentsReplacedByChildren` with its children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <Note>
         A wrapped paragraph.
@@ -159,7 +165,19 @@ A paragraph.`);
     expect(markdown).toContain("A wrapped phrase.");
   });
 
-  test("omits a component without children", async () => {
+  test("throws for a component without fallback Markdown that the build does not replace with its children", async () => {
+    await expect(
+      markdownRendererFor({ componentsReplacedByChildren: new Set() })(`${FRONTMATTER}
+      <Note>
+        A wrapped paragraph.
+      </Note>
+    `),
+    ).rejects.toThrow(
+      "An entry without a path renders `Note` without fallback Markdown. Expected a component in `COMPONENT_MARKDOWN` or `COMPONENTS_REPLACED_BY_CHILDREN` in `build/markdown/component-markdown.ts`.",
+    );
+  });
+
+  test("omits a component in `componentsReplacedByChildren` without children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <Figure src="/a.png" />
 
@@ -168,7 +186,7 @@ A paragraph.`);
     expect(markdown).not.toContain("Figure");
   });
 
-  test("replaces a component nested inside another with its children", async () => {
+  test("replaces a component in `componentsReplacedByChildren`, nested inside another, with its children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <Note>
         <Panel>
@@ -196,7 +214,7 @@ A paragraph.`);
     expect(markdown).toContain(fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`));
   });
 
-  test("replaces a component nested inside another, authored inside a sentence, with its children", async () => {
+  test("replaces a component in `componentsReplacedByChildren`, nested inside another and authored inside a sentence, with its children", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       A <Emphasis>phrase <Strong>within</Strong> a phrase</Emphasis>.
     `);
@@ -210,7 +228,7 @@ A paragraph.`);
     expect(markdown).toContain("A wrapped word.");
   });
 
-  test("omits an expression and a component without children nested inside another", async () => {
+  test("omits an expression and a component in `componentsReplacedByChildren` without children nested inside another", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <Note>
         <Figure src="/image.png" />

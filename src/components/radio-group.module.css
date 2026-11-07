@@ -44,7 +44,6 @@
   }
 
   input:focus-visible + & {
-    outline: 1px dotted var(--color-focus-ring); /* An outline rather than `focus-stroke` so it is concentric with the circle. */
-    outline-offset: 1px;
+    @mixin focus-outline-dotted;
   }
 }

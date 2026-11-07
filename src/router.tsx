@@ -10,7 +10,7 @@ export function getRouter(history?: RouterHistory) {
   const router = createTanStackRouter({
     routeTree,
     history,
-    scrollRestoration: false,
+    scrollRestoration: false, // The router identifies a scrolled element by its position in the DOM, so it would scroll a window showing a new entry to where the user left the previous entry. Each window keeps its own position instead.
     trailingSlash: "never",
     defaultPreload: "intent",
     defaultPreloadStaleTime: Infinity,

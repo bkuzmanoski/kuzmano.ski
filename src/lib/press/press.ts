@@ -41,6 +41,23 @@ export function isSimulatedMouseDown(event: ReactMouseEvent | MouseEvent): boole
 }
 
 /**
+ * Calls `onRelease` when the next `pointerup` or `pointercancel` occurs anywhere in the window, then stops listening.
+ * Returns a cleanup function that stops listening without calling `onRelease` (i.e., when the component unmounts).
+ */
+export function listenForPointerRelease(onRelease: () => void): () => void {
+  const controller = new AbortController();
+  const release = () => {
+    controller.abort();
+    onRelease();
+  };
+
+  window.addEventListener("pointerup", release, { signal: controller.signal });
+  window.addEventListener("pointercancel", release, { signal: controller.signal });
+
+  return () => controller.abort();
+}
+
+/**
  * Releases the pointer capture the browser implicitly sets on the element a touch lands on, so the pointer can reach
  * other elements while the finger stays down.
  */

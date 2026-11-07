@@ -1,40 +1,33 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import { workerEnvState as env } from "#/test-utils/worker-env.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
 import { SENDER, deliverMessage } from "./mail.ts";
 
 import type { WorkerEnv } from "cloudflare:workers";
 
-const env = vi.hoisted(() => ({ current: {}, fails: false }));
-
-vi.mock("./env.ts", () => ({
-  workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
-}));
+vi.mock("./env.ts", async () => (await import("#/test-utils/worker-env.ts")).workerEnvMock());
 
 const DESTINATION_EMAIL_ADDRESS = "inbox@example.com";
+
+const send = vi.fn<NonNullable<WorkerEnv["SEND_EMAIL"]>["send"]>();
+
+beforeEach(() => {
+  send.mockReset();
+  send.mockResolvedValue({ messageId: "1" });
+  env.current = { [SEND_EMAIL_BINDING]: { send }, [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION_EMAIL_ADDRESS };
+  vi.spyOn(console, "error").mockReturnValue();
+});
+
 const MESSAGE = {
   replyTo: "sender@example.com",
   subject: "Message from sender@example.com",
   text: "Hello.",
 };
-
-const send = vi.fn<NonNullable<WorkerEnv["SEND_EMAIL"]>["send"]>();
-
 const rejectWith = (code: string) => {
   send.mockRejectedValue(Object.assign(new Error(code), { code }));
 };
-
-beforeEach(() => {
-  send.mockReset();
-  send.mockResolvedValue({ messageId: "1" });
-  env.fails = false;
-  env.current = { [SEND_EMAIL_BINDING]: { send }, [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION_EMAIL_ADDRESS };
-  vi.spyOn(console, "error").mockReturnValue();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 test("a message is addressed to the configured destination email address, with its sender as the reply-to address", async () => {
   await expect(deliverMessage(MESSAGE)).resolves.toBe("sent");
@@ -47,17 +40,14 @@ test("a message is addressed to the configured destination email address, with i
   });
 });
 
-describe("expected bindings", () => {
-  test.each([
-    ["send email", { [CONTACT_EMAIL_ADDRESS_BINDING]: DESTINATION_EMAIL_ADDRESS }, SEND_EMAIL_BINDING],
-    ["destination email address", { [SEND_EMAIL_BINDING]: { send } }, CONTACT_EMAIL_ADDRESS_BINDING],
-  ])("a missing %s binding is reported without sending a message", async (_label, partial, binding) => {
-    env.current = partial;
+test("a missing binding produces `unavailable` and logs the `contact_binding_missing` event, without sending a message", async () => {
+  env.current = { [SEND_EMAIL_BINDING]: { send } };
 
-    await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
-    expect(send).not.toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ binding }));
-  });
+  await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
+  expect(send).not.toHaveBeenCalled();
+  expect(console.error).toHaveBeenCalledWith(
+    expect.objectContaining({ event: "contact_binding_missing", binding: CONTACT_EMAIL_ADDRESS_BINDING }),
+  );
 });
 
 test.each([
@@ -71,7 +61,7 @@ test.each([
   await expect(deliverMessage(MESSAGE)).resolves.toBe(delivery);
 });
 
-test("a rejection without a code produces `unavailable` and is logged with an unknown code", async () => {
+test("a rejection without a code produces `unavailable` and logs its code as `unknown`", async () => {
   send.mockRejectedValue("nope");
 
   await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
@@ -92,11 +82,4 @@ test("the message body is never logged", async () => {
   await deliverMessage(MESSAGE);
 
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain(MESSAGE.text);
-});
-
-test("an unreachable Workers environment produces `unavailable` and is reported", async () => {
-  env.fails = true;
-
-  await expect(deliverMessage(MESSAGE)).resolves.toBe("unavailable");
-  expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ event: "contact_binding_missing" }));
 });

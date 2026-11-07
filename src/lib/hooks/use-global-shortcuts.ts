@@ -1,6 +1,6 @@
-import { useEffect, useEffectEvent } from "react";
-
 import { isEditableTarget } from "../keys.ts";
+
+import { useEventListeners } from "./use-event-listeners.ts";
 
 /**
  * A global keyboard shortcut. Modifier is Option/Alt. `code` is the physical key from KeyboardEvent.code. `key` is not
@@ -14,32 +14,24 @@ export interface KeyboardShortcut {
 }
 
 export function useGlobalShortcuts(shortcuts: Array<KeyboardShortcut>) {
-  const runMatch = useEffectEvent((event: KeyboardEvent) => {
-    const isEditing = isEditableTarget(event.target);
-    const matchedShortcut = shortcuts.find(
-      (shortcut) =>
-        shortcut.code === event.code &&
-        shortcut.enabled !== false &&
-        (!isEditing || shortcut.invokesWhileEditing === true),
-    );
-
-    if (matchedShortcut) {
-      event.preventDefault();
-      matchedShortcut.run();
-    }
-  });
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
+  useEventListeners("window", {
+    keydown: (event) => {
       if (!event.altKey || event.metaKey || event.ctrlKey) {
         return;
       }
 
-      runMatch(event);
-    }
+      const isEditing = isEditableTarget(event.target);
+      const matchedShortcut = shortcuts.find(
+        (shortcut) =>
+          shortcut.code === event.code &&
+          shortcut.enabled !== false &&
+          (!isEditing || shortcut.invokesWhileEditing === true),
+      );
 
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+      if (matchedShortcut) {
+        event.preventDefault();
+        matchedShortcut.run();
+      }
+    },
+  });
 }

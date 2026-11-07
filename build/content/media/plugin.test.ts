@@ -6,19 +6,17 @@ import type { CoverImage } from "#/lib/content/media.ts";
 import { mediaRoute } from "#/lib/content/paths.ts";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../../environments.ts";
-import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
+import { IMMUTABLE_CACHE_CONTROL, headersMatchingPathIn, matchableHeadersRuleFrom } from "../../headers.ts";
 import { fromContent } from "../../paths.ts";
 import { devServerMiddlewareOf } from "../../test-utils/dev-server.ts";
-import { headersRulesAddedAtBuildStartBy } from "../../test-utils/headers.ts";
 import { hookOf } from "../../test-utils/plugin-hooks.ts";
 
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID } from "./entry-cover-images.ts";
 import { RESOLVED_ENTRY_ICON_URLS_MODULE_ID } from "./entry-icon-urls.ts";
-import { contentMedia } from "./plugin.ts";
+import { MEDIA_HEADERS_RULE, contentMedia } from "./plugin.ts";
 
 import type * as mediaIndexModule from "./media-index.ts";
 import type { MediaIndex } from "./media-index.ts";
-import type { AddHeadersRules } from "../../headers.ts";
 import type { Plugin } from "vite";
 
 const { indexBuilds, buildMediaIndex } = vi.hoisted(() => {
@@ -101,7 +99,7 @@ function setUpContentMedia() {
 
   const warn = vi.fn<(message: string) => void>();
   const logger: Logger = { warn, error: vi.fn() };
-  const { plugins, mediaForEntry } = contentMedia({ addHeadersRules: () => undefined });
+  const { plugins, mediaForEntry } = contentMedia();
   const mediaPlugin: Plugin = plugins.find((plugin) => plugin.name === "kuzmano.ski:content-media")!;
 
   hookOf<(config: { logger: Logger }) => void>(mediaPlugin, "configResolved")({ logger });
@@ -148,9 +146,6 @@ function setUpContentMedia() {
     staleModuleIdsAfterRebuild,
   };
 }
-
-const mediaPluginFor = (options: { addHeadersRules: AddHeadersRules }) =>
-  contentMedia(options).plugins.find((plugin) => plugin.name === "kuzmano.ski:content-media")!;
 
 describe("contentMedia", () => {
   test("resolves a reference through the newest index build when an earlier build finishes after it", async () => {
@@ -445,17 +440,10 @@ describe("contentMedia", () => {
   });
 });
 
-describe("the content media plugin", () => {
-  test("adds an immutable `Cache-Control` and `Content-Signal` rule for `/media/*` to `_headers` when the client environment starts", async () => {
-    expect(await headersRulesAddedAtBuildStartBy(mediaPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
-      expect.objectContaining({
-        pathPatterns: [mediaRoute("*")],
-        headers: { "Cache-Control": IMMUTABLE_CACHE_CONTROL, "Content-Signal": CONTENT_SIGNAL },
-      }),
-    ]);
-  });
-
-  test("adds rules to `_headers` from the client environment only", async () => {
-    expect(await headersRulesAddedAtBuildStartBy(mediaPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
-  });
+test("`MEDIA_HEADERS_RULE` sets an immutable `Cache-Control` and a `Content-Signal` on a media URL", () => {
+  expect(
+    Object.fromEntries(
+      headersMatchingPathIn([matchableHeadersRuleFrom(MEDIA_HEADERS_RULE)], mediaRoute("0123456789abcdef.png")),
+    ),
+  ).toEqual({ "cache-control": IMMUTABLE_CACHE_CONTROL, "content-signal": CONTENT_SIGNAL });
 });

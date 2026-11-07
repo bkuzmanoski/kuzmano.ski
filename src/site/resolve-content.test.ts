@@ -39,15 +39,17 @@ test("a segment that is neither a collection nor a page resolves to not found", 
   expect(resolveContent("unknown-segment", "unknown-entry")).toEqual({ kind: "notFound" });
 });
 
+test("a segment matching an inherited object property resolves to not found", () => {
+  expect(resolveContent("constructor")).toEqual({ kind: "notFound" });
+  expect(resolveContent("constructor", "slug")).toEqual({ kind: "notFound" });
+});
+
 test("a segment corresponding to a collection resolves to that collection", () => {
   expect(resolveContent("collection")).toEqual({ kind: "collection", collection });
 });
 
-test("a segment corresponding to a feature resolves to its feature route", () => {
-  expect(resolveContent(FEATURE_ROUTE_SPECS.contact.route.slice(1))).toEqual({
-    kind: "feature",
-    route: FEATURE_ROUTE_SPECS.contact.route,
-  });
+test("a segment corresponding to a feature resolves to the ID of its feature route", () => {
+  expect(resolveContent(FEATURE_ROUTE_SPECS.contact.route.slice(1))).toEqual({ kind: "feature", id: "contact" });
 });
 
 test("a feature segment with an additional slug resolves to not found", () => {

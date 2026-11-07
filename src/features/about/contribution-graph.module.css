@@ -9,14 +9,9 @@
 }
 
 .scrollContainerFrame {
-  position: relative;
+  @mixin dither-06-inline-size;
 
-  @supports (width: round(down, 1px, 1px)) {
-    /* A width of 4n + 1 dots starts and ends the field on a column of dots. */
-    inline-size: calc(
-      round(down, 100% - var(--layout-bitmap-pixel), 4 * var(--layout-bitmap-pixel)) + var(--layout-bitmap-pixel)
-    );
-  }
+  position: relative;
 
   &:has(> :focus-visible) {
     @mixin focus-stroke -2px;
@@ -46,19 +41,11 @@
   min-inline-size: 100%;
   margin-inline-end: auto;
 
-  &::before {
-    @mixin dither-06;
-
-    content: "";
-
-    position: absolute;
-    z-index: -1;
+  @mixin dither-06-behind {
     inset: calc(-1 * var(--contribution-graph-step));
 
     /* Ends at the padding box, which a field that extended past it would scroll vertically. */
     inset-block-end: calc(-1 * var(--contribution-graph-padding-block-end));
-
-    color: var(--color-dither-pattern);
 
     @media (forced-colors: active) {
       color: GrayText;

@@ -1,41 +1,46 @@
 // Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
 
-export function readStored(key: string): string | null {
+type StorageArea = () => Storage;
+
+const LOCAL_STORAGE: StorageArea = () => localStorage;
+export const SESSION_STORAGE: StorageArea = () => sessionStorage;
+
+export function readStored(key: string, storageArea = LOCAL_STORAGE): string | null {
   try {
-    return localStorage.getItem(key);
+    return storageArea().getItem(key);
   } catch {
     return null;
   }
 }
 
-export function readStoredJson(key: string): unknown {
+export function readStoredJson(key: string, storageArea = LOCAL_STORAGE): unknown {
   try {
-    const rawValue = localStorage.getItem(key);
+    const rawValue = storageArea().getItem(key);
     return rawValue === null ? null : JSON.parse(rawValue);
   } catch {
     return null;
   }
 }
 
-export function writeStored(key: string, value: string) {
+export function writeStored(key: string, value: string, storageArea = LOCAL_STORAGE) {
   try {
-    localStorage.setItem(key, value);
+    storageArea().setItem(key, value);
   } catch {
     // Ignored.
   }
 }
 
-export function removeStored(key: string) {
+export function removeStored(key: string, storageArea = LOCAL_STORAGE) {
   try {
-    localStorage.removeItem(key);
+    storageArea().removeItem(key);
   } catch {
     // Ignored.
   }
 }
 
-export function clearStorage() {
+export function clearStorage(storageArea = LOCAL_STORAGE) {
   try {
-    localStorage.clear();
+    storageArea().clear();
   } catch {
     // Ignored.
   }

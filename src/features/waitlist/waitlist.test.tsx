@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { SITE_URL } from "#/config/site.ts";
 import { RenderedEntryContext } from "#/lib/content/rendered-entry.ts";
@@ -38,10 +38,6 @@ beforeEach(() => {
   fetchMock.mockImplementation(() => joinResponse);
   playErrorSound.mockClear();
   playSuccessSound.mockClear();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 const renderWaitlist = (children?: ReactNode, { list = "List", title }: { list?: string; title?: string } = {}) =>

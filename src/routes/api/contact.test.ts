@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { API_ROUTES } from "#/api-routes.ts";
 import { CONTACT_EMAIL_ADDRESS_RATELIMIT_BINDING, SEND_EMAIL_RATELIMIT_BINDING } from "#/server/bindings.ts";
 import type { DeliveryResult } from "#/server/mail.ts";
-import { getRequestFromSite, jsonPostRequest } from "#/test-utils/requests.ts";
+import { getRequestFromSite, jsonPostRequest, requestHandlersOf } from "#/test-utils/requests.ts";
 
 import { Route } from "./contact.ts";
 
@@ -32,14 +32,7 @@ const VALID_SUBMISSION = {
   message: "Hello.",
 };
 
-/**
- * The exported route handler, so the tests exercise the endpoint as the site serves it. This route exports a handler
- * record rather than a handler factory.
- */
-const { GET, POST } = Route.options.server!.handlers as unknown as {
-  GET: (context: { request: Request }) => Promise<Response>;
-  POST: (context: { request: Request }) => Promise<Response>;
-};
+const { GET, POST } = requestHandlersOf(Route);
 
 const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
   GET({ request: getRequestFromSite(ENDPOINT_URL, options) });

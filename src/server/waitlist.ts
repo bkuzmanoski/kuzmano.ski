@@ -4,8 +4,8 @@ import { isRecord } from "#/lib/guards.ts";
 import type { Membership } from "#/lib/waitlist/membership.ts";
 
 import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings.ts";
-import { workerEnv } from "./env.ts";
-import { logServerEvent, reportMissingBinding } from "./log.ts";
+import { logServerEvent } from "./log.ts";
+import { readBindings } from "./read-bindings.ts";
 
 import type { ServerLogEvent } from "./log.ts";
 
@@ -33,8 +33,6 @@ interface NotionCredentials {
   dataSourceId: string;
 }
 
-const reportMissingWaitlistBinding = (binding: string) => reportMissingBinding("waitlist_binding_missing", binding);
-
 type WaitlistFailureEvent = Extract<ServerLogEvent, `waitlist_${string}_failed`>;
 
 async function reportFailedResponse(event: WaitlistFailureEvent, response: Response) {
@@ -49,29 +47,9 @@ function reportFailedRequest(event: WaitlistFailureEvent, error: unknown) {
 }
 
 async function readNotionCredentials(): Promise<NotionCredentials | null> {
-  let env;
+  const bindings = await readBindings("waitlist_binding_missing", [NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING]);
 
-  try {
-    env = await workerEnv();
-  } catch {
-    reportMissingWaitlistBinding("the Workers environment");
-    return null;
-  }
-
-  const token = env[NOTION_TOKEN_BINDING];
-  const dataSourceId = env[WAITLIST_DATA_SOURCE_BINDING];
-
-  if (!token) {
-    reportMissingWaitlistBinding(NOTION_TOKEN_BINDING);
-    return null;
-  }
-
-  if (!dataSourceId) {
-    reportMissingWaitlistBinding(WAITLIST_DATA_SOURCE_BINDING);
-    return null;
-  }
-
-  return { token, dataSourceId };
+  return bindings && { token: bindings[NOTION_TOKEN_BINDING], dataSourceId: bindings[WAITLIST_DATA_SOURCE_BINDING] };
 }
 
 const postToNotion = (path: string, token: string, body: unknown) =>

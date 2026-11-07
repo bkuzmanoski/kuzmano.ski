@@ -362,10 +362,18 @@ describe("buildMediaIndex", () => {
       bodyImageFileNames: [],
       videos: [],
     });
+
+    let markSecondCoverImageRead: () => void = () => undefined;
+
+    const secondCoverImageRead = new Promise<void>((resolve) => (markSecondCoverImageRead = resolve));
     const reader: MediaFileReader = {
       readImage: async (path) => {
         if (path === firstEntry.coverImageFilePath) {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await secondCoverImageRead;
+        }
+
+        if (path === secondEntry.coverImageFilePath) {
+          markSecondCoverImageRead();
         }
 
         return resolvedImage({ path, dimensions: { width: 100, height: 100 } });

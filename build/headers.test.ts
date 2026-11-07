@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   IMMUTABLE_CACHE_CONTROL,
-  headersFile,
+  headersFilePlugin,
   headersFileTextFrom,
   headersMatchingPathIn,
   headersRuleText,
@@ -19,6 +19,7 @@ import { hookOf } from "./test-utils/plugin-hooks.ts";
 
 import type { HeadersRule } from "./headers.ts";
 import type { ContextHook } from "./test-utils/plugin-hooks.ts";
+import type { Plugin } from "vite";
 
 const CACHE_RULE: HeadersRule = {
   description: "A cached path.",
@@ -64,17 +65,11 @@ interface EmittedFile {
   source: string;
 }
 
-async function callBuildStart(plugin: ReturnType<typeof headersFile>["plugin"], command: "build" | "serve" = "build") {
-  await hookOf<ContextHook>(plugin, "buildStart").call({
-    environment: { config: { command, build: { assetsDir: "assets" } } },
-  });
-}
-
-async function emittedHeadersFileText(plugin: ReturnType<typeof headersFile>["plugin"], publicDir = "") {
+async function emittedHeadersFileText(plugin: Plugin, publicDir = "") {
   const emittedFiles: Array<EmittedFile> = [];
 
   await hookOf<ContextHook>(plugin, "generateBundle").call({
-    environment: { config: { publicDir } },
+    environment: { config: { publicDir, build: { assetsDir: "assets" } } },
     emitFile: (file: EmittedFile) => emittedFiles.push(file),
     error: (message: string) => {
       throw new Error(message);
@@ -167,43 +162,15 @@ describe("headersMatchingPathIn", () => {
   });
 });
 
-describe("headersFile", () => {
-  test("emits a `_headers` file containing each added rule once, sorted by its first path pattern", async () => {
-    const { addHeadersRules, plugin } = headersFile();
-
-    addHeadersRules([SIGNALED_RULE]);
-    addHeadersRules([CACHE_RULE, TYPED_RULE]);
-    addHeadersRules([SIGNALED_RULE]);
-
-    expect(await emittedHeadersFileText(plugin)).toBe(HEADERS_FILE_TEXT);
-  });
-
-  test("adds an immutable `Cache-Control` rule for `build.assetsDir` when a build starts", async () => {
-    const { plugin } = headersFile();
-
-    await callBuildStart(plugin);
-
-    expect(await emittedHeadersFileText(plugin)).toBe(`# Build output file names include a hash of their contents.
+describe("headersFilePlugin", () => {
+  test("emits a `_headers` file containing each rule and the immutable rule for `build.assetsDir`, sorted by first path pattern", async () => {
+    expect(await emittedHeadersFileText(headersFilePlugin([SIGNALED_RULE, CACHE_RULE, TYPED_RULE]))).toBe(
+      `# Build output file names include a hash of their contents.
 /assets/*
   Cache-Control: ${IMMUTABLE_CACHE_CONTROL}
-`);
-  });
 
-  test("does not add a rule for `build.assetsDir` when the dev server starts", async () => {
-    const { plugin } = headersFile();
-
-    await callBuildStart(plugin, "serve");
-
-    expect(await emittedHeadersFileText(plugin)).toBe("\n");
-  });
-
-  test("throws when rules are added after `_headers` was emitted, naming their path patterns", async () => {
-    const { addHeadersRules, plugin } = headersFile();
-
-    addHeadersRules([CACHE_RULE]);
-    await emittedHeadersFileText(plugin);
-
-    expect(() => addHeadersRules([TYPED_RULE])).toThrow("/first.txt, /second.txt");
+${HEADERS_FILE_TEXT}`,
+    );
   });
 
   test("fails the build when `publicDir` contains a `_headers` file", async () => {
@@ -211,8 +178,7 @@ describe("headersFile", () => {
 
     try {
       await writeFile(join(publicDirectoryAbsolutePath, "_headers"), headersFileTextFrom([CACHE_RULE]));
-
-      await expect(emittedHeadersFileText(headersFile().plugin, publicDirectoryAbsolutePath)).rejects.toThrow(
+      await expect(emittedHeadersFileText(headersFilePlugin([]), publicDirectoryAbsolutePath)).rejects.toThrow(
         join(publicDirectoryAbsolutePath, "_headers"),
       );
     } finally {
@@ -220,8 +186,8 @@ describe("headersFile", () => {
     }
   });
 
-  test("throws when a rule is added with a path pattern the dev server cannot match", () => {
-    expect(() => headersFile().addHeadersRules([{ ...CACHE_RULE, pathPatterns: ["/:name/file.txt"] }])).toThrow(
+  test("throws for a rule with a path pattern the dev server cannot match", () => {
+    expect(() => headersFilePlugin([{ ...CACHE_RULE, pathPatterns: ["/:name/file.txt"] }])).toThrow(
       '"/:name/file.txt"',
     );
   });
@@ -233,13 +199,11 @@ describe("the `_headers` dev server middleware", () => {
     respond: (response: ServerResponse) => void = (response) => response.writeHead(200),
     rules: Array<HeadersRule> = [CACHE_RULE, TYPED_RULE],
   ) {
-    const { addHeadersRules, plugin } = headersFile();
     const request = new IncomingMessage(new Socket());
     const response = new ServerResponse(request);
 
     request.url = url;
-    addHeadersRules(rules);
-    devServerMiddlewareOf(plugin)(request, response, () => respond(response));
+    devServerMiddlewareOf(headersFilePlugin(rules))(request, response, () => respond(response));
 
     return { ...response.getHeaders() };
   }
@@ -287,12 +251,6 @@ describe("the `_headers` dev server middleware", () => {
     expect(responseHeadersFor("/first.txt", respondWithMarkdown)).toEqual({
       "content-type": "text/markdown",
       "x-robots-tag": "noindex",
-    });
-  });
-
-  test("sets a header once when the same rule was added twice", () => {
-    expect(responseHeadersFor("/signaled.txt", undefined, [SIGNALED_RULE, { ...SIGNALED_RULE }])).toEqual({
-      "content-signal": "search=yes",
     });
   });
 });

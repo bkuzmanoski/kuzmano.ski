@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import ShareButtonIcon from "#/assets/images/button-icon-share.svg?react";
 
-import { Button } from "./button.tsx";
-import { Tooltip } from "./tooltip.tsx";
+import { ActionFailureAlert } from "./action-failure-alert.tsx";
+import { IconButton } from "./icon-button.tsx";
 
 export function ShareButton({
   url,
@@ -19,6 +19,7 @@ export function ShareButton({
   className?: string;
 }) {
   const [isSharing, setIsSharing] = useState(false);
+  const [shareFailure, setShareFailure] = useState<{ isPermissionDenied: boolean } | null>(null);
 
   async function share() {
     if (isSharing) {
@@ -29,26 +30,35 @@ export function ShareButton({
 
     try {
       await navigator.share({ url, title });
-    } catch {
-      // Ignored.
+    } catch (error) {
+      const errorName = error instanceof DOMException ? error.name : null;
+      setShareFailure(errorName === "AbortError" ? null : { isPermissionDenied: errorName === "NotAllowedError" });
     }
 
     setIsSharing(false);
   }
 
   return (
-    <Tooltip label={label} suppressed={disabled} className={className}>
-      <Button
+    <>
+      <IconButton
         variant="standalone"
+        label={label}
         disabled={disabled}
         holdPressed={isSharing}
-        aria-label={label}
+        className={className}
         onClick={() => {
           void share();
         }}
       >
         <ShareButtonIcon />
-      </Button>
-    </Tooltip>
+      </IconButton>
+      <ActionFailureAlert
+        action="share"
+        entity="link"
+        isPermissionDenied={shareFailure?.isPermissionDenied ?? false}
+        open={shareFailure !== null}
+        onDismiss={() => setShareFailure(null)}
+      />
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
 
@@ -30,11 +30,6 @@ function addIcon() {
 
 beforeEach(() => {
   document.head.replaceChildren();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 describe("watchFaviconColorScheme", () => {

@@ -24,8 +24,8 @@ export interface EntryStylesheetClassNames {
 
 export interface MDXModule {
   default: MDXContent;
-  /** Absent when the entry has no stylesheet. */
-  stylesheetClassNames?: EntryStylesheetClassNames;
+  /** Empty when the entry has no stylesheet. */
+  stylesheetClassNames: EntryStylesheetClassNames;
 }
 
 /**
@@ -75,7 +75,7 @@ export interface ContentSource {
 
 export interface Catalog {
   pages: ContentIndex;
-  collections: Record<string, Collection>;
+  collections: ReadonlyMap<string, Collection>;
 }
 
 export interface CatalogOptions {
@@ -86,9 +86,18 @@ export interface CatalogOptions {
 
 export function createCatalog(source: ContentSource, options: CatalogOptions): Catalog {
   const loadedModules = new Map<string, Promise<MDXModule>>();
+  const parsedFrontmatter = new Map<string, Frontmatter>(); // The window manager reads an entry's frontmatter on every render.
 
-  const frontmatterFromFilePath = (filePath: string) =>
-    parseFrontmatter(source.frontmatterModules[filePath]?.default, filePath);
+  function frontmatterFromFilePath(filePath: string): Frontmatter {
+    let frontmatter = parsedFrontmatter.get(filePath);
+
+    if (!frontmatter) {
+      frontmatter = parseFrontmatter(source.frontmatterModules[filePath]?.default, filePath);
+      parsedFrontmatter.set(filePath, frontmatter);
+    }
+
+    return frontmatter;
+  }
 
   function loadContent(filePath: string): Promise<MDXModule> {
     const loadedModule = loadedModules.get(filePath);
@@ -109,7 +118,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
           ...bodyModule,
           stylesheetClassNames: stylesheetModule.default,
         }))
-      : importBody();
+      : importBody().then((bodyModule) => ({ ...bodyModule, stylesheetClassNames: {} }));
     const trackedPromise = trackPromise(modulePromise); // Tracked so an entry whose module has already loaded can render without suspending. This keeps hydration from discarding the server-rendered article (see `/src/client.tsx`).
 
     loadedModules.set(filePath, trackedPromise);
@@ -176,7 +185,7 @@ export function createCatalog(source: ContentSource, options: CatalogOptions): C
 
   return {
     pages: contentIndex(options.pagesDirectoryName).index,
-    collections: Object.fromEntries(
+    collections: new Map(
       Object.entries(options.collections).map(([segment, metadata]) => [segment, collection(segment, metadata)]),
     ),
   };

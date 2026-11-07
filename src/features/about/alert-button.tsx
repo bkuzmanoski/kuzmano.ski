@@ -2,9 +2,9 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Alert } from "#/components/alert.tsx";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./alert-button.module.css";
 

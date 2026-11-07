@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { createElement } from "react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { PAGE_SLUGS } from "#/config/content.ts";
 import { fakeCoverImage } from "#/test-utils/collection.ts";
@@ -29,9 +29,12 @@ vi.mock("./catalog.ts", async () => {
       [fakeEntry(slugs[0]), fakeEntry("unlisted-page"), fakeEntry("draft-page", { draft: true })],
       pagesDirectoryName,
     ),
-    collections: {
-      collection: fakeCollection([...fakeCollectionEntries("published"), fakeEntry("draft-entry", { draft: true })]),
-    },
+    collections: new Map([
+      [
+        "collection",
+        fakeCollection([...fakeCollectionEntries("published"), fakeEntry("draft-entry", { draft: true })]),
+      ],
+    ]),
   });
 });
 vi.mock("virtual:entry-cover-images", async () => {
@@ -48,10 +51,6 @@ vi.mock("virtual:entry-cover-images", async () => {
 
 beforeEach(() => {
   preloadFont.mockClear();
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 const DECLARED_PAGE_SLUG = PAGE_SLUGS[0];
@@ -131,7 +130,7 @@ test("an entry's route data does not include the URLs of the fonts its route pre
 
 test.each([
   ["a page", pages, () => loadSegment(DECLARED_PAGE_SLUG)],
-  ["a collection entry", collections.collection!, () => loadCollectionEntry("published")],
+  ["a collection entry", collections.get("collection")!, () => loadCollectionEntry("published")],
 ])("on the server, %s's route data resolves after its body has loaded", async (_kind, contentIndex, load) => {
   const loadBodyUnmocked = contentIndex.load.bind(contentIndex);
 
@@ -150,7 +149,7 @@ test.each([
 
 test.each([
   ["a page", pages, () => loadSegment(DECLARED_PAGE_SLUG)],
-  ["a collection entry", collections.collection!, () => loadCollectionEntry("published")],
+  ["a collection entry", collections.get("collection")!, () => loadCollectionEntry("published")],
 ])("in the browser, %s's route data resolves without loading its body", async (_kind, contentIndex, load) => {
   const loadBody = vi.spyOn(contentIndex, "load");
 

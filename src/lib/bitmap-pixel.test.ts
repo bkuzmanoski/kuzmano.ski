@@ -40,7 +40,6 @@ describe("subscribeToDevicePixelRatioChange", () => {
 
   afterEach(() => {
     listenersByQuery.clear();
-    vi.unstubAllGlobals();
   });
 
   test("calls `onChange` when the device pixel ratio changes", () => {

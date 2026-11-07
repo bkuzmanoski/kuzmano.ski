@@ -4,13 +4,13 @@ import DocumentOpenCollectionBodyIcon from "#/assets/images/collection-body-icon
 import DocumentCollectionBodyIcon from "#/assets/images/collection-body-icon-document.svg?react";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSoundPlayer } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation.ts";
 import { PRESERVE_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
+import { usePressSoundPlayer } from "#/lib/press/use-press-sound.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import { useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
@@ -88,10 +88,9 @@ function CollectionEntryRow({
         aria-labelledby={`${entryId}-title`}
         aria-describedby={descriptionIds.filter((id) => id !== null).join(" ")}
         aria-current={isOpen || undefined}
-        {...mergeHandlers(
-          mergeHandlers(pressSoundHandlers, doublePressLinkHandlers), // Merged before `itemProps` so `useListNavigation` skips modified or non-primary presses when `useDoublePressLink` prevents their `mousedown` default.
-          itemProps,
-        )}
+        // `itemProps` comes last so `useListNavigation` skips modified or non-primary presses when `useDoublePressLink`
+        // prevents their `mousedown` default.
+        {...mergeHandlers(pressSoundHandlers, doublePressLinkHandlers, itemProps)}
       >
         <span
           className={styles.titleColumn}

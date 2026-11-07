@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { jsonBodyOfFirstRequest, respondWith } from "#/test-utils/fetch.ts";
 
@@ -27,10 +27,6 @@ beforeEach(() => {
   respondWith(fetchMock, 204);
   onFailure.mockReset();
   vi.mocked(playSuccessSound).mockClear();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 function renderWaitlist({ list = LIST, source = SOURCE } = {}) {

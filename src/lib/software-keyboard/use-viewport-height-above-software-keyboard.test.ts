@@ -13,7 +13,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
   textInput.remove();
   document.documentElement.removeAttribute("style");
 });

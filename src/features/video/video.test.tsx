@@ -16,7 +16,6 @@ const DURATION_S = 60;
 let playback: { paused: boolean; muted: boolean; currentTime: number };
 let isFullScreen: boolean;
 
-// jsdom does not load or play media, so playback is simulated on the element's prototype.
 beforeEach(() => {
   playback = { paused: true, muted: false, currentTime: 0 };
   isFullScreen = false;
@@ -46,7 +45,6 @@ beforeEach(() => {
     this.dispatchEvent(new Event("pause"));
   });
 
-  // jsdom does not implement the Fullscreen API, so it is simulated on the document and the element's prototype.
   const setFullScreen = (value: boolean) => {
     isFullScreen = value;
     document.dispatchEvent(new Event("fullscreenchange"));

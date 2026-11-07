@@ -2,8 +2,8 @@ import { AUTHOR_NAME } from "#/config/site.ts";
 import { errorMessageOf } from "#/lib/errors.ts";
 
 import { CONTACT_EMAIL_ADDRESS_BINDING, SEND_EMAIL_BINDING } from "./bindings.ts";
-import { workerEnv } from "./env.ts";
-import { logServerEvent, reportMissingBinding } from "./log.ts";
+import { logServerEvent } from "./log.ts";
+import { readBindings } from "./read-bindings.ts";
 
 export const SENDER = { name: AUTHOR_NAME, email: "no-reply@kuzmano.ski" };
 
@@ -30,30 +30,14 @@ function errorCodeOf(error: unknown): string {
   return typeof code === "string" ? code : "unknown";
 }
 
-function reportMissingContactBinding(binding: string): "unavailable" {
-  reportMissingBinding("contact_binding_missing", binding);
-  return "unavailable";
-}
-
 export async function deliverMessage(message: OutgoingMessage): Promise<DeliveryResult> {
-  let env;
+  const bindings = await readBindings("contact_binding_missing", [SEND_EMAIL_BINDING, CONTACT_EMAIL_ADDRESS_BINDING]);
 
-  try {
-    env = await workerEnv();
-  } catch {
-    return reportMissingContactBinding("the Workers environment");
+  if (!bindings) {
+    return "unavailable";
   }
 
-  const sendEmailBinding = env[SEND_EMAIL_BINDING];
-  const contactEmailAddress = env[CONTACT_EMAIL_ADDRESS_BINDING];
-
-  if (!sendEmailBinding) {
-    return reportMissingContactBinding(SEND_EMAIL_BINDING);
-  }
-
-  if (!contactEmailAddress) {
-    return reportMissingContactBinding(CONTACT_EMAIL_ADDRESS_BINDING);
-  }
+  const { [SEND_EMAIL_BINDING]: sendEmailBinding, [CONTACT_EMAIL_ADDRESS_BINDING]: contactEmailAddress } = bindings;
 
   try {
     await sendEmailBinding.send({

@@ -12,7 +12,7 @@ import type { ResolvedEntryIcon, ResolvedImage, ResolvedVideo } from "./resolved
 const MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX = 144;
 
 /** X fetches cover images up to this size. */
-const MIN_OPEN_GRAPH_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_OPEN_GRAPH_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /** The largest file Cloudflare serves as a static asset. */
 export const MAX_RENDITION_BYTES = 25 * 1024 * 1024;
@@ -49,8 +49,8 @@ export function coverImageProblems({
     );
   }
 
-  if (bytes > MIN_OPEN_GRAPH_IMAGE_BYTES) {
-    problems.push(`${quotedFilePath} exceeds the ${fileSize(MIN_OPEN_GRAPH_IMAGE_BYTES)} limit (${fileSize(bytes)}).`);
+  if (bytes > MAX_OPEN_GRAPH_IMAGE_BYTES) {
+    problems.push(`${quotedFilePath} exceeds the ${fileSize(MAX_OPEN_GRAPH_IMAGE_BYTES)} limit (${fileSize(bytes)}).`);
   }
 
   return problems;
@@ -137,8 +137,7 @@ export function imageMetadataProblems({
     return [];
   }
 
-  const metadataNameList =
-    embeddedMetadataNames.length === 1 ? embeddedMetadataNames.join("") : `${embeddedMetadataNames.join(", ")}`;
+  const metadataNameList = embeddedMetadataNames.join(", ");
   const remedy = isEncodableImage(path)
     ? "Strip it with `npm run optimize-image`."
     : "Strip it before committing the image.";

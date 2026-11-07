@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
 import { formatDate } from "#/lib/datetime.ts";
@@ -23,10 +23,6 @@ Object.defineProperty(navigator, "clipboard", { value: { writeText } });
 beforeEach(() => {
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
 });
 
 const COLLECTION = fakeCollection(fakeCollectionEntries("entry"));

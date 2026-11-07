@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { createWindowPlacer, createWindowResizer } from "./layout.ts";
 import { createWindowReducer } from "./state.ts";
-import { EMPTY_STATE, WINDOW_DOM_ORDER } from "./window.ts";
+import { EMPTY_STATE } from "./window.ts";
 
 import type { Size } from "../geometry.ts";
 import type { Action, ManagerState, WindowId, WindowLayout, WindowSpec } from "./window.ts";
@@ -15,6 +15,8 @@ const WINDOW_LAYOUT: WindowLayout = {
   minSize: { width: 480, height: 320 },
   padding: 8,
 };
+
+const WINDOW_IDS = Object.keys(WINDOW_LAYOUT.windows) as Array<WindowId>;
 
 const centerOf = (size: Size) => ({ x: (SURFACE.width - size.width) / 2, y: (SURFACE.height - size.height) / 2 });
 
@@ -71,10 +73,10 @@ describe("open", () => {
   });
 
   test("opens every window at a position and size that fits within the desktop", () => {
-    const state = opened(...WINDOW_DOM_ORDER);
+    const state = opened(...WINDOW_IDS);
     const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
 
-    for (const id of WINDOW_DOM_ORDER) {
+    for (const id of WINDOW_IDS) {
       const { maximized: _maximized, ...geometry } = state.geometry[id]!;
       const placedRect = placeWindow(geometry, SURFACE);
       expect(placedRect).toEqual(geometry);

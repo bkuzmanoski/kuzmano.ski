@@ -7,8 +7,8 @@ import { requestPathOf } from "./paths.ts";
 import type { Plugin } from "vite";
 
 // Cloudflare applies the rules in `_headers` to static assets. Each plugin declares the rules for the files it emits,
-// and `headersFile` emits them all at once. The dev server applies the same rules to its responses as it does not read
-// `_headers`.
+// and `headersFilePlugin` emits them all at once. The dev server applies the same rules to its responses as it does not
+// read `_headers`.
 
 export const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
@@ -29,8 +29,6 @@ export interface HeadersRule {
 export interface MatchableHeadersRule extends HeadersRule {
   pathRegExp: RegExp;
 }
-
-export type AddHeadersRules = (rules: Array<HeadersRule>) => void;
 
 export const headersRuleText = ({ description, pathPatterns, headers }: HeadersRule) =>
   [
@@ -128,100 +126,72 @@ export function headersFileTextFrom(rules: Iterable<HeadersRule>): string {
 const isServedFileStatusCode = (statusCode: number) => (statusCode >= 200 && statusCode < 300) || statusCode === 304;
 
 /**
- * Creates the function plugins register `_headers` rules through, and the plugin that emits the file into the client
- * build and applies the rules to the dev server's responses.
+ * Creates a plugin that writes all declared rules to the client build's `_headers` file and applies them to dev-server
+ * responses. Rules are declared by the plugins that emit the files they describe, then collected here so `_headers` is
+ * emitted once.
  *
- * A plugin registers its rules from the client environment's `buildStart`, which the build finishes for every plugin
- * before any `generateBundle` runs, so the file is emitted once and includes every rule whatever order the plugins are
- * listed in. `vite dev` calls `buildStart` for the client environment as well, before the server listens. A rule
- * registered twice is kept once, and a rule `headersMatchingPathIn` cannot match is refused when it is registered, so
- * the dev server sets the headers Cloudflare sets on every path.
- *
- * The plugin registers the rule for the hashed files Vite emits to `build.assetsDir` itself.
+ * Throws when a rule contains a path pattern the dev server cannot match, ensuring it applies the same headers as
+ * Cloudflare. The plugin also adds an immutable-cache rule for Vite's hashed files in `build.assetsDir`.
  */
-export function headersFile(): { addHeadersRules: AddHeadersRules; plugin: Plugin } {
-  const registeredRulesByText = new Map<string, MatchableHeadersRule>(); // Keyed by the rule's text, which is what `_headers` would repeat.
-
-  let isEmitted = false;
-
-  const addHeadersRules: AddHeadersRules = (rules) => {
-    if (isEmitted) {
-      throw new Error(
-        `\`${HEADERS_FILE_NAME}\` was already emitted when rules for ${rules.flatMap(({ pathPatterns }) => pathPatterns).join(", ")} were added. Add rules from \`buildStart\`.`,
-      );
-    }
-
-    for (const rule of rules) {
-      registeredRulesByText.set(headersRuleText(rule), matchableHeadersRuleFrom(rule));
-    }
-  };
+export function headersFilePlugin(rules: Array<HeadersRule>): Plugin {
+  const matchableRules = rules.map(matchableHeadersRuleFrom);
 
   return {
-    addHeadersRules,
-    plugin: {
-      name: "kuzmano.ski:headers",
-      applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
-      buildStart() {
-        const { command, build } = this.environment.config;
+    name: "kuzmano.ski:headers",
+    applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
+    generateBundle() {
+      const { publicDir, build } = this.environment.config;
 
-        if (command === "build") {
-          addHeadersRules([{ ...BUILD_OUTPUT_HEADERS_RULE, pathPatterns: [`/${build.assetsDir}/*`] }]);
-        }
-      },
-      generateBundle() {
-        const { publicDir } = this.environment.config;
+      if (publicDir && existsSync(join(publicDir, HEADERS_FILE_NAME))) {
+        // Vite copies `publicDir` into the output as well, and one of the two files would replace the other.
+        this.error(`Declare the rules in \`${join(publicDir, HEADERS_FILE_NAME)}\` through \`headersFilePlugin\`.`);
+      }
 
-        if (publicDir && existsSync(join(publicDir, HEADERS_FILE_NAME))) {
-          // Vite copies `publicDir` into the output as well, and one of the two files would replace the other.
-          this.error(`Declare the rules in \`${join(publicDir, HEADERS_FILE_NAME)}\` through \`addHeadersRules\`.`);
-        }
+      this.emitFile({
+        type: "asset",
+        fileName: HEADERS_FILE_NAME,
+        source: headersFileTextFrom([
+          ...rules,
+          { ...BUILD_OUTPUT_HEADERS_RULE, pathPatterns: [`/${build.assetsDir}/*`] },
+        ]),
+      });
+    },
+    configureServer: {
+      // Registered before every other plugin's middleware, including those of `enforce: "pre"` plugins, so the headers
+      // are set before any of them responds. They are set up front because Vite's static file server keeps a header
+      // already on the response in place of its own, such as its `cache-control: no-cache`. A later middleware's
+      // `setHeader` replaces a rule's value, and an error status removes the rule's headers.
+      order: "pre",
+      handler(server) {
+        server.middlewares.use((request, response, next) => {
+          const requestPath = requestPathOf(request);
+          const ruleHeaders =
+            requestPath === undefined ? new Map<string, string>() : headersMatchingPathIn(matchableRules, requestPath);
 
-        this.emitFile({
-          type: "asset",
-          fileName: HEADERS_FILE_NAME,
-          source: headersFileTextFrom(registeredRulesByText.values()),
-        });
-        isEmitted = true;
-      },
-      configureServer: {
-        // Registered before every other plugin's middleware, including those of `enforce: "pre"` plugins, so the
-        // headers are set before any of them responds. They are set up front because Vite's static file server keeps a
-        // header already on the response in place of its own, such as its `cache-control: no-cache`. A later
-        // middleware's `setHeader` replaces a rule's value, and an error status removes the rule's headers.
-        order: "pre",
-        handler(server) {
-          server.middlewares.use((request, response, next) => {
-            const requestPath = requestPathOf(request);
-            const ruleHeaders =
-              requestPath === undefined
-                ? new Map<string, string>()
-                : headersMatchingPathIn(registeredRulesByText.values(), requestPath);
-
-            if (ruleHeaders.size > 0) {
-              for (const [name, value] of ruleHeaders) {
-                response.setHeader(name, value);
-              }
-
-              const writeHead = response.writeHead.bind(response);
-
-              // Node calls `writeHead` itself when a middleware writes a response without calling it, so this also
-              // applies to a status set through `statusCode`.
-              response.writeHead = ((...writeHeadArguments: Parameters<typeof writeHead>) => {
-                if (!isServedFileStatusCode(writeHeadArguments[0])) {
-                  for (const [name, value] of ruleHeaders) {
-                    if (response.getHeader(name) === value) {
-                      response.removeHeader(name);
-                    }
-                  }
-                }
-
-                return writeHead(...writeHeadArguments);
-              }) as typeof writeHead;
+          if (ruleHeaders.size > 0) {
+            for (const [name, value] of ruleHeaders) {
+              response.setHeader(name, value);
             }
 
-            next();
-          });
-        },
+            const writeHead = response.writeHead.bind(response);
+
+            // Node calls `writeHead` itself when a middleware writes a response without calling it, so this also
+            // applies to a status set through `statusCode`.
+            response.writeHead = ((...writeHeadArguments: Parameters<typeof writeHead>) => {
+              if (!isServedFileStatusCode(writeHeadArguments[0])) {
+                for (const [name, value] of ruleHeaders) {
+                  if (response.getHeader(name) === value) {
+                    response.removeHeader(name);
+                  }
+                }
+              }
+
+              return writeHead(...writeHeadArguments);
+            }) as typeof writeHead;
+          }
+
+          next();
+        });
       },
     },
   };

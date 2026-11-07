@@ -12,7 +12,10 @@ vi.mock("#/site/catalog.ts", async () => {
   const catalog = await import("#/test-utils/catalog.ts");
 
   return catalog.configuredCatalogMock({
-    collections: { ...catalog.configuredCollections, "other-collection": catalog.otherCollection },
+    collections: new Map([
+      ...Object.entries(catalog.configuredCollections),
+      ["other-collection", catalog.otherCollection],
+    ]),
   });
 });
 

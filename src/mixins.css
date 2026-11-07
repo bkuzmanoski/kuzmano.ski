@@ -45,6 +45,16 @@
   white-space: nowrap;
 }
 
+/* The tooltip around a `strip` `IconButton` in a row of controls, `$size` wide plus the border beside it. */
+@define-mixin strip-control $size {
+  align-self: stretch;
+  width: calc($size + 1px);
+
+  & > button {
+    width: 100%;
+  }
+}
+
 /* The value of a text field, in a `TextInput` and in a `StaticField`. */
 @define-mixin text-field-value {
   font: var(--font-ui-large);
@@ -164,6 +174,12 @@
   outline-offset: 1px;
 }
 
+/* A dotted outline for a rounded control. Unlike `focus-stroke`, it follows the control's border radius. */
+@define-mixin focus-outline-dotted {
+  outline: 1px dotted var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
 @define-mixin content-rail-collapsed {
   @container content (width < 800px) {
     @mixin-content;
@@ -248,6 +264,30 @@
   @mixin dither-fill $color;
 
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='4' height='4' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+}
+
+/* Rounds the inline size down to 4n + 1 bitmap pixels, so a `dither-06` fill starts and ends on a column of dots. */
+@define-mixin dither-06-inline-size {
+  @supports (width: round(down, 1px, 1px)) {
+    inline-size: calc(
+      round(down, 100% - var(--layout-bitmap-pixel), 4 * var(--layout-bitmap-pixel)) + var(--layout-bitmap-pixel)
+    );
+  }
+}
+
+/* Renders a `dither-06` fill behind the element's content, in a `::before` the block positions with `inset`. The
+   element sets `isolation: isolate` and `position: relative`. */
+@define-mixin dither-06-behind {
+  &::before {
+    @mixin dither-06;
+
+    content: "";
+    position: absolute;
+    z-index: -1;
+    color: var(--color-dither-pattern);
+
+    @mixin-content;
+  }
 }
 
 @define-mixin dither-11 $color: currentColor {

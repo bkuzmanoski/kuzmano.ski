@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 
 import ActiveWindowControl from "#/assets/images/window-control-active.svg?react";
 import CloseWindowControl from "#/assets/images/window-control-close.svg?react";
@@ -8,74 +8,37 @@ import { ARROW_STEP_PX } from "#/components/scrollbar.tsx";
 import { Tooltip } from "#/components/tooltip.tsx";
 import { stepScrollForPress } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
-import { isApplePlatform } from "#/lib/device.ts";
-import { containsPoint } from "#/lib/geometry.ts";
 import { PRESERVE_FOCUS_PROPS, useRestorableFocus } from "#/lib/hooks/use-restorable-focus.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress, swallowNextPress } from "#/lib/press/press.ts";
-import { useDoublePress } from "#/lib/press/use-double-press.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
+import { keyboardScrollDelta } from "#/lib/window-manager/keyboard-scroll.ts";
 import { WindowRevealContext } from "#/lib/window-manager/use-is-window-revealed.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
 
 import { ScrollPane } from "./scroll-pane.tsx";
+import { useIsRevealedAfterStartup } from "./use-is-revealed-after-startup.ts";
+import { useWindowDrag } from "./use-window-drag.ts";
 import styles from "./window.module.css";
 
-import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
+import type { PointerEvent, ReactNode } from "react";
 
 /** The id set on the focused window's content container, so the skip link has a stable target. */
 export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 
+export type WindowSizingControls =
+  | { kind: "resizable"; onZoom: () => void; onResize: (width: number, height: number) => void }
+  | { kind: "fixed" }
+  | {
+      kind: "fitContentHeight";
+      /** Reports the height the window renders at, as it ignores `height` and is as tall as its content. */
+      onFitContentHeight: (height: number) => void;
+    };
+
 /** Where a window is being dragged to, reported while the gesture runs so an outline can show the proposed position. */
 export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
-
-const APPLE_OPTION_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "PageUp", ArrowDown: "PageDown" };
-const APPLE_COMMAND_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "Home", ArrowDown: "End" };
-
-function scrollKeyOf(event: KeyboardEvent): string | null {
-  if (!event.altKey && !event.ctrlKey && !event.metaKey) {
-    return event.key;
-  }
-
-  if (!isApplePlatform() || event.ctrlKey || (event.altKey && event.metaKey)) {
-    return null;
-  }
-
-  return (event.altKey ? APPLE_OPTION_ARROW_SCROLL_KEYS : APPLE_COMMAND_ARROW_SCROLL_KEYS)[event.key] ?? null;
-}
-
-function keyboardScrollDelta(event: KeyboardEvent, viewport: HTMLElement): number | null {
-  const pageDistance = () => Math.max(viewport.clientHeight - ARROW_STEP_PX, ARROW_STEP_PX);
-
-  switch (scrollKeyOf(event)) {
-    case "ArrowUp":
-      return -ARROW_STEP_PX;
-
-    case "ArrowDown":
-      return ARROW_STEP_PX;
-
-    case "PageUp":
-      return -pageDistance();
-
-    case "PageDown":
-      return pageDistance();
-
-    case " ":
-      return event.shiftKey ? -pageDistance() : pageDistance();
-
-    case "Home":
-      return -viewport.scrollHeight;
-
-    case "End":
-      return viewport.scrollHeight;
-
-    default:
-      return null;
-  }
-}
 
 function TitleBarButton({
   icon,
@@ -134,12 +97,10 @@ export function Window({
   maximized,
   hidden,
   unplaced,
+  sizing,
   onClose,
-  onZoom,
   onFocus,
   onMove,
-  onResize,
-  onFitContentHeight,
   onDrag,
   header,
   children,
@@ -160,14 +121,10 @@ export function Window({
    * `/src/features/window-manager/window.module.css`).
    */
   unplaced: boolean;
+  sizing: WindowSizingControls;
   onClose: () => void;
-  onZoom: (() => void) | null;
   onFocus: () => void;
   onMove: (x: number, y: number) => void;
-  /** `null` on a fixed-size window, which also hides the resize control from its scrollbar. */
-  onResize: ((width: number, height: number) => void) | null;
-  /** Set on a window that is as tall as its content, which ignores `height` and reports the height it renders at. */
-  onFitContentHeight: ((height: number) => void) | null;
   onDrag: (drag: WindowDrag | null) => void;
   /** Rendered between the title bar and the scroll pane. */
   header?: ReactNode;
@@ -176,15 +133,13 @@ export function Window({
   const inactiveDescriptionId = useId();
   const fallbackContentId = useId();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
-  const [isAwaitingStartupReveal, setIsAwaitingStartupReveal] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isResizePressed, setIsResizePressed] = useState(false);
   const [keyDownHandlers] = useState(createWindowKeyDownHandlers);
   const windowRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const hasMovedWindowRef = useRef(false);
-  const dragRef = useRef<WindowDrag | null>(null);
 
+  const onZoom = sizing.kind === "resizable" ? sizing.onZoom : null;
+  const onResize = sizing.kind === "resizable" ? sizing.onResize : null;
+  const onFitContentHeight = sizing.kind === "fitContentHeight" ? sizing.onFitContentHeight : null;
   const fitsContentHeight = onFitContentHeight !== null;
   const reportContentHeight = useEffectEvent((nextHeight: number) => onFitContentHeight?.(nextHeight));
 
@@ -206,117 +161,22 @@ export function Window({
     return () => observer.disconnect();
   }, [fitsContentHeight]);
 
-  // A window that rendered before the startup sequence completed waits for the opacity transition that reveals it after
-  // the menu bar and icons (see `.ready` in `window.module.css`). Under reduced motion the transition does not run, so
-  // the wait ends at once.
-  if (!isStartupSequenceComplete && !isAwaitingStartupReveal) {
-    setIsAwaitingStartupReveal(true);
-  }
-
-  useEffect(() => {
-    if (!isStartupSequenceComplete || !isAwaitingStartupReveal) {
-      return;
-    }
-
-    const revealTransition = windowRef.current
-      ?.getAnimations()
-      .find((animation) => "transitionProperty" in animation && animation.transitionProperty === "opacity");
-    let isCurrent = true;
-
-    void (revealTransition?.finished ?? Promise.resolve())
-      .catch(() => undefined) // A canceled transition also ends the wait.
-      .then(() => {
-        if (isCurrent) {
-          setIsAwaitingStartupReveal(false);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [isStartupSequenceComplete, isAwaitingStartupReveal]);
-
-  const isRevealed = isStartupSequenceComplete && !isAwaitingStartupReveal && !hidden;
+  const isRevealed = useIsRevealedAfterStartup(windowRef, isStartupSequenceComplete) && !hidden;
 
   // The desktop is inert until the startup sequence completes, and focusing an element in inert content has no effect,
   // so the focused window takes the focus only once the startup sequence has completed.
   useRestorableFocus(windowRef, { shouldHoldFocus: focused && !hidden && isStartupSequenceComplete, contentKey });
 
-  function reportDrag(drag: WindowDrag) {
-    dragRef.current = drag;
-    onDrag(drag);
-  }
-
-  function endDrag() {
-    const drag = dragRef.current;
-
-    dragRef.current = null;
-    onDrag(null);
-
-    return drag;
-  }
-
-  const moveHandlers = usePointerDrag({
-    threshold: DRAG_THRESHOLD_PX, // The title bar also responds to a double click, which must survive the jitter of a press.
-    canStart: (event) => !maximized && !(event.target as HTMLElement).closest("button"),
-    start: () => {
-      playClickSound();
-      hasMovedWindowRef.current = false;
-
-      return { x, y };
-    },
-    onDragMove: (delta, from) => reportDrag({ kind: "move", x: from.x + delta.dx, y: from.y + delta.dy }),
-    onEnd: (moved) => {
-      const drag = endDrag();
-
-      hasMovedWindowRef.current = moved;
-
-      if (drag?.kind === "move") {
-        onMove(drag.x, drag.y);
-      }
-    },
-  });
-  const zoomHandlers = useDoublePress({
-    acceptsDoublePress: (event) =>
-      Boolean(onZoom) && !(event.target as HTMLElement).closest("button") && (maximized || !hasMovedWindowRef.current),
-    onDoublePress: () => {
-      if (maximized) {
-        playClickSound();
-      }
-
-      onZoom?.();
-    },
-  });
-  const resizeHandlers = usePointerDrag({
-    start: (event) => {
-      playClickSound();
-      setIsResizing(true);
-      setIsResizePressed(true);
-
-      return {
-        width,
-        height,
-        origin: { x: event.clientX, y: event.clientY },
-        bounds: event.currentTarget.getBoundingClientRect(),
-      };
-    },
-    onDragMove: (delta, from) => {
-      reportDrag({ kind: "resize", width: from.width + delta.dx, height: from.height + delta.dy });
-
-      if (!containsPoint(from.bounds, { x: from.origin.x + delta.dx, y: from.origin.y + delta.dy })) {
-        setIsResizePressed(false);
-      }
-    },
-    onEnd: () => {
-      const drag = endDrag();
-
-      setIsResizing(false);
-      setIsResizePressed(false);
-
-      if (drag?.kind === "resize") {
-        onResize?.(drag.width, drag.height);
-      }
-    },
+  const { titleBarHandlers, resizeHandlers, isResizing, isResizePressed } = useWindowDrag({
+    x,
+    y,
+    width,
+    height,
+    maximized,
+    onMove,
+    onResize,
+    onZoom,
+    onDrag,
   });
 
   const contentId = focused ? FOCUSED_WINDOW_CONTENT_ID : fallbackContentId;
@@ -382,7 +242,7 @@ export function Window({
           keyDownHandlers.handle(event);
         }
 
-        const delta = event.defaultPrevented ? null : keyboardScrollDelta(event, viewport);
+        const delta = event.defaultPrevented ? null : keyboardScrollDelta(event, viewport, ARROW_STEP_PX);
 
         if (delta !== null) {
           event.preventDefault();
@@ -407,7 +267,7 @@ export function Window({
       {/* An inactive window's contents are inert, so the window itself is its only tab stop and
           neither the Tab key nor a screen reader reaches the content its scrim covers. */}
       <div className={styles.contents} inert={!focused}>
-        <div className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...mergeHandlers(moveHandlers, zoomHandlers)}>
+        <div className={styles.titleBar} {...PRESERVE_FOCUS_PROPS} {...titleBarHandlers}>
           {focused && <div className={styles.bars} aria-hidden />}
           <span
             className={styles.title}

@@ -318,6 +318,25 @@ test("a visible tooltip describes a control whose `aria-label` attribute differs
   expect(screen.getByRole("button", { description: "Tip" }).getAttribute("aria-describedby")).toBe(tip()!.id);
 });
 
+test("a visible tooltip appends its description to its control's existing description", () => {
+  render(
+    <>
+      <p id="hint">Hint</p>
+      <Tooltip label="Tip">
+        <button type="button" aria-label="Control" aria-describedby="hint" />
+      </Tooltip>
+    </>,
+  );
+
+  const control = screen.getByRole("button");
+
+  expect(control.getAttribute("aria-describedby")).toBe("hint");
+
+  hoverTooltipUntilShown(control.parentElement!);
+
+  expect(control.getAttribute("aria-describedby")).toBe(`hint ${tip()!.id}`);
+});
+
 test("a visible tooltip is hidden from assistive technology", () => {
   render(
     <Tooltip label="Tip">

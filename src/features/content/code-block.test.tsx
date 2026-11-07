@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { GITHUB_GIST_LINK_TEXT } from "#/config/site.ts";
 import { githubGistUrlOf } from "#/site/github-gists.ts";
@@ -20,10 +20,6 @@ beforeEach(() => {
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 const renderInEntry = (codeBlock: ReactNode) => render(<EntryClipboardProvider>{codeBlock}</EntryClipboardProvider>);

@@ -12,9 +12,11 @@ import {
   authoredEntry,
   draftEntry,
 } from "../test-utils/authored-content.ts";
+import { hookOf } from "../test-utils/plugin-hooks.ts";
 
-import { routesFor } from "./routes.ts";
+import { contentProblemsIn, contentProblemsPlugin, routesFor } from "./routes.ts";
 
+import type * as authoredContentModule from "../content/authored-content.ts";
 import type { AuthoredContent } from "../content/authored-content.ts";
 
 vi.mock("#/config/content.ts", async (importOriginal) => ({
@@ -25,6 +27,13 @@ vi.mock("#/config/content.ts", async (importOriginal) => ({
     "collection-3": { title: "Collection 3", description: "" },
   },
   PAGE_SLUGS: ["page-1", "page-2"],
+}));
+
+const contentOnDisk = vi.hoisted(() => ({ current: null as AuthoredContent | null }));
+
+vi.mock("../content/authored-content.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof authoredContentModule>()),
+  readAuthoredContent: () => contentOnDisk.current,
 }));
 
 const TODAY = "2026-07-19";
@@ -45,7 +54,8 @@ const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
     ...overrides,
   });
 
-const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides), TODAY);
+const routes = (overrides?: Partial<AuthoredContent>) => routesFor(content(overrides));
+const problems = (overrides?: Partial<AuthoredContent>) => contentProblemsIn(content(overrides), TODAY).join("\n");
 const paths = (overrides?: Partial<AuthoredContent>) => routes(overrides).map(({ path }) => path);
 const pagesWith = (slug: string) =>
   authoredContentDirectory(PAGES_DIRECTORY_NAME, [
@@ -116,7 +126,6 @@ describe("routesFor", () => {
           authoredCollection("collection-3"),
         ],
       }),
-      TODAY,
     ).map(({ path }) => path);
 
     expect(pathsWithDrafts).not.toContain("/collection-1/unpublished");
@@ -136,22 +145,28 @@ describe("routesFor", () => {
     expect(routesWithUnregisteredPage).toContainEqual({ path: "/unlisted", sitemap: { exclude: true } });
     expect(routesWithUnregisteredPage).toContainEqual({ path: "/page-1", sitemap: { lastmod: "2026-02-03" } });
   });
+});
 
-  test("includes an entry with an adjacent media directory", () => {
+describe("contentProblemsIn", () => {
+  test("returns no problems for a valid tree", () => {
+    expect(problems()).toBe("");
+  });
+
+  test("does not report an entry with an adjacent media directory", () => {
     expect(
-      paths({
+      problems({
         collections: [
           authoredCollection("collection-1", [authoredEntry("entry-1", UNDATED_ENTRY_OVERRIDES)], ["entry-1"]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
       }),
-    ).toContain("/collection-1/entry-1");
+    ).toBe("");
   });
 
-  test("throws for a collection name that is not URL-safe", () => {
-    expect(() =>
-      paths({
+  test("reports a collection name that is not URL-safe", () => {
+    expect(
+      problems({
         collections: [
           authoredCollection("Collection Four"),
           authoredCollection("collection-1"),
@@ -159,51 +174,51 @@ describe("routesFor", () => {
           authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/URL-unsafe.*Collection Four/s);
+    ).toMatch(/URL-unsafe.*Collection Four/s);
   });
 
-  test("throws for an entry slug that is not URL-safe", () => {
-    expect(() =>
-      paths({
+  test("reports an entry slug that is not URL-safe", () => {
+    expect(
+      problems({
         collections: [
           authoredCollection("collection-1", [authoredEntry("Not A Slug", UNDATED_ENTRY_OVERRIDES)]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/URL-unsafe.*Not A Slug/s);
+    ).toMatch(/URL-unsafe.*Not A Slug/s);
   });
 
-  test("throws for a page slug that is not URL-safe", () => {
-    expect(() =>
-      paths({
+  test("reports a page slug that is not URL-safe", () => {
+    expect(
+      problems({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
           authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES),
           authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
           authoredEntry("Read Me", UNDATED_ENTRY_OVERRIDES),
         ]),
       }),
-    ).toThrow(/URL-unsafe.*Read Me/s);
+    ).toMatch(/URL-unsafe.*Read Me/s);
   });
 
-  test("throws for a declared page without a corresponding file", () => {
-    expect(() =>
-      paths({
+  test("reports a declared page without a corresponding file", () => {
+    expect(
+      problems({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES)]),
       }),
-    ).toThrow(/declared with no corresponding content file.*page-2/s);
+    ).toMatch(/declared with no corresponding content file.*page-2/s);
   });
 
-  test("throws for a page with the same slug as a collection", () => {
-    expect(() =>
-      paths({
+  test("reports a page with the same slug as a collection", () => {
+    expect(
+      problems({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
           authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES),
           authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
           authoredEntry("collection-1", UNDATED_ENTRY_OVERRIDES),
         ]),
       }),
-    ).toThrow(/shadowed by a collection.*collection-1/s);
+    ).toMatch(/shadowed by a collection.*collection-1/s);
   });
 
   test.each([
@@ -222,73 +237,73 @@ describe("routesFor", () => {
       { collections: [...content().collections, authoredCollection(MEDIA_SEGMENT)] },
       `${CONTENT_DIRECTORY_PATH}/${MEDIA_SEGMENT}/`,
     ],
-  ])("throws for %s, naming its source", (_label, overrides, sourcePath) => {
-    expect(() => paths(overrides)).toThrow(`Content shadowing reserved route(s): ${sourcePath}.`);
+  ])("reports %s, naming its source", (_label, overrides, sourcePath) => {
+    expect(problems(overrides)).toContain(`Content shadowing reserved route(s): ${sourcePath}.`);
   });
 
-  test("throws for a declared collection without a corresponding directory", () => {
-    expect(() =>
-      paths({ collections: [authoredCollection("collection-1"), authoredCollection("collection-2")] }),
-    ).toThrow(/no corresponding content directory.*collection-3/s);
+  test("reports a declared collection without a corresponding directory", () => {
+    expect(problems({ collections: [authoredCollection("collection-1"), authoredCollection("collection-2")] })).toMatch(
+      /no corresponding content directory.*collection-3/s,
+    );
   });
 
-  test("throws for a content directory without a declared collection", () => {
-    expect(() => paths({ collections: [...content().collections, authoredCollection("unregistered")] })).toThrow(
+  test("reports a content directory without a declared collection", () => {
+    expect(problems({ collections: [...content().collections, authoredCollection("unregistered")] })).toMatch(
       /no declared collection.*unregistered/s,
     );
   });
 
-  test("throws for a directory inside a collection without an entry of the same name", () => {
-    expect(() =>
-      paths({
+  test("reports a directory inside a collection without an entry of the same name", () => {
+    expect(
+      problems({
         collections: [
           authoredCollection("collection-1", [authoredEntry("entry-1", UNDATED_ENTRY_OVERRIDES)], ["archive"]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(/no matching entry.*archive/s);
+    ).toMatch(/no matching entry.*archive/s);
   });
 
-  test("throws for a directory inside the pages directory without an entry of the same name", () => {
-    expect(() =>
-      paths({
+  test("reports a directory inside the pages directory without an entry of the same name", () => {
+    expect(
+      problems({
         pages: authoredContentDirectory(
           PAGES_DIRECTORY_NAME,
           [authoredEntry("page-1", UNDATED_ENTRY_OVERRIDES), authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES)],
           ["drafts"],
         ),
       }),
-    ).toThrow(/no matching entry.*drafts/s);
+    ).toMatch(/no matching entry.*drafts/s);
   });
 
-  test("includes a published entry dated today", () => {
+  test("does not report a published entry dated today", () => {
     expect(
-      paths({
+      problems({
         collections: [
           authoredCollection("collection-1", [authoredEntry("entry-1", { date: TODAY })]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
       }),
-    ).toContain("/collection-1/entry-1");
+    ).toBe("");
   });
 
-  test("accepts a draft entry dated after today", () => {
-    expect(() =>
-      paths({
+  test("does not report a draft entry dated after today", () => {
+    expect(
+      problems({
         collections: [
           authoredCollection("collection-1", [draftEntry("entry-1", { date: "2026-07-20" })]),
           authoredCollection("collection-2"),
           authoredCollection("collection-3"),
         ],
       }),
-    ).not.toThrow();
+    ).toBe("");
   });
 
-  test("throws for every published page and collection entry dated after today, naming the source path and date of each", () => {
-    expect(() =>
-      paths({
+  test("reports every published page and collection entry dated after today, naming the source path and date of each", () => {
+    expect(
+      problems({
         pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [
           authoredEntry("page-1", { date: "2026-07-20" }),
           authoredEntry("page-2", UNDATED_ENTRY_OVERRIDES),
@@ -299,8 +314,31 @@ describe("routesFor", () => {
           authoredCollection("collection-3"),
         ],
       }),
-    ).toThrow(
+    ).toContain(
       `${CONTENT_DIRECTORY_PATH}/${PAGES_DIRECTORY_NAME}/page-1.mdx (2026-07-20), ${CONTENT_DIRECTORY_PATH}/collection-1/entry-1.mdx (2026-08-01)`,
     );
+  });
+});
+
+describe("contentProblemsPlugin", () => {
+  const buildStartIn = (command: "build" | "serve") =>
+    hookOf<(this: unknown) => void>(contentProblemsPlugin(), "buildStart").call({
+      environment: { config: { command } },
+      error: (message: string) => {
+        throw new Error(message);
+      },
+    });
+
+  const contentWithTwoProblems = () =>
+    content({ collections: [authoredCollection("collection-1"), authoredCollection("unregistered")] });
+
+  test("fails the build, naming each problem, when the content on disk has problems", () => {
+    contentOnDisk.current = contentWithTwoProblems();
+    expect(() => buildStartIn("build")).toThrow(/no corresponding content directory.*\n.*no declared collection/);
+  });
+
+  test("does not fail when the dev server starts its environment", () => {
+    contentOnDisk.current = contentWithTwoProblems();
+    expect(() => buildStartIn("serve")).not.toThrow();
   });
 });

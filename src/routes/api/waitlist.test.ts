@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { API_ROUTES } from "#/api-routes.ts";
 import { WAITLIST_RATELIMIT_BINDING } from "#/server/bindings.ts";
 import type { MembershipResult } from "#/server/waitlist.ts";
-import { jsonPostRequest } from "#/test-utils/requests.ts";
+import { jsonPostRequest, requestHandlersOf } from "#/test-utils/requests.ts";
 
 import { Route } from "./waitlist.ts";
 
@@ -27,13 +27,7 @@ const VALID_SUBMISSION = {
   source: "/collection/entry",
 };
 
-/**
- * The exported route handler, so the tests exercise the endpoint as the site serves it. This route exports a handler
- * record rather than a handler factory.
- */
-const { POST } = Route.options.server!.handlers as unknown as {
-  POST: (context: { request: Request }) => Promise<Response>;
-};
+const { POST } = requestHandlersOf(Route);
 
 const post = (body: unknown, options?: Parameters<typeof jsonPostRequest>[2]) =>
   POST({ request: jsonPostRequest(ENDPOINT_URL, body, options) });

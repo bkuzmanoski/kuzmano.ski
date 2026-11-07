@@ -1,5 +1,3 @@
-import babel from "@rolldown/plugin-babel";
-import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
@@ -10,6 +8,7 @@ import { entryCoverImagesPlugin } from "./build/content/media/entry-cover-images
 import { entryIconUrlsPlugin } from "./build/content/media/entry-icon-urls.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
 import { markdownTokenCountsPlugin } from "./build/markdown/markdown-token-counts.ts";
+import { reactPlugins } from "./build/react-compiler.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
@@ -32,8 +31,7 @@ export default defineConfig({
     // Enables the Worker entry to resolve `virtual:markdown-token-counts`; tests that need counts mock the module.
     markdownTokenCountsPlugin(() => Promise.resolve({})),
     themeColorsPlugin(),
-    viteReact({ include: /\.(tsx?|mdx)$/ }),
-    babel({ presets: [reactCompilerPreset()] }),
+    ...reactPlugins(),
   ],
   test: {
     restoreMocks: true,

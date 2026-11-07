@@ -1,16 +1,13 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { SITE_URL } from "#/config/site.ts";
 import type { Membership } from "#/lib/waitlist/membership.ts";
+import { workerEnvState as env } from "#/test-utils/worker-env.ts";
 
 import { NOTION_TOKEN_BINDING, WAITLIST_DATA_SOURCE_BINDING } from "./bindings.ts";
 import { recordMembership } from "./waitlist.ts";
 
-const env = vi.hoisted(() => ({ current: {}, fails: false }));
-
-vi.mock("./env.ts", () => ({
-  workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
-}));
+vi.mock("./env.ts", async () => (await import("#/test-utils/worker-env.ts")).workerEnvMock());
 
 const NOTION_TOKEN = "notion-token";
 const DATA_SOURCE_ID = "data-source-id";
@@ -34,14 +31,8 @@ beforeEach(() => {
   fetchMock.mockReset();
   respondToLookup([]);
   respondToWrite(200);
-  env.fails = false;
   env.current = { [NOTION_TOKEN_BINDING]: NOTION_TOKEN, [WAITLIST_DATA_SOURCE_BINDING]: DATA_SOURCE_ID };
   vi.spyOn(console, "error").mockReturnValue();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 test("a membership is written to the configured data source", async () => {
@@ -134,20 +125,12 @@ test("a write that throws produces `unavailable`", async () => {
   await expect(recordMembership(MEMBERSHIP)).resolves.toBe("unavailable");
 });
 
-test.each([
-  ["token", { [WAITLIST_DATA_SOURCE_BINDING]: DATA_SOURCE_ID }, NOTION_TOKEN_BINDING],
-  ["data source", { [NOTION_TOKEN_BINDING]: NOTION_TOKEN }, WAITLIST_DATA_SOURCE_BINDING],
-])("a missing %s binding is reported without a request to Notion", async (_label, partial, binding) => {
-  env.current = partial;
+test("a missing binding produces `unavailable` and logs the `waitlist_binding_missing` event, without a request to Notion", async () => {
+  env.current = { [NOTION_TOKEN_BINDING]: NOTION_TOKEN };
 
   await expect(recordMembership(MEMBERSHIP)).resolves.toBe("unavailable");
   expect(fetchMock).not.toHaveBeenCalled();
-  expect(console.error).toHaveBeenCalledWith(expect.objectContaining({ binding }));
-});
-
-test("an unreachable Workers environment produces `unavailable` without a request to Notion", async () => {
-  env.fails = true;
-
-  await expect(recordMembership(MEMBERSHIP)).resolves.toBe("unavailable");
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(console.error).toHaveBeenCalledWith(
+    expect.objectContaining({ event: "waitlist_binding_missing", binding: WAITLIST_DATA_SOURCE_BINDING }),
+  );
 });

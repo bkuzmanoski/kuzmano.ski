@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { createFrameScheduler } from "../frame-scheduler.ts";
+
 import type { RefObject } from "react";
 
 export interface ScrollMetrics {
@@ -37,20 +39,8 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 
     measure();
 
-    let frameId: number | null = null;
-
-    const schedule = () => {
-      if (frameId !== null) {
-        return;
-      }
-
-      frameId = requestAnimationFrame(() => {
-        frameId = null;
-        measure();
-      });
-    };
-
-    const resizeObserver = new ResizeObserver(schedule);
+    const measurement = createFrameScheduler(measure);
+    const resizeObserver = new ResizeObserver(measurement.schedule);
 
     const observeChildren = () => {
       for (const child of element.children) {
@@ -63,7 +53,7 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
 
     const mutationObserver = new MutationObserver(() => {
       observeChildren();
-      schedule();
+      measurement.schedule();
     });
 
     mutationObserver.observe(element, { childList: true });
@@ -71,10 +61,7 @@ export function useScrollMetrics(ref: RefObject<HTMLElement | null>) {
     return () => {
       resizeObserver.disconnect();
       mutationObserver.disconnect();
-
-      if (frameId !== null) {
-        cancelAnimationFrame(frameId);
-      }
+      measurement.stop();
     };
   }, [ref, measure]);
 

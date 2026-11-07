@@ -8,12 +8,10 @@ export const IDLE_DURATION_MS = 250;
 export const DETENT_PX = 40;
 
 const STEP_SPEED_PX_PER_S = 450;
-const SPEED_SMOOTHING = 0;
 
 interface ScrollGesture {
   top: number;
   at: number;
-  speed: number;
   distance: number;
   silent: boolean;
 }
@@ -29,7 +27,7 @@ function getScrollTop(element: Element) {
 
 /** Starts a gesture a full detent along, so the first real movement plays a sound immediately. */
 function openGesture(top: number, at: number, silent = false): ScrollGesture {
-  return { top, at, speed: 0, distance: DETENT_PX, silent };
+  return { top, at, distance: DETENT_PX, silent };
 }
 
 /** Records the current position without playing a detent. */
@@ -133,15 +131,11 @@ export function playScrollSound(element: Element) {
     return;
   }
 
-  const speed = (movedDistance / elapsedMs) * 1000;
-
-  gesture.speed = gesture.speed > 0 ? gesture.speed * SPEED_SMOOTHING + speed * (1 - SPEED_SMOOTHING) : speed;
-
   // Keep the remainder so detents stay evenly spaced across event boundaries, but never carry more than one detent into
   // the next event.
   gesture.distance = Math.min(gesture.distance - DETENT_PX, DETENT_PX);
 
-  playScrollDetentSound(gesture.speed);
+  playScrollDetentSound((movedDistance / elapsedMs) * 1000);
 }
 
 /** Records `height` and reports whether it differs from the element's previous height in `heights`. */

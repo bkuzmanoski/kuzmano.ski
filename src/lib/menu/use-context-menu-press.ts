@@ -1,6 +1,8 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useRef } from "react";
 
 import { playClickSound } from "../audio/sounds.ts";
+import { clientPositionOf, distanceBetween } from "../geometry.ts";
+import { useEventListeners } from "../hooks/use-event-listeners.ts";
 import { useTimer } from "../hooks/use-timer.ts";
 import { isPrimaryPress } from "../press/press.ts";
 import { useMousePressStart } from "../press/use-mouse-press-start.ts";
@@ -54,7 +56,7 @@ export function useContextMenuPress({
     onPress({ origin, isPointerHeld, pointerType });
   }
 
-  const onPointerDown = useEffectEvent((event: PointerEvent) => {
+  const onPointerDown = (event: PointerEvent) => {
     longPressTimer.cancel(); // A second touch begins a pinch rather than continuing a long press.
 
     if (!event.isPrimary) {
@@ -67,7 +69,7 @@ export function useContextMenuPress({
       return;
     }
 
-    const position = { x: event.clientX, y: event.clientY };
+    const position = clientPositionOf(event);
     const press = {
       pointerId: event.pointerId,
       pointerType: event.pointerType,
@@ -89,37 +91,37 @@ export function useContextMenuPress({
       // timer and native event may occur nearly simultaneously, only the first opens the menu.
       longPressTimer.start(() => open(press.position, true, press.pointerType), LONG_PRESS_DURATION_MS);
     }
-  });
+  };
 
-  const onMouseDown = useEffectEvent((event: MouseEvent) => {
+  const onMouseDown = (event: MouseEvent) => {
     if (mousePressStart.consumeMouseDown(event) && isPrimaryPress(event) && event.altKey && isTarget(event.target)) {
       event.preventDefault(); // The browser would otherwise move the focus to the body after the menu has focused itself.
-      open({ x: event.clientX, y: event.clientY }, true, "mouse");
+      open(clientPositionOf(event), true, "mouse");
     }
-  });
+  };
 
-  const onPointerMove = useEffectEvent((event: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent) => {
     const press = pressRef.current;
 
     if (press?.pointerId !== event.pointerId) {
       return;
     }
 
-    press.position = { x: event.clientX, y: event.clientY };
+    press.position = clientPositionOf(event);
 
-    if (Math.hypot(event.clientX - press.origin.x, event.clientY - press.origin.y) > LONG_PRESS_TOLERANCE_PX) {
+    if (distanceBetween(clientPositionOf(event), press.origin) > LONG_PRESS_TOLERANCE_PX) {
       longPressTimer.cancel();
     }
-  });
+  };
 
-  const onPointerEnd = useEffectEvent((event: PointerEvent) => {
+  const onPointerEnd = (event: PointerEvent) => {
     if (pressRef.current?.pointerId === event.pointerId) {
       pressRef.current = null;
       longPressTimer.cancel();
     }
-  });
+  };
 
-  const onContextMenu = useEffectEvent((event: MouseEvent) => {
+  const onContextMenu = (event: MouseEvent) => {
     if (!isTarget(event.target)) {
       return;
     }
@@ -130,23 +132,18 @@ export function useContextMenuPress({
 
     if (!press?.hasOpenedMenu) {
       // Windows dispatches `contextmenu` after the release, and macOS during the press.
-      open(press?.position ?? { x: event.clientX, y: event.clientY }, press !== null, press?.pointerType ?? "mouse");
+      open(press?.position ?? clientPositionOf(event), press !== null, press?.pointerType ?? "mouse");
     }
+  };
+
+  // Listens on `document` instead of in the window's capture phase, so a menu mounted during `pointerdown` cannot
+  // receive that same event through its own document listener as a new press.
+  useEventListeners("document", {
+    pointerdown: onPointerDown,
+    mousedown: onMouseDown,
+    pointermove: onPointerMove,
+    pointerup: onPointerEnd,
+    pointercancel: onPointerEnd,
+    contextmenu: onContextMenu,
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const options = { signal: controller.signal };
-
-    // Add event listeners on `document` instead of the window capture phase so a menu mounted during `pointerdown`
-    // cannot receive that same event through its own document listener as a new press.
-    document.addEventListener("pointerdown", onPointerDown, options);
-    document.addEventListener("mousedown", onMouseDown, options);
-    document.addEventListener("pointermove", onPointerMove, options);
-    document.addEventListener("pointerup", onPointerEnd, options);
-    document.addEventListener("pointercancel", onPointerEnd, options);
-    document.addEventListener("contextmenu", onContextMenu, options);
-
-    return () => controller.abort();
-  }, []);
 }

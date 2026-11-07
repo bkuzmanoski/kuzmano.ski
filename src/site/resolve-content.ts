@@ -1,5 +1,7 @@
+import type { FeatureRouteId } from "#/config/feature-routes.ts";
+
 import { collections, pages } from "./catalog.ts";
-import { featureRouteFor } from "./routes.ts";
+import { featureRouteIdFor } from "./routes.ts";
 
 import type { Collection, Frontmatter } from "./catalog.ts";
 
@@ -8,7 +10,7 @@ export type ResolvedContent =
   | { kind: "page"; slug: string; frontmatter: Frontmatter | null }
   | { kind: "collectionEntry"; collection: Collection; slug: string; frontmatter: Frontmatter | null }
   | { kind: "collection"; collection: Collection }
-  | { kind: "feature"; route: string }
+  | { kind: "feature"; id: FeatureRouteId }
   | { kind: "notFound" };
 
 /**
@@ -18,7 +20,7 @@ export type ResolvedContent =
  * feature route wins over content of the same name.
  */
 export function resolveContent(segment: string, slug?: string): ResolvedContent {
-  const collection = collections[segment];
+  const collection = collections.get(segment);
 
   if (slug !== undefined) {
     return collection?.has(slug)
@@ -26,10 +28,10 @@ export function resolveContent(segment: string, slug?: string): ResolvedContent 
       : { kind: "notFound" };
   }
 
-  const featureRoute = featureRouteFor(segment);
+  const featureRouteId = featureRouteIdFor(segment);
 
-  if (featureRoute) {
-    return { kind: "feature", route: featureRoute };
+  if (featureRouteId) {
+    return { kind: "feature", id: featureRouteId };
   }
 
   if (collection) {

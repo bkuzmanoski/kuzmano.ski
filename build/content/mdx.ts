@@ -59,7 +59,7 @@ export function mdxCompileOptionsFor({
 }: MDXOptions = {}): CompileOptions {
   const rehypePlugins: PluggableList = [
     [rehypeMedia, mediaForEntry], // First, so the elements the other plugins see already name the files the site serves.
-    [rehypeProvidedElements, ["video"]], // Renders videos with the site's playback controls (see `/src/features/content/video.tsx`).
+    [rehypeProvidedElements, ["video"]], // Renders videos with the site's playback controls (see `/src/features/video/video.tsx`).
     rehypeCalloutVariants,
     rehypeImageGalleryChildren,
     rehypeContentSpans,

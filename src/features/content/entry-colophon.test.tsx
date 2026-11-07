@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import type { Collection } from "#/site/catalog.ts";
 import { collectionWithFeed } from "#/test-utils/catalog.ts";
@@ -12,10 +12,6 @@ import { EntryColophon } from "./entry-colophon.tsx";
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal),
 );
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
 
 const COLLECTION = fakeCollection(fakeCollectionEntries("newest", "middle", "oldest"));
 

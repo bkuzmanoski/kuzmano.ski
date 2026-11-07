@@ -8,12 +8,9 @@ import valueParser from "postcss-value-parser";
 import { errorMessageOf } from "#/lib/errors.ts";
 
 import { CLIENT_ENVIRONMENT } from "./environments.ts";
-import { SOURCE_DIRECTORY_PATH, fromRoot, toRootRelative } from "./paths.ts";
+import { SOURCE_DIRECTORY_PATH, fromRoot, isFileReference, toRootRelative } from "./paths.ts";
 
 import type { Plugin } from "vite";
-
-/** References that do not resolve to local files: schemes, absolute paths, and fragments. */
-const NON_FILE_REFERENCE = /^(?:[a-z][a-z0-9+.-]*:|\/|#)/i;
 
 /**
  * Matches the first unescaped query or fragment delimiter. Escaped `\?` and `\#` remain part of the path. The pattern
@@ -64,7 +61,7 @@ export function unresolvedUrlsIn(css: string, exists: (filePath: string) => bool
 
   const collectUnresolved = (value: string) => {
     for (const reference of urlsIn(value)) {
-      if (!NON_FILE_REFERENCE.test(reference) && !exists(filePathOf(reference))) {
+      if (isFileReference(reference) && !exists(filePathOf(reference))) {
         unresolvedReferences.push(reference);
       }
     }

@@ -1,9 +1,11 @@
 import { useSyncExternalStore } from "react";
 
+import { mediaQueryListFor } from "../media-query.ts";
+
 let reducedMotionQuery: MediaQueryList | null | undefined;
 
 function getQuery() {
-  reducedMotionQuery ??= (window as Partial<Window>).matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
+  reducedMotionQuery ??= mediaQueryListFor("(prefers-reduced-motion: reduce)");
   return reducedMotionQuery;
 }
 

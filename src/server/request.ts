@@ -7,21 +7,40 @@ export const MAX_BODY_LENGTH = 32_768;
 
 const CONTENT_LENGTH = /^\d+$/;
 
-const utf8Encoder = new TextEncoder();
-
-/** Returns whether a request or body exceeds the maximum accepted size. */
-export function exceedsMaxLength(value: Request | string): boolean {
-  if (typeof value === "string") {
-    return utf8Encoder.encode(value).length > MAX_BODY_LENGTH;
-  }
-
-  const declaredLength = value.headers.get("content-length");
+/** Returns whether a request declares a body longer than the maximum accepted size. */
+export function declaresExcessiveLength(request: Request): boolean {
+  const declaredLength = request.headers.get("content-length");
 
   if (declaredLength === null) {
     return false;
   }
 
   return !CONTENT_LENGTH.test(declaredLength) || Number(declaredLength) > MAX_BODY_LENGTH;
+}
+
+/** Reads a request body as text, returning `null` if it exceeds the maximum accepted size. */
+export async function readBodyWithinMaxLength(request: Request): Promise<string | null> {
+  if (!request.body) {
+    return "";
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Array<Uint8Array<ArrayBuffer>> = [];
+
+  let byteLength = 0;
+
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    byteLength += chunk.value.byteLength;
+
+    if (byteLength > MAX_BODY_LENGTH) {
+      await reader.cancel();
+      return null;
+    }
+
+    chunks.push(chunk.value);
+  }
+
+  return new Blob(chunks).text();
 }
 
 /** Returns whether a request's `Origin` matches the request URL's origin. */

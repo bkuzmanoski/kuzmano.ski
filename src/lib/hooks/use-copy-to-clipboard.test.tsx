@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { deferWrite } from "#/test-utils/clipboard.ts";
 
@@ -11,10 +11,6 @@ beforeEach(() => {
   writeText.mockReset();
   writeText.mockResolvedValue(undefined);
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 /** Starts two copies, of which the second starts while the first's write is pending. */

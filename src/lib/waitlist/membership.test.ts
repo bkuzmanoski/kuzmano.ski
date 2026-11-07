@@ -24,6 +24,13 @@ test("surrounding whitespace is trimmed from every field", () => {
   });
 });
 
+test("`parseSubmission` lowercases the email address", () => {
+  expect(parseSubmission({ ...VALID_SUBMISSION, emailAddress: "User@Example.COM" })).toMatchObject({
+    ok: true,
+    value: { emailAddress: "user@example.com" },
+  });
+});
+
 test.each([
   ["a missing email address", { emailAddress: undefined }],
   ["a missing list", { list: undefined }],

@@ -18,6 +18,12 @@ import { insetFromViewport, insetToViewport } from "#/lib/geometry.ts";
 import type { Inset, Size, Transform } from "#/lib/geometry.ts";
 import { useClientValue } from "#/lib/hooks/use-client-value.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
+import {
+  whenDisplayGlassLayerReady,
+  whenFontReady,
+  whenIllustrationReady,
+  whenKeySoundsReady,
+} from "#/lib/startup-sequence/assets.ts";
 import { screenParametersFor } from "#/lib/startup-sequence/crt-display-effect.ts";
 import { beginStartupSequence, completeStartupSequence } from "#/lib/startup-sequence/lifecycle.ts";
 import { clearStartupSequenceThemeColor } from "#/lib/startup-sequence/overlay.ts";
@@ -30,10 +36,6 @@ import {
   phaseFlags,
   sequence,
   startOfPhaseMs,
-  whenDisplayGlassLayerReady,
-  whenFontReady,
-  whenIllustrationReady,
-  whenKeySoundsReady,
 } from "#/lib/startup-sequence/phases.ts";
 import type { Motion, Phase } from "#/lib/startup-sequence/phases.ts";
 import { shouldRunStartupSequence } from "#/lib/startup-sequence/session.ts";
@@ -57,8 +59,6 @@ const cssParallaxTransform = ({ translate, scale }: typeof KEYBOARD_PARALLAX) =>
   `translate3d(${translate.x * 100}%, ${translate.y * 100}%, 0) scale3d(${scale.x}, ${scale.y}, 1)`;
 
 const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
-
-type CoverContent = "loadingIndicator" | "beginPrompt";
 
 function Display({
   metrics,
@@ -137,7 +137,6 @@ function StartupSequenceContent() {
     getPrefersReducedMotion() ? REDUCED_MOTION_DURATION_MS : MOTION_DURATION_MS,
   );
 
-  const [coverContent, setCoverContent] = useState<CoverContent>("loadingIndicator");
   const [phase, setPhase] = useState<Phase>("loading");
   const [metrics, setMetrics] = useState<StageMetrics>(() => stageMetricsFor(viewportSize()));
   const bodyImageRef = useRef<HTMLImageElement>(null);
@@ -201,7 +200,6 @@ function StartupSequenceContent() {
       }
 
       setPhase("waiting-for-input");
-      setCoverContent("beginPrompt");
 
       const eventListenerOptions = { capture: true, signal: controller.signal };
 
@@ -346,11 +344,7 @@ function StartupSequenceContent() {
         <>
           <div className={styles.loadingCover} />
           <div className={styles.loadingContent}>
-            {coverContent === "loadingIndicator" ? (
-              <LoadingIndicator />
-            ) : (
-              <div className={styles.prompt}>{beginPrompt}</div>
-            )}
+            {phase === "waiting-for-input" ? <div className={styles.prompt}>{beginPrompt}</div> : <LoadingIndicator />}
           </div>
         </>
       )}

@@ -34,7 +34,11 @@ export function useTimers() {
   }
 
   function add(callback: () => void, delayMs: number) {
-    timersRef.current.push(setTimeout(callback, delayMs));
+    const timer = setTimeout(() => {
+      timersRef.current = timersRef.current.filter((pendingTimer) => pendingTimer !== timer);
+      callback();
+    }, delayMs);
+    timersRef.current.push(timer);
   }
 
   useEffect(() => cancelAll, []);

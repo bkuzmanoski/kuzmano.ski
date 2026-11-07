@@ -161,7 +161,6 @@ afterEach(() => {
   devicePixelRatioChangeListeners.clear();
   putImageData.mockClear();
   document.body.replaceChildren();
-  vi.unstubAllGlobals();
 });
 
 test("`composeBackdropDitherField` returns a density that falls from the top edge to `0` at the bottom edge", () => {

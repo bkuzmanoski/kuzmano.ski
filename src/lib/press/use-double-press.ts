@@ -1,7 +1,10 @@
 import { useRef } from "react";
 
+import { clientPositionOf, distanceBetween } from "../geometry.ts";
+
 import { swallowNextPress } from "./press.ts";
 
+import type { Position } from "../geometry.ts";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
 /** The window within which a second press pairs with the first. */
@@ -10,9 +13,8 @@ export const DOUBLE_PRESS_INTERVAL_MS = 350;
 /** How far a press may travel, and how far the second may land from the first. */
 const DOUBLE_PRESS_TOLERANCE_PX = 16;
 
-const exceedsTolerance = (event: ReactPointerEvent, from: { x: number; y: number }) =>
-  Math.abs(event.clientX - from.x) > DOUBLE_PRESS_TOLERANCE_PX ||
-  Math.abs(event.clientY - from.y) > DOUBLE_PRESS_TOLERANCE_PX;
+const exceedsTolerance = (event: ReactPointerEvent, from: Position) =>
+  distanceBetween(clientPositionOf(event), from) > DOUBLE_PRESS_TOLERANCE_PX;
 
 /**
  * Detects a double press from mouse, touch, or pen input.
@@ -38,12 +40,12 @@ export function useDoublePress({
   onDoublePress: () => void;
 }) {
   const lastPointerTypeRef = useRef("mouse");
-  const pressStartRef = useRef<{ x: number; y: number } | null>(null);
-  const pendingPressRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  const pressStartRef = useRef<Position | null>(null);
+  const pendingPressRef = useRef<(Position & { time: number }) | null>(null);
 
   function onPointerDown(event: ReactPointerEvent) {
     if (event.pointerType !== "mouse") {
-      pressStartRef.current = { x: event.clientX, y: event.clientY };
+      pressStartRef.current = clientPositionOf(event);
     }
   }
 
@@ -85,7 +87,7 @@ export function useDoublePress({
       return;
     }
 
-    pendingPressRef.current = { time: currentTime, x: event.clientX, y: event.clientY };
+    pendingPressRef.current = { ...clientPositionOf(event), time: currentTime };
   }
 
   function onPointerCancel() {

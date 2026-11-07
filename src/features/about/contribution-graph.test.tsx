@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { act, screen } from "@testing-library/react";
 import postcss from "postcss";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { GITHUB_PROFILE_URL, GITHUB_USERNAME } from "#/config/site.ts";
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
@@ -33,10 +33,6 @@ beforeEach(() => {
   useContributionCalendar.mockReset();
   notifyResizeObservers = stubResizeObserver();
   prefersReducedMotion.matches = false;
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 /** A partial first week that starts on a Wednesday, then a whole week from Sunday. */

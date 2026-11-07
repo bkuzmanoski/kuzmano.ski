@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { API_ROUTES } from "#/api-routes.ts";
 import { GITHUB_USERNAME } from "#/config/site.ts";
 import type { ContributionCalendar } from "#/lib/github/contributions.ts";
-import { getRequestFromSite } from "#/test-utils/requests.ts";
+import { getRequestFromSite, requestHandlersOf } from "#/test-utils/requests.ts";
 
 import { Route } from "./github-contributions.ts";
 
@@ -35,15 +35,9 @@ beforeEach(() => {
   vi.stubGlobal("caches", { default: dataCenterCache });
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
 const ENDPOINT_URL = `https://example.com${API_ROUTES.githubContributions}`;
 
-const { GET } = Route.options.server!.handlers as unknown as {
-  GET: (context: { request: Request }) => Promise<Response>;
-};
+const { GET } = requestHandlersOf(Route);
 
 const get = (options?: Parameters<typeof getRequestFromSite>[1]) =>
   GET({ request: getRequestFromSite(ENDPOINT_URL, options) });

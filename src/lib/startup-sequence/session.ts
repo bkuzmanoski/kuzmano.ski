@@ -1,4 +1,5 @@
-// Has no imports because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
+// Imports only leaf modules because pre-hydration scripts bundle this module (see `/build/inline-scripts.ts`).
+import { SESSION_STORAGE, removeStored, writeStored } from "../storage.ts";
 
 export const STARTUP_SEQUENCE_STORAGE_KEY = "startup-sequence-run";
 
@@ -16,18 +17,5 @@ export function shouldRunStartupSequence(): boolean {
   return cachedShouldRun;
 }
 
-export function rememberStartupSequenceRun() {
-  try {
-    sessionStorage.setItem(STARTUP_SEQUENCE_STORAGE_KEY, "1");
-  } catch {
-    // Ignored.
-  }
-}
-
-export function forgetStartupSequenceRun() {
-  try {
-    sessionStorage.removeItem(STARTUP_SEQUENCE_STORAGE_KEY);
-  } catch {
-    // Ignored.
-  }
-}
+export const rememberStartupSequenceRun = () => writeStored(STARTUP_SEQUENCE_STORAGE_KEY, "1", SESSION_STORAGE);
+export const forgetStartupSequenceRun = () => removeStored(STARTUP_SEQUENCE_STORAGE_KEY, SESSION_STORAGE);

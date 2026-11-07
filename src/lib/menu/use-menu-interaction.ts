@@ -1,10 +1,12 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { playClickSound, playHoverSound } from "../audio/sounds.ts";
+import { clientPositionOf, distanceBetween } from "../geometry.ts";
 import { useActivationFlash } from "../hooks/use-activation-flash.ts";
+import { useEventListeners } from "../hooks/use-event-listeners.ts";
 import { useTimer } from "../hooks/use-timer.ts";
 import { isFollowingLink } from "../link.ts";
-import { cycle } from "../math.ts";
+import { navigationTargetOf } from "../list-navigation.ts";
 import { isPointerClick, isPrimaryPress } from "../press/press.ts";
 import { DRAG_THRESHOLD_PX } from "../press/use-pointer-drag.ts";
 
@@ -34,16 +36,6 @@ export interface OpeningPress {
 function indexAt(x: number, y: number): number {
   const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
   return element ? Number(element.dataset.index) : -1;
-}
-
-function lastEnabledIndex(items: ReadonlyArray<MenuInteractionItem>): number {
-  for (let index = items.length - 1; index >= 0; index--) {
-    if (items[index]?.isEnabled) {
-      return index;
-    }
-  }
-
-  return -1;
 }
 
 export function useMenuInteraction({
@@ -97,25 +89,15 @@ export function useMenuInteraction({
     }
   }
 
-  function focusEdgeItem(edge: "first" | "last") {
-    const index = edge === "first" ? items.findIndex((item) => item.isEnabled) : lastEnabledIndex(items);
+  // A menu wraps at either end and skips its disabled items.
+  function focusNavigationTarget(key: string) {
+    const index = navigationTargetOf(key, focusedItemIndexRef.current, items.length, {
+      wraps: true,
+      isEnabled: (candidate) => items[candidate]?.isEnabled === true,
+    });
 
-    if (index >= 0) {
+    if (index !== null && index >= 0) {
       focusItem(index);
-    }
-  }
-
-  function focusAdjacentItem(direction: 1 | -1) {
-    let nextIndex = focusedItemIndexRef.current;
-    let remaining = items.length;
-
-    while (remaining-- > 0) {
-      nextIndex = cycle(items.length, nextIndex, direction);
-
-      if (items[nextIndex]?.isEnabled) {
-        focusItem(nextIndex);
-        return;
-      }
     }
   }
 
@@ -183,10 +165,9 @@ export function useMenuInteraction({
   useLayoutEffect(() => () => activateFlashingItem(), []);
 
   const hasMovedFromPressOrigin = (event: PointerEvent) =>
-    pressOrigin === null ||
-    Math.hypot(event.clientX - pressOrigin.x, event.clientY - pressOrigin.y) > DRAG_THRESHOLD_PX;
+    pressOrigin === null || distanceBetween(clientPositionOf(event), pressOrigin) > DRAG_THRESHOLD_PX;
 
-  const onPointerMove = useEffectEvent((event: PointerEvent) => {
+  const onPointerMove = (event: PointerEvent) => {
     if (hasMovedFromPressOrigin(event)) {
       isOpeningPressStationaryRef.current = false;
     }
@@ -198,9 +179,9 @@ export function useMenuInteraction({
     const index = indexAt(event.clientX, event.clientY);
 
     focusItem(items[index]?.isEnabled ? index : -1);
-  });
+  };
 
-  const onPointerUp = useEffectEvent((event: PointerEvent) => {
+  const onPointerUp = (event: PointerEvent) => {
     const wasSticky = isStickyRef.current;
 
     isStickyRef.current = true;
@@ -224,9 +205,9 @@ export function useMenuInteraction({
     } else if (!wasSticky && !anchor?.contains(event.target as Node)) {
       onClose();
     }
-  });
+  };
 
-  const onPointerCancel = useEffectEvent(() => {
+  const onPointerCancel = () => {
     // When the browser takes over a gesture (e.g., to scroll), it fires `pointercancel` instead of `pointerup`. Mark
     // the menu as sticky so the next press starts a new interaction rather than ending the canceled opening hold.
     isStickyRef.current = true;
@@ -234,9 +215,9 @@ export function useMenuInteraction({
     if (!flash.isRunning()) {
       focusItem(-1);
     }
-  });
+  };
 
-  const onPointerDown = useEffectEvent((event: PointerEvent) => {
+  const onPointerDown = (event: PointerEvent) => {
     isOpeningPressStationaryRef.current = false;
 
     const isTargetInsideMenu =
@@ -245,21 +226,18 @@ export function useMenuInteraction({
     if (isStickyRef.current && !isTargetInsideMenu && !flash.isRunning()) {
       onClose();
     }
-  });
+  };
 
   useEffect(() => {
     listRef.current?.focus();
-
-    const controller = new AbortController();
-    const options = { signal: controller.signal };
-
-    document.addEventListener("pointermove", onPointerMove, options);
-    document.addEventListener("pointerup", onPointerUp, options);
-    document.addEventListener("pointercancel", onPointerCancel, options);
-    document.addEventListener("pointerdown", onPointerDown, options);
-
-    return () => controller.abort();
   }, [listRef]);
+
+  useEventListeners("document", {
+    pointermove: onPointerMove,
+    pointerup: onPointerUp,
+    pointercancel: onPointerCancel,
+    pointerdown: onPointerDown,
+  });
 
   function onClick(event: MouseEvent) {
     const item = (event.target as Element).closest<HTMLElement>("[data-index]");
@@ -279,26 +257,11 @@ export function useMenuInteraction({
 
     switch (event.key) {
       case "ArrowDown":
-        event.preventDefault();
-        focusAdjacentItem(1);
-
-        break;
-
       case "ArrowUp":
-        event.preventDefault();
-        focusAdjacentItem(-1);
-
-        break;
-
       case "Home":
-        event.preventDefault();
-        focusEdgeItem("first");
-
-        break;
-
       case "End":
         event.preventDefault();
-        focusEdgeItem("last");
+        focusNavigationTarget(event.key);
 
         break;
 

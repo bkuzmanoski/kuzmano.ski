@@ -1,6 +1,6 @@
 import CrossCheckboxIndicator from "#/assets/images/checkbox-indicator-cross.svg?react";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./checkbox.module.css";
 

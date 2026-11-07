@@ -2,8 +2,7 @@ import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { PLAIN_TEXT_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 
-import { CLIENT_ENVIRONMENT } from "./environments.ts";
-import { requestPathOf } from "./paths.ts";
+import { generatedFilesPlugin } from "./generated-file-middleware.ts";
 
 import type { Plugin } from "vite";
 
@@ -49,23 +48,9 @@ export const robotsText = () =>
     ``,
   ].join("\n");
 
-export function robotsPlugin(): Plugin {
-  return {
+export const robotsPlugin = (): Plugin =>
+  generatedFilesPlugin({
     name: "kuzmano.ski:robots",
-    applyToEnvironment: (environment) => environment.name === CLIENT_ENVIRONMENT,
-    generateBundle() {
-      this.emitFile({ type: "asset", fileName: "robots.txt", source: robotsText() });
-    },
-    configureServer(server) {
-      server.middlewares.use((request, response, next) => {
-        if (requestPathOf(request) !== `/robots.txt`) {
-          next();
-          return;
-        }
-
-        response.setHeader("content-type", PLAIN_TEXT_CONTENT_TYPE);
-        response.end(robotsText());
-      });
-    },
-  };
-}
+    fileNames: ["robots.txt"],
+    load: () => Promise.resolve({ contentType: PLAIN_TEXT_CONTENT_TYPE, contents: robotsText() }),
+  });

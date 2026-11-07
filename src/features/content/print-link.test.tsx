@@ -11,7 +11,6 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 );
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   vi.mocked(playClickSound).mockClear();
 });
 

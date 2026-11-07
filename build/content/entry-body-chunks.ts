@@ -128,7 +128,7 @@ export function entryBodyChunksIn(chunks: Array<BundledChunk>, base: string): Re
  * hydration; client and development builds receive an empty map.
  */
 export function entryBodyChunksPlugin(): Array<Plugin> {
-  let entryBodyChunks: Record<EntryKey, EntryBodyChunks> = {};
+  let entryBodyChunks: Record<EntryKey, EntryBodyChunks> | null = null;
   return [
     {
       name: "kuzmano.ski:entry-body-chunks-capture",
@@ -151,7 +151,22 @@ export function entryBodyChunksPlugin(): Array<Plugin> {
       name: "kuzmano.ski:entry-body-chunks",
       moduleId: "virtual:entry-body-chunks",
       exportName: "ENTRY_BODY_CHUNKS",
-      load: ({ name, config }) => (name === SERVER_ENVIRONMENT && config.command === "build" ? entryBodyChunks : {}),
+      load({ name, config }) {
+        if (name !== SERVER_ENVIRONMENT || config.command !== "build") {
+          return {};
+        }
+
+        // The server build depends on chunks captured by the client build, so TanStack Start must build the client
+        // environment first. This check prevents documents from being emitted without their entry preloads and
+        // stylesheets.
+        if (entryBodyChunks === null) {
+          throw new Error(
+            "The server build loaded `virtual:entry-body-chunks` before the client build captured the entry body chunks.",
+          );
+        }
+
+        return entryBodyChunks;
+      },
     }),
   ];
 }

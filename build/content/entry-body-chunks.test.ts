@@ -181,3 +181,10 @@ test("the virtual module exports an empty map outside the SSR build", async () =
     "export const ENTRY_BODY_CHUNKS = {};",
   );
 });
+
+test("the virtual module throws in the SSR build before the client build captures body chunks", async () => {
+  const [, provider] = entryBodyChunksPlugin();
+  await expect(loadedModuleFor(provider!, SERVER_ENVIRONMENT, "build")).rejects.toThrow(
+    "before the client build captured the entry body chunks",
+  );
+});

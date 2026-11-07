@@ -1,5 +1,6 @@
-import { CLIENT_ENVIRONMENT } from "../environments.ts";
-import { ICON_ARTWORK_FILE_PATH, STYLESHEET_FILE_PATH, fromRoot, requestPathOf } from "../paths.ts";
+import { generatedFilesPlugin } from "../generated-file-middleware.ts";
+import { ICON_ARTWORK_FILE_PATH, STYLESHEET_FILE_PATH, fromRoot } from "../paths.ts";
+import { sharedLoad } from "../shared-load.ts";
 import { readPalette } from "../stylesheet/palette.ts";
 
 import { readArtwork } from "./artwork.ts";
@@ -55,57 +56,22 @@ async function generateFiles(): Promise<Array<GeneratedFile>> {
 
 /** Generates the site's icons and web app manifest. */
 export function siteIconsPlugin(): Plugin {
-  let generatedFilesPromise: Promise<Array<GeneratedFile>> | null = null;
-
-  const ensureFiles = () =>
-    (generatedFilesPromise ??= generateFiles().catch((cause: unknown) => {
-      generatedFilesPromise = null; // Clear failed generation so later requests can retry after the inputs are fixed.
-      throw cause;
-    }));
+  const generatedFiles = sharedLoad(generateFiles);
 
   return {
-    name: "kuzmano.ski:site-icons",
-    async generateBundle() {
-      if (this.environment.name !== CLIENT_ENVIRONMENT) {
-        return;
-      }
-
-      for (const { fileName, contents } of await ensureFiles()) {
-        this.emitFile({ type: "asset", fileName, source: contents });
-      }
-    },
-    configureServer(server) {
-      server.middlewares.use((request, response, next) => {
-        const requestPath = requestPathOf(request);
-        const fileName = SITE_ASSET_FILE_NAMES.find((candidate) => requestPath === `/${candidate}`);
-
-        // Generate files only for icon requests so invalid artwork or stylesheets do not break unrelated dev-server
-        // requests.
-        if (fileName === undefined) {
-          next();
-          return;
-        }
-
-        ensureFiles()
-          .then((generatedFiles) => {
-            const requestedFile = generatedFiles.find((candidate) => candidate.fileName === fileName);
-
-            if (!requestedFile) {
-              next();
-              return;
-            }
-
-            response.setHeader("content-type", requestedFile.mediaType);
-            response.end(requestedFile.contents);
-          })
-          .catch(next);
-      });
-    },
+    ...generatedFilesPlugin({
+      name: "kuzmano.ski:site-icons",
+      fileNames: SITE_ASSET_FILE_NAMES,
+      load: async (fileName) => {
+        const generatedFile = (await generatedFiles.get()).find((candidate) => candidate.fileName === fileName)!; // `generateFiles` checks that it generates every name in `SITE_ASSET_FILE_NAMES`.
+        return { contentType: generatedFile.mediaType, contents: generatedFile.contents };
+      },
+    }),
     // Under `vite dev`, an edit to an input clears the generated files, so the next icon request generates them from
     // the edited input.
     watchChange(id) {
       if (INPUT_FILE_ABSOLUTE_PATHS.includes(id)) {
-        generatedFilesPromise = null;
+        generatedFiles.clear();
       }
     },
   };

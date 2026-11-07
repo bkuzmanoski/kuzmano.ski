@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import { clearStorage, readStored, readStoredJson, removeStored, writeStored } from "./storage.ts";
+import { SESSION_STORAGE, clearStorage, readStored, readStoredJson, removeStored, writeStored } from "./storage.ts";
 
 const PRIVATE_MODE_ERROR = new DOMException("The operation is insecure.", "SecurityError");
 const QUOTA_ERROR = new DOMException("The quota has been exceeded.", "QuotaExceededError");
@@ -12,8 +12,6 @@ function stubStorageThrowing(error: DOMException) {
 
   vi.stubGlobal("localStorage", { getItem: fail, setItem: fail, removeItem: fail, clear: fail });
 }
-
-afterEach(() => vi.unstubAllGlobals());
 
 describe("readStored", () => {
   test("returns the value stored for the key", () => {
@@ -92,5 +90,27 @@ describe("clearStorage", () => {
   test("returns without throwing when clearing throws", () => {
     stubStorageThrowing(PRIVATE_MODE_ERROR);
     expect(() => clearStorage()).not.toThrow();
+  });
+});
+
+describe("storage that throws when read", () => {
+  const throwOnRead = () => {
+    throw PRIVATE_MODE_ERROR;
+  };
+
+  test.each([
+    ["readStored", () => readStored("theme")],
+    ["readStoredJson", () => readStoredJson("theme")],
+    ["writeStored", () => writeStored("theme", "dark")],
+    ["removeStored", () => removeStored("theme")],
+    ["clearStorage", () => clearStorage()],
+  ])("`%s` returns without throwing when reading `localStorage` throws", (_name, callStorage) => {
+    vi.spyOn(window, "localStorage", "get").mockImplementation(throwOnRead);
+    expect(callStorage).not.toThrow();
+  });
+
+  test("`readStored` returns `null` when reading `sessionStorage` throws", () => {
+    vi.spyOn(window, "sessionStorage", "get").mockImplementation(throwOnRead);
+    expect(readStored("theme", SESSION_STORAGE)).toBeNull();
   });
 });

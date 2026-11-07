@@ -124,8 +124,13 @@ Encode videos and generate poster images before committing them:
 npm run encode-video <video|directory> ... # Requires ffmpeg
 ```
 
-The poster image is taken from the first frame unless a time is given (e.g.,
-`npm run encode-video -- --poster-time 3 <video>`).
+By default, the poster image is taken from the first frame. To use a different
+frame, specify a time (e.g., `npm run encode-video -- --poster-time 3 <video>`).
+The script skips MP4 files that already have a poster image and pass the build
+checks, so rerunning it on a folder does not re-encode existing output. Using
+`--crf`, `--width`, or `--poster-time` re-encodes a video from its source.
+`--force` also re-encodes MP4 files without a source, resulting in a second
+lossy pass and reduced quality.
 
 #### Generated media
 

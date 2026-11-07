@@ -20,6 +20,7 @@ export const WAITLIST_SCHEMA: Schema<WaitlistFields> = {
 export const EMPTY_MEMBERSHIP: WaitlistFields = { emailAddress: "" };
 
 export interface Membership extends WaitlistFields {
+  emailAddress: string;
   list: string;
   /** The path of the entry where the user joined the waitlist. */
   source: string;
@@ -39,5 +40,5 @@ export function parseSubmission(value: Record<string, unknown>): ParsedSubmissio
 
   return Object.keys(errors).length > 0
     ? { ok: false, reason: "invalid", errors }
-    : { ok: true, value: { ...trimmedFields, list, source } };
+    : { ok: true, value: { emailAddress: emailAddress.toLowerCase(), list, source } };
 }

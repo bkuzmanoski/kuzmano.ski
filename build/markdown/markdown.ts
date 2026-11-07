@@ -1,17 +1,12 @@
-import remarkFrontmatter from "remark-frontmatter";
-import remarkMdx from "remark-mdx";
-import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
-import { unified } from "unified";
 import { CONTINUE, EXIT, SKIP, visit } from "unist-util-visit";
 
-import { GITHUB_GIST_LINK_TEXT, GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL } from "#/config/site.ts";
-import { FALLBACK_TEXT_BEFORE_URL } from "#/lib/waitlist/render-fallback.ts";
+import { GITHUB_GIST_LINK_TEXT } from "#/config/site.ts";
 import { githubGistUrlOf } from "#/site/github-gists.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 
 import { codeFenceAttributesIn } from "../content/markup/code-fence-attributes.ts";
-import { remarkGfmSubset } from "../content/markup/gfm.ts";
+import { entryParser } from "../content/markup/entry-syntax.ts";
 import { NO_MEDIA_FOR_ENTRY, remarkMedia } from "../content/markup/media-rewrite.ts";
 import {
   JSX_ELEMENT_NODE_TYPES,
@@ -22,12 +17,13 @@ import {
   stringAttributeOf,
 } from "../content/markup/tree.ts";
 
+import { COMPONENTS_REPLACED_BY_CHILDREN, componentMarkdownOf, lacksFallbackMarkdown } from "./component-markdown.ts";
 import { readEntryDataExports } from "./entry-data.ts";
-import { experienceMarkdownNodesFrom } from "./experience.ts";
 import { remarkAuthoredLists } from "./lists.ts";
 import { MARKDOWN_SERIALIZER_OPTIONS, paragraphOf, textNode, textParagraph } from "./nodes.ts";
 import { remarkAuthoredTables } from "./tables.ts";
 
+import type { MarkdownContext } from "./component-markdown.ts";
 import type { EntryDataExport, EntryDataModuleReader } from "./entry-data.ts";
 import type { CodeFenceAttributeName } from "../content/markup/code-fence-attributes.ts";
 import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
@@ -57,136 +53,6 @@ interface MarkdownFileData extends Pick<MarkdownEntry, "url" | "readEntryDataMod
 interface MarkdownVFile extends EntryVFile {
   data: Record<string, unknown>;
 }
-
-interface MarkdownContext {
-  /** The entry's URL, for a component that needs to link back to it. */
-  url?: string;
-  entryDataExportOf: (element: ContentNode) => EntryDataExport;
-}
-
-type ComponentReplacement = (node: ContentNode, context: MarkdownContext) => Array<ContentNode>;
-type ComponentMarkdown = (
-  { block: ComponentReplacement; inline?: ComponentReplacement } | { block?: undefined; inline: ComponentReplacement }
-) & { isRenderedFromEntryData?: boolean };
-
-const strongTextOf = (value: string): ContentNode => ({ type: "strong", children: [textNode(value)] });
-
-const TRAILING_PUNCTUATION_PATTERN = /[.:;?!…]$/;
-const ASIDE_MARKDOWN: ComponentMarkdown = {
-  block: (node) => {
-    const label = stringAttributeOf(node, "label");
-    const children = node.children ?? [];
-
-    if (children.length === 0) {
-      return []; // Omits the aside too when the Markdown pass omitted every child.
-    }
-
-    if (!label) {
-      return [{ type: "blockquote", children }];
-    }
-
-    const [firstChild, ...otherChildren] = children;
-
-    if (firstChild?.type === "paragraph" && otherChildren.length === 0) {
-      const runInLabel = TRAILING_PUNCTUATION_PATTERN.test(label) ? label : `${label}:`;
-      return [
-        {
-          type: "blockquote",
-          children: [paragraphOf([strongTextOf(runInLabel), textNode(" "), ...(firstChild.children ?? [])])],
-        },
-      ];
-    }
-
-    return [{ type: "blockquote", children: [paragraphOf([strongTextOf(label)]), ...children] }];
-  },
-};
-
-const textIn = (node: ContentNode): string => node.value ?? (node.children ?? []).map(textIn).join("");
-
-const INLINE_CODE_MARKDOWN: ComponentMarkdown = {
-  inline: (node) => {
-    const value = textIn(node);
-    return value ? [{ type: "inlineCode", value }] : [];
-  },
-};
-
-const CAPTIONED_IMAGES_MARKDOWN: ComponentMarkdown = {
-  block: (node) => {
-    const caption = stringAttributeOf(node, "caption");
-    return [...(node.children ?? []), ...(caption ? [textParagraph(caption)] : [])];
-  },
-};
-
-const waitlistFallbackParagraphFor = (url: string): ContentNode =>
-  paragraphOf([textNode(FALLBACK_TEXT_BEFORE_URL), { type: "link", url, children: [textNode(url)] }]);
-
-/**
- * Fallback Markdown for React components embedded in the content, keyed by element name. The build replaces a component
- * without fallback Markdown with its children.
- */
-const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
-  Callout: ASIDE_MARKDOWN,
-  ContributionGraph: {
-    // The graph is rendered from data fetched in the browser, so in Markdown it becomes a GitHub profile link.
-    block: () => [
-      paragraphOf([{ type: "link", url: GITHUB_PROFILE_URL, children: [textNode(`${GITHUB_PROFILE_LINK_TEXT}.`)] }]),
-    ],
-  },
-  CareerTimeline: {
-    isRenderedFromEntryData: true,
-    block: (node, { entryDataExportOf }) => {
-      const { value, quotedDataFilePath } = entryDataExportOf(node);
-      return experienceMarkdownNodesFrom(value, quotedDataFilePath); // Validates the record, throwing if invalid.
-    },
-  },
-  ImageGallery: CAPTIONED_IMAGES_MARKDOWN,
-  ImageRow: CAPTIONED_IMAGES_MARKDOWN,
-  PrintLink: { block: () => [] }, // Omitted.
-  Rail: ASIDE_MARKDOWN,
-  Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },
-  blockquote: {
-    // Markdown cannot quote inside a sentence, so a quotation is replaced by its children.
-    block: (node) => [{ type: "blockquote", children: node.children ?? [] }],
-    inline: (node) => node.children ?? [],
-  },
-  code: INLINE_CODE_MARKDOWN,
-  hr: { block: () => [{ type: "thematicBreak" }] },
-  kbd: INLINE_CODE_MARKDOWN,
-  img: {
-    // A `<picture>` is replaced by its children, which keeps its `<img>` and drops its `<source>` elements.
-    // `remarkMedia` has already rewritten the `src` attribute to an absolute media URL.
-    inline: (node) => {
-      const url = stringAttributeOf(node, "src");
-      return url ? [{ type: "image", url, alt: stringAttributeOf(node, "alt") ?? "" }] : [];
-    },
-  },
-  video: {
-    // Markdown has no video element, so a video becomes a link to its file. The link contains the poster image, with
-    // the video's `aria-label` as its alternative text, or the `aria-label` alone for a video without a poster image.
-    inline: (node) => {
-      const url = stringAttributeOf(node, "src");
-      const poster = stringAttributeOf(node, "poster");
-      const label = stringAttributeOf(node, "aria-label");
-
-      if (!url) {
-        return [];
-      }
-
-      return [
-        {
-          type: "link",
-          url,
-          children: poster ? [{ type: "image", url: poster, alt: label ?? "" }] : [textNode(label ?? url)],
-        },
-      ];
-    },
-  },
-};
-
-const componentMarkdownOf = (node: ContentNode): ComponentMarkdown | undefined =>
-  isJsxElement(node) && node.name && Object.hasOwn(COMPONENT_MARKDOWN, node.name)
-    ? COMPONENT_MARKDOWN[node.name]
-    : undefined;
 
 /**
  * Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}` other than a literal,
@@ -465,6 +331,24 @@ function assertBlockFallbacks() {
   };
 }
 
+function assertComponentFallbacks(componentsReplacedByChildren: ReadonlySet<string>) {
+  return function assert(tree: ContentNode, file: EntryVFile) {
+    const componentNames = new Set<string>();
+
+    visit(tree, (node) => {
+      if (isJsxElement(node) && node.name && lacksFallbackMarkdown(node.name, componentsReplacedByChildren)) {
+        componentNames.add(node.name);
+      }
+    });
+
+    if (componentNames.size > 0) {
+      throw new Error(
+        `${quotedEntryPathOf(file)} renders ${[...componentNames].map((name) => `\`${name}\``).join(", ")} without fallback Markdown. Expected a component in \`COMPONENT_MARKDOWN\` or \`COMPONENTS_REPLACED_BY_CHILDREN\` in \`build/markdown/component-markdown.ts\`.`,
+      );
+    }
+  };
+}
+
 function replacementsFor(node: ContentNode, context: MarkdownContext): Array<ContentNode> {
   if (DISCARDED_NODE_TYPES.has(node.type)) {
     return [];
@@ -576,14 +460,14 @@ function assertMarkdownOnly() {
  * Returns a renderer that converts an entry's MDX source to its Markdown representation, resolving the entry's media
  * through `mediaForEntry`.
  */
-export function markdownRendererFor(mediaForEntry: MediaForEntry = NO_MEDIA_FOR_ENTRY): MarkdownRenderer {
-  const processor = unified()
-    .use(remarkParse)
-    .use(remarkFrontmatter) // Keeps the frontmatter block which contains the title, description, and date.
-    .use(remarkMdx)
-    .use(remarkGfmSubset)
+export function markdownRendererFor({
+  mediaForEntry = NO_MEDIA_FOR_ENTRY,
+  componentsReplacedByChildren = COMPONENTS_REPLACED_BY_CHILDREN,
+}: { mediaForEntry?: MediaForEntry; componentsReplacedByChildren?: ReadonlySet<string> } = {}): MarkdownRenderer {
+  const processor = entryParser() // Keeps the frontmatter block that contains the title, description, and date.
     .use(splitBlockElements)
     .use(assertBlockFallbacks)
+    .use(assertComponentFallbacks, componentsReplacedByChildren)
     .use(replacePreformattedElements)
     .use(replaceCodeFenceAttributes)
     .use(replaceLiteralExpressions)

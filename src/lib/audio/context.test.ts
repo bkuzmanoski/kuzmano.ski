@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { FakeAudioContext } from "#/test-utils/audio.ts";
 
@@ -23,10 +23,6 @@ beforeEach(() => {
 
   vi.stubGlobal("AudioContext", FakeAudioContext);
   setUserActivation(true);
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 describe("schedulePlayback", () => {

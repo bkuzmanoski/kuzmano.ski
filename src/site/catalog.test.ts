@@ -36,7 +36,7 @@ test.for(SEGMENTS)(
       return; // `skip` throws, but its overloaded signature does not narrow `entry` for the type checker.
     }
 
-    const module = await collections[segment]!.load(entry.slug);
+    const module = await collections.get(segment)!.load(entry.slug);
 
     expect(module).toHaveProperty("default");
   },

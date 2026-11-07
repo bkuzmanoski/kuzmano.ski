@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef, useState } from "react";
 
-import { WINDOW_LAYOUT } from "#/config/desktop.ts";
+import { WINDOW_DOM_ORDER, WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
@@ -15,8 +15,8 @@ import {
 import { createWindowPlacer, createWindowResizer } from "#/lib/window-manager/layout.ts";
 import type { WindowClose } from "#/lib/window-manager/use-close-window.ts";
 import { WindowCloseContext } from "#/lib/window-manager/use-close-window.ts";
-import { WINDOW_DOM_ORDER, isUnmeasured } from "#/lib/window-manager/window.ts";
-import type { WindowGeometry, WindowId } from "#/lib/window-manager/window.ts";
+import { isUnmeasured } from "#/lib/window-manager/window.ts";
+import type { WindowGeometry, WindowId, WindowSizing } from "#/lib/window-manager/window.ts";
 
 import { DragOutline } from "./drag-outline.tsx";
 import { WindowBody, WindowHeader } from "./window-body.tsx";
@@ -24,7 +24,7 @@ import styles from "./window-layer.module.css";
 import { Window } from "./window.tsx";
 import { ZoomRect } from "./zoom-rect.tsx";
 
-import type { WindowDrag } from "./window.tsx";
+import type { WindowDrag, WindowSizingControls } from "./window.tsx";
 import type { ReactNode } from "react";
 
 const placeWindow = createWindowPlacer(WINDOW_LAYOUT);
@@ -84,8 +84,24 @@ const DesktopWindow = memo(function OpenWindow({
     [close, id, registerCloseGuard],
   );
 
-  const { sizing } = WINDOW_LAYOUT.windows[id];
-  const isResizable = sizing === "resizable";
+  function sizingControlsFor(sizing: WindowSizing): WindowSizingControls {
+    switch (sizing) {
+      case "resizable":
+        return {
+          kind: "resizable",
+          onZoom: () => toggleZoom(id),
+          onResize: (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight),
+        };
+
+      case "fitContentHeight":
+        return { kind: "fitContentHeight", onFitContentHeight: (nextHeight) => fitContentHeight(id, nextHeight) };
+
+      case "fixed":
+        return { kind: "fixed" };
+    }
+  }
+
+  const sizingControls = sizingControlsFor(WINDOW_LAYOUT.windows[id].sizing);
 
   return (
     <Window
@@ -100,12 +116,10 @@ const DesktopWindow = memo(function OpenWindow({
       maximized={maximized}
       hidden={hidden}
       unplaced={unplaced}
+      sizing={sizingControls}
       onClose={windowClose.close}
-      onZoom={isResizable ? () => toggleZoom(id) : null}
       onFocus={() => focus(id)}
       onMove={(nextX, nextY) => move(id, nextX, nextY)}
-      onResize={isResizable ? (nextWidth, nextHeight) => resize(id, nextWidth, nextHeight) : null}
-      onFitContentHeight={sizing === "fitContentHeight" ? (nextHeight) => fitContentHeight(id, nextHeight) : null}
       onDrag={(drag) => onDrag(drag && { id, drag })}
       header={<WindowHeader route={route} />}
     >

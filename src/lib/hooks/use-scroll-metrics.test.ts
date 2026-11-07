@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { useScrollMetrics } from "./use-scroll-metrics.ts";
 
@@ -38,8 +38,6 @@ beforeEach(() => {
   vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   vi.stubGlobal("MutationObserver", MutationObserverStub);
 });
-
-afterEach(() => vi.unstubAllGlobals());
 
 function renderWithElement() {
   const element = document.createElement("div");

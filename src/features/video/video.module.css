@@ -4,7 +4,7 @@
   background: var(--color-background);
   outline: none;
 
-  /* Before hydration, the native player receives focus. */
+  /* Before hydration, the native player owns focus. */
   &:has(> video:focus-visible) {
     @mixin focus-stroke -3px;
   }
@@ -54,12 +54,7 @@
 
 /* Nested under `.controls` to override the wrapper's alignment regardless of stylesheet load order. */
 .controls > .control {
-  align-self: stretch;
-  width: calc(var(--video-control-height) + 1px); /* Includes the border beside the control. */
-
-  & > button {
-    width: 100%;
-  }
+  @mixin strip-control var(--video-control-height);
 
   &.playPauseControl {
     border-inline-end: 1px solid var(--color-border);

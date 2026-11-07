@@ -1,5 +1,4 @@
-import { NON_GESTURE_KEYS, needsAudioPriming } from "../audio/context.ts";
-import { loadKeySounds } from "../audio/sounds.ts";
+import { NON_GESTURE_KEYS } from "../audio/context.ts";
 
 /** The phases in sequence order, which `phaseFlags` derives each phase's flags from. */
 const PHASES = [
@@ -98,80 +97,3 @@ export function startOfPhaseMs(steps: ReadonlyArray<Step>, phase: Phase): number
 
 export const isBeginKey = (event: KeyboardEvent) =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !NON_GESTURE_KEYS.has(event.key);
-
-export async function whenFontReady(): Promise<void> {
-  const fontSet = (document as Partial<Document>).fonts;
-
-  if (!fontSet) {
-    return;
-  }
-
-  const promptFont = getComputedStyle(document.documentElement).getPropertyValue("--font-chrome").trim();
-
-  try {
-    if (promptFont) {
-      await fontSet.load(promptFont);
-    }
-
-    await fontSet.ready;
-  } catch {
-    // Ignored.
-  }
-}
-
-/** Keypress sounds play only from the begin prompt, which only appears if audio needs priming. */
-export const whenKeySoundsReady = (): Promise<unknown> => (needsAudioPriming() ? loadKeySounds() : Promise.resolve());
-
-export function whenIllustrationReady(...images: Array<HTMLImageElement | null>): Promise<unknown> {
-  return Promise.all(
-    images.map((image) => (image?.decode ? image.decode().catch(() => undefined) : Promise.resolve())),
-  );
-}
-
-/**
- * In Firefox, replaces the SVG in the display's glass layer `image` with a PNG rendered at the device pixel size of its
- * layout box, so the stage zoom resamples a bitmap. A failed step leaves the SVG in place.
- *
- * Firefox rasterizes an SVG image on the main thread as the stage's scale changes. These filters take about 300ms at
- * large window sizes, which freezes the zoom, and a rasterization at the end of the zoom can display an earlier
- * transform. Other browsers keep the SVG, as Safari and Chrome weaken the grain that dithers the glass layer when they
- * render it to a canvas.
- */
-export async function whenDisplayGlassLayerReady(image: HTMLImageElement | null): Promise<void> {
-  if (!image || !CSS.supports("-moz-appearance: none")) {
-    return;
-  }
-
-  try {
-    await image.decode();
-
-    // Reads the computed size because `clientWidth` rounds to a whole CSS pixel, and a browser that resamples the PNG
-    // to fit its layout box softens the grain.
-    const { width, height } = getComputedStyle(image);
-    const canvas = document.createElement("canvas");
-
-    canvas.width = Math.round(parseFloat(width) * window.devicePixelRatio);
-    canvas.height = Math.round(parseFloat(height) * window.devicePixelRatio);
-
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-      return;
-    }
-
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    const pngBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
-
-    if (!pngBlob) {
-      return;
-    }
-
-    const pngUrl = URL.createObjectURL(pngBlob);
-
-    image.src = pngUrl;
-    await image.decode().finally(() => URL.revokeObjectURL(pngUrl));
-  } catch {
-    // Ignored.
-  }
-}

@@ -1,5 +1,5 @@
 import { act, screen } from "@testing-library/react";
-import { afterEach, expect, test, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { collection, collectionEntries } from "#/test-utils/catalog.ts";
@@ -19,10 +19,6 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 vi.mock("#/lib/audio/scroll.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 const COLLECTION_ENTRY = collectionEntries[0]!;
 

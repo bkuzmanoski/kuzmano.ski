@@ -8,10 +8,12 @@ export interface InvalidResult<TFields> {
   errors: Errors<TFields>;
 }
 
-/** Reads field errors from the body of a rejected submission. */
+/** Reads field errors from the body of a rejected submission, keeping only the fields with a message. */
 export function invalidResult<TFields>(body: unknown): InvalidResult<TFields> {
-  const errors = isRecord(body) && isRecord(body.errors) ? (body.errors as Errors<TFields>) : {};
-  return { status: "invalid", errors };
+  const errorEntries = isRecord(body) && isRecord(body.errors) ? Object.entries(body.errors) : [];
+  const errors = Object.fromEntries(errorEntries.filter(([, message]) => typeof message === "string"));
+
+  return { status: "invalid", errors: errors as Errors<TFields> };
 }
 
 /**

@@ -1,5 +1,6 @@
+import { DARK_COLOR_SCHEME_QUERY, mediaQueryListFor } from "./media-query.ts";
+
 const ICON_SELECTOR = 'link[rel="icon"][type="image/svg+xml"]';
-const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 const SCHEME_PARAMETER = "color-scheme";
 
 /**
@@ -14,7 +15,7 @@ const SCHEME_PARAMETER = "color-scheme";
  * TODO: Remove this once https://crbug.com/1026539 is fixed.
  */
 export function watchFaviconColorScheme(): () => void {
-  const darkSchemeQuery = (window as Partial<Window>).matchMedia?.(DARK_SCHEME_QUERY);
+  const darkSchemeQuery = mediaQueryListFor(DARK_COLOR_SCHEME_QUERY);
   const icon = document.querySelector<HTMLLinkElement>(ICON_SELECTOR);
   const sourceHref = icon?.getAttribute("href")?.split("?")[0];
 

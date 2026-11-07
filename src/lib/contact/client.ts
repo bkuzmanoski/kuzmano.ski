@@ -2,34 +2,19 @@ import { API_ROUTES } from "#/api-routes.ts";
 
 import { postSubmission } from "../forms/client.ts";
 import { isRecord } from "../guards.ts";
+import { SESSION_STORAGE, readStored, writeStored } from "../storage.ts";
 
 import type { ContactFields } from "./message.ts";
 import type { InvalidResult } from "../forms/client.ts";
 
 export const CONTACT_EMAIL_ADDRESS_STORAGE_KEY = "contact-email-address";
 
-function cacheContactEmailAddress(emailAddress: string) {
-  try {
-    sessionStorage.setItem(CONTACT_EMAIL_ADDRESS_STORAGE_KEY, emailAddress);
-  } catch {
-    // Ignored.
-  }
-}
-
-function readCachedContactEmailAddress(): string | null {
-  try {
-    return sessionStorage.getItem(CONTACT_EMAIL_ADDRESS_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Reads the published contact email address from the current session, or from the server if the session does not have
  * it. Returns `null` when it cannot be read.
  */
 export async function readContactEmailAddress(signal?: AbortSignal): Promise<string | null> {
-  const cachedEmailAddress = readCachedContactEmailAddress();
+  const cachedEmailAddress = readStored(CONTACT_EMAIL_ADDRESS_STORAGE_KEY, SESSION_STORAGE);
 
   if (cachedEmailAddress !== null) {
     return cachedEmailAddress;
@@ -48,7 +33,7 @@ export async function readContactEmailAddress(signal?: AbortSignal): Promise<str
       return null;
     }
 
-    cacheContactEmailAddress(body.emailAddress);
+    writeStored(CONTACT_EMAIL_ADDRESS_STORAGE_KEY, body.emailAddress, SESSION_STORAGE);
 
     return body.emailAddress;
   } catch {

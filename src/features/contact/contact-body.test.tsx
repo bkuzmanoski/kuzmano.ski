@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { CHARACTER_COUNT_VISIBLE_FROM } from "#/lib/contact/character-count.ts";
 import { MESSAGE_MAX_LENGTH } from "#/lib/contact/message.ts";
@@ -83,10 +83,6 @@ beforeEach(() => {
 
   forceCloseWindow.mockClear();
   closeGuardRef.current = null;
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 const input = (label: string) => screen.getByLabelText(label);

@@ -1,14 +1,13 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
+import { isArrowKey } from "#/lib/keys.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./radio-group.module.css";
 
 import type { KeyboardEvent } from "react";
-
-const SELECTION_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
 function fitsInRow(radioGroup: HTMLElement): boolean {
   const radioButtons = [...radioGroup.children];
@@ -74,7 +73,7 @@ export function RadioGroup<TValue extends string>({
       pressSoundHandlers.onKeyDown(event);
     }
 
-    isSelectionKeyPendingRef.current = SELECTION_KEYS.has(event.key);
+    isSelectionKeyPendingRef.current = isArrowKey(event.key); // The arrow keys move the selection in a radio group.
   }
 
   function onSelect(option: RadioGroupOption<TValue>) {

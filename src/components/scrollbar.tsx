@@ -7,7 +7,7 @@ import { cx } from "#/lib/class-names.ts";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { clamp } from "#/lib/math.ts";
-import { isPrimaryPress } from "#/lib/press/press.ts";
+import { isPrimaryPress, listenForPointerRelease } from "#/lib/press/press.ts";
 import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 import { useTrailingClick } from "#/lib/press/use-trailing-click.ts";
@@ -38,28 +38,23 @@ function ScrollArrow({
   const [isPressed, setIsPressed] = useState(false);
   const repeatTimer = useTimer();
   const trailingClick = useTrailingClick();
-  const holdControllerRef = useRef<AbortController | null>(null);
+  const stopHoldRef = useRef<(() => void) | null>(null);
 
   // Keep the hold alive until the pointer is released, even if it leaves the arrow's bounds.
   function endHold() {
-    holdControllerRef.current?.abort();
-    holdControllerRef.current = null;
+    stopHoldRef.current?.();
+    stopHoldRef.current = null;
     setIsPressed(false);
     repeatTimer.cancel();
   }
 
   function beginHold() {
-    const holdController = new AbortController();
-
-    holdControllerRef.current?.abort();
-    holdControllerRef.current = holdController;
-
-    window.addEventListener("pointerup", endHold, { signal: holdController.signal });
-    window.addEventListener("pointercancel", endHold, { signal: holdController.signal });
+    stopHoldRef.current?.();
+    stopHoldRef.current = listenForPointerRelease(endHold);
   }
 
   // The scrollbar can unmount while the pointer is held, so the window listener must also be removed.
-  useEffect(() => () => holdControllerRef.current?.abort(), []);
+  useEffect(() => () => stopHoldRef.current?.(), []);
 
   function startRepeating() {
     const repeat = () => {
@@ -87,6 +82,9 @@ function ScrollArrow({
         }
       }}
       onPointerUp={trailingClick.onPointerUp}
+      // Chrome and Firefox focus a button on `mousedown`, which would blur the field the arrow scrolls and mark it
+      // visited.
+      onMouseDown={(event) => event.preventDefault()}
       onPointerDown={(event) => {
         if (!isPrimaryPress(event)) {
           return;
@@ -121,13 +119,13 @@ export function Scrollbar({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
-  const viewportHoldRef = useRef<{ viewport: HTMLElement; controller: AbortController } | null>(null);
+  const viewportHoldRef = useRef<{ viewport: HTMLElement; stop: () => void } | null>(null);
 
   function releaseViewport() {
     const viewportHold = viewportHoldRef.current;
 
     viewportHoldRef.current = null;
-    viewportHold?.controller.abort();
+    viewportHold?.stop();
     viewportHold?.viewport.style.removeProperty("overflow-y");
   }
 
@@ -142,13 +140,8 @@ export function Scrollbar({
 
     releaseViewport();
 
-    const controller = new AbortController();
-
-    viewportHoldRef.current = { viewport, controller };
+    viewportHoldRef.current = { viewport, stop: listenForPointerRelease(releaseViewport) };
     viewport.style.overflowY = "hidden";
-
-    window.addEventListener("pointerup", releaseViewport, { signal: controller.signal });
-    window.addEventListener("pointercancel", releaseViewport, { signal: controller.signal });
   }
 
   // The scrollbar can unmount during a touch, and the viewport can outlive it.

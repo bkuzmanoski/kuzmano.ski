@@ -33,27 +33,108 @@ const SERVER_MODULE_IMPORT_RESTRICTION: ImportPattern = {
   message: "`/src/server` may only be imported by the Worker entry or an API handler in `/src/routes/api`.",
 };
 
+const FILE_EXTENSION_IMPORT_RESTRICTION: ImportPattern = {
+  regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`, // The lookahead skips a `?query` suffix.
+  message: "Include the file extension in imports.",
+};
+
+interface ImportRestrictionGroup {
+  files: Array<string>;
+  /** Additional patterns (besides `FILE_EXTENSION_IMPORT_RESTRICTION` which applies to every file). */
+  patterns: Array<ImportPattern>;
+}
+
 /**
- * Flat config replaces rule options instead of merging them, so the final matching block controls a file's checks. Each
- * call below repeats patterns from the blocks it overrides.
+ * Import patterns prohibited for each file group. Files use only the patterns from the first matching group, so each
+ * group must list all restrictions that apply rather than relying on a broader group.
  */
-const restrictImports = (...patterns: Array<ImportPattern>): Linter.RulesRecord => ({
-  "@typescript-eslint/no-restricted-imports": [
-    "error",
-    {
-      patterns: [
-        {
-          regex: String.raw`^(#/|\.{1,2}/)(?![^?#]*\.[^./?#]+([?#]|$))`, // The lookahead skips a `?query` suffix.
-          message: "Include the file extension in imports.",
-        },
-        ...patterns,
-      ],
-    },
-  ],
-});
+const IMPORT_RESTRICTION_GROUPS: Array<ImportRestrictionGroup> = [
+  {
+    files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}", "src/worker.ts"],
+    patterns: [CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION],
+  },
+  {
+    files: ["src/lib/**/*.{ts,tsx}"],
+    patterns: [
+      { regex: String.raw`^#/lib/`, message: "Use relative imports within `/src/lib`." },
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ],
+  },
+  {
+    files: ["src/config/**/*.{ts,tsx}"],
+    patterns: [
+      {
+        regex: String.raw`^(#/(?!server/)|\.\./)`, // The pattern that allows types leaves out `server/`, as in the `/content` group below.
+        allowTypeImports: true,
+        message: "`/src/config` may import types from other layers, but must not import their code.",
+      },
+      CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION,
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ],
+  },
+  {
+    files: [
+      "src/app/**/*.{ts,tsx}",
+      "src/components/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/routes/**/*.{ts,tsx}",
+      "src/site/**/*.{ts,tsx}",
+      "src/test-utils/**/*.{ts,tsx}",
+    ],
+    patterns: [CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION, SERVER_MODULE_IMPORT_RESTRICTION],
+  },
+  {
+    files: ["src/api-routes.ts"],
+    patterns: [
+      // All layers can read `/src/api-routes.ts`, but importing the route tree's value would bundle every route into
+      // each `lib/*/client.ts` consumer.
+      {
+        regex: String.raw`^(#/|\./)routeTree\.gen\.ts$`,
+        allowTypeImports: true,
+        message: "`/src/api-routes.ts` may import the route tree's types, but must not import its value.",
+      },
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ],
+  },
+  { files: ["src/**/*.{ts,tsx}"], patterns: [SERVER_MODULE_IMPORT_RESTRICTION] },
+  {
+    // `/build/markdown` evaluates entry data files in Vite's process, so any `/src` code they import runs there too.
+    // The type-only exception excludes `server/`, because ESLint does not apply the server restriction to type imports.
+    files: ["content/**/*.ts"],
+    patterns: [
+      {
+        regex: String.raw`^#/(?!server/)`,
+        allowTypeImports: true,
+        message: "`/content` may import types from `/src`, but must not import its code.",
+      },
+      {
+        regex: String.raw`^(\.\./)+(build|scripts|src)/`,
+        message: "Use `#/` to import from `/src`; `/content` must not import `/build` or `/scripts`.",
+      },
+      SERVER_MODULE_IMPORT_RESTRICTION,
+    ],
+  },
+  { files: ["**/*.{ts,tsx}"], patterns: [] },
+];
+
+/**
+ * Each group gets its own config block and ignores files matched by earlier groups, ensuring that each file matches
+ * only one block. Because flat config replaces rather than merges rule options, overlapping blocks would be
+ * order-dependent.
+ */
+const IMPORT_RESTRICTION_BLOCKS: Array<Linter.Config> = IMPORT_RESTRICTION_GROUPS.map(({ files, patterns }, index) => ({
+  files,
+  ignores: IMPORT_RESTRICTION_GROUPS.slice(0, index).flatMap((earlierGroup) => earlierGroup.files),
+  rules: {
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      { patterns: [FILE_EXTENSION_IMPORT_RESTRICTION, ...patterns] },
+    ],
+  },
+}));
 
 export default defineConfig(
-  { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts"] },
+  { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts", "**/*.tmp/**/*"] },
   ...BASE_CONFIG,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -68,7 +149,6 @@ export default defineConfig(
       "import-x/resolver-next": [createNodeResolver({ extensions: [".ts", ".tsx", ".json"] })],
     },
     rules: {
-      ...restrictImports(),
       "import/no-extraneous-dependencies": ["error", { devDependencies: true, includeTypes: true }],
       "import/no-restricted-paths": [
         "error",
@@ -193,8 +273,6 @@ export default defineConfig(
       "react-refresh/only-export-components": ["error", { allowConstantExport: true, allowExportNames: ["Route"] }],
     },
   },
-  // Each block below must come after the blocks it overrides because later matching flat-config entries take
-  // precedence.
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
@@ -207,79 +285,5 @@ export default defineConfig(
       ],
     },
   },
-  {
-    files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/routes/api/**", "src/server/**", "src/worker.ts"],
-    rules: restrictImports(SERVER_MODULE_IMPORT_RESTRICTION),
-  },
-  {
-    files: [
-      "src/app/**/*.{ts,tsx}",
-      "src/components/**/*.{ts,tsx}",
-      "src/config/**/*.{ts,tsx}",
-      "src/features/**/*.{ts,tsx}",
-      "src/routes/**/*.{ts,tsx}",
-      "src/site/**/*.{ts,tsx}",
-      "src/test-utils/**/*.{ts,tsx}",
-    ],
-    ignores: ["src/routes/api/**"],
-    rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION, SERVER_MODULE_IMPORT_RESTRICTION),
-  },
-  {
-    files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}", "src/worker.ts"],
-    rules: restrictImports(CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION),
-  },
-  {
-    files: ["src/lib/**/*.{ts,tsx}"],
-    rules: restrictImports(
-      {
-        regex: String.raw`^#/lib/`,
-        message: "Use relative imports within `/src/lib`.",
-      },
-      SERVER_MODULE_IMPORT_RESTRICTION,
-    ),
-  },
-  {
-    files: ["src/config/**/*.ts"],
-    rules: restrictImports(
-      {
-        regex: String.raw`^(#/(?!server/)|\.\./)`, // `server/` is left out of the pattern that allows types, as in the `/content` block below.
-        allowTypeImports: true,
-        message: "`/src/config` may import types from other layers, but must not import their code.",
-      },
-      CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION,
-      SERVER_MODULE_IMPORT_RESTRICTION,
-    ),
-  },
-  {
-    // `/build/markdown` evaluates an entry's data file in the process running Vite, so code the file imported from
-    // `/src` would run there too. `server/` is left out of the pattern that allows types, as a type import it matches
-    // is not checked against the server pattern.
-    files: ["content/**/*.ts"],
-    rules: restrictImports(
-      {
-        regex: String.raw`^#/(?!server/)`,
-        allowTypeImports: true,
-        message: "`/content` may import types from `/src`, but must not import its code.",
-      },
-      {
-        regex: String.raw`^(\.\./)+(build|scripts|src)/`,
-        message: "Use `#/` to import from `/src`; `/content` must not import `/build` or `/scripts`.",
-      },
-      SERVER_MODULE_IMPORT_RESTRICTION,
-    ),
-  },
-  {
-    files: ["src/api-routes.ts"],
-    rules: restrictImports(
-      // Every layer may read `/src/api-routes.ts`, so importing the route tree's value would pull every route into each
-      // `lib/*/client.ts` caller.
-      {
-        regex: String.raw`^(#/|\./)routeTree\.gen\.ts$`,
-        allowTypeImports: true,
-        message: "`/src/api-routes.ts` may import the route tree's types, but must not import its value.",
-      },
-      SERVER_MODULE_IMPORT_RESTRICTION,
-    ),
-  },
+  ...IMPORT_RESTRICTION_BLOCKS,
 );

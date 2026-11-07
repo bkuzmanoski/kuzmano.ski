@@ -1,8 +1,16 @@
+import babel from "@rolldown/plugin-babel";
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
+
 import { CLIENT_ENVIRONMENT } from "./environments.ts";
 import { toRootRelative } from "./paths.ts";
 
 import type { Logger, LoggerEvent, SourceLocation } from "babel-plugin-react-compiler";
 import type { Plugin } from "vite";
+
+export const reactPlugins = (logger?: Logger) => [
+  viteReact({ include: /\.(tsx?|mdx)$/ }),
+  babel({ presets: [reactCompilerPreset({ logger })] }),
+];
 
 export interface CompilerOptimizationFailure {
   filePath: string;

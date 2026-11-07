@@ -25,6 +25,13 @@ describe("invalidResult", () => {
   ])("%s produces an invalid result without field errors", (_label, body) => {
     expect(invalidResult<Fields>(body)).toEqual({ status: "invalid", errors: {} });
   });
+
+  test("ignores field errors that are not strings", () => {
+    expect(invalidResult<Fields>({ errors: { from: { text: "Enter your email address." } } })).toEqual({
+      status: "invalid",
+      errors: {},
+    });
+  });
 });
 
 describe("firstMessage", () => {

@@ -10,6 +10,7 @@ import { errorMessageOf } from "#/lib/errors.ts";
 import { CLIENT_ENVIRONMENT } from "../../environments.ts";
 import { IMMUTABLE_CACHE_CONTROL } from "../../headers.ts";
 import { MEDIA_DIRECTORY_PATH, fromContent, fromRoot, requestPathOf } from "../../paths.ts";
+import { sharedLoad } from "../../shared-load.ts";
 
 import { createImageDerivativeStore, imageDerivativeAuditBetween } from "./derivative-store.ts";
 import { RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, entryCoverImagesPlugin } from "./entry-cover-images.ts";
@@ -21,13 +22,13 @@ import { rootRelativePathOf } from "./renditions.ts";
 import { createMediaFileReader } from "./resolved-media.ts";
 
 import type { MediaIndex } from "./media-index.ts";
-import type { AddHeadersRules, HeadersRule } from "../../headers.ts";
+import type { HeadersRule } from "../../headers.ts";
 import type { MediaForEntry } from "../markup/media-rewrite.ts";
 import type { Logger, Plugin } from "vite";
 
 const MEDIA_PATH_PREFIX = mediaRoute("");
 
-const MEDIA_HEADERS_RULE: HeadersRule = {
+export const MEDIA_HEADERS_RULE: HeadersRule = {
   description: "Media URLs include content hashes and encoding-setting fingerprints.",
   pathPatterns: [mediaRoute("*")],
   headers: {
@@ -100,7 +101,7 @@ function createProblemReporter(warn: (problem: string) => void) {
  *
  * A build reads only the committed derivatives. The dev server encodes a missing derivative on demand.
  */
-export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): {
+export function contentMedia(): {
   plugins: Array<Plugin>;
   mediaForEntry: MediaForEntry;
 } {
@@ -108,36 +109,20 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
   const contentDirectoryAbsolutePath = fromContent();
   const mediaFileReader = createMediaFileReader(); // Shared by every index build, so a rebuild rereads only the files updated since the last one.
 
-  let indexBuild: Promise<MediaIndex> | null = null;
+  // Every caller awaits the same build until a file update clears it, so an entry compiled after the update resolves
+  // against an index that includes it.
+  const indexBuild = sharedLoad(() => buildMediaIndex(mediaFileReader));
+  const ensureIndex = indexBuild.get;
+
   let latestIndexChange: { trigger: string; indexChange: Promise<IndexChange> } | null = null;
   let logger: Logger | undefined; // Set by `configResolved`, which Vite calls before any hook that reports a problem.
 
   const problemReporter = createProblemReporter((problem) => logger?.warn(problem, { timestamp: true }));
 
-  // Every caller awaits the same build until a file update clears it, so an entry compiled after the update resolves
-  // against an index that includes it.
-  const ensureIndex = () => {
-    if (indexBuild) {
-      return indexBuild;
-    }
-
-    const currentIndexBuild: Promise<MediaIndex> = buildMediaIndex(mediaFileReader).catch((cause: unknown) => {
-      // Clearing only this failed build lets later requests retry without discarding a rebuild that a newer file update
-      // has already started.
-      if (indexBuild === currentIndexBuild) {
-        indexBuild = null;
-      }
-
-      throw cause;
-    });
-
-    return (indexBuild = currentIndexBuild);
-  };
-
   async function rebuildIndex(): Promise<IndexChange> {
-    const previousIndexBuild = indexBuild;
+    const previousIndexBuild = indexBuild.current();
 
-    indexBuild = null;
+    indexBuild.clear();
 
     const index = await ensureIndex();
     const previousIndex = await previousIndexBuild?.catch(() => null);
@@ -167,11 +152,6 @@ export function contentMedia({ addHeadersRules }: { addHeadersRules: AddHeadersR
     enforce: "pre",
     configResolved(config) {
       logger = config.logger;
-    },
-    buildStart() {
-      if (this.environment.name === CLIENT_ENVIRONMENT) {
-        addHeadersRules([MEDIA_HEADERS_RULE]); // Registers the rule for `vite dev` as well, where the dev server serves `/media/*`.
-      }
     },
     configureServer(server) {
       ensureIndex()

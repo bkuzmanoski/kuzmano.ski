@@ -1,3 +1,4 @@
+import { isRecord } from "../guards.ts";
 import { readStoredJson, writeStored } from "../storage.ts";
 
 import type { Position } from "../geometry.ts";
@@ -40,20 +41,15 @@ export function defaultPositions(ids: ReadonlyArray<string>, layout: IconLayout)
 }
 
 export function isValidPosition(value: unknown): value is IconPosition {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Number.isFinite((value as IconPosition).right) &&
-    Number.isFinite((value as IconPosition).top)
-  );
+  return isRecord(value) && Number.isFinite(value.right) && Number.isFinite(value.top);
 }
 
 /** Every icon gets a finite position: the saved one when it is valid, the default otherwise. */
 export function loadPositions(ids: ReadonlyArray<string>, layout: IconLayout, storageKey: string): IconPositions {
   const positions = defaultPositions(ids, layout);
-  const savedPositions = readStoredJson(storageKey) as Record<string, unknown> | null;
+  const savedPositions = readStoredJson(storageKey);
 
-  if (savedPositions) {
+  if (isRecord(savedPositions)) {
     for (const id of ids) {
       const value = savedPositions[id];
 

@@ -2,10 +2,9 @@ import { describe, expect, test, vi } from "vitest";
 
 import { PAGES_DIRECTORY_NAME } from "#/config/content.ts";
 import type * as contentConfig from "#/config/content.ts";
-import { CONTENT_SIGNAL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "#/config/site.ts";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "#/config/site.ts";
 import { PLAIN_TEXT_CONTENT_TYPE } from "#/lib/media-types.ts";
 
-import { CLIENT_ENVIRONMENT } from "../environments.ts";
 import {
   authoredCollection,
   authoredContent,
@@ -14,14 +13,12 @@ import {
   draftEntry,
 } from "../test-utils/authored-content.ts";
 import { devServerMiddlewareOf, devServerRequestFor } from "../test-utils/dev-server.ts";
-import { headersRulesAddedAtBuildStartBy } from "../test-utils/headers.ts";
 import { linkTextsIn } from "../test-utils/markdown.ts";
 import { hookOf } from "../test-utils/plugin-hooks.ts";
 
 import { llmsTxtFor, llmsTxtPlugin } from "./llms-txt.ts";
 
 import type { MarkdownTokenCounts } from "./token-count.ts";
-import type { AddHeadersRules } from "../headers.ts";
 import type { ContextHook } from "../test-utils/plugin-hooks.ts";
 
 vi.mock("#/config/content.ts", async (importOriginal) => ({
@@ -64,11 +61,11 @@ const BUILD_LLMS_TXT = `# Built
 const DEV_LLMS_TXT = `# Served
 `;
 
-function pluginWithLoaders({ addHeadersRules = () => undefined }: { addHeadersRules?: AddHeadersRules } = {}) {
+function pluginWithLoaders() {
   const loadForBuild = vi.fn(() => Promise.resolve(BUILD_LLMS_TXT));
   const loadForDevRequest = vi.fn(() => Promise.resolve(DEV_LLMS_TXT));
   return {
-    plugin: llmsTxtPlugin({ loadForBuild, loadForDevRequest, addHeadersRules }),
+    plugin: llmsTxtPlugin({ loadForBuild, loadForDevRequest }),
     loadForBuild,
     loadForDevRequest,
   };
@@ -194,14 +191,6 @@ describe("llmsTxtPlugin", () => {
 
     expect(emitFile).toHaveBeenCalledWith({ type: "asset", fileName: "llms.txt", source: BUILD_LLMS_TXT });
     expect(loadForDevRequest).not.toHaveBeenCalled();
-  });
-
-  test("adds a `Content-Signal` rule for `/llms.txt` to `_headers` when the build starts", async () => {
-    expect(
-      await headersRulesAddedAtBuildStartBy((options) => pluginWithLoaders(options).plugin, CLIENT_ENVIRONMENT),
-    ).toStrictEqual([
-      expect.objectContaining({ pathPatterns: ["/llms.txt"], headers: { "Content-Signal": CONTENT_SIGNAL } }),
-    ]);
   });
 
   test("serves `/llms.txt` under `vite dev` as plain text, rendered again for each request", async () => {

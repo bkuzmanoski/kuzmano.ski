@@ -23,8 +23,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 const LIFETIMES = { successfulResponseSeconds: 60, failedResponseSeconds: 30 };

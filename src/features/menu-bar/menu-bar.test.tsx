@@ -448,8 +448,6 @@ describe("disabled items", () => {
 });
 
 describe("printing", () => {
-  afterEach(() => vi.unstubAllGlobals());
-
   test("the `Print…` menu item is enabled while an entry window is focused", () => {
     focusedWindow = "entry";
     render(<MenuBar />);

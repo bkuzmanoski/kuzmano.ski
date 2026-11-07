@@ -18,6 +18,7 @@ export const markdownPath = (path: string) => `${path}.md`;
 const segmentsOf = (path: string) => path.split("/").filter(Boolean);
 
 export const isRootPath = (path: string) => segmentsOf(path).length === 0;
+export const hasFileExtension = (path: string) => /\.[^/]+$/.test(path);
 
 export function parseContentPath(path: string): ContentPath | null {
   const segments = segmentsOf(path);

@@ -1,4 +1,6 @@
 // Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
+import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
+import type { FeatureRouteId } from "#/config/feature-routes.ts";
 import { AUTHOR_NAME, OPEN_GRAPH_IMAGE, SITE_URL } from "#/config/site.ts";
 import type { EntryBodyChunks } from "#/lib/content/catalog.ts";
 import type { CoverImage } from "#/lib/content/media.ts";
@@ -95,4 +97,10 @@ export function documentHead({
       { rel: "describedby", href: canonicalUrl(LLMS_TXT_PATH) },
     ],
   };
+}
+
+/** The head tags for a feature route without a document behind it. */
+export function featureRouteHead(id: FeatureRouteId) {
+  const { route, title, description, isIndexed } = FEATURE_ROUTE_SPECS[id];
+  return documentHead({ title, description, path: route, noindex: !isIndexed });
 }

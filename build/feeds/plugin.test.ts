@@ -7,7 +7,7 @@ import { CONTENT_SIGNAL } from "#/config/site.ts";
 import { FEED_CONTENT_TYPE } from "#/lib/media-types.ts";
 import { FEEDS } from "#/site/feeds.ts";
 
-import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../environments.ts";
+import { headersMatchingPathIn, matchableHeadersRuleFrom } from "../headers.ts";
 import {
   authoredCollection,
   authoredContent,
@@ -16,12 +16,11 @@ import {
   draftEntry,
 } from "../test-utils/authored-content.ts";
 import { articleDocument, documentSource, feedMetadata, missingDocumentSource } from "../test-utils/feeds.ts";
-import { headersRulesAddedAtBuildStartBy } from "../test-utils/headers.ts";
+import { hookOf } from "../test-utils/plugin-hooks.ts";
 
-import { atomFeeds, feedXmlFor } from "./plugin.ts";
+import { FEED_HEADERS_RULE, atomFeeds, feedXmlFor } from "./plugin.ts";
 
 import type { AuthoredContent } from "../content/authored-content.ts";
-import type { AddHeadersRules } from "../headers.ts";
 
 const COLLECTION_1_FEED_METADATA = feedMetadata({ collections: ["collection-1"] });
 
@@ -33,7 +32,6 @@ const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
     ],
     ...overrides,
   });
-const feedsPluginFor = (options: { addHeadersRules: AddHeadersRules }) => atomFeeds(options).plugin;
 
 describe("feedXmlFor", () => {
   test("includes every entry in the feed's collections, newest first", async () => {
@@ -141,22 +139,25 @@ describe("feedXmlFor", () => {
   });
 });
 
-describe("atomFeeds", () => {
-  test("adds a `Content-Type`, `Cache-Control`, `Access-Control-Allow-Origin`, and `Content-Signal` rule for every feed path to `_headers` when the client build starts", async () => {
-    expect(await headersRulesAddedAtBuildStartBy(feedsPluginFor, CLIENT_ENVIRONMENT)).toStrictEqual([
-      expect.objectContaining({
-        pathPatterns: FEEDS.map(({ path }) => path),
-        headers: {
-          "Content-Type": FEED_CONTENT_TYPE,
-          "Cache-Control": "public, max-age=3600",
-          "Access-Control-Allow-Origin": "*",
-          "Content-Signal": CONTENT_SIGNAL,
-        },
-      }),
-    ]);
-  });
+test.each(FEEDS.map(({ path }) => path))(
+  "`FEED_HEADERS_RULE` sets `Content-Type`, `Cache-Control`, `Access-Control-Allow-Origin`, and `Content-Signal` on `%s`",
+  (feedPath) => {
+    expect(Object.fromEntries(headersMatchingPathIn([matchableHeadersRuleFrom(FEED_HEADERS_RULE)], feedPath))).toEqual({
+      "content-type": FEED_CONTENT_TYPE,
+      "cache-control": "public, max-age=3600",
+      "access-control-allow-origin": "*",
+      "content-signal": CONTENT_SIGNAL,
+    });
+  },
+);
 
-  test("adds rules to `_headers` from the client build only", async () => {
-    expect(await headersRulesAddedAtBuildStartBy(feedsPluginFor, SERVER_ENVIRONMENT)).toStrictEqual([]);
+describe("atomFeeds", () => {
+  test("throws when the plugin's `buildApp` handler runs before prerendering captures a document, naming `tanstackStart()`", async () => {
+    const { plugin } = atomFeeds();
+    const buildApp = hookOf<(builder: unknown) => Promise<void>>(plugin, "buildApp");
+
+    await expect(
+      buildApp({ environments: { client: { config: { root: "/", build: { outDir: "dist" } } } } }),
+    ).rejects.toThrow("`tanstackStart()`");
   });
 });

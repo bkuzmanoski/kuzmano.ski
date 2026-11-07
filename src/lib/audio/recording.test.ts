@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { fakeAudioContext } from "#/test-utils/audio.ts";
 
@@ -27,8 +27,6 @@ beforeEach(() => {
     },
   );
 });
-
-afterEach(() => vi.unstubAllGlobals());
 
 describe("loadRecording", () => {
   test("fetches and decodes a recording once across repeated loads of its URL", async () => {

@@ -12,6 +12,7 @@ import {
 } from "../build/content/media/derivatives.ts";
 import { isEncodableImage, withoutExtension } from "../build/content/media/formats.ts";
 import { fileSize } from "../build/content/media/problems.ts";
+import { writeFileAtomically } from "../build/files.ts";
 
 import { wholeNumberOption } from "./helpers/arguments.ts";
 import { changeToInvocationDirectory } from "./helpers/files.ts";
@@ -78,7 +79,7 @@ async function convert(inputFilePath: string, qualityByFormat: Arguments["qualit
       quality: qualityByFormat[derivative.format],
     });
 
-    await writeFile(outputFilePath, encodedBytes);
+    await writeFileAtomically(outputFilePath, (temporaryFilePath) => writeFile(temporaryFilePath, encodedBytes));
 
     console.log(`  → ${outputFilePath}  ${fileSize(encodedBytes.byteLength)}`);
   }

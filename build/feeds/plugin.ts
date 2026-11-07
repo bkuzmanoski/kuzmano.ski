@@ -11,14 +11,14 @@ import { entryRoute } from "#/site/routes.ts";
 
 import { byNewestFirst, publishedEntries, readAuthoredContent } from "../content/authored-content.ts";
 import { CLIENT_ENVIRONMENT } from "../environments.ts";
-import { requestPathOf } from "../paths.ts";
+import { serveGeneratedFiles } from "../generated-file-middleware.ts";
 
 import { articleContentOf } from "./article.ts";
 import { atomFeed } from "./atom.ts";
 
 import type { FeedEntry } from "./atom.ts";
 import type { AuthoredContent, AuthoredEntry } from "../content/authored-content.ts";
-import type { AddHeadersRules, HeadersRule } from "../headers.ts";
+import type { HeadersRule } from "../headers.ts";
 import type { Plugin } from "vite";
 
 export type DocumentSource = (route: string) => Promise<string | undefined>;
@@ -26,7 +26,7 @@ export type ArticleContentCache = Map<string, Promise<string>>;
 
 type CaptureDocument = (result: { page: { path: string }; html: string }) => void;
 
-const FEED_HEADERS_RULE: HeadersRule = {
+export const FEED_HEADERS_RULE: HeadersRule = {
   description: "Feeds are typed as Atom rather than as the generic XML of their .xml paths.",
   pathPatterns: FEEDS.map(({ path }) => path),
   headers: {
@@ -113,9 +113,10 @@ export async function feedXmlFor(
  * `captureDocument` callback that records each prerendered document for it.
  *
  * `captureDocument` is called from the prerenderer's `onSuccess`, which runs before the plugin's `buildApp` handler
- * reads what it recorded.
+ * reads what it recorded. TanStack Start prerenders from a `buildApp` handler of the same order, so `vite.config.ts`
+ * must list this plugin after `tanstackStart()`.
  */
-export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRules }): {
+export function atomFeeds(): {
   plugin: Plugin;
   captureDocument: CaptureDocument;
 } {
@@ -128,11 +129,6 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
   const plugin: Plugin = {
     name: "kuzmano.ski:feeds",
     enforce: "post",
-    buildStart() {
-      if (this.environment.name === CLIENT_ENVIRONMENT) {
-        addHeadersRules([FEED_HEADERS_RULE]);
-      }
-    },
     buildApp: {
       order: "post",
       async handler(builder) {
@@ -140,6 +136,13 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
 
         if (!clientEnvironment) {
           return;
+        }
+
+        // The prerenderer captures at least `/`, so an empty map means this handler ran before prerendering.
+        if (prerenderedDocuments.size === 0) {
+          throw new Error(
+            "The feeds plugin ran before prerendering captured any document. List it after `tanstackStart()` in `vite.config.ts`.",
+          );
         }
 
         const outputDirectoryAbsolutePath = resolve(
@@ -166,13 +169,11 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
       },
     },
     configureServer(server) {
-      server.middlewares.use((request, response, next) => {
-        const requestPath = requestPathOf(request);
+      serveGeneratedFiles(server, (requestPath, request) => {
         const feed = FEEDS.find((candidate) => candidate.path === requestPath);
 
         if (!feed) {
-          next();
-          return;
+          return null;
         }
 
         const origin = `http://${request.headers.host ?? "localhost"}`;
@@ -185,12 +186,10 @@ export function atomFeeds({ addHeadersRules }: { addHeadersRules: AddHeadersRule
             .catch(() => undefined);
 
         // Re-read per request so an edit to a content file shows up without a restart.
-        feedXmlFor(feed, readAuthoredContent(), documentOf)
-          .then((xml) => {
-            response.setHeader("content-type", FEED_CONTENT_TYPE);
-            response.end(xml);
-          })
-          .catch(next);
+        return feedXmlFor(feed, readAuthoredContent(), documentOf).then((xml) => ({
+          contentType: FEED_CONTENT_TYPE,
+          contents: xml,
+        }));
       });
     },
   };

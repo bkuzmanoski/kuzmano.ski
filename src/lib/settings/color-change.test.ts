@@ -1,10 +1,8 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
 
 import { notifyColorChange, subscribeToColorChange } from "./color-change.ts";
-
-afterEach(() => vi.unstubAllGlobals());
 
 describe("subscribeToColorChange", () => {
   test("calls the listener once for each notification", () => {

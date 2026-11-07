@@ -6,8 +6,8 @@ import { isRecord } from "#/lib/guards.ts";
 import { readJson } from "#/lib/json.ts";
 
 import { GITHUB_TOKEN_BINDING } from "./bindings.ts";
-import { workerEnv } from "./env.ts";
-import { logServerEvent, reportMissingBinding } from "./log.ts";
+import { logServerEvent } from "./log.ts";
+import { readBindings } from "./read-bindings.ts";
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
 const CONTRIBUTION_CALENDAR_QUERY = `query($login: String!) {
@@ -21,8 +21,6 @@ const CONTRIBUTION_CALENDAR_QUERY = `query($login: String!) {
   }
 }`;
 const REQUEST_TIMEOUT_MS = 5_000;
-
-const reportMissingGitHubBinding = (binding: string) => reportMissingBinding("github_binding_missing", binding);
 
 async function reportFailedResponse(response: Response) {
   logServerEvent("github_contributions_failed", {
@@ -57,19 +55,13 @@ function contributionCalendarIn(payload: unknown): ContributionCalendar | null {
 
 /** Fetches the last year of contributions for `login` from GitHub. Returns `null` when the calendar cannot be read. */
 export async function fetchGitHubContributionCalendar(login: string): Promise<ContributionCalendar | null> {
-  let token;
+  const bindings = await readBindings("github_binding_missing", [GITHUB_TOKEN_BINDING]);
 
-  try {
-    token = (await workerEnv())[GITHUB_TOKEN_BINDING];
-  } catch {
-    reportMissingGitHubBinding("the Workers environment");
+  if (!bindings) {
     return null;
   }
 
-  if (!token) {
-    reportMissingGitHubBinding(GITHUB_TOKEN_BINDING);
-    return null;
-  }
+  const token = bindings[GITHUB_TOKEN_BINDING];
 
   let response: Response;
 

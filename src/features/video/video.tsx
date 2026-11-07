@@ -6,8 +6,7 @@ import PauseVideoIcon from "#/assets/images/video-icon-pause.svg?react";
 import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
 import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
 import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
-import { Button } from "#/components/button.tsx";
-import { Tooltip } from "#/components/tooltip.tsx";
+import { IconButton } from "#/components/icon-button.tsx";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
@@ -236,7 +235,9 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
           onPointerDown?.(event);
 
           if (containerRef.current) {
-            focusWithTabIndexUntilBlur(containerRef.current, { preventScroll: true }); // The container has no name of its own, so it is focusable only from a press on the video, after which it receives the keys that control playback.
+            // The container has no name of its own, so it is focusable only from a press on the video, after which it
+            // receives the keys that control playback.
+            focusWithTabIndexUntilBlur(containerRef.current, { preventScroll: true });
           }
         }}
         onClick={(event) => {
@@ -255,20 +256,15 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         onTimeUpdate={syncState}
       />
       <div className={styles.controls} role="group" aria-label="Playback controls" data-feed-omit>
-        <Tooltip
+        <IconButton
+          variant="strip"
           label={isPaused ? "Play" : "Pause"}
-          suppressed={!hasSiteControls}
+          disabled={!hasSiteControls}
           className={cx(styles.control, styles.playPauseControl)}
+          onClick={togglePlayback}
         >
-          <Button
-            variant="strip"
-            disabled={!hasSiteControls}
-            aria-label={isPaused ? "Play" : "Pause"}
-            onClick={togglePlayback}
-          >
-            {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
-          </Button>
-        </Tooltip>
+          {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
+        </IconButton>
         <div
           ref={trackRef}
           className={styles.track}
@@ -284,34 +280,24 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         >
           <div ref={thumbRef} className={styles.thumb} />
         </div>
-        <Tooltip
+        <IconButton
+          variant="strip"
           label={isMuted ? "Unmute" : "Mute"}
-          suppressed={!hasSiteControls}
+          disabled={!hasSiteControls}
           className={cx(styles.control, styles.muteControl)}
+          onClick={toggleMuted}
         >
-          <Button
-            variant="strip"
-            disabled={!hasSiteControls}
-            aria-label={isMuted ? "Unmute" : "Mute"}
-            onClick={toggleMuted}
-          >
-            {isMuted ? <SoundOffVideoIcon /> : <SoundOnVideoIcon />}
-          </Button>
-        </Tooltip>
-        <Tooltip
+          {isMuted ? <SoundOffVideoIcon /> : <SoundOnVideoIcon />}
+        </IconButton>
+        <IconButton
+          variant="strip"
           label={isFullScreen ? "Exit full screen" : "Enter full screen"}
-          suppressed={!canToggleFullScreen}
+          disabled={!canToggleFullScreen}
           className={cx(styles.control, styles.fullScreenControl)}
+          onClick={toggleFullScreen}
         >
-          <Button
-            variant="strip"
-            disabled={!canToggleFullScreen}
-            aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
-            onClick={toggleFullScreen}
-          >
-            {isFullScreen ? <FullScreenExitVideoIcon /> : <FullScreenEnterVideoIcon />}
-          </Button>
-        </Tooltip>
+          {isFullScreen ? <FullScreenExitVideoIcon /> : <FullScreenEnterVideoIcon />}
+        </IconButton>
       </div>
     </div>
   );

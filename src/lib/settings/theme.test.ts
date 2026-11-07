@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 
 import { DEFAULT_THEME_CHROMA_SCALE, DEFAULT_THEME_COLOR } from "./theme-tint.ts";
 import { applyAppearance, applyDesktopBackgroundThemeColor, applyThemeTint, themeChromaScaleFrom } from "./theme.ts";
@@ -6,7 +6,6 @@ import { applyAppearance, applyDesktopBackgroundThemeColor, applyThemeTint, them
 const root = document.documentElement;
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   root.removeAttribute("data-appearance");
   root.removeAttribute("style");
   document.head.replaceChildren();

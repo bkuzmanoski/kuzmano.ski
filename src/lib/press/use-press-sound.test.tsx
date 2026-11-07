@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
 
-import { playClickSound } from "./sounds.ts";
+import { playClickSound } from "../audio/sounds.ts";
+
 import { usePressSound, usePressSoundPlayer } from "./use-press-sound.ts";
 
-vi.mock("./sounds.ts", async (importOriginal) =>
+vi.mock("../audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
 );
 
@@ -36,7 +37,7 @@ const renderControl = ({ defersTouchPressSound = false } = {}) => {
   return screen.getByRole("button", { name: "Press" });
 };
 
-test("a touch press plays a sound once on pointer down, and not again on mouse down, pointer up, or click", () => {
+test("plays a sound once for a touch press on pointer down, not on mouse down, pointer up, or click", () => {
   const control = renderControl();
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -50,7 +51,7 @@ test("a touch press plays a sound once on pointer down, and not again on mouse d
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a mouse press plays a sound once on mouse down, and not on pointer down, pointer up, or click", () => {
+test("plays a sound once for a mouse press on mouse down, not on pointer down, pointer up, or click", () => {
   const control = renderControl();
 
   fireEvent.pointerDown(control, { pointerType: "mouse" });
@@ -68,26 +69,26 @@ test("a mouse press plays a sound once on mouse down, and not on pointer down, p
 });
 
 test.each(SCREEN_READER_ACTIVATIONS)(
-  "a screen reader's activate action in %s does not play a sound",
+  "does not play a sound for a screen reader's activate action in %s",
   (_browser, activate) => {
     activate(renderControl());
     expect(playClickSound).not.toHaveBeenCalled();
   },
 );
 
-test("a pointer click event without a preceding pointer down event plays a sound", () => {
+test("plays a sound for a pointer click event without a preceding pointer down event", () => {
   fireEvent.click(renderControl(), CLICK);
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a control with `silencesBrowserHandledPress` plays a sound for a press without a modifier key", () => {
+test("plays a sound for a press without a modifier key on a control with `silencesBrowserHandledPress`", () => {
   render(<SilentBrowserHandledPressControl />);
   pressWithMouse(screen.getByRole("link", { name: "Press" }));
 
   expect(playClickSound).toHaveBeenCalledOnce();
 });
 
-test("a control with `silencesBrowserHandledPress` does not play a sound for a press with a modifier key, or its `click` event", () => {
+test("does not play a sound for a press with a modifier key, or its `click` event on a control with `silencesBrowserHandledPress`", () => {
   render(<SilentBrowserHandledPressControl />);
 
   const control = screen.getByRole("link", { name: "Press" });
@@ -99,7 +100,7 @@ test("a control with `silencesBrowserHandledPress` does not play a sound for a p
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a keyboard activation with Enter or Space plays a sound once", () => {
+test("plays a sound once for a keyboard activation with Enter or Space", () => {
   const control = renderControl();
 
   fireEvent.keyDown(control, { key: "Enter" });
@@ -114,7 +115,7 @@ test("a keyboard activation with Enter or Space plays a sound once", () => {
   expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
-test("a click event without a preceding pointer or activation key press does not play a sound", () => {
+test("does not play a sound for a click event without a preceding pointer or activation key press", () => {
   const control = renderControl();
 
   fireEvent.keyDown(control, { key: "a" });
@@ -123,7 +124,7 @@ test("a click event without a preceding pointer or activation key press does not
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("an activation key pressed before the control loses focus does not play a sound on a later click event", () => {
+test("does not play a sound on a later click event if an activation key was pressed before the control loses focus", () => {
   const control = renderControl();
 
   fireEvent.keyDown(control, { key: " " });
@@ -133,7 +134,7 @@ test("an activation key pressed before the control loses focus does not play a s
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a canceled pointer down event lets the next pointer click event play a sound", () => {
+test("lets the next pointer click event play a sound after a canceled pointer down event", () => {
   const control = renderControl();
 
   fireEvent.pointerDown(control);
@@ -146,9 +147,8 @@ test("a canceled pointer down event lets the next pointer click event play a sou
   expect(playClickSound).toHaveBeenCalledTimes(2);
 });
 
-test("a non-primary press does not play a sound", () => {
+test("does not play a sound for a non-primary press", () => {
   fireEvent.pointerDown(renderControl(), { button: 2 });
-
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
@@ -171,7 +171,7 @@ test.for([
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a control with `defersTouchPressSound` plays a sound for a touch press on its `click` event", () => {
+test("plays a sound for a touch press on its `click` event for a control with `defersTouchPressSound`", () => {
   const control = renderControl({ defersTouchPressSound: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -185,7 +185,7 @@ test("a control with `defersTouchPressSound` plays a sound for a touch press on 
 });
 
 // A touch that stops a scroll in motion ends without a `click` event.
-test("a control with `defersTouchPressSound` does not play a sound for a touch press that ends without a `click` event", () => {
+test("does not play a sound for a touch press that ends without a `click` event on a control with `defersTouchPressSound`", () => {
   const control = renderControl({ defersTouchPressSound: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -194,7 +194,7 @@ test("a control with `defersTouchPressSound` does not play a sound for a touch p
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a control with `defersTouchPressSound` does not play a sound for a canceled touch press", () => {
+test("does not play a sound for a canceled touch press on a control with `defersTouchPressSound`", () => {
   const control = renderControl({ defersTouchPressSound: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -203,7 +203,7 @@ test("a control with `defersTouchPressSound` does not play a sound for a cancele
   expect(playClickSound).not.toHaveBeenCalled();
 });
 
-test("a control with `defersTouchPressSound` plays a sound for a mouse press on mouse down", () => {
+test("plays a sound for a mouse press on mouse down for a control with `defersTouchPressSound`", () => {
   const control = renderControl({ defersTouchPressSound: true });
 
   pressWithMouse(control);
@@ -216,7 +216,7 @@ test("a control with `defersTouchPressSound` plays a sound for a mouse press on 
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a control with `defersTouchPressSound` plays one sound for a mouse press after a touch press whose `click` event went to another control", () => {
+test("plays one sound for a mouse press after a touch press whose `click` event went to another control on a control with `defersTouchPressSound`", () => {
   const control = renderControl({ defersTouchPressSound: true });
 
   fireEvent.pointerDown(control, { pointerType: "touch" });
@@ -228,9 +228,56 @@ test("a control with `defersTouchPressSound` plays one sound for a mouse press a
   expect(playClickSound).toHaveBeenCalledTimes(1);
 });
 
-test("a control with `defersTouchPressSound` plays a sound for a tap retargeted to it by iOS", () => {
+test("plays a sound for a tap retargeted to it by iOS on a control with `defersTouchPressSound`", () => {
   fireEvent.click(renderControl({ defersTouchPressSound: true }), CLICK);
   expect(playClickSound).toHaveBeenCalledTimes(1);
+});
+
+describe("onPressStart", () => {
+  function PressStartControl({ onPressStart }: { onPressStart: (event: { type: string }) => void }) {
+    return (
+      <button type="button" {...usePressSound({ onPressStart })}>
+        Press
+      </button>
+    );
+  }
+
+  const renderPressStartControl = () => {
+    const onPressStart = vi.fn<(event: { type: string }) => void>();
+
+    render(<PressStartControl onPressStart={onPressStart} />);
+
+    return { control: screen.getByRole("button", { name: "Press" }), onPressStart };
+  };
+
+  test("is called with the `pointerdown` event of a touch press", () => {
+    const { control, onPressStart } = renderPressStartControl();
+
+    fireEvent.pointerDown(control, { pointerType: "touch" });
+    fireEvent.mouseDown(control, CLICK);
+    fireEvent.click(control, CLICK);
+
+    expect(onPressStart.mock.calls.map(([event]) => event.type)).toEqual(["pointerdown"]);
+  });
+
+  test("is called with the `mousedown` event of a mouse press", () => {
+    const { control, onPressStart } = renderPressStartControl();
+
+    pressWithMouse(control);
+
+    expect(onPressStart.mock.calls.map(([event]) => event.type)).toEqual(["mousedown"]);
+  });
+
+  test.each(SCREEN_READER_ACTIVATIONS)(
+    "is not called for a screen reader's activate action in %s",
+    (_label, activate) => {
+      const { control, onPressStart } = renderPressStartControl();
+
+      activate(control);
+
+      expect(onPressStart).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("playPendingTouchPressSound", () => {

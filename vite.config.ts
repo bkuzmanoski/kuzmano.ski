@@ -1,6 +1,4 @@
-import babel from "@rolldown/plugin-babel";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import postcssMixins from "postcss-mixins";
 import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
@@ -9,15 +7,16 @@ import svgr from "vite-plugin-svgr";
 import { entryBodyChunksPlugin } from "./build/content/entry-body-chunks.ts";
 import { frontmatterPlugin } from "./build/content/frontmatter.ts";
 import { mdxPlugin } from "./build/content/mdx.ts";
-import { contentMedia } from "./build/content/media/plugin.ts";
+import { MEDIA_HEADERS_RULE, contentMedia } from "./build/content/media/plugin.ts";
 import { cssAssetsPlugin } from "./build/css-assets.ts";
-import { atomFeeds } from "./build/feeds/plugin.ts";
-import { headersFile } from "./build/headers.ts";
+import { FEED_HEADERS_RULE, atomFeeds } from "./build/feeds/plugin.ts";
+import { headersFilePlugin } from "./build/headers.ts";
 import { inlineScriptsPlugin } from "./build/inline-scripts.ts";
+import { LLMS_TXT_HEADERS_RULE } from "./build/markdown/llms-txt.ts";
 import { markdownPlugin } from "./build/markdown/plugin.ts";
-import { prerenderRoutes } from "./build/prerender/routes.ts";
+import { contentProblemsPlugin, prerenderRoutes } from "./build/prerender/routes.ts";
 import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
-import { reactCompilerOptimizationFailures } from "./build/react-compiler.ts";
+import { reactCompilerOptimizationFailures, reactPlugins } from "./build/react-compiler.ts";
 import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
@@ -27,9 +26,8 @@ import { SITE_URL } from "./src/config/site.ts";
 
 export default defineConfig(({ command }) => {
   const optimizationFailures = reactCompilerOptimizationFailures();
-  const { plugin: headersPlugin, addHeadersRules } = headersFile();
-  const { plugins: mediaPlugins, mediaForEntry } = contentMedia({ addHeadersRules });
-  const { plugin: feedsPlugin, captureDocument } = atomFeeds({ addHeadersRules });
+  const { plugins: mediaPlugins, mediaForEntry } = contentMedia();
+  const { plugin: feedsPlugin, captureDocument } = atomFeeds();
 
   return {
     resolve: { tsconfigPaths: true },
@@ -38,7 +36,10 @@ export default defineConfig(({ command }) => {
         plugins: [
           postcssMixins({ mixinsFiles: "src/mixins.css" }),
           postcssPresetEnv({
-            features: { "position-area-property": false }, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
+            features: {
+              "custom-selectors": true,
+              "position-area-property": false, // Relevant browsers have support for `position-area` so the alias to `inset-area` is not needed.
+            },
           }),
         ],
       },
@@ -47,14 +48,15 @@ export default defineConfig(({ command }) => {
       workersRuntimePlugin(),
       themeColorsPlugin(),
       cssAssetsPlugin(),
-      headersPlugin,
+      headersFilePlugin([MEDIA_HEADERS_RULE, FEED_HEADERS_RULE, LLMS_TXT_HEADERS_RULE]),
       robotsPlugin(),
       siteIconsPlugin(),
       inlineScriptsPlugin(),
       svgr({ svgrOptions }),
       frontmatterPlugin(),
+      contentProblemsPlugin(),
       ...mediaPlugins,
-      ...markdownPlugin({ mediaForEntry, addHeadersRules }),
+      ...markdownPlugin({ mediaForEntry }),
       mdxPlugin({ mediaForEntry }),
       entryBodyChunksPlugin(),
       tanstackStart({
@@ -73,8 +75,7 @@ export default defineConfig(({ command }) => {
         },
       }),
       feedsPlugin,
-      viteReact({ include: /\.(tsx?|mdx)$/ }),
-      babel({ presets: [reactCompilerPreset({ logger: optimizationFailures.logger })] }),
+      ...reactPlugins(optimizationFailures.logger),
       optimizationFailures.plugin,
     ],
     environments: {

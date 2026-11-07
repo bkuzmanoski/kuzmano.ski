@@ -1,5 +1,6 @@
 // Imports only leaf modules because `/vite.config.ts` loads this module through `/build`.
-import { markdownPath } from "#/lib/content/paths.ts";
+import { isDraft } from "#/lib/content/frontmatter.ts";
+import { hasFileExtension, markdownPath } from "#/lib/content/paths.ts";
 import { HTML_MEDIA_TYPE, MARKDOWN_MEDIA_TYPE } from "#/lib/media-types.ts";
 
 import { isRootPath } from "./routes.ts";
@@ -13,7 +14,6 @@ export const MARKDOWN_TOKEN_COUNT_HEADER = "x-markdown-tokens";
 const DEFAULT_QUALITY = 1;
 const QUALITY_PARAMETER = /^q=(\d(?:\.\d{0,3})?)$/;
 const TRAILING_SLASH = /.\/$/;
-const FILE_NAME_EXTENSION = /\.[^/]*$/;
 
 // Returns a media type's declared quality, or 0 when it is absent. Ignores wildcards so browsers' trailing `*/*` does
 // not select `text/markdown`.
@@ -46,10 +46,10 @@ export function prefersMarkdown(acceptHeader: string | null | undefined): boolea
 }
 
 export const hasMarkdownRepresentation = (frontmatter: Frontmatter | null) =>
-  frontmatter?.draft !== true || import.meta.env.DEV;
+  !isDraft(frontmatter) || import.meta.env.DEV;
 
 export function markdownRepresentationPathFor(pathname: string): string | null {
-  if (isRootPath(pathname) || TRAILING_SLASH.test(pathname) || FILE_NAME_EXTENSION.test(pathname)) {
+  if (isRootPath(pathname) || TRAILING_SLASH.test(pathname) || hasFileExtension(pathname)) {
     return null;
   }
 

@@ -1,9 +1,8 @@
-import { createProcessor } from "@mdx-js/mdx";
 import { doc, getSupportInfo } from "prettier";
 
 import { errorMessageOf } from "#/lib/errors.ts";
 
-import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./build/content/markup/entry-syntax.ts";
+import { entryParser } from "./build/content/markup/entry-syntax.ts";
 import { estreeOf } from "./build/content/markup/tree.ts";
 
 import type { ContentNode } from "./build/content/markup/tree.ts";
@@ -57,14 +56,13 @@ const COLLAPSIBLE_WHITESPACE_PATTERN = /[ \t\r\n]+/g;
  */
 const JSX_FORMAT_OPTIONS = { parser: "__js_expression", rootMarker: "mdx" };
 
-const processor = createProcessor({ remarkPlugins: ENTRY_SYNTAX_REMARK_PLUGINS });
 const { hardline, indent, join } = doc.builders;
 const { languages } = await getSupportInfo();
 
 /** Captures root printing errors that Prettier otherwise discards between `embed` and `print`. */
 const printFailures = new WeakMap<ContentNode, unknown>();
 
-const parse = (text: string): ContentNode => processor.parse(text);
+const parse = (text: string): ContentNode => entryParser.parse(text);
 
 function parseFormatted(formatted: string): ContentNode {
   try {

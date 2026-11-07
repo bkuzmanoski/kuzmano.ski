@@ -4,8 +4,8 @@ import Checkmark from "#/assets/images/checkmark.svg?react";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 import type { ClipboardCopyStatus } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
+import { ActionFailureAlert } from "./action-failure-alert.tsx";
 import { Button } from "./button.tsx";
-import { CopyFailureAlert } from "./copy-failure-alert.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
 import type { IconButtonVariant } from "./button.tsx";
@@ -44,7 +44,13 @@ export function CopyButton({
         onDidHide={() => clearConfirmation()}
         {...appearance}
       />
-      <CopyFailureAlert entity={entity} open={latestClipboardCopy?.status === "failed"} onDismiss={dismissFailure} />
+      <ActionFailureAlert
+        action="copy"
+        isPermissionDenied
+        entity={entity}
+        open={latestClipboardCopy?.status === "failed"}
+        onDismiss={dismissFailure}
+      />
     </>
   );
 }

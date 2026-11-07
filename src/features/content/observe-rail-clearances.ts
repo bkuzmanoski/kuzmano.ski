@@ -1,11 +1,12 @@
 import { railClearanceOf } from "#/lib/content/rail-clearance.ts";
+import { createFrameScheduler } from "#/lib/frame-scheduler.ts";
 
 const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
 const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
 const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote";
 const MASTHEAD_SELECTOR = "[data-entry-masthead]";
 
-/** Matches the element `content-body.module.css` anchors the masthead to, including that rule's `:not()`. */
+/** Matches the element `content-body.module.css` anchors the masthead to, with its `:--within-rail-span` expanded. */
 const MASTHEAD_SUBJECT_SELECTOR =
   '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])';
 
@@ -93,9 +94,6 @@ export function observeRailClearances(body: HTMLElement | null) {
     return;
   }
 
-  let frame = 0;
-  let isObserving = true;
-
   // Measured before the ref callback returns, as well as on resize, so that the article's ref callback, which React
   // calls after this one, scrolls to a fragment target where the clearances place it.
   //
@@ -105,20 +103,14 @@ export function observeRailClearances(body: HTMLElement | null) {
 
   // Deferred to the next frame, so the resize the update causes is observed in that frame rather than while the
   // observer is still delivering this one.
-  const scheduleUpdate = () => {
-    if (isObserving) {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => updateRailClearances(body));
-    }
-  };
-  const observer = new ResizeObserver(scheduleUpdate);
+  const update = createFrameScheduler(() => updateRailClearances(body));
+  const observer = new ResizeObserver(update.schedule);
 
   observer.observe(body);
-  void document.fonts.ready.then(scheduleUpdate);
+  void document.fonts.ready.then(update.schedule); // `update` ignores this once stopped as the promise can settle after cleanup.
 
   return () => {
-    isObserving = false;
     observer.disconnect();
-    cancelAnimationFrame(frame);
+    update.stop();
   };
 }

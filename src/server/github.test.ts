@@ -1,15 +1,12 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { SITE_NAME } from "#/config/site.ts";
+import { workerEnvState as env } from "#/test-utils/worker-env.ts";
 
 import { GITHUB_TOKEN_BINDING } from "./bindings.ts";
 import { fetchGitHubContributionCalendar } from "./github.ts";
 
-const env = vi.hoisted(() => ({ current: {}, fails: false }));
-
-vi.mock("./env.ts", () => ({
-  workerEnv: () => (env.fails ? Promise.reject(new Error("No bindings.")) : Promise.resolve(env.current)),
-}));
+vi.mock("./env.ts", async () => (await import("#/test-utils/worker-env.ts")).workerEnvMock());
 
 const GITHUB_TOKEN = "token";
 const USERNAME = "login";
@@ -31,17 +28,11 @@ const graphQlResponse = (days: Array<unknown> = [{ date: "2026-01-07", count: 3 
   });
 
 beforeEach(() => {
-  env.fails = false;
   env.current = { [GITHUB_TOKEN_BINDING]: GITHUB_TOKEN };
   fetchMock.mockReset();
   fetchMock.mockResolvedValue(graphQlResponse());
   vi.stubGlobal("fetch", fetchMock);
   vi.spyOn(console, "error").mockReturnValue();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 describe("fetchGitHubContributionCalendar", () => {
@@ -74,11 +65,8 @@ describe("fetchGitHubContributionCalendar", () => {
     expect(query).toContain("count: contributionCount");
   });
 
-  test.each([
-    ["the token is missing", () => (env.current = {})],
-    ["the environment is unreachable", () => (env.fails = true)],
-  ])("returns `null` without sending a request, and logs the missing binding, when %s", async (_label, arrange) => {
-    arrange();
+  test("returns `null` without sending a request, and logs the `github_binding_missing` event, when the token is missing", async () => {
+    env.current = {};
 
     await expect(fetchGitHubContributionCalendar(USERNAME)).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();

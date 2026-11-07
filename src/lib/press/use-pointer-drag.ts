@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { clientPositionOf, distanceBetween } from "../geometry.ts";
+
 import { isPrimaryPress } from "./press.ts";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
@@ -109,8 +111,7 @@ export function usePointerDrag<T>({
 
     activeDragRef.current = {
       pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      ...clientPositionOf(event),
       value: start(event),
       moved: false,
       handle,
@@ -144,7 +145,7 @@ export function usePointerDrag<T>({
 
     const delta = { dx: event.clientX - activeDrag.x, dy: event.clientY - activeDrag.y };
 
-    if (Math.abs(delta.dx) > threshold || Math.abs(delta.dy) > threshold) {
+    if (distanceBetween(clientPositionOf(event), activeDrag) > threshold) {
       activeDrag.moved = true;
     }
 

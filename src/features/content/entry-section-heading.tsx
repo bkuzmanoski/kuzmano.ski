@@ -1,10 +1,10 @@
 import { Children, isValidElement, useId } from "react";
 
 import { CopyTooltip } from "#/components/copy-tooltip.tsx";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
 

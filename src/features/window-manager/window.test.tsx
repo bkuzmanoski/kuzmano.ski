@@ -104,6 +104,7 @@ const windowShowing = (
   handlers: {
     onFocus?: () => void;
     onMove?: (x: number, y: number) => void;
+    onZoom?: () => void;
     onResize?: (width: number, height: number) => void;
     onDrag?: (drag: WindowDrag | null) => void;
   } = {},
@@ -120,12 +121,10 @@ const windowShowing = (
     maximized={false}
     hidden={false}
     unplaced={false}
+    sizing={{ kind: "resizable", onZoom: handlers.onZoom ?? vi.fn(), onResize: handlers.onResize ?? vi.fn() }}
     onClose={vi.fn()}
-    onZoom={vi.fn()}
     onFocus={handlers.onFocus ?? vi.fn()}
     onMove={handlers.onMove ?? vi.fn()}
-    onResize={handlers.onResize ?? vi.fn()}
-    onFitContentHeight={null}
     onDrag={handlers.onDrag ?? vi.fn()}
   >
     {children}
@@ -148,12 +147,10 @@ const unresizableWindow = (
     maximized={false}
     hidden={false}
     unplaced={false}
+    sizing={onFitContentHeight ? { kind: "fitContentHeight", onFitContentHeight } : { kind: "fixed" }}
     onClose={vi.fn()}
-    onZoom={null}
     onFocus={vi.fn()}
     onMove={vi.fn()}
-    onResize={null}
-    onFitContentHeight={onFitContentHeight}
     onDrag={vi.fn()}
   >
     {children}
@@ -651,7 +648,7 @@ test("the window restores focus to itself when its content is replaced", () => {
 test("each tap of a double tap on the `Zoom` button zooms the window", () => {
   const onZoom = vi.fn();
 
-  render(cloneElement(windowShowing("tall", TALL_PANE_ELEMENT), { onZoom }));
+  render(windowShowing("tall", TALL_PANE_ELEMENT, true, { onZoom }));
 
   const zoomButton = screen.getByRole("button", { name: "Zoom" });
 

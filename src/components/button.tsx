@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { activateOnKeyPress } from "#/lib/keys.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
 import { isPrimaryPress } from "#/lib/press/press.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./button.module.css";
 

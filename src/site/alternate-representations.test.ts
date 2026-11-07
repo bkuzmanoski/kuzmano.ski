@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { collectionWithFeed as COLLECTION_WITH_FEED } from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeCollectionEntries, fakeEntry } from "#/test-utils/collection.ts";
@@ -8,8 +8,6 @@ import { collectionFeedOf } from "./feeds.ts";
 
 const COLLECTION_WITH_FEED_ENTRY = COLLECTION_WITH_FEED.list()[0]!;
 const COLLECTION_WITHOUT_FEED = fakeCollection(fakeCollectionEntries("entry"));
-
-afterEach(() => vi.unstubAllEnvs());
 
 describe("entryAlternateRepresentationsOf", () => {
   test("returns a page's Markdown representation path, and `null` for its feed", () => {

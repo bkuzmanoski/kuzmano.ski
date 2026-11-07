@@ -1,6 +1,5 @@
-import { usePressSound } from "../audio/use-press-sound.ts";
-import { isPrimaryPress, releaseImplicitPointerCapture } from "../press/press.ts";
-import { useMousePressStart } from "../press/use-mouse-press-start.ts";
+import { releaseImplicitPointerCapture } from "../press/press.ts";
+import { usePressSound } from "../press/use-press-sound.ts";
 import { useTrailingClick } from "../press/use-trailing-click.ts";
 
 import type { MouseEvent, PointerEvent } from "react";
@@ -28,37 +27,26 @@ export function useMenuButtonPress({
   onPress: (event: MouseEvent<HTMLButtonElement>) => void;
   onActivate: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
-  const pressSoundHandlers = usePressSound();
   const trailingClick = useTrailingClick();
-  const mousePressStart = useMousePressStart();
 
-  function press(event: MouseEvent<HTMLButtonElement>) {
-    trailingClick.recordPress();
-    onPress(event);
-  }
+  // `usePressSound` detects press starts and ignores disabled buttons even though Chromium dispatches pointer events to
+  // them, including buttons disabled through a `<fieldset>`.
+  const pressSoundHandlers = usePressSound({
+    onPressStart: (event) => {
+      if (event.type === "pointerdown") {
+        releaseImplicitPointerCapture(event as PointerEvent<HTMLButtonElement>);
+      }
+
+      trailingClick.recordPress();
+      onPress(event as MouseEvent<HTMLButtonElement>); // The handlers are only attached to a `<button>`.
+    },
+  });
 
   return {
     ...pressSoundHandlers,
-    onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
-      pressSoundHandlers.onPointerDown(event);
-
-      // Chromium dispatches pointer events to disabled buttons, including those disabled by a `<fieldset>`.
-      if (!isPrimaryPress(event) || event.currentTarget.matches(":disabled")) {
-        return;
-      }
-
-      if (!mousePressStart.recordPointerDown(event)) {
-        releaseImplicitPointerCapture(event);
-        press(event);
-      }
-    },
     onMouseDown: (event: MouseEvent<HTMLButtonElement>) => {
-      pressSoundHandlers.onMouseDown(event);
       event.preventDefault();
-
-      if (mousePressStart.consumeMouseDown(event)) {
-        press(event);
-      }
+      pressSoundHandlers.onMouseDown(event);
     },
     onPointerUp: trailingClick.onPointerUp,
     onClick: (event: MouseEvent<HTMLButtonElement>) => {

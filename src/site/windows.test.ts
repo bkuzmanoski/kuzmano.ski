@@ -14,7 +14,9 @@ import {
 
 vi.mock("./catalog.ts", async () => {
   const { configuredCollections: collectionsWithFeeds, siteCatalogMock } = await import("#/test-utils/catalog.ts");
-  return siteCatalogMock({ collections: { ...siteCatalogMock().collections, ...collectionsWithFeeds } });
+  return siteCatalogMock({
+    collections: new Map([...siteCatalogMock().collections, ...Object.entries(collectionsWithFeeds)]),
+  });
 });
 
 const COLLECTION_WITH_FEED_ENTRY_ROUTE = COLLECTION_WITH_FEED.routeOf(COLLECTION_WITH_FEED.list()[0]!.slug);

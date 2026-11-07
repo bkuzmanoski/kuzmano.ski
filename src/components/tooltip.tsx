@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
 import { cx } from "#/lib/class-names.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 import {
@@ -95,21 +96,17 @@ export function Tooltip({
 
   // The Escape key hides a visible tooltip while the pointer and the focus stay on the control. The event is not
   // stopped, so the press that hides a tooltip in a menu also closes the menu.
-  useEffect(() => {
-    if (!isVisible) {
-      return;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isVisible]);
+  useEventListeners(
+    "document",
+    {
+      keydown: (event) => {
+        if (event.key === "Escape") {
+          setIsOpen(false);
+        }
+      },
+    },
+    { enabled: isVisible },
+  );
 
   function show(delay: number) {
     timer.cancel();
@@ -202,7 +199,10 @@ export function Tooltip({
       }}
     >
       {isValidElement<TooltipChildProps>(children) && !childTextIncludesLabel && !isNamedByLabel(children.props, label)
-        ? cloneElement(children, { "aria-describedby": isVisible ? id : undefined })
+        ? cloneElement(children, {
+            "aria-describedby":
+              [children.props["aria-describedby"], isVisible ? id : undefined].filter(Boolean).join(" ") || undefined,
+          })
         : children}
       {isVisible && (
         <span

@@ -1,47 +1,32 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import Logo from "#/assets/images/logo.svg?react";
-import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-off.svg?react";
-import SoundEffectsOnMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-on.svg?react";
-import ToggleAppearanceLightDarkMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-light-dark.svg?react";
-import ToggleAppearanceSystemMenuBarIcon from "#/assets/images/menu-bar-icon-toggle-appearance-system.svg?react";
 import { joinedWithSeparators } from "#/components/menu-items.ts";
 import type { MenuItem } from "#/components/menu-items.ts";
 import { Menu } from "#/components/menu.tsx";
-import { Tooltip } from "#/components/tooltip.tsx";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
-import { SITE_LOCALE, SITE_LOCATION, SITE_NAME, SITE_SOURCE_URL, SITE_TIME_ZONE } from "#/config/site.ts";
-import { setSoundEffectsAudibly } from "#/lib/audio/sound-effects-setting.ts";
+import { SITE_NAME, SITE_SOURCE_URL } from "#/config/site.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useGlobalShortcuts } from "#/lib/hooks/use-global-shortcuts.ts";
 import type { KeyboardShortcut } from "#/lib/hooks/use-global-shortcuts.ts";
-import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { cycle } from "#/lib/math.ts";
 import { useMenuButtonPress } from "#/lib/menu/use-menu-button-press.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { isPrimaryPress } from "#/lib/press/press.ts";
 import { sleep } from "#/lib/screensaver/lifecycle.ts";
-import {
-  APPEARANCE_LABELS,
-  APPEARANCE_SETTINGS,
-  SOUND_EFFECTS_LABELS,
-  setAppearance,
-  useSettings,
-} from "#/lib/settings/settings.ts";
 import { restart, useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
-import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
 import { useFocusedWindow, useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
 import { SITE_FEED } from "#/site/feeds.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import { isFeatureWindow, windowAlternateRepresentationsOf } from "#/site/windows.ts";
 
 import styles from "./menu-bar.module.css";
+import { AppearanceStatus, SoundStatus, TimeStatus } from "./status-items.tsx";
 
-import type { ComponentProps, ComponentType, KeyboardEvent, ReactNode } from "react";
+import type { ComponentProps, ComponentType, KeyboardEvent } from "react";
 
 const destinationShortcut = (id: DestinationId) => {
   const shortcutNumber = DESTINATION_ORDER.indexOf(id) + 1;
@@ -80,158 +65,6 @@ function MenuTitle({
   );
 }
 
-function StatusButton({
-  label,
-  className,
-  isSilent = false,
-  onClick,
-  children,
-}: {
-  label: string;
-  className?: string;
-  isSilent?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  const [isShowingState, setIsShowingState] = useState(false);
-  const timer = useTimer();
-  const pressSoundHandlers = usePressSound();
-
-  function showState() {
-    setIsShowingState(true);
-    timer.start(() => setIsShowingState(false), STATE_DISPLAY_DURATION_MS);
-  }
-
-  function clearState() {
-    timer.cancel();
-    setIsShowingState(false);
-  }
-
-  return (
-    <Tooltip
-      label={label}
-      persistOnPress
-      showsState={isShowingState}
-      onDidHide={clearState}
-      className={cx(styles.statusItemTooltipWrapper, className)}
-    >
-      <button
-        type="button"
-        className={styles.control}
-        aria-label={label}
-        {...mergeHandlers(isSilent ? {} : pressSoundHandlers, {
-          onClick: () => {
-            showState();
-            onClick();
-          },
-        })}
-      >
-        {children}
-      </button>
-    </Tooltip>
-  );
-}
-
-function AppearanceStatus() {
-  const { appearance } = useSettings();
-  const nextAppearance =
-    APPEARANCE_SETTINGS[cycle(APPEARANCE_SETTINGS.length, APPEARANCE_SETTINGS.indexOf(appearance), 1)]!;
-  const Icon = appearance === "system" ? ToggleAppearanceSystemMenuBarIcon : ToggleAppearanceLightDarkMenuBarIcon;
-
-  return (
-    <StatusButton
-      label={`Appearance: ${APPEARANCE_LABELS[appearance]}`}
-      className={styles.appearanceStatus}
-      onClick={() => setAppearance(nextAppearance)}
-    >
-      <Icon className={styles.menuBarIcon} />
-    </StatusButton>
-  );
-}
-
-function SoundStatus() {
-  const { soundEffects: sound } = useSettings();
-  const Icon = sound === "on" ? SoundEffectsOnMenuBarIcon : SoundEffectsOffMenuBarIcon;
-
-  return (
-    <StatusButton
-      label={`Sound: ${SOUND_EFFECTS_LABELS[sound]}`}
-      isSilent={sound === "on"}
-      onClick={() => setSoundEffectsAudibly(sound === "on" ? "off" : "on")}
-    >
-      <Icon className={styles.menuBarIcon} />
-    </StatusButton>
-  );
-}
-
-interface SiteTime {
-  /** The displayed minute as a valid global date and time string, in UTC. */
-  dateTime: string;
-  /** The hour, minute, and day period, without the time zone. */
-  timeText: string;
-  timeZoneName: string;
-}
-
-const TIME_FORMAT = new Intl.DateTimeFormat(SITE_LOCALE, {
-  timeZone: SITE_TIME_ZONE,
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-  timeZoneName: "short",
-});
-
-function currentSiteTime(): SiteTime {
-  const now = new Date();
-  const timeParts = TIME_FORMAT.formatToParts(now);
-
-  const partValue = (type: string) => timeParts.find((part) => part.type === type)?.value ?? "";
-
-  return {
-    dateTime: `${now.toISOString().slice(0, "YYYY-MM-DDTHH:MM".length)}Z`,
-    timeText: `${partValue("hour")}:${partValue("minute")} ${partValue("dayPeriod")}`,
-    timeZoneName: partValue("timeZoneName"),
-  };
-}
-
-function TimeStatus() {
-  const [clockTime, setClockTime] = useState<SiteTime | null>(null);
-
-  useEffect(() => {
-    let tickTimer: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      setClockTime(currentSiteTime());
-
-      const now = new Date();
-      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-
-      tickTimer = setTimeout(tick, msToNextMinute);
-    };
-
-    tick();
-
-    return () => clearTimeout(tickTimer);
-  }, []);
-
-  if (!clockTime) {
-    return null;
-  }
-
-  return (
-    <Tooltip label={SITE_LOCATION} childTextIncludesLabel>
-      <time dateTime={clockTime.dateTime} className={cx(styles.control, styles.time, styles.wideOnly)}>
-        <span>
-          {clockTime.timeText}
-          {/* Hidden from assistive technology, which reads the location instead of an abbreviation that VoiceOver pronounces as a word. */}
-          <span aria-hidden>{` (${clockTime.timeZoneName})`}</span>
-          {/* One text node, so a screen reader reads the location as one phrase. */}
-          <span className={styles.timeLocation}>{` in ${SITE_LOCATION}`}</span>
-        </span>
-      </time>
-    </Tooltip>
-  );
-}
-
 export function MenuBar() {
   const { open, close, toggleZoom, cycleWindows } = useWindowActions();
   const focusedWindow = useFocusedWindow();
@@ -240,10 +73,10 @@ export function MenuBar() {
   const [openMenu, setOpenMenu] = useState<{
     label: string;
     anchor: HTMLButtonElement;
+    isPointerHeld: boolean;
     focusesFirstItem: boolean;
   } | null>(null);
   const titleIdPrefix = useId();
-  const [isPointerHeld, setIsPointerHeld] = useState(false);
   const titleElementsRef = useRef<Record<string, HTMLButtonElement | null>>({});
   const titlePressPointerIdRef = useRef<number | null>(null);
 
@@ -328,10 +161,9 @@ export function MenuBar() {
   function openMenuAt(
     label: string,
     anchor: HTMLButtonElement,
-    { isPointerHeld: isHeld = false, focusesFirstItem = false } = {},
+    { isPointerHeld = false, focusesFirstItem = false } = {},
   ) {
-    setIsPointerHeld(isHeld);
-    setOpenMenu({ label, anchor, focusesFirstItem });
+    setOpenMenu({ label, anchor, isPointerHeld, focusesFirstItem });
   }
 
   // On touch, the press that dismisses an open menu can also open the next menu. There is no hover to switch menus
@@ -363,8 +195,9 @@ export function MenuBar() {
   // Focuses the title before the menu mounts, as the title prevents the default action of its `mousedown`.
   function onTitlePress(anchor: HTMLButtonElement, label: string) {
     anchor.focus({ focusVisible: false });
-    setIsPointerHeld(true);
-    setOpenMenu((current) => (current?.label === label ? null : { label, anchor, focusesFirstItem: false }));
+    setOpenMenu((current) =>
+      current?.label === label ? null : { label, anchor, isPointerHeld: true, focusesFirstItem: false },
+    );
   }
 
   function onTitleActivate(anchor: HTMLButtonElement, label: string) {
@@ -439,7 +272,7 @@ export function MenuBar() {
               <Menu
                 items={items}
                 opener={{ kind: "title", title: openMenu.anchor, labelledBy: `${titleIdPrefix}-${menuIndex}` }}
-                isPointerHeld={isPointerHeld}
+                isPointerHeld={openMenu.isPointerHeld}
                 focusesFirstItem={openMenu.focusesFirstItem}
                 onOpenAdjacentMenu={(direction) => openAdjacentMenu(label, direction)}
                 onClose={() => closeMenu(label)}

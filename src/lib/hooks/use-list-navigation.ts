@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { scrollIntoViewSilently } from "../audio/scroll.ts";
 import { playHoverSound } from "../audio/sounds.ts";
 import { activateOnKeyPress } from "../keys.ts";
+import { navigationTargetOf } from "../list-navigation.ts";
 import { clamp } from "../math.ts";
 
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
@@ -14,24 +15,7 @@ import type { KeyboardEvent, MouseEvent, RefObject } from "react";
  */
 const ITEM_ATTRIBUTE = "data-list-item";
 
-/** Where each key moves the focus, from the item that received it. */
-const KEY_TARGETS: Record<string, ((index: number, lastIndex: number) => number) | undefined> = {
-  ArrowUp: (index) => index - 1,
-  ArrowDown: (index) => index + 1,
-  Home: () => 0,
-  End: (_index, lastIndex) => lastIndex,
-};
-
-/**
- * Where each key moves the focus from outside the list. Each arrow key focuses the item at the end of the list it
- * points away from, like a combobox's arrow keys when they open its popup.
- */
-const OUTSIDE_KEY_TARGETS: Record<string, ((lastIndex: number) => number) | undefined> = {
-  ArrowUp: (lastIndex) => lastIndex,
-  ArrowDown: () => 0,
-  Home: () => 0,
-  End: (lastIndex) => lastIndex,
-};
+const NAVIGATION_OPTIONS = { wraps: false };
 
 function itemAt(list: HTMLElement | null, listId: string, index: number) {
   const items = list?.querySelectorAll<HTMLElement>(`[${ITEM_ATTRIBUTE}]`) ?? [];
@@ -108,15 +92,14 @@ export function useListNavigation(
           return;
         }
 
-        const targetIndex = KEY_TARGETS[event.key]?.(index, count - 1);
+        const nextIndex = navigationTargetOf(event.key, index, count, NAVIGATION_OPTIONS);
 
-        if (targetIndex === undefined) {
+        if (nextIndex === null) {
           return;
         }
 
         event.preventDefault();
 
-        const nextIndex = clamp(targetIndex, 0, count - 1);
         const item = itemAt(listRef.current, listId, nextIndex);
 
         if (nextIndex === index || !item) {
@@ -129,11 +112,12 @@ export function useListNavigation(
     };
   }
 
-  // Moves the focus into the list for a key pressed while an element outside it, such as the window that contains it,
-  // has the focus. It prevents the default of a key it moves the focus for, and ignores the event otherwise.
+  // Handles arrow keys pressed outside the list, such as on its containing window, by moving focus into the list. Each
+  // key focuses the item at the end it points toward, matching a combobox opening its popup. Prevents the default only
+  // when focus moves.
   function onKeyDownOutsideList(event: KeyboardEvent) {
-    const targetIndex = OUTSIDE_KEY_TARGETS[event.key]?.(count - 1);
-    const item = targetIndex === undefined ? null : itemAt(listRef.current, listId, targetIndex);
+    const targetIndex = navigationTargetOf(event.key, -1, count, NAVIGATION_OPTIONS);
+    const item = targetIndex === null ? null : itemAt(listRef.current, listId, targetIndex);
 
     if (!item) {
       return;

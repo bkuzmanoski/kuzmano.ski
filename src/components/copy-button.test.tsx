@@ -25,7 +25,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  vi.unstubAllGlobals();
 });
 
 const renderButton = (value: string | null = "test@example.com") =>

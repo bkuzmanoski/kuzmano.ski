@@ -1,6 +1,8 @@
 import { MDXProvider } from "@mdx-js/react";
 import { use } from "react";
 
+import { ImageGallery } from "#/features/image-gallery/image-gallery.tsx";
+import { Video } from "#/features/video/video.tsx";
 import { Waitlist } from "#/features/waitlist/waitlist.tsx";
 import { cx } from "#/lib/class-names.ts";
 import { RenderedEntryContext } from "#/lib/content/rendered-entry.ts";
@@ -17,12 +19,10 @@ import { EntryColophon } from "./entry-colophon.tsx";
 import { EntryMasthead } from "./entry-masthead.tsx";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 import { Footnote } from "./footnote.tsx";
-import { ImageGallery } from "./image-gallery.tsx";
 import { ImageRow } from "./image-row.tsx";
 import { observeRailClearances } from "./observe-rail-clearances.ts";
 import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
 import { Rail } from "./rail.tsx";
-import { Video } from "./video.tsx";
 
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
@@ -63,10 +63,10 @@ export function ContentBody({ route, target }: { route: string; target: EntryTar
       <OpensInNewTabDescriptionProvider>
         <EntryClipboardProvider>
           <MDXProvider components={MDX_COMPONENTS}>
-            <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames?.entry)}>
+            <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames.entry)}>
               <div ref={observeRailClearances} data-content-body>
                 {target.collection !== null && <EntryMasthead target={target} />}
-                <h1 className={stylesheetClassNames?.title} data-feed-omit>
+                <h1 className={stylesheetClassNames.title} data-feed-omit>
                   {target.title}
                 </h1>
                 <MDXContent />

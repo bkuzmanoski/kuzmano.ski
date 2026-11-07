@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { fakeScrollViewport } from "#/test-utils/audio.ts";
 
@@ -29,10 +29,6 @@ beforeEach(() => {
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.mocked(playScrollDetentSound).mockClear();
   vi.mocked(playClickSound).mockClear();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
 });
 
 const detents = () => vi.mocked(playScrollDetentSound).mock.calls.length;

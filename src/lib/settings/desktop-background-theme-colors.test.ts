@@ -50,7 +50,6 @@ beforeEach(() => {
 afterEach(() => {
   stopWatchingFunctions.splice(0).forEach((stopWatching) => stopWatching());
   pendingAnimationFrames.clear();
-  vi.unstubAllGlobals();
   vi.mocked(computedColorOf).mockReset();
   setAppearance("system");
   resetThemeTint();

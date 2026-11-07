@@ -1,6 +1,6 @@
 import { visit } from "unist-util-visit";
 
-import { elementNameOf, isJsxElement, isWhitespaceOrComment, quotedEntryPathOf } from "./tree.ts";
+import { elementNameOf, isJsxElement, isJsxElementNamed, isWhitespaceOrComment, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
@@ -34,7 +34,7 @@ function describedChild(node: ContentNode): string {
 export function rehypeImageGalleryChildren() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node: ContentNode) => {
-      if (!isJsxElement(node) || elementNameOf(node) !== "ImageGallery") {
+      if (!isJsxElementNamed(node, "ImageGallery")) {
         return;
       }
 

@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+
+import { useEventListeners } from "../hooks/use-event-listeners.ts";
 
 import { isPointerClick, isSimulatedMouseDown } from "./press.ts";
 
@@ -13,39 +15,31 @@ import { isPointerClick, isSimulatedMouseDown } from "./press.ts";
 export function useIsFromPointerPress(): () => boolean {
   const isPointerPressRef = useRef(false);
 
-  useEffect(() => {
-    function recordPointerPress() {
-      isPointerPressRef.current = true;
-    }
+  const recordPointerPress = () => {
+    isPointerPressRef.current = true;
+  };
+  const clearPointerPress = () => {
+    isPointerPressRef.current = false;
+  };
 
-    function clearPointerPress() {
-      isPointerPressRef.current = false;
-    }
-
-    function clearSimulatedPress(event: MouseEvent) {
-      if (isSimulatedMouseDown(event)) {
-        clearPointerPress();
-      }
-    }
-
-    function clearClickWithoutPress(event: MouseEvent) {
-      if (!isPointerClick(event)) {
-        clearPointerPress();
-      }
-    }
-
-    // Listens in the capture phase on the window, so the hook records the input before a control's handler acts on it,
-    // and records a press on a control that stops its propagation.
-    const controller = new AbortController();
-    const options = { capture: true, signal: controller.signal };
-
-    window.addEventListener("pointerdown", recordPointerPress, options);
-    window.addEventListener("keydown", clearPointerPress, options);
-    window.addEventListener("mousedown", clearSimulatedPress, options);
-    window.addEventListener("click", clearClickWithoutPress, options);
-
-    return () => controller.abort();
-  }, []);
+  useEventListeners(
+    "window",
+    {
+      pointerdown: recordPointerPress,
+      keydown: clearPointerPress,
+      mousedown: (event) => {
+        if (isSimulatedMouseDown(event)) {
+          clearPointerPress();
+        }
+      },
+      click: (event) => {
+        if (!isPointerClick(event)) {
+          clearPointerPress();
+        }
+      },
+    },
+    { capture: true }, // Capture events on the window before control handlers run, including for controls that stop propagation.
+  );
 
   return () => isPointerPressRef.current;
 }

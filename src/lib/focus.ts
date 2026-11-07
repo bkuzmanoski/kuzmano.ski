@@ -1,3 +1,5 @@
+import { flushSync } from "react-dom";
+
 /**
  * Focuses an element, temporarily assigning `tabindex="-1"` when it does not already have a `tabindex` attribute.
  *
@@ -18,4 +20,9 @@ export function focusWithTabIndexUntilBlur(element: HTMLElement, options?: Focus
   } else {
     element.removeAttribute("tabindex"); // The element did not take the focus (e.g., inside inert content or outside the document), so it has no `blur` to wait for.
   }
+}
+
+export function focusAfterClosingAlert(close: () => void, element: HTMLElement | null | undefined): void {
+  flushSync(close); // Ensure the modal alert is closed and the document is no longer inert before focusing the element.
+  element?.focus();
 }

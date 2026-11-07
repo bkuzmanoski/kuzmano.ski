@@ -1,8 +1,10 @@
-import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
+import { clientPositionOf } from "#/lib/geometry.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { useMenuButtonPress } from "#/lib/menu/use-menu-button-press.ts";
 import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
 import type { OpeningPress } from "#/lib/menu/use-menu-interaction.ts";
@@ -78,16 +80,9 @@ function PopupMenuOptions<TValue extends string>({
     onClose,
   });
 
-  const onLayoutChange = useEffectEvent(onClose); // Close when layout changes because the options are positioned from the button's opening bounds.
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    window.addEventListener("resize", onLayoutChange, { signal: controller.signal });
-    document.addEventListener("scroll", onLayoutChange, { signal: controller.signal, capture: true });
-
-    return () => controller.abort();
-  }, []);
+  // Close when the layout changes because the options use the button bounds captured when the menu opened.
+  useEventListeners("window", { resize: onClose });
+  useEventListeners("document", { scroll: onClose }, { capture: true });
 
   const { buttonRect } = openState;
   const style: StyleWithVars = {
@@ -161,8 +156,7 @@ export function PopupMenu<TValue extends string>({
     setOpenState((current) => (current ? null : { button, buttonRect: button.getBoundingClientRect(), openingPress }));
 
   const menuButtonPressHandlers = useMenuButtonPress({
-    onPress: (event) =>
-      toggle(event.currentTarget, { isPointerHeld: true, origin: { x: event.clientX, y: event.clientY } }),
+    onPress: (event) => toggle(event.currentTarget, { isPointerHeld: true, origin: clientPositionOf(event) }),
     onActivate: (event) => toggle(event.currentTarget, { isPointerHeld: false, origin: null }),
   });
 

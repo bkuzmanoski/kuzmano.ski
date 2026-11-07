@@ -12,6 +12,7 @@ import { readAuthoredContent } from "../content/authored-content.ts";
 import { NO_MEDIA_FOR_ENTRY } from "../content/markup/media-rewrite.ts";
 import { CLIENT_ENVIRONMENT } from "../environments.ts";
 import { requestPathOf } from "../paths.ts";
+import { sharedLoad } from "../shared-load.ts";
 
 import { entryDataModuleReaderThrough, readEntryDataModule } from "./entry-data.ts";
 import { llmsTxtFor, llmsTxtPlugin } from "./llms-txt.ts";
@@ -24,7 +25,6 @@ import type { EntryDataModuleReader } from "./entry-data.ts";
 import type { MarkdownTokenCounts } from "./token-count.ts";
 import type { AuthoredContent } from "../content/authored-content.ts";
 import type { MediaForEntry } from "../content/markup/media-rewrite.ts";
-import type { AddHeadersRules } from "../headers.ts";
 import type { Plugin } from "vite";
 
 interface RenderedMarkdown {
@@ -48,12 +48,8 @@ function requestedMarkdownPathFor(requestPath: string, acceptHeader: string | un
  */
 export function markdownPlugin({
   mediaForEntry = NO_MEDIA_FOR_ENTRY,
-  addHeadersRules,
-}: {
-  mediaForEntry?: MediaForEntry;
-  addHeadersRules: AddHeadersRules;
-}): Array<Plugin> {
-  const renderEntryMarkdown = markdownRendererFor(mediaForEntry);
+}: { mediaForEntry?: MediaForEntry } = {}): Array<Plugin> {
+  const renderEntryMarkdown = markdownRendererFor({ mediaForEntry });
 
   // A build imports entry data with `readEntryDataModule`, and `vite dev` through its SSR module runner.
   const renderMarkdown = async (entryDataModuleReader: EntryDataModuleReader): Promise<RenderedMarkdown> => {
@@ -67,12 +63,10 @@ export function markdownPlugin({
   };
   const llmsTxtOf = ({ content, tokenCounts }: RenderedMarkdown) => llmsTxtFor(content, tokenCounts);
 
-  let renderedMarkdown: Promise<RenderedMarkdown> | null = null;
-
   // Whichever environment builds first renders the content; the other awaits the same render. Three build-time hooks
   // reach this: the Markdown files and `llms.txt` emitted in the client environment, and the token counts loaded in the
   // server environment. `vite dev` renders per request instead.
-  const ensureRenderedMarkdown = () => (renderedMarkdown ??= renderMarkdown(readEntryDataModule));
+  const ensureRenderedMarkdown = sharedLoad(() => renderMarkdown(readEntryDataModule)).get;
 
   const markdownEmitPlugin: Plugin = {
     name: "kuzmano.ski:markdown-emit",
@@ -147,7 +141,6 @@ export function markdownPlugin({
     llmsTxtPlugin({
       loadForBuild: async () => llmsTxtOf(await ensureRenderedMarkdown()),
       loadForDevRequest: async (server) => llmsTxtOf(await renderMarkdown(entryDataModuleReaderThrough(server))),
-      addHeadersRules,
     }),
   ];
 }

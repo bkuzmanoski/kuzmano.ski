@@ -7,6 +7,7 @@ import { cx } from "#/lib/class-names.ts";
 import type { Position } from "#/lib/geometry.ts";
 import { useIsApplePlatform } from "#/lib/hooks/use-is-apple-platform.ts";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.ts";
+import { edgeIndexOf } from "#/lib/list-navigation.ts";
 import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
@@ -32,8 +33,8 @@ export type MenuOpener =
   /** A context menu that opens at the point pressed. */
   | { kind: "point"; position: Position; pointerType: string; label: string };
 
-const isEnabled = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled;
-const isLink = (entry: MenuItem | undefined) => entry?.kind === "action" && !entry.disabled && entry.href !== undefined;
+const isEnabled = (entry: MenuItem | undefined): entry is MenuAction => entry?.kind === "action" && !entry.disabled;
+const isLink = (entry: MenuItem | undefined) => isEnabled(entry) && entry.href !== undefined;
 
 function onItemClick(event: MouseEvent<HTMLAnchorElement>) {
   // Items activate from the document-level `pointerup` handler in `useMenuInteraction`, which waits for the activation
@@ -159,7 +160,9 @@ export function Menu({
       isPointerHeld: isPointerHeld && !opensAbovePoint,
       origin: isContextMenu ? opener.position : null, // A menu with a title opens below it rather than over the point pressed.
     },
-    initialFocusedItemIndex: focusesFirstItem ? menuInteractionItems.findIndex((item) => item.isEnabled) : -1,
+    initialFocusedItemIndex: focusesFirstItem
+      ? edgeIndexOf("first", menuInteractionItems.length, (index) => menuInteractionItems[index]?.isEnabled === true)
+      : -1,
     isBrowserHandledRelease: (index, event) => isLink(items[index]) && isBrowserHandledClick(event),
     activatesOnNonPrimaryRelease: isContextMenu,
     onActivate: (index) => {

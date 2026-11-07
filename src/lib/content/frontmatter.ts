@@ -49,3 +49,5 @@ export function parseFrontmatter(input: unknown, path: string): Frontmatter {
 
   return { title, description, date, category, draft };
 }
+
+export const isDraft = (frontmatter: Frontmatter | null) => frontmatter?.draft === true;

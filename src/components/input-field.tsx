@@ -1,8 +1,8 @@
 import { useRef } from "react";
 
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { InputFieldBinding } from "#/lib/forms/use-input-field.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./input-field.module.css";
 

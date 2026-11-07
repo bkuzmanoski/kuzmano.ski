@@ -62,12 +62,8 @@ export function resolveRoute(route: string): ResolvedRoute {
         collection: content.collection,
       };
 
-    case "feature": {
-      const featureRouteId = FEATURE_ROUTE_IDS.find((id) => FEATURE_ROUTE_SPECS[id].route === content.route);
-      return featureRouteId
-        ? { id: featureRouteId, title: FEATURE_ROUTE_SPECS[featureRouteId].title }
-        : { id: "notFound" };
-    }
+    case "feature":
+      return { id: content.id, title: FEATURE_ROUTE_SPECS[content.id].title };
 
     default:
       return { id: "notFound" };

@@ -79,25 +79,68 @@ export const isJsxElement = (node: ContentNode) => JSX_ELEMENT_NODE_TYPES.has(no
 /** Returns an element name from MDX JSX or hast. */
 export const elementNameOf = (node: ContentNode | undefined) => node?.tagName ?? node?.name ?? null;
 
-/** Whether an element has an attribute, including JSX expressions. */
-export function hasAttribute(node: ContentNode, name: string): boolean {
+export const isJsxElementNamed = (node: ContentNode, name: string) =>
+  isJsxElement(node) && elementNameOf(node) === name;
+
+/**
+ * Returns an attribute from an MDX JSX or hast element, or `undefined` when it is absent. JSX attribute values are
+ * `null` when valueless and objects when authored as expressions.
+ */
+export function attributeOf(node: ContentNode, name: string): { value?: unknown } | undefined {
   if (node.attributes) {
-    return node.attributes.some((attribute) => attribute.name === name);
+    return node.attributes.find((attribute) => attribute.name === name);
   }
 
-  return node.properties !== undefined && name in node.properties;
+  return node.properties !== undefined && name in node.properties ? { value: node.properties[name] } : undefined;
 }
+
+/** Whether an element declares a named attribute, including a JSX expression. */
+export const hasAttribute = (node: ContentNode, name: string) => attributeOf(node, name) !== undefined;
 
 /** Whether a JSX element spreads an expression into its attributes, which can set any attribute at runtime. */
 export const hasSpreadAttribute = (node: ContentNode) =>
   node.attributes?.some(({ type }) => type === "mdxJsxExpressionAttribute") ?? false;
 
 export function stringAttributeOf(node: ContentNode, name: string): string | null {
-  const value = node.attributes
-    ? node.attributes.find((attribute) => attribute.name === name)?.value
-    : node.properties?.[name];
+  const value = attributeOf(node, name)?.value;
   return typeof value === "string" ? value : null;
 }
+
+/**
+ * Returns an attribute value only when it is in `allowedValues`; otherwise throws. Returns `undefined` if the attribute
+ * is absent. `describeElement` receives its authored value: a string, "without a value", or "authored as an
+ * expression".
+ */
+export function assertAttributeOneOf<TValue extends string>(
+  node: ContentNode,
+  name: string,
+  allowedValues: ReadonlyArray<TValue>,
+  { file, describeElement }: { file: EntryVFile; describeElement: (authoredValue: AuthoredAttributeValue) => string },
+): TValue | undefined {
+  const attribute = attributeOf(node, name);
+
+  if (attribute === undefined) {
+    return undefined;
+  }
+
+  const { value } = attribute;
+
+  if (typeof value === "string" && (allowedValues as ReadonlyArray<string>).includes(value)) {
+    return value as TValue;
+  }
+
+  const authoredValue: AuthoredAttributeValue =
+    typeof value === "string"
+      ? { kind: "string", value }
+      : { kind: value === null || value === undefined ? "without a value" : "authored as an expression" };
+
+  throw new Error(
+    `${quotedEntryPathOf(file)} renders ${describeElement(authoredValue)}. Expected one of: ${allowedValues.join(", ")}.`,
+  );
+}
+
+export type AuthoredAttributeValue =
+  { kind: "string"; value: string } | { kind: "without a value" | "authored as an expression" };
 
 /** Adds an attribute, stringifying JSX values but preserving hast numeric values. */
 function setAttribute(node: ContentNode, name: string, value: string | number) {

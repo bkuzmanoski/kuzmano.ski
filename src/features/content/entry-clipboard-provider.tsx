@@ -1,4 +1,4 @@
-import { CopyFailureAlert } from "#/components/copy-failure-alert.tsx";
+import { ActionFailureAlert } from "#/components/action-failure-alert.tsx";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
 import styles from "./content-body.module.css";
@@ -34,7 +34,9 @@ export function EntryClipboardProvider({ children }: { children: ReactNode }) {
       <span className={styles.entryCopyStatus} role="status">
         {latestClipboardCopy?.status === "copied" && <span key={latestClipboardCopy.id}>Copied</span>}
       </span>
-      <CopyFailureAlert
+      <ActionFailureAlert
+        action="copy"
+        isPermissionDenied
         entity={latestClipboardCopy?.entity ?? ""}
         open={latestClipboardCopy?.status === "failed"}
         onDismiss={dismissFailure}

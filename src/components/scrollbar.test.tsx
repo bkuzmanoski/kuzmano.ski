@@ -130,6 +130,11 @@ test("the click event that follows a press does not step a second time", () => {
   expect(viewport.scrollTop).toBe(ARROW_STEP_PX);
 });
 
+test("a mouse press on an arrow prevents the default action of its `mousedown` event so the browser does not focus the arrow", () => {
+  const { scrollDownButton } = renderScrollbar();
+  expect(fireEvent.mouseDown(scrollDownButton, { button: 0 })).toBe(false);
+});
+
 test("a tap whose touch pointer events do not reach the arrow still steps the viewport", () => {
   const { viewport, scrollDownButton } = renderScrollbar();
 

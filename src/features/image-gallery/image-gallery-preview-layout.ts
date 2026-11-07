@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
+import { distanceBetween } from "#/lib/geometry.ts";
 import type { Position, Size, Transform } from "#/lib/geometry.ts";
 import { clamp } from "#/lib/math.ts";
 
@@ -8,12 +9,8 @@ import type { DragEvent, PointerEvent as ReactPointerEvent, RefObject } from "re
 const AREA_CENTER: Position = { x: 0, y: 0 };
 const UNZOOMED: Transform = { scale: 1, x: 0, y: 0 };
 const SCROLL_ZOOM_RATE_PER_PX = 0.002;
-
-/** Trackpad pinch deltas are smaller than that of a scroll event. */
-const PINCH_SCROLL_ZOOM_RATE_PER_PX = 0.01;
-
-/** The distance of a line for a wheel event with deltas in lines. */
-const SCROLL_LINE_HEIGHT_PX = 16;
+const PINCH_SCROLL_ZOOM_RATE_PER_PX = 0.01; // Trackpad pinch deltas are smaller than that of a scroll event.
+const SCROLL_LINE_HEIGHT_PX = 16; // The distance of a line for a wheel event with deltas in lines.
 
 interface PreviewImageLayout {
   naturalSize: Size;
@@ -39,10 +36,6 @@ interface PreviewImageState {
   hasPinched: boolean;
 }
 
-/**
- * Returns `zoom` at `scale`, moved so the point of the image that was at `from` is at `to`, and kept from uncovering
- * the image area along an axis the image fills.
- */
 function zoomedBy(zoom: Transform, from: Position, to: Position, scale: number, layout: PreviewImageLayout) {
   const nextScale = clamp(scale, 1, layout.maxScale);
   const ratio = nextScale / zoom.scale;
@@ -56,7 +49,7 @@ function zoomedBy(zoom: Transform, from: Position, to: Position, scale: number, 
   };
 }
 
-/** The midpoint of the pointers, and the distance between the first two, or `null` for a single pointer. */
+/** Returns the pointer midpoint and the distance between the first two pointers, if present. */
 function touchesOf(pointers: Map<number, Position>) {
   const [first, second] = [...pointers.values()];
 
@@ -70,7 +63,7 @@ function touchesOf(pointers: Map<number, Position>) {
 
   return {
     position: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
-    distance: Math.hypot(second.x - first.x, second.y - first.y),
+    distance: distanceBetween(first, second),
   };
 }
 
@@ -93,9 +86,9 @@ function render(state: PreviewImageState, previewImage: HTMLElement) {
   const { naturalSize, fittedSize } = state.layout;
   const { scale, x, y } = state.zoom;
 
-  // Rounded rather than floored, so a scale computed as the natural size over the fitted size reaches the natural size
-  // despite floating-point error. The fitted size of each side is floored separately, so the height at the largest
-  // scale can round past the natural height.
+  // Round instead of floor so a scale derived from natural and fitted sizes reaches the natural size despite
+  // floating-point error. Because fitted dimensions are floored independently, the maximum height can round above the
+  // natural height.
   const width = Math.min(naturalSize.width, Math.round(fittedSize.width * scale));
   const height = Math.min(naturalSize.height, Math.round(fittedSize.height * scale));
 
@@ -181,9 +174,9 @@ function moveGesture(state: PreviewImageState, previewImage: HTMLElement) {
 }
 
 /**
- * Lays out the preview image at whole-pixel dimensions, using its natural size when possible or scaled down to fit the
- * image area. This matches the stylesheet's whole-pixel centering. Until the natural dimensions are available, the
- * stylesheet determines the image bounds.
+ * Sizes the preview image to whole pixels, preserving its natural size when it fits and scaling it down when needed.
+ * This aligns with the stylesheet's pixel-perfect centering. The stylesheet controls the bounds until natural image
+ * dimensions are available.
  */
 export function usePreviewImageLayout(
   previewRef: RefObject<HTMLDialogElement | null>,
@@ -211,7 +204,10 @@ export function usePreviewImageLayout(
     const controller = new AbortController();
     const refit = () => fit(state, preview, previewImage);
 
-    previewImage.addEventListener("load", refit, { capture: true, signal: controller.signal }); // `load` does not bubble, so only a capturing listener receives it from the `<img>`.
+    previewImage.addEventListener("load", refit, {
+      capture: true, // `load` does not bubble, so only a capturing listener receives it from the `<img>`.
+      signal: controller.signal,
+    });
     window.addEventListener("resize", refit, { signal: controller.signal });
 
     return () => controller.abort();

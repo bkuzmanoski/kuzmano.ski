@@ -1,9 +1,8 @@
 import { isValidElement, useId, useRef } from "react";
 
 import GitHubGistButtonIcon from "#/assets/images/button-icon-github-gist.svg?react";
-import { Button } from "#/components/button.tsx";
 import { ControlledCopyButton } from "#/components/copy-button.tsx";
-import { Tooltip } from "#/components/tooltip.tsx";
+import { IconButton } from "#/components/icon-button.tsx";
 import { GITHUB_GIST_LINK_TEXT } from "#/config/site.ts";
 import { cx } from "#/lib/class-names.ts";
 import { useIsHydrated } from "#/lib/hooks/use-client-value.ts";
@@ -61,18 +60,17 @@ export function CodeBlock({
         </span>
         <div className={styles.controls}>
           {gistUrl !== null && (
-            <Tooltip label={GITHUB_GIST_LINK_TEXT} className={styles.control}>
-              <Button
-                variant="strip"
-                href={gistUrl}
-                target="_blank"
-                aria-label={GITHUB_GIST_LINK_TEXT}
-                aria-describedby={opensInNewTabDescriptionId}
-                data-feed-text={`${GITHUB_GIST_LINK_TEXT}.`}
-              >
-                <GitHubGistButtonIcon />
-              </Button>
-            </Tooltip>
+            <IconButton
+              variant="strip"
+              label={GITHUB_GIST_LINK_TEXT}
+              href={gistUrl}
+              target="_blank"
+              aria-describedby={opensInNewTabDescriptionId}
+              data-feed-text={`${GITHUB_GIST_LINK_TEXT}.`}
+              className={styles.control}
+            >
+              <GitHubGistButtonIcon />
+            </IconButton>
           )}
           <ControlledCopyButton
             copyStatus={entryClipboard?.copyStatusOf(copyControlId) ?? null}

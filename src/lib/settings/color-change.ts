@@ -1,4 +1,5 @@
 import { createEmitter } from "../emitter.ts";
+import { DARK_COLOR_SCHEME_QUERY, mediaQueryListFor } from "../media-query.ts";
 
 const colorChangeEmitter = createEmitter();
 
@@ -9,7 +10,7 @@ export const notifyColorChange = () => colorChangeEmitter.emit();
  * listening.
  */
 export function subscribeToColorChange(onChange: () => void): () => void {
-  const systemColorSchemeQuery = (window as Partial<Window>).matchMedia?.("(prefers-color-scheme: dark)");
+  const systemColorSchemeQuery = mediaQueryListFor(DARK_COLOR_SCHEME_QUERY);
   const unsubscribeFromNotifications = colorChangeEmitter.subscribe(onChange);
 
   systemColorSchemeQuery?.addEventListener("change", onChange);

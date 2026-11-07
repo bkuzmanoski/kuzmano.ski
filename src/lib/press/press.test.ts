@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { MAX_CLICK_DELAY_MS, isPointerClick, swallowNextPress } from "./press.ts";
+import { MAX_CLICK_DELAY_MS, isPointerClick, listenForPointerRelease, swallowNextPress } from "./press.ts";
 
 beforeEach(() => vi.useFakeTimers());
 
@@ -118,4 +118,26 @@ test("a click once `MAX_CLICK_DELAY_MS` has passed reaches its target", () => {
 
   expect(target.click()).toBe(true);
   expect(target.onClick).toHaveBeenCalledTimes(1);
+});
+
+test.each(["pointerup", "pointercancel"])(
+  "`listenForPointerRelease` calls its callback only for the first `%s` event on the window",
+  (type) => {
+    const onRelease = vi.fn();
+
+    listenForPointerRelease(onRelease);
+    window.dispatchEvent(new Event(type));
+    window.dispatchEvent(new Event(type));
+
+    expect(onRelease).toHaveBeenCalledTimes(1);
+  },
+);
+
+test("`listenForPointerRelease` stops listening when its returned function is called", () => {
+  const onRelease = vi.fn();
+
+  listenForPointerRelease(onRelease)();
+  window.dispatchEvent(new Event("pointerup"));
+
+  expect(onRelease).not.toHaveBeenCalled();
 });

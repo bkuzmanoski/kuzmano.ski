@@ -1,9 +1,9 @@
 import { Link, useRouter } from "@tanstack/react-router";
 
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
 import { isBrowserHandledClick, linkDestinationOf, sitePathPartsOf } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import { useOpensInNewTabDescriptionId } from "./opens-in-new-tab-description.ts";
 

@@ -1,5 +1,4 @@
 import { useId, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 
 import Checkmark from "#/assets/images/checkmark.svg?react";
 import { Alert } from "#/components/alert.tsx";
@@ -9,6 +8,7 @@ import { LoadingIndicator } from "#/components/loading-indicator.tsx";
 import { TextInput, TextInputFrame } from "#/components/text-input.tsx";
 import { SITE_URL } from "#/config/site.ts";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
+import { focusAfterClosingAlert } from "#/lib/focus.ts";
 import { useForm } from "#/lib/forms/use-form.ts";
 import { useInputField } from "#/lib/forms/use-input-field.ts";
 import { EMPTY_MEMBERSHIP, WAITLIST_SCHEMA } from "#/lib/waitlist/membership.ts";
@@ -80,8 +80,10 @@ export function Waitlist({
   }
 
   function closePrompt() {
-    flushSync(() => setPrompt(null));
-    (prompt?.kind === "incomplete" ? emailAddressFieldRef.current : elementFocusedAtJoinRef.current)?.focus();
+    focusAfterClosingAlert(
+      () => setPrompt(null),
+      prompt?.kind === "incomplete" ? emailAddressFieldRef.current : elementFocusedAtJoinRef.current,
+    );
   }
 
   return (

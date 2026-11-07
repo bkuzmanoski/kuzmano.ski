@@ -27,6 +27,22 @@ describe("mergeHandlers", () => {
     expect(callOrder).toEqual(["first", "second"]);
   });
 
+  test("runs shared handlers from multiple bags in the order the bags are given", () => {
+    const callOrder: Array<string> = [];
+
+    const handlerRecording = (name: string) => ({
+      onPointerUp: (_event: SyntheticEvent) => {
+        callOrder.push(name);
+      },
+    });
+
+    mergeHandlers(handlerRecording("first"), handlerRecording("second"), handlerRecording("third")).onPointerUp(
+      POINTER_UP_EVENT,
+    );
+
+    expect(callOrder).toEqual(["first", "second", "third"]);
+  });
+
   test("retains the handlers that only one bag provides", () => {
     const onPointerDown = vi.fn();
     const onDoubleClick = vi.fn();

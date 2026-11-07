@@ -1,8 +1,13 @@
 import type { Rect, Size } from "../geometry.ts";
 
-export const WINDOW_DOM_ORDER = ["collection", "entry", "contact", "controlPanel"] as const;
+/**
+ * The windows the window manager can open, keyed by ID. The site declares them by augmenting this interface (see
+ * `WINDOW_DOM_ORDER` in `/src/config/desktop.ts`) so the window manager does not depend on which windows exist.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Declaration merging fills it.
+export interface WindowIdRegistry {}
 
-export type WindowId = (typeof WINDOW_DOM_ORDER)[number];
+export type WindowId = Extract<keyof WindowIdRegistry, string>;
 
 export interface Destination {
   type: WindowId;

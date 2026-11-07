@@ -11,13 +11,8 @@ export type ServerLogEvent =
   | "waitlist_join_failed"
   | "waitlist_lookup_failed";
 
-type MissingBindingEvent = Extract<ServerLogEvent, `${string}_binding_missing`>;
+export type MissingBindingEvent = Extract<ServerLogEvent, `${string}_binding_missing`>;
 
 export function logServerEvent(event: ServerLogEvent, fields: Record<string, unknown>) {
   console.error({ event, ...fields });
-}
-
-/** Logs a binding or secret the Worker could not reach. */
-export function reportMissingBinding(event: MissingBindingEvent, binding: string) {
-  logServerEvent(event, { binding, message: `The worker could not access \`${binding}\`` });
 }

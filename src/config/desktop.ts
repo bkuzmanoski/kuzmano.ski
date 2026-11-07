@@ -1,6 +1,14 @@
 import type { IconLayout } from "#/lib/desktop-icons/icon.ts";
 import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
+/** The site's windows, in the order the window layer renders them. */
+export const WINDOW_DOM_ORDER = ["collection", "entry", "contact", "controlPanel"] as const;
+
+declare module "#/lib/window-manager/window.ts" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Declaration merging adds the members it extends.
+  interface WindowIdRegistry extends Record<(typeof WINDOW_DOM_ORDER)[number], true> {}
+}
+
 export const WINDOW_LAYOUT: WindowLayout = {
   windows: {
     // Odd widths keep pane widths even when `--layout-scrollbar-gutter-width` is odd, so full-width dither patterns do

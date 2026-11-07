@@ -1,5 +1,5 @@
-import { usePressSound } from "#/lib/audio/use-press-sound.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
+import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import styles from "./print-link.module.css";
 
