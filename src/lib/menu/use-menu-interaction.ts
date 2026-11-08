@@ -65,7 +65,7 @@ export function useMenuInteraction({
   onActivate: (index: number) => void;
   onClose: () => void;
 }) {
-  const flash = useActivationFlash<number>();
+  const activationFlash = useActivationFlash<number>();
   const typeaheadTimer = useTimer();
   const [focusedItemIndex, setFocusedItemIndex] = useState(initialFocusedItemIndex);
   const pressOrigin = openingPress.origin;
@@ -132,7 +132,7 @@ export function useMenuInteraction({
   }
 
   function activate(index: number, isPointerActivation = false) {
-    if (!items[index]?.isEnabled || flash.isRunning()) {
+    if (!items[index]?.isEnabled || activationFlash.isRunning()) {
       return;
     }
 
@@ -142,7 +142,7 @@ export function useMenuInteraction({
     playClickSound(); // Plays for every input, including a screen reader's activate action, unlike `usePressSound`.
     flashingItemIndexRef.current = index;
 
-    flash.start(index, () => {
+    activationFlash.start(index, () => {
       flashingItemIndexRef.current = -1;
       onActivate(index);
       returnFocusToAnchor(isPointerActivation);
@@ -172,7 +172,7 @@ export function useMenuInteraction({
       isOpeningPressStationaryRef.current = false;
     }
 
-    if (flash.isRunning() || isOpeningPressStationaryRef.current) {
+    if (activationFlash.isRunning() || isOpeningPressStationaryRef.current) {
       return;
     }
 
@@ -186,7 +186,7 @@ export function useMenuInteraction({
 
     isStickyRef.current = true;
 
-    if (flash.isRunning()) {
+    if (activationFlash.isRunning()) {
       return;
     }
 
@@ -212,7 +212,7 @@ export function useMenuInteraction({
     // the menu as sticky so the next press starts a new interaction rather than ending the canceled opening hold.
     isStickyRef.current = true;
 
-    if (!flash.isRunning()) {
+    if (!activationFlash.isRunning()) {
       focusItem(-1);
     }
   };
@@ -223,7 +223,7 @@ export function useMenuInteraction({
     const isTargetInsideMenu =
       listRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
 
-    if (isStickyRef.current && !isTargetInsideMenu && !flash.isRunning()) {
+    if (isStickyRef.current && !isTargetInsideMenu && !activationFlash.isRunning()) {
       onClose();
     }
   };
@@ -251,7 +251,7 @@ export function useMenuInteraction({
   }
 
   function onKeyDown(event: KeyboardEvent) {
-    if (flash.isRunning()) {
+    if (activationFlash.isRunning()) {
       return;
     }
 
@@ -292,7 +292,7 @@ export function useMenuInteraction({
 
   return {
     focusedItemIndex,
-    isHighlighted: (index: number) => flash.highlightOf(index) ?? focusedItemIndex === index,
+    isHighlighted: (index: number) => activationFlash.highlightOf(index) ?? focusedItemIndex === index,
     onClick,
     onKeyDown,
   };

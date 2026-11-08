@@ -3,8 +3,10 @@ import { useId, useRef } from "react";
 import DocumentOpenCollectionBodyIcon from "#/assets/images/collection-body-icon-document-open.svg?react";
 import DocumentCollectionBodyIcon from "#/assets/images/collection-body-icon-document.svg?react";
 import { ENTRY_DATE_FORMAT } from "#/config/content.ts";
+import { useOpenWindowFrom } from "#/features/window-manager/use-open-window-from.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
+import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useListNavigation } from "#/lib/hooks/use-list-navigation.ts";
 import { PRESERVE_FOCUS_PROPS } from "#/lib/hooks/use-restorable-focus.ts";
 import { useDateFormat } from "#/lib/locale/use-date-format.ts";
@@ -12,7 +14,7 @@ import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { useDoublePressLink } from "#/lib/press/use-double-press-link.ts";
 import { usePressSoundPlayer } from "#/lib/press/use-press-sound.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
-import { useWindowActions, useWindowContent } from "#/lib/window-manager/context.ts";
+import { useWindowContent } from "#/lib/window-manager/context.ts";
 import { useWindowKeyDown } from "#/lib/window-manager/use-window-key-down.ts";
 import type { Collection, Entry } from "#/site/catalog.ts";
 import { collectionFeedOf } from "#/site/feeds.ts";
@@ -88,6 +90,7 @@ function CollectionEntryRow({
   entryIconUrl,
   href,
   isOpen,
+  highlight,
   categoryColumnLabels,
   dateFormat,
   itemProps,
@@ -97,6 +100,8 @@ function CollectionEntryRow({
   entryIconUrl: string | null;
   href: string;
   isOpen: boolean;
+  /** Temporarily overrides the focus highlight during the activation flash; `null` uses the focus state. */
+  highlight: boolean | null;
   categoryColumnLabels: Array<string>;
   dateFormat: Intl.DateTimeFormat;
   itemProps: ComponentProps<"a">;
@@ -121,7 +126,11 @@ function CollectionEntryRow({
     <li>
       <a
         href={href}
-        className={styles.listItem}
+        className={cx(
+          styles.listItem,
+          highlight === true && styles.highlighted,
+          highlight === false && styles.unhighlighted,
+        )}
         aria-labelledby={`${entryId}-title`}
         aria-describedby={descriptionIds.filter((id) => id !== null).join(" ")}
         aria-current={isOpen || undefined}
@@ -170,25 +179,35 @@ function useOpenEntrySlug(collection: Collection): string | null {
 
 export function CollectionBody({ target: { collection } }: { target: CollectionTarget }) {
   const openSlug = useOpenEntrySlug(collection);
-  const { open } = useWindowActions();
+  const openWindowFrom = useOpenWindowFrom();
   const dateFormat = useDateFormat(ENTRY_DATE_FORMAT);
+  const activationFlash = useActivationFlash<string>();
   const listRef = useRef<HTMLUListElement>(null);
 
   const entries = collection.list();
   const categoryColumnLabels = categoryColumnLabelsOf(collection);
 
-  const openEntry = (slug: string) => open(collection.routeOf(slug));
+  function openEntry(index: number) {
+    const entry = entries[index];
+
+    if (!entry) {
+      return;
+    }
+
+    // `getElementsByClassName` matches the generated class name without parsing a selector, so it does not assume the
+    // name is selector-safe.
+    const title = listRef.current?.children.item(index)?.getElementsByClassName(styles.title!).item(0);
+
+    activationFlash.start(entry.slug);
+    openWindowFrom(collection.routeOf(entry.slug), title);
+  }
 
   const { itemProps, onKeyDownOutsideList } = useListNavigation(listRef, {
     count: entries.length,
     currentIndex: entries.findIndex((entry) => entry.slug === openSlug),
     onActivate: (index) => {
-      const entry = entries[index];
-
-      if (entry) {
-        playClickSound();
-        openEntry(entry.slug);
-      }
+      playClickSound();
+      openEntry(index);
     },
   });
 
@@ -233,10 +252,11 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
             entryIconUrl={collection.entryIconUrlOf(entry.slug)}
             href={collection.routeOf(entry.slug)}
             isOpen={entry.slug === openSlug}
+            highlight={activationFlash.highlightOf(entry.slug)}
             categoryColumnLabels={categoryColumnLabels}
             dateFormat={dateFormat}
             itemProps={itemProps(index)}
-            onOpen={() => openEntry(entry.slug)}
+            onOpen={() => openEntry(index)}
           />
         ))}
       </ul>

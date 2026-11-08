@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { DEFAULT_ACTIVATION_FLASH_DURATION_MS } from "#/lib/hooks/use-activation-flash.ts";
 import { WindowKeyDownContext, createWindowKeyDownHandlers } from "#/lib/window-manager/use-window-key-down.ts";
+import { ZoomRectContext } from "#/lib/window-manager/use-zoom-rect.ts";
 import type { Collection } from "#/site/catalog.ts";
 import {
   collection as COLLECTION,
@@ -10,9 +12,12 @@ import {
   collectionWithFeed as COLLECTION_WITH_FEED,
 } from "#/test-utils/catalog.ts";
 import { fakeCollection, fakeEntry } from "#/test-utils/collection.ts";
+import { runActivationFlash } from "#/test-utils/menu.ts";
 import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
+import styles from "./collection-body.module.css";
 import { CollectionBody, CollectionColumnHeadings, UNCATEGORIZED_LABEL } from "./collection-body.tsx";
 
 vi.mock("#/site/catalog.ts", async () => (await import("#/test-utils/catalog.ts")).siteCatalogMock());
@@ -40,10 +45,16 @@ beforeEach(() => {
   vi.mocked(playClickSound).mockClear();
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
 
 const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
 const targetOf = (collection: Collection) => ({ id: "collection" as const, title: collection.title, collection });
+const highlightOf = (link: HTMLElement) =>
+  link.classList.contains(styles.highlighted!) ? "on" : link.classList.contains(styles.unhighlighted!) ? "off" : null;
 const shownCategoryLabelOf = (row: Element) => row.querySelector("[id$='-category']")?.textContent;
 
 function showEntryInWindow(slug: string | null) {
@@ -276,6 +287,45 @@ test("the Enter and Space keys open the focused entry", () => {
   fireEvent.keyDown(links.at(-1)!, { key: " " });
 
   expect(open).toHaveBeenLastCalledWith(routeOf(LAST_INDEX));
+});
+
+test("opening an entry opens its window at once, and flashes only that entry's highlight until the activation flash ends", () => {
+  vi.useFakeTimers();
+
+  const links = renderList(COLLECTION_ENTRIES[0]!.slug);
+
+  fireEvent.keyDown(links[1]!, { key: "Enter" });
+
+  expect(open).toHaveBeenCalledExactlyOnceWith(routeOf(1));
+  expect(highlightOf(links[1]!)).toBe("off");
+  expect(highlightOf(links[0]!)).toBeNull();
+
+  advanceTimersBy(DEFAULT_ACTIVATION_FLASH_DURATION_MS / 4); // The flash's second step turns the highlight on.
+
+  expect(highlightOf(links[1]!)).toBe("on");
+
+  runActivationFlash();
+
+  expect(highlightOf(links[1]!)).toBeNull();
+});
+
+test("opening an entry grows a zoom rect from its title toward the entry window", () => {
+  const showZoomRect = vi.fn();
+  const titleRect = new DOMRect(10, 20, 30, 40);
+
+  showEntryInWindow(null);
+  render(
+    <ZoomRectContext value={showZoomRect}>
+      <CollectionBody target={targetOf(COLLECTION)} />
+    </ZoomRectContext>,
+  );
+
+  const link = screen.getAllByRole("link")[1]!;
+
+  vi.spyOn(link.getElementsByClassName(styles.title!)[0]!, "getBoundingClientRect").mockReturnValue(titleRect);
+  fireEvent.keyDown(link, { key: "Enter" });
+
+  expect(showZoomRect).toHaveBeenCalledExactlyOnceWith({ windowId: "entry", from: titleRect });
 });
 
 test("pressing an entry with the mouse plays the click sound", () => {

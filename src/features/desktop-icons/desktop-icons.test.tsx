@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import menuStyles from "#/components/menu.module.css";
@@ -7,6 +7,7 @@ import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { ICON_POSITIONS_STORAGE_KEY } from "#/lib/desktop-icons/positions.ts";
 import { LONG_PRESS_DURATION_MS } from "#/lib/menu/use-context-menu-press.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
+import { ZoomRectContext } from "#/lib/window-manager/use-zoom-rect.ts";
 import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
@@ -17,9 +18,9 @@ import { DesktopIcons } from "./desktop-icons.tsx";
 
 let focusedWindow: WindowId | null = null;
 let notFoundRoute: string | null = null;
+let isStartupSequenceComplete = true;
 
 const open = vi.hoisted(() => vi.fn());
-const prefersReducedMotion = vi.hoisted(() => ({ matches: false }));
 
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
@@ -30,11 +31,7 @@ vi.mock("#/lib/window-manager/context.ts", async () =>
 );
 vi.mock("#/lib/startup-sequence/lifecycle.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof StartupSequenceLifecycle>()),
-  useIsStartupSequenceComplete: () => true,
-}));
-vi.mock("#/lib/hooks/use-prefers-reduced-motion.ts", () => ({
-  getPrefersReducedMotion: () => prefersReducedMotion.matches,
-  usePrefersReducedMotion: () => prefersReducedMotion.matches,
+  useIsStartupSequenceComplete: () => isStartupSequenceComplete,
 }));
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {}),
@@ -44,10 +41,10 @@ beforeEach(() => {
   vi.useFakeTimers();
   focusedWindow = null;
   notFoundRoute = null;
+  isStartupSequenceComplete = true;
   open.mockClear();
   vi.mocked(playClickSound).mockClear();
   vi.mocked(playHoverSound).mockClear();
-  prefersReducedMotion.matches = false;
 });
 
 afterEach(() => {
@@ -69,17 +66,17 @@ const cleanUpDesktopMenuItem = () => screen.getByRole("menuitem", { name: CLEAN_
 function renderDesktop() {
   render(
     <main data-desktop="">
-      <DesktopIcons onZoomRect={vi.fn()} />
+      <DesktopIcons />
     </main>,
   );
 }
 
 function renderIcons() {
-  const { rerender } = render(<DesktopIcons onZoomRect={vi.fn()} />);
+  const { rerender } = render(<DesktopIcons />);
   return (nextFocusedWindow: WindowId | null, nextNotFoundRoute: string | null = null) => {
     focusedWindow = nextFocusedWindow;
     notFoundRoute = nextNotFoundRoute;
-    rerender(<DesktopIcons onZoomRect={vi.fn()} />);
+    rerender(<DesktopIcons />);
   };
 }
 
@@ -105,19 +102,56 @@ function longPressDesktop() {
   advanceTimersBy(LONG_PRESS_DURATION_MS);
 }
 
-test.each([
-  ["shows a zoom rect growing from the icon", false, 1],
-  ["does not show a zoom rect growing from the icon under a reduced motion preference", true, 0],
-])("opening an icon's window %s", (_label, isMotionReduced, zoomRectCount) => {
-  const onZoomRect = vi.fn();
+test("opening an icon's window grows a zoom rect from the icon", () => {
+  const showZoomRect = vi.fn();
+  const iconRect = new DOMRect(10, 20, 30, 40);
 
-  prefersReducedMotion.matches = isMotionReduced;
-
-  render(<DesktopIcons onZoomRect={onZoomRect} />);
+  render(
+    <ZoomRectContext value={showZoomRect}>
+      <DesktopIcons />
+    </ZoomRectContext>,
+  );
+  vi.spyOn(icon(0), "getBoundingClientRect").mockReturnValue(iconRect);
   fireEvent.keyDown(icon(0), { key: "Enter" });
 
   expect(open).toHaveBeenCalledTimes(1);
-  expect(onZoomRect).toHaveBeenCalledTimes(zoomRectCount);
+  expect(showZoomRect).toHaveBeenCalledExactlyOnceWith({ windowId: "entry", from: iconRect });
+});
+
+test("pressing an arrow key when the desktop has focus focuses the first icon", () => {
+  renderIcons();
+  fireEvent.keyDown(document.body, { key: "ArrowDown" });
+
+  expect(document.activeElement).toBe(icon(0));
+});
+
+test("pressing an arrow key when a window has focus does not focus an icon", () => {
+  const setFocusedWindow = renderIcons();
+
+  setFocusedWindow("entry");
+  fireEvent.keyDown(document.body, { key: "ArrowDown" });
+
+  expect(document.activeElement).toBe(document.body);
+});
+
+test("pressing an arrow key before the startup sequence completes does not focus an icon", () => {
+  isStartupSequenceComplete = false;
+  renderIcons();
+  fireEvent.keyDown(document.body, { key: "ArrowDown" });
+
+  expect(document.activeElement).toBe(document.body);
+});
+
+test("pressing the empty desktop clears the selection and makes the first icon the tab stop again", () => {
+  renderDesktop();
+  act(() => icon(1).focus()); // Focusing an icon selects it.
+
+  expect(icon(1).tabIndex).toBe(0);
+
+  fireEvent.pointerDown(desktop());
+
+  expect(icon(1).tabIndex).toBe(-1);
+  expect(icon(0).tabIndex).toBe(0);
 });
 
 test("closing the last window by a pointer press focuses the selected icon, and the Enter key still opens it", () => {
@@ -165,7 +199,7 @@ test.each(SCREEN_READER_ACTIVATIONS)(
 );
 
 test("holding the Enter key opens the icon's window once", () => {
-  render(<DesktopIcons onZoomRect={vi.fn()} />);
+  render(<DesktopIcons />);
   fireEvent.keyDown(icon(0), { key: "Enter" });
   fireEvent.keyDown(icon(0), { key: "Enter", repeat: true });
 
@@ -173,7 +207,7 @@ test("holding the Enter key opens the icon's window once", () => {
 });
 
 test("holding Alt and the O key opens the icon's window once", () => {
-  render(<DesktopIcons onZoomRect={vi.fn()} />);
+  render(<DesktopIcons />);
   fireEvent.keyDown(icon(0), { code: "KeyO", altKey: true });
   fireEvent.keyDown(icon(0), { code: "KeyO", altKey: true, repeat: true });
 
@@ -181,7 +215,7 @@ test("holding Alt and the O key opens the icon's window once", () => {
 });
 
 test("the Enter key with a modifier key does not open the icon's window, or prevent the key's default action", () => {
-  render(<DesktopIcons onZoomRect={vi.fn()} />);
+  render(<DesktopIcons />);
 
   expect(fireEvent.keyDown(icon(0), { key: "Enter", metaKey: true })).toBe(true);
   expect(open).not.toHaveBeenCalled();

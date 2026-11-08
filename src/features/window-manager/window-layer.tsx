@@ -1,7 +1,8 @@
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 
 import { WINDOW_DOM_ORDER, WINDOW_LAYOUT } from "#/config/desktop.ts";
 import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
+import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
 import {
@@ -15,6 +16,8 @@ import {
 import { createWindowPlacer, createWindowResizer } from "#/lib/window-manager/layout.ts";
 import type { WindowClose } from "#/lib/window-manager/use-close-window.ts";
 import { WindowCloseContext } from "#/lib/window-manager/use-close-window.ts";
+import { ZoomRectContext } from "#/lib/window-manager/use-zoom-rect.ts";
+import type { ZoomRectRequest } from "#/lib/window-manager/use-zoom-rect.ts";
 import { isUnmeasured } from "#/lib/window-manager/window.ts";
 import type { WindowGeometry, WindowId, WindowSizing } from "#/lib/window-manager/window.ts";
 
@@ -142,8 +145,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const focusedWindow = useFocusedWindow();
   const { focusDesktop, measure } = useWindowActions();
 
-  // The zoom-rect growing from an icon towards the window it opened. That window stays hidden until the zoom-rect has
-  // landed on it.
+  // Animates from an icon or collection entry to its opened window, which remains hidden until the animation finishes.
   const [zoomRect, setZoomRect] = useState<{ windowId: WindowId; from: Rect } | null>(null);
 
   // The window being moved or resized, which remains stationary while an outline shows its proposed position. The drag
@@ -152,6 +154,17 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   const surfaceRef = useRef<HTMLElement>(null);
 
   useElementResize(surfaceRef, measure);
+
+  // Converts viewport coordinates to the shared surface coordinate space used by windows and the zoom rect. Memoized
+  // explicitly because React Compiler cannot guarantee a stable context value identity.
+  const showZoomRect = useCallback(
+    ({ windowId, from }: ZoomRectRequest) =>
+      setZoomRect({
+        windowId,
+        from: rectRelativeTo(from, surfaceRef.current?.getBoundingClientRect() ?? { x: 0, y: 0 }),
+      }),
+    [],
+  );
 
   const isUnplaced = isUnmeasured(surface);
   const zoomTarget = zoomRect ? geometry[zoomRect.windowId] : undefined;
@@ -169,52 +182,54 @@ export function WindowLayer({ children }: { children: ReactNode }) {
         }
       }}
     >
-      <DesktopIcons onZoomRect={setZoomRect} />
-      {/* Animate from the icon to its newly opened window. This sibling shares the windows' stacking context;
-          its matching z-index and earlier DOM position place it below the target window and above existing ones.
-          Both use geometry fitted to the same desktop surface, so the animation lands precisely on the window. */}
-      {zoomRect && (
-        <ZoomRect
-          key={zoomRect.windowId}
-          from={zoomRect.from}
-          target={zoomTarget ? placeWindow(zoomTarget, surface) : null}
-          z={order.length}
-          onDone={() => setZoomRect(null)}
-        />
-      )}
-      {/* Sort by ID for stable DOM order (preserves scroll positions). `zIndex` manages the stacking order. */}
-      {WINDOW_DOM_ORDER.map((id) => {
-        const windowContent = content[id];
-        const windowGeometry = geometry[id];
-
-        if (!windowContent || !windowGeometry) {
-          return null;
-        }
-
-        return (
-          <DesktopWindow
-            key={id}
-            id={id}
-            route={windowContent.route}
-            title={windowContent.title}
-            {...placeWindow(windowGeometry, surface)}
-            z={order.indexOf(id) + 1}
-            focused={id === focusedWindow}
-            maximized={windowGeometry.maximized}
-            hidden={id === zoomRect?.windowId}
-            unplaced={isUnplaced}
-            onDrag={setWindowDrag}
+      <ZoomRectContext value={showZoomRect}>
+        <DesktopIcons />
+        {/* Animates from the icon or collection entry to the newly opened window. Its shared stacking context, matching
+          z-index, and earlier DOM position place it below the target window but above existing windows. Both use
+          geometry fitted to the same desktop surface, ensuring the animation lands precisely on the window. */}
+        {zoomRect && (
+          <ZoomRect
+            key={zoomRect.windowId}
+            from={zoomRect.from}
+            target={zoomTarget ? placeWindow(zoomTarget, surface) : null}
+            z={order.length}
+            onDone={() => setZoomRect(null)}
           />
-        );
-      })}
-      {windowDrag && draggedGeometry && (
-        <DragOutline
-          kind={windowDrag.drag.kind}
-          rect={outlineRect(draggedGeometry, surface, windowDrag.drag)}
-          z={order.length + 1}
-        />
-      )}
-      {children}
+        )}
+        {/* Sort by ID for stable DOM order (preserves scroll positions). `zIndex` manages the stacking order. */}
+        {WINDOW_DOM_ORDER.map((id) => {
+          const windowContent = content[id];
+          const windowGeometry = geometry[id];
+
+          if (!windowContent || !windowGeometry) {
+            return null;
+          }
+
+          return (
+            <DesktopWindow
+              key={id}
+              id={id}
+              route={windowContent.route}
+              title={windowContent.title}
+              {...placeWindow(windowGeometry, surface)}
+              z={order.indexOf(id) + 1}
+              focused={id === focusedWindow}
+              maximized={windowGeometry.maximized}
+              hidden={id === zoomRect?.windowId}
+              unplaced={isUnplaced}
+              onDrag={setWindowDrag}
+            />
+          );
+        })}
+        {windowDrag && draggedGeometry && (
+          <DragOutline
+            kind={windowDrag.drag.kind}
+            rect={outlineRect(draggedGeometry, surface, windowDrag.drag)}
+            z={order.length + 1}
+          />
+        )}
+        {children}
+      </ZoomRectContext>
     </main>
   );
 }

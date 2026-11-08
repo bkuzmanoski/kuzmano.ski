@@ -4,17 +4,16 @@ import type { MenuItem } from "#/components/menu-items.ts";
 import { Menu } from "#/components/menu.tsx";
 import { ICON_LAYOUT } from "#/config/desktop.ts";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
+import { useOpenWindowFrom } from "#/features/window-manager/use-open-window-from.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import type { Icon, IconPlacement } from "#/lib/desktop-icons/icon.ts";
 import { positionFromDrop, resolveIconPlacements } from "#/lib/desktop-icons/layout.ts";
 import { adjacentIconId } from "#/lib/desktop-icons/navigation.ts";
 import { createIconPositionsStore } from "#/lib/desktop-icons/positions.ts";
-import { rectRelativeTo } from "#/lib/geometry.ts";
-import type { Rect } from "#/lib/geometry.ts";
 import { useActivationFlash } from "#/lib/hooks/use-activation-flash.ts";
 import { useElementSize } from "#/lib/hooks/use-element-size.ts";
-import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { activateOnKeyPress, isArrowKey } from "#/lib/keys.ts";
 import type { ArrowKey } from "#/lib/keys.ts";
 import { followLink } from "#/lib/link.ts";
@@ -28,9 +27,8 @@ import {
   useWindowActions,
   useWindowContent,
 } from "#/lib/window-manager/context.ts";
-import type { WindowId } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
-import { isDestinationOpen, resolveWindow } from "#/site/windows.ts";
+import { isDestinationOpen } from "#/site/windows.ts";
 
 import { DesktopIcon } from "./desktop-icon.tsx";
 import styles from "./desktop-icons.module.css";
@@ -56,15 +54,16 @@ const DESKTOP_MENU_ITEMS: Array<MenuItem> = [{ kind: "action", label: "Clean Up 
 const isEmptyDesktop = (target: EventTarget | null) =>
   target instanceof HTMLElement && target.dataset.desktop !== undefined;
 
-export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: WindowId; from: Rect }) => void }) {
+export function DesktopIcons() {
   const content = useWindowContent();
   const focusedWindow = useFocusedWindow();
   const notFoundRoute = useNotFoundRoute();
-  const { open, focusDesktop } = useWindowActions();
+  const { focusDesktop } = useWindowActions();
   const isFromPointerPress = useIsFromPointerPress();
+  const openWindowFrom = useOpenWindowFrom();
   const positions = useIconPositions();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
-  const flash = useActivationFlash<string>();
+  const activationFlash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   const [desktopMenu, setDesktopMenu] = useState<{ press: ContextMenuPress; focusesFirstItem: boolean } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -77,25 +76,17 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
 
   // Only a press on the empty desktop clears the selection. A press on a window or on the menu bar does not clear it.
   // The desktop stops showing a selection when it does not hold keyboard focus.
-  useEffect(() => {
-    function onPointerDown(event: PointerEvent) {
+  useEventListeners("document", {
+    pointerdown: (event) => {
       if (isEmptyDesktop(event.target)) {
         setSelectedIconId(null);
       }
-    }
-
-    document.addEventListener("pointerdown", onPointerDown);
-
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, []);
+    },
+  });
 
   // Read from the DOM rather than from a ref map, so an icon does not have to take a ref callback that its parent
   // rebuilds on every render.
   const iconElement = (id: string) => layerRef.current?.querySelector<HTMLAnchorElement>(`[data-icon="${id}"]`);
-
-  /** The box of an element in the layer's own coordinates. */
-  const relativeRect = (element: Element): Rect =>
-    rectRelativeTo(element.getBoundingClientRect(), layerRef.current?.getBoundingClientRect() ?? { x: 0, y: 0 });
 
   const tabStop = selectedIconId ?? ICONS[0]?.id;
   const openWindowRoutes = Object.values(content).map(({ route }) => route);
@@ -127,23 +118,14 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
   }
 
   function openIcon(iconDefinition: Icon) {
-    flash.start(iconDefinition.id);
+    activationFlash.start(iconDefinition.id);
 
     if (iconDefinition.kind === "download") {
       followLink(iconElement(iconDefinition.id));
       return;
     }
 
-    // The zoom rect grows toward a window that is not on the desktop yet, unless the user prefers reduced motion. A
-    // window that is already open only changes what it shows.
-    const windowId = resolveWindow(iconDefinition.route)?.id;
-    const element = iconElement(iconDefinition.id);
-
-    if (element && windowId && !content[windowId] && !getPrefersReducedMotion()) {
-      onZoomRect({ windowId, from: relativeRect(element) });
-    }
-
-    open(iconDefinition.route);
+    openWindowFrom(iconDefinition.route, iconElement(iconDefinition.id));
   }
 
   function moveSelection(fromId: string | null, key: ArrowKey) {
@@ -219,28 +201,22 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
     }
   }, [isDesktopActive]);
 
-  const onDesktopArrowKeyPress = useEffectEvent((key: ArrowKey) => moveSelection(selectedIconId, key));
+  useEventListeners(
+    "window",
+    {
+      keydown: (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.target !== document.body) {
+          return;
+        }
 
-  useEffect(() => {
-    if (focusedWindow !== null || !isStartupSequenceComplete) {
-      return;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.altKey || event.ctrlKey || event.metaKey || event.target !== document.body) {
-        return;
-      }
-
-      if (isArrowKey(event.key)) {
-        event.preventDefault();
-        onDesktopArrowKeyPress(event.key);
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusedWindow, isStartupSequenceComplete]);
+        if (isArrowKey(event.key)) {
+          event.preventDefault();
+          moveSelection(selectedIconId, event.key);
+        }
+      },
+    },
+    { enabled: focusedWindow === null && isStartupSequenceComplete },
+  );
 
   return (
     // The layer always renders so its ref exists for measurement.
@@ -253,7 +229,7 @@ export function DesktopIcons({ onZoomRect }: { onZoomRect: (zoom: { windowId: Wi
           y={y}
           cellSize={ICON_LAYOUT.cellSize}
           open={iconDefinition.kind === "collection" && isDestinationOpen(iconDefinition.route, openWindowRoutes)}
-          selected={flash.highlightOf(id) ?? (focusedWindow === null && selectedIconId === id)}
+          selected={activationFlash.highlightOf(id) ?? (focusedWindow === null && selectedIconId === id)}
           tabIndex={tabStop === id ? 0 : -1}
           onSelect={selectIcon}
           onOpen={openIcon}

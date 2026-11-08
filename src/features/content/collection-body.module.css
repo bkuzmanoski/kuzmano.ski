@@ -96,7 +96,8 @@
 
   -webkit-touch-callout: default;
 
-  &:focus .title {
+  &:focus:not(.unhighlighted) .title,   /* The activation flash overrides the focus highlight while it runs. */
+  &.highlighted .title {
     @mixin highlight;
   }
 
