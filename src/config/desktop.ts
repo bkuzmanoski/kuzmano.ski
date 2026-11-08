@@ -14,7 +14,7 @@ export const WINDOW_LAYOUT: WindowLayout = {
     // Odd widths keep pane widths even when `--layout-scrollbar-gutter-width` is odd, so full-width dither patterns do
     // not end on a partial column.
     entry: { defaultSize: { width: 1281, height: 1280 }, sizing: "resizable" },
-    collection: { defaultSize: { width: 641, height: 640 }, sizing: "resizable" },
+    collection: { defaultSize: { width: 641, height: 655 }, sizing: "resizable" }, // Height fits 18 rows exactly.
 
     contact: { defaultSize: { width: 572, height: 480 }, sizing: "fixed" },
     controlPanel: { defaultSize: { width: 480, height: 273 }, sizing: "fitContentHeight" },
