@@ -17,10 +17,8 @@
 .circle {
   --radio-group-dot-color: var(--color-foreground);
 
-  @mixin checkable-indicator;
+  @mixin checkable-indicator 14px;
 
-  width: 14px;
-  height: 14px;
   border-radius: 50%;
 
   input:disabled + & {

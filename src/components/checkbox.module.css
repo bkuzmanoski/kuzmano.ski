@@ -3,10 +3,7 @@
 }
 
 .box {
-  @mixin checkable-indicator;
-
-  width: 12px;
-  height: 12px;
+  @mixin checkable-indicator 12px;
 
   input:focus-visible + & {
     @mixin focus-stroke -3px;

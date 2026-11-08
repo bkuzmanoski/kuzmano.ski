@@ -97,14 +97,17 @@
   }
 }
 
-@define-mixin checkable-indicator {
+@define-mixin checkable-indicator $size {
   pointer-events: none;
 
   position: relative;
 
   flex: none;
-  align-self: center;
+  align-self: flex-start;
 
+  width: $size;
+  height: $size;
+  margin-block-start: calc((1lh - $size) / 2); /* Centers the indicator on the first line of a label that wraps. */
   border: 1px solid currentColor;
 
   color: var(--color-border);

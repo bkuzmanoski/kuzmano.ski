@@ -26,11 +26,46 @@ import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description
 
 import type { ComponentProps } from "react";
 
+const CATEGORY_COLUMN_HEADING = "Category";
+
 export const UNCATEGORIZED_LABEL = "Uncategorized";
 
 const entryIconStyleOf = (entryIconUrl: string): StyleWithVars => ({
   "--collection-body-entry-icon-image": `url("${entryIconUrl}")`,
 });
+
+function categoryColumnLabelsOf(collection: Collection): Array<string> {
+  return [
+    ...new Set([CATEGORY_COLUMN_HEADING, ...collection.list().map((entry) => entry.category ?? UNCATEGORIZED_LABEL)]),
+  ];
+}
+
+/**
+ * Renders a category label alongside invisible alternatives so every category cell and heading matches the width of the
+ * longest label without JavaScript measurement.
+ */
+function CategoryColumnCell({
+  label,
+  columnLabels,
+  labelId,
+  className,
+  ...cellProps
+}: { label: string; columnLabels: Array<string>; labelId?: string } & ComponentProps<"span">) {
+  return (
+    <span className={cx(styles.categoryColumn, className)} {...cellProps}>
+      <span id={labelId} className={styles.categoryLabel}>
+        {label}
+      </span>
+      <span className={styles.otherCategoryLabels}>
+        {columnLabels
+          .filter((columnLabel) => columnLabel !== label)
+          .map((columnLabel) => (
+            <span key={columnLabel}>{columnLabel}</span>
+          ))}
+      </span>
+    </span>
+  );
+}
 
 export function CollectionColumnHeadings({ collection }: { collection: Collection }) {
   if (collection.list().length === 0) {
@@ -41,7 +76,7 @@ export function CollectionColumnHeadings({ collection }: { collection: Collectio
     <div className={styles.columnHeadings} aria-hidden="true" {...PRESERVE_FOCUS_PROPS}>
       <div className={styles.columnHeadingsRow}>
         <span className={styles.titleColumn}>Title</span>
-        <span className={styles.categoryColumn}>Category</span>
+        <CategoryColumnCell label={CATEGORY_COLUMN_HEADING} columnLabels={categoryColumnLabelsOf(collection)} />
         <span className={styles.dateColumn}>Date</span>
       </div>
     </div>
@@ -53,6 +88,7 @@ function CollectionEntryRow({
   entryIconUrl,
   href,
   isOpen,
+  categoryColumnLabels,
   dateFormat,
   itemProps,
   onOpen,
@@ -61,6 +97,7 @@ function CollectionEntryRow({
   entryIconUrl: string | null;
   href: string;
   isOpen: boolean;
+  categoryColumnLabels: Array<string>;
   dateFormat: Intl.DateTimeFormat;
   itemProps: ComponentProps<"a">;
   onOpen: () => void;
@@ -105,13 +142,13 @@ function CollectionEntryRow({
             {entry.title}
           </span>
         </span>
-        <span
-          id={`${entryId}-category`}
-          className={cx(styles.categoryColumn, entry.category === undefined && styles.uncategorized)}
+        <CategoryColumnCell
+          label={entry.category ?? UNCATEGORIZED_LABEL}
+          columnLabels={categoryColumnLabels}
+          labelId={`${entryId}-category`} // Applied to the label as descriptions referenced by `aria-describedby` include hidden descendants.
+          className={cx(entry.category === undefined && styles.uncategorized)}
           aria-hidden="true"
-        >
-          {entry.category ?? UNCATEGORIZED_LABEL}
-        </span>
+        />
         <FormattedDate
           id={`${entryId}-date`}
           date={entry.date}
@@ -138,6 +175,7 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
   const listRef = useRef<HTMLUListElement>(null);
 
   const entries = collection.list();
+  const categoryColumnLabels = categoryColumnLabelsOf(collection);
 
   const openEntry = (slug: string) => open(collection.routeOf(slug));
 
@@ -195,6 +233,7 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
             entryIconUrl={collection.entryIconUrlOf(entry.slug)}
             href={collection.routeOf(entry.slug)}
             isOpen={entry.slug === openSlug}
+            categoryColumnLabels={categoryColumnLabels}
             dateFormat={dateFormat}
             itemProps={itemProps(index)}
             onOpen={() => openEntry(entry.slug)}

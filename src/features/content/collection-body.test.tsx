@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
@@ -41,8 +41,10 @@ beforeEach(() => {
 });
 
 const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
+
 const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
 const targetOf = (collection: Collection) => ({ id: "collection" as const, title: collection.title, collection });
+const shownCategoryLabelOf = (row: Element) => row.querySelector("[id$='-category']")?.textContent;
 
 function showEntryInWindow(slug: string | null) {
   openWindows.mockReturnValue(slug === null ? {} : { entry: { route: COLLECTION.routeOf(slug), title: slug } });
@@ -81,10 +83,27 @@ test("an entry shows its category, or `Uncategorized` when its frontmatter omits
 
   const [categorizedRow, uncategorizedRow] = screen.getAllByRole("link");
 
-  expect(categorizedRow?.textContent).toContain("Category");
+  expect(shownCategoryLabelOf(categorizedRow!)).toBe("Category");
   expect(categorizedRow?.textContent).not.toContain("A description.");
-  expect(uncategorizedRow?.textContent).toContain(UNCATEGORIZED_LABEL);
+  expect(shownCategoryLabelOf(uncategorizedRow!)).toBe(UNCATEGORIZED_LABEL);
   expect(uncategorizedRow?.textContent).not.toContain("Another description.");
+});
+
+test("the column headings and each entry render every label of the category column once", () => {
+  const collection = fakeCollection([
+    fakeEntry("entry-1", { category: "A category" }),
+    fakeEntry("entry-2", { category: "Another category" }),
+    fakeEntry("entry-3"),
+  ]); // The cells stack the labels in one grid area, so every cell sizes the column to the longest label.
+  const { container: columnHeadings } = render(<CollectionColumnHeadings collection={collection} />);
+
+  render(<CollectionBody target={targetOf(collection)} />);
+
+  for (const row of [columnHeadings, ...screen.getAllByRole("link")]) {
+    for (const label of ["Category", "A category", "Another category", UNCATEGORIZED_LABEL]) {
+      expect(within(row).getAllByText(label)).toHaveLength(1);
+    }
+  }
 });
 
 test("the `lang` attribute of an entry's date names the browser's locale when its language differs from that of the document", () => {

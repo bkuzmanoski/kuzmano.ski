@@ -116,6 +116,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
         <PopupMenu
           value={direction}
           options={CAREER_TIMELINE_DIRECTION_OPTIONS}
+          className={styles.directionPopupMenu}
           aria-label="Order"
           onChange={setDirection}
         />

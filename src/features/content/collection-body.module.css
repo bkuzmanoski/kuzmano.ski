@@ -140,7 +140,7 @@
   gap: var(--collection-body-icon-gap);
   align-items: center;
 
-  min-width: 0;
+  min-width: 224px; /* The category column narrows before the title does, until it reaches its own minimum width. */
 
   .columnHeadingsRow & {
     padding-inline-start: calc(var(--collection-body-document-icon-width) + var(--collection-body-icon-gap));
@@ -185,7 +185,7 @@
 }
 
 .title,
-.categoryColumn,
+.categoryLabel,
 .dateColumn {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -200,10 +200,35 @@
 
 .categoryColumn,
 .dateColumn {
-  flex: none;
-  width: 112px;
   margin-block-end: -0.5px;
   padding-block-start: 0.5px;
+}
+
+/* The cell's labels share one grid area, so the cell's content width is that of the longest label. */
+.categoryColumn {
+  display: grid;
+  flex: 0 1 auto; /* Narrows from the longest label's width to `min-width`, truncating the label. */
+  min-width: 112px;
+}
+
+.categoryLabel {
+  grid-area: 1 / 1;
+}
+
+.otherCategoryLabels {
+  display: contents;
+  visibility: hidden;
+}
+
+.otherCategoryLabels > * {
+  overflow: hidden; /* Removes the label's automatic minimum width, so the cell can narrow below the longest label. */
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.dateColumn {
+  flex: none;
+  width: 112px;
 }
 
 .uncategorized {
@@ -227,6 +252,12 @@
   @mixin content-link;
 }
 
+/* Each breakpoint accommodates its visible columns plus a 16px `--layout-gutter` between columns and on both sides of
+ * the row. (The centering inset is 0 below 800px.)
+ *
+ * - 400px: title (224px) + category (112px) = 384px.
+ * - 560px: title, category, and date (112px) = 512px.
+ */
 @container collection-body (width < 560px) {
   .dateColumn {
     display: none;
@@ -234,6 +265,10 @@
 }
 
 @container collection-body (width < 400px) {
+  .titleColumn {
+    min-width: 0; /* The title is the only column. */
+  }
+
   .categoryColumn {
     display: none;
   }
