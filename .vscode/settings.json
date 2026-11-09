@@ -27,5 +27,13 @@
     "source.fixAll.stylelint": "explicit",
     "source.fixAll.ts": "explicit"
   },
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.mdx$",
+        "cmd": "cd \"${workspaceFolder}\" && npx markdownlint-cli2 --fix --no-globs \"${relativeFile}\""
+      }
+    ]
+  }
 }

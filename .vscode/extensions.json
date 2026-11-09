@@ -2,6 +2,7 @@
   "recommendations": [
     "davidanson.vscode-markdownlint",
     "dbaeumer.vscode-eslint",
+    "emeraldwalk.runonsave",
     "esbenp.prettier-vscode",
     "stylelint.vscode-stylelint",
     "unifiedjs.vscode-mdx",
