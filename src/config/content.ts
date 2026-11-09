@@ -26,10 +26,10 @@ export const COLLECTIONS = {
   work: {
     title: "Work",
     description:
-      "Design, engineering, consulting, and teaching projects for clients including Kinesis, Ansarada, SAP, and Transport for NSW.",
+      "Product design, software development, technology consulting, and teaching projects for clients including Loopit, Kinesis, Ansarada, SAP, and Transport for NSW.",
   },
-  blog: {
-    title: "Blog",
+  notes: {
+    title: "Notes",
     description: "Writing on UI design and software development for macOS, iOS, and the web.",
   },
 } as const satisfies Record<string, CollectionMetadata>;

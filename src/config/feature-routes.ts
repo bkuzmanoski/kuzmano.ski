@@ -13,7 +13,7 @@ export const FEATURE_ROUTE_SPECS = {
   contact: {
     route: "/contact",
     title: "Contact",
-    description: "Send Brian a message about software design and engineering work, collaborations, or anything else.",
+    description: "Send Brian a message about software design and development work, collaborations, or anything else.",
     isIndexed: true,
   },
   controlPanel: {

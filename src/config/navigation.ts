@@ -14,7 +14,7 @@ export const DESTINATION_SPECS = {
   about: { type: "entry", route: "/about" },
   experience: { type: "entry", route: "/experience" },
   work: { type: "collection", route: "/work", title: COLLECTIONS.work.title },
-  blog: { type: "collection", route: "/blog", title: COLLECTIONS.blog.title },
+  notes: { type: "collection", route: "/notes", title: COLLECTIONS.notes.title },
   contact: { type: "contact", route: FEATURE_ROUTE_SPECS.contact.route, title: FEATURE_ROUTE_SPECS.contact.title },
 } as const satisfies Record<DestinationId, DestinationSpec>;
 
@@ -24,7 +24,7 @@ export const DESTINATION_SPECS = {
  */
 export const DESTINATION_GROUPS = [
   ["about", "experience", "work"],
-  ["blog"],
+  ["notes"],
   ["contact"],
 ] as const satisfies ReadonlyArray<ReadonlyArray<DestinationId>>;
 
