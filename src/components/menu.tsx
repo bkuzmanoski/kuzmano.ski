@@ -8,7 +8,7 @@ import type { Position } from "#/lib/geometry.ts";
 import { useIsApplePlatform } from "#/lib/hooks/use-is-apple-platform.ts";
 import { followLink, isBrowserHandledClick, isFollowingLink } from "#/lib/link.ts";
 import { edgeIndexOf } from "#/lib/list-navigation.ts";
-import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
+import { menuItemIndexProps, menuItemSelector, useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
 import styles from "./menu.module.css";
@@ -86,7 +86,7 @@ const MenuItemRow = memo(function MenuRow({
     "aria-disabled": item.disabled || undefined,
     "aria-keyshortcuts": item.shortcut ? `Alt+${item.shortcut.label}` : undefined,
     "aria-describedby": item.accessory ? `${id}-description` : undefined,
-    "data-index": index,
+    ...menuItemIndexProps(index),
   };
   const itemContent = (
     <>
@@ -175,7 +175,7 @@ export function Menu({
       if (item.action) {
         item.action();
       } else {
-        followLink(menuRef.current?.querySelector<HTMLAnchorElement>(`a[data-index="${index}"]`));
+        followLink(menuRef.current?.querySelector<HTMLAnchorElement>(`a${menuItemSelector(index)}`));
       }
     },
     onClose,

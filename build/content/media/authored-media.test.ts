@@ -102,7 +102,7 @@ describe("authoredMediaIn", () => {
 
   test("reports a cover image without a corresponding entry", () => {
     expect(problemsIn({ fileNames: ["entry.mdx", "other-entry.cover.png"] })).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/other-entry.cover.png" is a cover image without a corresponding entry.`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/other-entry.cover.png" is the cover image of an entry that does not exist.`,
     ]);
   });
 
@@ -111,7 +111,7 @@ describe("authoredMediaIn", () => {
 
     expect(entryMedia).toEqual([]);
     expect(problems).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is a cover image without a corresponding entry.`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.png" is the cover image of an entry that does not exist.`,
     ]);
   });
 
@@ -119,7 +119,7 @@ describe("authoredMediaIn", () => {
     "reports %s only as a cover image without a corresponding entry",
     (coverImage) => {
       expect(problemsIn({ fileNames: ["entry.mdx", coverImage] })).toEqual([
-        `"${CONTENT_DIRECTORY_PATH}/collection/${coverImage}" is a cover image without a corresponding entry.`,
+        `"${CONTENT_DIRECTORY_PATH}/collection/${coverImage}" is the cover image of an entry that does not exist.`,
       ]);
     },
   );
@@ -131,7 +131,7 @@ describe("authoredMediaIn", () => {
 
     expect(entryMedia[0]?.coverImageFilePath).toBe("collection/entry.cover.png");
     expect(problems).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.old.png" is a cover image without a corresponding entry.`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/entry.cover.old.png" is the cover image of an entry that does not exist.`,
     ]);
   });
 
@@ -194,7 +194,7 @@ describe("authoredMediaIn", () => {
 
   test("reports an entry icon without a corresponding entry", () => {
     expect(problemsIn({ fileNames: ["entry.mdx", "other-entry.icon.svg"] })).toEqual([
-      `"${CONTENT_DIRECTORY_PATH}/collection/other-entry.icon.svg" is an entry icon without a corresponding entry.`,
+      `"${CONTENT_DIRECTORY_PATH}/collection/other-entry.icon.svg" is the entry icon of an entry that does not exist.`,
     ]);
   });
 
@@ -400,7 +400,7 @@ describe("mediaReferenceProblems", () => {
       ![A video](./video.mp4)
     `;
     expect(referenceProblemsIn(source, entry)).toEqual([
-      expect.stringMatching(/references "\.\/video\.mp4", which is a video, where only an image can be rendered/),
+      expect.stringMatching(/references the video "\.\/video\.mp4" where only images can be rendered/),
     ]);
   });
 
@@ -411,7 +411,7 @@ describe("mediaReferenceProblems", () => {
       <video src="./image.png" />
     `;
     expect(referenceProblemsIn(withImageSource, entry)).toEqual([
-      expect.stringMatching(/references "\.\/image\.png", which is an image, where only a video can be rendered/),
+      expect.stringMatching(/references the image "\.\/image\.png" where only videos can be rendered/),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" is not referenced by`),
     ]);
   });
@@ -424,7 +424,7 @@ describe("mediaReferenceProblems", () => {
     `;
 
     expect(referenceProblemsIn(withImageSourceChild, entry)).toEqual([
-      expect.stringMatching(/references "\.\/image\.png", which is an image, where only a video can be rendered/),
+      expect.stringMatching(/references the image "\.\/image\.png" where only videos can be rendered/),
       expect.stringContaining(`"${CONTENT_DIRECTORY_PATH}/collection/entry/video.mp4" is not referenced by`),
     ]);
   });

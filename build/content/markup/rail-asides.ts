@@ -1,6 +1,7 @@
 import { visit } from "unist-util-visit";
 
-import { RAIL_SUBJECT_COMPONENT_NAMES } from "#/lib/content/rail-subjects.ts";
+import { contentComponentNamesWhere } from "#/features/content/content-components.ts";
+import type { ContentComponentName } from "#/features/content/content-components.ts";
 
 import {
   elementNameOf,
@@ -9,15 +10,17 @@ import {
   isJsxElement,
   isWhitespaceOrComment,
   quotedEntryPathOf,
+  quotedNameOf,
   stringAttributeOf,
 } from "./tree.ts";
 
 import type { ContentNode, ContentNodeAttribute, ContentParent, EntryVFile, EstreeNode } from "./tree.ts";
 
-export const RAIL_COMPONENT_NAME = "Rail";
-export const FOOTNOTE_COMPONENT_NAME = "Footnote";
+export const ASIDE_COMPONENT_NAME = "Aside" satisfies ContentComponentName;
+export const FOOTNOTE_COMPONENT_NAME = "Footnote" satisfies ContentComponentName;
 
-const RAIL_ASIDE_COMPONENT_NAMES = new Set([RAIL_COMPONENT_NAME, FOOTNOTE_COMPONENT_NAME]);
+const RAIL_ASIDE_COMPONENT_NAMES = new Set<string>(contentComponentNamesWhere(({ railRole }) => railRole === "aside"));
+const RAIL_SUBJECT_COMPONENT_NAMES = contentComponentNamesWhere(({ railRole }) => railRole === "subject");
 const RAIL_SUBJECT_NAMES = new Set<string>(RAIL_SUBJECT_COMPONENT_NAMES);
 const RAIL_SUBJECT_PROPERTY = "--content-body-rail-subject";
 
@@ -37,7 +40,7 @@ function lastRenderedNodeIn(nodes: Array<ContentNode>): ContentNode | undefined 
 const railAsidePlacementOf = (aside: ContentNode) =>
   aside.name === FOOTNOTE_COMPONENT_NAME
     ? `references the footnote with the ID "${stringAttributeOf(aside, "id") ?? ""}" inside`
-    : `renders a \`${aside.name}\` after`;
+    : `renders ${quotedNameOf(aside.name ?? "")} after`;
 
 const isComponentElement = (node: ContentNode) =>
   node.type === "mdxJsxFlowElement" &&
@@ -91,7 +94,7 @@ function nameRailSubject(subject: ContentNode, anchorName: string) {
 }
 
 /**
- * Wraps each root-level run of `Rail` and `Footnote` elements in `<div data-rail-asides>` and assigns a unique
+ * Wraps each root-level run of `Aside` and `Footnote` elements in `<div data-rail-asides>` and assigns a unique
  * rail-subject name to the preceding element.
  *
  * The transform stores the name in `--content-body-rail-subject` on both the subject and its aside group. Content
@@ -115,7 +118,7 @@ export function rehypeRailAsides() {
       const placement =
         node.type === "mdxJsxTextElement" ? "inside a sentence" : `inside \`<${elementNameOf(parent) ?? ""}>\``;
 
-      throw new Error(`${entryPath} renders a \`${node.name}\` ${placement}.`);
+      throw new Error(`${entryPath} renders ${quotedNameOf(node.name ?? "")} ${placement}.`);
     });
 
     // Shiki replaces a code block with a root node containing its `<pre>`, which is the element a rail aside after it
@@ -137,7 +140,7 @@ export function rehypeRailAsides() {
       const subject = lastRenderedNodeIn(children);
 
       if (subject === undefined || !isElement(subject)) {
-        throw new Error(`${entryPath} renders a \`${node.name}\` that does not follow an element.`);
+        throw new Error(`${entryPath} renders ${quotedNameOf(node.name ?? "")} without an element before it.`);
       }
 
       const problemMessageStart = `${entryPath} ${railAsidePlacementOf(node)} \`<${elementNameOf(subject) ?? ""}>\``;
@@ -149,7 +152,9 @@ export function rehypeRailAsides() {
       }
 
       if (hasAttribute(subject, "style")) {
-        throw new Error(`${problemMessageStart} with a \`style\` attribute, which the build sets to place the aside.`);
+        throw new Error(
+          `${problemMessageStart} with the \`style\` attribute, which the build sets to place the aside.`,
+        );
       }
 
       if (hasSpreadAttribute(subject)) {

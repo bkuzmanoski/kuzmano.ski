@@ -57,7 +57,6 @@ function isUrlSafeFileName(fileName: string) {
 }
 const isPosterImageFileName = (fileName: string) => withoutExtension(fileName).endsWith(VIDEO_POSTER_IMAGE_STEM_SUFFIX);
 const isNamedAfter = (fileName: string, stem: string) => withoutExtension(fileName) === stem;
-const withIndefiniteArticle = (noun: string) => `${/^[aeiou]/.test(noun) ? "an" : "a"} ${noun}`;
 
 function authoredVideosIn(mediaDirectoryPath: string, imageFileNames: Array<string>, videoFileNames: Array<string>) {
   const problems: Array<string> = [];
@@ -181,7 +180,7 @@ function orphanSiblingImageProblems(
     .filter((fileName) => !listedEntries.some(({ slug }) => isSiblingImageOf(fileName, slug, kind)))
     .map(
       (fileName) =>
-        `${quotedContentPath(directoryName, fileName)} is ${withIndefiniteArticle(kind.noun)} without a corresponding entry.`,
+        `${quotedContentPath(directoryName, fileName)} is the ${kind.noun} of an entry that does not exist.`,
     );
 }
 
@@ -286,7 +285,7 @@ export function mediaReferenceProblems(
 
     if (expected && kind !== expected) {
       problems.push(
-        `${quotedContentPath(entryFilePath)} references "${reference}", which is ${withIndefiniteArticle(kind)}, where only ${withIndefiniteArticle(expected)} can be rendered.`,
+        `${quotedContentPath(entryFilePath)} references the ${kind} "${reference}" where only ${expected}s can be rendered.`,
       );
     }
   }

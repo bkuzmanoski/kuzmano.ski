@@ -24,14 +24,10 @@ function imagesIn(children: ReactNode): Array<ReactElement> {
       return []; // The line breaks between images authored on consecutive lines.
     }
 
-    if (isValidElement<{ children?: ReactNode }>(child)) {
-      if (child.type === "img" || child.type === "picture") {
-        return [child];
-      }
-
-      if (child.type === "p") {
-        return imagesIn(child.props.children);
-      }
+    // The build removes the paragraphs around images authored in Markdown (see
+    // `/build/content/markup/inline-content.ts`).
+    if (isValidElement(child) && (child.type === "img" || child.type === "picture")) {
+      return [child];
     }
 
     throw new Error(

@@ -6,10 +6,10 @@ import { Video } from "#/features/video/video.tsx";
 import { Waitlist } from "#/features/waitlist/waitlist.tsx";
 import { cx } from "#/lib/class-names.ts";
 import { RenderedEntryContext } from "#/lib/content/rendered-entry.ts";
-import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
 import { contentIndexOf } from "#/site/windows.ts";
 import type { EntryTarget } from "#/site/windows.ts";
 
+import { Aside } from "./aside.tsx";
 import { Callout } from "./callout.tsx";
 import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
@@ -22,10 +22,20 @@ import { Footnote } from "./footnote.tsx";
 import { ImageRow } from "./image-row.tsx";
 import { observeRailClearances } from "./observe-rail-clearances.ts";
 import { OpensInNewTabDescriptionProvider } from "./opens-in-new-tab-description-provider.tsx";
-import { Rail } from "./rail.tsx";
+import { revealFragmentTarget } from "./reveal-fragment-target.ts";
 
+import type { ContentComponentNameWith } from "./content-components.ts";
 import type { MDXComponents } from "mdx/types";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType } from "react";
+
+const PROVIDED_COMPONENTS = {
+  Aside,
+  Callout,
+  Footnote,
+  ImageGallery,
+  ImageRow,
+  Waitlist,
+} satisfies Record<ContentComponentNameWith<{ provided: "everywhere" }>, ComponentType<never>>;
 
 /** The elements and components any entry can use without importing them. These load with every page. */
 const MDX_COMPONENTS: MDXComponents = {
@@ -35,12 +45,7 @@ const MDX_COMPONENTS: MDXComponents = {
     href === undefined ? <a {...props} /> : <ContentLink href={href} {...props} />,
   pre: (props: ComponentProps<"pre">) => <CodeBlock {...props} />,
   video: Video,
-  Callout,
-  Rail,
-  Footnote, // Emitted by the build for each footnote definition (see `/build/content/markup/footnote-asides.ts`).
-  ImageGallery,
-  ImageRow,
-  Waitlist,
+  ...PROVIDED_COMPONENTS,
 };
 
 /**

@@ -1,4 +1,6 @@
 import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL } from "#/config/site.ts";
+import { contentComponentNamesWhere } from "#/features/content/content-components.ts";
+import type { ContentComponentNameWith } from "#/features/content/content-components.ts";
 import { FALLBACK_TEXT_BEFORE_URL } from "#/lib/waitlist/render-fallback.ts";
 
 import { isJsxElement, stringAttributeOf } from "../content/markup/tree.ts";
@@ -74,27 +76,8 @@ const CAPTIONED_IMAGES_MARKDOWN: ComponentMarkdown = {
 const waitlistFallbackParagraphFor = (url: string): ContentNode =>
   paragraphOf([textNode(FALLBACK_TEXT_BEFORE_URL), { type: "link", url, children: [textNode(url)] }]);
 
-/** Fallback Markdown for React components embedded in the content, keyed by element name. */
-const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
-  Callout: ASIDE_MARKDOWN,
-  ContributionGraph: {
-    // The graph is rendered from data fetched in the browser, so in Markdown it becomes a GitHub profile link.
-    block: () => [
-      paragraphOf([{ type: "link", url: GITHUB_PROFILE_URL, children: [textNode(`${GITHUB_PROFILE_LINK_TEXT}.`)] }]),
-    ],
-  },
-  CareerTimeline: {
-    isRenderedFromEntryData: true,
-    block: (node, { entryDataExportOf }) => {
-      const { value, quotedDataFilePath } = entryDataExportOf(node);
-      return experienceMarkdownNodesFrom(value, quotedDataFilePath); // Validates the record, throwing if invalid.
-    },
-  },
-  ImageGallery: CAPTIONED_IMAGES_MARKDOWN,
-  ImageRow: CAPTIONED_IMAGES_MARKDOWN,
-  PrintLink: { block: () => [] }, // Omitted.
-  Rail: ASIDE_MARKDOWN,
-  Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },
+/** Fallback Markdown for the HTML elements an entry renders, keyed by element name. */
+const ELEMENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   blockquote: {
     // Markdown cannot quote inside a sentence, so a quotation is replaced by its children.
     block: (node) => [{ type: "blockquote", children: node.children ?? [] }],
@@ -134,21 +117,42 @@ const COMPONENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   },
 };
 
+const COMPONENT_MARKDOWN = {
+  Aside: ASIDE_MARKDOWN,
+  Callout: ASIDE_MARKDOWN,
+  ContributionGraph: {
+    // The component renders the graph from data it fetches in the browser, so its Markdown is a GitHub profile link.
+    block: () => [
+      paragraphOf([{ type: "link", url: GITHUB_PROFILE_URL, children: [textNode(`${GITHUB_PROFILE_LINK_TEXT}.`)] }]),
+    ],
+  },
+  CareerTimeline: {
+    isRenderedFromEntryData: true,
+    block: (node, { entryDataExportOf }) => {
+      const { value, quotedDataFilePath } = entryDataExportOf(node);
+      return experienceMarkdownNodesFrom(value, quotedDataFilePath); // Validates the record, throwing if invalid.
+    },
+  },
+  ImageGallery: CAPTIONED_IMAGES_MARKDOWN,
+  ImageRow: CAPTIONED_IMAGES_MARKDOWN,
+  PrintLink: { block: () => [] }, // Omitted.
+  Waitlist: { block: (node, { url }) => (url ? [...(node.children ?? []), waitlistFallbackParagraphFor(url)] : []) },
+} satisfies Record<ContentComponentNameWith<{ markdown: "fallback" }>, ComponentMarkdown>;
+
+const FALLBACK_MARKDOWN: Record<string, ComponentMarkdown> = { ...ELEMENT_MARKDOWN, ...COMPONENT_MARKDOWN };
+
 export const componentMarkdownOf = (node: ContentNode): ComponentMarkdown | undefined =>
-  isJsxElement(node) && node.name && Object.hasOwn(COMPONENT_MARKDOWN, node.name)
-    ? COMPONENT_MARKDOWN[node.name]
+  isJsxElement(node) && node.name && Object.hasOwn(FALLBACK_MARKDOWN, node.name)
+    ? FALLBACK_MARKDOWN[node.name]
     : undefined;
 
-/**
- * Components whose children serve as their Markdown fallback. The build emits those children in place of the component
- * and rejects components absent from both this set and `COMPONENT_MARKDOWN`, preventing unreviewed content from
- * reaching the Markdown output.
- */
-export const COMPONENTS_REPLACED_BY_CHILDREN: ReadonlySet<string> = new Set(["AboutHeader", "AlertButton"]);
+export const COMPONENTS_REPLACED_BY_CHILDREN: ReadonlySet<string> = new Set(
+  contentComponentNamesWhere(({ markdown }) => markdown === "children"),
+);
 
 /** Whether `name` names a React component, which the build checks, instead of an HTML element, which it does not. */
 const isComponentName = (name: string) => /^[A-Z]/.test(name);
 
 /** Whether `name` names a component with neither fallback Markdown nor a listing in `componentsReplacedByChildren`. */
 export const lacksFallbackMarkdown = (name: string, componentsReplacedByChildren: ReadonlySet<string>) =>
-  isComponentName(name) && !Object.hasOwn(COMPONENT_MARKDOWN, name) && !componentsReplacedByChildren.has(name);
+  isComponentName(name) && !Object.hasOwn(FALLBACK_MARKDOWN, name) && !componentsReplacedByChildren.has(name);

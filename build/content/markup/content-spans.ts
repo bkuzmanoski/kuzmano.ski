@@ -1,6 +1,6 @@
 import { visit } from "unist-util-visit";
 
-import { CONTENT_SPANS } from "#/lib/content/content-spans.ts";
+import { CONTENT_SPANS } from "#/features/content/content-spans.ts";
 
 import { assertAttributeOneOf, elementNameOf } from "./tree.ts";
 
@@ -22,7 +22,7 @@ export function rehypeContentSpans() {
         describeElement: (authoredValue) =>
           authoredValue.kind === "string"
             ? `\`<${elementName} ${SPAN_ATTRIBUTE_NAME}="${authoredValue.value}">\``
-            : `\`<${elementName}>\` with a \`${SPAN_ATTRIBUTE_NAME}\` attribute ${authoredValue.kind}`,
+            : `\`<${elementName}>\` with the \`${SPAN_ATTRIBUTE_NAME}\` attribute ${authoredValue.kind}`,
       });
     });
   };

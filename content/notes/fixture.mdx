@@ -47,13 +47,19 @@ A paragraph the subsection heading heads.
 2. A second numbered list item.
 
 <dl>
-  <dt>A term</dt>
+  <dt>
+    A term
+  </dt>
   <dd>
     A definition long enough to wrap onto a second line, so the term’s alignment
     can be compared with its first line.
   </dd>
-  <dt>A second term</dt>
-  <dd>A second definition.</dd>
+  <dt>
+    A second term
+  </dt>
+  <dd>
+    A second definition.
+  </dd>
 </dl>
 
 ## Code
@@ -161,26 +167,42 @@ A paragraph the subsection heading heads.
 A paragraph before the table.
 
 <table>
-  <caption>A caption below a table.</caption>
+  <caption>
+    A caption below a table.
+  </caption>
   <thead>
     <tr>
-      <th>Column</th>
-      <th>Value</th>
+      <th>
+        Column
+      </th>
+      <th>
+        Value
+      </th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>First row</td>
-      <td>1</td>
+      <td>
+        First row
+      </td>
+      <td>
+        1
+      </td>
     </tr>
     <tr>
-      <td>Second row</td>
-      <td>2</td>
+      <td>
+        Second row
+      </td>
+      <td>
+        2
+      </td>
     </tr>
   </tbody>
 </table>
 
-<Rail label="Aside">An aside beside a table.</Rail>
+<Aside label="Aside">
+  An aside beside a table.
+</Aside>
 
 A paragraph after the table.
 
@@ -191,14 +213,19 @@ A paragraph after the table.
   | --------- | ----: |
   | First row |     3 |
 
-  <figcaption>A caption below a table in a figure.</figcaption>
+  <figcaption>
+    A caption below a table in a figure.
+  </figcaption>
 </figure>
 
 ## Figures
 
 <figure>
   <img src="./image.jpg" alt="A JPEG image in an img element in a figure" />
-  <figcaption>A caption below an image.</figcaption>
+
+  <figcaption>
+    A caption below an image.
+  </figcaption>
 </figure>
 
 A paragraph between two figures.
@@ -208,26 +235,37 @@ A paragraph between two figures.
   let value = 1
   ```
 
-  <figcaption>A caption below a code block.</figcaption>
+  <figcaption>
+    A caption below a code block.
+  </figcaption>
 </figure>
 
 ### A subsection heading before an unnumbered figure
 
 <figure data-content-unnumbered>
-  <blockquote>A quotation in a figure that takes no number.</blockquote>
-  <figcaption>A caption below an unnumbered figure.</figcaption>
+  <blockquote>
+    A quotation in a figure that takes no number.
+  </blockquote>
+
+  <figcaption>
+    A caption below an unnumbered figure.
+  </figcaption>
 </figure>
 
 <figure data-content-span="wide">
   ![A JPEG image in a wide figure](./image.jpg)
 
-  <figcaption>A caption below a wide figure.</figcaption>
+  <figcaption>
+    A caption below a wide figure.
+  </figcaption>
 </figure>
 
 <figure data-content-span="pane">
   ![A PNG image with a transparent background in a pane-spanning figure](./image.png)
 
-  <figcaption>A caption below a pane-spanning figure.</figcaption>
+  <figcaption>
+    A caption below a pane-spanning figure.
+  </figcaption>
 </figure>
 
 ## Images
@@ -264,8 +302,11 @@ words.
 
 <ImageRow caption="A caption below an image row.">
   ![A small PNG image](./inline-image.png)
+
   ![An animated GIF image](./animated-image.gif)
+
   ![An SVG image](./vector-image.svg)
+
   <img src="./picture-1x.png" alt="A PNG image in an img element" />
 </ImageRow>
 
@@ -273,9 +314,15 @@ words.
 
 <ImageGallery caption="A caption below an image gallery.">
   ![A PNG image with a transparent background](./image.png)
-  ![A JPEG image](./image.jpg) ![A portrait JPEG image](./portrait-image.jpeg)
+
+  ![A JPEG image](./image.jpg)
+
+  ![A portrait JPEG image](./portrait-image.jpeg)
+
   <img src="./image.png" alt="A PNG image with a transparent background" />
+
   <img src="./image.jpg" alt="A JPEG image" />
+
   <img src="./portrait-image.jpeg" alt="A portrait JPEG image" />
 </ImageGallery>
 
@@ -311,39 +358,47 @@ words.
 A paragraph with an aside beside it, long enough to wrap onto a second line so
 the aside’s alignment can be compared with its first line.
 
-<Rail label="Aside">An aside beside a paragraph.</Rail>
+<Aside label="Aside">
+  An aside beside a paragraph.
+</Aside>
 
 ### A subsection heading with an aside beside it
 
-<Rail label="Aside">An aside beside a subsection heading.</Rail>
+<Aside label="Aside">
+  An aside beside a subsection heading.
+</Aside>
 
 A short paragraph.
 
-<Rail label="Aside">
+<Aside label="Aside">
   A long aside beside a short paragraph, which runs on for more lines than the
   paragraph has, past the paragraph after it.
-</Rail>
+</Aside>
 
 A second short paragraph.
 
-<Rail label="Aside">A second aside, which starts below the first.</Rail>
+<Aside label="Aside">
+  A second aside, which starts below the first.
+</Aside>
 
-<Rail label="Aside">A third aside, beside the same paragraph.</Rail>
+<Aside label="Aside">
+  A third aside, beside the same paragraph.
+</Aside>
 
 A paragraph with an aside of two paragraphs beside it.
 
-<Rail label="Aside">
+<Aside label="Aside">
   The first paragraph of the aside.
 
   The second paragraph of the aside.
-</Rail>
+</Aside>
 
 A paragraph at the end of the section.
 
-<Rail label="Aside">
+<Aside label="Aside">
   A long aside beside the last paragraph of a section, which runs on for more
   lines than the paragraph has, past the end of the section.
-</Rail>
+</Aside>
 
 ## Footnotes
 

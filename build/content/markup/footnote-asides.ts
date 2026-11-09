@@ -1,7 +1,7 @@
 import { visit } from "unist-util-visit";
 import { visitParents } from "unist-util-visit-parents";
 
-import { FOOTNOTE_COMPONENT_NAME, RAIL_COMPONENT_NAME } from "./rail-asides.ts";
+import { ASIDE_COMPONENT_NAME, FOOTNOTE_COMPONENT_NAME } from "./rail-asides.ts";
 import { elementNameOf, isJsxElement, isJsxElementNamed, isWhitespaceOrComment, quotedEntryPathOf } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
@@ -48,7 +48,7 @@ const isLink = (node: ContentNode) =>
   node.type === "link" || node.type === "linkReference" || isJsxElementNamed(node, "a");
 const isHeading = (node: ContentNode) =>
   node.type === "heading" || (isJsxElement(node) && /^h[1-6]$/.test(elementNameOf(node) ?? ""));
-const isRail = (node: ContentNode) => isJsxElementNamed(node, RAIL_COMPONENT_NAME);
+const isAside = (node: ContentNode) => isJsxElementNamed(node, ASIDE_COMPONENT_NAME);
 const isFootnoteDefinition = (node: ContentNode): node is FootnoteDefinition => node.type === "footnoteDefinition";
 
 function containerDescriptionOf(container: ContentNode): string {
@@ -137,7 +137,7 @@ function assertReferencesDefined(tree: ContentParent, file: FootnoteVFile) {
  * Converts an entry's GFM footnotes to rail asides. Numbers each footnote by its first reference and replaces every
  * reference with `<sup><a id="fnref-<label>" href="#fn-<label>" aria-label="Footnote N">`. Repeated references receive
  * IDs suffixed with `-2`, `-3`, and so on. Moves each definition into a `Footnote` element with the ID `fn-<label>`,
- * inserting it at the root after the block containing its first reference and any existing `Rail` elements. Appends
+ * inserting it at the root after the block containing its first reference and any existing `Aside` elements. Appends
  * links back to every reference to the footnote's final paragraph.
  *
  * Throws when a reference has no definition, a label is defined twice, two labels share an ID, a definition has no
@@ -155,7 +155,7 @@ export function remarkFootnoteAsides() {
     visit(tree, (node: ContentNode) => {
       if (isJsxElementNamed(node, FOOTNOTE_COMPONENT_NAME)) {
         throw new Error(
-          `${entryPath} renders a \`${FOOTNOTE_COMPONENT_NAME}\`, which the build emits for each footnote.`,
+          `${entryPath} renders \`${FOOTNOTE_COMPONENT_NAME}\`, which the build emits for each footnote.`,
         );
       }
     });
@@ -257,7 +257,7 @@ export function remarkFootnoteAsides() {
     let pendingIdentifiers: Array<string> = [];
 
     for (const block of tree.children) {
-      if (!isRail(block) && !isWhitespaceOrComment(block)) {
+      if (!isAside(block) && !isWhitespaceOrComment(block)) {
         children.push(...footnoteElementsFor(pendingIdentifiers));
         pendingIdentifiers = [];
       }

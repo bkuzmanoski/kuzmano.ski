@@ -711,26 +711,15 @@
   }
 
   &:where(img, video) {
-    /* Limit height to 80% of the scroll pane and center on whole pixels to keep the border pixel-aligned. Without
-     * `round()` or typed `attr()` the maximum width falls back to `none` and the margin to 0. */
-    --content-body-image-max-width: round(down, 80cqh * attr(width type(<number>)) / attr(height type(<number>)), 1px);
-
     display: block;
 
     /* Restates the `width` and `height` ratio so lazy-loaded images keep their space in Chrome. Without typed `attr()`
      * the ratio falls back to `auto`. */
     aspect-ratio: attr(width type(<number>)) / attr(height type(<number>));
     width: 100%;
-    max-width: var(--content-body-image-max-width);
     height: auto;
-    margin-inline-start: max(0px, round(down, (100% - var(--content-body-image-max-width)) / 2, 1px));
 
     background: var(--color-background-secondary);
-  }
-
-  &:where(img, video):where([data-content-span="pane"], [data-content-span="pane"] *) {
-    max-width: none;
-    margin-inline-start: 0;
   }
 
   &[data-content-panel]:where([data-content-span="pane"], [data-content-span="pane"] *) {

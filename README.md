@@ -174,6 +174,41 @@ To link a code block to a GitHub Gist, add the gist's ID after the language:
 ```
 ````
 
+### Blocks and inline content
+
+MDX treats a line of JSX that follows a line of Markdown as part of the same
+paragraph, so separate a block element from Markdown with a blank line. In a
+`<figure>`, put a blank line between children.
+
+Prettier wraps prose only between tags on their own lines, so put the tags of an
+element that contains prose (e.g., `<blockquote>`, `<figcaption>`, `<Aside>`,
+etc.) on their own lines, e.g.:
+
+```mdx
+<figure>
+  ![Alt text](./image.png)
+
+  <figcaption>
+    A caption.
+  </figcaption>
+</figure>
+```
+
+Inside `<ImageRow>` and `<ImageGallery>`, put a blank line between children so
+Prettier keeps each one on its own line:
+
+```mdx
+<ImageRow>
+  ![First image](./first.png)
+
+  [![Second image](./second.png)](/page)
+</ImageRow>
+```
+
+The build fails when a paragraph, or an element or component that accepts only
+inline content, contains a block. To let a component sit inside a paragraph,
+mark it `renders: "inline"`.
+
 ### Other representations
 
 #### Markdown

@@ -173,7 +173,7 @@ A paragraph.`);
       </Note>
     `),
     ).rejects.toThrow(
-      "An entry without a path renders `Note` without fallback Markdown. Expected a component in `COMPONENT_MARKDOWN` or `COMPONENTS_REPLACED_BY_CHILDREN` in `build/markdown/component-markdown.ts`.",
+      "An entry without a path renders `Note` without fallback Markdown. Expected a component in `CONTENT_COMPONENTS` in `src/features/content/content-components.ts`.",
     );
   });
 
@@ -293,7 +293,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     expect(markdown).not.toContain("Description.");
   });
 
-  test.each(["Callout", "Rail"])(
+  test.each(["Aside", "Callout"])(
     "renders a `%s` of one paragraph as a blockquote that starts with its `label` attribute in bold text and a colon",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
@@ -305,7 +305,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     },
   );
 
-  test.each(["Callout", "Rail"])(
+  test.each(["Aside", "Callout"])(
     "renders a `%s` authored on one line as a blockquote that starts with its `label` attribute in bold text and a colon",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
@@ -315,7 +315,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     },
   );
 
-  test.each(["Callout", "Rail"])(
+  test.each(["Aside", "Callout"])(
     "renders a `%s` of several paragraphs as a blockquote with its `label` attribute in bold text above its children",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
@@ -335,7 +335,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     },
   );
 
-  test.each(["Callout", "Rail"])(
+  test.each(["Aside", "Callout"])(
     "renders a `%s` without a `label` attribute as a blockquote of its children",
     async (name) => {
       const markdown = await markdownFor(`${FRONTMATTER}
@@ -351,25 +351,25 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
 
   test("omits the colon after a `label` attribute that ends in punctuation", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
-      <Rail label="Label?">A labeled sentence.</Rail>
+      <Aside label="Label?">A labeled sentence.</Aside>
     `);
     expect(markdown).toContain("> **Label?** A labeled sentence.");
   });
 
-  test("renders consecutive `Rail` elements as separate blockquotes", async () => {
+  test("renders consecutive `Aside` elements as separate blockquotes", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       A paragraph.
 
-      <Rail label="Label">A first aside.</Rail>
+      <Aside label="Label">A first aside.</Aside>
 
-      <Rail label="Label">A second aside.</Rail>
+      <Aside label="Label">A second aside.</Aside>
     `);
     expect(markdown).toContain(`> **Label:** A first aside.
 
 > **Label:** A second aside.`);
   });
 
-  test.each(["Callout", "Rail"])("omits a `%s` that contains only a `PrintLink`", async (name) => {
+  test.each(["Aside", "Callout"])("omits a `%s` that contains only a `PrintLink`", async (name) => {
     const markdown = await markdownFor(`${FRONTMATTER}
       A paragraph.
 
@@ -382,7 +382,7 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     expect(markdown).not.toContain("Print");
   });
 
-  test("throws when a `PrintLink` is authored inside a sentence, naming the component", async () => {
+  test("throws for a `PrintLink` inside a sentence, naming the component", async () => {
     await expect(
       markdownFor(`${FRONTMATTER}
       A sentence with <PrintLink>a print link</PrintLink> inside it.
@@ -390,22 +390,24 @@ ${fallbackText(`[${ENTRY_URL}](${ENTRY_URL})`)}`);
     ).rejects.toThrow("renders `PrintLink` inside a sentence.");
   });
 
-  test("throws when a `Rail` is authored inside a sentence, naming the component", async () => {
+  test("throws for an `Aside` inside a sentence, naming the component", async () => {
     await expect(
       markdownFor(`${FRONTMATTER}
-      A sentence with <Rail label="Label">an aside</Rail> inside it.
+      A sentence with <Aside label="Label">an aside</Aside> inside it.
     `),
-    ).rejects.toThrow("renders `Rail` inside a sentence.");
+    ).rejects.toThrow("renders `Aside` inside a sentence.");
   });
 
   test("replaces an `ImageGallery` with its children, then the paragraph of its `caption` attribute", async () => {
     const markdown = await markdownFor(`${FRONTMATTER}
       <ImageGallery caption="A caption.">
         ![First](https://example.com/first.png)
+
         ![Second](https://example.com/second.png)
       </ImageGallery>
     `);
     expect(markdown).toContain(`![First](https://example.com/first.png)
+
 ![Second](https://example.com/second.png)
 
 A caption.`);
@@ -415,6 +417,7 @@ A caption.`);
     const markdown = await markdownFor(`${FRONTMATTER}
       <ImageRow caption="A caption.">
         <img src="https://example.com/first.png" alt="First" />
+
         <img src="https://example.com/second.png" alt="Second" />
       </ImageRow>
     `);
@@ -803,7 +806,10 @@ if (value) {
             <th>Column</th>
           </tr>
         </table>
-        <figcaption>A caption.</figcaption>
+
+        <figcaption>
+          A caption.
+        </figcaption>
       </figure>
     `);
     expect(markdown).toContain(`| Column |
@@ -1010,7 +1016,10 @@ A second paragraph.
       "authored on one line",
       `<figure>
         <blockquote>A quotation.</blockquote>
-        <figcaption>A caption.</figcaption>
+
+        <figcaption>
+          A caption.
+        </figcaption>
       </figure>`,
     ],
     [
@@ -1020,7 +1029,9 @@ A second paragraph.
           A quotation.
         </blockquote>
 
-        <figcaption>A caption.</figcaption>
+        <figcaption>
+          A caption.
+        </figcaption>
       </figure>`,
     ],
   ])(

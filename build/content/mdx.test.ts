@@ -124,19 +124,19 @@ const value = 1;
     },
   );
 
-  test("marks a highlighted code block before a `Rail` as its rail subject", async () => {
+  test("marks a highlighted code block before an `Aside` as its rail subject", async () => {
     const { default: MDXContent } = await evaluate(
       `
 \`\`\`ts
 const value = 1;
 \`\`\`
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `,
       { ...mdxCompileOptionsFor(), ...runtime, useMDXComponents },
     );
     const markup = renderToStaticMarkup(
-      createElement(MDXContent, { components: { Rail: (properties) => createElement("aside", properties) } }),
+      createElement(MDXContent, { components: { Aside: (properties) => createElement("aside", properties) } }),
     );
 
     expect(markup).toMatch(
@@ -144,14 +144,14 @@ const value = 1;
     );
   });
 
-  test.each(["h2", "h3"])("marks an `<%s>` section heading before a `Rail` as its rail subject", async (tagName) => {
+  test.each(["h2", "h3"])("marks an `<%s>` section heading before an `Aside` as its rail subject", async (tagName) => {
     const markup = await renderedMarkupOf(
       `
 ${tagName === "h2" ? "##" : "###"} A heading
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `,
-      { Rail: (properties) => createElement("aside", properties) },
+      { Aside: (properties) => createElement("aside", properties) },
     );
     expect(markup).toMatch(
       new RegExp(
@@ -233,17 +233,17 @@ A sentence.[^1]
 <div data-rail-asides="" style="--content-body-rail-subject:--content-body-rail-subject-1"><aside id="fn-1"><p>A note. <a href="#fnref-1" aria-label="Back to reference 1">↩︎</a></p></aside></div>`);
   });
 
-  test("groups a footnote referenced inside a `Rail` with that `Rail`", async () => {
+  test("groups a footnote referenced inside an `Aside` with that `Aside`", async () => {
     const markup = await renderedMarkupOf(
       `
 A paragraph.
 
-<Rail>An aside.[^1]</Rail>
+<Aside>An aside.[^1]</Aside>
 
 [^1]: A note.
 `,
       {
-        Rail: (properties) => createElement("aside", properties),
+        Aside: (properties) => createElement("aside", properties),
         Footnote: ({ number: _number, ...properties }) => createElement("aside", properties),
       },
     );

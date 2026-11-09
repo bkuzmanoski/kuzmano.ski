@@ -1,11 +1,11 @@
 import { Link, useRouter } from "@tanstack/react-router";
 
-import { revealFragmentTarget } from "#/lib/content/reveal-fragment-target.ts";
 import { isBrowserHandledClick, linkDestinationOf, sitePathPartsOf } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import { useOpensInNewTabDescriptionId } from "./opens-in-new-tab-description.ts";
+import { revealFragmentTarget } from "./reveal-fragment-target.ts";
 
 import type { ComponentProps, MouseEvent } from "react";
 

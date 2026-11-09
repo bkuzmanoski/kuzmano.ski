@@ -28,14 +28,27 @@ export interface OpeningPress {
   origin: Position | null;
 }
 
+const ITEM_INDEX_ATTRIBUTE = "data-index";
+const ITEM_SELECTOR = `[${ITEM_INDEX_ATTRIBUTE}]`;
+
+/**
+ * Returns the props that mark a menu item with its index, which `useMenuInteraction` reads to find the item under a
+ * press or click.
+ */
+export const menuItemIndexProps = (index: number) => ({ [ITEM_INDEX_ATTRIBUTE]: index });
+
+/** Returns the selector for the menu item that `menuItemIndexProps` marks with `index`. */
+export const menuItemSelector = (index: number) => `[${ITEM_INDEX_ATTRIBUTE}="${index}"]`;
+
+const itemIndexOf = (item: Element | null | undefined) => Number(item?.getAttribute(ITEM_INDEX_ATTRIBUTE) ?? -1);
+
 /**
  * The index of the item under a point, or -1 if the point is not over one. The point is hit-tested rather than read
  * from an event's target, because on iOS a tap near an item can be retargeted to it for the compatibility mouse events
  * and `click`, while the touch pointer events remain on the element under the finger.
  */
 function indexAt(x: number, y: number): number {
-  const element = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-index]");
-  return element ? Number(element.dataset.index) : -1;
+  return itemIndexOf(document.elementFromPoint(x, y)?.closest(ITEM_SELECTOR));
 }
 
 export function useMenuInteraction({
@@ -240,8 +253,8 @@ export function useMenuInteraction({
   });
 
   function onClick(event: MouseEvent) {
-    const item = (event.target as Element).closest<HTMLElement>("[data-index]");
-    const index = Number(item?.dataset.index ?? -1);
+    const item = (event.target as Element).closest<HTMLElement>(ITEM_SELECTOR);
+    const index = itemIndexOf(item);
 
     // Pointer clicks and `followLink` clicks dispatched after a link item's activation flash belong to the activation
     // already handled by `pointerup`.

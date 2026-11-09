@@ -84,7 +84,7 @@ const isBlockElementInParagraph = (node: ContentNode) =>
 
 /**
  * MDX unwraps paragraphs that contain only a JSX element. This makes a component with block fallback Markdown on its
- * own line, such as `<Rail label="Aside">An aside.</Rail>`, render as a block.
+ * own line, such as `<Aside label="Aside">An aside.</Aside>`, render as a block.
  */
 function soleBlockComponentIn(paragraph: ContentNode): ContentNode | undefined {
   const renderedChildren = (paragraph.children ?? []).filter((child) => child.type !== "text" || child.value?.trim());
@@ -343,7 +343,7 @@ function assertComponentFallbacks(componentsReplacedByChildren: ReadonlySet<stri
 
     if (componentNames.size > 0) {
       throw new Error(
-        `${quotedEntryPathOf(file)} renders ${[...componentNames].map((name) => `\`${name}\``).join(", ")} without fallback Markdown. Expected a component in \`COMPONENT_MARKDOWN\` or \`COMPONENTS_REPLACED_BY_CHILDREN\` in \`build/markdown/component-markdown.ts\`.`,
+        `${quotedEntryPathOf(file)} renders ${[...componentNames].map((name) => `\`${name}\``).join(", ")} without fallback Markdown. Expected a component in \`CONTENT_COMPONENTS\` in \`src/features/content/content-components.ts\`.`,
       );
     }
   };

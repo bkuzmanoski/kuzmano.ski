@@ -1,4 +1,4 @@
-import { scrollIntoViewSilently } from "../audio/scroll.ts";
+import { scrollIntoViewSilently } from "#/lib/audio/scroll.ts";
 
 function decodedFragmentOf(fragment: string) {
   try {

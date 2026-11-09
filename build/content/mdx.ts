@@ -9,7 +9,8 @@ import { rehypeContentSpans } from "./markup/content-spans.ts";
 import { rehypeElementIds } from "./markup/element-ids.ts";
 import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./markup/entry-syntax.ts";
 import { remarkFootnoteAsides } from "./markup/footnote-asides.ts";
-import { rehypeImageGalleryChildren } from "./markup/image-gallery-children.ts";
+import { rehypeImageChildren } from "./markup/image-children.ts";
+import { rehypeInlineContent } from "./markup/inline-content.ts";
 import { NO_MEDIA_FOR_ENTRY, rehypeMedia } from "./markup/media-rewrite.ts";
 import { rehypeNumberedElements } from "./markup/numbered-elements.ts";
 import { rehypeProvidedElements } from "./markup/provided-elements.ts";
@@ -61,7 +62,8 @@ export function mdxCompileOptionsFor({
     [rehypeMedia, mediaForEntry], // First, so the elements the other plugins see already name the files the site serves.
     [rehypeProvidedElements, ["video"]], // Renders videos with the site's playback controls (see `/src/features/video/video.tsx`).
     rehypeCalloutVariants,
-    rehypeImageGalleryChildren,
+    rehypeInlineContent,
+    rehypeImageChildren,
     rehypeContentSpans,
     rehypeNumberedElements,
     rehypeSlug,

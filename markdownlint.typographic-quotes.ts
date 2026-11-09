@@ -1,8 +1,6 @@
-import remarkMdx from "remark-mdx";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
+import { contentComponentOf } from "#/features/content/content-components.ts";
 
-import { remarkGfmSubset } from "./build/content/markup/gfm.ts";
+import { entryBodyParser } from "./build/content/markup/entry-syntax.ts";
 import { elementNameOf, isJsxElement } from "./build/content/markup/tree.ts";
 
 import type { ContentNode } from "./build/content/markup/tree.ts";
@@ -16,11 +14,6 @@ interface ProseCharacter {
    * reference).
    */
   offset: number | null;
-}
-
-interface TypographicQuotesConfig {
-  /** The names of component props that hold prose, which the rule checks in addition to `PROSE_ATTRIBUTE_NAMES`. */
-  prose_attributes?: Array<string>;
 }
 
 interface OpenQuotationCounts {
@@ -42,7 +35,10 @@ const DIGIT_PATTERN = /\d/;
 const WHITESPACE_PATTERN = /\s/;
 const PLACEHOLDER_CHARACTER = "x";
 const PHRASING_CONTAINER_TYPES = new Set(["paragraph", "heading", "tableCell"]);
-const PROSE_ATTRIBUTE_NAMES = ["alt", "title", "label", "aria-label"];
+
+/** The attributes that contain prose on any element. A component lists its own in `CONTENT_COMPONENTS`. */
+const PROSE_ATTRIBUTE_NAMES = new Set(["alt", "title", "label", "aria-label"]);
+
 const LITERAL_ELEMENT_NAMES = new Set(["code", "kbd", "pre", "samp"]);
 
 export const AMBIGUOUS_QUOTE_DETAIL =
@@ -239,18 +235,18 @@ function titleRangeIn(source: string, node: ContentNode): { start: number; end: 
   return null;
 }
 
-function proseRunsIn(
-  source: string,
-  tree: ContentNode,
-  proseAttributeNames: ReadonlySet<string>,
-): Array<Array<ProseCharacter>> {
+const isProseAttribute = (elementName: string | null, attributeName: string) =>
+  PROSE_ATTRIBUTE_NAMES.has(attributeName) ||
+  (contentComponentOf(elementName)?.proseAttributes?.includes(attributeName) ?? false);
+
+function proseRunsIn(source: string, tree: ContentNode): Array<Array<ProseCharacter>> {
   const proseRuns: Array<Array<ProseCharacter>> = [];
 
   const addProseAttributeValues = (node: ContentNode) => {
     for (const { type, name, value, position } of node.attributes ?? []) {
       if (
         type !== "mdxJsxAttribute" ||
-        !proseAttributeNames.has(name ?? "") ||
+        !isProseAttribute(elementNameOf(node), name ?? "") ||
         typeof value !== "string" ||
         position?.start.offset === undefined ||
         position.end.offset === undefined
@@ -388,23 +384,19 @@ const typographicQuotesRule: Rule = {
   tags: ["typography"],
   parser: "none",
   function: (params, onError) => {
-    const config = params.config as TypographicQuotesConfig; // `config` is the rule's own entry in `.markdownlint-cli2.jsonc`, typed as `any`.
-    const proseAttributeNames = new Set([...PROSE_ATTRIBUTE_NAMES, ...(config.prose_attributes ?? [])]);
     const source = params.lines.join("\n");
 
     let tree: ContentNode;
 
     try {
-      // Matches `entryParser` parsing except for `remarkFrontmatter`: markdownlint excludes frontmatter from
-      // `params.lines`, so an initial thematic break in the remaining content could be parsed as frontmatter.
-      tree = unified().use(remarkParse).use(remarkMdx).use(remarkGfmSubset).parse(source);
+      tree = entryBodyParser.parse(source);
     } catch {
       return; // The build reports MDX that does not parse.
     }
 
     const replacements = new Map<number, string | null>();
 
-    for (const proseRun of proseRunsIn(source, tree, proseAttributeNames)) {
+    for (const proseRun of proseRunsIn(source, tree)) {
       for (const [offset, replacement] of typographicQuotesIn(proseRun)) {
         replacements.set(offset, replacement);
       }

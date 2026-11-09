@@ -2,7 +2,6 @@ import { act, fireEvent, screen, within } from "@testing-library/react";
 import { Suspense, useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { RAIL_SUBJECT_COMPONENT_NAMES } from "#/lib/content/rail-subjects.ts";
 import { STATE_DISPLAY_DURATION_MS, resetTooltipState } from "#/lib/tooltip.ts";
 import type { Collection, MDXModule } from "#/site/catalog.ts";
 import { canonicalUrl } from "#/site/metadata.ts";
@@ -25,6 +24,7 @@ import calloutStyles from "./callout.module.css";
 import { CodeBlock } from "./code-block.tsx";
 import styles from "./content-body.module.css";
 import { ContentBody } from "./content-body.tsx";
+import { contentComponentNamesWhere } from "./content-components.ts";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 
 /** The body the pages index loads for a page. */
@@ -599,7 +599,10 @@ test("a rail aside is grouped in an element with the `data-rail-asides` attribut
 });
 
 test.each([
-  ...RAIL_SUBJECT_COMPONENT_NAMES.map((name): [string, string] => [`\`${name}\``, name]),
+  ...contentComponentNamesWhere(({ railRole }) => railRole === "subject").map((name): [string, string] => [
+    `\`${name}\``,
+    name,
+  ]),
   ["`<pre>`", "pre"],
   ["`<video>`", "video"],
 ])(

@@ -6,10 +6,10 @@ import { describe, expect, test } from "vitest";
 
 import typographicQuotesRule, { AMBIGUOUS_QUOTE_DETAIL } from "./markdownlint.typographic-quotes.ts";
 
-async function typographicQuoteErrorsIn(source: string, config: object | true = true) {
+async function typographicQuoteErrorsIn(source: string) {
   const results = await lint({
     strings: { entry: source },
-    config: { default: false, "typographic-quotes": config },
+    config: { default: false, "typographic-quotes": true },
     customRules: [typographicQuotesRule],
   });
   return results.entry ?? [];
@@ -119,17 +119,17 @@ A footnote.[^1]
 
   test("fixes quotes in the text inside a JSX element, its prose attribute values, and an image's alt text", async () => {
     expect(
-      await fixed(`<Rail label="It's">
+      await fixed(`<Aside label="It's">
   It's inside an element.
-</Rail>
+</Aside>
 
 <img alt='A "quotation"' src="./image.png" />
 
 ![It's an image](./image.png)
 `),
-    ).toBe(`<Rail label="It’s">
+    ).toBe(`<Aside label="It’s">
   It’s inside an element.
-</Rail>
+</Aside>
 
 <img alt='A “quotation”' src="./image.png" />
 
@@ -144,11 +144,14 @@ A footnote.[^1]
     ).toEqual([]);
   });
 
-  test("fixes quotes in the values of the props specified in `prose_attributes`", async () => {
-    const source = `<Component speech="It's" list="It's" />
+  test("fixes quotes in the values of the props that `CONTENT_COMPONENTS` lists as prose for a component, and only on that component", async () => {
+    const source = `<AboutHeader speech="It's" list="It's" />
+
+<Component speech="It's" />
 `;
-    expect(applyFixes(source, await typographicQuoteErrorsIn(source, { prose_attributes: ["speech"] })))
-      .toBe(`<Component speech="It’s" list="It's" />
+    expect(applyFixes(source, await typographicQuoteErrorsIn(source))).toBe(`<AboutHeader speech="It’s" list="It's" />
+
+<Component speech="It's" />
 `);
   });
 

@@ -1,9 +1,9 @@
 import { cx } from "#/lib/class-names.ts";
-import type { CalloutVariant } from "#/lib/content/callout-variants.ts";
 
 import styles from "./callout.module.css";
 import { LabeledAside } from "./labeled-aside.tsx";
 
+import type { CalloutVariant } from "./callout-variants.ts";
 import type { ComponentProps } from "react";
 
 const CALLOUT_VARIANT_CLASS_NAMES: Record<CalloutVariant, string | undefined> = {

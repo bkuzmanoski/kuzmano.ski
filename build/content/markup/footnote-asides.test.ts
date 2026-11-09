@@ -14,7 +14,7 @@ import type { ComponentProps } from "react";
 
 const ENTRY_PATH = fromContent("collection", "entry.mdx");
 const COMPONENTS: MDXComponents = {
-  Rail: (props: ComponentProps<"aside">) => createElement("aside", props),
+  Aside: (props: ComponentProps<"aside">) => createElement("aside", props),
   Footnote: ({ number, ...props }: ComponentProps<"aside"> & { number: string }) =>
     createElement("aside", { ...props, "data-number": number }),
 };
@@ -85,12 +85,12 @@ A second paragraph.[^note]
 <p>A second paragraph.${referenceMarkup("note", 1, 2)}</p>`);
   });
 
-  test("places a footnote after any `Rail` elements that follow the block containing its first reference", async () => {
+  test("places a footnote after any `Aside` elements that follow the block containing its first reference", async () => {
     expect(
       await renderedMarkupOf(`
 A sentence.[^note]
 
-<Rail>An aside.</Rail>
+<Aside>An aside.</Aside>
 
 A second paragraph.
 
@@ -102,14 +102,14 @@ A second paragraph.
 <p>A second paragraph.</p>`);
   });
 
-  test("places a footnote after a `Rail` that follows an MDX comment after the block containing its first reference", async () => {
+  test("places a footnote after an `Aside` that follows an MDX comment after the block containing its first reference", async () => {
     expect(
       await renderedMarkupOf(`
 A sentence.[^note]
 
 {/* A comment. */}
 
-<Rail>An aside.</Rail>
+<Aside>An aside.</Aside>
 
 A second paragraph.
 
@@ -144,12 +144,12 @@ A sentence.[^first] Another.[^second]
     ).toMatch(/<\/ul>\n<aside id="fn-note" data-number="1">/);
   });
 
-  test("places a footnote referenced inside a `Rail` after that `Rail`", async () => {
+  test("places a footnote referenced inside an `Aside` after that `Aside`", async () => {
     expect(
       await renderedMarkupOf(`
 A paragraph.
 
-<Rail>An aside.[^note]</Rail>
+<Aside>An aside.[^note]</Aside>
 
 A second paragraph.
 
@@ -260,12 +260,12 @@ A sentence.[^outer]
     ["a list item", "- [^note]: A note.", "a list item"],
     [
       "a JSX element",
-      `<Rail>
+      `<Aside>
 
 [^note]: A note.
 
-</Rail>`,
-      "`<Rail>`",
+</Aside>`,
+      "`<Aside>`",
     ],
   ])(
     "throws for a definition inside %s, naming the entry, the label, and the container",
@@ -357,6 +357,6 @@ A sentence.
 
 <Footnote id="fn-note" number="1">A note.</Footnote>
 `),
-    ).rejects.toThrow('"content/collection/entry.mdx" renders a `Footnote`, which the build emits for each footnote.');
+    ).rejects.toThrow('"content/collection/entry.mdx" renders `Footnote`, which the build emits for each footnote.');
   });
 });

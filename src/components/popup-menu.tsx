@@ -6,7 +6,7 @@ import { cx } from "#/lib/class-names.ts";
 import { clientPositionOf } from "#/lib/geometry.ts";
 import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { useMenuButtonPress } from "#/lib/menu/use-menu-button-press.ts";
-import { useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
+import { menuItemIndexProps, useMenuInteraction } from "#/lib/menu/use-menu-interaction.ts";
 import type { OpeningPress } from "#/lib/menu/use-menu-interaction.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
@@ -114,7 +114,7 @@ function PopupMenuOptions<TValue extends string>({
           role="option"
           aria-selected={index === chosenOptionIndex}
           className={cx(styles.option, isHighlighted(index) && styles.highlighted)}
-          data-index={index}
+          {...menuItemIndexProps(index)}
         >
           <PopupMenuOptionLabel option={option} />
         </div>

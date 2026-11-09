@@ -1,16 +1,19 @@
 import { visit } from "unist-util-visit";
 
-import { CALLOUT_VARIANTS } from "#/lib/content/callout-variants.ts";
+import { CALLOUT_VARIANTS } from "#/features/content/callout-variants.ts";
+import type { ContentComponentName } from "#/features/content/content-components.ts";
 
 import { assertAttributeOneOf, isJsxElementNamed } from "./tree.ts";
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
+const CALLOUT_COMPONENT_NAME = "Callout" satisfies ContentComponentName;
+
 /** Throws if an entry renders a `<Callout>` whose `variant` attribute is not one of `CALLOUT_VARIANTS`. */
 export function rehypeCalloutVariants() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node: ContentNode) => {
-      if (!isJsxElementNamed(node, "Callout")) {
+      if (!isJsxElementNamed(node, CALLOUT_COMPONENT_NAME)) {
         return;
       }
 
@@ -18,8 +21,8 @@ export function rehypeCalloutVariants() {
         file,
         describeElement: (authoredValue) =>
           authoredValue.kind === "string"
-            ? `a \`Callout\` with the variant "${authoredValue.value}"`
-            : `a \`Callout\` with a \`variant\` attribute ${authoredValue.kind}`,
+            ? `\`Callout\` with the variant "${authoredValue.value}"`
+            : `\`Callout\` with the \`variant\` attribute ${authoredValue.kind}`,
       });
     });
   };

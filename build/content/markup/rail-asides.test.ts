@@ -16,7 +16,7 @@ import type { PluggableList } from "unified";
 
 const ENTRY_PATH = fromContent("collection", "entry.mdx");
 const COMPONENTS: MDXComponents = {
-  Rail: (props: ComponentProps<"aside">) => createElement("aside", props),
+  Aside: (props: ComponentProps<"aside">) => createElement("aside", props),
   Footnote: ({ number, ...props }: ComponentProps<"aside"> & { number: string }) =>
     createElement("aside", { "data-number": number, ...props }),
   Callout: (props: ComponentProps<"aside">) => createElement("aside", { className: "callout", ...props }),
@@ -34,14 +34,14 @@ const styleFirstParagraph = () => (tree: ContentParent) => {
 };
 
 describe("rehypeRailAsides", () => {
-  test("wraps a `Rail` and the rail asides directly after it in a `<div>` with the `data-rail-asides` attribute, after the element they follow", async () => {
+  test("wraps an `Aside` and the rail asides directly after it in a `<div>` with the `data-rail-asides` attribute, after the element they follow", async () => {
     expect(
       await renderedMarkupOf(`
 A paragraph.
 
-<Rail>First.</Rail>
+<Aside>First.</Aside>
 
-<Rail>Second.</Rail>
+<Aside>Second.</Aside>
 
 A second paragraph.
 `),
@@ -50,11 +50,11 @@ A second paragraph.
 <p>A second paragraph.</p>`);
   });
 
-  test("groups a `Footnote` with the `Rail` elements before it", async () => {
+  test("groups a `Footnote` with the `Aside` elements before it", async () => {
     const markup = await renderedMarkupOf(`
 A paragraph.
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 
 <Footnote id="fn-1" number="1">A footnote.</Footnote>
 `);
@@ -67,11 +67,11 @@ A paragraph.
     const markup = await renderedMarkupOf(`
 A paragraph.
 
-<Rail>First.</Rail>
+<Aside>First.</Aside>
 
 A second paragraph.
 
-<Rail>Second.</Rail>
+<Aside>Second.</Aside>
 `);
 
     expect(markup).toContain('<p style="--content-body-rail-subject:--content-body-rail-subject-1">A paragraph.</p>');
@@ -87,7 +87,7 @@ A second paragraph.
     const markup = await renderedMarkupOf(`
 <figure>A figure.</figure>
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `);
     expect(markup).toContain(
       '<figure style="--content-body-rail-subject:--content-body-rail-subject-1">A figure.</figure>',
@@ -98,64 +98,64 @@ A second paragraph.
     const markup = await renderedMarkupOf(`
 <Callout>A callout.</Callout>
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `);
     expect(markup).toContain(
       '<aside class="callout" style="--content-body-rail-subject:--content-body-rail-subject-1">A callout.</aside>',
     );
   });
 
-  test("skips an MDX comment between a rail subject and a `Rail`", async () => {
+  test("skips an MDX comment between a rail subject and an `Aside`", async () => {
     const markup = await renderedMarkupOf(`
 A paragraph.
 
 {/* A comment. */}
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `);
     expect(markup).toContain('<p style="--content-body-rail-subject:--content-body-rail-subject-1">A paragraph.</p>');
   });
 
-  test("throws for a `Rail` inside a sentence, naming the entry", async () => {
-    await expect(renderedMarkupOf(`A sentence <Rail>with a note</Rail> inside it.`)).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` inside a sentence.',
+  test("throws for an `Aside` inside a sentence, naming the entry", async () => {
+    await expect(renderedMarkupOf(`A sentence <Aside>with a note</Aside> inside it.`)).rejects.toThrow(
+      '"content/collection/entry.mdx" renders `Aside` inside a sentence.',
     );
   });
 
-  test("throws for a `Rail` inside another element, naming the element", async () => {
+  test("throws for an `Aside` inside another element, naming the element", async () => {
     await expect(
       renderedMarkupOf(`
 <figure>
   A figure.
 
-  <Rail>A note.</Rail>
+  <Aside>A note.</Aside>
 </figure>
 `),
-    ).rejects.toThrow("renders a `Rail` inside `<figure>`.");
+    ).rejects.toThrow("renders `Aside` inside `<figure>`.");
   });
   test.each([
-    ["at the start of the entry", "<Rail>A note.</Rail>"],
+    ["at the start of the entry", "<Aside>A note.</Aside>"],
     [
       "after an import",
       `import { value } from "./entry.data.ts";
 
-<Rail>A note.</Rail>`,
+<Aside>A note.</Aside>`,
     ],
-  ])("throws for a `Rail` %s, which does not follow an element", async (_label, source) => {
+  ])("throws for an `Aside` %s, which does not follow an element", async (_label, source) => {
     await expect(renderedMarkupOf(source)).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` that does not follow an element.',
+      '"content/collection/entry.mdx" renders `Aside` without an element before it.',
     );
   });
 
-  test("throws for a `Rail` after a component not in `RAIL_SUBJECT_COMPONENT_NAMES`, naming the component", async () => {
+  test("throws for an `Aside` after a component not in `RAIL_SUBJECT_COMPONENT_NAMES`, naming the component", async () => {
     await expect(
       renderedMarkupOf(`
 <ContributionGraph />
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `),
     ).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` after `<ContributionGraph>`, which it cannot be placed beside. Expected an element or one of: Callout, ImageGallery, ImageRow, Waitlist.',
+      '"content/collection/entry.mdx" renders `Aside` after `<ContributionGraph>`, which it cannot be placed beside. Expected an element or one of: Callout, ImageGallery, ImageRow, Waitlist.',
     );
   });
 
@@ -171,42 +171,42 @@ A paragraph.
     );
   });
 
-  test("throws for a `Rail` after a JSX element with a `style` attribute, naming the element", async () => {
+  test("throws for an `Aside` after a JSX element with a `style` attribute, naming the element", async () => {
     await expect(
       renderedMarkupOf(`
 <figure style={{ color: "red" }}>A figure.</figure>
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `),
     ).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` after `<figure>` with a `style` attribute, which the build sets to place the aside.',
+      '"content/collection/entry.mdx" renders `Aside` after `<figure>` with the `style` attribute, which the build sets to place the aside.',
     );
   });
 
-  test("throws for a `Rail` after a hast element with a `style` attribute, naming the element", async () => {
+  test("throws for an `Aside` after a hast element with a `style` attribute, naming the element", async () => {
     await expect(
       renderedMarkupOf(
         `
 A paragraph.
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `,
         [styleFirstParagraph, rehypeRailAsides],
       ),
     ).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` after `<p>` with a `style` attribute, which the build sets to place the aside.',
+      '"content/collection/entry.mdx" renders `Aside` after `<p>` with the `style` attribute, which the build sets to place the aside.',
     );
   });
 
-  test("throws for a `Rail` after a JSX element with a spread attribute, naming the element", async () => {
+  test("throws for an `Aside` after a JSX element with a spread attribute, naming the element", async () => {
     await expect(
       renderedMarkupOf(`
 <figure {...{ title: "A title" }}>A figure.</figure>
 
-<Rail>A note.</Rail>
+<Aside>A note.</Aside>
 `),
     ).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Rail` after `<figure>` with a spread attribute, which can set the `style` attribute the build sets to place the aside.',
+      '"content/collection/entry.mdx" renders `Aside` after `<figure>` with a spread attribute, which can set the `style` attribute the build sets to place the aside.',
     );
   });
 });

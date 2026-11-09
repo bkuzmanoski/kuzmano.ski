@@ -21,7 +21,7 @@ describe("rehypeCalloutVariants", () => {
 
   test("throws for a `Callout` with an unknown variant, naming the entry and the variant", async () => {
     await expect(compile(`<Callout variant="warn">A note.</Callout>`)).rejects.toThrow(
-      '"content/collection/entry.mdx" renders a `Callout` with the variant "warn". Expected one of: note, warning.',
+      '"content/collection/entry.mdx" renders `Callout` with the variant "warn". Expected one of: note, warning.',
     );
   });
 
@@ -33,13 +33,13 @@ describe("rehypeCalloutVariants", () => {
 
   test("throws for a `Callout` with a `variant` attribute authored as an expression", async () => {
     await expect(compile(`<Callout variant={"note"}>A note.</Callout>`)).rejects.toThrow(
-      "a `variant` attribute authored as an expression",
+      "the `variant` attribute authored as an expression",
     );
   });
 
   test("throws for a `Callout` with a `variant` attribute without a value", async () => {
     await expect(compile(`<Callout variant>A note.</Callout>`)).rejects.toThrow(
-      "a `variant` attribute without a value",
+      "the `variant` attribute without a value",
     );
   });
 

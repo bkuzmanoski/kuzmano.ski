@@ -9,11 +9,11 @@ import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.
 import { isBrowserShortcut } from "#/lib/keys.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { usePressSound } from "#/lib/press/use-press-sound.ts";
-import { FLOCK } from "#/lib/screensaver/flock.ts";
 import { FADE_IN_DURATION_MS, sleepOnIdle, useSleepState, wake } from "#/lib/screensaver/lifecycle.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
+import { FLOCK } from "./flock.ts";
 import styles from "./screensaver.module.css";
 
 import type { PointerEvent } from "react";

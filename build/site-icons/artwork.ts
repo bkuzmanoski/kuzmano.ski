@@ -60,7 +60,7 @@ export function artworkIn(markup: string): Artwork {
   const monogramPath = monograms[0]?.properties.d;
 
   if (typeof monogramPath !== "string" || monogramPath === "") {
-    throw new Error(`${ICON_ARTWORK_FILE_PATH} has a \`${MONOGRAM_SELECTOR}\` with no path data.`);
+    throw new Error(`${ICON_ARTWORK_FILE_PATH} has \`${MONOGRAM_SELECTOR}\` with no path data.`);
   }
 
   return { ...boundsIn(viewBox), path: monogramPath };

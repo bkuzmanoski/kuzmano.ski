@@ -32,7 +32,8 @@
     "commands": [
       {
         "match": "\\.mdx$",
-        "cmd": "cd \"${workspaceFolder}\" && npx markdownlint-cli2 --fix --no-globs \"${relativeFile}\""
+        "cmd": "cd \"${workspaceFolder}\" && npx markdownlint-cli2 --fix --no-globs \"${relativeFile}\"",
+        "autoShowOutputPanel": "error"
       }
     ]
   }

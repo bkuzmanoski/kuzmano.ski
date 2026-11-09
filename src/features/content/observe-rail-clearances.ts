@@ -1,4 +1,3 @@
-import { railClearanceOf } from "#/lib/content/rail-clearance.ts";
 import { createFrameScheduler } from "#/lib/frame-scheduler.ts";
 
 const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
@@ -47,6 +46,14 @@ function setRailClearance(element: HTMLElement, property: string, clearance: num
     element.style.setProperty(property, clearanceValue);
   }
 }
+
+/**
+ * The whole pixels to add to the space before an element so that the lowest of the rail items before it ends above
+ * `rowTop`, the element's top less the space before it. Returns 0 when every rail item ends above it, or when
+ * `railItemBottoms` is empty.
+ */
+export const railClearanceOf = (railItemBottoms: Array<number>, rowTop: number) =>
+  Math.max(0, Math.ceil(Math.max(...railItemBottoms) - rowTop));
 
 function updateRailClearances(body: HTMLElement) {
   const railItemBottoms: Array<number> = [];

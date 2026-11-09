@@ -27,7 +27,7 @@ export function hookOf<THook extends (...args: never) => unknown>(plugin: Plugin
   const handler: unknown = typeof hook === "object" && hook !== null && "handler" in hook ? hook.handler : hook;
 
   if (typeof handler !== "function") {
-    throw new Error(`\`${plugin.name}\` does not have a \`${hookName}\` hook.`);
+    throw new Error(`\`${plugin.name}\` does not have the \`${hookName}\` hook.`);
   }
 
   return handler as THook;

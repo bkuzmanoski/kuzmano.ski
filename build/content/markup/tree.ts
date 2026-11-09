@@ -79,8 +79,13 @@ export const isJsxElement = (node: ContentNode) => JSX_ELEMENT_NODE_TYPES.has(no
 /** Returns an element name from MDX JSX or hast. */
 export const elementNameOf = (node: ContentNode | undefined) => node?.tagName ?? node?.name ?? null;
 
+/** Whether a node is a JSX fragment (`<>…</>`), which renders its children in its place. */
+export const isJsxFragment = (node: ContentNode) => isJsxElement(node) && elementNameOf(node) === null;
+
 export const isJsxElementNamed = (node: ContentNode, name: string) =>
   isJsxElement(node) && elementNameOf(node) === name;
+
+export const quotedNameOf = (name: string) => (/^[A-Z]/.test(name) ? `\`${name}\`` : `\`<${name}>\``);
 
 /**
  * Returns an attribute from an MDX JSX or hast element, or `undefined` when it is absent. JSX attribute values are

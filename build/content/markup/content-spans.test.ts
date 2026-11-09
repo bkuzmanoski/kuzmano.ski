@@ -44,13 +44,13 @@ describe("rehypeContentSpans", () => {
 
   test("throws for an element with a `data-content-span` attribute authored as an expression", async () => {
     await expect(compile(`<figure data-content-span={"wide"}>A figure.</figure>`)).rejects.toThrow(
-      "`<figure>` with a `data-content-span` attribute authored as an expression",
+      "`<figure>` with the `data-content-span` attribute authored as an expression",
     );
   });
 
   test("throws for an element with a `data-content-span` attribute without a value", async () => {
     await expect(compile(`<figure data-content-span>A figure.</figure>`)).rejects.toThrow(
-      "`<figure>` with a `data-content-span` attribute without a value",
+      "`<figure>` with the `data-content-span` attribute without a value",
     );
   });
 

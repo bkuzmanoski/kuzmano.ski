@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { observeRailClearances } from "./observe-rail-clearances.ts";
+import { observeRailClearances, railClearanceOf } from "./observe-rail-clearances.ts";
 
 const SPACE_BEFORE_PX = 20;
 const BODY_PADDING_BLOCK_END_PX = 44;
@@ -64,13 +64,33 @@ function createBody(markup: string) {
   return body;
 }
 
-const railClearanceOf = (element: HTMLElement) => element.style.getPropertyValue("--content-body-rail-clearance");
-const endRailClearanceOf = (body: HTMLElement) => body.style.getPropertyValue("--content-body-end-rail-clearance");
+const railClearancePropertyOf = (element: HTMLElement) =>
+  element.style.getPropertyValue("--content-body-rail-clearance");
+const endRailClearancePropertyOf = (body: HTMLElement) =>
+  body.style.getPropertyValue("--content-body-end-rail-clearance");
 
 function resizeBody() {
   resizeCallbacks.forEach((callback) => callback());
   frameCallbacks.splice(0).forEach((callback) => callback());
 }
+
+describe("railClearanceOf", () => {
+  test("returns how far the lowest rail item extends below the top of the element's row", () => {
+    expect(railClearanceOf([120, 180, 150], 100)).toBe(80);
+  });
+
+  test("rounds a fractional distance up to a whole pixel", () => {
+    expect(railClearanceOf([100.2], 100)).toBe(1);
+  });
+
+  test("returns `0` when every rail item ends above the top of the element's row", () => {
+    expect(railClearanceOf([60, 90], 100)).toBe(0);
+  });
+
+  test("returns `0` when `railItemBottoms` is empty", () => {
+    expect(railClearanceOf([], 100)).toBe(0);
+  });
+});
 
 describe("observeRailClearances", () => {
   test("sets `--content-body-rail-clearance` on a section heading to how far the rail asides before it extend past the top of its row", () => {
@@ -87,7 +107,7 @@ describe("observeRailClearances", () => {
     placeElement(heading, 120, 160);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe(`${250 - (120 - SPACE_BEFORE_PX)}px`);
+    expect(railClearancePropertyOf(heading)).toBe(`${250 - (120 - SPACE_BEFORE_PX)}px`);
   });
 
   test("sets `--content-body-rail-clearance` on an element whose `data-content-span` attribute is `wide`, and not on an element in the text column", () => {
@@ -108,9 +128,9 @@ describe("observeRailClearances", () => {
     placeElement(wideFigure!, 180, 300);
     observeRailClearances(body);
 
-    expect(railClearanceOf(secondParagraph!)).toBe("");
-    expect(railClearanceOf(textFigure!)).toBe("");
-    expect(railClearanceOf(wideFigure!)).toBe(`${250 - (180 - SPACE_BEFORE_PX)}px`);
+    expect(railClearancePropertyOf(secondParagraph!)).toBe("");
+    expect(railClearancePropertyOf(textFigure!)).toBe("");
+    expect(railClearancePropertyOf(wideFigure!)).toBe(`${250 - (180 - SPACE_BEFORE_PX)}px`);
   });
 
   test("does not set `--content-body-rail-clearance` on an element when every rail item ends above its row", () => {
@@ -127,7 +147,7 @@ describe("observeRailClearances", () => {
     placeElement(heading, 120, 160);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe("");
+    expect(railClearancePropertyOf(heading)).toBe("");
   });
 
   test("sets `--content-body-rail-clearance` on a section heading to how far a masthead placed in the rail extends past the top of its row", () => {
@@ -152,7 +172,7 @@ describe("observeRailClearances", () => {
     positionMastheadInRail(masthead);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe(`${200 - (120 - SPACE_BEFORE_PX)}px`);
+    expect(railClearancePropertyOf(heading)).toBe(`${200 - (120 - SPACE_BEFORE_PX)}px`);
   });
 
   test("leaves `--content-body-rail-clearance` unset on a heading directly after the title, which the masthead is placed beside", () => {
@@ -177,8 +197,8 @@ describe("observeRailClearances", () => {
     positionMastheadInRail(masthead);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe("");
-    expect(railClearanceOf(nextHeading)).toBe(`${200 - (150 - SPACE_BEFORE_PX)}px`);
+    expect(railClearancePropertyOf(heading)).toBe("");
+    expect(railClearancePropertyOf(nextHeading)).toBe(`${200 - (150 - SPACE_BEFORE_PX)}px`);
   });
 
   test("ignores a masthead in the normal flow rather than in the rail", () => {
@@ -195,7 +215,7 @@ describe("observeRailClearances", () => {
     placeElement(heading, 120, 160);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe("");
+    expect(railClearancePropertyOf(heading)).toBe("");
   });
 
   test("sets `--content-body-end-rail-clearance` on the body to how far the rail items extend past its content box", () => {
@@ -211,7 +231,7 @@ describe("observeRailClearances", () => {
     placeElement(group.firstElementChild!, 0, 250);
     observeRailClearances(body);
 
-    expect(endRailClearanceOf(body)).toBe(`${250 - contentBottom}px`);
+    expect(endRailClearancePropertyOf(body)).toBe(`${250 - contentBottom}px`);
   });
 
   test("measures before it returns, and again in the frame after the body resizes", () => {
@@ -228,12 +248,12 @@ describe("observeRailClearances", () => {
     placeElement(heading, 120, 160);
     observeRailClearances(body);
 
-    expect(railClearanceOf(heading)).toBe("150px");
+    expect(railClearancePropertyOf(heading)).toBe("150px");
 
     placeElement(group.firstElementChild!, 0, 300);
     resizeBody();
 
-    expect(railClearanceOf(heading)).toBe("200px");
+    expect(railClearancePropertyOf(heading)).toBe("200px");
   });
 
   test("stops measuring after its cleanup runs", () => {
@@ -252,7 +272,7 @@ describe("observeRailClearances", () => {
     placeElement(group.firstElementChild!, 0, 300);
     resizeBody();
 
-    expect(railClearanceOf(heading)).toBe("150px");
+    expect(railClearancePropertyOf(heading)).toBe("150px");
   });
 
   test("does not measure or return a cleanup where `anchor-scope` is not supported", () => {
@@ -271,8 +291,8 @@ describe("observeRailClearances", () => {
     placeElement(heading, 120, 160);
 
     expect(observeRailClearances(body)).toBeUndefined();
-    expect(railClearanceOf(heading)).toBe("");
-    expect(endRailClearanceOf(body)).toBe("");
+    expect(railClearancePropertyOf(heading)).toBe("");
+    expect(endRailClearancePropertyOf(body)).toBe("");
     expect(resizeCallbacks).toEqual([]);
   });
 });
