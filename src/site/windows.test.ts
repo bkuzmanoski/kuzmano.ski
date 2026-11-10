@@ -117,8 +117,10 @@ describe("isDestinationOpen", () => {
     expect(isDestinationOpen("/contact", ["/contact"])).toBe(true);
   });
 
-  test("a collection destination is open when its window's route has a trailing slash", () => {
+  test("a destination is open when its window's route has a trailing slash", () => {
+    expect(isDestinationOpen("/page", ["/page/"])).toBe(true);
     expect(isDestinationOpen("/collection", ["/collection/"])).toBe(true);
+    expect(isDestinationOpen("/contact", ["/contact/"])).toBe(true);
   });
 
   test("a collection destination is closed when only one of its entries is open", () => {

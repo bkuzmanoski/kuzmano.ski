@@ -228,7 +228,7 @@ export function DesktopIcons() {
           x={x}
           y={y}
           cellSize={ICON_LAYOUT.cellSize}
-          open={iconDefinition.kind === "collection" && isDestinationOpen(iconDefinition.route, openWindowRoutes)}
+          open={iconDefinition.kind !== "download" && isDestinationOpen(iconDefinition.route, openWindowRoutes)}
           selected={activationFlash.highlightOf(id) ?? (focusedWindow === null && selectedIconId === id)}
           tabIndex={tabStop === id ? 0 : -1}
           onSelect={selectIcon}

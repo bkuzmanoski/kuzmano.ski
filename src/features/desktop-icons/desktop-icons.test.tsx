@@ -8,7 +8,7 @@ import { ICON_POSITIONS_STORAGE_KEY } from "#/lib/desktop-icons/positions.ts";
 import { LONG_PRESS_DURATION_MS } from "#/lib/menu/use-context-menu-press.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { ZoomRectContext } from "#/lib/window-manager/use-zoom-rect.ts";
-import type { WindowId } from "#/lib/window-manager/window.ts";
+import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
 import { MOUSE_PRESS_INIT, SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
@@ -16,6 +16,7 @@ import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.t
 
 import { DesktopIcons } from "./desktop-icons.tsx";
 
+let windowContent: WindowRecord<WindowContent> = {};
 let focusedWindow: WindowId | null = null;
 let notFoundRoute: string | null = null;
 let isStartupSequenceComplete = true;
@@ -25,6 +26,7 @@ const open = vi.hoisted(() => vi.fn());
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
     actions: { open, focusDesktop: vi.fn() },
+    content: () => windowContent,
     focusedWindow: () => focusedWindow,
     notFoundRoute: () => notFoundRoute,
   }),
@@ -39,6 +41,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 
 beforeEach(() => {
   vi.useFakeTimers();
+  windowContent = {};
   focusedWindow = null;
   notFoundRoute = null;
   isStartupSequenceComplete = true;
@@ -116,6 +119,19 @@ test("opening an icon's window grows a zoom rect from the icon", () => {
 
   expect(open).toHaveBeenCalledTimes(1);
   expect(showZoomRect).toHaveBeenCalledExactlyOnceWith({ windowId: "entry", from: iconRect });
+});
+
+test.each(DESTINATION_ORDER)("the %s icon renders a different glyph while a window is open at its route", (id) => {
+  const { type, title, route } = DESTINATIONS[id];
+  const glyphMarkup = () => screen.getByLabelText(title).querySelector("svg")?.outerHTML;
+  const { rerender } = render(<DesktopIcons />);
+  const closedGlyphMarkup = glyphMarkup();
+
+  windowContent = { [type]: { route, title } };
+  rerender(<DesktopIcons />);
+
+  expect(closedGlyphMarkup).toBeDefined();
+  expect(glyphMarkup()).not.toBe(closedGlyphMarkup);
 });
 
 test("pressing an arrow key when the desktop has focus focuses the first icon", () => {

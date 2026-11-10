@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 40 40">
+  <path
+    fill="black"
+    stroke="black"
+    d="M18.938 1.26 1.261 18.939a.5.5 0 0 0 0 .707l19.092 19.092a.5.5 0 0 0 .707 0l8.237-8.237h2.995c.454 0 .888.18 1.208.5s.754.5 1.207.5H36.5V33a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-8.5a.5.5 0 0 0-.5-.5h-3.203l2.94-2.94a.5.5 0 0 0 0-.707L19.646 1.26a.5.5 0 0 0-.708 0Z"
+  />
+  <path
+    fill="white"
+    d="M21 37h-1v-1h1zm-2-2h-1v-1h1zm4 0h-1v-1h1zm-6-2h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm-10-2h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm8 0h-1v-1h1zm4 0h-1v-1h1zm-26-2h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm-26-2h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM9 25H8v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM7 23H6v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM5 21H4v-1h1zm4 0H8v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM3 19H2v-1h1zm4 0H6v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM5 17H4v-1h1zm4 0H8v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM7 15H6v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM9 13H8v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm-18-2h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zm4 0h-1v-1h1zM13 9h-1V8h1zm4 0h-1V8h1zm4 0h-1V8h1zm4 0h-1V8h1zM15 7h-1V6h1zm4 0h-1V6h1zm4 0h-1V6h1zm-6-2h-1V4h1zm4 0h-1V4h1zm-2-2h-1V2h1z"
+  />
+</svg>

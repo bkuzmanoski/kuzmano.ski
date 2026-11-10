@@ -5,7 +5,7 @@ import type { WindowId } from "#/lib/window-manager/window.ts";
 import { collectionAlternateRepresentationsOf, entryAlternateRepresentationsOf } from "./alternate-representations.ts";
 import { pages } from "./catalog.ts";
 import { resolveContent } from "./resolve-content.ts";
-import { FEATURE_ROUTE_IDS, isRootPath, parseContentPath } from "./routes.ts";
+import { FEATURE_ROUTE_IDS, entryRouteOf, isRootPath, parseContentPath } from "./routes.ts";
 
 import type { AlternateRepresentations } from "./alternate-representations.ts";
 import type { Collection, ContentIndex } from "./catalog.ts";
@@ -80,12 +80,14 @@ function destinationShownBy(windowRoute: string): string | null {
 
   switch (windowTarget?.id) {
     case "entry":
-    case "contact":
-    case "controlPanel":
-      return windowRoute;
+      return entryRouteOf(windowTarget);
 
     case "collection":
       return windowTarget.collection.route;
+
+    case "contact":
+    case "controlPanel":
+      return FEATURE_ROUTE_SPECS[windowTarget.id].route;
 
     default:
       return null;

@@ -1,7 +1,11 @@
 import { memo, useRef } from "react";
 
+import ApplicationOpenSelectedDesktopIcon from "#/assets/images/desktop-icon-application-open-selected.svg?react";
+import ApplicationOpenDesktopIcon from "#/assets/images/desktop-icon-application-open.svg?react";
 import ApplicationSelectedDesktopIcon from "#/assets/images/desktop-icon-application-selected.svg?react";
 import ApplicationDesktopIcon from "#/assets/images/desktop-icon-application.svg?react";
+import DocumentOpenSelectedDesktopIcon from "#/assets/images/desktop-icon-document-open-selected.svg?react";
+import DocumentOpenDesktopIcon from "#/assets/images/desktop-icon-document-open.svg?react";
 import DocumentSelectedDesktopIcon from "#/assets/images/desktop-icon-document-selected.svg?react";
 import DocumentDesktopIcon from "#/assets/images/desktop-icon-document.svg?react";
 import FolderOpenSelectedDesktopIcon from "#/assets/images/desktop-icon-folder-open-selected.svg?react";
@@ -27,13 +31,22 @@ import type { ComponentType, KeyboardEvent } from "react";
 type GlyphIcon = ComponentType<{ className?: string }>;
 
 const GLYPHS: Record<IconKind, { closed: [GlyphIcon, GlyphIcon]; open?: [GlyphIcon, GlyphIcon] }> = {
-  entry: { closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon] },
+  entry: {
+    closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon],
+    open: [DocumentOpenDesktopIcon, DocumentOpenSelectedDesktopIcon],
+  },
   collection: {
     closed: [FolderDesktopIcon, FolderSelectedDesktopIcon],
     open: [FolderOpenDesktopIcon, FolderOpenSelectedDesktopIcon],
   },
-  contact: { closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon] },
-  controlPanel: { closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon] },
+  contact: {
+    closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon],
+    open: [ApplicationOpenDesktopIcon, ApplicationOpenSelectedDesktopIcon],
+  },
+  controlPanel: {
+    closed: [ApplicationDesktopIcon, ApplicationSelectedDesktopIcon],
+    open: [ApplicationOpenDesktopIcon, ApplicationOpenSelectedDesktopIcon],
+  },
   download: { closed: [DocumentDesktopIcon, DocumentSelectedDesktopIcon] },
 };
 
