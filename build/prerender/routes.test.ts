@@ -238,7 +238,7 @@ describe("contentProblemsIn", () => {
       `${CONTENT_DIRECTORY_PATH}/${MEDIA_SEGMENT}/`,
     ],
   ])("reports %s, naming its source", (_label, overrides, sourcePath) => {
-    expect(problems(overrides)).toContain(`Content shadowing reserved route(s): ${sourcePath}.`);
+    expect(problems(overrides)).toContain(`Content shadowing reserved route(s): ${sourcePath}`);
   });
 
   test("reports a declared collection without a corresponding directory", () => {
