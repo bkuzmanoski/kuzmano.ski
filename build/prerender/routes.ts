@@ -76,35 +76,35 @@ export function contentProblemsIn(
   return [
     ...problemFor(
       claimedRoutes.filter(({ name }) => !URL_SAFE_NAME.test(name)).map(({ sourcePath }) => sourcePath),
-      (offendingPaths) => `URL-unsafe content file or folder name(s): ${offendingPaths}.`,
+      (offendingPaths) => `URL-unsafe content file or folder name(s): ${offendingPaths}`,
     ),
     ...problemFor(
       claimedRoutes.filter(({ path }) => RESERVED_ROUTES.includes(path)).map(({ sourcePath }) => sourcePath),
-      (offendingPaths) => `Content shadowing reserved route(s): ${offendingPaths}.`,
+      (offendingPaths) => `Content shadowing reserved route(s): ${offendingPaths}`,
     ),
     ...problemFor(
       PAGE_SLUGS.filter((slug) => !pages.entries.some((entry) => entry.slug === slug)).map((slug) =>
         join(CONTENT_DIRECTORY_PATH, PAGES_DIRECTORY_NAME, entryFileName(slug)),
       ),
-      (offendingPaths) => `Page(s) declared with no corresponding content file: ${offendingPaths}.`,
+      (offendingPaths) => `Page(s) declared with no corresponding content file: ${offendingPaths}`,
     ),
     ...problemFor(
       pages.entries
         .filter(({ slug }) => collections.some((collection) => collection.name === slug))
         .map(({ entryFilePath }) => join(CONTENT_DIRECTORY_PATH, entryFilePath)),
-      (offendingPaths) => `Page(s) shadowed by a collection: ${offendingPaths}.`,
+      (offendingPaths) => `Page(s) shadowed by a collection: ${offendingPaths}`,
     ),
     ...problemFor(
       Object.keys(COLLECTIONS)
         .filter((name) => !collections.some((collection) => collection.name === name))
         .map((name) => `${join(CONTENT_DIRECTORY_PATH, name)}/`),
-      (offendingPaths) => `Collection(s) declared with no corresponding content directory: ${offendingPaths}.`,
+      (offendingPaths) => `Collection(s) declared with no corresponding content directory: ${offendingPaths}`,
     ),
     ...problemFor(
       collections
         .filter(({ name }) => !(name in COLLECTIONS))
         .map(({ name }) => `${join(CONTENT_DIRECTORY_PATH, name)}/`),
-      (offendingPaths) => `Content director(ies) with no declared collection: ${offendingPaths}.`,
+      (offendingPaths) => `Content director(ies) with no declared collection: ${offendingPaths}`,
     ),
     // An entry-named subdirectory contains that entry's media. A nested content directory has no route.
     ...problemFor(
@@ -113,13 +113,13 @@ export function contentProblemsIn(
           .filter((subdirectoryName) => !entries.some(({ slug }) => slug === subdirectoryName))
           .map((subdirectoryName) => `${join(CONTENT_DIRECTORY_PATH, name, subdirectoryName)}/`),
       ),
-      (offendingPaths) => `Content director(ies) with no matching entry: ${offendingPaths}.`,
+      (offendingPaths) => `Content director(ies) with no matching entry: ${offendingPaths}`,
     ),
     ...problemFor(
       allPublishedEntries
         .filter(({ date }) => date !== undefined && date > today)
         .map(({ entryFilePath, date }) => `${join(CONTENT_DIRECTORY_PATH, entryFilePath)} (${date})`),
-      (offendingPaths) => `Published entr(ies) dated after today: ${offendingPaths}.`,
+      (offendingPaths) => `Published entr(ies) dated after today: ${offendingPaths}`,
     ),
   ];
 }
