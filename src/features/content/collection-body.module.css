@@ -14,7 +14,7 @@
     --collection-body-centering-inset: max(
       0px,
       round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px)
-    ); /* Rounded down to a whole pixel so text stays pixel aligned on 1x displays. */
+    ); /* Rounded down to a whole pixel so icons stays pixel aligned on 1x displays. */
   }
 }
 
@@ -27,7 +27,7 @@
 
   flex: none;
 
-  height: 32px; /* 28px, +1px per rule, +2px between them. */
+  height: 32px; /* 28px, +1px per rule, +2px between the rules. */
   padding-block: 1px 3px; /* The extra space above centers Helvetica's capitals, which sit above the center of the line box. */
   padding-inline: var(--window-safe-area-inline-start, 0)
     calc(var(--window-safe-area-inline-end, 0px) + var(--collection-body-scrollbar-width));
@@ -141,7 +141,7 @@
   gap: var(--collection-body-icon-gap);
   align-items: center;
 
-  min-width: 224px; /* The category column narrows before the title does, until it reaches its own minimum width. */
+  min-width: 204px; /* The category column narrows before the title does, until it reaches its own minimum width. */
 
   .columnHeadingsRow & {
     padding-inline-start: calc(var(--collection-body-document-icon-width) + var(--collection-body-icon-gap));
@@ -229,7 +229,7 @@
 
 .dateColumn {
   flex: none;
-  width: 112px;
+  width: 96px;
 }
 
 .uncategorized {
@@ -253,19 +253,18 @@
   @mixin content-link;
 }
 
-/* Each breakpoint accommodates its visible columns plus a 16px `--layout-gutter` between columns and on both sides of
- * the row. (The centering inset is 0 below 800px.)
- *
- * - 400px: title (224px) + category (112px) = 384px.
- * - 560px: title, category, and date (112px) = 512px.
- */
-@container collection-body (width < 560px) {
+/* Each breakpoint below accommodates the min-width of its visible columns plus `--layout-gutter` (16px) between columns
+ * and on both sides of the row. (The centering inset is 0 below 800px.) */
+
+/* gutter (16px) + title (204px) + gutter (16px) + category (112px) + gutter (16px) + date (96px) + gutter (16px) */
+@container collection-body (width < 476px) {
   .dateColumn {
     display: none;
   }
 }
 
-@container collection-body (width < 400px) {
+/* gutter (16px) + title (204px) + gutter (16px) + category (112px) + gutter (16px) */
+@container collection-body (width < 364px) {
   .titleColumn {
     min-width: 0; /* The title is the only column. */
   }
