@@ -70,7 +70,6 @@
 
   font: var(--content-body-font-caption);
   color: var(--color-foreground-secondary);
-  text-wrap: balance;
 
   & > * {
     grid-column: 2;
@@ -738,11 +737,6 @@
 
 .content :where(th, td)[align="right"] {
   text-align: right;
-}
-
-/* Follows the element defaults to override their wrapping at equal specificity. */
-.railAside :where(h1, h2, h3, p, li, figcaption, dt, dd) {
-  text-wrap: balance;
 }
 
 /* Follows the element defaults to override their band metrics at equal specificity. */
