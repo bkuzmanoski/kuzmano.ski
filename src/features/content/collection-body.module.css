@@ -66,7 +66,7 @@
 .columnHeadingsRow,
 .listItem {
   display: flex;
-  gap: var(--layout-gutter);
+  gap: calc(var(--layout-gutter) * 2);
   align-items: center;
   padding-inline: calc(var(--layout-gutter) + var(--collection-body-centering-inset));
 }
@@ -253,18 +253,18 @@
   @mixin content-link;
 }
 
-/* Each breakpoint below accommodates the min-width of its visible columns plus `--layout-gutter` (16px) between columns
- * and on both sides of the row. (The centering inset is 0 below 800px.) */
+/* Each breakpoint below accommodates the min-width of its visible columns, plus `calc(var(--layout-gutter) * 2)` (32px)
+ * between columns, plus `--layout-gutter` (16px) on both sides of the row. (The centering inset is 0 below 800px.) */
 
-/* gutter (16px) + title (204px) + gutter (16px) + category (112px) + gutter (16px) + date (96px) + gutter (16px) */
-@container collection-body (width < 476px) {
+/* gutter (16px) + title (204px) + gap (32px) + category (112px) + gap (32px) + date (96px) + gutter (16px) */
+@container collection-body (width < 508px) {
   .dateColumn {
     display: none;
   }
 }
 
-/* gutter (16px) + title (204px) + gutter (16px) + category (112px) + gutter (16px) */
-@container collection-body (width < 364px) {
+/* gutter (16px) + title (204px) + gap (32px) + category (112px) + gutter (16px) */
+@container collection-body (width < 380px) {
   .titleColumn {
     min-width: 0; /* The title is the only column. */
   }
