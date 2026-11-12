@@ -20,7 +20,7 @@ import type { PointerEvent } from "react";
 
 const SCREENSAVER_STYLE: StyleWithVars = { "--screensaver-fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
 
-function wakeOnMovement(event: PointerEvent<HTMLDivElement>) {
+function wakeOnPointerMove(event: PointerEvent<HTMLDivElement>) {
   if (event.buttons === 0) {
     wake();
   }
@@ -53,7 +53,7 @@ export function Screensaver() {
   const isDismissible = sleepState === "asleep";
 
   const dismissHandlers = isDismissible
-    ? mergeHandlers(pressSoundHandlers, { onClick: wake, onPointerMove: wakeOnMovement })
+    ? mergeHandlers(pressSoundHandlers, { onClick: wake, onPointerMove: wakeOnPointerMove })
     : undefined;
 
   useIdleTimeout(SCREENSAVER_IDLE_DELAY_MS, isIdleSleepEnabled, sleepOnIdle);
