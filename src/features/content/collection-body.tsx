@@ -196,7 +196,7 @@ export function CollectionBody({ target: { collection } }: { target: CollectionT
 
     // `getElementsByClassName` matches the generated class name without parsing a selector, so it does not assume the
     // name is selector-safe.
-    const title = listRef.current?.children.item(index)?.getElementsByClassName(styles.title!).item(0);
+    const title = listRef.current?.children.item(index)?.getElementsByClassName(styles.title).item(0);
 
     activationFlash.start(entry.slug);
     openWindowFrom(collection.routeOf(entry.slug), title);

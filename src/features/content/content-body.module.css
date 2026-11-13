@@ -57,6 +57,9 @@
   print-color-adjust: exact;
 }
 
+/* stylelint-disable css-modules-kit/no-unused-class-names -- `aside.tsx` and `footnote.tsx` use these classes. They
+ * must remain in this stylesheet because CSS Modules scopes classes to their defining stylesheet, and the
+ * `content-rail-anchored` rules belowselect them to restyle asides placed in the rail. */
 .railAside {
   position: relative;
 
@@ -91,6 +94,7 @@
   margin-inline-end: 8px;
   color: var(--color-accent);
 }
+/* stylelint-enable css-modules-kit/no-unused-class-names */
 
 .content {
   container: content / inline-size;
@@ -381,6 +385,8 @@
       margin-block-start: 0;
     }
 
+    /* stylelint-disable css-modules-kit/no-unused-class-names -- `aside.tsx` and `footnote.tsx` use `.railAside` and
+     * `.railLabel` (see comment above). */
     & > :--within-rail-span + [data-rail-asides] > .railAside {
       display: block;
       padding-inline-start: 0;
@@ -395,6 +401,7 @@
         margin-block-start: 4px;
       }
     }
+    /* stylelint-enable css-modules-kit/no-unused-class-names */
   }
 
   @mixin content-rail-collapsed {
@@ -778,10 +785,6 @@
       }
     }
   }
-}
-
-.entryCopyStatus {
-  @mixin visually-hidden;
 }
 
 @media print {

@@ -19,7 +19,7 @@ export default {
   ignoreFiles: [".output/**/*", "dist/**/*"],
   reportInvalidScopeDisables: true,
   reportNeedlessDisables: true,
-  plugins: ["stylelint-value-no-unknown-custom-properties"],
+  plugins: ["stylelint-value-no-unknown-custom-properties", "@css-modules-kit/stylelint-plugin"],
   rules: {
     "property-disallowed-list": ["scroll-behavior"], // Incompatible with the scroll sounds implementation (see `/src/lib/audio/scroll.ts`).
     "selector-class-pattern": "^[a-z][a-zA-Z0-9]*$|^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
@@ -44,10 +44,12 @@ export default {
           "./src/styles.css",
           "./src/mixins.css",
           "./src/features/content/content-body.module.css",
+          "./src/features/image-gallery/image-gallery.module.css",
           "./src/features/window-manager/window-layer.module.css",
         ],
       },
     ],
+    "css-modules-kit/no-unused-class-names": true,
   },
   overrides: [
     {

@@ -160,7 +160,7 @@ const windowTitleBar = () => screen.getByText("Window").parentElement!;
 const scrollPane = () => document.getElementById(FOCUSED_WINDOW_CONTENT_ID)!;
 const scrollArrows = () => [screen.getByLabelText("Scroll up"), screen.getByLabelText("Scroll down")];
 const scrollArrowVisibilities = () => scrollArrows().map((arrow) => getComputedStyle(arrow).visibility);
-const areContentAnimationsPaused = () => document.querySelector("section")!.classList.contains(styles.concealed!);
+const areContentAnimationsPaused = () => document.querySelector("section")!.classList.contains(styles.concealed);
 const isScrollbarCollapsed = () => screen.getByRole("scrollbar").parentElement?.hasAttribute("data-collapsed");
 
 function RevealProbe() {

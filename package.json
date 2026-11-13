@@ -16,10 +16,10 @@
     "dev": "vite dev --port 3000",
     "lint": "prettier --check . && eslint . --max-warnings=0 && stylelint '**/*.css' && markdownlint-cli2",
     "lint:fix": "prettier --write . && eslint --fix . && stylelint --fix '**/*.css' && markdownlint-cli2 --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "cmk --clean && tsc --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "build": "tsc && vite build",
+    "build": "cmk --clean && tsc && vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist .output .tanstack .wrangler/tmp node_modules/.vite node_modules/.cache/jiti && find . -name node_modules -prune -o -name .git -prune -o -type f -name '*.tmp' -exec rm -f {} +",
     "prepare-media": "node scripts/prepare-media.ts",
@@ -54,6 +54,8 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@css-modules-kit/codegen": "^1.4.2",
+    "@css-modules-kit/stylelint-plugin": "^1.4.2",
     "@csstools/postcss-color-mix-function": "^4.0.11",
     "@csstools/postcss-oklab-function": "^5.0.11",
     "@csstools/postcss-relative-color-syntax": "^4.0.11",

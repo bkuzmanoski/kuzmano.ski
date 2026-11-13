@@ -15,7 +15,7 @@ export function LoadingIndicator({
   return (
     <span
       role={layout === "fill" ? "status" : "img"}
-      className={cx(styles.loadingIndicator, styles[layout], className)}
+      className={cx(styles.loadingIndicator, layout === "fill" ? styles.fill : styles.inline, className)}
       aria-label={label}
       data-loading-indicator="" // Marks the indicator for `/build/prerender/verify.ts`, which fails the build if a page is prerendered while a Suspense boundary is still pending.
     >

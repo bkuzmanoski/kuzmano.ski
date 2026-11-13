@@ -1,7 +1,7 @@
 import { ActionFailureAlert } from "#/components/action-failure-alert.tsx";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
-import styles from "./content-body.module.css";
+import styles from "./entry-clipboard-provider.module.css";
 import { EntryClipboardContext } from "./entry-clipboard.ts";
 
 import type { EntryClipboard } from "./entry-clipboard.ts";

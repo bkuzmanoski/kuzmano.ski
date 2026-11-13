@@ -9,8 +9,8 @@ import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
 import { pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
 
+import styles from "./image-gallery-preview.module.css";
 import { SWIPE_DISTANCE_PX } from "./image-gallery-swipe.ts";
-import styles from "./image-gallery.module.css";
 import { ImageGallery } from "./image-gallery.tsx";
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>

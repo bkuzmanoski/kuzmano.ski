@@ -54,7 +54,7 @@ const LAST_INDEX = COLLECTION_ENTRIES.length - 1;
 const routeOf = (index: number) => COLLECTION.routeOf(COLLECTION_ENTRIES[index]!.slug);
 const targetOf = (collection: Collection) => ({ id: "collection" as const, title: collection.title, collection });
 const highlightOf = (link: HTMLElement) =>
-  link.classList.contains(styles.highlighted!) ? "on" : link.classList.contains(styles.unhighlighted!) ? "off" : null;
+  link.classList.contains(styles.highlighted) ? "on" : link.classList.contains(styles.unhighlighted) ? "off" : null;
 const shownCategoryLabelOf = (row: Element) => row.querySelector("[id$='-category']")?.textContent;
 
 function showEntryInWindow(slug: string | null) {
@@ -322,7 +322,7 @@ test("opening an entry grows a zoom rect from its title toward the entry window"
 
   const link = screen.getAllByRole("link")[1]!;
 
-  vi.spyOn(link.getElementsByClassName(styles.title!)[0]!, "getBoundingClientRect").mockReturnValue(titleRect);
+  vi.spyOn(link.getElementsByClassName(styles.title)[0]!, "getBoundingClientRect").mockReturnValue(titleRect);
   fireEvent.keyDown(link, { key: "Enter" });
 
   expect(showZoomRect).toHaveBeenCalledExactlyOnceWith({ windowId: "entry", from: titleRect });

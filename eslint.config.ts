@@ -134,7 +134,9 @@ const IMPORT_RESTRICTION_BLOCKS: Array<Linter.Config> = IMPORT_RESTRICTION_GROUP
 }));
 
 export default defineConfig(
-  { ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "**/routeTree.gen.ts", "**/*.tmp/**/*"] },
+  {
+    ignores: [".output/**/*", ".wrangler/**/*", "dist/**/*", "generated/**/*", "**/routeTree.gen.ts", "**/*.tmp/**/*"],
+  },
   ...BASE_CONFIG,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,

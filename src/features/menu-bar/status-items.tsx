@@ -21,7 +21,7 @@ import {
 } from "#/lib/settings/settings.ts";
 import { STATE_DISPLAY_DURATION_MS } from "#/lib/tooltip.ts";
 
-import styles from "./menu-bar.module.css";
+import styles from "./status-items.module.css";
 
 import type { ReactNode } from "react";
 

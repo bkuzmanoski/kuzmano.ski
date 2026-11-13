@@ -1,0 +1,3 @@
+.entryCopyStatus {
+  @mixin visually-hidden;
+}

@@ -105,7 +105,7 @@ export function Alert(
     >
       {open && (
         <>
-          <span className={cx(styles.icon, styles[variant ?? "error"])} aria-hidden>
+          <span className={cx(styles.icon, variant === "information" ? styles.information : styles.error)} aria-hidden>
             {variant === "information" ? CHAR_INFORMATION_ICON : CHAR_ERROR_ICON}
           </span>
           <p id={messageId} className={styles.message}>

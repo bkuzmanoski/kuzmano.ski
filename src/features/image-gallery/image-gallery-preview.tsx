@@ -2,7 +2,6 @@ import { useImperativeHandle, useRef, useState } from "react";
 
 import { Tooltip } from "#/components/tooltip.tsx";
 import { ZoomRect } from "#/features/window-manager/zoom-rect.tsx";
-import { cx } from "#/lib/class-names.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -10,8 +9,8 @@ import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { usePressSound } from "#/lib/press/use-press-sound.ts";
 
 import { usePreviewImageLayout } from "./image-gallery-preview-layout.ts";
+import styles from "./image-gallery-preview.module.css";
 import { useImageGallerySwipe } from "./image-gallery-swipe.ts";
-import styles from "./image-gallery.module.css";
 
 import type { ReactElement, ReactNode, Ref, RefObject } from "react";
 
@@ -123,7 +122,7 @@ export function ImageGalleryPreview({
       ref={previewRef}
       className={styles.preview}
       tabIndex={-1}
-      data-image-gallery-zoom-rect={zoomRect?.direction} // `image-gallery.module.css` hides the frame while the zoom rect runs.
+      data-image-gallery-zoom-rect={zoomRect?.direction} // Styles hide the frame while the zoom rect runs.
       aria-label="Image preview"
       data-content-default-styles="off"
       data-feed-omit
@@ -173,7 +172,7 @@ export function ImageGalleryPreview({
             {image}
           </div>
         </div>
-        <div className={cx(styles.controls, styles.previewControls)}>
+        <div className={styles.previewControls}>
           {previousControl}
           <span className={styles.position} aria-hidden>
             {positionLabel}

@@ -4,6 +4,7 @@
     "dbaeumer.vscode-eslint",
     "emeraldwalk.runonsave",
     "esbenp.prettier-vscode",
+    "mizdra.css-modules-kit-vscode",
     "stylelint.vscode-stylelint",
     "unifiedjs.vscode-mdx",
     "vitest.explorer"
