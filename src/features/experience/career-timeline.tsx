@@ -186,7 +186,7 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                   {endMonth}
                 </p>
                 <p className={styles.summary}>{role.summary}</p>
-                {role.highlights && (
+                {role.highlights && role.highlights.length > 0 && (
                   <ul className={styles.highlights}>
                     {role.highlights.map((highlight) => (
                       <li key={highlight}>{highlight}</li>
