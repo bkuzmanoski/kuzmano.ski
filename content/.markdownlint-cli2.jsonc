@@ -2,6 +2,7 @@
   "config": {
     "MD033": false,
     "MD034": false, // The site links a bare URL or email address as a GFM autolink literal.
+    "MD036": false,
     "heading-levels": { "minimum": 2, "maximum": 3 } // The document renders the entry's title as its `h1`.
   },
   "frontMatter": "^---\\n(?:[^]*?)\\n---(?:\\n|$)",
