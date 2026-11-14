@@ -164,9 +164,6 @@
 }
 
 .previewControls {
-  /* Composes the class instead of including a mixin, so the gallery's `.controls > .control` rules match the previous
-   * and next controls that `ImageGallery` passes to the preview. */
-  composes: controls from "./image-gallery.module.css";
   height: calc(var(--image-gallery-control-size) + 1px); /* Includes the top border. */
 }
 

@@ -2,6 +2,7 @@ import { useImperativeHandle, useRef, useState } from "react";
 
 import { Tooltip } from "#/components/tooltip.tsx";
 import { ZoomRect } from "#/features/window-manager/zoom-rect.tsx";
+import { cx } from "#/lib/class-names.ts";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect } from "#/lib/geometry.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
@@ -11,6 +12,7 @@ import { usePressSound } from "#/lib/press/use-press-sound.ts";
 import { usePreviewImageLayout } from "./image-gallery-preview-layout.ts";
 import styles from "./image-gallery-preview.module.css";
 import { useImageGallerySwipe } from "./image-gallery-swipe.ts";
+import galleryStyles from "./image-gallery.module.css";
 
 import type { ReactElement, ReactNode, Ref, RefObject } from "react";
 
@@ -172,7 +174,8 @@ export function ImageGalleryPreview({
             {image}
           </div>
         </div>
-        <div className={styles.previewControls}>
+        {/* The gallery's `.controls > .control` rules style the previous and next controls that `ImageGallery` passes in. */}
+        <div className={cx(galleryStyles.controls, styles.previewControls)}>
           {previousControl}
           <span className={styles.position} aria-hidden>
             {positionLabel}
