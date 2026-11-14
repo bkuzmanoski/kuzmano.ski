@@ -29,3 +29,21 @@ export function createFrameScheduler(callback: () => void): FrameScheduler {
     },
   };
 }
+
+/** Invokes `onFrame` on each animation frame until the returned function stops the loop. */
+export function loopAnimationFrames(onFrame: (now: DOMHighResTimeStamp) => void): () => void {
+  let isStopped = false;
+  let frameId = requestAnimationFrame(function run(now) {
+    onFrame(now);
+
+    // Schedule the next frame only after `onFrame` returns, so it can stop the loop.
+    if (!isStopped) {
+      frameId = requestAnimationFrame(run);
+    }
+  });
+
+  return () => {
+    isStopped = true;
+    cancelAnimationFrame(frameId);
+  };
+}

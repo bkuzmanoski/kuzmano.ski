@@ -35,6 +35,7 @@ export default defineConfig({
   ],
   test: {
     restoreMocks: true,
+    tags: [{ name: "slow", description: "Runs for several seconds and is skipped by `npm run test:watch`." }],
     // Creating a jsdom accounts for most test-file runtime, so source tests use `vmThreads`, which creates one jsdom
     // per worker rather than per file. Tooling tests use the default pool because native modules (Sharp and Vite
     // bindings) reject VM-created `RegExp` values when validating Node built-in arguments. They run in Node unless a

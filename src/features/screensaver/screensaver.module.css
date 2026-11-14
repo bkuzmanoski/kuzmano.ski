@@ -1,7 +1,6 @@
 .screensaver {
   --screensaver-fade-in-ms: 0ms; /* Set from JS. */
-  --screensaver-sprite-size: 64px;
-  --screensaver-fly-distance: calc(max(100dvw, 100dvh) + var(--screensaver-sprite-size));
+  --screensaver-sprite-size: 0px; /* Set from JS. */
 
   pointer-events: none;
 
@@ -50,71 +49,8 @@
   }
 }
 
-.sprite {
-  --screensaver-start-top: 0%; /* Set from JS. */
-  --screensaver-start-right: 0%; /* Set from JS. */
-  --screensaver-flight-duration: 0s; /* Set from JS. */
-  --screensaver-flight-delay: 0s; /* Set from JS. */
-
-  position: absolute;
-  top: var(--screensaver-start-top);
-  right: var(--screensaver-start-right);
-
-  width: var(--screensaver-sprite-size);
-  height: var(--screensaver-sprite-size);
-
-  background-repeat: no-repeat;
-
-  image-rendering: pixelated;
-
-  animation: fly var(--screensaver-flight-duration) var(--screensaver-flight-delay) linear infinite;
-}
-
-.toaster {
-  --screensaver-flap-phase: 0; /* Set from JS. */
-  --screensaver-flap-ms: 200ms; /* One stroke of the wings, across the four frames of `flap`. */
-
-  background-image: url("../../assets/images/screensaver-toaster-sprite.gif");
-
-  animation-name: flap, fly;
-  animation-duration: var(--screensaver-flap-ms), var(--screensaver-flight-duration);
-  animation-timing-function: steps(4), linear;
-  animation-delay:
-    calc(var(--screensaver-flap-phase) * var(--screensaver-flap-ms) / -4), var(--screensaver-flight-delay);
-  animation-iteration-count: infinite;
-  animation-direction: alternate, normal;
-}
-
-.toast-1 {
-  background-image: url("../../assets/images/screensaver-toast-1.gif");
-}
-
-.toast-2 {
-  background-image: url("../../assets/images/screensaver-toast-2.gif");
-}
-
-.toast-3 {
-  background-image: url("../../assets/images/screensaver-toast-3.gif");
-}
-
-@keyframes flap {
-  from {
-    background-position-x: 0;
-  }
-
-  to {
-    background-position-x: -256px;
-  }
-}
-
-@keyframes fly {
-  from {
-    translate: 0 0;
-  }
-
-  to {
-    translate: calc(-1 * var(--screensaver-fly-distance)) var(--screensaver-fly-distance);
-  }
+.flock {
+  display: block;
 }
 
 @media print {

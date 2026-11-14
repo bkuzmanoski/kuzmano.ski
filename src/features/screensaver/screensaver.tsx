@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SCREENSAVER_IDLE_DELAY_MS } from "#/config/desktop.ts";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
@@ -13,12 +13,16 @@ import { FADE_IN_DURATION_MS, sleepOnIdle, useSleepState, wake } from "#/lib/scr
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
-import { FLOCK } from "./flock.ts";
+import { createFlockFlight, startFlockAnimation } from "./flock-animation.ts";
+import { SPRITE_SIZE_PX } from "./flock.ts";
 import styles from "./screensaver.module.css";
 
 import type { PointerEvent } from "react";
 
-const SCREENSAVER_STYLE: StyleWithVars = { "--screensaver-fade-in-ms": `${FADE_IN_DURATION_MS}ms` };
+const SCREENSAVER_STYLE: StyleWithVars = {
+  "--screensaver-fade-in-ms": `${FADE_IN_DURATION_MS}ms`,
+  "--screensaver-sprite-size": `${SPRITE_SIZE_PX}px`,
+};
 
 function wakeOnPointerMove(event: PointerEvent<HTMLDivElement>) {
   if (event.buttons === 0) {
@@ -40,6 +44,15 @@ function wakeOnKeyDown(event: KeyboardEvent) {
   }
 
   wake();
+}
+
+function Flock() {
+  const [flight] = useState(createFlockFlight);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => startFlockAnimation(flight, canvasRef.current!), [flight]);
+
+  return <canvas ref={canvasRef} className={styles.flock} />;
 }
 
 export function Screensaver() {
@@ -93,10 +106,7 @@ export function Screensaver() {
       aria-hidden
       {...dismissHandlers}
     >
-      {isUp &&
-        FLOCK.map(({ image, style }, index) => (
-          <div key={index} className={cx(styles.sprite, styles[image])} style={style} />
-        ))}
+      {isUp && <Flock />}
     </div>
   );
 }

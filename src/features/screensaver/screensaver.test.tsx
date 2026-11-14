@@ -3,18 +3,26 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import { FADE_IN_DURATION_MS, sleep, wake } from "#/lib/screensaver/lifecycle.ts";
+import { stubCanvasContext, stubImageLoad } from "#/test-utils/canvas.ts";
 import { pressWithMouse } from "#/test-utils/press.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
+import { SPRITE_SIZE_PX, TOAST_SPEED_PX_PER_S } from "./flock.ts";
 import { Screensaver } from "./screensaver.tsx";
-
-const MOUSE_MOVE = { buttons: 0 };
-const TOUCH_MOVE = { buttons: 1 };
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal),
 );
 
+const MOUSE_MOVE = { buttons: 0 };
+const TOUCH_MOVE = { buttons: 1 };
+const MAX_STAGGERED_WAIT_MS = ((window.innerWidth + SPRITE_SIZE_PX) / TOAST_SPEED_PX_PER_S) * 1000;
+
+let canvasContext: ReturnType<typeof stubCanvasContext>;
+
 beforeEach(() => {
+  canvasContext = stubCanvasContext();
+  stubImageLoad("loaded");
   vi.mocked(playClickSound).mockClear();
   vi.mocked(playKeyDownSound).mockClear();
   vi.mocked(playKeyUpSound).mockClear();
@@ -26,10 +34,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const fadeIn = () =>
-  act(() => {
-    vi.advanceTimersByTime(FADE_IN_DURATION_MS);
-  });
+const fadeIn = () => advanceTimersBy(FADE_IN_DURATION_MS);
 
 function raise() {
   const { container } = render(<Screensaver />);
@@ -59,6 +64,27 @@ test("the flock is only in the DOM while the screensaver is up, and is removed w
   act(wake);
 
   expect(screensaver.childElementCount).toBe(0);
+});
+
+test("the flock renders sprites after the screensaver rises", () => {
+  raise();
+  advanceTimersBy(MAX_STAGGERED_WAIT_MS);
+
+  expect(canvasContext.drawImage).toHaveBeenCalled();
+});
+
+test("the flock stops rendering sprites when the screensaver is dismissed", () => {
+  raise();
+  advanceTimersBy(MAX_STAGGERED_WAIT_MS);
+  act(wake);
+
+  const drawImageCallCount = canvasContext.drawImage.mock.calls.length;
+
+  expect(drawImageCallCount).toBeGreaterThan(0);
+
+  advanceTimersBy(MAX_STAGGERED_WAIT_MS);
+
+  expect(canvasContext.drawImage).toHaveBeenCalledTimes(drawImageCallCount);
 });
 
 test.each([

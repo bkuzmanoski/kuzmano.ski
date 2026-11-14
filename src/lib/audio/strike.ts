@@ -1,3 +1,5 @@
+import { createSeededRandom } from "../random.ts";
+
 import { bufferCache, playBuffer, renderBuffer } from "./buffer.ts";
 
 /** A struck object: a burst of noise shaped by its resonance and the damping that suppresses it. */
@@ -12,23 +14,9 @@ export interface Strike {
   dampingHz: number;
 }
 
-/** Seedable PRNG, so a strike renders the same noise burst every time. */
-function mulberry32(seed: number): () => number {
-  let state = seed;
-
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 const sampleFor = bufferCache((context: AudioContext, strike: Strike) => {
   const sampleRate = context.sampleRate;
-  const random = mulberry32(strike.seed);
+  const random = createSeededRandom(strike.seed); // Seeded, so a strike renders the same noise burst every time.
 
   // A bandpass biquad (RBJ cookbook, constant 0dB peak gain). `b1` is 0 here.
   const w0 = (2 * Math.PI * strike.toneHz) / sampleRate;

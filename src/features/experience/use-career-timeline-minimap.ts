@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
+import { createFrameScheduler } from "#/lib/animation-frames.ts";
 import { recordScrollAt, silenceScrollAt } from "#/lib/audio/scroll.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import {
@@ -10,7 +11,6 @@ import {
 } from "#/lib/experience/career-timeline-viewport.ts";
 import { careerTimelinePlacementCenterOf } from "#/lib/experience/career-timeline.ts";
 import type { CareerTimelineDirection } from "#/lib/experience/career-timeline.ts";
-import { createFrameScheduler } from "#/lib/frame-scheduler.ts";
 import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
 import { axisFractionAt, readCareerTimelineLayout } from "./career-timeline-layout.ts";

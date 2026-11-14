@@ -1,4 +1,4 @@
-import { createFrameScheduler } from "#/lib/frame-scheduler.ts";
+import { createFrameScheduler } from "#/lib/animation-frames.ts";
 
 const RAIL_CLEARANCE_PROPERTY = "--content-body-rail-clearance";
 const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";

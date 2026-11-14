@@ -14,8 +14,8 @@ import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { playKeyDownSound, playKeyPressSound, playKeyUpSound, playStartupChimeSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { isTouchOnly } from "#/lib/device.ts";
-import { insetFromViewport, insetToViewport } from "#/lib/geometry.ts";
-import type { Inset, Size, Transform } from "#/lib/geometry.ts";
+import { insetFromViewport, insetToViewport, viewportSize } from "#/lib/geometry.ts";
+import type { Inset, Transform } from "#/lib/geometry.ts";
 import { useClientValue } from "#/lib/hooks/use-client-value.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import {
@@ -57,8 +57,6 @@ const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bott
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
 const cssParallaxTransform = ({ translate, scale }: typeof KEYBOARD_PARALLAX) =>
   `translate3d(${translate.x * 100}%, ${translate.y * 100}%, 0) scale3d(${scale.x}, ${scale.y}, 1)`;
-
-const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
 
 function Display({
   metrics,

@@ -34,6 +34,9 @@ export const clientPositionOf = (event: { clientX: number; clientY: number }): P
   y: event.clientY,
 });
 
+/** The size of the layout viewport. */
+export const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
+
 /** Whether a point falls within a rect, counting its edges as within. */
 export function containsPoint(rect: Rect, { x, y }: Position): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;

@@ -7,6 +7,7 @@ import PlayVideoIcon from "#/assets/images/video-icon-play.svg?react";
 import SoundOffVideoIcon from "#/assets/images/video-icon-sound-off.svg?react";
 import SoundOnVideoIcon from "#/assets/images/video-icon-sound-on.svg?react";
 import { IconButton } from "#/components/icon-button.tsx";
+import { loopAnimationFrames } from "#/lib/animation-frames.ts";
 import { playClickSound } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
 import { formatPlaybackTime } from "#/lib/datetime.ts";
@@ -98,19 +99,11 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
       return;
     }
 
-    let frame = 0;
-
-    const tick = () => {
+    return loopAnimationFrames(() => {
       if (videoRef.current) {
         syncPosition(videoRef.current);
       }
-
-      frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-
-    return () => cancelAnimationFrame(frame);
+    });
   }, [isPaused]);
 
   useEffect(() => {

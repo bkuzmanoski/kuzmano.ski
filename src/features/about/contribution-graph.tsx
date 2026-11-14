@@ -4,7 +4,7 @@ import { GITHUB_PROFILE_LINK_TEXT, GITHUB_PROFILE_URL, GITHUB_USERNAME, SITE_LOC
 import { ContentLink } from "#/features/content/content-link.tsx";
 import { SCROLL_PANE_VIEWPORT_SELECTOR } from "#/features/window-manager/scroll-pane.tsx";
 import type { DateFormat } from "#/lib/datetime.ts";
-import { intersectionOf, intersectionRatioOf } from "#/lib/geometry.ts";
+import { intersectionOf, intersectionRatioOf, viewportSize } from "#/lib/geometry.ts";
 import { busiestCountIn, contributionLevelOf, monthLabelsFor, weekdayOf } from "#/lib/github/contributions.ts";
 import { useContributionCalendar } from "#/lib/github/use-contribution-calendar.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
@@ -38,7 +38,7 @@ const doesOverflow = (scrollContainer: HTMLElement | null) =>
   scrollContainer !== null && scrollContainer.scrollWidth > scrollContainer.clientWidth;
 
 function visibleFractionOf(figure: HTMLElement): number {
-  const viewportRect = { x: 0, y: 0, width: innerWidth, height: innerHeight };
+  const viewportRect = { x: 0, y: 0, ...viewportSize() };
   const paneRect = figure.closest(SCROLL_PANE_VIEWPORT_SELECTOR)?.getBoundingClientRect();
   const visibleRect = paneRect ? intersectionOf(paneRect, viewportRect) : viewportRect;
 

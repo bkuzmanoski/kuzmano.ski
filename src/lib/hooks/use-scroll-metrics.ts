@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { createFrameScheduler } from "../frame-scheduler.ts";
+import { createFrameScheduler } from "../animation-frames.ts";
 
 import type { RefObject } from "react";
 
