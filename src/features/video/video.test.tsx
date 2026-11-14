@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { renderToString } from "react-dom/server";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { Video } from "./video.tsx";
 
@@ -12,12 +13,15 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 );
 
 const DURATION_S = 60;
+const TRACK_WIDTH_PX = 110;
+const THUMB_WIDTH_PX = 10;
+const FRAME_MS = 16;
 
-let playback: { paused: boolean; muted: boolean; currentTime: number };
+let playback: { paused: boolean; muted: boolean; currentTime: number; seeking: boolean };
 let isFullScreen: boolean;
 
 beforeEach(() => {
-  playback = { paused: true, muted: false, currentTime: 0 };
+  playback = { paused: true, muted: false, currentTime: 0, seeking: false };
   isFullScreen = false;
 
   vi.mocked(playClickSound).mockClear();
@@ -34,7 +38,9 @@ beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, "currentTime", "get").mockImplementation(() => playback.currentTime);
   vi.spyOn(HTMLMediaElement.prototype, "currentTime", "set").mockImplementation((value: number) => {
     playback.currentTime = value;
+    playback.seeking = true; // Until `finishSeek`.
   });
+  vi.spyOn(HTMLMediaElement.prototype, "seeking", "get").mockImplementation(() => playback.seeking);
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function play(this: HTMLMediaElement) {
     playback.paused = false;
     this.dispatchEvent(new Event("play"));
@@ -63,8 +69,41 @@ beforeEach(() => {
   Object.defineProperty(Element.prototype, "requestFullscreen", { configurable: true, value: requestFullscreen });
 });
 
+afterEach(() => vi.useRealTimers());
+
 const renderVideo = () =>
   render(<Video src="/video.mp4" poster="/video.poster.webp" width={640} controls aria-label="A video" />);
+
+/** Renders a video with its slider laid out from `x` = 0, so a pointer at `thumbCenterAt(0.5)` is halfway along it. */
+function renderVideoWithLaidOutSlider() {
+  vi.useFakeTimers(); // A drag reports its moves on animation frames.
+
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  Object.defineProperty(slider, "clientWidth", { value: TRACK_WIDTH_PX, configurable: true });
+  Object.defineProperty(slider.firstElementChild, "offsetWidth", { value: THUMB_WIDTH_PX, configurable: true });
+  slider.getBoundingClientRect = () => new DOMRect(0, 0, TRACK_WIDTH_PX, THUMB_WIDTH_PX);
+
+  return { video, slider };
+}
+
+const thumbCenterAt = (position: number) => THUMB_WIDTH_PX / 2 + position * (TRACK_WIDTH_PX - THUMB_WIDTH_PX);
+
+function pressSliderAt(slider: HTMLElement, position: number) {
+  fireEvent.pointerDown(slider, { button: 0, clientX: thumbCenterAt(position) });
+}
+
+function dragSliderTo(slider: HTMLElement, position: number) {
+  fireEvent.pointerMove(slider, { buttons: 1, clientX: thumbCenterAt(position) });
+  advanceTimersBy(FRAME_MS);
+}
+
+function finishSeek(video: HTMLVideoElement) {
+  playback.seeking = false;
+  fireEvent(video, new Event("seeked"));
+}
 
 test("a video without the `controls` prop renders a `<video>` with its props, without playback controls", () => {
   const { container } = render(<Video src="/video.mp4" autoPlay muted loop aria-label="A video" />);
@@ -135,7 +174,7 @@ test("the playback controls are marked with the `data-feed-omit` attribute", () 
 });
 
 test("the controls show the playing, muted, and current time state that a video has when they mount", () => {
-  playback = { paused: false, muted: true, currentTime: 12 };
+  playback = { paused: false, muted: true, currentTime: 12, seeking: false };
 
   renderVideo();
 
@@ -312,6 +351,100 @@ test("pressing an arrow key with a modifier key does not seek the video", () => 
   fireEvent.keyDown(screen.getByRole("slider", { name: "Seek" }), { key: "ArrowRight", altKey: true });
 
   expect(playback.currentTime).toBe(0);
+});
+
+test("dragging the slider seeks the video to the time under the pointer", () => {
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+
+  expect(playback.currentTime).toBe(15);
+
+  finishSeek(video);
+  dragSliderTo(slider, 0.5);
+
+  expect(playback.currentTime).toBe(30);
+
+  fireEvent.pointerUp(slider);
+
+  expect(playback.currentTime).toBe(30);
+});
+
+test("dragging the slider starts a seek only after the previous one finishes, then seeks to the latest time under the pointer", () => {
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+  dragSliderTo(slider, 0.5);
+  dragSliderTo(slider, 0.75);
+
+  expect(playback.currentTime).toBe(15);
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:45 of 1:00"); // The thumb follows the pointer meanwhile.
+
+  finishSeek(video);
+
+  expect(playback.currentTime).toBe(45);
+});
+
+test("dragging the slider seeks with `fastSeek` where the browser provides it, then to the exact time when the user releases the slider", () => {
+  const KEYFRAME_INTERVAL_S = 10;
+  const fastSeek = vi.fn((seconds: number) => {
+    playback.currentTime = Math.floor(seconds / KEYFRAME_INTERVAL_S) * KEYFRAME_INTERVAL_S;
+    playback.seeking = true;
+  });
+
+  Object.defineProperty(HTMLMediaElement.prototype, "fastSeek", { configurable: true, value: fastSeek });
+
+  try {
+    const { slider } = renderVideoWithLaidOutSlider();
+
+    pressSliderAt(slider, 0.25);
+
+    expect(fastSeek).toHaveBeenCalledWith(15);
+    expect(playback.currentTime).toBe(10);
+
+    fireEvent.pointerUp(slider);
+
+    expect(playback.currentTime).toBe(15);
+  } finally {
+    Reflect.deleteProperty(HTMLMediaElement.prototype, "fastSeek");
+  }
+});
+
+test("pressing on the slider pauses a playing video until the user releases it, without changing the Pause button to a Play button", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  pressSliderAt(slider, 0.25);
+
+  expect(playback.paused).toBe(true);
+  expect(screen.getByRole("button", { name: "Pause" })).toBeDefined();
+
+  fireEvent.pointerUp(slider);
+
+  expect(playback.paused).toBe(false);
+  expect(screen.getByRole("button", { name: "Pause" })).toBeDefined();
+});
+
+test("releasing the slider leaves a paused video paused", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+  fireEvent.pointerUp(slider);
+
+  expect(playback.paused).toBe(true);
+  expect(screen.getByRole("button", { name: "Play" })).toBeDefined();
+});
+
+test("releasing the slider at the end of the video leaves a playing video paused", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  pressSliderAt(slider, 1);
+  fireEvent.pointerUp(slider);
+
+  expect(playback.currentTime).toBe(DURATION_S);
+  expect(playback.paused).toBe(true);
+  expect(screen.getByRole("button", { name: "Play" })).toBeDefined();
 });
 
 test("seeking sets the `--video-progress` custom property of the slider to the current time as a fraction of the duration", () => {

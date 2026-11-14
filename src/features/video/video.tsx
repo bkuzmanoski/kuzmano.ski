@@ -24,17 +24,28 @@ import type { ComponentProps, KeyboardEvent } from "react";
 const SEEK_STEP_S = 5;
 
 interface WebKitVideoElement extends HTMLVideoElement {
-  /** Safari on iPhone can't make an arbitrary element full screen, only a `<video>` through its native player. */
+  /** Safari on iPhone supports fullscreen only for `<video>` elements via its native player. */
   webkitEnterFullscreen?: () => void;
 }
 
-const canEnterFullScreen = () =>
-  Boolean(document.fullscreenEnabled) || "webkitEnterFullscreen" in HTMLVideoElement.prototype;
+/** State tracked while the user drags the seek slider. */
+interface Scrub {
+  /** Whether playback was active when dragging began, so it can resume when dragging ends. */
+  wasPlaying: boolean;
+  /** The playback time corresponding to the pointer position. */
+  targetSeconds: number;
+  /** The latest requested seek time, or `null` until the first seek is requested. */
+  requestedSeconds: number | null;
+}
 
 const LAYOUT_ATTRIBUTE_PREFIX = "data-content-";
 
 type LayoutAttributes = Record<`${typeof LAYOUT_ATTRIBUTE_PREFIX}${string}`, unknown>;
 type ControlledVideoProps = Omit<ComponentProps<"video">, "controls"> & Partial<LayoutAttributes>;
+
+const canEnterFullScreen = () =>
+  Boolean(document.fullscreenEnabled) || "webkitEnterFullscreen" in HTMLVideoElement.prototype;
+const canFastSeek = () => "fastSeek" in HTMLMediaElement.prototype;
 
 function partitionLayoutAttributes(props: ControlledVideoProps) {
   const layoutAttributes: LayoutAttributes = {};
@@ -66,6 +77,7 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
   const videoRef = useRef<HTMLVideoElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
+  const scrubRef = useRef<Scrub | null>(null);
 
   const hasSiteControls = useIsHydrated();
   const canToggleFullScreen = useClientValue(false, canEnterFullScreen);
@@ -73,17 +85,21 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
   const hasDuration = duration > 0;
 
   const syncPosition = (video: HTMLVideoElement) => {
-    const progress = Number.isFinite(video.duration) && video.duration > 0 ? video.currentTime / video.duration : 0;
+    const seconds = scrubRef.current?.targetSeconds ?? video.currentTime;
+    const progress = Number.isFinite(video.duration) && video.duration > 0 ? seconds / video.duration : 0;
 
     trackRef.current?.style.setProperty("--video-progress", String(clamp(progress, 0, 1)));
-    setCurrentSecond(Math.floor(video.currentTime));
+    setCurrentSecond(Math.floor(seconds));
   };
 
   const syncState = () => {
     const video = videoRef.current;
 
     if (video) {
-      setIsPaused(video.paused);
+      if (!scrubRef.current) {
+        setIsPaused(video.paused);
+      }
+
       setIsMuted(video.muted);
       setDuration(Number.isFinite(video.duration) ? video.duration : 0);
       syncPosition(video);
@@ -137,14 +153,70 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     }
   }
 
-  function seekToPointer(clientX: number, trackLeft: number) {
+  function startScrub() {
+    const video = videoRef.current;
+
+    if (video) {
+      scrubRef.current = { wasPlaying: !video.paused, targetSeconds: video.currentTime, requestedSeconds: null };
+      video.pause();
+    }
+  }
+
+  /**
+   * Seeks to the latest scrub target after the current seek completes. `onSeeked` invokes this again if the pointer
+   * moved while seeking.
+   *
+   * Updating `currentTime` during an active seek cancels it, so seeking on every pointer move can prevent frames from
+   * rendering. When available, `fastSeek` jumps to a decodable keyframe.
+   */
+  function seekToScrubTarget(video: HTMLVideoElement, scrub: Scrub) {
+    if (video.seeking || scrub.requestedSeconds === scrub.targetSeconds) {
+      return;
+    }
+
+    scrub.requestedSeconds = scrub.targetSeconds;
+
+    if (canFastSeek()) {
+      video.fastSeek(scrub.targetSeconds);
+    } else {
+      video.currentTime = scrub.targetSeconds;
+    }
+  }
+
+  function scrubToPointer(clientX: number, trackLeft: number) {
+    const video = videoRef.current;
+    const scrub = scrubRef.current;
     const trackWidth = trackRef.current?.clientWidth ?? 0;
     const thumbWidth = thumbRef.current?.offsetWidth ?? 0;
     const travel = trackWidth - thumbWidth;
 
-    if (travel > 0) {
-      seekTo(clamp((clientX - trackLeft - thumbWidth / 2) / travel, 0, 1) * duration);
+    if (video && scrub && travel > 0) {
+      scrub.targetSeconds = clamp((clientX - trackLeft - thumbWidth / 2) / travel, 0, 1) * duration;
+      seekToScrubTarget(video, scrub);
+      syncPosition(video);
     }
+  }
+
+  function endScrub() {
+    const video = videoRef.current;
+    const scrub = scrubRef.current;
+
+    scrubRef.current = null;
+
+    if (!video || !scrub) {
+      return;
+    }
+
+    // Apply the exact target because `fastSeek` may land on a keyframe and `seekToScrubTarget` can miss the latest
+    // target.
+    video.currentTime = scrub.targetSeconds;
+
+    // Playing a video from its end restarts it from the beginning.
+    if (scrub.wasPlaying && scrub.targetSeconds < duration) {
+      video.play().catch(() => undefined); // `syncState` below reflects a rejected play as paused.
+    }
+
+    syncState();
   }
 
   function toggleMuted() {
@@ -175,11 +247,13 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
 
       playClickSound();
       trackRef.current?.focus({ preventScroll: true });
-      seekToPointer(origin.x, origin.trackLeft);
+      startScrub();
+      scrubToPointer(origin.x, origin.trackLeft);
 
       return origin;
     },
-    onDragMove: ({ dx }, origin) => seekToPointer(origin.x + dx, origin.trackLeft),
+    onDragMove: ({ dx }, origin) => scrubToPointer(origin.x + dx, origin.trackLeft),
+    onEnd: endScrub,
   });
 
   function onKeyDown(event: KeyboardEvent) {
@@ -247,6 +321,11 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
         onLoadedMetadata={syncState}
         onDurationChange={syncState}
         onTimeUpdate={syncState}
+        onSeeked={(event) => {
+          if (scrubRef.current) {
+            seekToScrubTarget(event.currentTarget, scrubRef.current);
+          }
+        }}
       />
       <div className={styles.controls} role="group" aria-label="Playback controls" data-feed-omit>
         <IconButton
