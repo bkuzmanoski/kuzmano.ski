@@ -59,7 +59,7 @@
 
 /* stylelint-disable css-modules-kit/no-unused-class-names -- `aside.tsx` and `footnote.tsx` use these classes. They
  * must remain in this stylesheet because CSS Modules scopes classes to their defining stylesheet, and the
- * `content-rail-anchored` rules belowselect them to restyle asides placed in the rail. */
+ * `content-rail-anchored` rules below select them to restyle asides placed in the rail. */
 .railAside {
   position: relative;
 
