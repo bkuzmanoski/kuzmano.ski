@@ -6,6 +6,13 @@
   @mixin visually-hidden;
 }
 
+@mixin content-rail-collapsed {
+  /* Hides the status aside where the rail collapses, so it does not interrupt the introduction. */
+  .entry [data-content-body] > [data-rail-asides] {
+    display: none;
+  }
+}
+
 .entry [data-image-row] img {
   image-rendering: pixelated;
 }
