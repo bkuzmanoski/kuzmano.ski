@@ -25,8 +25,7 @@ interface CollectionMetadata {
 export const COLLECTIONS = {
   work: {
     title: "Work",
-    description:
-      "Product design, software development, technology consulting, and teaching projects for clients including Loopit, Kinesis, Ansarada, SAP, and Transport for NSW.",
+    description: "Case studies in product design, software engineering, technology consulting, and teaching.",
   },
   notes: {
     title: "Notes",

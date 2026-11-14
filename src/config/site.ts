@@ -10,7 +10,7 @@ export const GITHUB_GIST_LINK_TEXT = "View GitHub Gist";
 export const SITE_NAME = "kuzmano.ski";
 export const SITE_URL = "https://kuzmano.ski";
 export const SITE_DESCRIPTION =
-  "Brian is a software designer and engineer with two decades of experience building software.";
+  "Brian Kuzmanoski is a Sydney-based software designer and engineer with two decades of experience, available for product design or app development work.";
 export const SITE_SOURCE_URL = `${GITHUB_PROFILE_URL}/kuzmano.ski`;
 
 // Localization
