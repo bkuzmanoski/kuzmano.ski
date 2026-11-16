@@ -25,7 +25,7 @@ interface CollectionMetadata {
 export const COLLECTIONS = {
   work: {
     title: "Work",
-    description: "Case studies in product design, software engineering, technology consulting, and teaching.",
+    description: "Case studies in product design, software engineering, and technology consulting.",
   },
   notes: {
     title: "Notes",
