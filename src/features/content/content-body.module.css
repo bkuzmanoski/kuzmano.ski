@@ -24,6 +24,9 @@
 :where(.content) {
   /* Layout metrics */
   --content-body-layout-measure: 616px; /* ~70 characters of the body face. */
+
+  /* The sum of `--content-body-layout-rail-width` and `--content-body-layout-rail-gap` must be even to align the
+   * content body grid to whole pixels (see `--content-body-wide-start-track`). */
   --content-body-layout-rail-width: 120px;
   --content-body-layout-rail-gap: 24px;
   --content-body-layout-rail-track: calc(var(--content-body-layout-rail-width) + var(--content-body-layout-rail-gap));
@@ -101,11 +104,22 @@
 }
 
 .content :where([data-content-body]) {
-  --content-body-wide-start-track: minmax(0, 1fr); /* Rounded to a whole pixel where supported (see below). */
+  /* Half the space on either side of a text column centered within the full width. Where supported, this is rounded
+   * down to a whole pixel (see below). Uses `cqw` instead of `%` so it also works in `row-gap`, where percentages
+   * resolve against height. */
+  --content-body-measure-margin: calc((100cqw - var(--content-body-layout-measure)) / 2);
+
+  /* Half the remaining width beside the gutters, rail, and text column. Subtracting half the rail track from the
+   * rounded measure margin keeps the track and subsequent grid lines on whole pixels when the gutter is a whole pixel
+   * and the rail track has an even pixel width. */
+  --content-body-wide-start-track: max(
+    0px,
+    var(--content-body-measure-margin) - var(--layout-gutter) - var(--content-body-layout-rail-track) / 2
+  );
   --content-body-rail-aside-gap: 12px;
   --content-body-padding-block: clamp(
     var(--content-body-layout-space-loose),
-    (100% - var(--content-body-layout-measure)) / 2,
+    var(--content-body-measure-margin),
     var(--content-body-layout-space-x-loose)
   );
 
@@ -124,24 +138,15 @@
   padding-block: var(--content-body-padding-block)
     calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
 
-  /* Half the width left beside the gutters, rail, and text column, rounded down to a whole pixel so bitmap labels stay
-   * pixel aligned on 1x displays. */
   @supports (width: round(down, 1px, 1px)) {
-    --content-body-wide-start-track: max(
-      0px,
-      round(
-        down,
-        (100% - 2 * var(--layout-gutter) - var(--content-body-layout-rail-track) - var(--content-body-layout-measure)) /
-          2,
-        1px
-      )
-    );
+    /* Rounded down to a whole pixel so bitmap labels stay pixel aligned on 1x displays. */
+    --content-body-measure-margin: round(down, (100cqw - var(--content-body-layout-measure)) / 2, 1px);
   }
 
   &:where(:has(> [data-entry-masthead])) {
     --content-body-padding-block: clamp(
       var(--layout-gutter),
-      (100% - var(--content-body-layout-measure)) / 2,
+      var(--content-body-measure-margin),
       var(--content-body-layout-space-x-loose)
     );
   }
@@ -190,7 +195,7 @@
     margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
   }
 
-  & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"], [data-entry-masthead]) + *,
+  & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) + *,
   &
     > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"])
     + :where([data-rail-asides])
@@ -206,7 +211,7 @@
   }
 
   & > * + :where(hr, [data-content-space="loose"]),
-  & > :where(h1, h1 + p, hr, [data-content-space="loose"]) + *,
+  & > :where(h1, h1 + p, hr, [data-content-space="loose"], [data-entry-masthead]) + *,
   & > :where(h1 + p, hr, [data-content-space="loose"]) + :where([data-rail-asides]) + * {
     margin-block-start: calc(var(--content-body-layout-space-loose) + var(--content-body-rail-clearance, 0px));
   }
@@ -417,8 +422,7 @@
   }
 }
 
-/* Element defaults unless `data-content-default-styles="off"` disables them. A nested `"on"` subtree restores them, but
- * a further nested `off` subtree remains disabled. */
+/* Element defaults unless disabled with `data-content-default-styles="off"`. */
 .content
   :not(
     :where(

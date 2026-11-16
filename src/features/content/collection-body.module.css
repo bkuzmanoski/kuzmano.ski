@@ -11,10 +11,8 @@
   font: var(--font-ui);
 
   @supports (width: round(down, 1px, 1px)) {
-    --collection-body-centering-inset: max(
-      0px,
-      round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px)
-    ); /* Rounded down to a whole pixel so icons stays pixel aligned on 1x displays. */
+    /* Rounded down to a whole pixel so icons stays pixel aligned on 1x displays. */
+    --collection-body-centering-inset: max(0px, round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px));
   }
 }
 

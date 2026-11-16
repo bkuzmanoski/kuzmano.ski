@@ -122,7 +122,7 @@
   --layout-safe-area-left: env(safe-area-inset-left, 0px);
   --layout-menu-bar-height: 32px;
   --layout-window-layer-padding: 0px; /* Set from JS. */
-  --layout-gutter: 16px;
+  --layout-gutter: 16px; /* Must use whole pixels to keep content body grid lines aligned. */
   --layout-title-bar-height: 28px; /* Excludes the bottom border. */
   --layout-title-bar-inset-inline: 4px;
   --layout-scrollbar-width: 20px; /* Excludes the leading border. */
