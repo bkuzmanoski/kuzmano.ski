@@ -376,8 +376,7 @@
 }
 
 @define-mixin scroll-pane-scrollbar-hidden {
-  /* stylelint-disable-next-line length-zero-no-unit -- The query matches the value as authored. */
-  @container not style(--window-safe-area-inline-end: 0px) {
+  @container not style(--window-safe-area-inline-end: 0) {
     @mixin-content;
   }
 }

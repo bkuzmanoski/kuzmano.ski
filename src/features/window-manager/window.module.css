@@ -1,3 +1,11 @@
+/* Registered as `<length>` so WebKit compares `env(safe-area-inset-right, 0px)` as a length in
+ * `scroll-pane-scrollbar-hidden`'s style query instead of hiding the scrollbar when the inset is zero. */
+@property --window-safe-area-inline-end {
+  inherits: true;
+  initial-value: 0;
+  syntax: "<length>";
+}
+
 .window {
   --window-safe-area-inline-start: 0px;
   --window-safe-area-inline-end: 0px;
