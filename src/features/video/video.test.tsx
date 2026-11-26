@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createRef } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -11,6 +11,8 @@ import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { Video } from "./video.tsx";
 
+import type { MockInstance } from "vitest";
+
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
   (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal),
 );
@@ -20,15 +22,32 @@ const TRACK_WIDTH_PX = 110;
 const THUMB_WIDTH_PX = 10;
 const FRAME_MS = 16;
 
-let playback: { paused: boolean; muted: boolean; currentTime: number; seeking: boolean };
+let playback: {
+  duration: number;
+  paused: boolean;
+  muted: boolean;
+  currentTime: number;
+  seeking: boolean;
+  readyState: number;
+  networkState: number;
+};
+let loadSpy: MockInstance<HTMLMediaElement["load"]>;
 let isFullScreen: boolean;
 
 beforeEach(() => {
-  playback = { paused: true, muted: false, currentTime: 0, seeking: false };
+  playback = {
+    duration: DURATION_S,
+    paused: true,
+    muted: false,
+    currentTime: 0,
+    seeking: false,
+    readyState: HTMLMediaElement.HAVE_ENOUGH_DATA,
+    networkState: HTMLMediaElement.NETWORK_IDLE,
+  };
   isFullScreen = false;
 
   vi.mocked(playClickSound).mockClear();
-  vi.spyOn(HTMLMediaElement.prototype, "duration", "get").mockReturnValue(DURATION_S);
+  vi.spyOn(HTMLMediaElement.prototype, "duration", "get").mockImplementation(() => playback.duration);
   vi.spyOn(HTMLMediaElement.prototype, "paused", "get").mockImplementation(() => playback.paused);
   vi.spyOn(HTMLMediaElement.prototype, "muted", "get").mockImplementation(() => playback.muted);
   vi.spyOn(HTMLMediaElement.prototype, "muted", "set").mockImplementation(function setMuted(
@@ -42,8 +61,18 @@ beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, "currentTime", "set").mockImplementation((value: number) => {
     playback.currentTime = value;
     playback.seeking = true; // Until `finishSeek`.
+    playback.readyState = HTMLMediaElement.HAVE_METADATA; // Chrome drops `readyState` to `HAVE_METADATA` until `seeked`.
   });
   vi.spyOn(HTMLMediaElement.prototype, "seeking", "get").mockImplementation(() => playback.seeking);
+  vi.spyOn(HTMLMediaElement.prototype, "readyState", "get").mockImplementation(() => playback.readyState);
+  vi.spyOn(HTMLMediaElement.prototype, "networkState", "get").mockImplementation(() => playback.networkState);
+  loadSpy = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(function load(this: HTMLMediaElement) {
+    playback.duration = Number.NaN;
+    playback.currentTime = 0;
+    playback.readyState = HTMLMediaElement.HAVE_NOTHING;
+    playback.networkState = HTMLMediaElement.NETWORK_LOADING;
+    this.dispatchEvent(new Event("durationchange"));
+  });
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(function play(this: HTMLMediaElement) {
     playback.paused = false;
     this.dispatchEvent(new Event("play"));
@@ -113,23 +142,39 @@ const cancelPointer = (slider: HTMLElement) => fireEvent.pointerCancel(slider);
 
 function finishSeek(video: HTMLVideoElement) {
   playback.seeking = false;
+  playback.readyState = HTMLMediaElement.HAVE_ENOUGH_DATA;
   fireEvent(video, new Event("seeked"));
 }
 
-test("a video without the `controls` prop renders a `<video>` with its props, without playback controls", () => {
+function finishFrameLoad(video: HTMLVideoElement) {
+  playback.duration = DURATION_S;
+  playback.readyState = HTMLMediaElement.HAVE_ENOUGH_DATA;
+  playback.networkState = HTMLMediaElement.NETWORK_IDLE;
+  fireEvent(video, new Event("loadeddata"));
+}
+
+test("a video without the `controls` prop renders a `<video>` with its props and the `playsinline` attribute, without playback controls", () => {
   const { container } = render(<Video src="/video.mp4" autoPlay muted loop aria-label="A video" />);
   const video = container.querySelector("video")!;
 
   expect(video.getAttribute("src")).toBe("/video.mp4");
   expect(video.hasAttribute("loop")).toBe(true);
+  expect(video.hasAttribute("playsinline")).toBe(true);
   expect(screen.queryByRole("group", { name: "Playback controls" })).toBeNull();
 });
 
-test("a video with the `controls` prop renders the site's playback controls in place of the browser's controls", () => {
+test("an explicit `playsInline={false}` prop omits the `playsinline` attribute", () => {
+  const { container } = render(<Video src="/video.mp4" playsInline={false} aria-label="A video" />);
+
+  expect(container.querySelector("video")!.hasAttribute("playsinline")).toBe(false);
+});
+
+test("a video with the `controls` prop renders the site's playback controls in place of the browser's controls and sets the `playsinline` attribute", () => {
   const { container } = renderVideo();
   const video = container.querySelector("video")!;
 
   expect(video.hasAttribute("controls")).toBe(false);
+  expect(video.hasAttribute("playsinline")).toBe(true);
   expect(screen.getByRole("button", { name: "Play" })).toHaveProperty("disabled", false);
   expect(screen.getByRole("slider", { name: "Seek" })).toBeDefined();
   expect(screen.getByRole("button", { name: "Mute" })).toBeDefined();
@@ -185,13 +230,89 @@ test("the playback controls are marked with the `data-feed-omit` attribute", () 
 });
 
 test("the controls show the playing, muted, and current time state that a video has when they mount", () => {
-  playback = { paused: false, muted: true, currentTime: 12, seeking: false };
+  playback.paused = false;
+  playback.muted = true;
+  playback.currentTime = 12;
 
   renderVideo();
 
   expect(screen.getByRole("button", { name: "Pause" })).toBeDefined();
   expect(screen.getByRole("button", { name: "Unmute" })).toBeDefined();
   expect(screen.getByRole("slider", { name: "Seek" }).getAttribute("aria-valuetext")).toBe("0:12 of 1:00");
+});
+
+test.each([
+  {
+    state: "playing",
+    setInitialPlayback: () => {
+      playback.paused = false;
+    },
+  },
+  {
+    state: "seeked",
+    setInitialPlayback: () => {
+      playback.currentTime = 12;
+    },
+  },
+])("the poster overlay is omitted when the video is already $state at mount", ({ setInitialPlayback }) => {
+  setInitialPlayback();
+
+  const { container } = renderVideo();
+
+  expect(container.querySelector("img")).toBeNull();
+});
+
+test("the poster overlay stays visible on play until the first video frame renders", () => {
+  let frameCallback: VideoFrameRequestCallback | null = null;
+  const requestVideoFrameCallback = vi.fn((callback: VideoFrameRequestCallback) => {
+    frameCallback = callback;
+    return 1;
+  });
+  const cancelVideoFrameCallback = vi.fn();
+
+  Object.defineProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback", {
+    configurable: true,
+    value: requestVideoFrameCallback,
+  });
+  Object.defineProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback", {
+    configurable: true,
+    value: cancelVideoFrameCallback,
+  });
+
+  try {
+    const { container } = renderVideo();
+
+    expect(container.querySelector("img")?.getAttribute("src")).toBe("/video.poster.webp");
+
+    fireEvent.click(screen.getByRole("button", { name: "Play" }));
+
+    expect(requestVideoFrameCallback).toHaveBeenCalledOnce();
+    expect(container.querySelector("img")).not.toBeNull();
+
+    act(() => {
+      frameCallback!(0, {} as VideoFrameCallbackMetadata);
+    });
+
+    expect(container.querySelector("img")).toBeNull();
+  } finally {
+    Reflect.deleteProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback");
+    Reflect.deleteProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback");
+  }
+});
+
+test("seeking removes the poster overlay once the seek completes", () => {
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+
+  expect(container.querySelector("img")).not.toBeNull();
+
+  fireEvent.keyDown(screen.getByRole("slider", { name: "Seek" }), { key: "ArrowRight" });
+
+  expect(container.querySelector("img")).not.toBeNull();
+
+  finishSeek(video);
+
+  expect(container.querySelector("img")).toBeNull();
 });
 
 test("the Play button plays the video, and becomes a Pause button that pauses it", () => {
@@ -249,6 +370,29 @@ test("the Enter Full Screen button enters the native full screen player of the `
   } finally {
     Reflect.deleteProperty(HTMLVideoElement.prototype, "webkitEnterFullscreen");
   }
+});
+
+test("exiting the native full screen player removes the `controls` attribute and syncs playback state", () => {
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const controlsValues: Array<boolean> = [];
+  const controlsDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "controls")!;
+
+  vi.spyOn(video, "controls", "set").mockImplementation((value: boolean) => {
+    controlsValues.push(value);
+    controlsDescriptor.set!.call(video, value);
+  });
+
+  playback.paused = false;
+  playback.muted = true;
+  playback.currentTime = 18;
+  fireEvent(video, new Event("webkitendfullscreen"));
+
+  expect(controlsValues).toEqual([true, false]); // WebKit ignores `controls = false` when the attribute is already absent.
+  expect(video.hasAttribute("controls")).toBe(false);
+  expect(screen.getByRole("button", { name: "Pause" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Unmute" })).toBeDefined();
+  expect(screen.getByRole("slider", { name: "Seek" }).getAttribute("aria-valuetext")).toBe("0:18 of 1:00");
 });
 
 test("pressing on the video toggles playback", () => {
@@ -394,31 +538,6 @@ test("dragging the slider starts a seek only after the previous one finishes, th
   finishSeek(video);
 
   expect(playback.currentTime).toBe(45);
-});
-
-test("dragging the slider seeks with `fastSeek` where the browser provides it, then to the exact time when the user releases the slider", () => {
-  const KEYFRAME_INTERVAL_S = 10;
-  const fastSeek = vi.fn((seconds: number) => {
-    playback.currentTime = Math.floor(seconds / KEYFRAME_INTERVAL_S) * KEYFRAME_INTERVAL_S;
-    playback.seeking = true;
-  });
-
-  Object.defineProperty(HTMLMediaElement.prototype, "fastSeek", { configurable: true, value: fastSeek });
-
-  try {
-    const { slider } = renderVideoWithLaidOutSlider();
-
-    pressSliderAt(slider, 0.25);
-
-    expect(fastSeek).toHaveBeenCalledWith(15);
-    expect(playback.currentTime).toBe(10);
-
-    fireEvent.pointerUp(slider);
-
-    expect(playback.currentTime).toBe(15);
-  } finally {
-    Reflect.deleteProperty(HTMLMediaElement.prototype, "fastSeek");
-  }
 });
 
 test("pressing on the slider pauses a playing video until the user releases it, without changing the Pause button to a Play button", () => {
@@ -579,6 +698,187 @@ test("a tap on the slider followed by a `click` event on a nearby control does n
   fireEvent.click(screen.getByRole("button", { name: "Mute" }), { detail: 1 });
 
   expect(playback.currentTime).toBe(6);
+});
+
+test("dragging the slider before frames load keeps the slider at the pointer and seeks once frames load", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+  dragSliderTo(slider, 0.5);
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+  expect(playback.currentTime).toBe(0);
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.5");
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:30 of 1:00");
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(30);
+});
+
+test("releasing the slider before frames load holds the release time and seeks once frames load", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+  fireEvent.pointerUp(slider);
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+  expect(playback.currentTime).toBe(0);
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.25");
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:15 of 1:00");
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(15);
+});
+
+test("repeated arrow key presses before frames load accumulate and seek once frames load", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+  expect(playback.currentTime).toBe(0);
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:10 of 1:00");
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(10);
+});
+
+test("seeking while the video is still fetching completes after the browser suspends loading before frames arrive", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+  playback.networkState = HTMLMediaElement.NETWORK_LOADING;
+
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  expect(loadSpy).not.toHaveBeenCalled();
+  expect(playback.currentTime).toBe(0);
+
+  playback.networkState = HTMLMediaElement.NETWORK_IDLE;
+  fireEvent(video, new Event("suspend"));
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+
+  // A second `suspend` while loading is already in flight must not restart the load.
+  fireEvent(video, new Event("suspend"));
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(5);
+});
+
+test("a subsequent seek retries loading if the browser ignores the `load()` called on `suspend`", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+  playback.networkState = HTMLMediaElement.NETWORK_LOADING;
+
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  // Simulate a browser ignoring a non-gesture `load()` inside `suspend`, leaving `networkState` at `NETWORK_IDLE`.
+  loadSpy.mockImplementationOnce(() => undefined);
+  playback.networkState = HTMLMediaElement.NETWORK_IDLE;
+  fireEvent(video, new Event("suspend"));
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  expect(loadSpy).toHaveBeenCalledTimes(2);
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(10);
+});
+
+test("a seek made once frames are available supersedes an earlier deferred seek", () => {
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  playback.duration = DURATION_S;
+  playback.readyState = HTMLMediaElement.HAVE_ENOUGH_DATA;
+  playback.networkState = HTMLMediaElement.NETWORK_IDLE;
+  fireEvent.keyDown(slider, { key: "End" });
+
+  expect(playback.currentTime).toBe(DURATION_S);
+  expect(slider.getAttribute("aria-valuetext")).toBe("1:00 of 1:00");
+
+  fireEvent(video, new Event("loadeddata"));
+
+  expect(playback.currentTime).toBe(DURATION_S);
+});
+
+test("seeking during an active seek updates the playback time instead of reloading or freezing the slider", () => {
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  expect(loadSpy).not.toHaveBeenCalled();
+  expect(playback.currentTime).toBe(10);
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:10 of 1:00");
+
+  // Also covers a mid-seek drop to `HAVE_METADATA` while still downloading, where `loadeddata` will not fire again.
+  playback.networkState = HTMLMediaElement.NETWORK_LOADING;
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+  finishSeek(video);
+  playback.currentTime = 30;
+  fireEvent(video, new Event("timeupdate"));
+
+  expect(loadSpy).not.toHaveBeenCalled();
+  expect(slider.getAttribute("aria-valuetext")).toBe("0:30 of 1:00");
+});
+
+test("an `emptied` event on a loaded video restores the poster overlay and defers a subsequent seek until frames load again", () => {
+  const { container } = renderVideo();
+  const video = container.querySelector("video")!;
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+  finishSeek(video);
+
+  expect(container.querySelector("img")).toBeNull();
+
+  playback.currentTime = 0;
+  playback.readyState = HTMLMediaElement.HAVE_METADATA;
+  playback.networkState = HTMLMediaElement.NETWORK_IDLE;
+  fireEvent(video, new Event("emptied"));
+
+  expect(container.querySelector("img")).not.toBeNull();
+
+  fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+  expect(loadSpy).toHaveBeenCalledOnce();
+  expect(playback.currentTime).toBe(0);
+
+  finishFrameLoad(video);
+
+  expect(playback.currentTime).toBe(5);
 });
 
 test("seeking sets the `--video-progress` custom property of the slider to the current time as a fraction of the duration", () => {
