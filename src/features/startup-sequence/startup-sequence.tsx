@@ -17,6 +17,7 @@ import { isTouchOnly } from "#/lib/device.ts";
 import { insetFromViewport, insetToViewport, viewportSize } from "#/lib/geometry.ts";
 import type { Inset, Transform } from "#/lib/geometry.ts";
 import { useClientValue } from "#/lib/hooks/use-client-value.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { getPrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import {
   whenDisplayGlassLayerReady,
@@ -163,14 +164,9 @@ function StartupSequenceContent() {
   const keyboardImageRef = useRef<HTMLImageElement>(null);
   const glassLayerImageRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const updateMetrics = () => setMetrics(stageMetricsFor(viewportSize()));
-
-    window.addEventListener("resize", updateMetrics, { signal: controller.signal });
-
-    return () => controller.abort();
-  }, []);
+  useEventListeners("window", {
+    resize: () => setMetrics(stageMetricsFor(viewportSize())),
+  });
 
   const schedulePhaseExecution = useEffectEvent(() => {
     const steps = sequence(motion);

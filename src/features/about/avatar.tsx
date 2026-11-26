@@ -1,8 +1,9 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import AvatarGraphic from "#/assets/images/avatar-graphic.svg?react";
 import { AUTHOR_NAME } from "#/config/site.ts";
 import { cx } from "#/lib/class-names.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
 
 import styles from "./avatar.module.css";
@@ -38,37 +39,32 @@ export function Avatar({
   const [gazeDirection, setGazeDirection] = useState<GazeDirection>(INITIAL_GAZE_DIRECTION);
   const graphicElementRef = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
-    const lookTowardPointer = (event: PointerEvent) => {
-      if (graphicElementRef.current) {
-        setGazeDirection(gazeDirectionToward(event, graphicElementRef.current.getBoundingClientRect()));
-      }
-    };
-
-    document.addEventListener("pointermove", lookTowardPointer, { passive: true });
-    document.addEventListener("pointerdown", lookTowardPointer, { passive: true }); // Touch input emits `pointermove` only after the touch point moves.
-
-    return () => {
-      document.removeEventListener("pointermove", lookTowardPointer);
-      document.removeEventListener("pointerdown", lookTowardPointer);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isSpeechBubbleShown) {
-      return;
+  const lookTowardPointer = (event: PointerEvent) => {
+    if (graphicElementRef.current) {
+      setGazeDirection(gazeDirectionToward(event, graphicElementRef.current.getBoundingClientRect()));
     }
+  };
 
-    const hideSpeechBubbleOnPressOutside = (event: PointerEvent) => {
-      if (!(event.target instanceof Node && graphicElementRef.current?.contains(event.target))) {
-        setIsSpeechBubbleShown(false);
-      }
-    };
+  useEventListeners(
+    "document",
+    {
+      pointermove: lookTowardPointer,
+      pointerdown: lookTowardPointer, // Touch input emits `pointermove` only after the touch point moves.
+    },
+    { passive: true },
+  );
 
-    document.addEventListener("pointerdown", hideSpeechBubbleOnPressOutside, { passive: true });
-
-    return () => document.removeEventListener("pointerdown", hideSpeechBubbleOnPressOutside);
-  }, [isSpeechBubbleShown]);
+  useEventListeners(
+    "document",
+    {
+      pointerdown: (event) => {
+        if (!(event.target instanceof Node && graphicElementRef.current?.contains(event.target))) {
+          setIsSpeechBubbleShown(false);
+        }
+      },
+    },
+    { passive: true, enabled: isSpeechBubbleShown },
+  );
 
   return (
     <div className={cx(styles.avatar, className)}>

@@ -4,6 +4,7 @@ import { SCREENSAVER_IDLE_DELAY_MS } from "#/config/desktop.ts";
 import { playKeyPressSounds } from "#/lib/audio/key-press-sounds.ts";
 import { loadKeySounds } from "#/lib/audio/sounds.ts";
 import { cx } from "#/lib/class-names.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { useIdleTimeout } from "#/lib/hooks/use-idle-timeout.ts";
 import { usePrefersReducedMotion } from "#/lib/hooks/use-prefers-reduced-motion.ts";
 import { isBrowserShortcut } from "#/lib/keys.ts";
@@ -77,27 +78,19 @@ export function Screensaver() {
     }
   }, [isUp]);
 
-  useEffect(() => {
-    if (!isUp) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    window.addEventListener(
-      "keydown",
-      (event) => {
+  useEventListeners(
+    "window",
+    {
+      keydown: (event) => {
         interceptKeyEvent(event);
 
         if (isDismissible) {
           wakeOnKeyDown(event);
         }
       },
-      { capture: true, signal: controller.signal },
-    );
-
-    return () => controller.abort();
-  }, [isUp, isDismissible]);
+    },
+    { capture: true, enabled: isUp },
+  );
 
   return (
     <div
