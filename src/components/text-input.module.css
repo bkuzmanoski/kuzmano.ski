@@ -26,8 +26,9 @@
   }
 
   &.multiline {
+    @mixin scrollbar-hidden; /* The input is paired with a `Scrollbar` of its own. */
+
     resize: none;
-    scrollbar-width: none; /* The input is paired with a `Scrollbar` of its own. */
 
     /* The caret is shorter than its line, so the padding also covers the leading below the caret. Without it, the
      * browser stops short of the end of the scroll range. */
@@ -49,7 +50,7 @@
   align-items: center;
 
   min-width: 0;
-  min-height: 30px;
+  min-height: var(--layout-control-height);
   padding: 2px 8px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -60,8 +61,6 @@
 
   &:focus-within {
     @mixin focus-ring;
-
-    box-shadow: 0 0 0 1px var(--color-background);
   }
 
   &:has(> :disabled) {

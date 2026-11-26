@@ -39,6 +39,18 @@
 
   outline: none;
 
+  /* Hides the native scrollbar where `scrollbar-width` is unsupported (Safari before 18.2), but only with a fine
+   * pointer, instead of through `scrollbar-hidden`. A `::-webkit-scrollbar` style switches WebKit to custom scrollbars,
+   * which `scroll-pane-scrollbar-hidden` cannot switch back to the native one, so on iOS 18.1 a maximized window in
+   * landscape would show neither the native scrollbar nor `Scrollbar`. */
+  @supports not (scrollbar-width: none) {
+    @mixin with-fine-pointer {
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+  }
+
   @mixin scroll-pane-scrollbar-hidden {
     scrollbar-width: thin;
   }

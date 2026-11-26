@@ -5,6 +5,7 @@ import { INITIAL_WINDOW_ROUTE } from "#/config/navigation.ts";
 import { FOCUSED_WINDOW_CONTENT_ID } from "#/features/window-manager/window.tsx";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { collection, configuredPages } from "#/test-utils/catalog.ts";
+import { MOUSE_PRESS_INIT, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { renderRoute } from "#/test-utils/router.tsx";
 
 const startupSequence = vi.hoisted(() => ({ isComplete: true, listeners: new Set<() => void>() }));
@@ -71,4 +72,35 @@ test("the skip link focuses the focused window's content", async () => {
   fireEvent.click(screen.getByRole("link", { name: "Jump to content" }));
 
   expect(document.activeElement).toBe(document.getElementById(FOCUSED_WINDOW_CONTENT_ID));
+});
+
+test("a mouse press focuses the desktop on its `pointerdown` event", async () => {
+  const { history } = renderRoute(collection.route);
+
+  await menuBarNavigation();
+  fireEvent.pointerDown(screen.getByRole("main"), MOUSE_PRESS_INIT);
+
+  expect(history.location.pathname).toBe("/");
+});
+
+test("a tap focuses the desktop on its `click` event, not its `pointerdown` event, and a canceled touch does not focus it", async () => {
+  const { history } = renderRoute(collection.route);
+
+  await menuBarNavigation();
+
+  const desktop = screen.getByRole("main");
+
+  fireEvent.pointerDown(desktop, TOUCH_PRESS_INIT);
+  fireEvent.pointerCancel(desktop, TOUCH_PRESS_INIT);
+  fireEvent.click(desktop, { detail: 1 });
+
+  expect(history.location.pathname).toBe(collection.route);
+
+  fireEvent.pointerDown(desktop, TOUCH_PRESS_INIT);
+
+  expect(history.location.pathname).toBe(collection.route);
+
+  fireEvent.click(desktop, { detail: 1 });
+
+  expect(history.location.pathname).toBe("/");
 });

@@ -4,6 +4,7 @@ import Logo from "#/assets/images/logo.svg?react";
 import { joinedWithSeparators } from "#/components/menu-items.ts";
 import type { MenuItem } from "#/components/menu-items.ts";
 import { Menu } from "#/components/menu.tsx";
+import type { InitialMenuItem } from "#/components/menu.tsx";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { DESTINATION_GROUPS, DESTINATION_ORDER } from "#/config/navigation.ts";
 import type { DestinationId } from "#/config/navigation.ts";
@@ -74,7 +75,7 @@ export function MenuBar() {
     label: string;
     anchor: HTMLButtonElement;
     isPointerHeld: boolean;
-    focusesFirstItem: boolean;
+    initialItem: InitialMenuItem;
   } | null>(null);
   const titleIdPrefix = useId();
   const titleElementsRef = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -161,9 +162,9 @@ export function MenuBar() {
   function openMenuAt(
     label: string,
     anchor: HTMLButtonElement,
-    { isPointerHeld = false, focusesFirstItem = false } = {},
+    { isPointerHeld = false, initialItem = "none" }: { isPointerHeld?: boolean; initialItem?: InitialMenuItem } = {},
   ) {
-    setOpenMenu({ label, anchor, isPointerHeld, focusesFirstItem });
+    setOpenMenu({ label, anchor, isPointerHeld, initialItem });
   }
 
   // On touch, the press that dismisses an open menu can also open the next menu. There is no hover to switch menus
@@ -186,7 +187,7 @@ export function MenuBar() {
 
     if (openMenu) {
       playHoverSound();
-      openMenuAt(label, anchor, { focusesFirstItem: true });
+      openMenuAt(label, anchor, { initialItem: "first" });
     } else {
       anchor.focus();
     }
@@ -196,7 +197,7 @@ export function MenuBar() {
   function onTitlePress(anchor: HTMLButtonElement, label: string) {
     anchor.focus({ focusVisible: false });
     setOpenMenu((current) =>
-      current?.label === label ? null : { label, anchor, isPointerHeld: true, focusesFirstItem: false },
+      current?.label === label ? null : { label, anchor, isPointerHeld: true, initialItem: "none" },
     );
   }
 
@@ -204,7 +205,7 @@ export function MenuBar() {
     if (openMenu?.label === label) {
       closeMenu(label);
     } else {
-      openMenuAt(label, anchor, { focusesFirstItem: true });
+      openMenuAt(label, anchor, { initialItem: "first" });
     }
   }
 
@@ -213,9 +214,18 @@ export function MenuBar() {
       case "ArrowDown":
       case "Enter":
       case " ":
+      case "Home":
         event.preventDefault();
         playClickSound();
-        openMenuAt(label, event.currentTarget, { focusesFirstItem: true });
+        openMenuAt(label, event.currentTarget, { initialItem: "first" });
+
+        break;
+
+      case "ArrowUp":
+      case "End":
+        event.preventDefault();
+        playClickSound();
+        openMenuAt(label, event.currentTarget, { initialItem: "last" });
 
         break;
 
@@ -273,7 +283,7 @@ export function MenuBar() {
                 items={items}
                 opener={{ kind: "title", title: openMenu.anchor, labelledBy: `${titleIdPrefix}-${menuIndex}` }}
                 isPointerHeld={openMenu.isPointerHeld}
-                focusesFirstItem={openMenu.focusesFirstItem}
+                initialItem={openMenu.initialItem}
                 onOpenAdjacentMenu={(direction) => openAdjacentMenu(label, direction)}
                 onClose={() => closeMenu(label)}
               />

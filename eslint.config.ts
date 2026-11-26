@@ -189,6 +189,8 @@ export default defineConfig(
                 "./resize-observer.ts",
                 "./router-context.tsx",
                 "./timers.ts",
+                "./visibility.ts",
+                "./visual-viewport.ts",
                 "./window-manager.ts",
               ],
             },

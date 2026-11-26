@@ -1,26 +1,15 @@
-import { compile } from "@mdx-js/mdx";
 import { describe, expect, test } from "vitest";
 
-import { mdxCompileOptionsFor } from "../mdx.ts";
+import { transformedTreeOf } from "../../test-utils/mdx.ts";
 
 import { elementNameOf, stringAttributeOf } from "./tree.ts";
 
-import type { ContentNode, ContentParent } from "./tree.ts";
+import type { ContentNode } from "./tree.ts";
 
 const NUMBER_ATTRIBUTE_NAMES = ["data-section-number", "data-figure-number", "data-table-number"];
 
 async function numberedChildrenOf(source: string): Promise<Array<[string | null, string | null]>> {
-  const compileOptions = mdxCompileOptionsFor({ syntaxHighlight: false });
-
-  let transformedTree: ContentParent = { type: "root", children: [] };
-
-  const capture = () => (tree: ContentParent) => {
-    transformedTree = tree;
-  };
-
-  await compile(source, { ...compileOptions, rehypePlugins: [...(compileOptions.rehypePlugins ?? []), capture] });
-
-  return transformedTree.children
+  return (await transformedTreeOf(source)).children
     .filter((child: ContentNode) => elementNameOf(child) !== null)
     .map((child) => [
       elementNameOf(child),

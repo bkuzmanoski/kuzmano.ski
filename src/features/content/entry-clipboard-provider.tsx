@@ -1,24 +1,24 @@
 import { ActionFailureAlert } from "#/components/action-failure-alert.tsx";
+import { CopyAnnouncer } from "#/components/copy-announcer.tsx";
 import { useCopyToClipboard } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
-import styles from "./entry-clipboard-provider.module.css";
 import { EntryClipboardContext } from "./entry-clipboard.ts";
 
 import type { EntryClipboard } from "./entry-clipboard.ts";
 import type { ReactNode } from "react";
 
 /**
- * Shares clipboard state with an entry's copy controls and renders their status region and failure alert.
+ * Shares clipboard state with an entry's copy controls and renders their `CopyAnnouncer` and failure alert.
  *
- * Keying confirmations by copy ID causes subsequent copies to be announced as new status updates. The provider clears
- * confirmations so they are removed even if the originating control unmounts.
+ * The provider owns the latest copy, so its confirmation ends even when the control that made the copy unmounts.
  */
 export function EntryClipboardProvider({ children }: { children: ReactNode }) {
-  const { latestClipboardCopy, copy, clearConfirmation, dismissFailure } = useCopyToClipboard<{
-    copyControlId: string;
-    /** What the control copies, as shown in the failure alert. */
-    entity: string;
-  }>();
+  const { latestClipboardCopy, confirmedClipboardCopyNumber, copy, clearConfirmation, dismissFailure } =
+    useCopyToClipboard<{
+      copyControlId: string;
+      /** The copied content's label, displayed in the failure alert. */
+      entity: string;
+    }>();
 
   const entryClipboard: EntryClipboard = {
     copyStatusOf: (copyControlId) =>
@@ -31,9 +31,7 @@ export function EntryClipboardProvider({ children }: { children: ReactNode }) {
   return (
     <EntryClipboardContext value={entryClipboard}>
       {children}
-      <span className={styles.entryCopyStatus} role="status">
-        {latestClipboardCopy?.status === "copied" && <span key={latestClipboardCopy.id}>Copied</span>}
-      </span>
+      <CopyAnnouncer confirmedClipboardCopyNumber={confirmedClipboardCopyNumber} />
       <ActionFailureAlert
         action="copy"
         isPermissionDenied

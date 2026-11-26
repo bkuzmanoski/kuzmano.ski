@@ -1,5 +1,6 @@
 import {
   RouterContextProvider,
+  RouterProvider,
   createMemoryHistory,
   createRootRoute,
   createRoute,
@@ -8,6 +9,7 @@ import {
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
+import { RenderedEntryContext } from "#/lib/content/rendered-entry.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import { ContentLink } from "./content-link.tsx";
@@ -67,6 +69,98 @@ test("hovering a link to a path with a query string and a fragment preloads the 
 
   await waitFor(() => expect(loadEntry).toHaveBeenCalledOnce());
   expect(loadEntry).toHaveBeenCalledWith(expect.objectContaining({ params: { slug: "entry" } }));
+});
+
+test("clicking a link to a fragment of the current entry scrolls to the element that the fragment names and focuses it without navigating", async () => {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([createRoute({ getParentRoute: () => rootRoute, path: "/collection/$slug" })]),
+    history: createMemoryHistory({ initialEntries: ["/collection/entry"] }),
+  });
+
+  await router.load();
+  render(
+    <RouterContextProvider router={router}>
+      <RenderedEntryContext value={{ route: "/collection/entry" }}>
+        <article>
+          <ContentLink href="/collection/entry#section">Fixture link</ContentLink>
+          <h2 id="section" tabIndex={-1}>
+            Fixture heading
+          </h2>
+        </article>
+      </RenderedEntryContext>
+    </RouterContextProvider>,
+  );
+
+  const heading = screen.getByRole("heading", { name: "Fixture heading" });
+  const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+
+  fireEvent.click(screen.getByRole("link", { name: "Fixture link" }));
+
+  expect(scrollIntoView.mock.contexts).toEqual([heading]);
+  expect(document.activeElement).toBe(heading);
+  expect(router.history.location.href).toBe("/collection/entry");
+});
+
+test("clicking a link to the current entry with a different query string and a fragment navigates through the router", async () => {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([createRoute({ getParentRoute: () => rootRoute, path: "/collection/$slug" })]),
+    history: createMemoryHistory({ initialEntries: ["/collection/entry"] }),
+  });
+
+  await router.load();
+  render(
+    <RouterContextProvider router={router}>
+      <RenderedEntryContext value={{ route: "/collection/entry" }}>
+        <article>
+          <ContentLink href="/collection/entry?view=all#section">Fixture link</ContentLink>
+          <h2 id="section" tabIndex={-1}>
+            Fixture heading
+          </h2>
+        </article>
+      </RenderedEntryContext>
+    </RouterContextProvider>,
+  );
+
+  fireEvent.click(screen.getByRole("link", { name: "Fixture link" }));
+
+  await waitFor(() => expect(router.history.location.href).toBe("/collection/entry?view=all#section"));
+});
+
+test("clicking a link to a fragment of another entry navigates without scrolling the target element into view", async () => {
+  const rootRoute = createRootRoute();
+  const entryRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/collection/$slug",
+    component: function Entry() {
+      const { slug } = entryRoute.useParams();
+      return slug === "entry" ? (
+        <ContentLink href="/collection/other#section">Fixture link</ContentLink>
+      ) : (
+        <h2 id="section">Fixture heading</h2>
+      );
+    },
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([entryRoute]),
+    history: createMemoryHistory({ initialEntries: ["/collection/entry"] }),
+    scrollRestoration: false,
+  });
+
+  render(<RouterProvider router={router} />);
+
+  const link = await screen.findByRole("link", { name: "Fixture link" });
+  const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+
+  fireEvent.click(link);
+  await screen.findByRole("heading", { name: "Fixture heading" });
+  await waitFor(() => expect(router.state.status).toBe("idle"));
+
+  // `ContentBody` reveals the element when it mounts, aligned by its kind. The router's own hash scroll would run after
+  // it and align every element to the top.
+  expect(router.history.location.href).toBe("/collection/other#section");
+  expect(scrollIntoView).not.toHaveBeenCalled();
 });
 
 test.each([

@@ -1,12 +1,10 @@
-import styles from "./copy-tooltip.module.css";
 import { Tooltip } from "./tooltip.tsx";
 
 import type { ReactNode } from "react";
 
 /**
- * The tooltip and screen-reader announcement for a copy control. A control whose copy is announced by a status region
- * it shares with other controls, such as an entry's copy status, sets `announcesConfirmation` to `false`, so a page
- * does not contain a status region per control. It is required, so each control states which region announces its copy.
+ * The tooltip of a copy control, which shows `confirmation` in place of `label` while `hasCopied`. The owner of the
+ * control's `useCopyToClipboard` renders the `CopyAnnouncer` that announces the copy.
  */
 export function CopyTooltip({
   label,
@@ -14,7 +12,6 @@ export function CopyTooltip({
   margin,
   hasCopied,
   suppressed = false,
-  announcesConfirmation,
   onDidHide,
   className,
   children,
@@ -24,29 +21,21 @@ export function CopyTooltip({
   margin?: number;
   hasCopied: boolean;
   suppressed?: boolean;
-  announcesConfirmation: boolean;
   onDidHide: () => void;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <>
-      <Tooltip
-        label={hasCopied ? confirmation : label}
-        margin={margin}
-        persistOnPress
-        showsState={hasCopied}
-        suppressed={suppressed}
-        onDidHide={onDidHide}
-        className={className}
-      >
-        {children}
-      </Tooltip>
-      {announcesConfirmation && (
-        <span className={styles.announcement} role="status">
-          {hasCopied ? confirmation : ""}
-        </span>
-      )}
-    </>
+    <Tooltip
+      label={hasCopied ? confirmation : label}
+      margin={margin}
+      persistOnPress
+      showsState={hasCopied}
+      suppressed={suppressed}
+      onDidHide={onDidHide}
+      className={className}
+    >
+      {children}
+    </Tooltip>
   );
 }

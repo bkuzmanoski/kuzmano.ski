@@ -6,13 +6,15 @@ import { DESTINATION_ORDER } from "#/config/navigation.ts";
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
 import { ICON_POSITIONS_STORAGE_KEY } from "#/lib/desktop-icons/positions.ts";
 import { LONG_PRESS_DURATION_MS } from "#/lib/menu/use-context-menu-press.ts";
+import { CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS } from "#/lib/menu/use-outside-touch-dismissal.ts";
 import type * as StartupSequenceLifecycle from "#/lib/startup-sequence/lifecycle.ts";
 import { ZoomRectContext } from "#/lib/window-manager/use-zoom-rect.ts";
 import type { WindowContent, WindowId, WindowRecord } from "#/lib/window-manager/window.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
-import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
+import { movePointerOver, releasePointerOver, runActivationFlash, stubCloseWatcher } from "#/test-utils/menu.ts";
 import { MOUSE_PRESS_INIT, SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
+import { stubVisualViewport } from "#/test-utils/visual-viewport.ts";
 
 import { DesktopIcons } from "./desktop-icons.tsx";
 
@@ -22,10 +24,11 @@ let notFoundRoute: string | null = null;
 let isStartupSequenceComplete = true;
 
 const open = vi.hoisted(() => vi.fn());
+const focusDesktop = vi.hoisted(() => vi.fn());
 
 vi.mock("#/lib/window-manager/context.ts", async () =>
   (await import("#/test-utils/window-manager.ts")).windowManagerMock({
-    actions: { open, focusDesktop: vi.fn() },
+    actions: { open, focusDesktop },
     content: () => windowContent,
     focusedWindow: () => focusedWindow,
     notFoundRoute: () => notFoundRoute,
@@ -332,7 +335,64 @@ test("the Down arrow key moves the highlight in the desktop menu, the Right arro
   expect(desktopMenu()).toBeNull();
 });
 
-test("the Enter key in the desktop menu plays the click sound and, after the item's activation flash, resets the icon positions and closes the menu", () => {
+test.each([["Escape"], ["Tab"]])(
+  "pressing the %s key in the desktop menu closes it and restores the focus to the previously focused element",
+  (key) => {
+    renderDesktop();
+    icon(1).focus();
+    fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+    expect(document.activeElement).toBe(desktopMenu());
+
+    fireEvent.keyDown(desktopMenu()!, { key });
+
+    expect(desktopMenu()).toBeNull();
+    expect(document.activeElement).toBe(icon(1));
+  },
+);
+
+test("a close request closes the desktop menu and restores focus to the previously focused element", () => {
+  const { requestClose } = stubCloseWatcher();
+
+  renderDesktop();
+  icon(1).focus();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  act(requestClose);
+
+  expect(desktopMenu()).toBeNull();
+  expect(document.activeElement).toBe(icon(1));
+});
+
+test("the Tab key in the desktop menu does not prevent its default action when the menu restores the focus to an element", () => {
+  renderDesktop();
+  icon(1).focus();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(fireEvent.keyDown(desktopMenu()!, { key: "Tab" })).toBe(true);
+});
+
+test("the Tab key in the desktop menu prevents its default action when the body had the focus before the menu opened", () => {
+  // The browser would otherwise move the focus from the menu to whatever follows it at the end of the body.
+  renderDesktop();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(fireEvent.keyDown(desktopMenu()!, { key: "Tab" })).toBe(false);
+  expect(desktopMenu()).toBeNull();
+});
+
+test("choosing the desktop menu item restores focus to the previously focused element", () => {
+  renderDesktop();
+  icon(1).focus();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+  fireEvent.keyDown(desktopMenu()!, { key: "ArrowDown" });
+  fireEvent.keyDown(desktopMenu()!, { key: "Enter" });
+  runActivationFlash();
+
+  expect(desktopMenu()).toBeNull();
+  expect(document.activeElement).toBe(icon(1));
+});
+
+test("the Enter key on the desktop menu item plays the click sound at once, and resets the icon positions and closes the menu after the activation flash", () => {
   renderDesktop();
 
   const defaultLeft = dragFirstIconAway();
@@ -418,7 +478,7 @@ test("the desktop menu stays open without activating the item when the long pres
   expect(desktopMenu()).not.toBeNull();
 });
 
-test("the desktop menu stays open when the long press that opened it releases outside the menu, and closes on the next press outside it", () => {
+test("the desktop menu stays open when the long press that opened it releases outside the menu, and closes when the next touch outside it ends", () => {
   renderDesktop();
   longPressDesktop();
   releasePointerOver(document.body, { clientX: 0, clientY: 0 });
@@ -427,7 +487,149 @@ test("the desktop menu stays open when the long press that opened it releases ou
 
   fireEvent.pointerDown(document.body, TOUCH_PRESS);
 
+  expect(desktopMenu()).not.toBeNull();
+
+  fireEvent.pointerUp(document.body, TOUCH_PRESS);
+
   expect(desktopMenu()).toBeNull();
+});
+
+test("a long press that opens the desktop menu focuses the desktop", () => {
+  renderDesktop();
+  longPressDesktop();
+
+  expect(desktopMenu()).not.toBeNull();
+  expect(focusDesktop).toHaveBeenCalledOnce();
+});
+
+test("a touch `contextmenu` event whose `pointerdown` reached another element opens the desktop menu above the press point and focuses the desktop", () => {
+  // Chrome on Android can adjust a touch's `pointerdown` onto a window beside the desktop without adjusting
+  // `contextmenu`.
+  renderDesktop();
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent(desktop(), new PointerEvent("contextmenu", { bubbles: true, cancelable: true, ...TOUCH_PRESS }));
+
+  expect(desktopMenu()!.classList).toContain(menuStyles.abovePoint);
+  expect(focusDesktop).toHaveBeenCalledOnce();
+});
+
+test("a `contextmenu` event without a press opens the desktop menu without focusing the desktop", () => {
+  renderDesktop();
+  fireEvent.contextMenu(desktop(), PRESS_POINT);
+
+  expect(desktopMenu()).not.toBeNull();
+  expect(focusDesktop).not.toHaveBeenCalled();
+});
+
+test("a long press on the desktop while the desktop menu is open opens a menu that stays open when the press ends", () => {
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+
+  const secondPress = { ...TOUCH_PRESS, pointerId: 2 };
+
+  fireEvent.pointerDown(desktop(), secondPress);
+  advanceTimersBy(LONG_PRESS_DURATION_MS);
+  fireEvent.pointerUp(desktop(), secondPress);
+
+  expect(desktopMenu()).not.toBeNull();
+});
+
+test("the desktop menu closes when a touch outside it scrolls the page", () => {
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent.pointerCancel(document.body, TOUCH_PRESS);
+  fireEvent.scroll(document);
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("the desktop menu closes when a touch outside it zooms the page", () => {
+  const viewport = stubVisualViewport();
+
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent.pointerCancel(document.body, TOUCH_PRESS);
+  act(() => {
+    viewport.dispatchEvent(new Event("resize"));
+  });
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("a touch drag on an icon canceled by the browser returns the icon to its starting position without playing the click sound", () => {
+  render(<DesktopIcons />);
+
+  const targetIcon = icon(0);
+  const initialLeft = targetIcon.style.left;
+  const initialTop = targetIcon.style.top;
+
+  fireEvent.pointerDown(targetIcon, { ...TOUCH_PRESS_INIT, clientX: 100, clientY: 100 });
+  vi.mocked(playClickSound).mockClear();
+  fireEvent.pointerMove(window, { ...TOUCH_PRESS_INIT, buttons: 1, clientX: 40, clientY: 100 });
+  advanceTimersToNextFrame();
+
+  expect(targetIcon.style.left).not.toBe(initialLeft);
+
+  fireEvent.pointerCancel(window, TOUCH_PRESS_INIT);
+
+  expect(targetIcon.style.left).toBe(initialLeft);
+  expect(targetIcon.style.top).toBe(initialTop);
+  expect(playClickSound).not.toHaveBeenCalled();
+});
+
+test("the desktop menu stays open when the page scrolls or zooms once `CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS` has elapsed since a canceled touch outside it", () => {
+  const viewport = stubVisualViewport();
+
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent.pointerCancel(document.body, TOUCH_PRESS);
+
+  expect(desktopMenu()).not.toBeNull();
+
+  advanceTimersBy(CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS);
+  fireEvent.scroll(document);
+  act(() => {
+    viewport.dispatchEvent(new Event("resize"));
+  });
+
+  expect(desktopMenu()).not.toBeNull();
+});
+
+test("the desktop menu closes when the first touch outside it ends while a second touch is held", () => {
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+  fireEvent.pointerDown(document.body, TOUCH_PRESS);
+  fireEvent.pointerDown(document.body, { ...TOUCH_PRESS, pointerId: 2, isPrimary: false });
+  fireEvent.pointerUp(document.body, TOUCH_PRESS);
+
+  expect(desktopMenu()).toBeNull();
+});
+
+test("a canceled touch outside the desktop menu that moved the focus closes the menu once `CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS` elapses", () => {
+  const outsideButton = document.body.appendChild(document.createElement("button"));
+
+  outsideButton.addEventListener("pointerdown", () => outsideButton.focus());
+  renderDesktop();
+  longPressDesktop();
+  releasePointerOver(document.body, { clientX: 0, clientY: 0 });
+  fireEvent.pointerDown(outsideButton, TOUCH_PRESS);
+  fireEvent.pointerCancel(outsideButton, TOUCH_PRESS);
+
+  expect(desktopMenu()).not.toBeNull();
+
+  advanceTimersBy(CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS);
+
+  expect(desktopMenu()).toBeNull();
+
+  outsideButton.remove();
 });
 
 test("the desktop menu closes when the secondary press that opened it releases outside the menu", () => {

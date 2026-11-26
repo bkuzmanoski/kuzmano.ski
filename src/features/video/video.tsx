@@ -15,7 +15,7 @@ import { focusWithTabIndexUntilBlur } from "#/lib/focus.ts";
 import { useClientValue, useIsHydrated } from "#/lib/hooks/use-client-value.ts";
 import { clamp } from "#/lib/math.ts";
 import { mergeRefs } from "#/lib/merge-refs.ts";
-import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { useAxisDrag } from "#/lib/press/use-axis-drag.ts";
 
 import styles from "./video.module.css";
 
@@ -32,10 +32,17 @@ interface WebKitVideoElement extends HTMLVideoElement {
 interface Scrub {
   /** Whether playback was active when dragging began, so it can resume when dragging ends. */
   wasPlaying: boolean;
+  /** The playback time to restore if the scrub is canceled. */
+  startSeconds: number;
   /** The playback time corresponding to the pointer position. */
   targetSeconds: number;
   /** The latest requested seek time, or `null` until the first seek is requested. */
   requestedSeconds: number | null;
+}
+
+interface SliderPress {
+  x: number;
+  trackLeft: number;
 }
 
 const LAYOUT_ATTRIBUTE_PREFIX = "data-content-";
@@ -109,17 +116,40 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
   // Media events that fired before hydration were missed, so the state is read from the element before it paints.
   useLayoutEffect(syncState, []);
 
-  // `timeupdate` fires only a few times a second, which moves the thumb in visible steps during playback.
+  // Update the thumb every frame for smooth playback as `timeupdate` alone fires too infrequently. The runs loop only
+  // while the slider is visible, as audio continues even if the video is scrolled out of view. `timeupdate` keeps the
+  // thumb's position and value current while it is out of view.
   useEffect(() => {
-    if (isPaused) {
+    const track = trackRef.current;
+
+    if (isPaused || !track) {
       return;
     }
 
-    return loopAnimationFrames(() => {
-      if (videoRef.current) {
-        syncPosition(videoRef.current);
+    let stopLoop: (() => void) | null = null;
+
+    const observer = new IntersectionObserver((entries) => {
+      // The last entry is the current one when the slider crossed the root's edge more than once since the last report.
+      if (entries.at(-1)?.isIntersecting) {
+        if (!stopLoop) {
+          stopLoop = loopAnimationFrames(() => {
+            if (videoRef.current) {
+              syncPosition(videoRef.current);
+            }
+          });
+        }
+      } else {
+        stopLoop?.();
+        stopLoop = null;
       }
     });
+
+    observer.observe(track);
+
+    return () => {
+      observer.disconnect();
+      stopLoop?.();
+    };
   }, [isPaused]);
 
   useEffect(() => {
@@ -157,7 +187,12 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     const video = videoRef.current;
 
     if (video) {
-      scrubRef.current = { wasPlaying: !video.paused, targetSeconds: video.currentTime, requestedSeconds: null };
+      scrubRef.current = {
+        wasPlaying: !video.paused,
+        startSeconds: video.currentTime,
+        targetSeconds: video.currentTime,
+        requestedSeconds: null,
+      };
       video.pause();
     }
   }
@@ -197,7 +232,8 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     }
   }
 
-  function endScrub() {
+  /** Ends the scrub at its target, or at the time it started from when the browser canceled the gesture. */
+  function endScrub({ isCanceled }: { isCanceled: boolean }) {
     const video = videoRef.current;
     const scrub = scrubRef.current;
 
@@ -207,12 +243,14 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
       return;
     }
 
-    // Apply the exact target because `fastSeek` may land on a keyframe and `seekToScrubTarget` can miss the latest
+    // Apply the exact time because `fastSeek` may seek to a keyframe and `seekToScrubTarget` can miss the latest
     // target.
-    video.currentTime = scrub.targetSeconds;
+    const endSeconds = isCanceled ? scrub.startSeconds : scrub.targetSeconds;
+
+    video.currentTime = endSeconds;
 
     // Playing a video from its end restarts it from the beginning.
-    if (scrub.wasPlaying && scrub.targetSeconds < duration) {
+    if (scrub.wasPlaying && endSeconds < duration) {
       video.play().catch(() => undefined); // `syncState` below reflects a rejected play as paused.
     }
 
@@ -239,21 +277,21 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     }
   }
 
-  const trackHandlers = usePointerDrag({
+  // The track lets the browser claim a vertical touch to scroll the page, so a touch press waits to begin the scrub
+  // (see `useAxisDrag`).
+  const trackHandlers = useAxisDrag<SliderPress>({
+    axis: "x",
     preventDefault: true,
     canStart: () => hasDuration,
-    start: (event) => {
-      const origin = { x: event.clientX, trackLeft: event.currentTarget.getBoundingClientRect().left };
-
+    start: (event) => ({ x: event.clientX, trackLeft: event.currentTarget.getBoundingClientRect().left }),
+    onBegin: (press, { dx }) => {
       playClickSound();
       trackRef.current?.focus({ preventScroll: true });
       startScrub();
-      scrubToPointer(origin.x, origin.trackLeft);
-
-      return origin;
+      scrubToPointer(press.x + dx, press.trackLeft);
     },
-    onDragMove: ({ dx }, origin) => scrubToPointer(origin.x + dx, origin.trackLeft),
-    onEnd: endScrub,
+    onDragMove: ({ dx }, press) => scrubToPointer(press.x + dx, press.trackLeft),
+    onEnd: ({ isCanceled }) => endScrub({ isCanceled }),
   });
 
   function onKeyDown(event: KeyboardEvent) {

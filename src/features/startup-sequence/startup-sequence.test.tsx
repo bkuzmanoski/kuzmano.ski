@@ -3,16 +3,14 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playKeyDownSound, playKeyPressSound, playKeyUpSound, playStartupChimeSound } from "#/lib/audio/sounds.ts";
 import { MIN_LOADING_DURATION_MS } from "#/lib/startup-sequence/phases.ts";
+import { stubVisibilityState } from "#/test-utils/visibility.ts";
 
 import { StartupSequence } from "./startup-sequence.tsx";
 
-const { primeAudio } = vi.hoisted(() => ({ primeAudio: vi.fn() }));
+const { needsAudioPriming, primeAudio } = vi.hoisted(() => ({ needsAudioPriming: vi.fn(), primeAudio: vi.fn() }));
 
 vi.mock("#/lib/audio/context.ts", async (importOriginal) =>
-  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, {
-    needsAudioPriming: () => true,
-    primeAudio,
-  }),
+  (await import("#/test-utils/audio.ts")).audioModuleMock(importOriginal, { needsAudioPriming, primeAudio }),
 );
 
 vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
@@ -20,6 +18,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 );
 
 beforeEach(() => {
+  needsAudioPriming.mockReturnValue(true);
   primeAudio.mockClear();
   vi.mocked(playKeyDownSound).mockClear();
   vi.mocked(playKeyUpSound).mockClear();
@@ -42,6 +41,27 @@ async function renderWaitingForInput() {
 
   return view;
 }
+
+test("the startup sequence begins without a press when no audio needs priming, once the page is visible", async () => {
+  const setVisibilityState = stubVisibilityState("hidden");
+
+  needsAudioPriming.mockReturnValue(false);
+  render(<StartupSequence />);
+
+  await act(async () => {
+    vi.advanceTimersByTime(MIN_LOADING_DURATION_MS);
+    await Promise.resolve();
+  });
+
+  expect(playStartupChimeSound).not.toHaveBeenCalled();
+
+  await act(async () => {
+    setVisibilityState("visible");
+    await Promise.resolve();
+  });
+
+  expect(playStartupChimeSound).toHaveBeenCalledOnce();
+});
 
 test("pressing a key primes audio while the startup sequence waits for input", async () => {
   await renderWaitingForInput();

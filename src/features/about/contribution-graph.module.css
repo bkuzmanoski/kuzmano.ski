@@ -21,6 +21,9 @@
 .scrollContainer {
   --contribution-graph-padding-block-end: calc(var(--contribution-graph-step) - 8 * var(--layout-bitmap-pixel));
 
+  /* Starts the year scrolled to its most recent week, and keeps that week in view while the calendar loads and the
+   * container resizes. `scroll-initial-target` would apply only at the first layout. `.track` sets the direction back
+   * for its content. */
   direction: rtl;
   overflow-x: auto;
   padding: var(--contribution-graph-step);
@@ -64,7 +67,6 @@
 }
 
 .weeks {
-  will-change: transform; /* Without the layer, Chrome re-rasterizes the mask of every day on each step. */
   display: flex;
   gap: var(--contribution-graph-gap);
 }
@@ -78,41 +80,27 @@
 .day {
   width: var(--contribution-graph-cell);
   height: var(--contribution-graph-cell);
+  color: var(--color-accent);
 
   &[data-level="1"] {
     @mixin dither-25;
-
-    color: var(--color-accent);
   }
 
   &[data-level="2"] {
     @mixin dither-50;
-
-    color: var(--color-accent);
   }
 
   &[data-level="3"] {
     @mixin dither-75;
-
-    color: var(--color-accent);
   }
 
   &[data-level="4"] {
-    background-color: var(--color-accent);
+    background-color: currentColor;
   }
 
   @media (forced-colors: active) {
+    color: CanvasText;
     forced-color-adjust: none;
-
-    &[data-level="1"],
-    &[data-level="2"],
-    &[data-level="3"] {
-      color: CanvasText;
-    }
-
-    &[data-level="4"] {
-      background-color: CanvasText;
-    }
   }
 }
 
@@ -157,6 +145,10 @@
       animation-duration: calc(var(--contribution-graph-week-count) * var(--contribution-graph-week-reveal-duration));
       animation-timing-function: steps(var(--contribution-graph-week-count), end);
       animation-fill-mode: both;
+
+      & .weeks {
+        will-change: transform; /* Without the layer, Chrome re-rasterizes the mask of every day on each step. */
+      }
     }
   }
 }
@@ -175,6 +167,10 @@
         animation-timeline: --contribution-graph;
         animation-range: entry var(--contribution-graph-reveal-start) cover
           min(45%, var(--contribution-graph-reveal-end-max));
+
+        & .weeks {
+          will-change: transform; /* Prevents mask re-rasterization, as above. Browsers without view timelines skip this animation. */
+        }
       }
     }
   }

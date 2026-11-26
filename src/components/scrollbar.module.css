@@ -25,6 +25,11 @@
   width: var(--layout-scrollbar-width);
   height: var(--layout-scrollbar-gutter-width);
 
+  /* Hide the arrow when the window is inactive. Use the focus state as a value because Safari 17 and Firefox before 151
+   * do not support style queries. The window's contents are inert and covered by its scrim, so the hidden arrow cannot
+   * receive pointer events. */
+  opacity: var(--window-focused, 1);
+
   &.arrowUp {
     border-bottom: 1px solid var(--color-border);
   }
@@ -55,8 +60,7 @@
   position: relative;
   flex: 1;
 
-  /* Use the inherited focus state instead of a style query. Safari can resolve a style query on a pseudo-element
-   * against the previous value, leaving the pattern one state behind. */
+  /* Hides the pattern in an inactive window (see `.arrow`). */
   &.filled::before {
     @mixin dither-13;
 
@@ -90,17 +94,11 @@
   height: var(--scrollbar-thumb-height);
   border-block: 1px solid var(--color-border);
 
+  opacity: var(--window-focused, 1); /* Hides the thumb in an inactive window (see `.arrow`). */
   background: var(--color-background);
 
   @media (forced-colors: active) {
     forced-color-adjust: none;
     background: CanvasText;
-  }
-}
-
-@container style(--window-focused: 0) {
-  .arrow,
-  .thumb {
-    visibility: hidden;
   }
 }

@@ -6,7 +6,7 @@ import { DETENT_PX, playPaneScrollSound } from "#/lib/audio/scroll.ts";
 import { useScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { clamp } from "#/lib/math.ts";
 import { DRAG_THRESHOLD_PX } from "#/lib/press/use-pointer-drag.ts";
-import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
+import { SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { ARROW_STEP_PX, ARROW_STEP_REPEAT_DELAY_MS, ARROW_STEP_REPEAT_INTERVAL_MS, Scrollbar } from "./scrollbar.tsx";
@@ -85,6 +85,8 @@ function renderScrollbar() {
 }
 
 const thumbCenterAt = (position: number) => TRACK_TOP_PX + THUMB_HEIGHT_PX / 2 + position * THUMB_TRAVEL_PX;
+
+type Scrollbar = ReturnType<typeof renderScrollbar>;
 
 function pressTrackAt(track: HTMLElement, position: number) {
   fireEvent.pointerDown(track, { button: 0, clientY: thumbCenterAt(position) });
@@ -377,13 +379,77 @@ test("a mouse press on the scrollbar does not hide the overflow of the viewport"
   expect(viewport.style.overflowY).toBe("");
 });
 
-test("a touch on the scrollbar still scrolls the viewport with its overflow hidden", () => {
+test("a vertical touch drag on the track scrolls the viewport despite its hidden overflow, and plays scroll sounds only after the jump that begins it", () => {
   const { viewport, track } = renderScrollbar();
 
-  fireEvent.pointerDown(track, { button: 0, pointerType: "touch", clientY: thumbCenterAt(0.5) });
+  fireEvent.pointerDown(track, { ...TOUCH_PRESS_INIT, clientY: thumbCenterAt(0.5) });
+
+  expect(viewport.scrollTop).toBe(0);
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  // Exceed `DRAG_THRESHOLD_PX` enough that an unsilenced jump would cross `DETENT_PX`.
+  fireEvent.pointerMove(track, {
+    ...TOUCH_PRESS_INIT,
+    buttons: 1,
+    clientY: thumbCenterAt(0.5) + DRAG_THRESHOLD_PX + 10,
+  });
+  advanceTimersBy(FRAME_MS);
+  advanceTimersBy(1);
+  fireEvent.scroll(viewport);
+
+  expect(viewport.scrollTop).toBeGreaterThan(MAX_SCROLL_TOP_PX / 2);
+  expect(viewport.style.overflowY).toBe("hidden");
+  expect(playClickSound).toHaveBeenCalledOnce();
+  expect(playScrollDetentSound).not.toHaveBeenCalled();
+
+  fireEvent.pointerMove(track, {
+    ...TOUCH_PRESS_INIT,
+    buttons: 1,
+    clientY: thumbCenterAt(0.75),
+  });
+  advanceTimersBy(FRAME_MS);
+  advanceTimersBy(1);
+  fireEvent.scroll(viewport);
+
+  expect(playScrollDetentSound).toHaveBeenCalledOnce();
+});
+
+test("a tap on the track scrolls to the tapped point and plays the click sound on its `click` event", () => {
+  const { viewport, track } = renderScrollbar();
+
+  fireEvent.pointerDown(track, { ...TOUCH_PRESS_INIT, clientY: thumbCenterAt(0.5) });
+
+  expect(viewport.scrollTop).toBe(0);
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  fireEvent.pointerUp(track, TOUCH_PRESS_INIT);
+
+  expect(viewport.scrollTop).toBe(0);
+
+  fireEvent.click(track, { detail: 1 });
 
   expect(viewport.scrollTop).toBe(MAX_SCROLL_TOP_PX / 2);
+  expect(playClickSound).toHaveBeenCalledOnce();
 });
+
+test.each([
+  ["track", ({ track }: Scrollbar) => track],
+  ["thumb", ({ thumb }: Scrollbar) => thumb],
+])(
+  "a sideways touch on the %s canceled by the browser does not scroll the viewport or play the click sound",
+  (_part, partOf) => {
+    const scrollbar = renderScrollbar();
+    const part = partOf(scrollbar);
+
+    fireEvent.pointerDown(part, { ...TOUCH_PRESS_INIT, clientX: 10, clientY: thumbCenterAt(0.5) });
+    fireEvent.pointerMove(part, { ...TOUCH_PRESS_INIT, buttons: 1, clientX: -40, clientY: thumbCenterAt(0.5) + 2 });
+    fireEvent.pointerCancel(part, TOUCH_PRESS_INIT);
+    advanceTimersBy(FRAME_MS);
+
+    expect(scrollbar.viewport.scrollTop).toBe(0);
+    expect(playClickSound).not.toHaveBeenCalled();
+  },
+);
 
 test("unmounting the scrollbar during a touch restores the overflow of the viewport", () => {
   const { viewport, thumb } = renderScrollbar();

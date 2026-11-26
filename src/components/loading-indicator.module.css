@@ -5,10 +5,11 @@
   & :global(.hand) path {
     --loading-indicator-hand-index: 0;
 
-    animation: tick-watch-hand calc(var(--loading-indicator-hands) * var(--loading-indicator-step-ms)) step-end infinite;
-    animation-delay: calc(
-      (var(--loading-indicator-hand-index) - var(--loading-indicator-hands)) * var(--loading-indicator-step-ms)
-    );
+    /* Shows only the first minute hand, at 12, so the watch reads 9:00 with the hour hand outside `.hand`. Without a
+     * reduced motion preference, the animation overrides this opacity to sweep the minute hand around the face. */
+    &:not(:first-child) {
+      opacity: 0;
+    }
 
     &:nth-child(2) {
       --loading-indicator-hand-index: 1;
@@ -36,6 +37,14 @@
 
     &:nth-child(8) {
       --loading-indicator-hand-index: 7;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: tick-watch-hand calc(var(--loading-indicator-hands) * var(--loading-indicator-step-ms)) step-end
+        infinite;
+      animation-delay: calc(
+        (var(--loading-indicator-hand-index) - var(--loading-indicator-hands)) * var(--loading-indicator-step-ms)
+      );
     }
   }
 

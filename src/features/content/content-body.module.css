@@ -1,24 +1,16 @@
 @custom-selector :--within-rail-span :not([data-content-span="wide"], [data-content-span="pane"]);
 
+/* Elements with relaxed spacing before and after them. The list is wrapped in `:where()` to prevent the build from
+ * splitting rules that use a custom selector containing a list. */
+@custom-selector :--relaxed-space-element
+  :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"]);
+
+/* Elements with the loose space after them. */
+@custom-selector :--loose-space-element :where(h1 + p, hr, [data-content-space="loose"]);
+
 @counter-style content-body-ordered-list {
   suffix: " ";
   system: extends decimal-leading-zero;
-}
-
-@counter-style content-body-unordered-list-level-1 {
-  symbols: "\25AB";
-  system: cyclic;
-}
-
-@counter-style content-body-unordered-list-level-2 {
-  symbols: "\25AA";
-  system: cyclic;
-}
-
-@counter-style content-body-hidden {
-  suffix: "";
-  symbols: "";
-  system: cyclic;
 }
 
 :where(.content) {
@@ -57,6 +49,8 @@
     "liga" 1,
     "calt" 1;
   font-variant-numeric: proportional-nums;
+  overflow-wrap: break-word;
+
   print-color-adjust: exact;
 }
 
@@ -104,10 +98,10 @@
 }
 
 .content :where([data-content-body]) {
-  /* Half the space on either side of a text column centered within the full width. Where supported, this is rounded
-   * down to a whole pixel (see below). Uses `cqw` instead of `%` so it also works in `row-gap`, where percentages
-   * resolve against height. */
-  --content-body-measure-margin: calc((100cqw - var(--content-body-layout-measure)) / 2);
+  /* Half the space on either side of a text column centered within the full width, rounded down to a whole pixel so
+   * bitmap labels stay pixel aligned on 1x displays. Uses `cqw` instead of `%` so it also works in `row-gap`, where
+   * percentages resolve against height. */
+  --content-body-measure-margin: round(down, (100cqw - var(--content-body-layout-measure)) / 2, 1px);
 
   /* Half the remaining width beside the gutters, rail, and text column. Subtracting half the rail track from the
    * rounded measure margin keeps the track and subsequent grid lines on whole pixels when the gutter is a whole pixel
@@ -137,11 +131,6 @@
    * `observe-rail-clearances.ts`). */
   padding-block: var(--content-body-padding-block)
     calc(var(--content-body-padding-block) + var(--content-body-end-rail-clearance, 0px));
-
-  @supports (width: round(down, 1px, 1px)) {
-    /* Rounded down to a whole pixel so bitmap labels stay pixel aligned on 1x displays. */
-    --content-body-measure-margin: round(down, (100cqw - var(--content-body-layout-measure)) / 2, 1px);
-  }
 
   &:where(:has(> [data-entry-masthead])) {
     --content-body-padding-block: clamp(
@@ -195,12 +184,9 @@
     margin-block-start: calc(var(--content-body-layout-space) + var(--content-body-rail-clearance, 0px));
   }
 
-  & > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) + *,
-  &
-    > :where(figure, table, blockquote, [data-callout], [data-content-space="relaxed"])
-    + :where([data-rail-asides])
-    + *,
-  & > * + :where(h3, figure, table, blockquote, [data-callout], [data-content-space="relaxed"]) {
+  & > :--relaxed-space-element + *,
+  & > :--relaxed-space-element + :where([data-rail-asides]) + *,
+  & > * + :where(h3, :--relaxed-space-element) {
     margin-block-start: calc(var(--content-body-layout-space-relaxed) + var(--content-body-rail-clearance, 0px));
   }
 
@@ -210,11 +196,14 @@
     ); /* 4px more than the space below the border for optical balance. */
   }
 
+  /* stylelint-disable no-descending-specificity -- Stylelint counts a custom selector as a pseudo-class, but
+   * `:--relaxed-space-element` and `:--loose-space-element` expand to `:where()`, which adds no specificity. */
   & > * + :where(hr, [data-content-space="loose"]),
-  & > :where(h1, h1 + p, hr, [data-content-space="loose"], [data-entry-masthead]) + *,
-  & > :where(h1 + p, hr, [data-content-space="loose"]) + :where([data-rail-asides]) + * {
+  & > :where(h1, :--loose-space-element, [data-entry-masthead]) + *,
+  & > :--loose-space-element + :where([data-rail-asides]) + * {
     margin-block-start: calc(var(--content-body-layout-space-loose) + var(--content-body-rail-clearance, 0px));
   }
+  /* stylelint-enable no-descending-specificity */
 
   & > * + [data-rail-asides] {
     margin-block-start: var(--content-body-layout-space);
@@ -279,7 +268,6 @@
   }
 
   & > :where(h2[data-section-number])::before {
-    content: attr(data-section-number);
     content: attr(data-section-number) / "";
     inset-inline-start: 0;
     top: calc(var(--content-body-first-line-offset) - 1px); /* From inside the border. */
@@ -294,12 +282,10 @@
   }
 
   & > :where(figure[data-figure-number])::before {
-    content: "Fig. " attr(data-figure-number);
     content: "Fig. " attr(data-figure-number) / "";
   }
 
   & > :where(table[data-table-number])::before {
-    content: "Table " attr(data-table-number);
     content: "Table " attr(data-table-number) / "";
     display: table-caption;
   }
@@ -430,7 +416,11 @@
       [data-content-default-styles="on"] [data-content-default-styles="off"] *
     )
   ) {
-  &:where(h1, h2, h3, p, li, figcaption, dt, dd) {
+  &:where(h1, h2, h3) {
+    text-wrap: balance;
+  }
+
+  &:where(p, li, figcaption, dt, dd) {
     text-wrap: pretty;
   }
 
@@ -475,7 +465,6 @@
   /* Archivo has no arrow glyph, so an external link in Archivo omits the arrow adornment. */
   &:where(a[target="_blank"]):not(:where(h1, h2, h3, blockquote) *)::after {
     /* The text variation selector (U+FE0E) prevents iOS from drawing the arrow as an emoji in a fallback font. */
-    content: "\202f\2197\fe0e";
     content: "\202f\2197\fe0e" / "";
   }
 
@@ -503,7 +492,6 @@
 
     &::before,
     &::after {
-      content: "`";
       content: "`" / "";
     }
   }
@@ -546,7 +534,10 @@
   }
 
   &:where(ul) {
-    list-style-type: content-body-hidden; /* Avoid `list-style: none;` to preserve accessibility in Safari. */
+    /* Render bullets in `::before` because Safari's VoiceOver stops at list markers before reading item text. Safari
+     * removes the list role from markerless `<ul>` elements, so each needs `role="list"` (added by `rehypeListRoles` in
+     * entries and manually in components). */
+    list-style-type: none;
   }
 
   &:where(ul) > li {
@@ -556,18 +547,14 @@
   &:where(ul) > li::before {
     @mixin bitmap-label;
 
-    content: counter(list-item, content-body-unordered-list-level-1);
-    content: counter(list-item, content-body-unordered-list-level-1) / "";
-
+    content: "\25AB" / ""; /* A string, as WebKit exposes a counter to assistive technology even with empty alternative text. */
     position: absolute;
     inset-inline-start: -16px;
-
     line-height: inherit;
   }
 
   &:where(ul ul) > li::before {
-    content: counter(list-item, content-body-unordered-list-level-2);
-    content: counter(list-item, content-body-unordered-list-level-2) / "";
+    content: "\25AA" / "";
   }
 
   &:where(ol) {
@@ -642,7 +629,7 @@
     --content-body-hr-square-size: calc(8 * var(--layout-bitmap-pixel));
     --content-body-hr-square-gap: calc(12 * var(--layout-bitmap-pixel));
     --content-body-hr-square-step: calc(var(--content-body-hr-square-size) + var(--content-body-hr-square-gap));
-    --content-body-hr-middle-square-position: 50%;
+    --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--layout-bitmap-pixel)));
 
     height: var(--content-body-hr-square-size);
 
@@ -666,10 +653,6 @@
 
     @media (forced-colors: active) {
       forced-color-adjust: none;
-    }
-
-    @supports (width: round(down, 1px, 1px)) {
-      --content-body-hr-middle-square-position: round(down, 50%, calc(2 * var(--layout-bitmap-pixel)));
     }
   }
 
@@ -762,7 +745,6 @@
     padding-block: 4px;
 
     &::before {
-      content: "\201c";
       content: "\201c" / "";
 
       inset-block: var(--content-body-first-line-offset) auto;
@@ -777,16 +759,16 @@
 
       -webkit-text-fill-color: transparent;
 
-      /* A rail item (see the rail items above). */
-      @supports (anchor-scope: all) {
-        @media (scripting: enabled) {
-          inset-inline-start: anchor(start);
-        }
-      }
-
       @media (forced-colors: active) {
         -webkit-text-fill-color: GrayText;
       }
+    }
+  }
+
+  /* The quotation mark is a rail item (see the rail items above). */
+  @mixin content-rail-anchored {
+    &::before {
+      inset-inline-start: anchor(start);
     }
   }
 }

@@ -1,4 +1,11 @@
-import { act, fireEvent, screen, within } from "@testing-library/react";
+import {
+  RouterContextProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { Suspense, useState } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -276,6 +283,41 @@ test("opening an entry without a fragment does not scroll", async () => {
   expect(scrollIntoViewSilently).not.toHaveBeenCalled();
 });
 
+test("navigating to a fragment of an entry that is already mounted scrolls to the element that the fragment names and focuses it", async () => {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: "/other" }),
+      createRoute({ getParentRoute: () => rootRoute, path: "/collection/$slug" }),
+    ]),
+    history: createMemoryHistory({ initialEntries: ["/other"] }),
+  });
+  const content = Promise.resolve({ stylesheetClassNames: {}, ...headingAnchorFixture });
+  const target: EntryTarget = pageTargetOf(SLUG, TITLE);
+
+  pageContent.module = content;
+
+  await router.load();
+  await act(() =>
+    render(
+      <RouterContextProvider router={router}>
+        <Suspense>
+          <ContentBody route={ROUTE} target={target} />
+        </Suspense>
+      </RouterContextProvider>,
+    ),
+  );
+
+  expect(scrollIntoViewSilently).not.toHaveBeenCalled();
+
+  await act(() => router.navigate({ href: `${ROUTE}#fixture-heading` }));
+
+  const heading = screen.getByRole("heading", { name: /Fixture Heading/ });
+
+  expect(scrollIntoViewSilently).toHaveBeenCalledExactlyOnceWith(heading, { block: "start" });
+  expect(document.activeElement).toBe(heading);
+});
+
 test("a press on a heading link with the mouse plays the click sound", async () => {
   await renderContent(headingAnchorFixture);
   pressWithMouse(screen.getByRole("link", { name: headingLinkName("Fixture Heading") }));
@@ -379,11 +421,32 @@ test("a copy from a second code block during the first code block's confirmation
   await copyFrom(secondCopyControl!);
   advanceTimersBy(STATE_DISPLAY_DURATION_MS / 2);
 
-  expect(status.textContent).toBe("Copied"); // The first copy's confirmation would have ended here.
+  expect(status.textContent).toBe("Copied\u00A0"); // The first copy's confirmation would have ended here.
 
   advanceTimersBy(STATE_DISPLAY_DURATION_MS / 2);
 
   expect(status.textContent).toBe("");
+});
+
+test("the status region announces a copy from a second code block with text that differs from that of the first, even after the region empties", async () => {
+  await renderContent(codeBlocksFixture);
+  vi.useFakeTimers();
+
+  const [firstCopyControl, secondCopyControl] = screen.getAllByRole("button", { name: "Copy to Clipboard" });
+  const status = screen.getByRole("status");
+
+  await copyFrom(firstCopyControl!);
+
+  expect(status.textContent).toBe("Copied");
+
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
+
+  expect(status.textContent).toBe("");
+
+  await copyFrom(secondCopyControl!);
+
+  // VoiceOver skips a message with the same text as the previous one, even after the region is emptied.
+  expect(status.textContent).toBe("Copied\u00A0");
 });
 
 test("a code block's copy control ignores a second press during its confirmation, leaving the same confirmation element in the status region", async () => {

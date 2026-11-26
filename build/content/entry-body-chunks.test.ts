@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 
 import { CLIENT_ENVIRONMENT, SERVER_ENVIRONMENT } from "../environments.ts";
 import { CONTENT_DIRECTORY_PATH, fromContent, fromRoot } from "../paths.ts";
-import { hookOf } from "../test-utils/plugin-hooks.ts";
+import { hookOf, throwError } from "../test-utils/plugin-hooks.ts";
 
 import {
   entryBodyChunksIn,
@@ -149,10 +149,6 @@ test("the URLs of an entry's chunks and stylesheets begin with the base", () => 
 
 test("the virtual module exports the body chunks captured from the client build in the SSR build", async () => {
   const [capture, provider] = entryBodyChunksPlugin();
-  const throwError = (message: string) => {
-    throw new Error(message);
-  };
-
   hookOf<GenerateBundle>(capture!, "generateBundle").call(
     { environment: { config: { base: "/" } }, error: throwError },
     {},

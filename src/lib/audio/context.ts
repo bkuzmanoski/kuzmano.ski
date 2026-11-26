@@ -26,6 +26,9 @@ let audioContext: AudioContext | null = null;
 let outputGainNode: GainNode | null = null;
 let runningPromise: Promise<void> | null = null;
 
+/** Counts the times the page became hidden, so a sound waiting for the context to run can tell that it did. */
+let pageHideCount = 0;
+
 const hasUserActivation = () => (navigator as Partial<Navigator>).userActivation?.hasBeenActive ?? true;
 
 /**
@@ -101,13 +104,25 @@ export function getGainNode(context: AudioContext): GainNode {
   return outputGainNode;
 }
 
-/** Resumes the audio context when a backgrounded tab becomes visible again. */
-function resumeAudioOnReturn(): void {
-  if (!audioContext || document.visibilityState !== "visible" || getSettings().soundEffects !== "on") {
+/**
+ * Suspends the audio context while the page is hidden, and resumes it when the page becomes visible again with sound
+ * effects on.
+ *
+ * A running context renders on the audio thread even while silent.
+ */
+function followPageVisibility(): void {
+  if (!audioContext) {
     return;
   }
 
-  ensureResumed(audioContext);
+  if (document.visibilityState === "hidden") {
+    pageHideCount++;
+    void audioContext.suspend().catch(() => {
+      // Ignored.
+    });
+  } else if (getSettings().soundEffects === "on") {
+    ensureResumed(audioContext);
+  }
 }
 
 export const needsAudioPriming = (): boolean =>
@@ -145,20 +160,23 @@ export function useAudioUnlock() {
     document.addEventListener("pointerdown", primeAudio, listenerOptions); // Mouse clicks.
     document.addEventListener("pointerup", primeAudio, listenerOptions); // Touch taps.
     document.addEventListener("keydown", primeAudioOnKeyDown, listenerOptions);
-    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: controller.signal });
+    document.addEventListener("visibilitychange", followPageVisibility, { signal: controller.signal });
 
     return () => controller.abort();
   }, []);
 }
 
 /**
- * Calls `play` with the audio context once the context is running, when sound effects are on.
+ * Calls `play` with the audio context once the context is running, when sound effects are on and the page is visible.
  *
  * `play` runs synchronously when the context is already running. Otherwise the context is resumed and `play` waits for
- * its `running` state.
+ * its `running` state, unless the page becomes hidden first.
+ *
+ * A sound requested while the page is hidden, or waiting when it becomes hidden, would play when the user returns, out
+ * of step with what requested it, so this drops it. Resuming the context for it would also undo `followPageVisibility`.
  */
 export function schedulePlayback(play: (context: AudioContext) => void) {
-  if (getSettings().soundEffects !== "on") {
+  if (getSettings().soundEffects !== "on" || document.visibilityState === "hidden") {
     return;
   }
 
@@ -175,5 +193,11 @@ export function schedulePlayback(play: (context: AudioContext) => void) {
 
   ensureResumed(context);
 
-  void whenAudioRunning(context).then(() => play(context));
+  const pageHideCountAtRequest = pageHideCount;
+
+  void whenAudioRunning(context).then(() => {
+    if (pageHideCount === pageHideCountAtRequest) {
+      play(context);
+    }
+  });
 }

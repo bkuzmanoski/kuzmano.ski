@@ -11,7 +11,8 @@ import {
 } from "#/lib/experience/career-timeline-viewport.ts";
 import { careerTimelinePlacementCenterOf } from "#/lib/experience/career-timeline.ts";
 import type { CareerTimelineDirection } from "#/lib/experience/career-timeline.ts";
-import { usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { useAxisDrag } from "#/lib/press/use-axis-drag.ts";
+import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
 
 import { axisFractionAt, readCareerTimelineLayout } from "./career-timeline-layout.ts";
 
@@ -28,6 +29,16 @@ export interface CareerTimelineListState {
   hiddenDisciplineIds: ReadonlySet<string>;
 }
 
+interface ChartPress {
+  layout: CareerTimelineLayout;
+  /** The fraction of the chart's axis that the visible-range frame centers on before the pointer travels. */
+  pressCenter: number;
+  isPressOnVisibleRangeFrame: boolean;
+  /** The scroll position to restore if the drag is canceled. */
+  startScrollTop: number;
+  isScrollSoundSilenced: boolean;
+}
+
 const scrollPaneOf = (listElement: HTMLElement | null): HTMLElement | null =>
   listElement?.closest(SCROLL_PANE_VIEWPORT_SELECTOR) ?? null;
 
@@ -41,6 +52,15 @@ function scrollToVisibleCareerTimelineCenter(layout: CareerTimelineLayout, cente
   if (scrollTop !== null) {
     layout.scrollPane.scrollTop = scrollTop;
   }
+}
+
+/** Scrolls the list so the visible-range frame centers on the press center moved by `delta` along the chart's axis. */
+function scrollListAlongChart(press: ChartPress, { dx, dy }: DragDelta) {
+  const { layout, pressCenter } = press;
+  scrollToVisibleCareerTimelineCenter(
+    layout,
+    visibleCareerTimelineCenterAfterTravel(pressCenter, layout.axis.isHorizontal ? dx : dy, layout.axis.lengthPx),
+  );
 }
 
 /**
@@ -105,7 +125,10 @@ export function useCareerTimelineMinimap(
     // without scrolling or resizing the scroll pane.
   }, [chartColumn, lanes, visibleRangeFrame, list, direction, hiddenDisciplineIds]);
 
-  return usePointerDrag({
+  // A touch press waits to scroll the list, as the browser can still cancel the gesture to scroll the scroll pane where
+  // the chart allows it with `touch-action`.
+  return useAxisDrag<ChartPress>({
+    axis: (press) => (press.layout.axis.isHorizontal ? "x" : "y"),
     preventDefault: true,
     start: (event) => {
       const scrollPane = scrollPaneOf(list.current);
@@ -122,36 +145,40 @@ export function useCareerTimelineMinimap(
         pressFraction >= visiblePlacement.offset &&
         pressFraction <= visiblePlacement.offset + visiblePlacement.size;
 
-      playClickSound();
-
-      if (!isPressOnVisibleRangeFrame) {
-        silenceScrollAt(layout.scrollPane);
-        scrollToVisibleCareerTimelineCenter(layout, pressFraction);
-      }
-
       return {
         layout,
         pressCenter: isPressOnVisibleRangeFrame ? careerTimelinePlacementCenterOf(visiblePlacement) : pressFraction,
-        isScrollSoundSilenced: !isPressOnVisibleRangeFrame,
+        isPressOnVisibleRangeFrame,
+        startScrollTop: layout.scrollPane.scrollTop,
+        isScrollSoundSilenced: false,
       };
     },
-    onDragMove: ({ dx, dy }, drag) => {
-      if (!drag) {
-        return;
+    onBegin: (press, delta) => {
+      playClickSound();
+
+      // A press away from the visible-range frame jumps the list to the press, without playing the scroll sound until
+      // the next move. A press on the frame scrolls the list only once the pointer travels.
+      if (!press.isPressOnVisibleRangeFrame) {
+        press.isScrollSoundSilenced = true;
+        silenceScrollAt(press.layout.scrollPane);
+        scrollListAlongChart(press, delta);
+      } else if (delta.dx !== 0 || delta.dy !== 0) {
+        scrollListAlongChart(press, delta);
+      }
+    },
+    onDragMove: (delta, press) => {
+      if (press.isScrollSoundSilenced) {
+        press.isScrollSoundSilenced = false;
+        recordScrollAt(press.layout.scrollPane); // Resume scroll sounds after a jump.
       }
 
-      if (drag.isScrollSoundSilenced) {
-        drag.isScrollSoundSilenced = false;
-        recordScrollAt(drag.layout.scrollPane); // Resume scroll sounds after a jump.
+      scrollListAlongChart(press, delta);
+    },
+    onEnd: ({ start: press, isCanceled }) => {
+      if (isCanceled) {
+        silenceScrollAt(press.layout.scrollPane);
+        press.layout.scrollPane.scrollTop = press.startScrollTop;
       }
-
-      const { layout, pressCenter } = drag;
-      const pointerTravelPx = layout.axis.isHorizontal ? dx : dy;
-
-      scrollToVisibleCareerTimelineCenter(
-        layout,
-        visibleCareerTimelineCenterAfterTravel(pressCenter, pointerTravelPx, layout.axis.lengthPx),
-      );
     },
   });
 }

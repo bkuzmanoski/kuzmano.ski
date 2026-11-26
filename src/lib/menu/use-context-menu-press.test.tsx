@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import { MOUSE_PRESS_INIT, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
+import { MOUSE_PRESS_INIT, SECOND_TOUCH_PRESS_INIT, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { playClickSound } from "../audio/sounds.ts";
@@ -76,6 +76,16 @@ test("a `contextmenu` event during a press on the target reports the pointer as 
     isPointerHeld: true,
     pointerType: "mouse",
   });
+});
+
+test("a touch `contextmenu` event whose `pointerdown` reached another element opens the menu with the pointer held", () => {
+  // Chrome on Android can adjust a touch's `pointerdown` to a nearby control without adjusting its `contextmenu`.
+  const { target, other } = renderTarget();
+
+  fireEvent.pointerDown(other, TOUCH_PRESS);
+  fireEvent(target, new PointerEvent("contextmenu", { bubbles: true, cancelable: true, ...TOUCH_PRESS }));
+
+  expect(onPress).toHaveBeenCalledExactlyOnceWith({ origin: ORIGIN, isPointerHeld: true, pointerType: "touch" });
 });
 
 test("a `contextmenu` event after the release of a press on the target reports the pointer as released, like the event on Windows", () => {
@@ -217,7 +227,7 @@ test("a second touch before the long press duration elapses does not open the me
   const { target } = renderTarget();
 
   fireEvent.pointerDown(target, TOUCH_PRESS);
-  fireEvent.pointerDown(target, { ...TOUCH_PRESS, pointerId: 2, isPrimary: false });
+  fireEvent.pointerDown(target, { ...SECOND_TOUCH_PRESS_INIT, ...POSITION });
   advanceTimersBy(LONG_PRESS_DURATION_MS);
 
   expect(onPress).not.toHaveBeenCalled();

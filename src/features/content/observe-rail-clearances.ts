@@ -97,6 +97,8 @@ function updateRailClearances(body: HTMLElement) {
  * Returns a cleanup function that stops observing.
  */
 export function observeRailClearances(body: HTMLElement | null) {
+  // Match the `@supports` condition of `content-rail-anchored` in `/src/mixins.css`. Scripting is already enabled here;
+  // outside `content-rail-expanded`, rail items remain in the flow and need no clearance.
   if (!body || !CSS.supports("anchor-scope: all")) {
     return;
   }

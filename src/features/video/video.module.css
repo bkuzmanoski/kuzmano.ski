@@ -68,7 +68,9 @@
 .track {
   --video-progress: 0; /* Set from JS. */
 
-  touch-action: none; /* A touch dragged along the track seeks the video, so the browser must not claim the gesture for panning and cancel it. */
+  /* Reserve horizontal drags for seeking. Vertical swipes scroll the page and trigger `pointercancel` to end
+   * scrubbing. */
+  touch-action: pan-y pinch-zoom;
 
   position: relative;
 

@@ -1,4 +1,4 @@
-import { memo, useId, useRef } from "react";
+import { memo, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import DownloadMenuItemIndicator from "#/assets/images/menu-item-indicator-download.svg?react";
@@ -32,6 +32,9 @@ export type MenuOpener =
   | { kind: "title"; title: HTMLElement; labelledBy: string }
   /** A context menu that opens at the point pressed. */
   | { kind: "point"; position: Position; pointerType: string; label: string };
+
+/** The item highlighted when the menu opens, or `"none"` to wait until the user moves to an item. */
+export type InitialMenuItem = "first" | "last" | "none";
 
 const isEnabled = (entry: MenuItem | undefined): entry is MenuAction => entry?.kind === "action" && !entry.disabled;
 const isLink = (entry: MenuItem | undefined) => isEnabled(entry) && entry.href !== undefined;
@@ -123,7 +126,7 @@ export function Menu({
   items,
   opener,
   isPointerHeld,
-  focusesFirstItem,
+  initialItem,
   onOpenAdjacentMenu,
   onClose,
 }: {
@@ -131,10 +134,10 @@ export function Menu({
   opener: MenuOpener;
   isPointerHeld: boolean;
   /**
-   * `true` for a menu opened with the keyboard or a `click` that does not end a press on its title, so the arrow keys
-   * move from an item rather than from the menu itself. Read only when the menu mounts.
+   * `"first"` or `"last"` for a menu opened with the keyboard or a `click` that does not end a press on its title, so
+   * the arrow keys move from an item rather than from the menu itself. Read only when the menu mounts.
    */
-  focusesFirstItem: boolean;
+  initialItem: InitialMenuItem;
   /** `undefined` for a menu without adjacent menus. */
   onOpenAdjacentMenu?: (direction: 1 | -1) => void;
   onClose: () => void;
@@ -142,6 +145,13 @@ export function Menu({
   const itemIdPrefix = useId();
   const isApplePlatform = useIsApplePlatform();
   const menuRef = useRef<HTMLDivElement>(null);
+  // A context menu returns the focus to the element other than the body focused before it opened, as it has no title to
+  // take the focus back.
+  const [previouslyFocusedElement] = useState(() =>
+    document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null,
+  );
   const isContextMenu = opener.kind === "point";
   const opensAbovePoint = isContextMenu && opener.pointerType !== "mouse";
 
@@ -149,20 +159,19 @@ export function Menu({
     label: item.kind === "action" ? item.label : "",
     isEnabled: isEnabled(item),
   }));
+  const isInteractionItemEnabled = (index: number) => menuInteractionItems[index]?.isEnabled === true;
 
   const { focusedItemIndex, isHighlighted, onClick, onKeyDown } = useMenuInteraction({
     items: menuInteractionItems,
     anchor: isContextMenu ? null : opener.title,
+    focusReturnTarget: isContextMenu ? previouslyFocusedElement : opener.title,
     listRef: menuRef,
     openingPress: {
-      // A menu above a finger or pen stays open when it lifts, as it lifts away from the menu, like a touch device's
-      // own context menus. A sticky menu still activates an item the press slides to and releases on.
       isPointerHeld: isPointerHeld && !opensAbovePoint,
       origin: isContextMenu ? opener.position : null, // A menu with a title opens below it rather than over the point pressed.
     },
-    initialFocusedItemIndex: focusesFirstItem
-      ? edgeIndexOf("first", menuInteractionItems.length, (index) => menuInteractionItems[index]?.isEnabled === true)
-      : -1,
+    initialFocusedItemIndex:
+      initialItem === "none" ? -1 : edgeIndexOf(initialItem, menuInteractionItems.length, isInteractionItemEnabled),
     isBrowserHandledRelease: (index, event) => isLink(items[index]) && isBrowserHandledClick(event),
     activatesOnNonPrimaryRelease: isContextMenu,
     onActivate: (index) => {

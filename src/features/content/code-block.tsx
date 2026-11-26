@@ -75,7 +75,6 @@ export function CodeBlock({
           <ControlledCopyButton
             copyStatus={entryClipboard?.copyStatusOf(copyControlId) ?? null}
             disabled={!isHydrated || entryClipboard === null}
-            announcesConfirmation={false}
             variant="strip"
             className={styles.control}
             onCopy={() => entryClipboard?.copyToClipboard(copyControlId, preRef.current?.textContent ?? "", "code")}

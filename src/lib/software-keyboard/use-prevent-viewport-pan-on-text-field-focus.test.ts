@@ -2,6 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
+import { stubVisualViewport } from "#/test-utils/visual-viewport.ts";
 
 import { usePreventViewportPanOnTextFieldFocus } from "./use-prevent-viewport-pan-on-text-field-focus.ts";
 
@@ -24,8 +25,7 @@ let setIsTouchOnly: (matches: boolean) => void;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  viewport = Object.assign(new EventTarget(), { scale: 1 });
-  vi.stubGlobal("visualViewport", viewport);
+  viewport = stubVisualViewport();
   stubUserAgent(IPHONE_USER_AGENT);
   setIsTouchOnly = stubMatchMedia();
   setIsTouchOnly(true);

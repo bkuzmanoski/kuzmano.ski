@@ -5,9 +5,11 @@ import { PopupMenu } from "#/components/popup-menu.tsx";
 import type { PopupMenuOption } from "#/components/popup-menu.tsx";
 import { EXPERIENCE_MONTH_FORMAT } from "#/config/content.ts";
 import { ContentLink } from "#/features/content/content-link.tsx";
+import { formattedDatePropsOf } from "#/features/content/formatted-date-props.ts";
 import { FormattedDate } from "#/features/content/formatted-date.tsx";
 import { accentColorVariable } from "#/lib/accent-colors.ts";
 import { cx } from "#/lib/class-names.ts";
+import { formatDate, fullMonthFormatterOf } from "#/lib/datetime.ts";
 import {
   DEFAULT_CAREER_TIMELINE_DIRECTION,
   careerTimelineModelFrom,
@@ -20,14 +22,17 @@ import {
   roleKeyOf,
   yearsIn,
 } from "#/lib/experience/career-timeline.ts";
-import type { CareerTimelineDirection, Experience, MonthSpan } from "#/lib/experience/career-timeline.ts";
+import type { CareerTimelineDirection, Experience, MonthSpan, Role } from "#/lib/experience/career-timeline.ts";
 import { useDateFormat } from "#/lib/locale/use-date-format.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
+import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import { careerTimelinePlacementAttributesOf } from "./career-timeline-layout.ts";
 import styles from "./career-timeline.module.css";
 import { useCareerTimelineLastRoleHeight } from "./use-career-timeline-last-role-height.ts";
 import { useCareerTimelineMinimap } from "./use-career-timeline-minimap.ts";
+
+import type { ReactNode } from "react";
 
 const CAREER_TIMELINE_DIRECTION_OPTIONS: ReadonlyArray<PopupMenuOption<CareerTimelineDirection>> = [
   { value: "newest-first", label: "Newest first" },
@@ -35,6 +40,36 @@ const CAREER_TIMELINE_DIRECTION_OPTIONS: ReadonlyArray<PopupMenuOption<CareerTim
 ];
 const TICK_INTERVAL_YEARS = 4;
 const CHAR_WORD_JOINER = "\u2060";
+
+function organizationAndDatesOf(role: Role, monthPart: (month: string) => ReactNode) {
+  const [startMonth, dash, endMonth] = roleDatesLabelPartsOf(role, monthPart);
+  return (
+    <>
+      {role.organization}, {startMonth}
+      {CHAR_WORD_JOINER}
+      {dash}
+      {CHAR_WORD_JOINER}
+      {endMonth}
+    </>
+  );
+}
+
+function spokenOrganizationAndDatesOf(role: Role, format: Intl.DateTimeFormat): ReactNode {
+  if (languageAttributeInDocumentFor(format) === undefined) {
+    const [startMonth, , endMonth] = roleDatesLabelPartsOf(role, (month) => formatDate(month, format));
+    return `${role.organization}, ${startMonth} to ${endMonth}`; // VoiceOver does not read an en-dash.
+  }
+
+  const [startMonth, , endMonth] = roleDatesLabelPartsOf(role, (month) => (
+    <span {...formattedDatePropsOf(month, format)} />
+  ));
+
+  return (
+    <>
+      {role.organization}, {startMonth} to {endMonth}
+    </>
+  );
+}
 
 const careerTimelinePlacementVariables = (
   span: MonthSpan,
@@ -80,6 +115,13 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
   const hasVisibleRoles = visibleCareerTimelineRoles.length > 0;
 
   const monthTimeElementOf = (month: string) => <FormattedDate date={month} format={monthFormat} />;
+
+  // macOS speech may read abbreviated months before a year as words (e.g., "Jul 2025" or "Dec 2020"). The spoken copy
+  // uses full month names in the same locale. As ARIA prohibits naming a `<time>` and VoiceOver may read a date twice
+  // when `<time>` wraps it in its own element, the paragraph hides the displayed text from assistive technology and
+  // overlays a transparent copy (`.spokenText`).
+  const fullMonthFormat = fullMonthFormatterOf(monthFormat);
+
   const toggleDiscipline = (id: string) =>
     setHiddenDisciplineIds((hidden) => {
       const next = new Set(hidden);
@@ -165,7 +207,6 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
         >
           {visibleCareerTimelineRoles.map((careerTimelineRole) => {
             const { role, span, shownDiscipline } = careerTimelineRole;
-            const [startMonth, dash, endMonth] = roleDatesLabelPartsOf(role, monthTimeElementOf);
             return (
               <li
                 key={roleKeyOf(role)}
@@ -179,15 +220,23 @@ export function CareerTimeline({ asOf, disciplines, roles }: Experience) {
                   <p className={styles.disciplines}>{roleDisciplinesLabelOf(careerTimelineRole)}</p>
                 </div>
                 <p className={styles.organizationAndDates}>
-                  {role.organization}, {startMonth}
-                  {CHAR_WORD_JOINER}
-                  {dash}
-                  {CHAR_WORD_JOINER}
-                  {endMonth}
+                  {fullMonthFormat ? (
+                    <>
+                      <span aria-hidden="true">{organizationAndDatesOf(role, monthTimeElementOf)}</span>
+                      <span className={styles.spokenText} suppressHydrationWarning>
+                        {spokenOrganizationAndDatesOf(role, fullMonthFormat)}
+                      </span>
+                    </>
+                  ) : (
+                    organizationAndDatesOf(role, monthTimeElementOf)
+                  )}
                 </p>
                 <p className={styles.summary}>{role.summary}</p>
                 {role.highlights && role.highlights.length > 0 && (
-                  <ul className={styles.highlights}>
+                  <ul
+                    className={styles.highlights}
+                    role="list" // The explicit role is required because Safari removes the list role of a `<ul>` without list markers.
+                  >
                     {role.highlights.map((highlight) => (
                       <li key={highlight}>{highlight}</li>
                     ))}

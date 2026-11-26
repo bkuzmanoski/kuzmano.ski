@@ -10,7 +10,7 @@ import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent }
 /** The window within which a second press pairs with the first. */
 export const DOUBLE_PRESS_INTERVAL_MS = 350;
 
-/** How far a press may travel, and how far the second may land from the first. */
+/** The maximum distance from a press's start to its release, and between the two releases. */
 const DOUBLE_PRESS_TOLERANCE_PX = 16;
 
 const exceedsTolerance = (event: ReactPointerEvent, from: Position) =>
@@ -22,9 +22,9 @@ const exceedsTolerance = (event: ReactPointerEvent, from: Position) =>
  * Uses the native `dblclick` event for mouse input and pairs pointer releases for touch and pen input, including
  * browsers that do not synthesize `dblclick` for double taps.
  *
- * Two presses form a double press when the second lands within `DOUBLE_PRESS_INTERVAL_MS` and
- * `DOUBLE_PRESS_TOLERANCE_PX` of the first. The hook treats a press that travels beyond `DOUBLE_PRESS_TOLERANCE_PX` as
- * a drag, which does not count toward a double press.
+ * For touch and pen input, two releases form a double press when the second occurs within `DOUBLE_PRESS_INTERVAL_MS`
+ * and `DOUBLE_PRESS_TOLERANCE_PX` of the first. A press released more than `DOUBLE_PRESS_TOLERANCE_PX` from its start
+ * is treated as a drag and does not count toward a double press.
  *
  * `acceptsDoublePress` decides whether a double press calls `onDoublePress`. When it returns `true` for a touch or pen
  * double press, the hook also swallows the rest of the second press. When it returns `false` (e.g., for a second press

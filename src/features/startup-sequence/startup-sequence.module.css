@@ -285,7 +285,11 @@
     }
 
     &.reading :global(.led) {
-      animation: disk-activity 4s step-end infinite;
+      opacity: 1;
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation: disk-activity 4s step-end infinite;
+      }
     }
   }
 
@@ -426,7 +430,9 @@
 
       background-color: currentColor;
 
-      animation: blink 1s step-end infinite;
+      @media (prefers-reduced-motion: no-preference) {
+        animation: blink 1s step-end infinite;
+      }
     }
   }
 }

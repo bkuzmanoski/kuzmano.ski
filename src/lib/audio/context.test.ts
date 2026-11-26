@@ -1,6 +1,8 @@
+import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { FakeAudioContext } from "#/test-utils/audio.ts";
+import { stubVisibilityState } from "#/test-utils/visibility.ts";
 
 const settings = vi.hoisted(() => ({ soundEffects: "on" }));
 
@@ -14,6 +16,9 @@ const setUserActivation = (hasBeenActive: boolean) =>
 
 /** The module keeps its context for the session, so each test loads a fresh module instance. */
 const loadContextModule = async () => await import("./context.ts");
+
+/** Lets the promise callbacks that a state change queued run, so a test can assert that a sound did not play. */
+const settlePromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
   vi.resetModules();
@@ -124,6 +129,47 @@ describe("schedulePlayback", () => {
 
     await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
   });
+
+  test("does not resume the context for a sound requested while the page is hidden, or play the sound once the page is visible", async () => {
+    FakeAudioContext.initialState = "running";
+
+    const setVisibilityState = stubVisibilityState();
+    const { schedulePlayback, primeAudio, useAudioUnlock } = await loadContextModule();
+    const play = vi.fn();
+
+    renderHook(useAudioUnlock);
+    primeAudio();
+    setVisibilityState("hidden");
+
+    const context = FakeAudioContext.instances[0]!;
+
+    schedulePlayback(play);
+
+    expect(context.resumeCount).toBe(0);
+
+    setVisibilityState("visible");
+    context.transitionToRunning();
+    await settlePromises();
+
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  test("does not play a sound that was waiting for the context when the page hid, and plays a sound requested after the page is visible again", async () => {
+    const setVisibilityState = stubVisibilityState();
+    const { schedulePlayback, useAudioUnlock } = await loadContextModule();
+    const soundBeforeHiding = vi.fn();
+    const soundAfterReturning = vi.fn();
+
+    renderHook(useAudioUnlock);
+    schedulePlayback(soundBeforeHiding);
+    setVisibilityState("hidden");
+    setVisibilityState("visible");
+    schedulePlayback(soundAfterReturning);
+    FakeAudioContext.instances[0]!.transitionToRunning();
+
+    await vi.waitFor(() => expect(soundAfterReturning).toHaveBeenCalledOnce());
+    expect(soundBeforeHiding).not.toHaveBeenCalled();
+  });
 });
 
 describe("primeAudio", () => {
@@ -206,6 +252,44 @@ describe("needsAudioPriming", () => {
     primeAudio();
 
     expect(needsAudioPriming()).toBe(true);
+  });
+});
+
+describe("useAudioUnlock", () => {
+  test("suspends the audio context while the page is hidden, and resumes it when the page is visible again", async () => {
+    FakeAudioContext.initialState = "running";
+
+    const setVisibilityState = stubVisibilityState();
+    const { primeAudio, useAudioUnlock } = await loadContextModule();
+
+    renderHook(useAudioUnlock);
+    primeAudio();
+
+    const context = FakeAudioContext.instances[0]!;
+
+    setVisibilityState("hidden");
+
+    expect(context.suspendCount).toBe(1);
+    expect(context.resumeCount).toBe(0);
+
+    setVisibilityState("visible");
+
+    expect(context.resumeCount).toBe(1);
+  });
+
+  test("does not resume the audio context when the page is visible again after sound is turned off", async () => {
+    FakeAudioContext.initialState = "running";
+
+    const setVisibilityState = stubVisibilityState();
+    const { primeAudio, useAudioUnlock } = await loadContextModule();
+
+    renderHook(useAudioUnlock);
+    primeAudio();
+    setVisibilityState("hidden");
+    settings.soundEffects = "off";
+    setVisibilityState("visible");
+
+    expect(FakeAudioContext.instances[0]!.resumeCount).toBe(0);
   });
 });
 

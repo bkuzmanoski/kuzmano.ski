@@ -1,8 +1,14 @@
 import { useEffect, useEffectEvent } from "react";
 
-type EventMapOf<TTarget extends "window" | "document"> = TTarget extends "window" ? WindowEventMap : DocumentEventMap;
+type EventTargetName = "window" | "document" | "visualViewport";
 
-export type EventListeners<TTarget extends "window" | "document"> = {
+type EventMapOf<TTarget extends EventTargetName> = TTarget extends "window"
+  ? WindowEventMap
+  : TTarget extends "document"
+    ? DocumentEventMap
+    : VisualViewportEventMap;
+
+export type EventListeners<TTarget extends EventTargetName> = {
   [TType in keyof EventMapOf<TTarget>]?: (event: EventMapOf<TTarget>[TType]) => void;
 };
 
@@ -14,11 +20,11 @@ export interface EventListenerOptions {
 }
 
 /**
- * Registers listeners for each event type in `listeners` on `window` or `document` after mount, then removes them on
- * unmount. Listeners always call the latest handler without being re-registered; they are re-registered only when the
- * target, event types, or options change.
+ * Registers listeners for each event type in `listeners` on `window`, `document`, or `window.visualViewport` after
+ * mount, then removes them on unmount. Listeners always call the latest handler and re-register only when the target,
+ * event types, or options change.
  */
-export function useEventListeners<TTarget extends "window" | "document">(
+export function useEventListeners<TTarget extends EventTargetName>(
   target: TTarget,
   listeners: EventListeners<TTarget>,
   { capture = false, passive, enabled = true }: EventListenerOptions = {},
@@ -33,8 +39,13 @@ export function useEventListeners<TTarget extends "window" | "document">(
       return;
     }
 
+    const eventTarget = target === "window" ? window : target === "document" ? document : window.visualViewport;
+
+    if (!eventTarget) {
+      return;
+    }
+
     const controller = new AbortController();
-    const eventTarget = target === "window" ? window : document;
 
     for (const type of eventTypes.split(" ")) {
       eventTarget.addEventListener(type, (event) => dispatch(type, event), {

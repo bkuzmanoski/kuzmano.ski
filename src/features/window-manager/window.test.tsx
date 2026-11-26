@@ -786,6 +786,28 @@ test("dragging the resize control reports the size being chosen and applies it o
   expect(onDrag).toHaveBeenLastCalledWith(null);
 });
 
+test.each([
+  ["the title bar", () => windowTitleBar()],
+  ["the resize control", () => screen.getByLabelText("Resize")],
+])(
+  "a drag on %s canceled by the browser leaves the position and size of the window unchanged",
+  async (_handleName, handle) => {
+    const onMove = vi.fn();
+    const onResize = vi.fn();
+    const onDrag = vi.fn();
+
+    render(windowShowing("tall", TALL_PANE_ELEMENT, true, { onMove, onResize, onDrag }));
+    fireEvent.pointerDown(handle(), { clientX: 0, clientY: 0, button: 0 });
+    fireEvent.pointerMove(handle(), { clientX: -50, clientY: 0, buttons: 1 });
+    await nextAnimationFrame();
+    fireEvent.pointerCancel(handle());
+
+    expect(onMove).not.toHaveBeenCalled();
+    expect(onResize).not.toHaveBeenCalled();
+    expect(onDrag).toHaveBeenLastCalledWith(null);
+  },
+);
+
 test("the resize control clears its pressed state when the pointer moves outside it", async () => {
   render(windowShowing("tall", TALL_PANE_ELEMENT));
 

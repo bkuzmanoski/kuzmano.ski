@@ -1,7 +1,11 @@
 .columnHeadings,
 .listView {
   --collection-body-max-width: 800px;
-  --collection-body-centering-inset: max(0px, (100cqi - var(--collection-body-max-width)) / 2);
+  --collection-body-centering-inset: max(
+    0px,
+    /* Rounded down to a whole pixel so icons stay pixel aligned on 1x displays. */
+    round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px)
+  );
   --collection-body-icon-size: 16px;
   --collection-body-icon-gap: 10px;
   --collection-body-document-icon-width: 12px;
@@ -9,11 +13,6 @@
 
   container: collection-body / inline-size;
   font: var(--font-ui);
-
-  @supports (width: round(down, 1px, 1px)) {
-    /* Rounded down to a whole pixel so icons stays pixel aligned on 1x displays. */
-    --collection-body-centering-inset: max(0px, round(down, (100cqi - var(--collection-body-max-width)) / 2, 1px));
-  }
 }
 
 .columnHeadings {
@@ -99,9 +98,8 @@
     @mixin highlight;
   }
 
-  /* Scrolling the first or last row into view includes the list's padding, so the row reaches the end of the list. A
-   * press on a clipped row scrolls the row into view on `mousedown`, which can leave the pointer over the padding. The
-   * row's press area extends over the padding, so its second press still lands on the row and opens the entry. */
+  /* Include the list padding when scrolling the first or last row into view. Extend the row's press area over that
+   * padding so a second press still opens the entry if `mousedown` scrolling moves the row away from the pointer. */
   .list > li:first-child & {
     scroll-margin-block-start: calc(var(--collection-body-padding-block) - var(--layout-gutter));
 

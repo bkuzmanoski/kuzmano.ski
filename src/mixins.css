@@ -17,12 +17,15 @@
 @define-mixin menu {
   @mixin panel;
 
-  /* A long press can end with the finger over a context menu (e.g., near the top of the viewport, where the menu has no
-   * room above the finger), and iOS then selects nearby text and displays the loupe. `menu-item` sets it on the items,
-   * but the finger can land on the menu's padding or border. */
+  /* A long press may end over the context menu, such as when it opens below a touch near the top of the viewport.
+   * Prevent iOS from selecting nearby text and showing the loupe when the touch ends on the menu's padding or border;
+   * `menu-item` already disables selection on the items. */
   user-select: none;
 
-  padding: 4px 0;
+  position: fixed;
+  z-index: var(--layer-menu);
+
+  padding: var(--layout-menu-padding-block) 0;
   border-color: var(
     --color-highlight-background /* Matches the background of an open menu title in `menu-bar.module.css`. */
   );
@@ -30,6 +33,8 @@
 
   font: var(--font-chrome);
   color: var(--color-foreground);
+
+  outline: none;
 }
 
 @define-mixin menu-item {
@@ -39,7 +44,7 @@
   display: flex;
   align-items: center;
 
-  height: 32px;
+  height: var(--layout-menu-item-height);
   padding: 0 var(--layout-gutter);
 
   white-space: nowrap;
@@ -76,7 +81,7 @@
   gap: 8px;
   align-items: baseline;
 
-  padding-block: 3px; /* Makes a line of `--font-chrome` as tall as a text `Button`. */
+  padding-block: calc((var(--layout-control-height) - 1lh) / 2); /* Makes one line as tall as a text `Button`. */
 
   font: var(--font-chrome);
   color: var(--color-foreground);
@@ -175,6 +180,7 @@
 @define-mixin focus-ring {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 1px;
+  box-shadow: 0 0 0 1px var(--color-background);
 }
 
 /* A dotted outline for a rounded control. Unlike `focus-stroke`, it follows the control's border radius. */
@@ -211,8 +217,25 @@
   }
 }
 
+/* Where rail items stay in the flow (the complement of `content-rail-anchored`). */
+@define-mixin content-rail-unanchored {
+  @mixin content-rail-collapsed {
+    @mixin-content;
+  }
+
+  @supports not (anchor-scope: all) {
+    @mixin-content;
+  }
+
+  @media not (scripting: enabled) {
+    @mixin-content;
+  }
+}
+
 @define-mixin entry-masthead-in-rail {
   @mixin content-rail-anchored {
+    /* Inline equivalent of `:--within-rail-span` from `content-body.module.css` as this mixin also expands in
+     * `entry-masthead.module.css`. */
     &:where(:has(+ h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"]))) {
       @mixin-content;
     }
@@ -240,7 +263,8 @@
   padding: 1px;
 
   color: var(--color-accent);
-  text-decoration: underline rgb(from var(--color-accent) r g b / 35%);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 
@@ -271,11 +295,9 @@
 
 /* Rounds the inline size down to 4n + 1 bitmap pixels, so a `dither-06` fill starts and ends on a column of dots. */
 @define-mixin dither-06-inline-size {
-  @supports (width: round(down, 1px, 1px)) {
-    inline-size: calc(
-      round(down, 100% - var(--layout-bitmap-pixel), 4 * var(--layout-bitmap-pixel)) + var(--layout-bitmap-pixel)
-    );
-  }
+  inline-size: calc(
+    round(down, 100% - var(--layout-bitmap-pixel), 4 * var(--layout-bitmap-pixel)) + var(--layout-bitmap-pixel)
+  );
 }
 
 /* Renders a `dither-06` fill behind the element's content, in a `::before` the block positions with `inset`. The
@@ -360,9 +382,28 @@
   }
 }
 
+/* Hides the element's native scrollbar. Where `scrollbar-width` is unsupported (Safari before 18.2), it hides
+ * `::-webkit-scrollbar` instead, which switches WebKit to custom scrollbars for the element. */
+@define-mixin scrollbar-hidden {
+  scrollbar-width: none;
+
+  @supports not (scrollbar-width: none) {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
 /* A device without an input that can both hover and point precisely (e.g., a phone or tablet without a mouse). */
 @define-mixin without-fine-pointer {
   @media not all and (any-hover: hover) and (any-pointer: fine) {
+    @mixin-content;
+  }
+}
+
+/* A device with an input that can both hover and point precisely (the complement of `without-fine-pointer`). */
+@define-mixin with-fine-pointer {
+  @media (any-hover: hover) and (any-pointer: fine) {
     @mixin-content;
   }
 }

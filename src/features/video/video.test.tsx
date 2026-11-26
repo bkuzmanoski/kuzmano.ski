@@ -4,6 +4,9 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound } from "#/lib/audio/sounds.ts";
+import { DRAG_THRESHOLD_PX } from "#/lib/press/use-pointer-drag.ts";
+import { stubIntersectionObserver } from "#/test-utils/intersection-observer.ts";
+import { SECOND_TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { Video } from "./video.tsx";
@@ -91,14 +94,22 @@ function renderVideoWithLaidOutSlider() {
 
 const thumbCenterAt = (position: number) => THUMB_WIDTH_PX / 2 + position * (TRACK_WIDTH_PX - THUMB_WIDTH_PX);
 
-function pressSliderAt(slider: HTMLElement, position: number) {
-  fireEvent.pointerDown(slider, { button: 0, clientX: thumbCenterAt(position) });
+function pressSliderAt(slider: HTMLElement, position: number, { pointerType = "mouse" } = {}) {
+  fireEvent.pointerDown(slider, { button: 0, pointerType, clientX: thumbCenterAt(position) });
 }
 
-function dragSliderTo(slider: HTMLElement, position: number) {
-  fireEvent.pointerMove(slider, { buttons: 1, clientX: thumbCenterAt(position) });
+/** Moves the pointer pressed on the slider to `position` along it, `dy` pixels below the slider's top edge. */
+function dragSliderTo(slider: HTMLElement, position: number, { dy = 0 } = {}) {
+  fireEvent.pointerMove(slider, { buttons: 1, clientX: thumbCenterAt(position), clientY: dy });
   advanceTimersBy(FRAME_MS);
 }
+
+/** Positions on the slider for a touch that moves by the drag threshold, and for one that moves past it. */
+const POSITION_WITHIN_DRAG_THRESHOLD = 0.25 + DRAG_THRESHOLD_PX / (TRACK_WIDTH_PX - THUMB_WIDTH_PX);
+const POSITION_PAST_DRAG_THRESHOLD = 0.5;
+
+/** Ends the gesture as a browser does when it claims a touch to scroll the page. */
+const cancelPointer = (slider: HTMLElement) => fireEvent.pointerCancel(slider);
 
 function finishSeek(video: HTMLVideoElement) {
   playback.seeking = false;
@@ -447,6 +458,129 @@ test("releasing the slider at the end of the video leaves a playing video paused
   expect(screen.getByRole("button", { name: "Play" })).toBeDefined();
 });
 
+test("a mouse press on the slider plays the click sound and focuses the slider before the pointer moves", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25);
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+  expect(document.activeElement).toBe(slider);
+});
+
+test("a mouse scrub canceled by the browser returns the video to the time it started from", () => {
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  playback.currentTime = 6;
+  pressSliderAt(slider, 0.25);
+
+  expect(playback.currentTime).toBe(15);
+
+  finishSeek(video);
+  cancelPointer(slider);
+
+  expect(playback.currentTime).toBe(6);
+});
+
+test("a touch press on the slider does not seek, pause playback, play the click sound, or take the focus until it moves horizontally past the drag threshold", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  dragSliderTo(slider, POSITION_WITHIN_DRAG_THRESHOLD, { dy: 40 }); // A vertical swipe that the browser can claim.
+
+  expect(playback.currentTime).toBe(0);
+  expect(playback.paused).toBe(false);
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(document.activeElement).not.toBe(slider);
+
+  dragSliderTo(slider, POSITION_PAST_DRAG_THRESHOLD);
+
+  expect(playback.currentTime).toBe(30);
+  expect(playback.paused).toBe(true);
+  expect(playClickSound).toHaveBeenCalledOnce();
+  expect(document.activeElement).toBe(slider);
+});
+
+test("a touch press on the slider that moves further vertically than horizontally does not seek, play the click sound, or take the focus", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  dragSliderTo(slider, POSITION_PAST_DRAG_THRESHOLD, { dy: 40 }); // A diagonal swipe that the browser can claim.
+
+  expect(playback.currentTime).toBe(0);
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(document.activeElement).not.toBe(slider);
+});
+
+test("a touch press on the slider canceled by the browser before it moves past the drag threshold does not seek or play the click sound", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  dragSliderTo(slider, 0.25, { dy: 40 });
+  cancelPointer(slider);
+
+  expect(playback.currentTime).toBe(0);
+  expect(playClickSound).not.toHaveBeenCalled();
+});
+
+test("a touch scrub canceled by the browser returns the video to the time it started from and resumes playback", () => {
+  const { video, slider } = renderVideoWithLaidOutSlider();
+
+  playback.currentTime = 6;
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  dragSliderTo(slider, POSITION_PAST_DRAG_THRESHOLD);
+
+  expect(playback.currentTime).toBe(30);
+
+  finishSeek(video);
+  cancelPointer(slider);
+
+  expect(playback.currentTime).toBe(6);
+  expect(playback.paused).toBe(false);
+  expect(screen.getByRole("button", { name: "Pause" })).toBeDefined();
+});
+
+test("a second touch that lands in the frame of the first touch's move prevents the seek and the click sound", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  playback.currentTime = 6;
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  fireEvent.pointerMove(slider, { buttons: 1, clientX: thumbCenterAt(POSITION_PAST_DRAG_THRESHOLD), clientY: 0 });
+  fireEvent.pointerDown(slider, SECOND_TOUCH_PRESS_INIT);
+  advanceTimersBy(FRAME_MS);
+
+  expect(playClickSound).not.toHaveBeenCalled();
+  expect(playback.currentTime).toBe(6);
+});
+
+test("a tap on the slider seeks to the time under the touch point and plays the click sound on its `click` event", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  playback.currentTime = 6;
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  fireEvent.pointerUp(slider);
+
+  expect(playback.currentTime).toBe(6);
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  fireEvent.click(slider, { detail: 1 });
+
+  expect(playback.currentTime).toBe(15);
+  expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test("a tap on the slider followed by a `click` event on a nearby control does not seek", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+
+  playback.currentTime = 6;
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  fireEvent.pointerUp(slider);
+  fireEvent.click(screen.getByRole("button", { name: "Mute" }), { detail: 1 });
+
+  expect(playback.currentTime).toBe(6);
+});
+
 test("seeking sets the `--video-progress` custom property of the slider to the current time as a fraction of the duration", () => {
   renderVideo();
 
@@ -457,4 +591,50 @@ test("seeking sets the `--video-progress` custom property of the slider to the c
   fireEvent.keyDown(slider, { key: "ArrowRight" });
 
   expect(slider.style.getPropertyValue("--video-progress")).toBe("0.25");
+});
+
+test("the slider follows playback on animation frames only while in view", () => {
+  vi.useFakeTimers();
+
+  const reportIntersection = stubIntersectionObserver();
+
+  renderVideo();
+
+  const slider = screen.getByRole("slider", { name: "Seek" });
+  const followOneFrameTo = (currentTime: number) => {
+    playback.currentTime = currentTime;
+    advanceTimersBy(FRAME_MS);
+  };
+
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  reportIntersection(slider, true);
+  followOneFrameTo(6);
+
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.1");
+  expect(slider.getAttribute("aria-valuenow")).toBe("6");
+
+  reportIntersection(slider, false);
+  followOneFrameTo(12);
+
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.1");
+  expect(slider.getAttribute("aria-valuenow")).toBe("6");
+
+  reportIntersection(slider, true);
+  followOneFrameTo(18);
+
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.3");
+  expect(slider.getAttribute("aria-valuenow")).toBe("18");
+});
+
+test("a `timeupdate` event moves the slider to the current time while it is out of view", () => {
+  const { container } = renderVideo();
+  const slider = screen.getByRole("slider", { name: "Seek" });
+
+  // The `IntersectionObserver` mock in `vitest.setup.ts` does not report visibility, leaving the slider out of view.
+  fireEvent.click(screen.getByRole("button", { name: "Play" }));
+  playback.currentTime = 12;
+  fireEvent(container.querySelector("video")!, new Event("timeupdate"));
+
+  expect(slider.style.getPropertyValue("--video-progress")).toBe("0.2");
+  expect(slider.getAttribute("aria-valuenow")).toBe("12");
 });

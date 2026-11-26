@@ -17,15 +17,6 @@
 .menu {
   @mixin menu;
 
-  position: fixed;
-  z-index: var(--layer-menu);
-  position-anchor: --menu; /* Declared by a context menu's `.pressPoint` or by a titled menu's opener (for example, the title wrapper in `menu-bar.module.css`). */
-
-  /* The area extends from the anchor's start edges to the viewport's end edges. When the menu overflows, the browser
-   * shifts it back into the viewport, keeping it aligned with its anchor during viewport resizing. The menu does not
-   * use `position-try-fallbacks`, which keeps the last fallback that fit until it no longer fits. */
-  position-area: block-end span-inline-end;
-
   width: max-content;
   min-width: 220px;
 
@@ -33,9 +24,19 @@
   margin-block-end: calc(var(--layout-safe-area-bottom) + var(--layout-viewport-margin));
   margin-inline-end: calc(var(--layout-safe-area-right) + var(--layout-viewport-margin));
 
-  outline: none;
+  /* Openers share an anchor name, scoped to each opener. Browsers that support anchor positioning but not
+   * `anchor-scope` (e.g., Chrome 125–130) would anchor every menu to the last opener, so they use the fallback
+   * below. */
+  @supports (anchor-scope: --menu) {
+    position-anchor: --menu; /* Declared by a context menu's `.pressPoint` or by a titled menu's opener (for example, the title wrapper in `menu-bar.module.css`). */
 
-  @supports not (anchor-name: --menu) {
+    /* The area extends from the anchor's start edges to the viewport's end edges. When the menu overflows, the browser
+     * moves it back into the viewport, keeping it aligned with its anchor during viewport resizing. The menu does not
+     * use `position-try-fallbacks`, which keeps the last fallback that fit until it no longer fits. */
+    position-area: block-end span-inline-end;
+  }
+
+  @supports not (anchor-scope: --menu) {
     position: absolute;
     top: 100%;
     left: 0;
@@ -45,12 +46,15 @@
 .abovePoint {
   --menu-finger-clearance: 24px; /* Clears the pad of a fingertip, which extends past the point the browser reports. */
 
-  position-area: block-start span-all;
   margin-block: calc(var(--layout-safe-area-top) + var(--layout-viewport-margin)) var(--menu-finger-clearance);
   margin-inline: calc(var(--layout-safe-area-left) + var(--layout-viewport-margin))
     calc(var(--layout-safe-area-right) + var(--layout-viewport-margin));
 
-  @supports not (anchor-name: --menu) {
+  @supports (anchor-scope: --menu) {
+    position-area: block-start span-all;
+  }
+
+  @supports not (anchor-scope: --menu) {
     top: auto;
     bottom: 100%;
     translate: -50% calc(-1 * var(--menu-finger-clearance));

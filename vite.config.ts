@@ -1,4 +1,5 @@
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import browserslist from "browserslist";
 import postcssMixins from "postcss-mixins";
 import postcssPresetEnv from "postcss-preset-env";
 import { defineConfig } from "vite";
@@ -19,6 +20,7 @@ import { verifyPrerenderedDocument } from "./build/prerender/verify.ts";
 import { reactCompilerOptimizationFailures, reactPlugins } from "./build/react-compiler.ts";
 import { robotsPlugin } from "./build/robots.ts";
 import { siteIconsPlugin } from "./build/site-icons/plugin.ts";
+import { cssTargetFrom, cssTargetPlugin } from "./build/stylesheet/css-target.ts";
 import { themeColorsPlugin } from "./build/stylesheet/theme-colors.ts";
 import { svgrOptions } from "./build/svgr.ts";
 import { workersRuntimePlugin } from "./build/workers-runtime.ts";
@@ -44,9 +46,11 @@ export default defineConfig(({ command }) => {
         ],
       },
     },
+    build: { cssTarget: cssTargetFrom(browserslist()) },
     plugins: [
       workersRuntimePlugin(),
       themeColorsPlugin(),
+      cssTargetPlugin(),
       cssAssetsPlugin(),
       headersFilePlugin([MEDIA_HEADERS_RULE, FEED_HEADERS_RULE, LLMS_TXT_HEADERS_RULE]),
       robotsPlugin(),

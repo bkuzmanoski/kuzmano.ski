@@ -258,7 +258,7 @@ A paragraph.
 - [ ] Open
 - [x] Done
 `),
-    ).toBe(`<ul>
+    ).toBe(`<ul role="list">
 <li>[ ] Open</li>
 <li>[x] Done</li>
 </ul>`);

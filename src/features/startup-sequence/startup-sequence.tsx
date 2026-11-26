@@ -53,6 +53,28 @@ import styles from "./startup-sequence.module.css";
 
 import type { Ref } from "react";
 
+/**
+ * Resolves when the document becomes visible, or immediately if it already is. Aborting `signal` stops listening and
+ * leaves the promise pending.
+ */
+function whenDocumentVisible(signal: AbortSignal): Promise<void> {
+  if (document.visibilityState === "visible") {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (document.visibilityState === "visible") {
+          resolve();
+        }
+      },
+      { signal },
+    );
+  });
+}
+
 const cssInset = (edges: Inset) => `${edges.top}px ${edges.right}px ${edges.bottom}px ${edges.left}px`;
 const cssTransform = ({ scale, x, y }: Transform) => `translate(${x}px, ${y}px) scale(${scale})`;
 const cssParallaxTransform = ({ translate, scale }: typeof KEYBOARD_PARALLAX) =>
@@ -185,6 +207,7 @@ function StartupSequenceContent() {
       whenIllustrationReady(bodyImageRef.current, keyboardImageRef.current),
       whenDisplayGlassLayerReady(glassLayerImageRef.current),
       new Promise((resolve) => timers.push(setTimeout(resolve, MIN_LOADING_DURATION_MS))),
+      whenDocumentVisible(controller.signal), // Wait until the page is visible so the sequence doesn't run unseen when audio doesn't need priming.
     ];
 
     void Promise.all(readinessPromises).then(() => {

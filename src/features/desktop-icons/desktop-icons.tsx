@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import type { MenuItem } from "#/components/menu-items.ts";
 import { Menu } from "#/components/menu.tsx";
+import type { InitialMenuItem } from "#/components/menu.tsx";
 import { ICON_LAYOUT } from "#/config/desktop.ts";
 import { DESTINATION_ORDER } from "#/config/navigation.ts";
 import { useOpenWindowFrom } from "#/features/window-manager/use-open-window-from.ts";
@@ -65,13 +66,28 @@ export function DesktopIcons() {
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const activationFlash = useActivationFlash<string>();
   const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
-  const [desktopMenu, setDesktopMenu] = useState<{ press: ContextMenuPress; focusesFirstItem: boolean } | null>(null);
+  const [desktopMenu, setDesktopMenu] = useState<{
+    id: number;
+    press: ContextMenuPress;
+    initialItem: InitialMenuItem;
+  } | null>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const containerSize = useElementSize(layerRef);
 
   useContextMenuPress({
     isTarget: isEmptyDesktop,
-    onPress: (press) => setDesktopMenu({ press, focusesFirstItem: !isFromPointerPress() }),
+    onPress: (press) => {
+      const initialItem = isFromPointerPress() ? "none" : "first";
+
+      if (press.pointerType === "touch") {
+        // Touch focuses the desktop on `click` (see `WindowLayer`), but a long press produces no click. Focus it here
+        // so opening the menu behaves like a mouse press.
+        focusDesktop();
+      }
+
+      // Remount the menu on each press to prevent a new long press from inheriting touch state used to close the menu.
+      setDesktopMenu((openMenu) => ({ id: (openMenu?.id ?? 0) + 1, press, initialItem }));
+    },
   });
 
   // Only a press on the empty desktop clears the selection. A press on a window or on the menu bar does not clear it.
@@ -240,6 +256,7 @@ export function DesktopIcons() {
       ))}
       {desktopMenu && (
         <Menu
+          key={desktopMenu.id}
           items={DESKTOP_MENU_ITEMS}
           opener={{
             kind: "point",
@@ -248,7 +265,7 @@ export function DesktopIcons() {
             label: "Desktop",
           }}
           isPointerHeld={desktopMenu.press.isPointerHeld}
-          focusesFirstItem={desktopMenu.focusesFirstItem}
+          initialItem={desktopMenu.initialItem}
           onClose={() => setDesktopMenu(null)}
         />
       )}

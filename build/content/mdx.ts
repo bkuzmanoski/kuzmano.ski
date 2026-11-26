@@ -11,6 +11,7 @@ import { ENTRY_SYNTAX_REMARK_PLUGINS } from "./markup/entry-syntax.ts";
 import { remarkFootnoteAsides } from "./markup/footnote-asides.ts";
 import { rehypeImageChildren } from "./markup/image-children.ts";
 import { rehypeInlineContent } from "./markup/inline-content.ts";
+import { rehypeListRoles } from "./markup/list-roles.ts";
 import { NO_MEDIA_FOR_ENTRY, rehypeMedia } from "./markup/media-rewrite.ts";
 import { rehypeNumberedElements } from "./markup/numbered-elements.ts";
 import { rehypeProvidedElements } from "./markup/provided-elements.ts";
@@ -65,6 +66,7 @@ export function mdxCompileOptionsFor({
     rehypeInlineContent,
     rehypeImageChildren,
     rehypeContentSpans,
+    rehypeListRoles,
     rehypeNumberedElements,
     rehypeSlug,
     [

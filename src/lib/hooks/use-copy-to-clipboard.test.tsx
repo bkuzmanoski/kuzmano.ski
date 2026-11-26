@@ -47,3 +47,33 @@ test("a write that fails after a second copy has started does not fail the secon
 
   expect(result.current.latestClipboardCopy).toMatchObject({ name: "second", status: "copied" });
 });
+
+test("`confirmedClipboardCopyNumber` is `null` until the latest copy's write succeeds, then counts from `1` the copies that were the latest when their writes succeeded", async () => {
+  const { result, firstWrite, secondWrite } = startTwoCopies();
+
+  await firstWrite.succeed();
+
+  expect(result.current.confirmedClipboardCopyNumber).toBeNull();
+
+  await secondWrite.succeed();
+
+  expect(result.current.confirmedClipboardCopyNumber).toBe(1);
+
+  const failedWrite = deferWrite(writeText);
+
+  act(() => {
+    void result.current.copy("failed value", { name: "failed" });
+  });
+  await failedWrite.fail();
+
+  expect(result.current.confirmedClipboardCopyNumber).toBeNull();
+
+  const thirdWrite = deferWrite(writeText);
+
+  act(() => {
+    void result.current.copy("third value", { name: "third" });
+  });
+  await thirdWrite.succeed();
+
+  expect(result.current.confirmedClipboardCopyNumber).toBe(2);
+});

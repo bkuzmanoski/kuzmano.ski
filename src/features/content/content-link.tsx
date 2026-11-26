@@ -1,5 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
 
+import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { isBrowserHandledClick, linkDestinationOf, sitePathPartsOf } from "#/lib/link.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
 import { usePressSound } from "#/lib/press/use-press-sound.ts";
@@ -28,6 +29,7 @@ export function ContentLink({
 }: Omit<ComponentProps<"a">, "href" | "target" | "onClick"> & { href: string }) {
   const opensInNewTabDescriptionId = useOpensInNewTabDescriptionId();
   const router = useRouter();
+  const renderedEntry = useRenderedEntry();
   const pressSoundHandlers = usePressSound({ defersTouchPressSound: true, silencesBrowserHandledPress: true });
 
   const linkProps = mergeHandlers(pressSoundHandlers, props);
@@ -57,8 +59,22 @@ export function ContentLink({
           to={pathname}
           search={router.options.parseSearch(search)}
           hash={hash.slice(1)}
+          // Turning off `hashScrollIntoView` keeps the router's own scroll from aligning a footnote to the top after
+          // `ContentBody` runs.
+          hashScrollIntoView={false}
           activeOptions={{ exact: true }}
           {...linkProps}
+          onClick={(event) => {
+            linkProps.onClick(event);
+
+            if (
+              hash &&
+              router.buildLocation({ to: pathname }).pathname === renderedEntry?.route &&
+              search === router.state.location.searchStr
+            ) {
+              revealContentLinkTarget(event, hash);
+            }
+          }}
         >
           {children}
         </Link>

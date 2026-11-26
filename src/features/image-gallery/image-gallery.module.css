@@ -102,7 +102,7 @@
 }
 
 .thumbnails {
-  scrollbar-width: none;
+  @mixin scrollbar-hidden;
 
   position: relative; /* The offset parent of the thumbnails, which their positions are read against. */
 
@@ -114,10 +114,6 @@
 
   min-width: 0;
   padding: var(--image-gallery-thumbnail-gap);
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 }
 
 .thumbnail {

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { PopupMenu } from "#/components/popup-menu.tsx";
 import { FEATURE_ROUTE_SPECS } from "#/config/feature-routes.ts";
 import { SITE_NAME, SITE_SOURCE_URL } from "#/config/site.ts";
 import { getSettings, setSoundEffects } from "#/lib/settings/settings.ts";
@@ -11,9 +12,10 @@ import { SITE_FEED } from "#/site/feeds.ts";
 import type { FeedMetadata } from "#/site/feeds.ts";
 import { DESTINATIONS } from "#/site/navigation.ts";
 import type * as Windows from "#/site/windows.ts";
-import { releasePointerOver, runActivationFlash, stubElementFromPoint } from "#/test-utils/menu.ts";
-import { SCREEN_READER_ACTIVATIONS, pressWithMouse } from "#/test-utils/press.ts";
+import { releasePointerOver, runActivationFlash, stubCloseWatcher, stubElementFromPoint } from "#/test-utils/menu.ts";
+import { SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, nextAnimationFrame } from "#/test-utils/timers.ts";
+import { stubVisibilityState } from "#/test-utils/visibility.ts";
 
 import { MenuBar } from "./menu-bar.tsx";
 
@@ -44,7 +46,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 beforeEach(() => {
   focusedWindow = null;
   alternateRepresentations = null;
-  open.mockClear();
+  open.mockReset(); // A test sets its implementation.
   playHoverSound.mockClear();
   playClickSound.mockClear();
   resetTooltipState();
@@ -55,12 +57,18 @@ afterEach(() => {
   Reflect.deleteProperty(document, "elementFromPoint");
 });
 
+const POPUP_MENU_OPTIONS = [
+  { value: "first", label: "First" },
+  { value: "second", label: "Second" },
+];
+
 const menuTitle = (label: string) => screen.getByRole("button", { name: label });
 const isExpanded = (label: string) => menuTitle(label).getAttribute("aria-expanded") === "true";
 const menu = () => document.querySelector('[role="menu"]');
 const menuItem = (label: string) => screen.getByText(label).closest("[data-index]")!;
 const highlightedMenuItem = () =>
   document.querySelector('[role="menuitem"][class*="highlighted"]')?.querySelector("span")?.textContent;
+const clockDateTime = () => document.querySelector("time")?.getAttribute("dateTime");
 
 const openWithPointer = (label: string) => pressWithMouse(menuTitle(label));
 
@@ -193,6 +201,33 @@ describe("opening a menu", () => {
     expect(isExpanded("Go")).toBe(true);
   });
 
+  test("opening a menu closes a pop-up menu that is open", () => {
+    render(
+      <>
+        <MenuBar />
+        <PopupMenu value="first" options={POPUP_MENU_OPTIONS} aria-label="A pop-up menu" onChange={() => undefined} />
+      </>,
+    );
+    fireEvent.keyDown(screen.getByRole("button", { name: /^A pop-up menu / }), { key: "ArrowDown" });
+
+    expect(screen.queryByRole("listbox", { name: "A pop-up menu" })).not.toBeNull();
+
+    fireEvent.pointerDown(menuTitle("File"), TOUCH_PRESS_INIT);
+
+    expect(isExpanded("File")).toBe(true);
+    expect(screen.queryByRole("listbox", { name: "A pop-up menu" })).toBeNull();
+  });
+
+  test("a tap on another title while a menu is open moves the focus to the menu it opens", () => {
+    // The tap focuses its title before opening the replacement menu, which unmounts the open menu and takes the focus.
+    render(<MenuBar />);
+    fireEvent.pointerDown(menuTitle("File"), TOUCH_PRESS_INIT);
+    fireEvent(menuTitle("File"), new MouseEvent("pointerup", { bubbles: true }));
+    fireEvent.pointerDown(menuTitle("Go"), { ...TOUCH_PRESS_INIT, pointerId: 2 }); // A new touch takes a new ID.
+
+    expect(screen.getByRole("menu", { name: "Go" })).toBe(document.activeElement);
+  });
+
   test("a press that closes the menu keeps the focus on the menu title", () => {
     render(<MenuBar />);
     openWithPointer("Go");
@@ -286,6 +321,55 @@ describe("dismissing a menu", () => {
     expect(document.activeElement).not.toBe(menuTitle("Go"));
   });
 
+  test("moving the focus to an element outside the menu and its title closes the menu", () => {
+    render(<MenuBar />);
+
+    const outsideButton = document.body.appendChild(document.createElement("button"));
+
+    openWithKeyboard("Go");
+    act(() => outsideButton.focus());
+
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(outsideButton);
+
+    outsideButton.remove();
+  });
+
+  test("a touch outside the menu that moves the focus closes the menu on its `pointerup` event, not its `pointerdown` event", () => {
+    render(<MenuBar />);
+
+    const windowElement = document.body.appendChild(document.createElement("div"));
+
+    windowElement.tabIndex = -1;
+    windowElement.addEventListener("pointerdown", () => windowElement.focus(), { capture: true });
+    openWithKeyboard("Go");
+    fireEvent.pointerDown(windowElement, TOUCH_PRESS_INIT);
+
+    expect(menu()).not.toBeNull();
+
+    fireEvent.pointerUp(windowElement, TOUCH_PRESS_INIT);
+
+    expect(menu()).toBeNull();
+
+    windowElement.remove();
+  });
+
+  test("a shortcut that opens a window closes the open menu when the window takes the focus", () => {
+    render(<MenuBar />);
+
+    const windowElement = document.body.appendChild(document.createElement("div"));
+
+    windowElement.tabIndex = -1;
+    open.mockImplementation(() => windowElement.focus());
+    openWithKeyboard("File");
+    fireEvent.keyDown(menu()!, { key: "¡", code: "Digit1", altKey: true });
+
+    expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+    expect(menu()).toBeNull();
+
+    windowElement.remove();
+  });
+
   test("a hold released away from the menu and its title closes the menu", () => {
     render(<MenuBar />);
     openWithPointer("Go");
@@ -342,6 +426,23 @@ describe("navigating an open menu", () => {
 
     expect(highlightedMenuItem()).toBe("Contact");
   });
+
+  test.each([
+    ["Up arrow", "last", "ArrowUp", "Contact"],
+    ["End", "last", "End", "Contact"],
+    ["Home", "first", "Home", "About"],
+  ])(
+    "pressing the %s key on a menu title plays the click sound and opens its menu with the %s item highlighted",
+    (_keyLabel, _edge, key, expectedItem) => {
+      render(<MenuBar />);
+      menuTitle("Go").focus();
+      fireEvent.keyDown(menuTitle("Go"), { key });
+
+      expect(playClickSound).toHaveBeenCalledOnce();
+      expect(document.activeElement).toBe(menu());
+      expect(highlightedMenuItem()).toBe(expectedItem);
+    },
+  );
 
   test("the Left and Right arrow keys open the adjacent menu, wrapping around at each end of the menu bar", () => {
     render(<MenuBar />);
@@ -404,6 +505,26 @@ describe("navigating an open menu", () => {
     render(<MenuBar />);
     openWithKeyboard("Go");
     fireEvent.keyDown(menu()!, { key: "Escape" });
+
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(menuTitle("Go"));
+  });
+
+  test("the Tab key closes the menu and focuses its title without preventing its default action", () => {
+    render(<MenuBar />);
+    openWithKeyboard("Go");
+
+    expect(fireEvent.keyDown(menu()!, { key: "Tab" })).toBe(true);
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(menuTitle("Go"));
+  });
+
+  test("a close request closes the menu and returns the focus to its title", () => {
+    const { requestClose } = stubCloseWatcher();
+
+    render(<MenuBar />);
+    openWithPointer("Go");
+    act(requestClose);
 
     expect(menu()).toBeNull();
     expect(document.activeElement).toBe(menuTitle("Go"));
@@ -592,6 +713,7 @@ describe("items that open a destination", () => {
   test.each([
     ["pressing elsewhere on the page", () => fireEvent(document, new MouseEvent("pointerdown", { bubbles: true }))],
     ["pressing the Escape key", () => fireEvent.keyDown(menu()!, { key: "Escape" })],
+    ["moving the focus to another menu title", () => act(() => menuTitle("File").focus())],
   ])(
     "%s during an item's activation flash leaves the menu open, and the item opens its destination when the flash ends",
     (_interruption, interrupt) => {
@@ -610,6 +732,24 @@ describe("items that open a destination", () => {
       expect(menu()).toBeNull();
     },
   );
+
+  test("a close request during an item's activation flash leaves the menu open, and the item opens its destination when the flash ends", () => {
+    const { requestClose } = stubCloseWatcher();
+
+    vi.useFakeTimers();
+    render(<MenuBar />);
+    openWithPointer("Go");
+    releasePointerOver(menuItem("About"));
+    act(requestClose);
+
+    expect(isExpanded("Go")).toBe(true);
+    expect(open).not.toHaveBeenCalled();
+
+    runActivationFlash();
+
+    expect(open).toHaveBeenCalledWith(DESTINATIONS.about.route);
+    expect(menu()).toBeNull();
+  });
 
   test.each([
     ["moving the pointer over another menu title", () => fireEvent.pointerOver(menuTitle(SITE_NAME))],
@@ -925,4 +1065,67 @@ test("the `dateTime` attribute of the clock is the displayed minute in UTC", () 
   expect(document.querySelector("time")?.getAttribute("dateTime")).toBe("2026-01-02T03:04Z");
 
   vi.useRealTimers();
+});
+
+test("the clock shows the next minute when the minute begins", () => {
+  vi.useFakeTimers({ now: new Date("2026-01-02T03:04:05.678Z") });
+  render(<MenuBar />);
+
+  advanceTimersBy(54_321);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:04Z");
+
+  advanceTimersBy(1);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:05Z");
+});
+
+test("the clock stops ticking while the page is hidden, and resumes at the current minute when the page is visible again", () => {
+  const setVisibilityState = stubVisibilityState();
+
+  vi.useFakeTimers({ now: new Date("2026-01-02T03:04:05.678Z") });
+  render(<MenuBar />);
+  act(() => setVisibilityState("hidden"));
+  advanceTimersBy(60_000);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:04Z");
+
+  vi.setSystemTime(new Date("2026-01-02T03:10:30Z")); // Without running the timers, as a browser that delayed them.
+  act(() => setVisibilityState("visible"));
+
+  expect(clockDateTime()).toBe("2026-01-02T03:10Z");
+
+  advanceTimersBy(30_000);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:11Z");
+});
+
+test("the clock mounted in a hidden page does not tick, and starts at the current minute when the page is visible", () => {
+  const setVisibilityState = stubVisibilityState("hidden");
+
+  vi.useFakeTimers({ now: new Date("2026-01-02T03:04:05.678Z") });
+  render(<MenuBar />);
+  advanceTimersBy(60_000);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:04Z");
+
+  vi.setSystemTime(new Date("2026-01-02T03:10:30Z"));
+  act(() => setVisibilityState("visible"));
+
+  expect(clockDateTime()).toBe("2026-01-02T03:10Z");
+
+  advanceTimersBy(30_000);
+
+  expect(clockDateTime()).toBe("2026-01-02T03:11Z");
+});
+
+test("the clock shows the current minute when the browser restores the page from the back/forward cache", () => {
+  vi.useFakeTimers({ now: new Date("2026-01-02T03:04:05.678Z") });
+  render(<MenuBar />);
+  vi.setSystemTime(new Date("2026-01-02T03:10:30Z")); // Without running the timers, which the cache paused.
+  act(() => {
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+  });
+
+  expect(clockDateTime()).toBe("2026-01-02T03:10Z");
 });

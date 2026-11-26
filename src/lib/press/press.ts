@@ -58,8 +58,8 @@ export function listenForPointerRelease(onRelease: () => void): () => void {
 }
 
 /**
- * Releases the pointer capture the browser implicitly sets on the element a touch lands on, so the pointer can reach
- * other elements while the finger stays down.
+ * Releases implicit pointer capture on the touched element, allowing the pointer to reach other elements during the
+ * touch.
  */
 export function releaseImplicitPointerCapture({ currentTarget, pointerId }: ReactPointerEvent<Element>): void {
   if (currentTarget.hasPointerCapture(pointerId)) {

@@ -68,6 +68,22 @@ test("the button announces the confirmation after a successful copy without chan
   expect(screen.getByRole("status").textContent).toBe("");
 });
 
+test("the button announces a second copy with text that differs from that of the first, even after the status region empties", async () => {
+  renderButton();
+  await clickCopy();
+
+  expect(screen.getByRole("status").textContent).toBe("Copied");
+
+  advanceTimersBy(STATE_DISPLAY_DURATION_MS);
+
+  expect(screen.getByRole("status").textContent).toBe("");
+
+  await clickCopy();
+
+  // VoiceOver skips a message with the same text as the previous one, even after the region is emptied.
+  expect(screen.getByRole("status").textContent).toBe("Copied\u00A0");
+});
+
 test("the button stays pressed until the confirmation clears", async () => {
   let completeWrite: (() => void) | undefined;
 

@@ -67,6 +67,7 @@ function PopupMenuOptions<TValue extends string>({
   const { focusedItemIndex, isHighlighted, onClick, onKeyDown } = useMenuInteraction({
     items: options.map((option) => ({ label: option.label, isEnabled: true })),
     anchor: openState.button,
+    focusReturnTarget: openState.button,
     listRef,
     openingPress: openState.openingPress,
     initialFocusedItemIndex: chosenOptionIndex,

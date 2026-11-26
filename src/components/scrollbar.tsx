@@ -8,8 +8,9 @@ import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { clamp } from "#/lib/math.ts";
 import { isPrimaryPress, listenForPointerRelease } from "#/lib/press/press.ts";
+import { useAxisDrag } from "#/lib/press/use-axis-drag.ts";
 import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
-import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
+import { DRAG_THRESHOLD_PX } from "#/lib/press/use-pointer-drag.ts";
 import { useTrailingClick } from "#/lib/press/use-trailing-click.ts";
 import type { StyleWithVars } from "#/lib/style.ts";
 
@@ -104,6 +105,14 @@ function ScrollArrow({
   );
 }
 
+/** State of a track press; `jumpToPressedPoint` updates `top` and `isScrollSoundSilenced`. */
+interface TrackPress {
+  clientY: number;
+  top: number;
+  travel: number;
+  isScrollSoundSilenced: boolean;
+}
+
 export function Scrollbar({
   viewportRef,
   viewportId,
@@ -163,57 +172,84 @@ export function Scrollbar({
   // The thumb runs the length of the track less its own height. A drag maps that travel onto the scroll range.
   const thumbTravel = () => (trackRef.current?.clientHeight ?? 0) - (thumbRef.current?.clientHeight ?? 0);
 
-  function dragScroll(delta: DragDelta, from: { top: number; travel: number; jumped?: boolean }) {
+  function scrollViewportBy(delta: DragDelta, from: { top: number; travel: number }) {
     const viewport = viewportRef.current;
 
-    if (!viewport || from.travel <= 0) {
+    if (!viewport || from.travel <= 0 || delta.dy === 0) {
       return;
-    }
-
-    if (from.jumped) {
-      from.jumped = false;
-      recordScrollAt(viewport); // Resume scroll sounds after a jump.
     }
 
     viewport.scrollTop = from.top + (delta.dy / from.travel) * scrollRange;
   }
 
-  const thumbHandlers = usePointerDrag({
+  function scrollViewportOnDragMove(
+    delta: DragDelta,
+    from: { top: number; travel: number; isScrollSoundSilenced?: boolean },
+  ) {
+    const viewport = viewportRef.current;
+
+    if (!viewport || from.travel <= 0 || delta.dy === 0) {
+      return;
+    }
+
+    if (from.isScrollSoundSilenced) {
+      from.isScrollSoundSilenced = false;
+      recordScrollAt(viewport); // Resume scroll sounds after a jump.
+    }
+
+    scrollViewportBy(delta, from);
+  }
+
+  // Android's back gesture starts at the window edge and is later canceled by the browser. To avoid scrolling the
+  // window and closing an open menu, touch presses wait for vertical movement or release before scrolling or playing
+  // the click sound (see `useAxisDrag`).
+  const thumbHandlers = useAxisDrag({
+    axis: "y",
     preventDefault: true,
-    start: () => {
+    start: () => ({ top: metrics.top, travel: thumbTravel() }),
+    onBegin: (from, delta) => {
       playClickSound();
-      return { top: metrics.top, travel: thumbTravel() };
+      scrollViewportBy(delta, from);
     },
-    onDragMove: dragScroll,
+    onDragMove: scrollViewportOnDragMove,
   });
 
   // A press on the track jumps to the pressed point, placing the thumb's center under the pointer. The point pressed
   // becomes the scrolled position and continues from there as a drag.
-  const trackHandlers = usePointerDrag({
+  function jumpToPressedPoint(press: TrackPress) {
+    const track = trackRef.current;
+    const thumb = thumbRef.current;
+    const viewport = viewportRef.current;
+
+    if (!track || !thumb || !viewport || press.travel <= 0 || scrollRange <= 0) {
+      return;
+    }
+
+    const thumbTop = press.clientY - track.getBoundingClientRect().top - thumb.clientHeight / 2;
+
+    press.top = clamp(thumbTop / press.travel, 0, 1) * scrollRange;
+    press.isScrollSoundSilenced = true;
+    silenceScrollAt(viewport);
+    viewport.scrollTop = press.top;
+  }
+
+  const trackHandlers = useAxisDrag<TrackPress>({
+    axis: "y",
     preventDefault: true,
     threshold: DRAG_THRESHOLD_PX,
     canStart: (event) => event.target === trackRef.current,
-    start: (event) => {
-      const track = trackRef.current;
-      const thumb = thumbRef.current;
-      const viewport = viewportRef.current;
-      const travel = thumbTravel();
-
+    start: (event) => ({
+      clientY: event.clientY,
+      top: metrics.top,
+      travel: thumbTravel(),
+      isScrollSoundSilenced: false,
+    }),
+    onBegin: (press, delta) => {
       playClickSound();
-
-      if (!track || !thumb || !viewport || travel <= 0 || scrollRange <= 0) {
-        return { top: metrics.top, travel };
-      }
-
-      const thumbTop = event.clientY - track.getBoundingClientRect().top - thumb.clientHeight / 2;
-      const top = clamp(thumbTop / travel, 0, 1) * scrollRange;
-
-      silenceScrollAt(viewport);
-      viewport.scrollTop = top;
-
-      return { top, travel, jumped: true };
+      jumpToPressedPoint(press);
+      scrollViewportBy(delta, press); // Apply the initial touch travel without resuming scroll sounds, so the jump stays silent until the next move.
     },
-    onDragMove: dragScroll,
+    onDragMove: scrollViewportOnDragMove,
   });
 
   function step(delta: number, isRepeat: boolean) {

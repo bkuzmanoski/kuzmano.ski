@@ -221,6 +221,23 @@
 
 .organizationAndDates {
   @mixin content-subtitle;
+
+  position: relative;
+}
+
+.spokenText {
+  pointer-events: none;
+  user-select: none; /* Excludes the overlay from copied text. */
+
+  /* Overlay the repeated visible text so VoiceOver places its cursor over the text rather than beside it. */
+  position: absolute;
+  inset: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap; /* Prevents Safari from dropping spaces between adjacent text nodes when wrapping. */
+
+  opacity: 0;
 }
 
 .organizationAndDates ~ * {
@@ -284,6 +301,7 @@
   }
 
   .chart {
+    touch-action: pan-y pinch-zoom; /* The chart reads only horizontal travel, so the browser can claim a vertical touch to scroll the scroll pane (see `useCareerTimelineMinimap`). */
     height: auto;
     margin-block-end: 8px;
     padding-block-start: calc(var(--career-timeline-year-label-height) + 12px);

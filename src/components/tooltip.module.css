@@ -24,18 +24,7 @@
 
   user-select: none;
 
-  position: fixed;
   z-index: var(--layer-tooltip);
-  position-anchor: --tooltip;
-  position-area: block-end span-all;
-  position-try-fallbacks:
-    --tooltip-align-end,
-    --tooltip-align-start,
-    flip-block,
-    --tooltip-align-end flip-block,
-    --tooltip-align-start flip-block;
-
-  justify-self: anchor-center;
 
   width: max-content;
   margin-block: var(--tooltip-margin) var(--layout-viewport-margin);
@@ -46,7 +35,24 @@
   color: var(--color-foreground);
   white-space: nowrap;
 
-  @supports not (anchor-name: --tooltip) {
+  /* Wrappers share an anchor name, scoped to each wrapper. Browsers that support anchor positioning but not
+   * `anchor-scope` (e.g., Chrome 125–130) would anchor every tooltip to the last wrapper, so they use the fallback
+   * below. */
+  @supports (anchor-scope: --tooltip) {
+    position: fixed;
+    position-anchor: --tooltip;
+    position-area: block-end span-all;
+    position-try-fallbacks:
+      --tooltip-align-end,
+      --tooltip-align-start,
+      flip-block,
+      --tooltip-align-end flip-block,
+      --tooltip-align-start flip-block;
+
+    justify-self: anchor-center;
+  }
+
+  @supports not (anchor-scope: --tooltip) {
     position: absolute;
     top: calc(100% + var(--tooltip-margin));
     left: 50%;

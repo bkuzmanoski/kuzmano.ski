@@ -26,8 +26,8 @@
     transition: opacity 0ms linear calc(var(--duration-desktop-reveal-step) * 2); /* Follow menu bar and icons reveal. */
   }
 
-  /* The property is inherited rather than a class so that content deep in the window can read the state through a style
-   * query (see `/src/components/scrollbar.module.css`). */
+  /* The property is inherited rather than a class so that content deep in the window can read the state as a value
+   * (e.g., `opacity: var(--window-focused, 1)` in `/src/components/scrollbar.module.css`). */
   &:not(.focused) {
     --window-focused: 0;
 
@@ -54,11 +54,8 @@
    * default position and size for the initial window placed by the window manager (see `defaultRect` in
    * `/src/lib/window-manager/layout.ts`). */
   &.unplaced {
-    top: 50%;
     top: round(down, 50%, 1px);
-    left: 50%;
     left: round(down, 50%, 1px);
-    translate: -50% -50%;
     translate: round(up, -50%, 1px) round(up, -50%, 1px);
 
     max-width: calc(100% - 2 * var(--layout-window-layer-padding));
@@ -137,9 +134,10 @@
 
     background-image: repeating-linear-gradient(to bottom, var(--color-border) 0 1px, transparent 1px 3px);
 
+    /* Preserve the gradient in forced colors. `--color-border` is set to `CanvasText` under forced colors (see
+     * `/src/styles.css`). */
     @media (forced-colors: active) {
       forced-color-adjust: none;
-      background-image: repeating-linear-gradient(to bottom, CanvasText 0 1px, transparent 1px 3px);
     }
   }
 
@@ -208,10 +206,9 @@
   height: var(--layout-scrollbar-gutter-width);
   border-top: 1px solid var(--color-border);
 
-  @container style(--window-focused: 0) {
-    & svg {
-      visibility: hidden;
-    }
+  /* Hides the icon in an inactive window (see the scrollbar's arrows in `/src/components/scrollbar.module.css`). */
+  & svg {
+    opacity: var(--window-focused, 1);
   }
 
   /* `pressed` is used because the drag captures the pointer and `:active` ends as soon as the resize starts. */

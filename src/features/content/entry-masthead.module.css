@@ -33,7 +33,6 @@
   white-space: nowrap;
 
   & > * + *::before {
-    content: "\2022";
     content: "\2022" / "";
     margin-inline-end: var(--entry-masthead-facts-divider-column-gap);
     color: var(--color-border-secondary);

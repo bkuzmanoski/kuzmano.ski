@@ -32,3 +32,8 @@ export function hookOf<THook extends (...args: never) => unknown>(plugin: Plugin
 
   return handler as THook;
 }
+
+/** The `error` of a plugin context, for a test that calls a hook outside Vite. Throws `message` as an `Error`. */
+export const throwError = (message: string): never => {
+  throw new Error(message);
+};

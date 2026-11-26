@@ -5,6 +5,7 @@ import { DesktopIcons } from "#/features/desktop-icons/desktop-icons.tsx";
 import { rectRelativeTo } from "#/lib/geometry.ts";
 import type { Rect, Size } from "#/lib/geometry.ts";
 import { useElementResize } from "#/lib/hooks/use-element-size.ts";
+import { isPointerClick } from "#/lib/press/press.ts";
 import {
   useFocusedWindow,
   useSurface,
@@ -152,6 +153,7 @@ export function WindowLayer({ children }: { children: ReactNode }) {
   // is stored here rather than in the window, so its update on each pointer frame does not re-render every window.
   const [windowDrag, setWindowDrag] = useState<WindowDragState | null>(null);
   const surfaceRef = useRef<HTMLElement>(null);
+  const isDesktopTouchPendingRef = useRef(false); // A touch on the desktop that focuses it at its `click`.
 
   useElementResize(surfaceRef, measure);
 
@@ -177,16 +179,37 @@ export function WindowLayer({ children }: { children: ReactNode }) {
       className={styles.windowLayer}
       data-desktop=""
       onPointerDown={(event) => {
-        if (event.target === event.currentTarget) {
+        isDesktopTouchPendingRef.current = false;
+
+        if (event.target !== event.currentTarget) {
+          return;
+        }
+
+        // A touch focuses the desktop at its `click`, as it can begin a gesture that the browser takes over, which
+        // dispatches no `click`. Android's back gesture starts as a touch at the edge of the screen, and focusing the
+        // desktop there would navigate to it before the gesture navigates back.
+        if (event.pointerType === "touch") {
+          isDesktopTouchPendingRef.current = true;
+        } else {
           focusDesktop();
         }
+      }}
+      onPointerCancel={() => {
+        isDesktopTouchPendingRef.current = false;
+      }}
+      onClick={(event) => {
+        if (isDesktopTouchPendingRef.current && event.target === event.currentTarget && isPointerClick(event)) {
+          focusDesktop();
+        }
+
+        isDesktopTouchPendingRef.current = false;
       }}
     >
       <ZoomRectContext value={showZoomRect}>
         <DesktopIcons />
-        {/* Animates from the icon or collection entry to the newly opened window. Its shared stacking context, matching
-          z-index, and earlier DOM position place it below the target window but above existing windows. Both use
-          geometry fitted to the same desktop surface, ensuring the animation lands precisely on the window. */}
+        {/* Animates from the icon or collection entry to the new window. The shared stacking context, matching z-index,
+          and earlier DOM position keep it below the new window and above existing windows. Both use geometry fitted to
+          the same desktop surface so the animation aligns with the window. */}
         {zoomRect && (
           <ZoomRect
             key={zoomRect.windowId}

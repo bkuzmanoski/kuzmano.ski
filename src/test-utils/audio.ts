@@ -52,6 +52,7 @@ export class FakeAudioContext {
   destination = { id: "destination" };
   sampleRate: number;
   resumeCount = 0;
+  suspendCount = 0;
 
   /**
    * What the next `resume()` returns. Set it to a rejected promise, or to one that never settles, to stand in for a
@@ -91,8 +92,19 @@ export class FakeAudioContext {
     return this.resumeResult;
   }
 
+  /** Moves to `suspended` at once, unlike `resume()`, which leaves the transition to `transitionToRunning`. */
+  suspend() {
+    this.suspendCount++;
+    this.transitionTo("suspended");
+    return Promise.resolve();
+  }
+
   transitionToRunning() {
-    this.state = "running";
+    this.transitionTo("running");
+  }
+
+  private transitionTo(state: AudioContextState) {
+    this.state = state;
     this.listeners.forEach((listener) => listener());
   }
 }

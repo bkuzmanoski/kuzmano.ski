@@ -6,7 +6,7 @@ import zoomRectStyles from "#/features/window-manager/zoom-rect.module.css";
 import { ZOOM_RECT_DURATION_MS } from "#/features/window-manager/zoom-rect.tsx";
 import { playClickSound, playHoverSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import * as imageGalleryFixture from "#/test-utils/fixtures/image-gallery.mdx";
-import { pressWithMouse } from "#/test-utils/press.ts";
+import { TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy, advanceTimersToNextFrame } from "#/test-utils/timers.ts";
 
 import styles from "./image-gallery-preview.module.css";
@@ -76,21 +76,25 @@ const offsetOf = (previewImageArea: HTMLElement) => [
   previewImageArea.style.getPropertyValue("--image-gallery-preview-image-offset-y"),
 ];
 
-function swipeAcross(element: Element, { dx, dy = 0 }: { dx: number; dy?: number }) {
-  fireEvent.pointerDown(element, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "touch",
-    clientX: SWIPE_START_POINT.x,
-    clientY: SWIPE_START_POINT.y,
-  });
+function swipeAcross(
+  element: Element,
+  { dx, dy = 0, endsWith = "pointerup" }: { dx: number; dy?: number; endsWith?: "pointerup" | "pointercancel" },
+) {
+  const { pointerId } = TOUCH_PRESS_INIT;
+
+  fireEvent.pointerDown(element, { ...TOUCH_PRESS_INIT, clientX: SWIPE_START_POINT.x, clientY: SWIPE_START_POINT.y });
   fireEvent.pointerMove(window, {
     buttons: 1,
-    pointerId: 1,
+    pointerId,
     clientX: SWIPE_START_POINT.x + dx,
     clientY: SWIPE_START_POINT.y + dy,
   });
-  fireEvent.pointerUp(window, { pointerId: 1 });
+
+  if (endsWith === "pointercancel") {
+    fireEvent.pointerCancel(window, { pointerId });
+  } else {
+    fireEvent.pointerUp(window, { pointerId });
+  }
 }
 
 test("the gallery renders a slide for each image, and shows only the first", () => {
@@ -334,6 +338,10 @@ test("swiping left across the shown image shows the next image, and swiping righ
 test.each([
   ["shorter than the swipe distance", { dx: -(SWIPE_DISTANCE_PX - 1) }],
   ["that travels further vertically than horizontally", { dx: -SWIPE_DISTANCE_PX, dy: SWIPE_DISTANCE_PX + 1 }],
+  [
+    "that is canceled by the browser (e.g., to start a pinch)",
+    { dx: -SWIPE_DISTANCE_PX, endsWith: "pointercancel" as const },
+  ],
 ])("a touch drag %s leaves the shown image unchanged", (_label, travel) => {
   renderGallery();
   swipeAcross(stage(), travel);

@@ -1,6 +1,9 @@
 .dragOutline {
   @mixin dashed-stroke;
 
+  /* Stays in the compositor layer of the windows instead of setting `will-change`. At a fractional width, Chrome rounds
+   * the right edge of a layer of its own to a different device pixel than that of the window, so the outline would end
+   * 1px short of where the window lands. */
   pointer-events: none;
   position: absolute;
   color: var(--color-border);

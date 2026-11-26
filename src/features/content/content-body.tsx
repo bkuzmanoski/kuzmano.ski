@@ -1,5 +1,6 @@
 import { MDXProvider } from "@mdx-js/react";
-import { use } from "react";
+import { useRouterState } from "@tanstack/react-router";
+import { use, useEffect, useRef } from "react";
 
 import { ImageGallery } from "#/features/image-gallery/image-gallery.tsx";
 import { Video } from "#/features/video/video.tsx";
@@ -48,27 +49,61 @@ const MDX_COMPONENTS: MDXComponents = {
   ...PROVIDED_COMPONENTS,
 };
 
-/**
- * React calls the body's ref callback before this one, so the body sets the rail clearances, which move the elements
- * after them, before this callback scrolls to the fragment target.
- */
-function revealInitialFragmentTarget(article: HTMLElement | null) {
-  if (article) {
-    revealFragmentTarget(article, window.location.hash);
-  }
-}
-
 export function ContentBody({ route, target }: { route: string; target: EntryTarget }) {
   // Read the module with `use()` rather than the route loader, as loader data must be serializable. The content index
   // memoizes the promise `load` returns, so each render reads the same one.
   const { default: MDXContent, stylesheetClassNames } = use(contentIndexOf(target).load(target.slug));
+
+  const routerLocation = useRouterState({
+    select: ({ location }) => ({ pathname: location.pathname, hash: location.hash }),
+  });
+  const articleRef = useRef<HTMLElement | null>(null);
+  const revealedInitialFragmentRef = useRef<string | null>(null);
+
+  /**
+   * React calls the body's ref callback first, setting rail clearances before this callback scrolls to the fragment
+   * target. This ensures the target's position accounts for the resulting layout shifts.
+   */
+  function setArticleRef(article: HTMLElement | null) {
+    articleRef.current = article;
+
+    if (!article) {
+      return;
+    }
+
+    const fragment = (routerLocation.pathname === route && routerLocation.hash) || window.location.hash;
+
+    revealedInitialFragmentRef.current = routerLocation.pathname === route && routerLocation.hash ? fragment : null;
+
+    if (fragment) {
+      revealFragmentTarget(article, fragment);
+    }
+  }
+
+  // Reveals a fragment target when navigation updates the URL to this entry while it stays mounted (e.g., following a
+  // link to a fragment of an entry already open in another window, or using browser history).
+  useEffect(() => {
+    if (routerLocation.pathname !== route || !routerLocation.hash) {
+      revealedInitialFragmentRef.current = null;
+      return;
+    }
+
+    if (routerLocation.hash === revealedInitialFragmentRef.current) {
+      revealedInitialFragmentRef.current = null;
+      return;
+    }
+
+    if (articleRef.current) {
+      revealFragmentTarget(articleRef.current, routerLocation.hash);
+    }
+  }, [route, routerLocation.pathname, routerLocation.hash]);
 
   return (
     <RenderedEntryContext value={{ route }}>
       <OpensInNewTabDescriptionProvider>
         <EntryClipboardProvider>
           <MDXProvider components={MDX_COMPONENTS}>
-            <article ref={revealInitialFragmentTarget} className={cx(styles.content, stylesheetClassNames.entry)}>
+            <article ref={setArticleRef} className={cx(styles.content, stylesheetClassNames.entry)}>
               <div ref={observeRailClearances} data-content-body>
                 {target.collection !== null && <EntryMasthead target={target} />}
                 <h1 className={stylesheetClassNames.title} data-feed-omit>

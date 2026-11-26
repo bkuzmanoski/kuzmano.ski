@@ -70,7 +70,7 @@ export function ZoomRect({
         width: box.width,
         height: box.height,
         zIndex: z,
-        transition: animate ? `all ${ZOOM_RECT_TRANSITION_DURATION_MS}ms ease-out` : "none",
+        transitionDuration: animate ? `${ZOOM_RECT_TRANSITION_DURATION_MS}ms` : "0ms",
       }}
     />
   );

@@ -1,6 +1,47 @@
 import { describe, expect, test } from "vitest";
 
-import { calendarDateIn, formatDate, formatPlaybackTime, midnightTimestampIn } from "./datetime.ts";
+import {
+  calendarDateIn,
+  formatDate,
+  formatPlaybackTime,
+  fullMonthFormatterOf,
+  midnightTimestampIn,
+} from "./datetime.ts";
+
+describe("fullMonthFormatterOf", () => {
+  test.each(["short", "narrow"] as const)(
+    "returns a formatter that writes the month in full for a format with a month of `%s`, and the other fields as the format writes them",
+    (month) => {
+      const format = new Intl.DateTimeFormat("en-US", { year: "numeric", month, day: "numeric", timeZone: "UTC" });
+      expect(fullMonthFormatterOf(format)?.format(Date.parse("2026-09-01"))).toBe("September 1, 2026");
+    },
+  );
+
+  test("returns a formatter in the locale of the format", () => {
+    const format = new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "short", timeZone: "UTC" });
+    expect(fullMonthFormatterOf(format)?.format(Date.parse("2026-09"))).toBe("septembre 2026");
+  });
+
+  test("returns a formatter in the time zone of the format", () => {
+    const format = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
+    expect(fullMonthFormatterOf(format)?.resolvedOptions().timeZone).toBe("America/New_York");
+  });
+
+  test.each(["long", "numeric", "2-digit"] as const)("returns `null` for a format with a month of `%s`", (month) => {
+    const format = new Intl.DateTimeFormat("en-US", { year: "numeric", month, timeZone: "UTC" });
+    expect(fullMonthFormatterOf(format)).toBeNull();
+  });
+
+  test("returns `null` for a format without a month", () => {
+    const format = new Intl.DateTimeFormat("en-US", { year: "numeric", timeZone: "UTC" });
+    expect(fullMonthFormatterOf(format)).toBeNull();
+  });
+
+  test("returns `null` for a format that sets `dateStyle`", () => {
+    const format = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });
+    expect(fullMonthFormatterOf(format)).toBeNull();
+  });
+});
 
 describe("formatDate", () => {
   const dayFormat = new Intl.DateTimeFormat("en-AU", {

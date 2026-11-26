@@ -17,8 +17,8 @@ import type { MouseEvent, PointerEvent } from "react";
  * Prevents the default action of `mousedown`, as the browser would otherwise focus the button after the menu has
  * focused itself, which would stop arrow key navigation.
  *
- * Releases the pointer capture the browser implicitly sets on the button a touch lands on, so the pointer can reach
- * another button or an item while the finger stays down, like a mouse with its button held down.
+ * Releases the button's implicit pointer capture on touch, allowing the pointer to reach another button or menu item
+ * while the touch remains active, as with a held mouse button.
  */
 export function useMenuButtonPress({
   onPress,

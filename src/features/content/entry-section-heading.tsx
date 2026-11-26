@@ -1,5 +1,6 @@
 import { Children, isValidElement, useId } from "react";
 
+import { COPY_CONFIRMATION } from "#/components/copy-announcer.tsx";
 import { CopyTooltip } from "#/components/copy-tooltip.tsx";
 import { useRenderedEntry } from "#/lib/content/rendered-entry.ts";
 import { isBrowserHandledClick } from "#/lib/link.ts";
@@ -46,11 +47,10 @@ function HeadingLink({
     <span className={styles.headingLinkPosition} style={anchorStyle} data-heading-level={level} data-feed-omit>
       <CopyTooltip
         label={"Copy link"}
-        confirmation={"Copied"}
+        confirmation={COPY_CONFIRMATION}
         margin={2}
         hasCopied={hasCopied}
         suppressed={renderedEntry === null || entryClipboard === null}
-        announcesConfirmation={false}
         onDidHide={() => entryClipboard?.clearCopyConfirmationOf(fragment)}
       >
         <a

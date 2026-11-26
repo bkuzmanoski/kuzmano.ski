@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { playClickSound, playHoverSound } from "#/lib/audio/sounds.ts";
-import { movePointerOver, releasePointerOver, runActivationFlash } from "#/test-utils/menu.ts";
-import { SCREEN_READER_ACTIVATIONS } from "#/test-utils/press.ts";
+import { movePointerOver, releasePointerOver, runActivationFlash, stubCloseWatcher } from "#/test-utils/menu.ts";
+import { SCREEN_READER_ACTIVATIONS, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 
 import { PopupMenu } from "./popup-menu.tsx";
 
@@ -287,16 +287,64 @@ test("the Escape key closes the options without calling `onChange`, and focuses 
   expect(document.activeElement).toBe(button());
 });
 
-test("the Tab key closes the options without calling `onChange`, and focuses the button", () => {
+test("the Tab key closes the options without calling `onChange`, and focuses the button without preventing its default action", () => {
   const onChange = vi.fn();
 
   renderPopupMenu(onChange);
   fireEvent.click(button());
-  fireEvent.keyDown(listbox()!, { key: "Tab" });
+
+  expect(fireEvent.keyDown(listbox()!, { key: "Tab" })).toBe(true);
+  expect(listbox()).toBeNull();
+  expect(onChange).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(button());
+});
+
+test("a close request closes the options without calling `onChange`, and focuses the button", () => {
+  const onChange = vi.fn();
+  const { requestClose } = stubCloseWatcher();
+
+  renderPopupMenu(onChange);
+  fireEvent.click(button());
+  act(requestClose);
 
   expect(listbox()).toBeNull();
   expect(onChange).not.toHaveBeenCalled();
   expect(document.activeElement).toBe(button());
+});
+
+test("closing the options with the Escape key destroys their close watcher", () => {
+  const { activeCloseWatchers } = stubCloseWatcher();
+
+  renderPopupMenu();
+  fireEvent.click(button());
+
+  expect(activeCloseWatchers).toHaveLength(1);
+
+  fireEvent.keyDown(listbox()!, { key: "Escape" });
+
+  expect(activeCloseWatchers).toHaveLength(0);
+});
+
+test("moving the focus to an element outside the open options closes them", () => {
+  renderPopupMenu();
+
+  const outsideButton = document.body.appendChild(document.createElement("button"));
+
+  fireEvent.click(button());
+  act(() => outsideButton.focus());
+
+  expect(listbox()).toBeNull();
+  expect(document.activeElement).toBe(outsideButton);
+
+  outsideButton.remove();
+});
+
+test("moving the focus to the button leaves the options open", () => {
+  renderPopupMenu();
+  fireEvent.click(button());
+  act(() => button().focus());
+
+  expect(listbox()).not.toBeNull();
 });
 
 test("a press outside the open options closes them", () => {
@@ -382,4 +430,24 @@ test.for([
   expect(button().matches(":disabled")).toBe(true);
   expect(playClickSound).not.toHaveBeenCalled();
   expect(listbox()).toBeNull();
+});
+
+test("opening a pop-up menu closes another pop-up menu that is open", () => {
+  render(
+    <>
+      <PopupMenu value="second" options={OPTIONS} aria-label="First menu" onChange={() => undefined} />
+      <PopupMenu value="second" options={OPTIONS} aria-label="Second menu" onChange={() => undefined} />
+    </>,
+  );
+
+  const buttonNamed = (name: string) => screen.getByRole("button", { name: new RegExp(`^${name} `) });
+
+  fireEvent.keyDown(buttonNamed("First menu"), { key: "ArrowDown" });
+
+  expect(screen.queryByRole("listbox", { name: "First menu" })).not.toBeNull();
+
+  fireEvent.pointerDown(buttonNamed("Second menu"), { ...TOUCH_PRESS_INIT, pointerId: 2, ...PRESS_ORIGIN });
+
+  expect(screen.queryByRole("listbox", { name: "Second menu" })).not.toBeNull();
+  expect(screen.queryByRole("listbox", { name: "First menu" })).toBeNull();
 });

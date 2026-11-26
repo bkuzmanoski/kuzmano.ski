@@ -58,12 +58,14 @@ export function useWindowDrag({
       return { x, y };
     },
     onDragMove: (delta, from) => reportDrag({ kind: "move", x: from.x + delta.dx, y: from.y + delta.dy }),
-    onEnd: (moved) => {
+    onEnd: (moved, { isCanceled }) => {
       const drag = endDrag();
 
       hasMovedWindowRef.current = moved;
 
-      if (drag?.kind === "move") {
+      // A gesture that is canceled by the browser (e.g., Android's back gesture, which can begin on a title bar at the
+      // screen's edge) leaves the window's position unchanged.
+      if (drag?.kind === "move" && !isCanceled) {
         onMove(drag.x, drag.y);
       }
     },
@@ -99,13 +101,13 @@ export function useWindowDrag({
         setIsResizePressed(false);
       }
     },
-    onEnd: () => {
+    onEnd: (_moved, { isCanceled }) => {
       const drag = endDrag();
 
       setIsResizing(false);
       setIsResizePressed(false);
 
-      if (drag?.kind === "resize") {
+      if (drag?.kind === "resize" && !isCanceled) {
         onResize?.(drag.width, drag.height);
       }
     },

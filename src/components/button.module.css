@@ -1,3 +1,5 @@
+@custom-selector :--disabled :is(:disabled, [aria-disabled="true"]);
+
 .button {
   user-select: none;
 
@@ -6,7 +8,7 @@
   justify-content: center;
 
   min-width: 112px;
-  height: 30px;
+  min-height: var(--layout-control-height);
   padding: 0 16px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -23,7 +25,7 @@
     flex: none;
 
     min-width: 0;
-    height: auto;
+    min-height: 0;
     padding: 0;
     border: none;
     border-radius: 0;
@@ -31,17 +33,14 @@
 
   &:focus {
     @mixin focus-ring;
-
-    box-shadow: 0 0 0 1px var(--color-background);
   }
 
-  &:is(:disabled, [aria-disabled="true"]) {
+  &:--disabled {
     border-color: var(--color-border-secondary);
     color: var(--color-foreground-disabled);
   }
 
-  &:active:not(:disabled, [aria-disabled="true"]),
-  &.pressed:not(:disabled, [aria-disabled="true"]) {
+  &:is(:active, .pressed):not(:--disabled) {
     color: var(--color-pressed-foreground);
     background: var(--color-pressed-background);
   }
@@ -59,7 +58,7 @@
       box-shadow: none;
     }
 
-    &:is(:disabled, [aria-disabled="true"]) {
+    &:--disabled {
       --color-icon-foreground: var(--color-border-secondary);
     }
 
@@ -72,6 +71,7 @@
     width: 24px;
     min-width: 0;
     height: 24px;
+    min-height: 0;
     padding: 0;
     border-radius: 3px;
 
@@ -79,8 +79,7 @@
       @mixin focus-outline-dotted;
     }
 
-    &:active:not(:disabled, [aria-disabled="true"]),
-    &.pressed:not(:disabled, [aria-disabled="true"]) {
+    &:is(:active, .pressed):not(:--disabled) {
       --color-icon-foreground: var(--color-pressed-foreground);
       --color-icon-background: var(--color-pressed-background);
     }
@@ -91,8 +90,7 @@
       @mixin focus-stroke 1px;
     }
 
-    &:active:not(:disabled, [aria-disabled="true"]),
-    &.pressed:not(:disabled, [aria-disabled="true"]) {
+    &:is(:active, .pressed):not(:--disabled) {
       --color-icon-background: var(--color-icon-foreground);
 
       background: var(--color-background);

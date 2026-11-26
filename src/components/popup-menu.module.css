@@ -11,7 +11,7 @@
 
   position: relative;
 
-  height: 30px;
+  height: var(--layout-control-height);
   padding-inline: var(--popup-menu-padding-inline-start) 30px;
   border: 1px solid var(--color-border);
 
@@ -85,25 +85,22 @@
 
   touch-action: none; /* A touch dragged between options chooses the option it is released over, so the browser must not claim the gesture for panning and cancel it. */
 
-  position: fixed;
-  z-index: var(--layer-menu);
+  /* Centers the chosen option on the button, within the viewport's gutters. The 1px terms are the border of `panel`. */
   top: clamp(
     var(--layout-gutter),
-    var(--popup-menu-button-top) + (var(--popup-menu-button-height) - 32px) / 2 - 1px - 4px -
-      var(--popup-menu-chosen-option-index) * 32px,
-    100dvh - var(--layout-gutter) - (var(--popup-menu-option-count) * 32px + 2 * (1px + 4px))
+    var(--popup-menu-button-top) + (var(--popup-menu-button-height) - var(--layout-menu-item-height)) / 2 - 1px -
+      var(--layout-menu-padding-block) - var(--popup-menu-chosen-option-index) * var(--layout-menu-item-height),
+    100dvh - var(--layout-gutter) -
+      (var(--popup-menu-option-count) * var(--layout-menu-item-height) + 2 * (1px + var(--layout-menu-padding-block)))
   );
   left: calc(
     var(--popup-menu-button-left) + var(--popup-menu-padding-inline-start) -
       var(--popup-menu-option-padding-inline-start)
   );
-
   min-width: calc(
     var(--popup-menu-button-width) + var(--popup-menu-option-padding-inline-start) -
       var(--popup-menu-padding-inline-start)
   );
-
-  outline: none;
 }
 
 .option {

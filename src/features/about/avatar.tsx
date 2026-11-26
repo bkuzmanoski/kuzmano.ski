@@ -46,7 +46,7 @@ export function Avatar({
     };
 
     document.addEventListener("pointermove", lookTowardPointer, { passive: true });
-    document.addEventListener("pointerdown", lookTowardPointer, { passive: true }); // Also listen for `pointerdown` as touch input does not emit `pointermove` until the finger moves.
+    document.addEventListener("pointerdown", lookTowardPointer, { passive: true }); // Touch input emits `pointermove` only after the touch point moves.
 
     return () => {
       document.removeEventListener("pointermove", lookTowardPointer);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 import SoundEffectsOffMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-off.svg?react";
 import SoundEffectsOnMenuBarIcon from "#/assets/images/menu-bar-icon-sound-effects-on.svg?react";
@@ -8,6 +8,7 @@ import { Tooltip } from "#/components/tooltip.tsx";
 import { SITE_LOCALE, SITE_LOCATION, SITE_TIME_ZONE } from "#/config/site.ts";
 import { setSoundEffectsAudibly } from "#/lib/audio/sound-effects-setting.ts";
 import { cx } from "#/lib/class-names.ts";
+import { useEventListeners } from "#/lib/hooks/use-event-listeners.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { cycle } from "#/lib/math.ts";
 import { mergeHandlers } from "#/lib/merge-handlers.ts";
@@ -140,23 +141,36 @@ function currentSiteTime(): SiteTime {
 
 export function TimeStatus() {
   const [clockTime, setClockTime] = useState<SiteTime | null>(null);
+  const tickTimer = useTimer();
 
-  useEffect(() => {
-    let tickTimer: ReturnType<typeof setTimeout>;
+  const tick = () => {
+    setClockTime(currentSiteTime());
 
-    const tick = () => {
-      setClockTime(currentSiteTime());
+    if (document.visibilityState === "hidden") {
+      return;
+    }
 
-      const now = new Date();
-      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    const now = new Date();
+    const timeToNextMinuteMs = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
-      tickTimer = setTimeout(tick, msToNextMinute);
-    };
+    tickTimer.start(tick, timeToNextMinuteMs);
+  };
 
-    tick();
+  const startClock = useEffectEvent(tick);
 
-    return () => clearTimeout(tickTimer);
-  }, []);
+  useEffect(() => startClock(), []);
+
+  useEventListeners("document", {
+    visibilitychange: () => (document.visibilityState === "hidden" ? tickTimer.cancel() : tick()),
+  });
+
+  useEventListeners("window", {
+    pageshow: (event) => {
+      if (event.persisted) {
+        tick();
+      }
+    },
+  });
 
   if (!clockTime) {
     return null;

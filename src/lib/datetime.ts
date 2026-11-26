@@ -10,6 +10,23 @@ export const dateFormatterOf = (format: DateFormat, locale = format.locale): Int
   new Intl.DateTimeFormat(locale, format.options);
 
 /**
+ * Returns a formatter like `format`, but with a full month name. Returns `null` if `format` uses a date or time style,
+ * or its month is not abbreviated.
+ */
+export function fullMonthFormatterOf(format: Intl.DateTimeFormat): Intl.DateTimeFormat | null {
+  const { locale, ...resolvedOptions } = format.resolvedOptions();
+  const options = resolvedOptions as Intl.DateTimeFormatOptions; // TypeScript types the resolved fields as `string`, but each has a value that the options accept.
+
+  if (options.dateStyle !== undefined || options.timeStyle !== undefined) {
+    return null;
+  }
+
+  return options.month === "short" || options.month === "narrow"
+    ? new Intl.DateTimeFormat(locale, { ...options, month: "long" })
+    : null;
+}
+
+/**
  * Writes an ISO 8601 calendar date (`YYYY-MM-DD` or `YYYY-MM`) in `format`. Returns `isoString` unchanged when it does
  * not parse.
  */

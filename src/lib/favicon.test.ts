@@ -1,21 +1,11 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import { stubMatchMedia } from "#/test-utils/match-media.ts";
+import { stubVisibilityState } from "#/test-utils/visibility.ts";
 
 import { watchFaviconColorScheme } from "./favicon.ts";
 
 const HREF = "/favicon.svg";
-
-function stubVisibility() {
-  let state: DocumentVisibilityState = "visible";
-
-  vi.spyOn(document, "visibilityState", "get").mockImplementation(() => state);
-
-  return (next: DocumentVisibilityState) => {
-    state = next;
-    document.dispatchEvent(new Event("visibilitychange"));
-  };
-}
 
 function addIcon() {
   const icon = document.createElement("link");
@@ -78,59 +68,59 @@ describe("watchFaviconColorScheme", () => {
   test("waits for a hidden tab to become visible before updating the icon", () => {
     stubMatchMedia();
 
-    const show = stubVisibility();
+    const setVisibilityState = stubVisibilityState();
     const icon = addIcon();
 
-    show("hidden");
+    setVisibilityState("hidden");
     watchFaviconColorScheme();
 
     expect(icon.getAttribute("href")).toBe(HREF);
 
-    show("visible");
+    setVisibilityState("visible");
 
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });
 
   test("updates to a scheme changed while the tab was hidden", () => {
     const change = stubMatchMedia();
-    const show = stubVisibility();
+    const setVisibilityState = stubVisibilityState();
     const icon = addIcon();
 
     watchFaviconColorScheme();
-    show("hidden");
+    setVisibilityState("hidden");
     change(true);
 
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
 
-    show("visible");
+    setVisibilityState("visible");
 
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=dark`);
   });
 
   test("does not update the icon when the scheme returns to the one already shown", () => {
     const change = stubMatchMedia();
-    const show = stubVisibility();
+    const setVisibilityState = stubVisibilityState();
     const icon = addIcon();
 
     watchFaviconColorScheme();
-    show("hidden");
+    setVisibilityState("hidden");
     icon.setAttribute("href", "sentinel");
     change(true);
     change(false);
-    show("visible");
+    setVisibilityState("visible");
 
     expect(icon.getAttribute("href")).toBe("sentinel");
   });
 
   test("does not update the icon after teardown", () => {
     const change = stubMatchMedia();
-    const show = stubVisibility();
+    const setVisibilityState = stubVisibilityState();
     const icon = addIcon();
 
     watchFaviconColorScheme()();
     change(true);
-    show("hidden");
-    show("visible");
+    setVisibilityState("hidden");
+    setVisibilityState("visible");
 
     expect(icon.getAttribute("href")).toBe(`${HREF}?color-scheme=light`);
   });

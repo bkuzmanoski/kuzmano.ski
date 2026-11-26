@@ -6,6 +6,7 @@ import type { ClipboardCopyStatus } from "#/lib/hooks/use-copy-to-clipboard.ts";
 
 import { ActionFailureAlert } from "./action-failure-alert.tsx";
 import { Button } from "./button.tsx";
+import { COPY_CONFIRMATION, CopyAnnouncer } from "./copy-announcer.tsx";
 import { CopyTooltip } from "./copy-tooltip.tsx";
 
 import type { IconButtonVariant } from "./button.tsx";
@@ -27,15 +28,17 @@ interface CopyButtonAppearance {
 export function CopyButton({
   value,
   entity,
+  confirmation = COPY_CONFIRMATION,
   ...appearance
 }: CopyButtonAppearance & { value: string | null; entity: string }) {
-  const { latestClipboardCopy, copy, clearConfirmation, dismissFailure } = useCopyToClipboard();
+  const { latestClipboardCopy, confirmedClipboardCopyNumber, copy, clearConfirmation, dismissFailure } =
+    useCopyToClipboard();
   return (
     <>
       <ControlledCopyButton
         copyStatus={latestClipboardCopy?.status ?? null}
         disabled={value === null}
-        announcesConfirmation
+        confirmation={confirmation}
         onCopy={() => {
           if (value !== null) {
             void copy(value, {});
@@ -44,6 +47,7 @@ export function CopyButton({
         onDidHide={() => clearConfirmation()}
         {...appearance}
       />
+      <CopyAnnouncer confirmedClipboardCopyNumber={confirmedClipboardCopyNumber} confirmation={confirmation} />
       <ActionFailureAlert
         action="copy"
         isPermissionDenied
@@ -56,25 +60,23 @@ export function CopyButton({
 }
 
 /**
- * A copy control whose copy, confirmation, and failure alert are owned by its caller, which passes the status of the
- * latest copy the control made as `copyStatus`, or `null` when there is none to display. `onDidHide` is called when the
- * control's tooltip is hidden, for the caller to end the confirmation the tooltip was showing.
+ * A copy control whose caller owns its copy, its `CopyAnnouncer`, and its failure alert, and passes the status of the
+ * latest copy the control made as `copyStatus`, or `null` when there is none to display. The control calls `onDidHide`
+ * when its tooltip hides, for the caller to end the confirmation the tooltip was showing.
  */
 export function ControlledCopyButton({
   copyStatus,
   disabled,
-  announcesConfirmation,
   icon = "value",
   variant = "standalone",
   label = "Copy to Clipboard",
-  confirmation = "Copied",
+  confirmation = COPY_CONFIRMATION,
   className,
   onCopy,
   onDidHide,
 }: CopyButtonAppearance & {
   copyStatus: ClipboardCopyStatus | null;
   disabled: boolean;
-  announcesConfirmation: boolean;
   onCopy: () => void;
   onDidHide: () => void;
 }) {
@@ -89,7 +91,6 @@ export function ControlledCopyButton({
       confirmation={confirmation}
       hasCopied={hasCopied}
       suppressed={disabled}
-      announcesConfirmation={announcesConfirmation}
       onDidHide={onDidHide}
       className={className}
     >

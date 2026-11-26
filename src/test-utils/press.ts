@@ -3,8 +3,14 @@ import { createEvent, fireEvent } from "@testing-library/react";
 /** The `PointerEvent` fields of a primary press with a mouse, without a position. */
 export const MOUSE_PRESS_INIT = { pointerType: "mouse", pointerId: 1, button: 0, isPrimary: true };
 
-/** The `PointerEvent` fields of a primary press with a touch, without a position. */
+/**
+ * The `PointerEvent` fields of a primary press with a touch, without a position. It shares its `pointerId` with
+ * `MOUSE_PRESS_INIT`, so a test follows either press with the same moves.
+ */
 export const TOUCH_PRESS_INIT = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true };
+
+/** The `PointerEvent` fields of a second touch that begins while a touch press is down, without a position. */
+export const SECOND_TOUCH_PRESS_INIT = { ...TOUCH_PRESS_INIT, pointerId: 2, isPrimary: false };
 
 /** The events of a press with a mouse, up to the release. */
 export function pressWithMouse(element: Element) {

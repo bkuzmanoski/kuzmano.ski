@@ -1,7 +1,17 @@
 .zoomRect {
   @mixin dashed-stroke;
 
+  /* Stays in the compositor layer of the windows instead of setting `will-change`. At a fractional width, Chrome rounds
+   * the right edge of a layer of its own to a different device pixel than that of the window, so the rect would end 1px
+   * short of the window it opens. */
   pointer-events: none;
+
   position: absolute;
+
   color: var(--color-border);
+
+  /* Transitions the geometry instead of a transform, as scaling would also scale the 1px dashes. `ZoomRect` sets the
+   * duration once the rect has rendered at its origin. */
+  transition-timing-function: ease-out;
+  transition-property: left, top, width, height;
 }

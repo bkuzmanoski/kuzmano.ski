@@ -1,8 +1,11 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { playClickSound } from "#/lib/audio/sounds.ts";
 import type { Experience } from "#/lib/experience/career-timeline.ts";
+import { DRAG_THRESHOLD_PX } from "#/lib/press/use-pointer-drag.ts";
 import { runActivationFlash } from "#/test-utils/menu.ts";
+import { MOUSE_PRESS_INIT, TOUCH_PRESS_INIT } from "#/test-utils/press.ts";
 import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 
 import styles from "./career-timeline.module.css";
@@ -14,6 +17,7 @@ vi.mock("#/lib/audio/sounds.ts", async (importOriginal) =>
 
 beforeEach(() => {
   vi.spyOn(navigator, "language", "get").mockReturnValue("en-US");
+  vi.mocked(playClickSound).mockClear();
 });
 
 afterEach(() => vi.useRealTimers());
@@ -63,7 +67,10 @@ const CHART_STICKY_TOP_PX = 16;
 const LANES_HEIGHT_PX = 400;
 const LANES_CENTER_X_PX = 140;
 const HORIZONTAL_CHART_COLUMN_HEIGHT_PX = 60;
-const POINTER_ID = 1;
+const HORIZONTAL_LANES_LEFT_PX = 20;
+const HORIZONTAL_LANES_TOP_PX = 20;
+const HORIZONTAL_LANES_WIDTH_PX = 560;
+const POINTER_ID = MOUSE_PRESS_INIT.pointerId;
 const FRAME_MS = 16;
 
 const careerTimelineInScrollPane = () => (
@@ -89,8 +96,23 @@ function chooseOrder(label: string) {
   void runActivationFlash();
 }
 
+/** The text of `element` without the elements that `selector` matches. */
+function textWithout(element: Element, selector: string): string {
+  const copy = element.cloneNode(true) as Element;
+
+  copy.querySelectorAll(selector).forEach((excluded) => excluded.remove());
+
+  return copy.textContent;
+}
+
+/** The text of `element` that the user sees, without the text visually hidden for assistive technology. */
+const displayedTextOf = (element: Element) => textWithout(element, `.${styles.spokenText}`);
+
+/** The text of `element` that assistive technology reads, without the elements hidden from it. */
+const spokenTextOf = (element: Element) => textWithout(element, '[aria-hidden="true"]');
+
 const paragraphWithText = (text: string) => (_content: string, element: Element | null) =>
-  element?.tagName === "P" && element.textContent === text;
+  element?.tagName === "P" && displayedTextOf(element) === text;
 const rectOf = (left: number, top: number, width: number, height: number): DOMRect => ({
   x: left,
   y: top,
@@ -161,7 +183,12 @@ function layOutChartAboveList(scrollPane: HTMLElement) {
     }
 
     if (this.matches(`.${styles.lanes}`)) {
-      return rectOf(20, 20, 560, HORIZONTAL_CHART_COLUMN_HEIGHT_PX - 20);
+      return rectOf(
+        HORIZONTAL_LANES_LEFT_PX,
+        HORIZONTAL_LANES_TOP_PX,
+        HORIZONTAL_LANES_WIDTH_PX,
+        HORIZONTAL_CHART_COLUMN_HEIGHT_PX - HORIZONTAL_LANES_TOP_PX,
+      );
     }
 
     if (this.tagName === "OL") {
@@ -178,12 +205,12 @@ function layOutChartAboveList(scrollPane: HTMLElement) {
   });
 }
 
-function renderChartBesideListScrolledTo(scrollTop: number) {
+function renderChartScrolledTo(scrollTop: number, layOutChart: (scrollPane: HTMLElement) => void) {
   const { container } = renderInScrollPane();
   const scrollPane = container.firstElementChild as HTMLElement;
 
   scrollPane.scrollTop = scrollTop;
-  layOutChartBesideList(scrollPane);
+  layOutChart(scrollPane);
 
   return { scrollPane, chart: container.querySelector(`.${styles.chart}`)! };
 }
@@ -207,15 +234,42 @@ function measureVisibleRangeFrameEdges(scrollPane: HTMLElement) {
   return { top: chartTop + offset * LANES_HEIGHT_PX, bottom: chartTop + (offset + size) * LANES_HEIGHT_PX };
 }
 
-const press = (chart: Element, clientY: number) =>
-  fireEvent.pointerDown(chart, { button: 0, pointerId: POINTER_ID, clientX: LANES_CENTER_X_PX, clientY });
+/**
+ * A pointer position over the chart. `clientX` defaults to the center of the lanes beside the list, and `clientY` to
+ * the top of the lanes above the list, so a test sets the coordinate along its chart's axis, and the other only for a
+ * swipe across the chart.
+ */
+interface ChartPoint {
+  clientX?: number;
+  clientY?: number;
+}
 
-function dragTo(clientY: number) {
-  fireEvent.pointerMove(window, { buttons: 1, pointerId: POINTER_ID, clientX: LANES_CENTER_X_PX, clientY });
+const clientPositionAt = ({ clientX = LANES_CENTER_X_PX, clientY = HORIZONTAL_LANES_TOP_PX }: ChartPoint) => ({
+  clientX,
+  clientY,
+});
+
+const press = (chart: Element, point: ChartPoint, init: PointerEventInit = MOUSE_PRESS_INIT) =>
+  fireEvent.pointerDown(chart, { ...init, ...clientPositionAt(point) });
+
+function movePointerTo(point: ChartPoint) {
+  fireEvent.pointerMove(window, { buttons: 1, pointerId: POINTER_ID, ...clientPositionAt(point) });
   vi.advanceTimersByTime(FRAME_MS);
 }
 
 const release = () => fireEvent.pointerUp(window, { pointerId: POINTER_ID });
+
+/** The horizontal position of a point on the chart laid out above the list, as a fraction of its axis. */
+const horizontalChartXAt = (fraction: number) => HORIZONTAL_LANES_LEFT_PX + fraction * HORIZONTAL_LANES_WIDTH_PX;
+
+/**
+ * A fraction of the chart's axis among the oldest roles, away from the visible-range frame of a list scrolled to its
+ * newest role.
+ */
+const FRACTION_AMONG_OLDEST_ROLES = 0.9;
+
+/** Ends the gesture as a browser does when it claims a touch to scroll the scroll pane. */
+const cancelPointer = () => fireEvent.pointerCancel(window, { pointerId: POINTER_ID });
 
 describe("CareerTimeline", () => {
   test("lists every role, newest first", () => {
@@ -246,10 +300,33 @@ describe("CareerTimeline", () => {
     ).toBeTruthy();
   });
 
+  test('writes each month in a role\'s dates in full, and joins the dates with "to", in the text that assistive technology reads', () => {
+    renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
+
+    const datesParagraph = within(roleNamed("Oldest Role")!).getByText(
+      paragraphWithText("Oldest Organization, Jan 2015\u2060–\u2060Jun 2018"),
+    );
+
+    expect(spokenTextOf(datesParagraph)).toBe("Oldest Organization, January 2015 to June 2018");
+  });
+
+  test("renders a role's dates once, without hiding them from assistive technology, when the browser's locale writes the month as a number", () => {
+    vi.spyOn(navigator, "language", "get").mockReturnValue("ja-JP");
+
+    const { container } = renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
+
+    expect(container.querySelector(`.${styles.spokenText}, .${styles.organizationAndDates} [aria-hidden]`)).toBeNull();
+    expect(
+      within(roleNamed("Oldest Role")!).getByText(
+        paragraphWithText("Oldest Organization, 2015年1月\u2060–\u20602018年6月"),
+      ),
+    ).toBeTruthy();
+  });
+
   test("renders each month in a role's dates as a `<time>` with the month in its `datetime` attribute", () => {
     renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
-    const times = within(roleNamed("Oldest Role")!).getAllByText(/2015|2018/);
+    const times = [...roleNamed("Oldest Role")!.querySelectorAll("time")];
 
     expect(times.map((time) => [time.tagName, time.getAttribute("datetime")])).toEqual([
       ["TIME", "2015-01"],
@@ -257,13 +334,21 @@ describe("CareerTimeline", () => {
     ]);
   });
 
-  test("marks each month with a `lang` attribute naming the browser's locale when its language differs from that of the document", () => {
+  test("sets a `lang` attribute naming the browser's locale on each displayed and spoken month when the locale is in a language other than that of the document", () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("de-DE");
     renderInRouterContext(<CareerTimeline {...EXPERIENCE} />);
 
-    const months = within(roleNamed("Oldest Role")!).getAllByText(/2015|2018/);
+    const role = roleNamed("Oldest Role")!;
+    const spokenText = role.querySelector(`.${styles.spokenText}`)!;
+    const localizedElements = [...role.querySelectorAll("time"), ...spokenText.querySelectorAll("[lang]")];
 
-    expect(months.map((month) => month.getAttribute("lang"))).toEqual(["de-DE", "de-DE"]);
+    expect(spokenText.getAttribute("lang")).toBeNull();
+    expect(localizedElements.map((element) => [element.textContent, element.getAttribute("lang")])).toEqual([
+      ["Jan. 2015", "de-DE"],
+      ["Juni 2018", "de-DE"],
+      ["Januar 2015", "de-DE"],
+      ["Juni 2018", "de-DE"],
+    ]);
   });
 
   test("does not set a `lang` attribute on a month when the browser's locale is in the document's language", () => {
@@ -453,10 +538,10 @@ describe("CareerTimeline", () => {
   test("leaves the scroll pane's scroll position unchanged when the visible-range frame is pressed without the pointer moving", () => {
     vi.useFakeTimers();
 
-    const { scrollPane, chart } = renderChartBesideListScrolledTo(MAXIMUM_SCROLL_TOP_PX);
+    const { scrollPane, chart } = renderChartScrolledTo(MAXIMUM_SCROLL_TOP_PX, layOutChartBesideList);
     const frame = measureVisibleRangeFrameEdges(scrollPane);
 
-    press(chart, (frame.top + frame.bottom) / 2);
+    press(chart, { clientY: (frame.top + frame.bottom) / 2 });
     vi.advanceTimersByTime(FRAME_MS);
     release();
 
@@ -466,12 +551,12 @@ describe("CareerTimeline", () => {
   test("leaves the scroll pane scrolled to the end when the visible-range frame is dragged down from the end of the list", () => {
     vi.useFakeTimers();
 
-    const { scrollPane, chart } = renderChartBesideListScrolledTo(MAXIMUM_SCROLL_TOP_PX);
+    const { scrollPane, chart } = renderChartScrolledTo(MAXIMUM_SCROLL_TOP_PX, layOutChartBesideList);
     const frame = measureVisibleRangeFrameEdges(scrollPane);
 
-    press(chart, frame.bottom - 2);
-    dragTo(frame.bottom - 1);
-    dragTo(frame.bottom + 20);
+    press(chart, { clientY: frame.bottom - 2 });
+    movePointerTo({ clientY: frame.bottom - 1 });
+    movePointerTo({ clientY: frame.bottom + 20 });
 
     expect(scrollPane.scrollTop).toBe(MAXIMUM_SCROLL_TOP_PX);
 
@@ -481,18 +566,18 @@ describe("CareerTimeline", () => {
   test("moves the visible-range frame by the pointer's travel when it is dragged before the chart sticks", () => {
     vi.useFakeTimers();
 
-    const { scrollPane, chart } = renderChartBesideListScrolledTo(0);
+    const { scrollPane, chart } = renderChartScrolledTo(0, layOutChartBesideList);
     const frameAtPress = measureVisibleRangeFrameEdges(scrollPane);
     const pressY = (frameAtPress.top + frameAtPress.bottom) / 2;
 
-    press(chart, pressY);
-    dragTo(pressY + 10);
+    press(chart, { clientY: pressY });
+    movePointerTo({ clientY: pressY + 10 });
 
     const scrollTopAfterFirstMove = scrollPane.scrollTop;
 
-    dragTo(pressY + 11);
-    dragTo(pressY + 10);
-    dragTo(pressY + 10);
+    movePointerTo({ clientY: pressY + 11 });
+    movePointerTo({ clientY: pressY + 10 });
+    movePointerTo({ clientY: pressY + 10 });
 
     expect(scrollPane.scrollTop).toBe(scrollTopAfterFirstMove);
 
@@ -504,5 +589,101 @@ describe("CareerTimeline", () => {
     expect(centerTravel).toBeCloseTo(10, 1);
 
     release();
+  });
+
+  test("scrolls the list to the point of a mouse press on the chart and plays the click sound before the pointer moves", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+
+    press(chart, { clientX: horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES) });
+
+    expect(scrollPane.scrollTop).toBeGreaterThan(LIST_TOP_PX);
+    expect(playClickSound).toHaveBeenCalledOnce();
+
+    release();
+  });
+
+  test("does not scroll the list or play the click sound for a touch press on the chart until it travels along the chart's axis past the drag threshold", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+    const pressX = horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES);
+
+    press(chart, { clientX: pressX }, TOUCH_PRESS_INIT);
+    movePointerTo({ clientX: pressX + DRAG_THRESHOLD_PX, clientY: HORIZONTAL_LANES_TOP_PX + 40 }); // A vertical swipe that the browser can claim.
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+    expect(playClickSound).not.toHaveBeenCalled();
+
+    movePointerTo({ clientX: pressX + DRAG_THRESHOLD_PX + 1 });
+
+    expect(scrollPane.scrollTop).toBeGreaterThan(LIST_TOP_PX);
+    expect(playClickSound).toHaveBeenCalledOnce();
+
+    release();
+  });
+
+  test("does not scroll the list or play the click sound for a touch press on the chart that travels further across the chart's axis than along it", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+    const pressX = horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES);
+
+    press(chart, { clientX: pressX }, TOUCH_PRESS_INIT);
+    movePointerTo({ clientX: pressX + DRAG_THRESHOLD_PX + 2, clientY: HORIZONTAL_LANES_TOP_PX + 20 }); // A diagonal swipe that the browser can claim.
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+    expect(playClickSound).not.toHaveBeenCalled();
+  });
+
+  test("does not scroll the list or play the click sound for a touch press on the chart canceled by the browser before it travels past the drag threshold", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+    const pressX = horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES);
+
+    press(chart, { clientX: pressX }, TOUCH_PRESS_INIT);
+    movePointerTo({ clientX: pressX, clientY: HORIZONTAL_LANES_TOP_PX + 40 });
+    cancelPointer();
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+    expect(playClickSound).not.toHaveBeenCalled();
+  });
+
+  test("returns the scroll pane to its scroll position at the press when the browser cancels a touch drag on the chart", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+    const pressX = horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES);
+
+    press(chart, { clientX: pressX }, TOUCH_PRESS_INIT);
+    movePointerTo({ clientX: pressX + 20 });
+
+    expect(scrollPane.scrollTop).toBeGreaterThan(LIST_TOP_PX);
+
+    cancelPointer();
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+  });
+
+  test("scrolls the list to the point of a tap on the chart and plays the click sound on its `click` event", () => {
+    vi.useFakeTimers();
+
+    const { scrollPane, chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+
+    press(chart, { clientX: horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES) }, TOUCH_PRESS_INIT);
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+    expect(playClickSound).not.toHaveBeenCalled();
+
+    fireEvent.pointerUp(chart, { pointerId: POINTER_ID, button: 0 });
+
+    expect(scrollPane.scrollTop).toBe(LIST_TOP_PX);
+
+    fireEvent.click(chart, { detail: 1 });
+
+    expect(scrollPane.scrollTop).toBeGreaterThan(LIST_TOP_PX);
+    expect(playClickSound).toHaveBeenCalledOnce();
   });
 });

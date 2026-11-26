@@ -183,10 +183,9 @@ export function Tooltip({
         timer.cancel();
         lastPointerTypeRef.current = event.pointerType;
 
-        // Only a pointer that was hovering can leave one. A touch lifting, and the synthesized mouse event iOS raises
-        // around a tap, are the tap finishing rather than a pointer moving away, and must not hide a tooltip the press
-        // has just shown.
         if (!wasHovering) {
+          // Ignore touch and synthesized mouse pointer-leave events as they finish a tap rather than end a hover, and
+          // must not hide a tooltip the press just showed.
           return;
         }
 

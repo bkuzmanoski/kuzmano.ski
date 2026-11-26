@@ -1,21 +1,16 @@
 .slider {
   --slider-thumb-width: 15px; /* The width of `slider-thumb.svg`. */
-  --slider-height: 30px; /* As tall as a text `Button`, and the height of `slider-thumb.svg`. */
+  --slider-height: var(--layout-control-height); /* Also the height of `slider-thumb.svg`. */
   --slider-track-height: 16px; /* Centers the track in the slider's height. */
   --slider-track-overhang: 6px; /* Shows the track's rounded ends past the thumb at either end of its travel. */
-  --slider-travel: calc(100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang));
-  --slider-travel-start: var(--slider-track-overhang);
+  --slider-travel: round(
+    down,
+    100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang),
+    var(--slider-step-count) * 1px
+  );
+  --slider-travel-start: round(down, (100% - var(--slider-travel) - var(--slider-thumb-width)) / 2, 1px);
   --slider-step-count: 0; /* Set from JS. */
   --slider-value-fraction: 0; /* Set from JS. */
-
-  @supports (width: round(down, 1px, 1px)) {
-    --slider-travel: round(
-      down,
-      100% - var(--slider-thumb-width) - 2 * var(--slider-track-overhang),
-      var(--slider-step-count) * 1px
-    );
-    --slider-travel-start: round(down, (100% - var(--slider-travel) - var(--slider-thumb-width)) / 2, 1px);
-  }
 
   position: relative;
   height: var(--slider-height);
@@ -30,7 +25,7 @@
   }
 }
 
-/* Spans the thumb's travel, so a press lands on the value the thumb shows there. */
+/* Covers the thumb's travel so clicks select the value shown at that position. */
 .input {
   position: absolute;
   z-index: 1;

@@ -116,13 +116,20 @@ export const DesktopIcon = memo(function Icon({
       return { x, y };
     },
     onDragMove: (delta, from) => onMoveStart(iconDefinition, from.x + delta.dx, from.y + delta.dy),
-    onEnd: (moved) => {
+    onEnd: (moved, { start: from, isCanceled }) => {
       hasMovedRef.current = moved;
 
-      if (moved) {
-        playClickSound();
-        onMoveEnd();
+      if (!moved) {
+        return;
       }
+
+      if (isCanceled) {
+        onMoveStart(iconDefinition, from.x, from.y);
+        return;
+      }
+
+      playClickSound();
+      onMoveEnd();
     },
   });
 

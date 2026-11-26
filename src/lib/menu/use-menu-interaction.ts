@@ -3,12 +3,15 @@ import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "re
 import { playClickSound, playHoverSound } from "../audio/sounds.ts";
 import { clientPositionOf, distanceBetween } from "../geometry.ts";
 import { useActivationFlash } from "../hooks/use-activation-flash.ts";
+import { useCloseWatcher } from "../hooks/use-close-watcher.ts";
 import { useEventListeners } from "../hooks/use-event-listeners.ts";
 import { useTimer } from "../hooks/use-timer.ts";
 import { isFollowingLink } from "../link.ts";
 import { navigationTargetOf } from "../list-navigation.ts";
 import { isPointerClick, isPrimaryPress } from "../press/press.ts";
 import { DRAG_THRESHOLD_PX } from "../press/use-pointer-drag.ts";
+
+import { useOutsideTouchDismissal } from "./use-outside-touch-dismissal.ts";
 
 import type { Position } from "../geometry.ts";
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
@@ -27,6 +30,9 @@ export interface OpeningPress {
   /** `null` when the press was not at a known point, which treats any release as having moved. */
   origin: Position | null;
 }
+
+/** Closes the open menu when another opens, so only one menu stays open at a time. */
+let closeOpenMenu: (() => void) | null = null;
 
 const ITEM_INDEX_ATTRIBUTE = "data-index";
 const ITEM_SELECTOR = `[${ITEM_INDEX_ATTRIBUTE}]`;
@@ -54,6 +60,7 @@ function indexAt(x: number, y: number): number {
 export function useMenuInteraction({
   items,
   anchor,
+  focusReturnTarget,
   listRef,
   openingPress,
   initialFocusedItemIndex,
@@ -63,7 +70,13 @@ export function useMenuInteraction({
   onClose,
 }: {
   items: ReadonlyArray<MenuInteractionItem>;
+  /**
+   * The element the menu opens from, treated as part of the menu for press, release, and focus interactions. Use `null`
+   * for a menu that opens at a point.
+   */
   anchor: HTMLElement | null;
+  /** The element to focus when the menu closes with focus inside it, or `null` to let focus fall to the body. */
+  focusReturnTarget: HTMLElement | null;
   listRef: RefObject<HTMLElement | null>;
   openingPress: OpeningPress;
   /** `-1` if no item should have focus when the menu is first opened. */
@@ -87,6 +100,7 @@ export function useMenuInteraction({
   const focusedItemIndexRef = useRef(focusedItemIndex);
   const typeaheadRef = useRef("");
   const flashingItemIndexRef = useRef(-1); // The item whose activation flash is running, or `-1`.
+  const hasClosedRef = useRef(false);
 
   function focusItem(index: number) {
     if (index === focusedItemIndexRef.current) {
@@ -136,11 +150,27 @@ export function useMenuInteraction({
     }
   }
 
-  function returnFocusToAnchor(isPointerActivation: boolean) {
+  /**
+   * Calls `onClose` only once. Returning the focus to an element outside the menu dispatches `focusin`, which would
+   * otherwise close the menu a second time.
+   */
+  function close() {
+    if (!hasClosedRef.current) {
+      hasClosedRef.current = true;
+      onClose();
+    }
+  }
+
+  /** Focuses `focusReturnTarget`, and returns whether it has the focus afterward. */
+  function returnFocus(options?: FocusOptions) {
+    focusReturnTarget?.focus(options);
+    return focusReturnTarget !== null && document.activeElement === focusReturnTarget;
+  }
+
+  function returnFocusAfterActivation(isPointerActivation: boolean) {
     if (listRef.current?.contains(document.activeElement)) {
-      // Restore focus to the anchor when an item activation leaves focus in the unmounted list (e.g., when opening a
-      // new tab).
-      anchor?.focus({ preventScroll: true, focusVisible: isPointerActivation ? false : undefined });
+      // Return the focus when an item activation leaves it in the list, which unmounts (e.g., when opening a new tab).
+      returnFocus({ preventScroll: true, focusVisible: isPointerActivation ? false : undefined });
     }
   }
 
@@ -158,8 +188,8 @@ export function useMenuInteraction({
     activationFlash.start(index, () => {
       flashingItemIndexRef.current = -1;
       onActivate(index);
-      returnFocusToAnchor(isPointerActivation);
-      onClose();
+      returnFocusAfterActivation(isPointerActivation);
+      close();
     });
   }
 
@@ -179,7 +209,6 @@ export function useMenuInteraction({
 
   const hasMovedFromPressOrigin = (event: PointerEvent) =>
     pressOrigin === null || distanceBetween(clientPositionOf(event), pressOrigin) > DRAG_THRESHOLD_PX;
-
   const onPointerMove = (event: PointerEvent) => {
     if (hasMovedFromPressOrigin(event)) {
       isOpeningPressStationaryRef.current = false;
@@ -193,6 +222,15 @@ export function useMenuInteraction({
 
     focusItem(items[index]?.isEnabled ? index : -1);
   };
+  const isInsideMenu = (target: EventTarget | null) =>
+    target instanceof Node && (listRef.current?.contains(target) === true || anchor?.contains(target) === true);
+
+  const outsideTouchDismissal = useOutsideTouchDismissal({
+    isInsideMenu,
+    canDismiss: () => !activationFlash.isRunning(),
+    isSticky: () => isStickyRef.current,
+    onDismiss: close,
+  });
 
   const onPointerUp = (event: PointerEvent) => {
     const wasSticky = isStickyRef.current;
@@ -200,6 +238,10 @@ export function useMenuInteraction({
     isStickyRef.current = true;
 
     if (activationFlash.isRunning()) {
+      return;
+    }
+
+    if (outsideTouchDismissal.consumePointerUp(event)) {
       return;
     }
 
@@ -216,14 +258,16 @@ export function useMenuInteraction({
 
       activate(index, true);
     } else if (!wasSticky && !anchor?.contains(event.target as Node)) {
-      onClose();
+      close();
     }
   };
 
-  const onPointerCancel = () => {
+  const onPointerCancel = (event: PointerEvent) => {
     // When the browser takes over a gesture (e.g., to scroll), it fires `pointercancel` instead of `pointerup`. Mark
     // the menu as sticky so the next press starts a new interaction rather than ending the canceled opening hold.
     isStickyRef.current = true;
+
+    outsideTouchDismissal.onPointerCancel(event);
 
     if (!activationFlash.isRunning()) {
       focusItem(-1);
@@ -233,11 +277,21 @@ export function useMenuInteraction({
   const onPointerDown = (event: PointerEvent) => {
     isOpeningPressStationaryRef.current = false;
 
-    const isTargetInsideMenu =
-      listRef.current?.contains(event.target as Node) || anchor?.contains(event.target as Node);
+    if (
+      event.pointerType !== "touch" &&
+      isStickyRef.current &&
+      !isInsideMenu(event.target) &&
+      !activationFlash.isRunning()
+    ) {
+      close();
+    }
+  };
 
-    if (isStickyRef.current && !isTargetInsideMenu && !activationFlash.isRunning()) {
-      onClose();
+  // The menu receives keys only while it has the focus, so it closes when the focus moves outside it (e.g., to a window
+  // opened by a global shortcut).
+  const onFocusIn = (event: FocusEvent) => {
+    if (!isInsideMenu(event.target) && !activationFlash.isRunning() && !outsideTouchDismissal.hasActiveTouch()) {
+      close();
     }
   };
 
@@ -250,6 +304,33 @@ export function useMenuInteraction({
     pointerup: onPointerUp,
     pointercancel: onPointerCancel,
     pointerdown: onPointerDown,
+    focusin: onFocusIn,
+  });
+
+  const closeForMenuOpening = useEffectEvent(() => close());
+
+  useEffect(() => {
+    closeOpenMenu?.();
+
+    const closeThisMenu = () => closeForMenuOpening();
+
+    closeOpenMenu = closeThisMenu;
+
+    return () => {
+      if (closeOpenMenu === closeThisMenu) {
+        closeOpenMenu = null;
+      }
+    };
+  }, []);
+
+  // Handle close requests (e.g., the Android back gesture) like Escape, unless an activation flash is running, as the
+  // flash closes the menu itself when it ends. `onKeyDown` prevents Escape's default close request to avoid handling it
+  // twice.
+  useCloseWatcher(() => {
+    if (!activationFlash.isRunning()) {
+      returnFocus();
+      close();
+    }
   });
 
   function onClick(event: MouseEvent) {
@@ -289,10 +370,20 @@ export function useMenuInteraction({
         break;
 
       case "Escape":
-      case "Tab":
         event.preventDefault();
-        anchor?.focus();
-        onClose();
+        returnFocus();
+        close();
+
+        break;
+
+      case "Tab":
+        // Restore focus so Tab can move to the next control. If no target is available, prevent Tab from moving focus
+        // to whatever follows the menu's portal at the end of the body.
+        if (!returnFocus()) {
+          event.preventDefault();
+        }
+
+        close();
 
         break;
 

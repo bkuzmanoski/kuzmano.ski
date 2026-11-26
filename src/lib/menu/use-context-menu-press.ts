@@ -18,7 +18,10 @@ export const LONG_PRESS_TOLERANCE_PX = 10;
 export interface ContextMenuPress extends OpeningPress {
   /** The pointer's position when the menu opens, where the press began or a long press has drifted to. */
   origin: Position;
-  /** The `pointerType` of the press, or `"mouse"` for a `contextmenu` event without a tracked press. */
+  /**
+   * The `pointerType` of the press, or of a `contextmenu` event without a tracked press, or `"mouse"` for a
+   * `contextmenu` event that does not have a tracked press (e.g., from the keyboard or a screen reader).
+   */
   pointerType: string;
 }
 
@@ -130,10 +133,23 @@ export function useContextMenuPress({
 
     const press = pressRef.current;
 
-    if (!press?.hasOpenedMenu) {
-      // Windows dispatches `contextmenu` after the release, and macOS during the press.
-      open(press?.position ?? clientPositionOf(event), press !== null, press?.pointerType ?? "mouse");
+    if (press?.hasOpenedMenu) {
+      return;
     }
+
+    if (press) {
+      // Windows dispatches `contextmenu` after the release, and macOS during the press.
+      open(press.position, true, press.pointerType);
+      return;
+    }
+
+    // A long press can reach the target without its `pointerdown`, as Chrome on Android adjusts a touch's `pointerdown`
+    // to a nearby control (e.g., a window's scrollbar beside a narrow strip of desktop), but not its `contextmenu`.
+    // Chrome dispatches `contextmenu` as a `PointerEvent` that names the pointer, which is still down after a long
+    // press.
+    const pointerType = "pointerType" in event && typeof event.pointerType === "string" ? event.pointerType : "";
+
+    open(clientPositionOf(event), pointerType === "touch" || pointerType === "pen", pointerType || "mouse");
   };
 
   // Listens on `document` instead of in the window's capture phase, so a menu mounted during `pointerdown` cannot

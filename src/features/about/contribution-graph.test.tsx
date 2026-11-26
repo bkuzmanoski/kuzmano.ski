@@ -15,7 +15,7 @@ import { renderInRouterContext } from "#/test-utils/router-context.tsx";
 import styles from "./contribution-graph.module.css";
 import { ContributionGraph } from "./contribution-graph.tsx";
 
-import type { AtRule, Node } from "postcss";
+import type { Rule } from "postcss";
 
 const useContributionCalendar = vi.hoisted(() => vi.fn<() => ContributionCalendar | null | undefined>());
 
@@ -455,28 +455,41 @@ describe("contribution-graph.module.css", () => {
   const stylesheet = postcss.parse(
     readFileSync(join(process.cwd(), "src/features/about/contribution-graph.module.css"), "utf8"),
   );
-  const isInForcedColorsQuery = (node: Node): boolean =>
-    node.parent !== undefined &&
-    ((node.parent.type === "atrule" && (node.parent as AtRule).params === "(forced-colors: active)") ||
-      isInForcedColorsQuery(node.parent));
-  const levelsInRules = (isForcedColors: boolean) => {
-    const levels: Array<number> = [];
+  const levelRules = () => {
+    const rules: Array<Rule> = [];
 
     stylesheet.walkRules((rule) => {
-      if (isInForcedColorsQuery(rule) === isForcedColors) {
-        levels.push(...[...rule.selector.matchAll(/\[data-level="(\d+)"\]/g)].map((match) => Number(match[1])));
+      if (rule.selector.includes("[data-level=")) {
+        rules.push(rule);
       }
     });
 
-    return levels;
+    return rules;
   };
   const everyLevelAbove0 = Array.from({ length: CONTRIBUTION_LEVEL_COUNT - 1 }, (_, index) => index + 1);
 
-  test("names each contribution level above 0 once in the rules outside `forced-colors` queries, leaving level 0 blank", () => {
-    expect(levelsInRules(false)).toEqual(everyLevelAbove0);
+  test("names each contribution level above 0 once across the rule selectors, and omits level 0", () => {
+    const levels = levelRules().flatMap((rule) =>
+      [...rule.selector.matchAll(/\[data-level="(\d+)"\]/g)].map((match) => Number(match[1])),
+    );
+    expect(levels).toEqual(everyLevelAbove0);
   });
 
-  test("names each contribution level above 0 once in the rules inside `forced-colors` queries, leaving level 0 blank", () => {
-    expect(levelsInRules(true)).toEqual(everyLevelAbove0);
+  test("renders each contribution level above 0 in `currentColor`", () => {
+    // Levels must use `currentColor` to inherit the color set by the `forced-colors` query.
+    const colors = levelRules().flatMap((rule) =>
+      rule.nodes.flatMap((node) => {
+        if (node.type === "decl" && /color|background/.test(node.prop)) {
+          return [node.value];
+        }
+
+        if (node.type === "atrule" && node.name === "mixin") {
+          return [node.params.split(/\s+/)[1] ?? "currentColor"]; // A `dither-*` mixin fills with `currentColor` by default.
+        }
+
+        return [];
+      }),
+    );
+    expect(colors).toEqual(everyLevelAbove0.map(() => "currentColor"));
   });
 });
