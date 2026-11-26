@@ -6,8 +6,7 @@
   @mixin visually-hidden;
 }
 
-@mixin content-rail-collapsed {
-  /* Hides the status aside where the rail collapses, so it does not interrupt the introduction. */
+@mixin content-rail-unanchored {
   .entry [data-content-body] > [data-rail-asides] {
     display: none;
   }
