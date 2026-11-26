@@ -27,7 +27,7 @@
   /* A size container, so content can size itself to the visible height of the pane with `cqh`. The pane's size comes
    * from the window rather than from its contents, so size containment does not change its layout. */
   container: pane / size;
-  overflow-y: auto;
+  overflow: hidden auto; /* Prevents content extending into the inline safe-area padding from adding horizontal scroll. */
   overscroll-behavior: none;
   flex: 1;
 

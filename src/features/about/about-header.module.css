@@ -12,7 +12,12 @@
     display: grid;
     grid-column: pane;
     grid-template-columns: subgrid;
+
+    /* Extends into `ScrollPane`'s inline safe-area padding while keeping the subgrid tracks aligned with the body. */
+    margin-inline: calc(-1 * var(--window-safe-area-inline-start, 0px))
+      calc(-1 * var(--window-safe-area-inline-end, 0px));
     padding-block-start: calc(var(--content-body-padding-block) + var(--content-body-layout-space-loose));
+    padding-inline: var(--window-safe-area-inline-start, 0) var(--window-safe-area-inline-end, 0);
   }
 
   & .avatar {
