@@ -1,7 +1,7 @@
 import keyDownRecordingUrl from "#/assets/sounds/key-down.wav";
 import keyUpRecordingUrl from "#/assets/sounds/key-up.wav";
 
-import { LEAD_TIME_S, schedulePlayback } from "./context.ts";
+import { LEAD_TIME_S, requestPlayback } from "./context.ts";
 import { loadRecording, playRecording } from "./recording.ts";
 import { playStrike } from "./strike.ts";
 import { playTone } from "./tone.ts";
@@ -82,7 +82,7 @@ const SUCCESS_LEVEL = 0.4;
 let lastClickAt = 0;
 
 export function playClickSound() {
-  schedulePlayback((context) => {
+  requestPlayback((context) => {
     const at = Math.max(context.currentTime + LEAD_TIME_S, lastClickAt + CLICK.durationSeconds);
 
     playStrike(context, CLICK, { at, level: 1, rate: 1 });
@@ -95,7 +95,7 @@ function createDetentPlayer<TArgs extends Array<unknown>>(
 ) {
   let lastPlayedAt = 0;
   return (...args: TArgs) =>
-    schedulePlayback((context) => {
+    requestPlayback((context) => {
       const at = context.currentTime + LEAD_TIME_S;
 
       if (at < lastPlayedAt + DETENT_INTERVAL_S) {
@@ -124,7 +124,7 @@ export function loadKeySounds(): Promise<unknown> {
 let lastKeyDownAt = 0;
 
 export function playKeyDownSound() {
-  schedulePlayback((context) => {
+  requestPlayback((context) => {
     const at = context.currentTime + LEAD_TIME_S;
 
     playRecording(context, keyDownRecordingUrl, { at, level: KEY_LEVEL });
@@ -133,7 +133,7 @@ export function playKeyDownSound() {
 }
 
 export function playKeyUpSound() {
-  schedulePlayback((context) => {
+  requestPlayback((context) => {
     const at = Math.max(context.currentTime + LEAD_TIME_S, lastKeyDownAt + KEY_UP_MIN_DELAY_S);
 
     playRecording(context, keyUpRecordingUrl, { at, level: KEY_LEVEL });
@@ -141,7 +141,7 @@ export function playKeyUpSound() {
 }
 
 export function playKeyPressSound() {
-  schedulePlayback((context) => {
+  requestPlayback((context) => {
     const at = context.currentTime + LEAD_TIME_S;
 
     playRecording(context, keyDownRecordingUrl, { at, level: KEY_LEVEL });
@@ -150,7 +150,7 @@ export function playKeyPressSound() {
 }
 
 export function playStartupChimeSound({ delaySeconds }: { delaySeconds: number }) {
-  schedulePlayback((context) =>
+  requestPlayback((context) =>
     playTone(context, STARTUP_CHIME, {
       at: context.currentTime + LEAD_TIME_S + delaySeconds,
       level: STARTUP_CHIME_LEVEL,
@@ -159,13 +159,11 @@ export function playStartupChimeSound({ delaySeconds }: { delaySeconds: number }
 }
 
 export function playErrorSound() {
-  schedulePlayback((context) =>
-    playTone(context, ERROR, { at: context.currentTime + LEAD_TIME_S, level: ERROR_LEVEL }),
-  );
+  requestPlayback((context) => playTone(context, ERROR, { at: context.currentTime + LEAD_TIME_S, level: ERROR_LEVEL }));
 }
 
 export function playSuccessSound() {
-  schedulePlayback((context) =>
+  requestPlayback((context) =>
     playTone(context, SUCCESS, { at: context.currentTime + LEAD_TIME_S, level: SUCCESS_LEVEL }),
   );
 }

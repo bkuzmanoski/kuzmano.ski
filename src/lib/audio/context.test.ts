@@ -8,9 +8,10 @@ const settings = vi.hoisted(() => ({ soundEffects: "on" }));
 
 vi.mock("../settings/settings.ts", () => ({ getSettings: () => settings }));
 
-const setUserActivation = (hasBeenActive: boolean) =>
+// Defaults to a page that has had a user gesture, with no gesture in progress.
+const setUserActivation = ({ hasBeenActive = true, isActive = false } = {}) =>
   Object.defineProperty(navigator, "userActivation", {
-    value: { hasBeenActive },
+    value: { hasBeenActive, isActive },
     configurable: true,
   });
 
@@ -27,153 +28,89 @@ beforeEach(() => {
   FakeAudioContext.reset();
 
   vi.stubGlobal("AudioContext", FakeAudioContext);
-  setUserActivation(true);
+  setUserActivation();
 });
 
-describe("schedulePlayback", () => {
-  test("does not play a sound or create an audio context when sound is turned off", async () => {
+describe("requestPlayback", () => {
+  test("does not play the sound or create an audio context when sound effects are off", async () => {
     settings.soundEffects = "off";
 
-    const { schedulePlayback } = await loadContextModule();
+    const { requestPlayback } = await loadContextModule();
     const play = vi.fn();
 
-    schedulePlayback(play);
+    requestPlayback(play);
 
     expect(play).not.toHaveBeenCalled();
     expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  test("does not play a sound or create an audio context before the document has had a user gesture", async () => {
-    setUserActivation(false);
+  test("does not play the sound or create an audio context before the page has had a user gesture", async () => {
+    setUserActivation({ hasBeenActive: false });
 
-    const { schedulePlayback } = await loadContextModule();
+    const { requestPlayback } = await loadContextModule();
     const play = vi.fn();
 
-    schedulePlayback(play);
+    requestPlayback(play);
 
     expect(play).not.toHaveBeenCalled();
     expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  test("plays immediately when the context is already running", async () => {
+  test("plays the sound when the audio context is running", async () => {
     FakeAudioContext.initialState = "running";
 
-    const { schedulePlayback } = await loadContextModule();
+    const { requestPlayback } = await loadContextModule();
     const play = vi.fn();
 
-    schedulePlayback(play);
+    requestPlayback(play);
 
     expect(play).toHaveBeenCalledOnce();
   });
 
-  test("resumes a suspended context and plays when it starts running", async () => {
-    const { schedulePlayback } = await loadContextModule();
+  test("during a user gesture, resumes a suspended audio context and plays the sound on it", async () => {
+    setUserActivation({ isActive: true });
+
+    const { requestPlayback } = await loadContextModule();
     const play = vi.fn();
 
-    schedulePlayback(play);
+    requestPlayback(play);
 
     const context = FakeAudioContext.instances[0]!;
 
     expect(context.resumeCount).toBe(1);
-    expect(play).not.toHaveBeenCalled();
-
-    context.transitionToRunning();
-
-    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
+    expect(play).toHaveBeenCalledExactlyOnceWith(context);
   });
 
-  test("plays every sound waiting for the same state change", async () => {
-    const { schedulePlayback } = await loadContextModule();
-    const firstSound = vi.fn();
-    const secondSound = vi.fn();
-
-    schedulePlayback(firstSound);
-    schedulePlayback(secondSound);
-
-    FakeAudioContext.instances[0]!.transitionToRunning();
-
-    await vi.waitFor(() => {
-      expect(firstSound).toHaveBeenCalledOnce();
-      expect(secondSound).toHaveBeenCalledOnce();
-    });
-  });
-
-  test("uses one context for the session", async () => {
-    FakeAudioContext.initialState = "running";
-
-    const { schedulePlayback } = await loadContextModule();
-
-    schedulePlayback(vi.fn());
-    schedulePlayback(vi.fn());
-
-    expect(FakeAudioContext.instances).toHaveLength(1);
-  });
-
-  test("plays once the context starts running, without waiting for a resume that never settles", async () => {
-    const { schedulePlayback, primeAudio } = await loadContextModule();
+  test("outside a user gesture, drops the sound when the audio context is suspended", async () => {
+    const { requestPlayback } = await loadContextModule();
     const play = vi.fn();
 
-    primeAudio(); // Creates the context, so the resume below is the one `schedulePlayback` issues.
+    requestPlayback(play);
 
     const context = FakeAudioContext.instances[0]!;
 
-    // Some iOS gestures can leave resume() pending even though a later gesture can successfully start the context.
-    // Waiting for that promise would strand audio.
-    context.resumeResult = new Promise<void>(() => undefined);
-
-    schedulePlayback(play);
-
-    expect(play).not.toHaveBeenCalled();
-
-    context.transitionToRunning();
-
-    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
-  });
-
-  test("does not resume the context for a sound requested while the page is hidden, or play the sound once the page is visible", async () => {
-    FakeAudioContext.initialState = "running";
-
-    const setVisibilityState = stubVisibilityState();
-    const { schedulePlayback, primeAudio, useAudioUnlock } = await loadContextModule();
-    const play = vi.fn();
-
-    renderHook(useAudioUnlock);
-    primeAudio();
-    setVisibilityState("hidden");
-
-    const context = FakeAudioContext.instances[0]!;
-
-    schedulePlayback(play);
-
-    expect(context.resumeCount).toBe(0);
-
-    setVisibilityState("visible");
+    // A context can stay suspended until a later gesture, so playing on `running` would play the sound out of step with
+    // the user action that triggered it.
     context.transitionToRunning();
     await settlePromises();
 
     expect(play).not.toHaveBeenCalled();
   });
 
-  test("does not play a sound that was waiting for the context when the page hid, and plays a sound requested after the page is visible again", async () => {
-    const setVisibilityState = stubVisibilityState();
-    const { schedulePlayback, useAudioUnlock } = await loadContextModule();
-    const soundBeforeHiding = vi.fn();
-    const soundAfterReturning = vi.fn();
+  test("creates one audio context for the session", async () => {
+    FakeAudioContext.initialState = "running";
 
-    renderHook(useAudioUnlock);
-    schedulePlayback(soundBeforeHiding);
-    setVisibilityState("hidden");
-    setVisibilityState("visible");
-    schedulePlayback(soundAfterReturning);
-    FakeAudioContext.instances[0]!.transitionToRunning();
+    const { requestPlayback } = await loadContextModule();
 
-    await vi.waitFor(() => expect(soundAfterReturning).toHaveBeenCalledOnce());
-    expect(soundBeforeHiding).not.toHaveBeenCalled();
+    requestPlayback(vi.fn());
+    requestPlayback(vi.fn());
+
+    expect(FakeAudioContext.instances).toHaveLength(1);
   });
 });
 
 describe("primeAudio", () => {
-  test("does not create an audio context when sound is turned off", async () => {
+  test("does not create an audio context when sound effects are off", async () => {
     settings.soundEffects = "off";
 
     const { primeAudio } = await loadContextModule();
@@ -183,47 +120,31 @@ describe("primeAudio", () => {
     expect(FakeAudioContext.instances).toHaveLength(0);
   });
 
-  test("resumes the context on every call", async () => {
+  test("resumes a suspended audio context on every call", async () => {
     const { primeAudio } = await loadContextModule();
 
+    // On iOS, a resume issued before WebKit accepts the gesture can stay pending, so a later gesture has to resume
+    // again.
     primeAudio();
     primeAudio();
 
     expect(FakeAudioContext.instances[0]!.resumeCount).toBe(2);
   });
 
-  test("ignores a rejected resume, and a later sound still plays once the context is running", async () => {
-    const { schedulePlayback, primeAudio } = await loadContextModule();
-    const play = vi.fn();
-
-    primeAudio();
-
-    const context = FakeAudioContext.instances[0]!;
-
-    context.resumeResult = Promise.reject(new Error("gesture declined"));
-    primeAudio();
-
-    context.resumeResult = Promise.resolve();
-
-    schedulePlayback(play);
-    context.transitionToRunning();
-
-    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
-  });
-
-  test("does not resume an already running context", async () => {
-    FakeAudioContext.initialState = "running";
-
+  test("ignores a rejected resume", async () => {
     const { primeAudio } = await loadContextModule();
 
     primeAudio();
+    FakeAudioContext.instances[0]!.resumeResult = Promise.reject(new Error("gesture declined"));
 
-    expect(FakeAudioContext.instances[0]!.resumeCount).toBe(0);
+    // Vitest fails the run on an unhandled rejection.
+    primeAudio();
+    await settlePromises();
   });
 });
 
 describe("needsAudioPriming", () => {
-  test("is `false` when sound is turned off", async () => {
+  test("is `false` when sound effects are off", async () => {
     settings.soundEffects = "off";
 
     const { needsAudioPriming } = await loadContextModule();
@@ -231,12 +152,12 @@ describe("needsAudioPriming", () => {
     expect(needsAudioPriming()).toBe(false);
   });
 
-  test("is `true` before a context has been opened", async () => {
+  test("is `true` before an audio context has been created", async () => {
     const { needsAudioPriming } = await loadContextModule();
     expect(needsAudioPriming()).toBe(true);
   });
 
-  test("is `false` once the context is running", async () => {
+  test("is `false` once the audio context is running", async () => {
     FakeAudioContext.initialState = "running";
 
     const { needsAudioPriming, primeAudio } = await loadContextModule();
@@ -246,7 +167,7 @@ describe("needsAudioPriming", () => {
     expect(needsAudioPriming()).toBe(false);
   });
 
-  test("is `true` while the context is suspended", async () => {
+  test("is `true` while the audio context is suspended", async () => {
     const { needsAudioPriming, primeAudio } = await loadContextModule();
 
     primeAudio();
@@ -256,7 +177,7 @@ describe("needsAudioPriming", () => {
 });
 
 describe("useAudioUnlock", () => {
-  test("suspends the audio context while the page is hidden, and resumes it when the page is visible again", async () => {
+  test("resumes a suspended audio context when the page becomes visible again", async () => {
     FakeAudioContext.initialState = "running";
 
     const setVisibilityState = stubVisibilityState();
@@ -268,16 +189,13 @@ describe("useAudioUnlock", () => {
     const context = FakeAudioContext.instances[0]!;
 
     setVisibilityState("hidden");
-
-    expect(context.suspendCount).toBe(1);
-    expect(context.resumeCount).toBe(0);
-
+    context.state = "suspended"; // The browser suspends or interrupts the context while the page is hidden.
     setVisibilityState("visible");
 
     expect(context.resumeCount).toBe(1);
   });
 
-  test("does not resume the audio context when the page is visible again after sound is turned off", async () => {
+  test("does not resume a suspended audio context when the page becomes visible again with sound effects off", async () => {
     FakeAudioContext.initialState = "running";
 
     const setVisibilityState = stubVisibilityState();
@@ -285,16 +203,20 @@ describe("useAudioUnlock", () => {
 
     renderHook(useAudioUnlock);
     primeAudio();
+
+    const context = FakeAudioContext.instances[0]!;
+
     setVisibilityState("hidden");
+    context.state = "suspended";
     settings.soundEffects = "off";
     setVisibilityState("visible");
 
-    expect(FakeAudioContext.instances[0]!.resumeCount).toBe(0);
+    expect(context.resumeCount).toBe(0);
   });
 });
 
 describe("getGainNode", () => {
-  test("returns one gain node for the session and connects it to the destination", async () => {
+  test("returns the same gain node on every call, connected to the destination", async () => {
     FakeAudioContext.initialState = "running";
 
     const { getGainNode } = await loadContextModule();

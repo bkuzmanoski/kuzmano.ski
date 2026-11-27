@@ -24,12 +24,12 @@ const OUTPUT_GAIN = 0.2;
 
 let audioContext: AudioContext | null = null;
 let outputGainNode: GainNode | null = null;
-let runningPromise: Promise<void> | null = null;
-
-/** Counts the times the page became hidden, so a sound waiting for the context to run can tell that it did. */
-let pageHideCount = 0;
 
 const hasUserActivation = () => (navigator as Partial<Navigator>).userActivation?.hasBeenActive ?? true;
+
+// Whether the page has transient activation (i.e., a user gesture is in progress or ended within the browser's
+// activation window).
+const hasTransientActivation = () => (navigator as Partial<Navigator>).userActivation?.isActive ?? true;
 
 /**
  * Checks only for the standard `running` state. WebKit also reports `interrupted`, which this treats like any other
@@ -69,30 +69,6 @@ function ensureResumed(context: AudioContext): void {
   }
 }
 
-/**
- * Resolves when the context becomes running. Waits for the state transition rather than a particular `resume()`
- * promise, as a resume issued by an earlier gesture may never settle.
- */
-function whenAudioRunning(context: AudioContext): Promise<void> {
-  if (isRunning(context)) {
-    return Promise.resolve();
-  }
-
-  runningPromise ??= new Promise<void>((resolve) => {
-    const onStateChange = () => {
-      if (isRunning(context)) {
-        context.removeEventListener("statechange", onStateChange);
-        runningPromise = null;
-        resolve();
-      }
-    };
-
-    context.addEventListener("statechange", onStateChange);
-  });
-
-  return runningPromise;
-}
-
 /** Returns the shared output gain node. */
 export function getGainNode(context: AudioContext): GainNode {
   if (!outputGainNode) {
@@ -104,25 +80,16 @@ export function getGainNode(context: AudioContext): GainNode {
   return outputGainNode;
 }
 
-/**
- * Suspends the audio context while the page is hidden, and resumes it when the page becomes visible again with sound
- * effects on.
- *
- * A running context renders on the audio thread even while silent.
- */
-function followPageVisibility(): void {
-  if (!audioContext) {
+// Resumes the audio context when the page becomes visible again with sound effects on.
+//
+// Do not explicitly suspend the context when the page is hidden. iOS interrupts it automatically, and suspending it
+// caused audio to remain silent after returning from the background, switching tabs, or locking the device.
+function resumeAudioOnReturn(): void {
+  if (!audioContext || document.visibilityState !== "visible" || getSettings().soundEffects !== "on") {
     return;
   }
 
-  if (document.visibilityState === "hidden") {
-    pageHideCount++;
-    void audioContext.suspend().catch(() => {
-      // Ignored.
-    });
-  } else if (getSettings().soundEffects === "on") {
-    ensureResumed(audioContext);
-  }
+  ensureResumed(audioContext);
 }
 
 export const needsAudioPriming = (): boolean =>
@@ -160,23 +127,23 @@ export function useAudioUnlock() {
     document.addEventListener("pointerdown", primeAudio, listenerOptions); // Mouse clicks.
     document.addEventListener("pointerup", primeAudio, listenerOptions); // Touch taps.
     document.addEventListener("keydown", primeAudioOnKeyDown, listenerOptions);
-    document.addEventListener("visibilitychange", followPageVisibility, { signal: controller.signal });
+    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: controller.signal });
 
     return () => controller.abort();
   }, []);
 }
 
 /**
- * Calls `play` with the audio context once the context is running, when sound effects are on and the page is visible.
+ * Calls `play` synchronously with the audio context when sound effects are on and either the context is running or the
+ * page has transient activation. Otherwise, the context is resumed and the sound is dropped.
  *
- * `play` runs synchronously when the context is already running. Otherwise the context is resumed and `play` waits for
- * its `running` state, unless the page becomes hidden first.
- *
- * A sound requested while the page is hidden, or waiting when it becomes hidden, would play when the user returns, out
- * of step with what requested it, so this drops it. Resuming the context for it would also undo `followPageVisibility`.
+ * A sound requested during a gesture on a context that is not running plays once the gesture's resume starts it, as
+ * `currentTime` does not advance while the context is suspended. A sound requested outside a gesture is dropped instead
+ * of waiting for the context to run, as a context can stay suspended or interrupted until a later gesture or the end of
+ * a phone call, and the sound would then play long after whatever requested it.
  */
-export function schedulePlayback(play: (context: AudioContext) => void) {
-  if (getSettings().soundEffects !== "on" || document.visibilityState === "hidden") {
+export function requestPlayback(play: (context: AudioContext) => void) {
+  if (getSettings().soundEffects !== "on") {
     return;
   }
 
@@ -193,11 +160,7 @@ export function schedulePlayback(play: (context: AudioContext) => void) {
 
   ensureResumed(context);
 
-  const pageHideCountAtRequest = pageHideCount;
-
-  void whenAudioRunning(context).then(() => {
-    if (pageHideCount === pageHideCountAtRequest) {
-      play(context);
-    }
-  });
+  if (hasTransientActivation()) {
+    play(context);
+  }
 }

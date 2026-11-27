@@ -1,12 +1,12 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { schedulePlayback } from "./context.ts";
+import { requestPlayback } from "./context.ts";
 import { playErrorSound, playKeyDownSound, playKeyPressSound, playKeyUpSound, playSuccessSound } from "./sounds.ts";
 
-vi.mock("./context.ts", () => ({ LEAD_TIME_S: 0, schedulePlayback: vi.fn() }));
+vi.mock("./context.ts", () => ({ LEAD_TIME_S: 0, requestPlayback: vi.fn() }));
 
 beforeEach(() => {
-  vi.mocked(schedulePlayback).mockClear();
+  vi.mocked(requestPlayback).mockClear();
 });
 
 // Each call schedules the sound again; caching the rendered buffer does not cache playback.
@@ -20,5 +20,5 @@ test.each([
   playSound();
   playSound();
 
-  expect(vi.mocked(schedulePlayback).mock.calls.map(([callback]) => typeof callback)).toEqual(["function", "function"]);
+  expect(vi.mocked(requestPlayback).mock.calls.map(([callback]) => typeof callback)).toEqual(["function", "function"]);
 });
