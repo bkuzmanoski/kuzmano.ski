@@ -10,7 +10,7 @@ import type { Rule } from "markdownlint";
 const HTML_WHITESPACE_PATTERN = /^[\t\n\f\r ]*$/;
 const UNRAVELED_TYPES = new Set(["mdxJsxTextElement", "mdxTextExpression"]);
 
-/** The element each mdast node type renders as, for the node types that `rehypeInlineContent` sees as elements. */
+// Maps mdast node types that `rehypeInlineContent` treats as elements to their rendered HTML element names.
 const RENDERED_ELEMENT_NAMES: Record<string, string | undefined> = {
   blockquote: "blockquote",
   break: "br",
@@ -29,9 +29,9 @@ const RENDERED_ELEMENT_NAMES: Record<string, string | undefined> = {
 
 interface InlineContentContainer {
   node: ContentNode;
-  /** The element or component the container renders, or `"p"` for a paragraph. */
+  /** Rendered element or component name, or `"p"` for a paragraph. */
   name: string;
-  /** The parent of the paragraph when the container is a paragraph, otherwise `null`. */
+  /** Parent node when the container is a paragraph, otherwise `null`. */
   paragraphParent: ContentNode | null;
 }
 
@@ -59,26 +59,19 @@ function renderedElementNameOf(node: ContentNode): string | null {
   return RENDERED_ELEMENT_NAMES[node.type] ?? null;
 }
 
-/**
- * Matches `remarkMarkAndUnravel` in `@mdx-js/mdx`, which replaces a paragraph of only JSX elements, expressions, and
- * whitespace with its children, so the build renders those children as blocks.
- */
+// Matches `remarkMarkAndUnravel` in `@mdx-js/mdx`, which unwraps paragraphs containing only JSX, expressions, and
+// whitespace into block children.
 const isUnraveled = (paragraph: ContentNode) =>
   (paragraph.children ?? []).every((child) => UNRAVELED_TYPES.has(child.type) || isBlankText(child));
 
-/**
- * Matches `mdast-util-to-hast`, which renders the items of a list without a paragraph around their text unless the list
- * or one of its items is spread or an item has more than one child.
- */
+// Matches `mdast-util-to-hast`, which omits `<p>` in list items unless the list or item is spread or has multiple
+// children.
 const isTightList = (list: ContentNode) =>
   list.spread !== true &&
   (list.children ?? []).every((item) => (item.spread ?? (item.children ?? []).length > 1) === false);
 
-/**
- * Whether inserting a blank line before the element makes it a block of its own. It does when the element starts its
- * line and ends the paragraph, after other content, and the paragraph is at the root or in a JSX element. Elsewhere, a
- * blank line can end the container the paragraph is in (e.g., a block quote).
- */
+// Whether inserting a blank line before the element splits it into its own block (only safe at root or in a JSX
+// element; elsewhere a blank line can terminate containers like block quotes).
 function canSplitBefore(lines: ReadonlyArray<string>, { block, container }: BlockInInlineContent) {
   const siblings = container.node.children ?? [];
   const blockIndex = siblings.indexOf(block);
@@ -96,12 +89,8 @@ function canSplitBefore(lines: ReadonlyArray<string>, { block, container }: Bloc
   );
 }
 
-/**
- * Yields blocks that `rehypeInlineContent` rejects in contexts that allow only inline content, without traversing those
- * blocks. The build removes paragraphs inside inline-only elements, paragraphs containing only JSX elements (see
- * `isUnraveled`), and paragraphs in tight list items; it renders all other paragraphs as `<p>` elements. Removed
- * paragraphs and fragments contribute their children directly to their parent.
- */
+// Yields block nodes rejected by `rehypeInlineContent` inside inline-only contexts without descending into them.
+// Mirrors the build's paragraph unwrapping (inline-only elements, unraveled JSX paragraphs, tight list items).
 function* blocksInInlineContentIn(
   parent: ContentNode,
   container: InlineContentContainer | null,
@@ -144,7 +133,7 @@ function* blocksInInlineContentIn(
   }
 }
 
-/** Reports a block where only inline content may appear, before `rehypeInlineContent` fails the build for it. */
+// Reports blocks in inline-only contexts before `rehypeInlineContent` fails the build.
 const inlineContentRule: Rule = {
   names: ["inline-content"],
   description: "An element that accepts only inline content should not contain a block",

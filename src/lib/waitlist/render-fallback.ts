@@ -1,9 +1,6 @@
 // Has no imports because `/vite.config.ts` loads this module through `/build`.
 
-/**
- * The text that replaces a waitlist in a feed and in the Markdown representation. It ends with the entry's URL, so the
- * build can emit the URL as a link after the text before it.
- */
+/** Fallback prefix replacing a waitlist in feeds and Markdown, followed by the entry's URL (or a link to it). */
 export const FALLBACK_TEXT_BEFORE_URL = "Join the waitlist at ";
 
 export const fallbackText = (url: string) => `${FALLBACK_TEXT_BEFORE_URL}${url}`;

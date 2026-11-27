@@ -96,7 +96,7 @@ function authoredVideosIn(mediaDirectoryPath: string, imageFileNames: Array<stri
 }
 
 interface SiblingImageKind {
-  /** The singular noun the problems use for an image of this kind. */
+  /** Singular noun used in problem messages for this image kind. */
   noun: string;
   stemSuffix: string;
   isSupported: (fileName: string) => boolean;
@@ -117,10 +117,7 @@ const SIBLING_IMAGE_KINDS = [COVER_IMAGE_KIND, ENTRY_ICON_KIND];
 const stemSuffixPositionIn = (fileName: string, { stemSuffix }: SiblingImageKind) =>
   fileName.lastIndexOf(`${stemSuffix}.`);
 
-/**
- * Matches a file name with the stem suffix of `kind`, unless another kind's stem suffix follows it (e.g.,
- * `entry.cover.icon.svg` is an entry icon).
- */
+// Matches `kind`'s stem suffix unless another kind's suffix follows it (e.g., `entry.cover.icon.svg` is an entry icon).
 function isSiblingImageFileName(fileName: string, kind: SiblingImageKind) {
   const stemSuffixPosition = stemSuffixPositionIn(fileName, kind);
   return (
@@ -135,7 +132,7 @@ function isSiblingImageFileName(fileName: string, kind: SiblingImageKind) {
 const isSiblingImageOf = (fileName: string, slug: string, { stemSuffix }: SiblingImageKind) =>
   isNamedAfter(fileName, `${slug}${stemSuffix}`);
 
-/** Finds the image of `kind` named after the entry with `slug` among a directory's images of that kind. */
+// Finds the `kind` image matching `slug` among a directory's sibling images.
 function siblingImageOf(
   directoryName: string,
   slug: string,
@@ -169,7 +166,7 @@ function siblingImageOf(
   return { filePath: isAssignable ? `${directoryName}/${siblingImageFileName}` : null, problems };
 }
 
-/** Reports each image of `kind` in a directory without a corresponding entry. */
+// Reports `kind` images in a directory that have no matching entry.
 function orphanSiblingImageProblems(
   directoryName: string,
   listedEntries: Array<ListedEntry>,

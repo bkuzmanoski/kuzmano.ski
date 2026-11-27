@@ -9,8 +9,7 @@ import type { AssetsBinding, WorkerEnv } from "cloudflare:workers";
 
 const RENDERED_DOCUMENT = "<!DOCTYPE html><title>Rendered</title>";
 
-/** The response header in which the stubbed router reports the `Accept` header it received. */
-const RENDERED_ACCEPT_HEADER = "x-rendered-accept";
+const RENDERED_ACCEPT_HEADER = "x-rendered-accept"; // Echoes the `Accept` header received by the stubbed router.
 
 const PAGE_TOKEN_COUNT = 607;
 const COLLECTION_TOKEN_COUNT = 145;
@@ -65,8 +64,7 @@ const FILES: Record<string, { body: string; contentType: string } | undefined> =
   "/media/image.webp": { body: "bytes", contentType: "image/webp" },
 };
 
-/** Bytes the Asset Worker returns for a `Range` request below. */
-const PARTIAL_BODY_LENGTH = 8;
+const PARTIAL_BODY_LENGTH = 8; // Bytes returned by the Asset Worker for the `Range` request below.
 
 const PARTIAL_RANGE = `bytes=0-${PARTIAL_BODY_LENGTH - 1}`;
 
@@ -74,7 +72,7 @@ const etagOf = (path: string) => `"${path}"`;
 
 let requestedPaths: Array<string> = [];
 
-/** Mimics the Asset Worker, which redirects trailing slashes and returns `304` for matching ETags. */
+// Mimics the Asset Worker, redirecting trailing slashes and returning `304` for matching ETags.
 const assets: AssetsBinding = {
   fetch: (request) => {
     const { pathname } = new URL(request.url);

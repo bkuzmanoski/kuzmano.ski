@@ -33,7 +33,7 @@ export type MenuOpener =
   /** A context menu that opens at the point pressed. */
   | { kind: "point"; position: Position; pointerType: string; label: string };
 
-/** The item highlighted when the menu opens, or `"none"` to wait until the user moves to an item. */
+/** Menu item highlighted when the menu opens, or `"none"` to wait until the user navigates. */
 export type InitialMenuItem = "first" | "last" | "none";
 
 const isEnabled = (entry: MenuItem | undefined): entry is MenuAction => entry?.kind === "action" && !entry.disabled;
@@ -65,10 +65,8 @@ function ShortcutHint({ label, isApplePlatform }: { label: string; isApplePlatfo
   );
 }
 
-/**
- * Memoized because the menu rebuilds every row whenever the highlight moves (the menu builds the row elements inside a
- * `map`, which the React Compiler caches as one array).
- */
+// Memoized because the menu rebuilds all rows whenever the highlight moves (the React Compiler caches the `map` as one
+// array).
 const MenuItemRow = memo(function MenuRow({
   item,
   index,

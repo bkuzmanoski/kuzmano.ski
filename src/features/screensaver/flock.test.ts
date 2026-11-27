@@ -54,7 +54,7 @@ const countsOf = (sprites: ReturnType<typeof flockFor>) => ({
   toast: sprites.filter(({ image }) => image !== "toaster").length,
 });
 
-/** Returns the frame of each frame-long interval across `strokeCount` strokes, sampled at the middle of each. */
+// Samples the toaster flap frame at the midpoint of each frame interval across `strokeCount` strokes.
 const flapFramesOver = (strokeCount: number, flapPhase: number) =>
   Array.from({ length: strokeCount * TOASTER_FLAP_FRAME_COUNT }, (_, index) =>
     toasterFlapFrameAt((index + 0.5) * FLAP_FRAME_MS, flapPhase),

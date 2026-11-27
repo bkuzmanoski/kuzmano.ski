@@ -3,8 +3,8 @@ import { Tooltip } from "./tooltip.tsx";
 import type { ReactNode } from "react";
 
 /**
- * The tooltip of a copy control, which shows `confirmation` in place of `label` while `hasCopied`. The owner of the
- * control's `useCopyToClipboard` renders the `CopyAnnouncer` that announces the copy.
+ * Tooltip for a copy control that swaps `label` for `confirmation` while `hasCopied`. The caller renders
+ * `CopyAnnouncer` separately.
  */
 export function CopyTooltip({
   label,

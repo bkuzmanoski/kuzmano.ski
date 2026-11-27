@@ -12,8 +12,7 @@ import type { ContentNode } from "./tree.ts";
 
 const URL_ATTRIBUTES = new Set(["src", "poster"]);
 
-/** MDX keeps an attribute name as authored, so either spelling can appear. */
-const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]);
+const URL_LIST_ATTRIBUTES = new Set(["srcSet", "srcset"]); // MDX preserves authored casing.
 
 export function mediaDirectoryFileNameOf(reference: string): string | null {
   const fileName = reference.replace(/^\.\//, "");
@@ -26,7 +25,7 @@ interface MediaReferenceFields {
   expected: MediaKind | null;
   /** Whether a `<picture>` that offers the image's alternates can wrap the markup. */
   canRenderAlternates: boolean;
-  /** The Markdown image, definition, or element. */
+  /** Markdown image, definition, or element node. */
   node: ContentNode;
   /** Preserves other `srcset` candidates and descriptors. */
   replace: (url: string) => void;
@@ -41,7 +40,7 @@ export type MediaReference = MediaReferenceFields &
     | { attribute: null; video: null }
     | {
         attribute: string;
-        /** The `<video>` this `src` plays, or `null` for any other attribute. */
+        /** `<video>` element played by this `src`, or `null` for other attributes. */
         video: ContentNode | null;
       }
   );
@@ -52,13 +51,8 @@ interface StringAttribute {
   replaceValue: (replacement: string) => void;
 }
 
-/**
- * Whether a Markdown image, image reference, or `<img>` can be wrapped in a `<picture>` that offers its image's
- * alternates.
- *
- * A `<picture>` cannot contain another. An `<img>` with a `srcset`, which a spread attribute can also set, chooses
- * among its own candidates, and a `<source>` would take precedence over them.
- */
+// Whether a Markdown image, image reference, or `<img>` can be wrapped in a `<picture>` with alternate `<source>`s.
+// Excludes images already inside `<picture>` or with a `srcset` (or spread) whose candidates `<source>` would override.
 function canRenderAlternates(node: ContentNode, ancestors: Array<ContentNode>): boolean {
   const isImage = node.type === "image" || node.type === "imageReference" || elementNameOf(node) === "img";
   const canSetSrcset = hasSpreadAttribute(node) || [...URL_LIST_ATTRIBUTES].some((name) => hasAttribute(node, name));
@@ -66,7 +60,7 @@ function canRenderAlternates(node: ContentNode, ancestors: Array<ContentNode>): 
   return isImage && !canSetSrcset && !ancestors.some((ancestor) => elementNameOf(ancestor) === "picture");
 }
 
-/** Returns definitions used by image references that satisfy `isIncluded`, excluding link-only definitions. */
+// Returns definition identifiers referenced by matching images (excluding link-only definitions).
 function imageDefinitionIdentifiersIn(
   tree: ContentNode,
   isIncluded: (imageReference: ContentNode, ancestors: Array<ContentNode>) => boolean = () => true,
@@ -82,7 +76,7 @@ function imageDefinitionIdentifiersIn(
   return identifiers;
 }
 
-/** Returns string attributes from JSX or compiled Markdown elements. */
+// Returns string attributes from JSX or compiled Markdown elements.
 function stringAttributesOf(node: ContentNode): Array<StringAttribute> {
   if (isJsxElement(node)) {
     return (node.attributes ?? []).flatMap((attribute): Array<StringAttribute> => {

@@ -1,9 +1,8 @@
 /**
- * The `lang` attribute for text formatted by `format`, or `undefined` when its locale is in `documentLanguage`, so only
- * text a screen reader would read in another language is marked.
+ * Returns the `lang` attribute for text formatted by `format`, or `undefined` when its resolved locale matches
+ * `documentLanguage`, so screen readers only switch languages when needed.
  *
- * The locale is read from the formatter rather than from the one it was requested in, because `Intl` falls back to a
- * supported locale when it does not support the requested one.
+ * Reads the formatter's resolved locale because `Intl` falls back when the requested locale is unsupported.
  */
 export function languageAttributeFor(
   format: Intl.DateTimeFormat | Intl.NumberFormat,

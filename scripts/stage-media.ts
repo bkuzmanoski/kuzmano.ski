@@ -20,11 +20,8 @@ import { runCommand } from "./helpers/external-commands.ts";
 
 const ROOT_DIRECTORY_ABSOLUTE_PATH = fromRoot("");
 
-/**
- * When the pre-commit hook passes `--if-media-inputs-staged`, this runs only if a staged change touches one of these
- * paths. Changes elsewhere in the media pipeline, such as reference parsing, can also affect required derivatives. The
- * build reports those changes; running without this option stages the resulting derivatives.
- */
+// Paths checked by `--if-media-inputs-staged` in the pre-commit hook. Other media pipeline changes can still affect
+// derivatives; running without the flag stages any resulting derivatives.
 const MEDIA_INPUT_PATHS = [CONTENT_DIRECTORY_PATH, MEDIA_DIRECTORY_PATH, "build/content/media"];
 
 const REGULAR_FILE_MODES = new Set(["100644", "100755"]);
@@ -33,13 +30,13 @@ const runGit = (gitArguments: Array<string>, environment: NodeJS.ProcessEnv = pr
   runCommand("git", gitArguments, { cwd: ROOT_DIRECTORY_ABSOLUTE_PATH, env: environment });
 const mediaPathOf = (fileName: string) => join(MEDIA_DIRECTORY_PATH, fileName);
 
-/** Resolves symbolic links, so two spellings of one index file compare equal. */
+// Resolves symlinks so alternate spellings of an index path compare equal.
 const canonicalPathOf = (path: string) => (existsSync(path) ? realpathSync(path) : path);
 
 const isHiddenFileName = (fileName: string) => fileName.startsWith(".");
 const nulSeparatedFieldsIn = (output: string) => output.split("\0").filter((field) => field !== "");
 
-/** Reads a line of `git ls-files --stage`, which has the form `<mode> <object ID> <stage>\t<path>`. */
+// Parses a `git ls-files --stage` line (`<mode> <object ID> <stage>\t<path>`).
 function indexEntryOf(line: string) {
   const [mode = "", objectId = ""] = line.slice(0, line.indexOf("\t")).split(" ");
   return { mode, objectId, path: line.slice(line.indexOf("\t") + 1) };
@@ -73,15 +70,9 @@ async function stagedMediaFileNames() {
     .filter((fileName) => !isHiddenFileName(fileName));
 }
 
-/**
- * Returns the environments to run each staging command in, one per index it updates.
- *
- * Plain commits, `git commit -a`, and commands outside a commit use the default index, which Git may lock as
- * `index.lock`. For `git commit <paths>`, Git runs hooks with a temporary index and later copies only the named paths
- * to the default index, held as `index.lock` until the commit finishes. The script stages media in both indexes so the
- * change remains in the default index. Because Git does not document this behavior, an unknown active index without an
- * `index.lock` causes staging to fail.
- */
+// Returns the env(s) for each Git index to update. For `git commit <paths>`, Git runs hooks against a temporary index
+// while locking the default index as `index.lock`; staging in both keeps the default index in sync. Fails if an unknown
+// active index has no `index.lock`.
 async function indexEnvironments(): Promise<Array<NodeJS.ProcessEnv>> {
   const { GIT_INDEX_FILE: activeIndexFileVariable, ...environmentWithoutIndexFile } = process.env;
   const { stdout } = await runGit(
@@ -106,14 +97,9 @@ async function indexEnvironments(): Promise<Array<NodeJS.ProcessEnv>> {
   return [process.env, { ...process.env, GIT_INDEX_FILE: defaultIndexLockFilePath }];
 }
 
-/**
- * Materializes the index beneath `snapshotDirectoryPath`, cloning unchanged regular files from the working tree and
- * checking all remaining entries out of the index.
- *
- * `git diff` compares clean-filtered, line-ending-normalized content, so files it considers unchanged may still not
- * match the index byte-for-byte. This also applies to files modified during the commit. The function hashes each clone
- * as it copies it, and replaces the clone with the index version when its hash differs from the index object ID.
- */
+// Materializes the Git index under `snapshotDirectoryPath`, cloning unchanged files from the working tree and checking
+// out the rest from the index. Hashes each clone against its index object ID because `git diff` ignores clean-filter
+// and line-ending differences.
 async function writeIndexSnapshot(snapshotDirectoryPath: string) {
   const [{ stdout: indexListing }, { stdout: unstagedChangeListing }] = await Promise.all([
     runGit(["ls-files", "--stage", "-z"]),
@@ -170,13 +156,8 @@ async function writeIndexSnapshot(snapshotDirectoryPath: string) {
   }
 }
 
-/**
- * Updates each index's additions and removals in one `update-index` call. Git writes via a lock file and rename, so a
- * failed update leaves that index unchanged.
- *
- * During `git commit <paths>`, Git updates the temporary index before the default index. If either update fails, the
- * commit aborts and Git discards the temporary index, leaving neither index partially updated.
- */
+// Applies additions and removals in one `update-index` call per index. Because Git updates the temporary index before
+// the default index during `git commit <paths>`, a failure in either aborts the commit cleanly.
 async function updateIndexes(
   indexEnvironmentList: Array<NodeJS.ProcessEnv>,
   addedFileNames: Array<string>,
@@ -199,7 +180,7 @@ async function updateIndexes(
   }
 }
 
-/** Returns derivative file names required by staged content, or reports an error and returns `null`. */
+// Returns derivative file names required by staged content, or reports an error and returns `null`.
 async function requiredDerivativeFileNamesIn(snapshotDirectoryPath: string) {
   const snapshotMediaDirectoryPath = join(snapshotDirectoryPath, MEDIA_DIRECTORY_PATH);
 

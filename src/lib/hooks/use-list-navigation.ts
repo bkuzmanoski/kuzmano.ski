@@ -8,11 +8,8 @@ import { clamp } from "../math.ts";
 
 import type { KeyboardEvent, MouseEvent, RefObject } from "react";
 
-/**
- * Marks an item as belonging to one list, by that list's own ID. Spread from `itemProps` rather than set by the caller,
- * so an item cannot be navigable but unreachable. The id prevents a list from claiming the items of another nested
- * inside it: a container search reaches the whole subtree, so the mark has to identify which list the item belongs to.
- */
+// Marks each list item with its owning list's ID (spread via `itemProps`) so container queries do not claim items from
+// nested sublists.
 const ITEM_ATTRIBUTE = "data-list-item";
 
 const NAVIGATION_OPTIONS = { wraps: false };

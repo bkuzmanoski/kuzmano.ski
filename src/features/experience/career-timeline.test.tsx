@@ -96,7 +96,7 @@ function chooseOrder(label: string) {
   void runActivationFlash();
 }
 
-/** The text of `element` without the elements that `selector` matches. */
+// Returns `element`'s text with elements matching `selector` removed.
 function textWithout(element: Element, selector: string): string {
   const copy = element.cloneNode(true) as Element;
 
@@ -105,10 +105,10 @@ function textWithout(element: Element, selector: string): string {
   return copy.textContent;
 }
 
-/** The text of `element` that the user sees, without the text visually hidden for assistive technology. */
+// Visible text of `element`, excluding text rendered only for assistive technology.
 const displayedTextOf = (element: Element) => textWithout(element, `.${styles.spokenText}`);
 
-/** The text of `element` that assistive technology reads, without the elements hidden from it. */
+// Text exposed to assistive technology, excluding `aria-hidden` elements.
 const spokenTextOf = (element: Element) => textWithout(element, '[aria-hidden="true"]');
 
 const paragraphWithText = (text: string) => (_content: string, element: Element | null) =>
@@ -234,11 +234,8 @@ function measureVisibleRangeFrameEdges(scrollPane: HTMLElement) {
   return { top: chartTop + offset * LANES_HEIGHT_PX, bottom: chartTop + (offset + size) * LANES_HEIGHT_PX };
 }
 
-/**
- * A pointer position over the chart. `clientX` defaults to the center of the lanes beside the list, and `clientY` to
- * the top of the lanes above the list, so a test sets the coordinate along its chart's axis, and the other only for a
- * swipe across the chart.
- */
+// Pointer position over the chart; `clientX`/`clientY` default to the lanes beside/above the list so tests only set the
+// axis under test (or both for cross-axis swipes).
 interface ChartPoint {
   clientX?: number;
   clientY?: number;
@@ -259,17 +256,12 @@ function movePointerTo(point: ChartPoint) {
 
 const release = () => fireEvent.pointerUp(window, { pointerId: POINTER_ID });
 
-/** The horizontal position of a point on the chart laid out above the list, as a fraction of its axis. */
+// Returns the x-coordinate on the horizontal chart at `fraction` along its axis.
 const horizontalChartXAt = (fraction: number) => HORIZONTAL_LANES_LEFT_PX + fraction * HORIZONTAL_LANES_WIDTH_PX;
 
-/**
- * A fraction of the chart's axis among the oldest roles, away from the visible-range frame of a list scrolled to its
- * newest role.
- */
-const FRACTION_AMONG_OLDEST_ROLES = 0.9;
+const FRACTION_AMONG_OLDEST_ROLES = 0.9; // Away from the visible-range frame when scrolled to the newest role.
 
-/** Ends the gesture as a browser does when it claims a touch to scroll the scroll pane. */
-const cancelPointer = () => fireEvent.pointerCancel(window, { pointerId: POINTER_ID });
+const cancelPointer = () => fireEvent.pointerCancel(window, { pointerId: POINTER_ID }); // Simulates browser scroll claim.
 
 describe("CareerTimeline", () => {
   test("lists every role, newest first", () => {

@@ -10,7 +10,7 @@ import { IMAGE_MEDIA_TYPES, authoredExtensionOf, mediaTypeOf, withoutExtension }
 import type { ImageDerivative } from "./derivatives.ts";
 import type { ResolvedImage, ResolvedMediaFile } from "./resolved-media.ts";
 
-/** Serves a resolved media file's original bytes from the content directory. */
+// Serves a resolved media file's original bytes from the content directory.
 interface AuthoredRendition {
   origin: "authored";
   url: string;

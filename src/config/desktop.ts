@@ -1,7 +1,7 @@
 import type { IconLayout } from "#/lib/desktop-icons/icon.ts";
 import type { WindowLayout } from "#/lib/window-manager/window.ts";
 
-/** The site's windows, in the order the window layer renders them. */
+/** Site windows in the DOM order rendered by the window layer. */
 export const WINDOW_DOM_ORDER = ["collection", "entry", "contact", "controlPanel"] as const;
 
 declare module "#/lib/window-manager/window.ts" {

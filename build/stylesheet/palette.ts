@@ -32,7 +32,7 @@ const COLOR_PLUGINS = [
 const HEX_VALUE = /^#([\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
 const CHANNEL_MAXIMUM = 255;
 
-/** The comma-separated argument lists of a function node. */
+// Splits a CSS function node's children into comma-separated argument lists.
 function argumentsOf(node: FunctionNode): Array<Array<Node>> {
   const argumentLists: Array<Array<Node>> = [[]];
 
@@ -99,7 +99,7 @@ function resolveLightDark(
   return resolveIndirections(schemeArgument, properties, scheme, trail);
 }
 
-/** Resolves CSS indirections while leaving color syntax for `COLOR_PLUGINS`. */
+// Resolves CSS indirections while leaving color syntax for `COLOR_PLUGINS`.
 function resolveIndirections(
   nodes: Array<Node>,
   properties: Map<string, string>,

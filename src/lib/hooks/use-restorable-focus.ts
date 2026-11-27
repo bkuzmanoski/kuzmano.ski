@@ -18,7 +18,7 @@ interface FocusRecord {
   element: HTMLElement;
 }
 
-/** Focusing a text field on a touch-only device would open its software keyboard. */
+// Focusing a text field on a touch-only device would open its software keyboard.
 const isAllowedFocusTarget = (element: HTMLElement) => !(isTouchOnly() && isEditableTarget(element));
 
 function focusTarget(container: HTMLElement, record: FocusRecord | null, contentKey: string): HTMLElement {

@@ -7,10 +7,7 @@ import { CopyAnnouncer } from "./copy-announcer.tsx";
 
 const PADDED_CONFIRMATION = "Copied\u00A0";
 
-/**
- * Renders `CopyAnnouncer` with each of `confirmedClipboardCopyNumbers` in turn, returning the status region's text
- * after each.
- */
+// Renders `CopyAnnouncer` across each copy number in turn, returning the status region text after each.
 function statusTextsAcross(confirmedClipboardCopyNumbers: Array<number | null>, { isStrict = false } = {}) {
   const announcerOf = (confirmedClipboardCopyNumber: number | null) =>
     isStrict ? (

@@ -27,10 +27,10 @@ function List({
 }: {
   count: number;
   currentIndex: number;
-  /** An item with its own onMouseDown, merged ahead of the hook's handler. */
+  // Item with its own onMouseDown, merged ahead of the hook's handler.
   guardedIndex?: number;
   label?: string;
-  /** A nested list, rendered inside the first item as a sublist would be. */
+  // Nested list rendered inside the first item.
   children?: ReactNode;
 }) {
   const listRef = useRef<HTMLUListElement>(null);

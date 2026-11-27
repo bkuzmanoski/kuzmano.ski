@@ -5,19 +5,18 @@ import { SITE_DESCRIPTION, SITE_NAME } from "#/config/site.ts";
 
 import { collectionRoute } from "./routes.ts";
 
-/** The name every feed is published under, at the root of the route it syndicates. */
+/** File name used for each published feed at the root of its route. */
 export const FEED_FILE_NAME = "feed.xml";
 
 export interface FeedMetadata {
   title: string;
   description: string;
   path: string;
-  /** The route whose content the feed syndicates. */
+  /** Route syndicated by this feed. */
   route: string;
   collections: Array<CollectionSegment>;
 }
 
-/** The feed for the site as a whole. */
 export const SITE_FEED: FeedMetadata = {
   title: SITE_NAME,
   description: SITE_DESCRIPTION,
@@ -34,7 +33,7 @@ const COLLECTION_FEEDS: Array<FeedMetadata> = Object.entries(COLLECTIONS).map(([
   collections: [segment as CollectionSegment],
 }));
 
-/** The feed of the collection at `route`, or `null` for a route that is not a collection route. */
+/** Returns the feed for the collection at `route`, or `null` if `route` is not a collection. */
 export const collectionFeedOf = (route: string): FeedMetadata | null =>
   COLLECTION_FEEDS.find((feed) => feed.route === route) ?? null;
 

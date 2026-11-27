@@ -60,7 +60,7 @@ export type Sprite = FlightProfile &
   (
     | {
         image: "toaster";
-        /** The frame at which the toaster's wingbeat starts, so the toasters flap out of step. */
+        /** Starting wingbeat frame offset so toasters flap out of sync. */
         flapPhase: number;
       }
     | { image: ToastImage }

@@ -48,7 +48,7 @@ export function isIsoDate(value: unknown): value is string {
   return !Number.isNaN(timestamp) && new Date(timestamp).toISOString().startsWith(value);
 }
 
-/** The calendar date of `instant` in `timeZone`, as `YYYY-MM-DD`. */
+/** Formats `instant` as a `YYYY-MM-DD` calendar date in `timeZone`. */
 export function calendarDateIn(timeZone: string, instant: Date): string {
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" })
@@ -58,7 +58,7 @@ export function calendarDateIn(timeZone: string, instant: Date): string {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
-/** The offset from UTC that `timeZone` observes at `instant`, as `Z` or `±hh:mm`. */
+// Returns the UTC offset observed by `timeZone` at `instant`, as `Z` or `±hh:mm`.
 function utcOffsetIn(timeZone: string, instant: number): string {
   const offsetName = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
     .formatToParts(instant)
@@ -73,7 +73,7 @@ const offsetMilliseconds = (offset: string) =>
     ? 0
     : (offset.startsWith("-") ? -1 : 1) * (Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6))) * 60_000;
 
-/** The RFC 3339 timestamp of midnight at the start of a `YYYY-MM-DD` date in `timeZone`. */
+/** Returns the RFC 3339 timestamp for midnight at the start of `date` in `timeZone`. */
 export function midnightTimestampIn(timeZone: string, date: string): string {
   const utcMidnight = Date.parse(`${date}T00:00:00Z`);
 

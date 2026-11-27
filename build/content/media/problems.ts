@@ -8,13 +8,11 @@ import { rootRelativePathOf } from "./renditions.ts";
 import type { MediaRendition } from "./renditions.ts";
 import type { ResolvedEntryIcon, ResolvedImage, ResolvedVideo } from "./resolved-media.ts";
 
-/** X `summary` cards drop smaller images. */
-const MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX = 144;
+const MIN_OPEN_GRAPH_IMAGE_SHORTEST_SIDE_PX = 144; // X `summary` cards drop smaller images.
 
-/** X fetches cover images up to this size. */
-const MAX_OPEN_GRAPH_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_OPEN_GRAPH_IMAGE_BYTES = 5 * 1024 * 1024; // X fetches cover images up to this size.
 
-/** The largest file Cloudflare serves as a static asset. */
+/** Largest file size Cloudflare serves as a static asset. */
 export const MAX_RENDITION_BYTES = 25 * 1024 * 1024;
 
 const BYTES_PER_KILOBYTE = 1024;
@@ -23,8 +21,7 @@ const BYTES_PER_MEGABYTE = 1024 * 1024;
 const H264_SAMPLE_FORMAT = "avc1";
 const AAC_SAMPLE_FORMAT = "mp4a";
 
-/** Allowed poster/video aspect-ratio difference for rounding and non-square video pixels. */
-const ASPECT_RATIO_TOLERANCE = 0.01;
+const ASPECT_RATIO_TOLERANCE = 0.01; // Allows for rounding and non-square video pixels.
 
 const REENCODE_VIDEO_REMEDY = "Re-encode it with `npm run encode-video`.";
 

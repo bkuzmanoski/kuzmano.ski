@@ -2,7 +2,7 @@ import { API_ROUTES } from "#/api-routes.ts";
 
 /** A browser-side failure to record on the server. */
 export interface ClientErrorReport {
-  /** Where the code caught the failure, for grouping the reports. */
+  /** Failure source category used to group error reports. */
   kind: string;
   message: string;
   route: string;

@@ -7,11 +7,10 @@ import { swallowNextPress } from "./press.ts";
 import type { Position } from "../geometry.ts";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
-/** The window within which a second press pairs with the first. */
+/** Maximum interval between two presses to count as a double press. */
 export const DOUBLE_PRESS_INTERVAL_MS = 350;
 
-/** The maximum distance from a press's start to its release, and between the two releases. */
-const DOUBLE_PRESS_TOLERANCE_PX = 16;
+const DOUBLE_PRESS_TOLERANCE_PX = 16; // Maximum drift during each press and between the two releases.
 
 const exceedsTolerance = (event: ReactPointerEvent, from: Position) =>
   distanceBetween(clientPositionOf(event), from) > DOUBLE_PRESS_TOLERANCE_PX;

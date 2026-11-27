@@ -21,7 +21,7 @@ export const themeColorPropertiesOf = (themeColor: AccentColorName) => ({
   "--color-accent": accentColorOf(themeColor),
 });
 
-/** The custom properties `RootDocument` sets and the build resolves the palette with. */
+/** Default CSS custom properties set by `RootDocument` and used by the build to resolve the palette. */
 export const DEFAULT_THEME_TINT_PROPERTIES = {
   ...themeColorPropertiesOf(DEFAULT_THEME_COLOR),
   [THEME_CHROMA_SCALE_PROPERTY]: String(DEFAULT_THEME_CHROMA_SCALE),

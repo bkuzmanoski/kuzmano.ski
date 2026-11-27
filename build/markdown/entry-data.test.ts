@@ -32,16 +32,13 @@ const ENTRY_DATA_MODULES: Record<string, EntryDataModule> = {
   [fromContent("shared/records.ts")]: { RECORD: "shared record" },
 };
 
-/**
- * Returns the fake module for each path in `ENTRY_DATA_MODULES`, and rejects for any other path to stand in for a
- * missing file.
- */
+// Returns the fake module for paths in `ENTRY_DATA_MODULES`, rejecting otherwise to simulate a missing file.
 const readFakeEntryDataModule = vi.fn((absolutePath: string) => {
   const entryDataModule = ENTRY_DATA_MODULES[absolutePath];
   return entryDataModule ? Promise.resolve(entryDataModule) : Promise.reject(new Error("The file does not exist."));
 });
 
-/** `ContentNode` flattens mdast into optional fields, so the parsed root is cast to it. */
+// `ContentNode` flattens mdast into optional fields, so the parsed root is cast to it.
 const treeOf = (source: string) => unified().use(remarkParse).use(remarkMdx).parse(source) as ContentNode;
 
 function componentElementsIn(tree: ContentNode): Array<ContentNode> {
@@ -63,10 +60,7 @@ const entryDataExportsOf = (source: string, entryAbsolutePath = ENTRY_ABSOLUTE_P
 const exportedValuesOf = async (source: string) =>
   [...(await entryDataExportsOf(source)).values()].map(({ value }) => value);
 
-/**
- * Created inside the repository, so a module resolves `#/` imports against its `package.json`. The `.tmp` suffix is
- * gitignored, and the directory is not under `node_modules`, which the dev server does not watch.
- */
+// Created inside the repo so `#/` imports resolve against `package.json`; `.tmp` is gitignored and watched by Vite.
 const temporaryModuleDirectory = async () => {
   const directoryAbsolutePath = fromRoot(`entry-data-module-${randomUUID()}.tmp`);
 

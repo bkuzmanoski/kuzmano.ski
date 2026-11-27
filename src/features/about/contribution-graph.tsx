@@ -16,9 +16,7 @@ import { languageAttributeInDocumentFor } from "#/site/language.ts";
 
 import styles from "./contribution-graph.module.css";
 
-/**
- * The number of weeks GitHub's calendar spans in most years, which sizes the graph while the calendar loads.
- */
+// Typical week span of GitHub's calendar, used to size the graph while it loads.
 const PENDING_CALENDAR_WEEK_COUNT = 53;
 
 const MONTH_FORMAT: DateFormat = {
@@ -29,8 +27,7 @@ const REVEAL_START_VISIBLE_FRACTION = 0.2;
 const REVEAL_END_ROUNDING_ALLOWANCE_PX = 1;
 const REVEAL_END_MAX_PROPERTY = "--contribution-graph-reveal-end-max";
 
-/** The condition of the `@supports` rule that reveals the weeks on scroll. */
-const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block";
+const VIEW_TIMELINE_CONDITION = "view-timeline: --contribution-graph block"; // Matches the `@supports` scroll-reveal rule.
 
 type RevealTimeline = "document" | "view";
 

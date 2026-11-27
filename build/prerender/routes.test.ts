@@ -39,7 +39,7 @@ vi.mock("../content/authored-content.ts", async (importOriginal) => ({
 const TODAY = "2026-07-19";
 const UNDATED_ENTRY_OVERRIDES = { date: undefined };
 
-/** A valid tree that each test can modify to exercise one condition. */
+// Valid baseline content tree that tests override to exercise one condition.
 const content = (overrides: Partial<AuthoredContent> = {}): AuthoredContent =>
   authoredContent({
     pages: authoredContentDirectory(PAGES_DIRECTORY_NAME, [

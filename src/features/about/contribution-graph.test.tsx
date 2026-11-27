@@ -35,7 +35,7 @@ beforeEach(() => {
   prefersReducedMotion.matches = false;
 });
 
-/** A partial first week that starts on a Wednesday, then a whole week from Sunday. */
+// Partial first week starting on Wednesday, followed by a full Sunday-start week.
 const WEEKS = [
   [
     { date: "2026-01-07", count: 0 },

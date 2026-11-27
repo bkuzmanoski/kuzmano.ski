@@ -16,7 +16,7 @@ interface PreviewImageLayout {
   naturalSize: Size;
   fittedSize: Size;
   areaSize: Size;
-  /** The scale at which the fitted size reaches the natural size. */
+  /** Scale factor at which the fitted image reaches its natural size. */
   maxScale: number;
 }
 
@@ -49,7 +49,7 @@ function zoomedBy(zoom: Transform, from: Position, to: Position, scale: number, 
   };
 }
 
-/** Returns the pointer midpoint and the distance between the first two pointers, if present. */
+// Returns the midpoint and distance between the first two active pointers, if present.
 function touchesOf(pointers: Map<number, Position>) {
   const [first, second] = [...pointers.values()];
 

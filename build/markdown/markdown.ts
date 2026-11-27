@@ -33,7 +33,7 @@ import type { ContentNode, ContentParent, EntryVFile } from "../content/markup/t
 
 export interface MarkdownEntry {
   path?: string;
-  /** The entry's URL, for a component that needs to link back to it. */
+  /** The entry's URL, used by components that link back to it. */
   url?: string;
   /** Called only for an entry that renders a component rendered from entry data. */
   readEntryDataModule?: EntryDataModuleReader;
@@ -42,10 +42,7 @@ export interface MarkdownEntry {
 /** Converts an entry's MDX source to its Markdown representation. */
 export type MarkdownRenderer = (source: string, entry?: MarkdownEntry) => Promise<string>;
 
-/**
- * What the transforms read from each entry's file as it differs between entries that the same processor renders.
- * `readEntryData` writes `entryDataExports`.
- */
+// Per-entry data shared across transforms on the same processor; `readEntryData` populates `entryDataExports`.
 interface MarkdownFileData extends Pick<MarkdownEntry, "url" | "readEntryDataModule"> {
   entryDataExports?: Map<ContentNode, EntryDataExport>;
 }
@@ -54,10 +51,8 @@ interface MarkdownVFile extends EntryVFile {
   data: Record<string, unknown>;
 }
 
-/**
- * Nodes that exist only to serve the compiled component: imports, exports, and `{expressions}` other than a literal,
- * which `replaceLiteralExpressions` has already replaced with its text.
- */
+// MDX nodes used only by compiled components (imports, exports, and non-literal expressions after
+// `replaceLiteralExpressions`).
 const EXPRESSION_NODE_TYPES = new Set(["mdxFlowExpression", "mdxTextExpression"]);
 const DISCARDED_NODE_TYPES = new Set(["mdxjsEsm", ...EXPRESSION_NODE_TYPES]);
 const MDX_NODE_TYPES = new Set([...DISCARDED_NODE_TYPES, ...JSX_ELEMENT_NODE_TYPES]);
@@ -82,10 +77,7 @@ const BLOCK_ELEMENT_NAMES = new Set([
 const isBlockElementInParagraph = (node: ContentNode) =>
   node.type === "mdxJsxTextElement" && BLOCK_ELEMENT_NAMES.has(node.name ?? "");
 
-/**
- * MDX unwraps paragraphs that contain only a JSX element. This makes a component with block fallback Markdown on its
- * own line, such as `<Aside label="Aside">An aside.</Aside>`, render as a block.
- */
+// Matches a paragraph containing only a block-fallback JSX element so it renders as a block (matching MDX unwrapping).
 function soleBlockComponentIn(paragraph: ContentNode): ContentNode | undefined {
   const renderedChildren = (paragraph.children ?? []).filter((child) => child.type !== "text" || child.value?.trim());
   const [onlyChild, ...otherChildren] = renderedChildren;
@@ -149,13 +141,8 @@ function literalTextOf(expression: ContentNode): string | null {
   return otherQuasis.length === 0 && typeof cooked === "string" ? cooked : null;
 }
 
-/**
- * Replaces each literal `{expression}` with the text it renders, such as `{"⌘"}` in a `<kbd>` or `{"{"}` in a table
- * cell, where MDX would otherwise parse the character itself as syntax. An expression authored as a block becomes a
- * paragraph. This runs before the transforms that read the text of an inline code element or a table cell, and after
- * `replacePreformattedElements`, which reads the text of the expressions in a `<pre>` itself so that it can separate
- * them by lines rather than paragraphs.
- */
+// Replaces literal `{expression}` nodes with their rendered text (block expressions become paragraphs). Runs after
+// `replacePreformattedElements` (so `<pre>` keeps line breaks) and before inline-code and table transforms.
 function replaceLiteralExpressions() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
@@ -226,10 +213,7 @@ function codeLanguageIn(pre: ContentNode): string | null {
   return language;
 }
 
-/**
- * Replaces each `<pre>` with a fenced code block of its text. This runs before `stripMdx`, which would replace the
- * `<code>` inside it with an inline code span and join its lines.
- */
+// Replaces each `<pre>` with a fenced code block before `stripMdx` would collapse its `<code>` into an inline span.
 function replacePreformattedElements() {
   return function transform(tree: ContentParent) {
     visit(tree, (node, index, parent) => {
@@ -244,17 +228,15 @@ function replacePreformattedElements() {
   };
 }
 
-/**
- * The blocks the build emits before a code fence for each attribute it sets (see
- * `/build/content/markup/code-fence-attributes.ts`).
- */
+// Blocks emitted before a code fence for each supported attribute (see
+// `/build/content/markup/code-fence-attributes.ts`).
 const CODE_FENCE_ATTRIBUTE_MARKDOWN: Record<CodeFenceAttributeName, (value: string) => Array<ContentNode>> = {
   gist: (gistId) => [
     paragraphOf([{ type: "link", url: githubGistUrlOf(gistId), children: [textNode(`${GITHUB_GIST_LINK_TEXT}.`)] }]),
   ],
 };
 
-/** Replaces the meta string of each code fence with the Markdown of the attributes it sets. */
+// Replaces each code fence's meta string with the Markdown blocks for its attributes.
 function replaceCodeFenceAttributes() {
   return function transform(tree: ContentParent, file: EntryVFile) {
     visit(tree, (node, index, parent) => {
@@ -296,7 +278,7 @@ function splitBlockElements() {
   };
 }
 
-/** The name of every component with block fallback Markdown that is authored inside a sentence in `tree`. */
+// Returns names of block-fallback components authored inline inside a sentence in `tree`.
 function blockFallbacksAuthoredInlineIn(tree: ContentNode): Set<string> {
   const componentNames = new Set<string>();
 
@@ -315,10 +297,7 @@ function blockFallbacksAuthoredInlineIn(tree: ContentNode): Set<string> {
   return componentNames;
 }
 
-/**
- * Throws for a component with a block as its fallback Markdown authored inside a sentence, where the serializer would
- * emit its replacement into the prose around it rather than as a block of its own.
- */
+// Throws if a block-fallback component is authored inline inside a sentence, where it cannot serialize as a block.
 function assertBlockFallbacks() {
   return function assert(tree: ContentNode, file: EntryVFile) {
     const authoredInline = blockFallbacksAuthoredInlineIn(tree);
@@ -396,7 +375,7 @@ function readEntryData() {
   };
 }
 
-/** Replaces MDX nodes with plain Markdown nodes that `remark-stringify` can serialize. */
+// Replaces MDX nodes with plain Markdown nodes for `remark-stringify`.
 function stripMdx() {
   return function transform(tree: ContentNode, file: MarkdownVFile) {
     const { url, entryDataExports } = markdownFileDataOf(file);
@@ -440,10 +419,7 @@ function mdxNodeTypesIn(tree: ContentNode): Set<string> {
   return mdxNodeTypes;
 }
 
-/**
- * Ensures the Markdown tree contains no MDX nodes. `remark-stringify` would serialize any MDX that survives `stripMdx`
- * as JSX, which would appear verbatim in the Markdown.
- */
+// Fails if any MDX nodes survive `stripMdx`, preventing `remark-stringify` from emitting verbatim JSX.
 function assertMarkdownOnly() {
   return function assert(tree: ContentNode, file: EntryVFile) {
     const remainingMdxNodeTypes = mdxNodeTypesIn(tree);

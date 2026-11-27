@@ -1,18 +1,18 @@
 import { createEvent, fireEvent } from "@testing-library/react";
 
-/** The `PointerEvent` fields of a primary press with a mouse, without a position. */
+/** `PointerEvent` fields for a primary mouse press, without coordinates. */
 export const MOUSE_PRESS_INIT = { pointerType: "mouse", pointerId: 1, button: 0, isPrimary: true };
 
 /**
- * The `PointerEvent` fields of a primary press with a touch, without a position. It shares its `pointerId` with
- * `MOUSE_PRESS_INIT`, so a test follows either press with the same moves.
+ * `PointerEvent` fields for a primary touch press, without coordinates. Shares `pointerId` with `MOUSE_PRESS_INIT` so
+ * tests can follow either with the same move events.
  */
 export const TOUCH_PRESS_INIT = { pointerType: "touch", pointerId: 1, button: 0, isPrimary: true };
 
-/** The `PointerEvent` fields of a second touch that begins while a touch press is down, without a position. */
+/** `PointerEvent` fields for a secondary touch starting while a primary touch is active, without coordinates. */
 export const SECOND_TOUCH_PRESS_INIT = { ...TOUCH_PRESS_INIT, pointerId: 2, isPrimary: false };
 
-/** The events of a press with a mouse, up to the release. */
+/** Dispatches a mouse press (`pointerdown` and `mousedown`) without releasing. */
 export function pressWithMouse(element: Element) {
   fireEvent.pointerDown(element, MOUSE_PRESS_INIT);
   return fireEvent.mouseDown(element, { button: 0, detail: 1 });
@@ -22,7 +22,10 @@ export function pressWithMouse(element: Element) {
 // device (see `isPointerClick` and `isSimulatedMouseDown` in `/src/lib/press/press.ts`). Each helper returns `false`
 // when a listener prevents the default action of the `click`.
 
-/** A whole press with a `pointerType` of `mouse`, in which only the `click` has a `detail` of `1`. */
+/**
+ * Simulates a Chrome screen-reader activation (mouse pointer events with `detail: 0`, followed by a `click` with
+ * `detail: 1`).
+ */
 export function activateWithScreenReaderInChrome(element: Element) {
   fireEvent.pointerDown(element, { pointerType: "mouse" });
   fireEvent.mouseDown(element, { detail: 0 });

@@ -5,8 +5,7 @@ import { useTrailingClick } from "./use-trailing-click.ts";
 
 const onConsume = vi.fn<(wasTrailingClickExpected: boolean) => void>();
 
-/** A pointer click, as opposed to keyboard activation. */
-const CLICK = { detail: 1 };
+const CLICK = { detail: 1 }; // Pointer click, as opposed to keyboard activation.
 
 function Control({ label }: { label: string }) {
   const { recordPress, onPointerUp, consume } = useTrailingClick();
@@ -25,7 +24,7 @@ function Control({ label }: { label: string }) {
 
 const control = (label: string) => screen.getByRole("button", { name: label });
 
-/** The touch pointer events stay on the element under the finger, and only the `click` reaches `element`. */
+// Simulates iOS tap retargeting: touch events fire on `document.body` and only `click` reaches `element`.
 function tapRetargetedTo(element: Element) {
   fireEvent.pointerDown(document.body);
   fireEvent.pointerUp(document.body);

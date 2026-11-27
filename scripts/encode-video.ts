@@ -92,10 +92,7 @@ const mp4FilePathOf = (inputFilePath: string) =>
 const posterImageFilePathOf = (videoFilePath: string) => `${posterImageStemOf(videoFilePath)}${POSTER_EXTENSION}`;
 const sizeOf = async (filePath: string) => fileSize((await stat(filePath)).size);
 
-/**
- * Whether `mp4FilePath` is an earlier output of this script (i.e., an MP4 with a poster image that passes the build's
- * checks).
- */
+// Returns whether `mp4FilePath` already has a valid encoded MP4 and poster image.
 async function isAlreadyEncoded(mp4FilePath: string): Promise<boolean> {
   if (!existsSync(mp4FilePath) || !existsSync(posterImageFilePathOf(mp4FilePath))) {
     return false;

@@ -27,10 +27,10 @@ afterEach(() => {
 
 const LIFETIMES = { successfulResponseSeconds: 60, failedResponseSeconds: 30 };
 const ENDPOINT_URL = "https://example.com/api/endpoint";
-/** The status codes `wrangler dev`'s cache stores, which are the ones `http-cache-semantics` understands. */
+// Status codes cached by `wrangler dev` (matching `http-cache-semantics`).
 const STORABLE_STATUS_CODES = new Set([200, 203, 204, 300, 301, 302, 303, 307, 308, 404, 405, 410, 414, 501]);
 
-/** The number of seconds a shared cache stores a response for: its `s-maxage`, or else its `max-age`. */
+// Returns the shared cache lifetime in seconds (`s-maxage`, falling back to `max-age`).
 function sharedCacheLifetimeSecondsOf(response: Response): number {
   const cacheControl = response.headers.get("cache-control") ?? "";
   const sharedMaxAge = /\bs-maxage=(\d+)/.exec(cacheControl)?.[1];
@@ -39,11 +39,8 @@ function sharedCacheLifetimeSecondsOf(response: Response): number {
   return Number(sharedMaxAge ?? maxAge ?? 0);
 }
 
-/**
- * A `Cache` that, like `wrangler dev`'s cache, stores responses by URL until the expiry their `Cache-Control` header
- * specifies, and only with a status code in `STORABLE_STATUS_CODES`. The tests install it as `caches.default`, where
- * Workers provides the data center's cache.
- */
+// In-memory `Cache` mimicking `wrangler dev` (honors `Cache-Control` expiry and `STORABLE_STATUS_CODES`), installed as
+// `caches.default`.
 function memoryCache() {
   const entries = new Map<string, { response: Response; expiresAt: number }>();
   const cache = {

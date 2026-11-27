@@ -14,7 +14,7 @@ export function jsonPostRequest(
   });
 }
 
-/** Returns a GET request to `url` whose `Sec-Fetch-Site` header is `site`, which defaults to `same-origin`. */
+/** Returns a GET request to `url` with `Sec-Fetch-Site` set to `site` (defaulting to `"same-origin"`). */
 export const getRequestFromSite = (
   url: string,
   { site = "same-origin", headers = {} }: { site?: string; headers?: HeadersInit } = {},
@@ -26,7 +26,7 @@ interface ApiRoute {
   options: { server?: { handlers?: unknown } };
 }
 
-/** HTTP methods defined by an API route's handler record, excluding TanStack's handler factory. */
+// HTTP methods defined by an API route's handler record, excluding TanStack's handler factory.
 type HandledMethodsOf<TRoute extends ApiRoute> = Extract<
   keyof Exclude<NonNullable<NonNullable<TRoute["options"]["server"]>["handlers"]>, (...args: never) => unknown>,
   string

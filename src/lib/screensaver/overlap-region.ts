@@ -4,8 +4,8 @@ import type { ConvexPolygon, HalfPlane } from "../convex-polygon.ts";
 import type { Position } from "../geometry.ts";
 
 /**
- * The offsets in lane coordinates of one sprite from another at which their padded outlines intersect, with their
- * bounds. The two sprites are too close at an offset inside the polygon in which `halfPlanes` intersect.
+ * Lane-coordinate offsets where two sprites' padded outlines intersect, along with their bounds. Sprites are too close
+ * whenever their relative offset lies inside the intersection of `halfPlanes`.
  */
 export interface OverlapRegion {
   halfPlanes: ReadonlyArray<HalfPlane>;
@@ -16,17 +16,14 @@ export interface OverlapRegion {
 }
 
 export interface OverlapRegionSettings {
-  /** How far a sprite descends for each pixel it flies left, which sets the slope of the lanes. */
+  /** Vertical descent per horizontal pixel flown left (sets the lane slope). */
   descentPerPx: number;
-  /** The minimum gap between two sprites' outlines. */
+  /** Minimum gap between two sprites' outlines. */
   clearancePx: number;
 }
 
-/**
- * The vertices of a regular octagon with an inradius of `1`, which `createOverlapRegions` scales to pad each outline.
- * As the octagon contains the circle of that radius, a padded outline extends at least the scaled radius in every
- * direction.
- */
+// Regular octagon with inradius `1`, scaled by `createOverlapRegions` to pad outlines. Because it circumscribes the
+// unit circle, each padded outline extends at least the scaled radius in every direction.
 const UNIT_OCTAGON: ConvexPolygon = Array.from({ length: 8 }, (_, index) => {
   const angle = ((index + 0.5) * Math.PI) / 4;
   const circumradius = 1 / Math.cos(Math.PI / 8);
@@ -45,7 +42,7 @@ export function createOverlapRegions({ descentPerPx, clearancePx }: OverlapRegio
   const collisionShapes = new Map<ConvexPolygon, ConvexPolygon>();
   const overlapRegions = new Map<ConvexPolygon, Map<ConvexPolygon, OverlapRegion>>();
 
-  /** Returns `outline`, padded by half of `clearancePx`, in lane coordinates. */
+  // Returns `outline` padded by half of `clearancePx`, in lane coordinates.
   function collisionShapeOf(outline: ConvexPolygon) {
     let collisionShape = collisionShapes.get(outline);
 

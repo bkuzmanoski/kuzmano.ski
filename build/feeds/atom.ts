@@ -39,10 +39,7 @@ const removeForbiddenCharacters = (value: string) =>
 const link = (rel: string, type: string, href: string) =>
   x("link", { rel, type, href: removeForbiddenCharacters(href) });
 
-/**
- * `x` reads any object in its second argument as attributes, so an element with child elements passes them as an array
- * rather than as separate arguments.
- */
+// `x` treats an object second argument as attributes, so child elements are passed as an array.
 const entryElement = (
   { title, description, url, markdownUrl, date, category, content }: FeedEntry,
   timestamp: (date: string) => string,

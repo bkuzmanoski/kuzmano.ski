@@ -12,7 +12,7 @@ export interface JsonValueModule {
   watchFiles?: Array<string>;
 }
 
-/** The ID a virtual module resolves to. The `\0` prefix excludes it from other plugins' file handling. */
+/** Returns a virtual module's resolved ID, prefixed with `\0` to exclude it from other plugins. */
 export const resolvedModuleIdOf = (moduleId: string) => `\0${moduleId}`;
 
 /**

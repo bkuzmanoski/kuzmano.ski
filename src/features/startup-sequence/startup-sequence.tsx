@@ -54,10 +54,8 @@ import styles from "./startup-sequence.module.css";
 
 import type { Ref } from "react";
 
-/**
- * Resolves when the document becomes visible, or immediately if it already is. Aborting `signal` stops listening and
- * leaves the promise pending.
- */
+// Resolves once the document is visible (immediately if already visible); aborting `signal` stops listening and leaves
+// the promise pending.
 function whenDocumentVisible(signal: AbortSignal): Promise<void> {
   if (document.visibilityState === "visible") {
     return Promise.resolve();

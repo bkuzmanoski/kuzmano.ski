@@ -1,13 +1,9 @@
 import type { IconPlacement } from "./icon.ts";
 import type { ArrowKey } from "../keys.ts";
 
-/**
- * How much further an icon off the arrow's axis has to be before it loses to one on that axis during keyboard
- * navigation.
- */
-const OFF_AXIS_DISTANCE_WEIGHT = 2;
+const OFF_AXIS_DISTANCE_WEIGHT = 2; // Penalizes off-axis icons during arrow-key navigation.
 
-/** The icon an arrow key selects, or `null` when no icon lies in that direction. */
+/** Returns the ID of the icon selected by `key`, or `null` when none lies in that direction. */
 export function adjacentIconId(placements: ReadonlyArray<IconPlacement>, fromId: string, key: ArrowKey): string | null {
   const from = placements.find((placement) => placement.id === fromId);
 

@@ -39,8 +39,7 @@ vi.mock("#/lib/device.ts", () => ({ isApplePlatform: vi.fn(), isTouchOnly: vi.fn
 
 const BASE_PANE_HEIGHT_PX = 100;
 
-/** A page overlaps the previous one by one arrow step. */
-const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX;
+const PAGE_SCROLL_DISTANCE_PX = BASE_PANE_HEIGHT_PX - ARROW_STEP_PX; // Each page overlaps the previous by one arrow step.
 
 const scrollTops = new WeakMap<Element, number>();
 const replacedProperties: Array<[string, PropertyDescriptor | undefined]> = [];

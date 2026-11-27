@@ -25,16 +25,14 @@ export interface Transform {
   y: number;
 }
 
-/** The straight-line distance between two points. */
 export const distanceBetween = (a: Position, b: Position) => Math.hypot(a.x - b.x, a.y - b.y);
 
-/** The position of a pointer or mouse event in viewport coordinates. */
 export const clientPositionOf = (event: { clientX: number; clientY: number }): Position => ({
   x: event.clientX,
   y: event.clientY,
 });
 
-/** The size of the layout viewport. */
+/** Returns the layout viewport dimensions. */
 export const viewportSize = (): Size => ({ width: window.innerWidth, height: window.innerHeight });
 
 /** Whether a point falls within a rect, counting its edges as within. */
@@ -42,7 +40,7 @@ export function containsPoint(rect: Rect, { x, y }: Position): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
 
-/** `rect` in the coordinates of a box whose top-left corner is at `origin`. */
+/** Translates `rect` into coordinates relative to `origin`. */
 export const rectRelativeTo = ({ x, y, width, height }: Rect, origin: Position): Rect => ({
   x: x - origin.x,
   y: y - origin.y,
@@ -50,7 +48,7 @@ export const rectRelativeTo = ({ x, y, width, height }: Rect, origin: Position):
   height,
 });
 
-/** The rect two rects overlap in, or `null` when they do not overlap. */
+/** Returns the overlapping region of two rects, or `null` if they do not overlap. */
 export function intersectionOf(a: Rect, b: Rect): Rect | null {
   const x = Math.max(a.x, b.x);
   const y = Math.max(a.y, b.y);
@@ -61,8 +59,8 @@ export function intersectionOf(a: Rect, b: Rect): Rect | null {
 }
 
 /**
- * The fraction of `rect`'s area within `bounds`, from 0 to 1, as `IntersectionObserver` measures it. `0` for an empty
- * rect.
+ * Returns the fraction of `rect`'s area inside `bounds` (`0` to `1`, matching `IntersectionObserver`), or `0` if `rect`
+ * is empty.
  */
 export function intersectionRatioOf(rect: Rect, bounds: Rect): number {
   const intersection = intersectionOf(rect, bounds);
@@ -115,9 +113,8 @@ export function insetFromViewport(box: Rect, viewport: Size): Inset {
 }
 
 /**
- * The scale and translation that places `from` where `to` is, for an element whose transform origin is the origin of
- * the coordinates both rects are given in. The rects are taken to share an aspect ratio, so their widths set the scale
- * on both axes.
+ * Returns the uniform scale and translation that maps `from` onto `to` (assuming shared aspect ratio and a transform
+ * origin at the coordinate origin).
  */
 export function transformBetween(from: Rect, to: Rect): Transform {
   const scale = from.width === 0 ? 1 : to.width / from.width;

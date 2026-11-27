@@ -10,19 +10,13 @@ type TextField = HTMLInputElement | HTMLTextAreaElement;
 
 const canPreventViewportPan = () => Boolean(window.visualViewport) && isIOS();
 
-/** Far enough above the viewport that iOS does not find any part of the field under the keyboard. */
-const HIDDEN_FIELD_OFFSET_PX = -2000;
+const HIDDEN_FIELD_OFFSET_PX = -2000; // Far enough above the viewport that iOS does not place the field under the keyboard.
 
-/**
- * Maximum time to wait for the software keyboard to resize the visual viewport before restoring the field when focus
- * does not open the keyboard, e.g. when a hardware keyboard is attached.
- */
+// Maximum wait for the software keyboard to resize the visual viewport before restoring the field (e.g., when a
+// hardware keyboard is attached).
 const SOFTWARE_KEYBOARD_SHOW_TIMEOUT_MS = 600; // On iPhone, the keyboard resizes the viewport within ~160ms of a focus event.
 
-/**
- * Inserts an inert stand-in element before the field to preserve its layout and displayed value while the real field is
- * above the viewport.
- */
+// Inserts an inert clone before `field` to preserve layout and displayed value while the real field is off-screen.
 function placeStandInElement(field: TextField): TextField {
   const standInElement = field.cloneNode(true) as TextField;
 

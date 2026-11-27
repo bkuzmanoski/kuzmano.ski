@@ -44,7 +44,7 @@ interface IndexValueModule {
   pluginFor: (loadIndex: () => Promise<MediaIndex>) => Plugin;
 }
 
-/** Pairs a virtual module's plugin with the value it exports from the index, so the plugin serves that value. */
+// Pairs a virtual module's plugin with the selector that reads its value from the media index.
 function indexValueModule<TValue>(
   resolvedModuleId: string,
   valueOf: (index: MediaIndex) => TValue,
@@ -57,7 +57,6 @@ function indexValueModule<TValue>(
   };
 }
 
-/** The virtual modules the plugin serves from the index. */
 const INDEX_VALUE_MODULES = [
   indexValueModule(RESOLVED_ENTRY_COVER_IMAGES_MODULE_ID, (index) => index.coverImages, entryCoverImagesPlugin),
   indexValueModule(RESOLVED_ENTRY_ICON_URLS_MODULE_ID, (index) => index.entryIconUrls, entryIconUrlsPlugin),
@@ -65,14 +64,12 @@ const INDEX_VALUE_MODULES = [
 
 interface IndexChange {
   index: MediaIndex;
-  /** The resolved IDs of the virtual modules with a value the change altered. */
+  /** Resolved IDs of virtual modules whose value changed. */
   staleValueModuleIds: Array<string>;
 }
 
-/**
- * Warns once per active development problem. Index rebuilds replace tracked problems; problems detected outside the
- * index remain tracked for the server's lifetime.
- */
+// Warns once per active dev problem; index rebuilds replace index problems while external problems persist for the
+// server's lifetime.
 function createProblemReporter(warn: (problem: string) => void) {
   const reportedProblems = new Set<string>();
 

@@ -10,7 +10,7 @@ const RATE_LIMIT_FALLBACK_KEY = "unknown";
 
 const rateLimitKeyOf = (request: Request) => request.headers.get("cf-connecting-ip") ?? RATE_LIMIT_FALLBACK_KEY;
 
-/** Whether the sender of `request` has exceeded `rateLimit`. Always `false` for an endpoint without a rate limit. */
+// Returns whether the request's sender exceeded `rateLimit` (always `false` when unconfigured).
 const exceedsRateLimit = async (request: Request, rateLimit?: RateLimitBindingName) =>
   rateLimit !== undefined && !(await isWithinRateLimit(rateLimit, rateLimitKeyOf(request)));
 

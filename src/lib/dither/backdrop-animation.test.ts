@@ -35,14 +35,13 @@ const CONTAINER_HEIGHT_PX = 800;
 
 const DITHER_FIELD_WIDTH_BITMAP_PIXELS = CONTAINER_WIDTH_PX / bitmapPixelSizePxAt(1);
 
-/** At a device pixel ratio of 0.5 a bitmap pixel rounds up to one device pixel (2 CSS pixels). */
+// At DPR 0.5, a bitmap pixel rounds up to 1 device pixel (2 CSS pixels).
 const ZOOMED_OUT_DEVICE_PIXEL_RATIO = 0.5;
 const ZOOMED_OUT_BITMAP_PIXEL_SIZE_PX = bitmapPixelSizePxAt(ZOOMED_OUT_DEVICE_PIXEL_RATIO);
 
 const HIGHLIGHT_CENTER = { x: 300, y: 200 };
 
-/** A point at the height of `HIGHLIGHT_CENTER`, far enough to the side for the highlight to leave the field there. */
-const POINT_BESIDE_HIGHLIGHT = { x: 1_500, y: HIGHLIGHT_CENTER.y };
+const POINT_BESIDE_HIGHLIGHT = { x: 1_500, y: HIGHLIGHT_CENTER.y }; // Far enough aside for the highlight to leave the field.
 
 const pendingAnimationFrames = new Map<number, FrameRequestCallback>();
 const putImageData = vi.fn<(...parameters: Array<unknown>) => void>();
@@ -89,7 +88,7 @@ const fakeContext = () => {
   return context as unknown as CanvasRenderingContext2D;
 };
 
-/** A box around `center`, standing in for the bounding box of the highlight center element. */
+// Bounding box centered on `center`, standing in for the highlight center element.
 const rectCenteredOn = (center: { x: number; y: number }) => new DOMRect(center.x - 50, center.y - 60, 100, 120);
 
 const setContainerSize = (container: HTMLElement, width: number, height: number) => {
@@ -97,7 +96,7 @@ const setContainerSize = (container: HTMLElement, width: number, height: number)
   Object.defineProperty(container, "clientHeight", { value: height, configurable: true });
 };
 
-/** A container at the top left of the viewport, with a highlight center element centered on `highlightCenter`. */
+// Container at the viewport's top left with a highlight center element centered on `highlightCenter`.
 const containerElements = (highlightCenter = HIGHLIGHT_CENTER) => {
   const container = document.createElement("div");
   const canvas = document.createElement("canvas");

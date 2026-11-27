@@ -51,7 +51,7 @@ let openWindows: WindowRecord<WindowContent>;
 let focusedWindow: WindowId | null;
 let notFoundRoute: string | null;
 
-/** Recorded in an effect so every assertion reads the state of the provider's latest commit. */
+// Records provider state in an effect so assertions always read the latest commit.
 function Probe() {
   const actions = useWindowActions();
   const content = useWindowContent();

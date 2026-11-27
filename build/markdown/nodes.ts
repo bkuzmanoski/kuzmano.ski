@@ -23,10 +23,7 @@ export const listOf = (
   children: items.map((children) => ({ type: "listItem", spread: false, children })),
 });
 
-/**
- * The blocks an authored element contains. MDX parses an element authored on one line as phrasing, which this wraps in
- * a paragraph, and one authored across lines as blocks.
- */
+/** Returns the block nodes inside `element`, wrapping single-line MDX phrasing elements in a paragraph. */
 export function blocksIn(element: ContentNode): Array<ContentNode> {
   const children = element.children ?? [];
 
@@ -49,7 +46,7 @@ export const MARKDOWN_SERIALIZER_OPTIONS = {
   emphasis: "_",
 } as const;
 
-/** Serializes without the GFM extensions an entry's serializer uses, so it does not escape the `~` in a token note. */
+// Serializes without GFM extensions so `~` in token notes is not escaped.
 const markdownSerializer = unified().use(remarkStringify, MARKDOWN_SERIALIZER_OPTIONS).freeze();
 
 /**

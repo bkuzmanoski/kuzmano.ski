@@ -36,7 +36,7 @@ function reportFailedRequest(error: unknown) {
 
 const daysOfWeek = (week: unknown) => (isRecord(week) ? week.days : week);
 
-/** Returns the calendar in a GraphQL response, or `null` when the response does not contain a valid one. */
+// Extracts the contribution calendar from a GraphQL payload, or returns `null` if invalid.
 function contributionCalendarIn(payload: unknown): ContributionCalendar | null {
   if (!isRecord(payload) || !isRecord(payload.data) || !isRecord(payload.data.user)) {
     return null;

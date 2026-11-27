@@ -5,7 +5,7 @@ export interface ContentPath {
   slug?: string;
 }
 
-/** The top-level URL segment content media is served under. */
+/** Top-level URL segment for served content media. */
 export const MEDIA_SEGMENT = "media";
 
 export const pageRoute = (slug: string) => `/${slug}`;
@@ -14,8 +14,7 @@ export const collectionRoute = (segment: string) => `/${segment}`;
 export const mediaRoute = (mediaPath: string) => `/${MEDIA_SEGMENT}/${mediaPath}`;
 export const markdownPath = (path: string) => `${path}.md`;
 
-/** Dropping empty parts ignores leading, trailing, and repeated slashes. */
-const segmentsOf = (path: string) => path.split("/").filter(Boolean);
+const segmentsOf = (path: string) => path.split("/").filter(Boolean); // Ignores leading, trailing, and repeated slashes.
 
 export const isRootPath = (path: string) => segmentsOf(path).length === 0;
 export const hasFileExtension = (path: string) => /\.[^/]+$/.test(path);

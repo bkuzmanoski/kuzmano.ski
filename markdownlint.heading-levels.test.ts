@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import headingLevelsRule from "./markdownlint.heading-levels.ts";
 
-/** Lints the source with only the rule under test, and returns the line and detail of each error. */
+// Lints `source` with only `heading-levels` enabled and returns each error's line and detail.
 async function headingLevelErrorsIn(source: string) {
   const results = await lint({
     strings: { entry: source },

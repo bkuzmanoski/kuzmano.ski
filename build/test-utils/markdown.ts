@@ -6,7 +6,7 @@ import type { ContentNode } from "../content/markup/tree.ts";
 
 const textIn = (node: ContentNode): string => node.value ?? (node.children ?? []).map(textIn).join("");
 
-/** The text of each link in `markdown`, as a CommonMark parser reads it. */
+/** Returns the text of each link in `markdown` as parsed by CommonMark. */
 export function linkTextsIn(markdown: string): Array<string> {
   const linkTexts: Array<string> = [];
 

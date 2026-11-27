@@ -13,7 +13,7 @@ export interface DragDelta {
 
 /** Details passed to `onEnd` alongside whether the drag moved. */
 export interface DragEnd<T> {
-  /** The value `start` returned at the press. */
+  /** Value returned by `start` when the press began. */
   start: T;
   /**
    * Whether the browser canceled the gesture with `pointercancel` (e.g., to pan the page from a handle that allows it
@@ -22,7 +22,7 @@ export interface DragEnd<T> {
   isCanceled: boolean;
 }
 
-/** The travel past which a press counts as a drag, for handles that also respond to a click. */
+/** Minimum pointer travel to treat a press as a drag on handles that also respond to clicks. */
 export const DRAG_THRESHOLD_PX = 4;
 
 interface ActiveDrag<T> {
@@ -62,7 +62,7 @@ export function usePointerDrag<T>({
   const pendingDeltaRef = useRef<{ delta: DragDelta; value: T } | null>(null);
   const frameRef = useRef<number | null>(null);
 
-  /** The second touch's `pointerdown` event, tracked to prevent it from starting a new drag. */
+  // Tracks the second touch's `pointerdown` event so it cannot start a new drag.
   const secondTouchEventRef = useRef<PointerEvent | null>(null);
 
   // Drag listeners outlive the render that registered them, so use the latest handlers rather than those from the

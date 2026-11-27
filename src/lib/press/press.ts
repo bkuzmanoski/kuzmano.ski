@@ -1,6 +1,6 @@
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
-/** The longest a click can take to arrive after the press it belongs to. */
+/** Maximum delay after a press during which its synthesized click can arrive. */
 export const MAX_CLICK_DELAY_MS = 1_000;
 
 let stopSwallowing: (() => void) | null = null;

@@ -25,11 +25,8 @@ interface TooltipChildProps {
   "aria-label"?: string;
 }
 
-/**
- * A control whose `aria-label` attribute is the tooltip's label already has the name the tooltip shows, so describing
- * it by the tooltip as well would read the same words twice. The tooltip describes a control with any other name as
- * that name might not include the label.
- */
+// Controls whose `aria-label` already matches the tooltip label omit `aria-describedby` so screen readers do not
+// announce the same text twice.
 const isNamedByLabel = (props: TooltipChildProps, label: string) => props["aria-label"] === label;
 
 export function Tooltip({

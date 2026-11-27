@@ -67,7 +67,7 @@ function renderList(openSlug: string | null) {
   return screen.getAllByRole("link");
 }
 
-/** The part of `Window` the list registers with, repeated here so the suite does not render the window's chrome. */
+// Minimal `Window` context the list registers with, avoiding rendering full window chrome.
 function renderListInWindow(openSlug: string | null) {
   showEntryInWindow(openSlug);
 

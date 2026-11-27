@@ -31,7 +31,7 @@ const COLLECTION_ENTRY_ROUTE = COLLECTION.routeOf(COLLECTION_ENTRY.slug);
 
 const openWindows = () => [...document.querySelectorAll("main > section")];
 
-/** Only the focused window renders its title bar controls. */
+// Only the focused window renders its title bar controls.
 const isFocused = (window: HTMLElement) => within(window).queryByRole("button", { name: "Close" }) !== null;
 
 test("a collection entry route opens a window titled by its frontmatter, containing its compiled MDX body", async () => {

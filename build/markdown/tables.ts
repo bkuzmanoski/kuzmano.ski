@@ -18,16 +18,13 @@ const isTableSectionName = isOneOf(TABLE_SECTION_NAMES);
 
 interface AuthoredTable {
   caption: Array<ContentNode>;
-  /** The `<td>` and `<th>` elements of each row. */
+  /** `<td>` and `<th>` elements of each row. */
   rows: Array<Array<ContentNode>>;
 }
 
 const TABLE_CELL_NAMES = new Set(["td", "th"]);
 
-/**
- * MDX parses an element authored on one line as phrasing inside a paragraph, so this function finds the rows and cells
- * of a table through the paragraphs between them.
- */
+// MDX parses single-line elements as phrasing inside a paragraph, so descend through paragraphs to find table cells.
 function cellsIn(row: ContentNode): Array<ContentNode> {
   return (row.children ?? []).flatMap((child) => {
     if (child.type === "paragraph") {

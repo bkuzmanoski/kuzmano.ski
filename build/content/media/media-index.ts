@@ -40,7 +40,7 @@ export interface MediaIndex {
   problems: () => Array<string>;
 }
 
-/** Index data contributed by a media file or video-poster pair. */
+// Index data contributed by a media file or video-poster pair.
 interface BodyMediaResolution {
   /** A reference names the media by its file name. */
   mediaByFileName: Array<[fileName: string, media: ContentMedia]>;

@@ -20,10 +20,8 @@ const startFetch = createStartHandler(defaultStreamHandler);
 const fetchAssetAt = (assets: AssetsBinding, request: Request, path: string) =>
   assets.fetch(new Request(new URL(path, request.url), request));
 
-/**
- * Treats `304 Not Modified` as a file response rather than a miss. Otherwise, a conditional request for Markdown could
- * receive the rendered document instead of confirming its cached Markdown file.
- */
+// Treats `304 Not Modified` as a file hit so conditional Markdown requests confirm their cached file instead of falling
+// through to the rendered HTML document.
 const isFileResponse = (file: Response) => file.ok || file.status === 304;
 
 function asMarkdownResponse(file: Response, path: string): Response {
@@ -44,7 +42,7 @@ function asMarkdownResponse(file: Response, path: string): Response {
   return new Response(file.body, { status: file.status, headers });
 }
 
-/** Adds `Vary: Accept` so shared caches distinguish response representations. */
+// Appends `Vary: Accept` so shared caches key responses by content negotiation.
 function varyingOnAccept(response: Response): Response {
   const responseVaryingOnAccept = new Response(response.body, response);
 

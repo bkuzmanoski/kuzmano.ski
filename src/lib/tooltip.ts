@@ -1,10 +1,7 @@
 export const HIDE_DELAY_MS = 100;
 export const GRACE_PERIOD_MS = 600;
 
-/**
- * How long a control displays transient state through its tooltip. The control owns the timing, as only it knows what
- * the state is; the value is shared so that they all display it for the same length of time.
- */
+/** Shared duration for controls to display transient state (e.g., copy confirmation) in their tooltip. */
 export const STATE_DISPLAY_DURATION_MS = 1_200;
 
 let groupInGracePeriod: Element | null = null;

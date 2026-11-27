@@ -145,5 +145,5 @@ export function watchStoredSettings(): () => void {
 
 export const useSettings = useValue;
 
-/** The current settings, outside React. Use `useSettings` in a component. */
+/** Returns the current settings outside React. Use `useSettings` in components. */
 export const getSettings = getValue;

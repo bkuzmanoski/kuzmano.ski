@@ -8,10 +8,8 @@ import type { WindowId, WindowLayout } from "./window.ts";
 const fitToSurface = (defaultLength: number, surfaceLength: number, padding: number): number =>
   Math.max(0, Math.min(defaultLength, surfaceLength - 2 * padding));
 
-/**
- * Floors each half separately, as `.unplaced` in `/src/features/window-manager/window.module.css` does, so both place a
- * window on the same whole pixel, and a window fitted to the surface exactly at the padding.
- */
+// Floors each half separately to match `.unplaced` in `/src/features/window-manager/window.module.css`, keeping window
+// placement pixel-aligned.
 const centeredOffset = (surfaceLength: number, windowLength: number): number =>
   Math.floor(surfaceLength / 2) - Math.floor(windowLength / 2);
 

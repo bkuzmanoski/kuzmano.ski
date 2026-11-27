@@ -9,9 +9,6 @@ function getQuery() {
   return reducedMotionQuery;
 }
 
-/**
- * Calls `onChange` when the user changes their reduced motion preference. Returns a function that stops listening.
- */
 const subscribeToPrefersReducedMotion = (onChange: () => void): (() => void) => {
   const query = getQuery();
 

@@ -13,10 +13,7 @@ export interface Entry extends Frontmatter {
   slug: string;
 }
 
-/**
- * The classes an entry's stylesheet (`<slug>.module.css`) can define: `entry` on the entry's `<article>`, and `title`
- * on its `<h1>`.
- */
+/** CSS classes an entry's stylesheet (`<slug>.module.css`) can define: `entry` on `<article>` and `title` on `<h1>`. */
 export interface EntryStylesheetClassNames {
   entry?: string;
   title?: string;
@@ -29,8 +26,8 @@ export interface MDXModule {
 }
 
 /**
- * The client chunks and stylesheets loaded by an entry: its body chunk, the chunk of its stylesheet, and the chunks
- * those import, other than the chunks the document loads for every page.
+ * Client chunks and stylesheets specific to an entry (its body chunk, stylesheet chunk, and their transitive imports,
+ * excluding chunks loaded for every page).
  */
 export interface EntryBodyChunks {
   moduleUrls: Array<string>;
@@ -44,7 +41,7 @@ export interface ContentIndex {
   frontmatterOf: (slug: string) => Frontmatter | null;
   /** For a document to load the body and its stylesheets before hydration. */
   bodyChunksOf: (slug: string) => EntryBodyChunks | null;
-  /** The compiled body, in a chunk of its own. */
+  /** Loads the entry's compiled body chunk. */
   load: (slug: string) => Promise<MDXModule>;
 }
 
@@ -64,7 +61,7 @@ interface CollectionMetadata {
 }
 
 export interface ContentSource {
-  /** The directory the content glob read from, without a trailing slash. */
+  /** Content glob root directory, without a trailing slash. */
   rootDirectoryPath: string;
   frontmatterModules: Record<string, { default: unknown }>;
   entryIconUrls: Record<EntryKey, string | undefined>;

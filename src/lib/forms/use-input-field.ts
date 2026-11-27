@@ -7,7 +7,6 @@ export interface InputFieldControl {
   "aria-describedby"?: string;
 }
 
-/** The IDs and error state shared by a field and its control. */
 export interface InputFieldBinding {
   control: InputFieldControl;
   errorId: string;

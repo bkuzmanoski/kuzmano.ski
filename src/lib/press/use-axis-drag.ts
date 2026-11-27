@@ -6,7 +6,6 @@ import { useTrailingClick } from "./use-trailing-click.ts";
 import type { DragDelta, DragEnd } from "./use-pointer-drag.ts";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
-/** The axis along which a drag reads the pointer's travel. */
 export type DragAxis = "x" | "y";
 
 interface AxisPress<T> {
@@ -18,7 +17,7 @@ interface AxisPress<T> {
 
 const NO_TRAVEL: DragDelta = { dx: 0, dy: 0 };
 
-/** Whether travel along `axis` exceeds the drag threshold and cross-axis travel. */
+// Returns whether travel along `axis` exceeds both the drag threshold and cross-axis travel.
 function isTravelAlong(axis: DragAxis, { dx, dy }: DragDelta) {
   const travelAlongPx = Math.abs(axis === "x" ? dx : dy);
   const travelAcrossPx = Math.abs(axis === "x" ? dy : dx);

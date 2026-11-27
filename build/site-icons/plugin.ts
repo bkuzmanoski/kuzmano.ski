@@ -19,7 +19,6 @@ const SITE_ASSET_FILE_NAMES = [
   WEB_APP_MANIFEST_FILE_NAME,
 ];
 
-/** The files the plugin generates every icon and the web app manifest from. */
 const INPUT_FILE_ABSOLUTE_PATHS = [fromRoot(ICON_ARTWORK_FILE_PATH), fromRoot(STYLESHEET_FILE_PATH)];
 
 interface GeneratedFile {

@@ -20,28 +20,24 @@ import { logServerEvent } from "./log.ts";
 
 const STORED_STATUS_HEADER = "x-stored-status";
 
-/** Milliseconds since the epoch. */
-const STORED_AT_HEADER = "x-stored-at";
+const STORED_AT_HEADER = "x-stored-at"; // Milliseconds since the epoch.
 
 export interface EdgeCacheLifetimes {
   successfulResponseSeconds: number;
   failedResponseSeconds: number;
 }
 
-/** The data center's cache, or `null` outside Workers (i.e. `vite dev`). */
+// Returns the Cloudflare edge cache, or `null` outside Workers (e.g., `vite dev`).
 const dataCenterCache = (): Cache | null =>
   (globalThis.caches as (CacheStorage & { default?: Cache }) | undefined)?.default ?? null;
 
-/**
- * The key the edge cache stores a route under, which is the request's origin and path alone, so a query string or a
- * header does not create a second entry.
- */
+// Normalizes the cache key to origin and path alone so query strings and headers share one entry.
 const cacheKeyFor = (request: Request) => {
   const { origin, pathname } = new URL(request.url);
   return new Request(`${origin}${pathname}`);
 };
 
-/** A copy of `response` to store, expiring after the lifetime for its outcome. */
+// Builds a cacheable copy of `response` expiring after the lifetime for its outcome.
 function storedCopyOf(
   response: Response,
   { successfulResponseSeconds, failedResponseSeconds }: EdgeCacheLifetimes,
@@ -62,11 +58,8 @@ function storedCopyOf(
   return storedCopy;
 }
 
-/**
- * A copy of a stored `response` for the client, without the headers only the data center's copy uses. A success has a
- * `max-age` of the seconds its stored copy has left. The copy of a failure restores its own status code and sets
- * `no-store`, as its `s-maxage` applies to the data center's cache alone.
- */
+// Builds a client copy of a cached `response` without internal cache headers: successes get the remaining `max-age`;
+// failures restore their original status and set `no-store` (so `s-maxage` stays edge-only).
 function clientCopyOf(response: Response, { successfulResponseSeconds }: EdgeCacheLifetimes): Response {
   const storedStatus = response.headers.get(STORED_STATUS_HEADER);
   const storedAtMs = Number(response.headers.get(STORED_AT_HEADER));
@@ -94,7 +87,7 @@ const reportFailedStore = (key: Request) => (error: unknown) => {
   logServerEvent("edge_cache_store_failed", { url: key.url, message: errorMessageOf(error) });
 };
 
-/** The response stored under `key`, or `undefined` when there is none or reading the cache fails. */
+// Returns the cached response for `key`, or `undefined` on a miss or cache read failure.
 async function storedResponseAt(cache: Cache, key: Request): Promise<Response | undefined> {
   try {
     return await cache.match(key);

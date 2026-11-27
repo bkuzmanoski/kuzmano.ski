@@ -17,8 +17,7 @@ export interface IconFile {
   contents: Buffer | string;
 }
 
-/** Fraction of each icon's width occupied by the monogram. */
-const MONOGRAM_FILLS = { favicon: 0.9, appIcon: 0.8, maskable: 0.6 };
+const MONOGRAM_FILLS = { favicon: 0.9, appIcon: 0.8, maskable: 0.6 }; // Fraction of icon width filled by the monogram.
 
 const SVG_MEDIA_TYPE = "image/svg+xml";
 const ICO_MEDIA_TYPE = "image/x-icon";
@@ -63,12 +62,9 @@ const faviconSvg = (artwork: Artwork, palette: Palette) =>
   />
 </svg>`;
 
-/**
- * Rasterizes `markup` at high density so Sharp downsamples the SVG instead of upscaling its 96 DPI output.
- *
- * Indexed PNGs reduce the size of standalone flat-color icons. ICO frames use full color because `sharp-ico` cannot
- * read indexed PNGs, and palette/transparency metadata outweighs the savings at 48px and below.
- */
+// Rasterizes at 512 DPI so Sharp downsamples instead of upscaling 96 DPI output. Indexed PNGs shrink standalone
+// flat-color icons; ICO frames stay full color because `sharp-ico` rejects indexed PNGs and palette metadata outweighs
+// savings at 48px and below.
 const rasterize = (markup: string, size: number, { indexed }: { indexed: boolean }) =>
   sharp(Buffer.from(markup), { density: 512 })
     .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })

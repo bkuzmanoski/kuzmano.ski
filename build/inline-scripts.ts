@@ -11,18 +11,16 @@ if (ROLLDOWN_VERSION !== VITE_ROLLDOWN_VERSION) {
   );
 }
 
-/** These scripts block the first paint, so they must stay small. */
-const MAX_INLINE_SCRIPT_BYTES = 1280;
+const MAX_INLINE_SCRIPT_BYTES = 1280; // Inline scripts block first paint, so keep them small.
 
-/** Rolldown prefixes generated module IDs, such as its runtime, with a NUL byte instead of a filesystem path. */
-const VIRTUAL_MODULE_PREFIX = "\0";
+const VIRTUAL_MODULE_PREFIX = "\0"; // Rolldown prefixes generated module IDs with a NUL byte.
 
 const INLINE_SCRIPT_QUERY = "inline-script";
 const INLINE_SCRIPT_PREFIX = `${VIRTUAL_MODULE_PREFIX}${INLINE_SCRIPT_QUERY}:`;
 
 const ENV_KEY_IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
-/** Defines the environment for Rolldown, which does not replace `import.meta.env`. */
+// Defines `import.meta.env` values for Rolldown, which does not replace them automatically.
 const environmentDefinitionsFrom = (env: ResolvedConfig["env"]) => ({
   "import.meta.env": JSON.stringify(env),
   ...Object.fromEntries(

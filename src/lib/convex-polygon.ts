@@ -3,14 +3,14 @@ import type { Position } from "./geometry.ts";
 /** A convex polygon, as its vertices in clockwise order where y increases downward, without collinear vertices. */
 export type ConvexPolygon = ReadonlyArray<Position>;
 
-/** The inside of one edge of a convex polygon, the points `p` at which `normal · p` is at most `offsetPx`. */
+/** Half-plane bounded by one polygon edge: points `p` where `normal · p <= offsetPx`. */
 export interface HalfPlane {
-  /** The edge's outward unit normal. */
+  /** Outward unit normal of the edge. */
   normal: Position;
   offsetPx: number;
 }
 
-/** The z component of the cross product of `a - origin` and `b - origin`, positive where `b` is clockwise from `a`. */
+// Returns the z component of `(a - origin) × (b - origin)`, positive when `b` is clockwise from `a`.
 const crossProductOf = (origin: Position, a: Position, b: Position) =>
   (a.x - origin.x) * (b.y - origin.y) - (a.y - origin.y) * (b.x - origin.x);
 
@@ -56,16 +56,16 @@ export function halfPlanesOf(polygon: ConvexPolygon): ReadonlyArray<HalfPlane> {
 }
 
 /**
- * Returns how far `point` lies inside the polygon in which `halfPlanes` intersect, measured to its nearest edge, and
- * negative outside it.
+ * Returns the signed distance from `point` to the nearest edge of the polygon formed by `halfPlanes` (positive inside,
+ * negative outside).
  */
 export const depthOf = (halfPlanes: ReadonlyArray<HalfPlane>, point: Position) =>
   Math.min(...halfPlanes.map(({ normal, offsetPx }) => offsetPx - normal.x * point.x - normal.y * point.y));
 
 /**
  * Returns the distance from `start`, along the unit vector `direction`, to the first point more than `marginPx` inside
- * the polygon in which `halfPlanes` intersect. Returns `Infinity` if the path never reaches that depth, or `null` if it
- * reached that depth more than `marginPx` before `start`.
+ * the polygon formed by `halfPlanes`. Returns `Infinity` if the path never reaches that depth, or `null` if it reached
+ * that depth more than `marginPx` before `start`.
  *
  * Returns `0` when `start` is less than `marginPx` past the entry point. This lets a point positioned at a previous
  * entry point re-enter at `0`, despite floating-point imprecision. Likewise, a path parallel to an edge and less than

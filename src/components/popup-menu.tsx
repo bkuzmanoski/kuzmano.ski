@@ -15,8 +15,7 @@ import styles from "./popup-menu.module.css";
 
 import type { KeyboardEvent } from "react";
 
-/** Enter and Space open the options through the button's `click`. */
-const OPEN_OPTIONS_KEYS = new Set(["ArrowDown", "ArrowUp"]);
+const OPEN_OPTIONS_KEYS = new Set(["ArrowDown", "ArrowUp"]); // Enter and Space open via the button's `click`.
 
 export interface PopupMenuOption<TValue extends string> {
   value: TValue;

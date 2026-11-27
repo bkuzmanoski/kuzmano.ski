@@ -23,9 +23,7 @@ const EXPECTED_CHILDREN = "Expected one or more images, authored in Markdown or 
 const isImage = (node: ContentNode) =>
   (node.type === "element" || isJsxElement(node)) && IMAGE_ELEMENT_NAMES.has(elementNameOf(node) ?? "");
 
-/**
- * Does not look inside paragraphs, as `rehypeInlineContent` removes the paragraphs around images authored in Markdown.
- */
+// Does not descend into paragraphs; `rehypeInlineContent` already unwraps paragraphs around Markdown images.
 const imageChildrenIn = (nodes: Array<ContentNode>) => nodes.filter((node) => !isWhitespaceOrComment(node));
 
 function describedChild(node: ContentNode): string {

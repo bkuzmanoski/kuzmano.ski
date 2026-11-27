@@ -1,4 +1,4 @@
-/** The URL of each entry icon. */
+/** URL of each entry icon. */
 declare module "virtual:entry-icon-urls" {
   import type { EntryKey } from "#/lib/content/entry-file.ts";
 

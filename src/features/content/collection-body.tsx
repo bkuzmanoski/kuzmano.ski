@@ -42,10 +42,8 @@ function categoryColumnLabelsOf(collection: Collection): Array<string> {
   ];
 }
 
-/**
- * Renders a category label alongside invisible alternatives so every category cell and heading matches the width of the
- * longest label without JavaScript measurement.
- */
+// Renders the category label alongside invisible alternatives so every cell and heading matches the widest label
+// without JS measurement.
 function CategoryColumnCell({
   label,
   columnLabels,

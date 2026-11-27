@@ -24,10 +24,8 @@ export interface Tone {
 
 const toneSeconds = (tone: Tone) => tone.notes.reduce((total, note) => total + note.seconds, 0);
 
-/**
- * The note playing at `seconds`, with the time elapsed within it. The last note absorbs any rounding past the end of
- * the run so the final samples still have a pitch to render.
- */
+// Returns the note active at `seconds` and the time elapsed within it. Clamps to the last note so floating-point
+// rounding past the end still renders a pitch.
 function noteAt(tone: Tone, seconds: number): { note: Note; elapsed: number } {
   let start = 0;
 

@@ -37,10 +37,7 @@ export interface ListedEntry {
 
 const isHiddenDirectoryItem = (name: string) => name.startsWith(".");
 
-/**
- * Returns the names of the visible items of `type`, sorted, since the order `readdir` returns depends on the
- * filesystem.
- */
+// Returns visible item names of `type`, sorted so order does not depend on `readdir`.
 const namesIn = (items: Array<DirectoryItem>, type: DirectoryItem["type"]) =>
   items
     .filter((item) => item.type === type && !isHiddenDirectoryItem(item.name))

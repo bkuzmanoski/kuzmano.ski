@@ -39,7 +39,7 @@ const svgBytes = (rootAttributes: string, content: string) =>
   Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" ${rootAttributes}>${content}</svg>`);
 const hashOf = (image: ResolvedMediaFile | UnreadableImage) => ("problem" in image ? null : image.hash);
 
-/** Inserts a `tEXt` chunk after a PNG's `IHDR` chunk. */
+// Inserts a `tEXt` chunk after a PNG's `IHDR` chunk.
 function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffer {
   const typeAndData = Buffer.from(`tEXt${keyword}\0${text}`, "latin1");
   const length = Buffer.alloc(4);
@@ -51,7 +51,7 @@ function withTextChunk(imageBytes: Buffer, keyword: string, text: string): Buffe
   return Buffer.concat([imageBytes.subarray(0, 33), length, typeAndData, checksum, imageBytes.subarray(33)]);
 }
 
-/** Moves a file's top-level `moov` box after the boxes that follow it, as an encoder without `+faststart` writes it. */
+// Moves the top-level `moov` box to the end, matching an encoder without `+faststart`.
 function withMovieBoxLast(bytes: Buffer): Buffer {
   const topLevelBoxes: Array<{ type: string; bytes: Buffer }> = [];
 

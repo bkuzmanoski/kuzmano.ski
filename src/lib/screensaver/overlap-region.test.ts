@@ -16,7 +16,7 @@ const BOX_OUTLINE: ConvexPolygon = [
   { x: BOX_BOUNDS.left, y: BOX_BOUNDS.bottom },
 ];
 
-/** The horizontal distance between two sprites with `BOX_OUTLINE` side by side, `CLEARANCE_PX` apart. */
+// Horizontal spacing between two side-by-side `BOX_OUTLINE` sprites, `CLEARANCE_PX` apart.
 const CONTACT_SPACING_PX = BOX_BOUNDS.right - BOX_BOUNDS.left + CLEARANCE_PX;
 
 const isInside = (halfPlanes: ReadonlyArray<HalfPlane>, offset: Position) => depthOf(halfPlanes, offset) > 0;

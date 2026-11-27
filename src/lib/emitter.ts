@@ -1,8 +1,7 @@
 /**
- * The listener half of a `useSyncExternalStore` store. State stays in the owning module as each store differs in how it
- * reads and derives it.
+ * Creates the listener half of a `useSyncExternalStore` store; state remains in the owning module.
  *
- * Use `client-store.ts` in components that run on the client.
+ * Use `client-store.ts` in client-only components.
  */
 export function createEmitter() {
   const listeners = new Set<() => void>();

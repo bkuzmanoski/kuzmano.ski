@@ -50,16 +50,14 @@ const WRAPPABLE_STRING_KEYS = new Set(["alt", "title"]);
 const HTML_TAG_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9-]*$/;
 const COLLAPSIBLE_WHITESPACE_PATTERN = /[ \t\r\n]+/g;
 
-/**
- * Prettier's own MDX support formats JSX with these undocumented options: an expression parser, and a root marker that
- * prints a `<$>` wrapper's children without it. The tests of formatted tags fail if a Prettier upgrade changes them.
- */
+// Undocumented Prettier options for formatting JSX (`rootMarker` unwraps the `<$>` wrapper); tag-formatting tests guard
+// against Prettier upgrades changing them.
 const JSX_FORMAT_OPTIONS = { parser: "__js_expression", rootMarker: "mdx" };
 
 const { hardline, indent, join } = doc.builders;
 const { languages } = await getSupportInfo();
 
-/** Captures root printing errors that Prettier otherwise discards between `embed` and `print`. */
+// Captures root printing errors that Prettier otherwise discards between `embed` and `print`.
 const printFailures = new WeakMap<ContentNode, unknown>();
 
 const parse = (text: string): ContentNode => entryParser.parse(text);
@@ -125,10 +123,8 @@ const isMarkdownBlock = (node: ContentNode): boolean =>
 
 const verbatim = (text: string): Doc => join(hardline, text.split("\n"));
 
-/**
- * Preserves authored line breaks between sibling nodes, allowing at most one blank line. A blank line is never added
- * because MDX treats consecutive paragraph lines as a single paragraph.
- */
+// Preserves authored line breaks between siblings (at most one blank line); never inserts a blank line since MDX joins
+// consecutive paragraph lines.
 function lineBreaksIn(gap: string): Doc {
   const lineBreakCount = gap.split("\n").length - 1;
 
@@ -139,10 +135,8 @@ function lineBreaksIn(gap: string): Doc {
   return lineBreakCount === 1 ? hardline : [hardline, hardline];
 }
 
-/**
- * Groups adjacent Markdown blocks so Prettier formats and separates them as it would in a Markdown file (e.g., adjacent
- * lists).
- */
+// Groups adjacent Markdown blocks so Prettier formats and separates them like a normal Markdown file (e.g., adjacent
+// lists).
 function groupsOf(children: Array<ContentNode>): Array<Array<ContentNode>> {
   const groups: Array<Array<ContentNode>> = [];
 
@@ -160,7 +154,7 @@ function groupsOf(children: Array<ContentNode>): Array<Array<ContentNode>> {
   return groups;
 }
 
-/** Formats an opening tag as JSX by wrapping it in an empty element. */
+// Formats an opening tag as JSX by wrapping it in an empty `<$>` element.
 async function printOpeningTag(openingTag: string, closingTag: string, context: PrintContext): Promise<Doc> {
   const { options, textToDoc, indentationWidth } = context;
   const element = await textToDoc(`<$>${openingTag}${closingTag}</$>`, JSX_FORMAT_OPTIONS);
@@ -172,10 +166,7 @@ async function printOpeningTag(openingTag: string, closingTag: string, context: 
   return verbatim(formatted.endsWith(closingTag) ? formatted.slice(0, -closingTag.length) : openingTag);
 }
 
-/**
- * Prints childless elements as JSX. For elements with children, prints the tags on their own lines around indented
- * children.
- */
+// Prints childless elements inline as JSX, and elements with children across lines around indented children.
 async function printElement(node: ContentNode, context: PrintContext): Promise<Doc> {
   const { originalText, textToDoc, options, indentationWidth } = context;
   const children = node.children ?? [];
@@ -243,7 +234,7 @@ async function printChildren(children: Array<ContentNode>, context: PrintContext
   return parts;
 }
 
-/** Determines whether Prettier formats a fenced code block for its language. */
+// Returns whether Prettier has a formatter for fenced code blocks in `lang`.
 const isFormattedLanguage = (lang: string): boolean =>
   languages.some(
     ({ name, aliases, extensions }) =>
@@ -253,11 +244,8 @@ const isFormattedLanguage = (lang: string): boolean =>
 const estreeWithoutLocations = (estree: unknown): unknown =>
   JSON.parse(JSON.stringify(estree, (key, value: unknown) => (ESTREE_LOCATION_KEYS.has(key) ? undefined : value)));
 
-/**
- * Retains only the fields formatting must preserve. Because formatting may rewrap text, whitespace collapses in text
- * and inline-code line breaks become spaces, matching Markdown rendering. Because Prettier may reformat JavaScript, the
- * comparison uses the estree of expressions and ESM.
- */
+// Extracts only formatting-invariant fields (collapsing whitespace in text/inline code, and comparing estree for
+// expressions and ESM).
 function comparable(node: ContentNode): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const estree = estreeOf(node);

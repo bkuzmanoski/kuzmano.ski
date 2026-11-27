@@ -11,7 +11,7 @@ export function useTimer() {
     }
   }
 
-  /** Starts the timer, replacing whatever was pending. */
+  /** Starts the timer, replacing any pending timeout. */
   function start(callback: () => void, delayMs: number) {
     cancel();
     timerRef.current = setTimeout(callback, delayMs);

@@ -28,17 +28,14 @@ import type { Plugin } from "vite";
 
 type ShikiTransformer = NonNullable<RehypeShikiOptions["transformers"]>[number];
 
-/** Removes Shiki's inline `<pre>` colors so the stylesheet can define them instead. */
+// Removes Shiki's inline `<pre>` colors so the stylesheet controls them.
 const PRE_STYLE_REMOVAL_TRANSFORMER: ShikiTransformer = {
   pre(node) {
     delete node.properties.style;
   },
 };
 
-/**
- * Preserves a code fence's meta string on Shiki's replacement `<code>` element so `rehypeCodeFenceAttributes` can read
- * it from both highlighted and unhighlighted blocks.
- */
+// Preserves a code fence's meta string on Shiki's `<code>` element so `rehypeCodeFenceAttributes` reads it uniformly.
 const META_STRING_PRESERVATION_TRANSFORMER: ShikiTransformer = {
   code(node) {
     const meta = this.options.meta?.__raw;
@@ -54,7 +51,6 @@ interface MDXOptions {
   mediaForEntry?: MediaForEntry;
 }
 
-/** The options an entry's MDX is compiled with for its document. */
 export function mdxCompileOptionsFor({
   syntaxHighlight = true,
   mediaForEntry = NO_MEDIA_FOR_ENTRY,

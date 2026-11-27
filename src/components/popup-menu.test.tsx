@@ -26,7 +26,6 @@ const OPTIONS = [
 ] as const;
 const PRESS_ORIGIN = { clientX: 10, clientY: 10 };
 
-/** Past the drag threshold from `PRESS_ORIGIN`. */
 const POINT_PAST_DRAG_THRESHOLD = { clientX: 100, clientY: 100 };
 
 const button = () => screen.getByRole("button", { name: /^A menu / });

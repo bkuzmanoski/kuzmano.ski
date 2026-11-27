@@ -1,7 +1,6 @@
-/** Eight bits, signed, across the full swing of the cone. */
-const DRIVER_QUANTIZATION_STEPS = 127;
+const DRIVER_QUANTIZATION_STEPS = 127; // Signed 8-bit full-scale amplitude.
 
-/** The sample rate used by the Macintosh 128K sound driver, in Hz. */
+/** Sample rate of the Macintosh 128K sound driver, in Hz. */
 export const DRIVER_SAMPLE_RATE = 22254.54;
 
 export const quantizeToDriver = (value: number) =>

@@ -1,4 +1,2 @@
-/**
- * The message of a thrown `Error`, or the thrown value as a string, without the `Error: ` prefix that `String` adds.
- */
+/** Returns an `Error`'s `message`, or `String(error)` for other thrown values (avoiding the `Error: ` prefix). */
 export const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));

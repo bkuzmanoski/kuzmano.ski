@@ -20,7 +20,7 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-/** The tooltip keys its grace period on the parent of a control's wrapper, so a group is two wrappers sharing one. */
+// Tooltips key their grace period on each wrapper's parent, so a group is two wrappers sharing a parent.
 function createGroup() {
   const group = document.createElement("div");
   const wrapper = () => group.appendChild(document.createElement("span"));

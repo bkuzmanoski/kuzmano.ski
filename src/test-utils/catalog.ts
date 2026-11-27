@@ -17,8 +17,8 @@ export const otherCollection = fakeCollection(fakeCollectionEntries("other-entry
 });
 
 /**
- * The return type is the type of the module this mock replaces, so an export added to the catalog fails to typecheck
- * here rather than arriving as `undefined` in the suites that mock it.
+ * Creates a type-checked mock of `#/site/catalog.ts`. Returning `typeof SiteCatalog` ensures newly added exports fail
+ * to typecheck here instead of arriving as `undefined` in tests.
  */
 export const siteCatalogMock = (overrides: Partial<typeof SiteCatalog> = {}): typeof SiteCatalog => ({
   pages: fakeContentIndex([fakeEntry("page", { title: "Page" })], PAGES_DIRECTORY_NAME),

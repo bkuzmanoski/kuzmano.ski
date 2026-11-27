@@ -114,7 +114,7 @@ function hoverTooltipUntilShown(wrapper: Element) {
   advanceTimersBy(HOVER_DELAY_MS);
 }
 
-/** The pointer event sequence iOS Safari dispatches for a tap, including its synthesized mouse event. */
+// Pointer event sequence iOS Safari dispatches for a tap, including the synthesized mouse event.
 function tap(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);
@@ -124,7 +124,7 @@ function tap(wrapper: Element) {
   fireEvent.click(wrapper);
 }
 
-/** A tap whose synthesized mouse event arrives after the touch sequence rather than within it. */
+// Tap whose synthesized mouse event arrives after the touch sequence rather than during it.
 function tapWithLateMouseEvent(wrapper: Element) {
   fireEvent.pointerEnter(wrapper, TOUCH);
   fireEvent.pointerDown(wrapper, TOUCH);

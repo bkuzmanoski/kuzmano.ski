@@ -31,7 +31,7 @@ export function entryKeyOf(moduleId: string | null | undefined): EntryKey | null
   return entryKey(directoryName, entrySlugOf(fileName));
 }
 
-/** The entry key of every `.mdx` file in the content tree, in listing order. */
+/** Returns the entry key of every `.mdx` file in `listing`, in listing order. */
 export const entryKeysIn = (listing: ContentListing): Array<EntryKey> =>
   listing.flatMap((directoryListing) => listedEntriesIn(directoryListing).map(({ key }) => key));
 
@@ -58,7 +58,7 @@ export function entryChunkDriftBetween(
   ];
 }
 
-/** The fields of a client chunk `entryBodyChunksIn` reads. */
+/** Client chunk fields read by `entryBodyChunksIn`. */
 export type BundledChunk = Pick<Rollup.OutputChunk, "fileName" | "facadeModuleId" | "isEntry" | "imports"> & {
   viteMetadata?: { importedCss: Set<string> };
 };

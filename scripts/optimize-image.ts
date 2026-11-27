@@ -38,7 +38,7 @@ interface Arguments extends OptimizationOptions {
 interface ImageOptimization {
   imageFilePath: string;
   format: ImageFormat;
-  /** The Exif orientation, where 1 is upright. */
+  /** Exif orientation, where 1 is upright. */
   orientation: number;
 }
 

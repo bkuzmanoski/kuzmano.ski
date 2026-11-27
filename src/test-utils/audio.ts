@@ -55,8 +55,7 @@ export class FakeAudioContext {
   suspendCount = 0;
 
   /**
-   * What the next `resume()` returns. Set it to a rejected promise, or to one that never settles, to stand in for a
-   * gesture the browser declined to honor.
+   * Promise returned by the next `resume()` call; set to a rejected or unsettled promise to simulate a blocked gesture.
    */
   resumeResult: Promise<void> = Promise.resolve();
 

@@ -30,10 +30,8 @@ const sourceElements = ({ alternates }: ContentImage): Array<ContentNode> =>
     children: [],
   }));
 
-/**
- * Returns renderable media references in document order. Unresolved or incompatible references remain unchanged. Trees
- * without a path have no renderable references.
- */
+// Returns renderable media references in document order; unresolved or incompatible references stay untouched, and
+// trees without a path yield none.
 async function renderableReferencesIn(
   tree: ContentParent,
   file: EntryVFile,
@@ -53,10 +51,7 @@ async function renderableReferencesIn(
   });
 }
 
-/**
- * Sets an authored element's `width` and `height` attributes to its media's intrinsic dimensions, so the element
- * reserves its box before the file loads.
- */
+// Sets intrinsic `width` and `height` on unsized authored elements so they reserve layout space before loading.
 function setIntrinsicDimensionsUnlessSized(node: ContentNode, { width, height }: SizedMedia) {
   const isSized = hasAttribute(node, "width") || hasAttribute(node, "height") || hasSpreadAttribute(node);
 
@@ -65,12 +60,9 @@ function setIntrinsicDimensionsUnlessSized(node: ContentNode, { width, height }:
   }
 }
 
-/**
- * Removes the `data-content-*` attributes from an authored `<img>` and returns them as properties for the `<picture>`
- * that wraps it. The content styles lay out the entry's direct children by these attributes, and the `<picture>` is the
- * direct child once it wraps the image. An attribute with an expression as its value stays on the `<img>`, since a hast
- * property cannot contain an expression.
- */
+// Moves static `data-content-*` attributes from an authored `<img>` onto its wrapping `<picture>`, since content layout
+// styles target direct children. Expression attributes stay on `<img>` because hast properties cannot contain
+// expressions.
 function extractLayoutAttributes(image: ContentNode): Record<string, string> {
   const layoutProperties: Record<string, string> = {};
 

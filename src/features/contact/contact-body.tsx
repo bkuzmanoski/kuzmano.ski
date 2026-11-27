@@ -34,10 +34,8 @@ import styles from "./contact-body.module.css";
 
 export const SENDING_MESSAGE = "Sending message…";
 
-/**
- * The screen reader text around the character count is an English sentence, so this formats its numbers in the
- * document's language rather than the browser's locale.
- */
+// Formats character counts in the document language rather than the browser locale so they match the surrounding
+// English screen reader text.
 const SCREEN_READER_NUMBER_FORMAT = new Intl.NumberFormat(DOCUMENT_LANGUAGE);
 
 export function ContactBody() {

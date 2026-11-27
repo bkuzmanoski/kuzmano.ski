@@ -1,4 +1,4 @@
-/** The state React reads from a promise passed to `use()`. */
+/** Promise with the state fields React reads when passed to `use()`. */
 export type TrackedPromise<T> = Promise<T> & {
   status?: "pending" | "fulfilled" | "rejected";
   value?: T;

@@ -17,14 +17,13 @@ export const IMAGE_MEDIA_TYPES = {
 const VIDEO_MEDIA_TYPES = { ".mp4": "video/mp4" } as const;
 const MEDIA_TYPES: Record<string, string | undefined> = { ...IMAGE_MEDIA_TYPES, ...VIDEO_MEDIA_TYPES };
 
-/** The build generates derivatives only for these image formats; the site serves all others as authored. */
+// Only these image formats get generated derivatives; all others are served as authored.
 const ENCODABLE_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
 
-/** Open Graph crawlers can render these formats when the site serves cover images as authored `og:image` assets. */
+// Open Graph crawlers support these formats for authored `og:image` cover images.
 const COVER_IMAGE_EXTENSIONS: Array<string> = [".jpeg", ".jpg", ".png"];
 
-/** A collection list renders an entry icon as a mask from its alpha channel. */
-const ENTRY_ICON_EXTENSIONS: Array<string> = [".svg"];
+const ENTRY_ICON_EXTENSIONS: Array<string> = [".svg"]; // Collection lists render entry icons as alpha masks.
 
 const FILE_EXTENSION = /\.[^./]*$/;
 

@@ -17,10 +17,7 @@ const SEQUENCE_TYPES = new Set(["atxHeadingSequence", "setextHeadingLine"]);
 const HTML_TYPES = new Set(["htmlFlow", "htmlText"]);
 const HTML_HEADING_TAG_PATTERN = /<h([1-6])(?=[\s/>])/gi;
 
-/**
- * Matches markdownlint's reading of a heading token, in which setext `===` is level 1, setext `---` is level 2, and ATX
- * `###` is level 3.
- */
+// Matches markdownlint's heading levels (setext `===` is 1, setext `---` is 2, ATX `###` is 3).
 function levelOf(heading: Token): number {
   const sequenceToken = heading.children.find((child) => SEQUENCE_TYPES.has(child.type));
 
@@ -42,10 +39,8 @@ function* elementHeadingsIn(htmlToken: Token): Generator<Heading> {
   }
 }
 
-/**
- * Walks the token tree rather than the raw lines so that a `#` or a `<h4>` inside a fenced or indented block, or in
- * inline code, is not mistaken for a heading. Headings nest inside block quotes and list items.
- */
+// Walks the token tree instead of raw lines so `#` or `<h4>` inside code blocks or inline code are ignored; headings
+// can still nest inside block quotes and list items.
 function* headingsIn(tokens: Array<Token>): Generator<Heading> {
   for (const token of tokens) {
     if (HEADING_TYPES.has(token.type)) {

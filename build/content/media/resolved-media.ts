@@ -38,7 +38,7 @@ export interface ResolvedEntryIcon extends ResolvedMediaFile {
 export interface Mp4Metadata {
   /** Four-character format of each track, such as `avc1` for H.264. */
   sampleFormats: Array<string>;
-  /** The display dimensions of the first track that declares any. */
+  /** Display dimensions of the first track that declares them. */
   dimensions: Dimensions | null;
   /** Whether `moov` precedes `mdat`, allowing playback before the full file downloads. */
   movieBoxPrecedesMediaData: boolean;
@@ -109,10 +109,8 @@ const unreadableImageAt = (path: string, reason: string): UnreadableImage => ({
   problem: `${quotedContentPath(path)} could not be read as an image: ${reason}`,
 });
 
-/**
- * Returns an `UnreadableImage` instead of throwing when sharp cannot decode the bytes, so the build reports a corrupt
- * or partially saved file alongside other problems rather than in place of them.
- */
+// Returns `UnreadableImage` instead of throwing on decode errors so corrupt or partially saved files are reported
+// alongside other problems.
 async function readImage(path: string): Promise<ResolvedImage | UnreadableImage> {
   const { resolvedMediaFile, contents } = await readMediaFile(path);
 
@@ -135,10 +133,8 @@ async function readImage(path: string): Promise<ResolvedImage | UnreadableImage>
 const SVG_ROOT_START_TAG = /<svg\b[^>]*>/;
 const VIEW_BOX_ATTRIBUTE = /\sviewBox\s*=/;
 
-/**
- * Returns an `UnreadableImage` instead of throwing when sharp cannot rasterize the SVG, so the build reports a corrupt
- * or partially saved file alongside other problems rather than in place of them.
- */
+// Returns `UnreadableImage` instead of throwing on SVG rasterization errors so corrupt or partially saved files are
+// reported alongside other problems.
 async function readEntryIcon(path: string): Promise<ResolvedEntryIcon | UnreadableImage> {
   const { resolvedMediaFile, contents } = await readMediaFile(path);
   const rootStartTag = SVG_ROOT_START_TAG.exec(contents.toString("utf8"))?.[0] ?? "";

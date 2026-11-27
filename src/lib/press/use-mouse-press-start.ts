@@ -17,7 +17,7 @@ import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent }
 export function useMousePressStart() {
   const isMouseDownExpectedRef = useRef(false);
   return {
-    /** Returns whether `event` belongs to a mouse press, whose `mousedown` the browser dispatches next. */
+    /** Records `event` and returns whether it started a mouse press (which precedes a `mousedown` event). */
     recordPointerDown: (event: ReactPointerEvent | PointerEvent) => {
       isMouseDownExpectedRef.current = event.pointerType === "mouse";
       return isMouseDownExpectedRef.current;

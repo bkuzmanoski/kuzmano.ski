@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 
 export const runCommand = promisify(execFile);
 
-/** Formulae named differently from the command they install. */
+// Homebrew formulae whose names differ from the command they install.
 const HOMEBREW_FORMULAE_BY_COMMAND: Record<string, string | undefined> = { jpegtran: "jpeg-turbo" };
 
 const isExecutable = (filePath: string) =>

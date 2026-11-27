@@ -2,13 +2,13 @@ import { transformBetween } from "../geometry.ts";
 
 import type { Inset, Position, Rect, Size, Transform } from "../geometry.ts";
 
-/** Metrics derived from the illustration, in its own coordinates. */
+// Illustration metrics in intrinsic coordinates.
 const ILLUSTRATION_RECT: Rect = { x: 0, y: 0, width: 1214, height: 1067 };
 const DISPLAY_RECT: Rect = { x: 330, y: 99, width: 554, height: 410 };
 const DISK_ACTIVITY_INDICATOR_RECT: Rect = { x: 890, y: 670, width: 6, height: 6 };
 const FOCUS_AREA_RECT: Rect = { x: 271, y: 52, width: 672, height: 504 };
 
-/** Metrics as fractions of the illustration's box. */
+// Metrics as fractions of the illustration's box.
 const DISPLAY_PLACEMENT: Rect = {
   x: DISPLAY_RECT.x / ILLUSTRATION_RECT.width,
   y: DISPLAY_RECT.y / ILLUSTRATION_RECT.height,
@@ -32,11 +32,11 @@ export const KEYBOARD_PARALLAX: { translate: Position; scale: Position } = {
   scale: { x: 1.07, y: 1.045 },
 };
 
-/** How much of each viewport axis a framed area is allowed to fill. */
+// Maximum fraction of each viewport axis a framed area may fill.
 const ZOOMED_OUT_EXTENT: Size = { width: 0.8, height: 0.8 };
 const ZOOMED_IN_EXTENT: Size = { width: 1.0, height: 1.0 };
 
-/** How far the parallax moves the keyboard's bottom edge below the illustration's box, as a fraction of its height. */
+// Fraction of the illustration's height by which parallax shifts the keyboard below the illustration's box.
 const KEYBOARD_PARALLAX_BOTTOM_OVERFLOW =
   KEYBOARD_PARALLAX.translate.y + (KEYBOARD_PARALLAX.scale.y - 1) * (1 - FOCAL_POINT.y);
 
@@ -49,14 +49,9 @@ function displayAreaOf(box: Rect): Rect {
   };
 }
 
-/**
- * Returns the illustration's viewport-relative box with `area` fitted within the per-axis limits in `scaleExtent`.
- * `bottomOverflow` is the fraction of the illustration's height that extends below its box when zoomed in.
- *
- * If height constrains the scale, `minimumTop` vertically centers `area` and is below `centeredTop`. If width
- * constrains it, `centeredTop` centers the illustration and its overflow, while `minimumTop` prevents `area` from
- * rising above the viewport's top margin.
- */
+// Returns the illustration's viewport-relative box with `area` fitted within `scaleExtent` (`bottomOverflow` is the
+// height fraction extending below the box when zoomed in). Height-constrained layouts center `area` via `minimumTop`;
+// width-constrained layouts center the full box plus overflow while `minimumTop` keeps `area` within the top margin.
 function framedOn(area: Rect, scaleExtent: Size, viewport: Size, bottomOverflow = 0): Rect {
   const scale = Math.min(
     (scaleExtent.width * viewport.width) / area.width,
@@ -80,21 +75,23 @@ const zoomedInBoxFor = (viewport: Size) =>
 
 export interface StageMetrics {
   viewport: Size;
-  /** The illustration's box, in viewport coordinates. */
+  /** Illustration bounds in viewport coordinates. */
   illustration: Rect;
-  /** The display cutout in the illustration, in viewport coordinates. */
+  /** Display cutout bounds in viewport coordinates. */
   display: Rect;
-  /** The illustration's rendered size over its own coordinates, which the screen inside the display scales with. */
+  /**
+   * Ratio of the illustration's rendered size to its intrinsic coordinate space, used to scale the screen inside it.
+   */
   scale: number;
   /** Takes the stage back out to the framing of the Macintosh reveal. */
   zoomOut: Transform;
 }
 
 /**
- * The stage's geometry for a viewport.
+ * Computes the stage's geometry for `viewport`.
  *
- * The illustration is placed at the framing the stage zooms in to, and the zoom out is the transform that takes the
- * illustration back to the framing it is initially revealed at.
+ * Places the illustration at its zoomed-in framing and returns `zoomOut` to transform it back to the initial reveal
+ * framing.
  */
 export function stageMetricsFor(viewport: Size): StageMetrics {
   const illustration = zoomedInBoxFor(viewport);

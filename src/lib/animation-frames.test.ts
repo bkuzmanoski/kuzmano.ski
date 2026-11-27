@@ -2,8 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { createFrameScheduler, loopAnimationFrames } from "./animation-frames.ts";
 
-/** Fake timers run animation frames on a 16ms interval. */
-const FRAME_MS = 16;
+const FRAME_MS = 16; // Fake timers run animation frames on a 16ms interval.
 
 beforeEach(() => vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] }));
 

@@ -39,11 +39,8 @@ export const headersRuleText = ({ description, pathPatterns, headers }: HeadersR
     ]),
   ].join("\n");
 
-/**
- * Checks that a path pattern uses only the `_headers` syntax `headersMatchingPathIn` matches: a path from the root,
- * where `*` matches any run of characters, including `/`. Throws, naming the pattern, for a `:name` placeholder or a
- * pattern that names a host, which Cloudflare supports and the dev server would not match.
- */
+// Ensures `pathPattern` is a root-relative path without `:name` placeholders (Cloudflare supports hosts and
+// placeholders, which the dev server's matcher does not).
 function assertMatchablePathPattern(pathPattern: string) {
   if (!pathPattern.startsWith("/") || pathPattern.includes(":")) {
     throw new Error(
@@ -97,9 +94,7 @@ export function headersMatchingPathIn(rules: Iterable<MatchableHeadersRule>, req
   return headers;
 }
 
-/**
- * Compares code units rather than using `localeCompare`, so the order does not depend on the build machine's locale.
- */
+// Compares by code units instead of `localeCompare` so output order is independent of the build machine's locale.
 const byCodeUnits = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
@@ -119,10 +114,7 @@ export function headersFileTextFrom(rules: Iterable<HeadersRule>): string {
   return `${sortedRuleTexts.join("\n\n")}\n`;
 }
 
-/**
- * A rule describes the file at its paths, so a response without that file, such as a `404` under `/media/`, does not
- * get the rule's headers, and a cache does not store it as `immutable`.
- */
+// Only apply file rules to served-file responses so `404`s under `/media/` are not cached as `immutable`.
 const isServedFileStatusCode = (statusCode: number) => (statusCode >= 200 && statusCode < 300) || statusCode === 304;
 
 /**

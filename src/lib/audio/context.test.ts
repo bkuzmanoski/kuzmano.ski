@@ -14,10 +14,10 @@ const setUserActivation = (hasBeenActive: boolean) =>
     configurable: true,
   });
 
-/** The module keeps its context for the session, so each test loads a fresh module instance. */
+// The module caches its audio context for the session, so each test imports a fresh instance.
 const loadContextModule = async () => await import("./context.ts");
 
-/** Lets the promise callbacks that a state change queued run, so a test can assert that a sound did not play. */
+// Flushes queued promise callbacks so tests can assert that a sound did not play.
 const settlePromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {

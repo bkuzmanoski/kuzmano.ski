@@ -6,7 +6,7 @@ import { generatedFilesPlugin } from "./generated-file-middleware.ts";
 
 import type { Plugin } from "vite";
 
-/** The Content Signals Policy, reproduced from https://contentsignals.org. */
+// Content Signals Policy, reproduced from https://contentsignals.org.
 const CONTENT_SIGNALS_POLICY = `# As a condition of accessing this website, you agree to
 # abide by the following content signals:
 

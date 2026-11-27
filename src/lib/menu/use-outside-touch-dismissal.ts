@@ -4,10 +4,10 @@ import { useEventListeners } from "../hooks/use-event-listeners.ts";
 import { useTimer } from "../hooks/use-timer.ts";
 
 /**
- * How long to watch for a scroll or zoom after an outside touch is canceled.
+ * Duration to watch for a scroll or zoom after an outside touch is canceled.
  *
- * Browsers do not dispatch `pointerup` after `pointercancel`, so this limit prevents an aborted gesture, such as a
- * canceled Android back swipe, from matching unrelated scrolls or resizes indefinitely.
+ * Browsers do not dispatch `pointerup` after `pointercancel`, so this window prevents an aborted gesture (e.g., a
+ * canceled Android back swipe) from matching unrelated scrolls or resizes indefinitely.
  */
 export const CANCELED_OUTSIDE_TOUCH_GRACE_PERIOD_MS = 300;
 

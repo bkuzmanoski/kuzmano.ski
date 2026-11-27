@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from "react";
 
-/** Adds the missing `CloseWatcher` declaration to the window type. */
+// Adds the missing `CloseWatcher` declaration to the window type.
 interface WindowWithCloseWatcher {
   CloseWatcher: new () => { onclose: (() => void) | null; destroy: () => void };
 }

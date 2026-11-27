@@ -2,10 +2,7 @@
 
 import type { Plugin, Rollup } from "vite";
 
-/**
- * Maps browserslist browsers to esbuild target names for `build.cssTarget`. Chrome and Firefox for Android have no
- * separate esbuild targets; their desktop counterparts set the lower bound.
- */
+// Maps browserslist names to esbuild `build.cssTarget` names (Android Chrome/Firefox fall back to desktop targets).
 const ESBUILD_BROWSER_NAMES: Readonly<Record<string, string>> = {
   chrome: "chrome",
   edge: "edge",
@@ -14,13 +11,11 @@ const ESBUILD_BROWSER_NAMES: Readonly<Record<string, string>> = {
   ios_saf: "ios",
 };
 
-/** Matches a custom property Lightning CSS declares when it lowers a feature (e.g., `--lightningcss-dark`). */
-const LIGHTNINGCSS_LOWERING_PROPERTY = /--lightningcss-[\w-]+/;
+const LIGHTNINGCSS_LOWERING_PROPERTY = /--lightningcss-[\w-]+/; // Custom property emitted when Lightning CSS lowers a feature.
 
-/** Matches a browserslist version esbuild can name, which excludes `TP` (Safari Technology Preview). */
-const NUMERIC_VERSION = /^\d+(\.\d+)?$/;
+const NUMERIC_VERSION = /^\d+(\.\d+)?$/; // Excludes non-numeric versions like `TP` (Safari Technology Preview).
 
-/** Orders two browserslist versions (e.g., `17.5` and `18`) by their numbers. */
+// Compares numeric browserslist versions (e.g., `17.5` vs `18`).
 function compareVersions(a: string, b: string): number {
   const [aMajor = 0, aMinor = 0] = a.split(".").map(Number);
   const [bMajor = 0, bMinor = 0] = b.split(".").map(Number);

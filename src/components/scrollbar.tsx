@@ -18,12 +18,12 @@ import styles from "./scrollbar.module.css";
 
 import type { ReactNode, PointerEvent as ReactPointerEvent, RefObject } from "react";
 
-/** The distance one press on a scrollbar arrow scrolls the viewport. */
+/** The viewport scroll distance for each scrollbar arrow press. */
 export const ARROW_STEP_PX = 40;
 
 export const ARROW_STEP_REPEAT_INTERVAL_MS = 70;
 
-/** How long a held scrollbar arrow waits before it repeats its step, so an ordinary press does not step twice. */
+/** Delay before a held scrollbar arrow starts repeating, preventing a single press from stepping twice. */
 export const ARROW_STEP_REPEAT_DELAY_MS = 400;
 
 function ScrollArrow({
@@ -33,7 +33,6 @@ function ScrollArrow({
 }: {
   direction: "up" | "down";
   hidden: boolean;
-  /** `isRepeat` is `true` for each step after the first while the user holds the arrow down. */
   onStep: (isRepeat: boolean) => void;
 }) {
   const [isPressed, setIsPressed] = useState(false);
@@ -105,7 +104,7 @@ function ScrollArrow({
   );
 }
 
-/** State of a track press; `jumpToPressedPoint` updates `top` and `isScrollSoundSilenced`. */
+// State of a track press; `jumpToPressedPoint` updates `top` and `isScrollSoundSilenced`.
 interface TrackPress {
   clientY: number;
   top: number;

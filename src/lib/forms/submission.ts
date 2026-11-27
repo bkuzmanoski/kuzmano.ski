@@ -13,10 +13,10 @@ export function trimmedStringField(value: unknown, limit: number): string | null
 }
 
 /**
- * The outcome of parsing a submitted body.
+ * Result of parsing a submitted form body.
  *
- * `TParsed` is the value produced by a valid submission. `TFields` names the fields whose validation can produce errors
- * and defaults to `TParsed`.
+ * `TParsed` is the validated value; `TFields` names the fields that can report validation errors (defaulting to
+ * `TParsed`).
  */
 export type ParsedSubmission<TParsed, TFields = TParsed> =
   | { ok: true; value: TParsed }

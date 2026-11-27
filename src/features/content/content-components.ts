@@ -1,6 +1,6 @@
 // Has no imports because `/vite.config.ts` loads this module through `/build`.
 
-/** What the build and the content tooling need to know about a component an entry can render. */
+/** Metadata used by the build and content tooling for components an entry can render. */
 export interface ContentComponent {
   /**
    * `"everywhere"` for a component in `MDX_COMPONENTS` (see `content-body.tsx`), which any entry can render without
@@ -13,9 +13,9 @@ export interface ContentComponent {
    */
   renders: "inline" | "block";
   /**
-   * What a block component that accepts only inline content accepts as its children. `"images"` means images alone,
-   * which `rehypeImageChildren` checks. The build removes the paragraphs around Markdown authored among the children. A
-   * component that renders inline content accepts only inline content without this field.
+   * Allowed child content for a block component that accepts only inline content (`"images"` restricts children to
+   * images, enforced by `rehypeImageChildren`). The build unwraps paragraphs around Markdown children; inline
+   * components implicitly allow only inline content.
    */
   childContent?: "inline" | "images";
   /**
@@ -24,12 +24,11 @@ export interface ContentComponent {
    * `/build/content/markup/rail-asides.ts`.
    */
   railRole?: "subject" | "aside";
-  /** The props that contain prose, which `markdownlint.typographic-quotes.ts` checks for typographic quotes. */
+  /** Props containing prose, checked for typographic quotes by `markdownlint.typographic-quotes.ts`. */
   proseAttributes?: ReadonlyArray<string>;
   /**
-   * How the Markdown representation renders the component: `"fallback"` by its entry in `COMPONENT_MARKDOWN` (see
-   * `/build/markdown/component-markdown.ts`), `"children"` by its children, and `"none"` for a component only the build
-   * emits, which an entry cannot render.
+   * Markdown rendering strategy: `"fallback"` uses `COMPONENT_MARKDOWN` (see `/build/markdown/component-markdown.ts`),
+   * `"children"` renders only its children, and `"none"` marks build-emitted components that entries cannot author.
    */
   markdown: "fallback" | "children" | "none";
 }
@@ -77,7 +76,7 @@ export const CONTENT_COMPONENTS = {
 
 export type ContentComponentName = keyof typeof CONTENT_COMPONENTS;
 
-/** The names of the components whose facts include `TFacts` (e.g., `{ markdown: "fallback" }`). */
+/** Component names whose metadata matches `TFacts` (e.g., `{ markdown: "fallback" }`). */
 export type ContentComponentNameWith<TFacts extends Partial<ContentComponent>> = {
   [TName in ContentComponentName]: (typeof CONTENT_COMPONENTS)[TName] extends TFacts ? TName : never;
 }[ContentComponentName];

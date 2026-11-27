@@ -11,7 +11,7 @@ interface FootnoteVFile extends EntryVFile {
 }
 
 interface FootnoteDefinition extends ContentNode {
-  /** The label as authored, rather than the normalized `identifier`. */
+  /** Authored label, rather than the normalized `identifier`. */
   label?: string | null;
   children: Array<ContentNode>;
 }
@@ -27,17 +27,11 @@ interface NumberedFootnote {
 }
 
 const BACK_LINK_TEXT = "↩︎";
-/**
- * A `[^label]` in an entry's source, with the run of backslashes before it, which escapes the bracket when its length
- * is odd.
- */
+// Matches `[^label]` and any preceding backslashes (an odd count escapes the bracket).
 const WRITTEN_REFERENCE_PATTERN = /(\\*)\[\^([^\]\s]+)\]/g;
 
-/**
- * Each run of characters other than ASCII letters, digits, hyphens, and underscores in a label becomes one hyphen, so
- * the fragment of a reference's `href` attribute matches the footnote's ID without percent-decoding. The transform
- * throws for two labels that become the same ID.
- */
+// Collapses runs of non-ASCII-identifier characters to `-` so reference `href` fragments match footnote IDs without
+// percent-decoding; collisions throw.
 const idOf = (identifier: string) => identifier.toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
 
 const footnoteIdOf = (identifier: string) => `fn-${idOf(identifier)}`;

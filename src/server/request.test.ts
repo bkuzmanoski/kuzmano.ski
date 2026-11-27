@@ -17,11 +17,7 @@ import {
 const ORIGIN = "https://example.com";
 const ENDPOINT_URL = `${ORIGIN}/api/endpoint`;
 
-/**
- * This character maximizes UTF-8 bytes within the form field limits, since it uses one UTF-16 code unit (the unit the
- * limits count) and three UTF-8 bytes (the unit the body guard counts). Four-byte characters use two UTF-16 code units,
- * so they produce fewer bytes per allowed code unit.
- */
+// Maximizes UTF-8 bytes per UTF-16 code unit (1 UTF-16 code unit -> 3 UTF-8 bytes; 4-byte chars use 2 UTF-16 units).
 const WIDEST_CHARACTER = "\u6f22";
 
 const post = (headers: HeadersInit = {}) => new Request(ENDPOINT_URL, { method: "POST", headers });

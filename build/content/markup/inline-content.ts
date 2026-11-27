@@ -5,7 +5,7 @@ import { elementNameOf, isJsxElement, isJsxFragment, quotedEntryPathOf, quotedNa
 
 import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 
-/** The HTML elements that are phrasing content (see https://html.spec.whatwg.org/#phrasing-content). */
+// HTML phrasing content elements (see https://html.spec.whatwg.org/#phrasing-content).
 const PHRASING_ELEMENT_NAMES = new Set([
   "a",
   "abbr",
@@ -63,10 +63,8 @@ const PHRASING_ELEMENT_NAMES = new Set([
   "wbr",
 ]);
 
-/**
- * The HTML elements whose content model is phrasing content, and `<a>`, `<del>`, and `<ins>`, whose transparent content
- * model inherits it inside them.
- */
+// HTML elements with a phrasing content model, plus `<a>`, `<del>`, and `<ins>`, whose transparent content model
+// inherits it.
 const INLINE_CONTEXT_ELEMENT_NAMES = new Set([
   "a",
   "abbr",
@@ -142,18 +140,13 @@ export function acceptsOnlyInlineContent(name: string | null, parentAcceptsOnlyI
 
 const describedContainer = (name: string) => (name === "p" ? "a paragraph" : quotedNameOf(name));
 
-/**
- * Whether a child of an element that accepts only inline content starts a line of its own in the source: a paragraph,
- * or an element MDX parsed as a block.
- */
+// Whether a child starts its own line in source (a paragraph or block JSX element).
 const isOwnLine = (node: ContentNode | undefined) => isParagraph(node) || node?.type === "mdxJsxFlowElement";
 
 const lineBreak = (): ContentNode => ({ type: "text", value: "\n" });
 
-/**
- * Replaces each paragraph with its children. Separates two children on lines of their own with a line break, as a
- * paragraph separates its lines, so the text of consecutive paragraphs does not run together.
- */
+// Unwraps paragraphs into their children, inserting a line break between consecutive own-line children so their text
+// does not run together.
 const childrenWithoutParagraphs = (children: Array<ContentNode>) =>
   children.flatMap((child, index) => [
     ...(index > 0 && isOwnLine(child) && isOwnLine(children[index - 1]) ? [lineBreak()] : []),

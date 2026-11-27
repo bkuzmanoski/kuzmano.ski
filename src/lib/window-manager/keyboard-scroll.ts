@@ -1,6 +1,5 @@
 import { isApplePlatform } from "../device.ts";
 
-/** The fields of a `keydown` event `keyboardScrollDelta` reads. */
 export interface ScrollKeyEvent {
   key: string;
   altKey: boolean;
@@ -12,10 +11,7 @@ export interface ScrollKeyEvent {
 const APPLE_OPTION_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "PageUp", ArrowDown: "PageDown" };
 const APPLE_COMMAND_ARROW_SCROLL_KEYS: Record<string, string> = { ArrowUp: "Home", ArrowDown: "End" };
 
-/**
- * Returns the scroll action represented by a key press, or `null` when modifiers prevent scrolling. On Apple platforms,
- * Option+Arrow keys page and Command+Arrow keys jump to an end.
- */
+// Maps a key press to its scroll action key, or `null` if modifiers block scrolling (Option/Command+Arrow on Apple).
 function scrollKeyOf(event: ScrollKeyEvent): string | null {
   if (!event.altKey && !event.ctrlKey && !event.metaKey) {
     return event.key;

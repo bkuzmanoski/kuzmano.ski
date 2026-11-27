@@ -8,10 +8,7 @@ import type { ContentNode, ContentParent } from "../content/markup/tree.ts";
 
 // Emits the `<ul>`, `<ol>`, and `<dl>` elements in an entry as Markdown lists in its Markdown representation.
 
-/**
- * MDX parses an element authored on one line as phrasing inside a paragraph, so this function finds the items of a list
- * through the paragraphs between them.
- */
+// MDX parses single-line elements as phrasing inside a paragraph, so descend through paragraphs to find list items.
 function listChildrenIn(list: ContentNode, names: ReadonlySet<string>): Array<ContentNode> {
   return (list.children ?? []).flatMap((child) => {
     if (child.type === "paragraph") {
@@ -50,10 +47,8 @@ function descriptionGroupsIn(list: ContentNode): Array<DescriptionGroup> {
 const termPhrasingIn = (term: ContentNode): Array<ContentNode> =>
   blocksIn(term).flatMap((block) => (block.type === "paragraph" ? (block.children ?? []) : []));
 
-/**
- * A group's terms in bold, then a colon and its descriptions' blocks. The first block, when it is a paragraph,
- * continues the terms' line, so a one-line description reads `**Term**: Description.`.
- */
+// Formats a description group's terms in bold followed by a colon and its descriptions, running the first paragraph
+// inline (`**Term**: Description.`).
 function descriptionListItemFrom({ terms, descriptions }: DescriptionGroup): Array<ContentNode> {
   const blocks = descriptions.flatMap(blocksIn);
 

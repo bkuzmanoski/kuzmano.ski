@@ -147,7 +147,7 @@ export function assertAttributeOneOf<TValue extends string>(
 export type AuthoredAttributeValue =
   { kind: "string"; value: string } | { kind: "without a value" | "authored as an expression" };
 
-/** Adds an attribute, stringifying JSX values but preserving hast numeric values. */
+// Adds an attribute, stringifying JSX values while preserving numeric hast values.
 function setAttribute(node: ContentNode, name: string, value: string | number) {
   if (node.attributes) {
     node.attributes.push({ type: "mdxJsxAttribute", name, value: String(value) });

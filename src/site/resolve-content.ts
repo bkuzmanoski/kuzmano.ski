@@ -5,7 +5,7 @@ import { featureRouteIdFor } from "./routes.ts";
 
 import type { Collection, Frontmatter } from "./catalog.ts";
 
-/** What a content path addresses. `notFound` means the catalog has no content for that segment and slug. */
+/** Target resolved from a content path (`notFound` when the catalog has no matching entry or collection). */
 export type ResolvedContent =
   | { kind: "page"; slug: string; frontmatter: Frontmatter | null }
   | { kind: "collectionEntry"; collection: Collection; slug: string; frontmatter: Frontmatter | null }
@@ -14,10 +14,10 @@ export type ResolvedContent =
   | { kind: "notFound" };
 
 /**
- * The content served at `/<segment>` or `/<segment>/<slug>`.
+ * Resolves the content served at `/<segment>` or `/<segment>/<slug>`.
  *
- * The window resolver and the document loader both call this, so a route cannot open one window and describe another. A
- * feature route wins over content of the same name.
+ * Shared by the window resolver and document loader so a route cannot open one window and describe another. Feature
+ * routes take precedence over content of the same name.
  */
 export function resolveContent(segment: string, slug?: string): ResolvedContent {
   const collection = collections.get(segment);

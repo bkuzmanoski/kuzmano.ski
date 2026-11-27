@@ -12,7 +12,7 @@ export interface AlternateRepresentations {
   feed: FeedMetadata | null;
 }
 
-/** A page, with a `collection` of `null`, or a collection entry. */
+// Represents a page (`collection: null`) or collection entry.
 interface RepresentedEntry {
   collection: Collection | null;
   slug: string;

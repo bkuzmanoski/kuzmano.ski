@@ -4,7 +4,7 @@ import { swallowNextPress } from "#/lib/press/press.ts";
 import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
 import { DRAG_THRESHOLD_PX, usePointerDrag } from "#/lib/press/use-pointer-drag.ts";
 
-/** The horizontal travel past which a touch drag across an image shows the next or previous image. */
+/** Minimum horizontal touch-drag distance required to navigate to another image. */
 export const SWIPE_DISTANCE_PX = 32;
 
 /**

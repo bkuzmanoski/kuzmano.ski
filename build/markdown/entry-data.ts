@@ -14,13 +14,12 @@ import type { ViteDevServer } from "vite";
 // data file. The Markdown pass reads the export that import names from the same file, so it emits the record the page
 // renders.
 
-/** The exports of an entry data module, keyed by export name. */
+/** Exports of an entry data module, keyed by export name. */
 export type EntryDataModule = Record<string, unknown>;
 
 /** Imports the entry data module at an absolute path. */
 export type EntryDataModuleReader = (absolutePath: string) => Promise<EntryDataModule>;
 
-/** The module specifier a name is imported from, and the name the module exports it as. */
 interface EntryImport {
   source: string;
   exportName: string;
@@ -65,11 +64,7 @@ function entryImportsIn(tree: ContentNode): Map<string, EntryImport> {
   return entryImports;
 }
 
-/**
- * The identifier an element spreads into its props as `{...NAME}`.
- *
- * Throws if the element spreads anything but one identifier or has any other attribute.
- */
+// Returns the single identifier spread into `element` as `{...NAME}`, throwing if any other attributes are present.
 function spreadIdentifierOf(element: ContentNode, file: EntryVFile): string {
   const [attribute, ...otherAttributes] = element.attributes ?? [];
   const properties =
@@ -89,7 +84,7 @@ function spreadIdentifierOf(element: ContentNode, file: EntryVFile): string {
   return identifier;
 }
 
-/** The value of an entry data file's export, and the file's quoted path for a problem message. */
+/** Exported value from an entry data file, paired with its quoted path for problem messages. */
 export interface EntryDataExport {
   value: unknown;
   quotedDataFilePath: string;

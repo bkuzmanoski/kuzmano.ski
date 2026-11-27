@@ -19,7 +19,7 @@ import styles from "./desktop.module.css";
 import { SiteIndex } from "./site-index.tsx";
 import { SkipLink } from "./skip-link.tsx";
 
-/** The desktop environment, mounted once by the root route above the outlet so it does not remount on navigation. */
+/** Desktop environment, mounted once above the router outlet so it does not remount on navigation. */
 export function Desktop() {
   useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `/src/lib/audio/context.ts`).
   useViewportHeightAboveSoftwareKeyboard(); // Keeps the desktop within the space left by the software keyboard (see `/src/lib/software-keyboard/use-viewport-height-above-software-keyboard.ts`).

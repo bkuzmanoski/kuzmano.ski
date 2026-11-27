@@ -13,8 +13,7 @@ vi.mock("../audio/sounds.ts", async (importOriginal) =>
 
 beforeEach(() => vi.mocked(playClickSound).mockClear());
 
-/** A pointer click, as opposed to keyboard activation. */
-const CLICK = { detail: 1 };
+const CLICK = { detail: 1 }; // Pointer click, as opposed to keyboard activation.
 
 function Control({ defersTouchPressSound = false, disabled = false }) {
   return (

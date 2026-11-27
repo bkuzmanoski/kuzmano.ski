@@ -1,6 +1,6 @@
 import type { Plugin } from "vite";
 
-/** The names of the members of `Plugin` that are hooks, either as a function or as an object with a `handler`. */
+// Names of `Plugin` members that are hooks (either functions or objects with a `handler`).
 type PluginHookName = {
   [TName in keyof Plugin]-?: NonNullable<Plugin[TName]> extends
     ((...args: never) => unknown) | { handler: (...args: never) => unknown }
@@ -33,7 +33,7 @@ export function hookOf<THook extends (...args: never) => unknown>(plugin: Plugin
   return handler as THook;
 }
 
-/** The `error` of a plugin context, for a test that calls a hook outside Vite. Throws `message` as an `Error`. */
+/** Stub `PluginContext.error` implementation for calling Vite hooks in tests; throws `message` as an `Error`. */
 export const throwError = (message: string): never => {
   throw new Error(message);
 };

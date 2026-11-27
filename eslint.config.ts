@@ -19,10 +19,8 @@ interface ImportPattern {
   allowTypeImports?: boolean;
 }
 
-/**
- * Rejects a relative import that leaves its layer, since imports use `#/` across layers and relative paths within one.
- * Every layer except `/src/lib` is one directory deep, so `../` escapes it. A separate restriction covers `/src/lib`.
- */
+// Rejects relative imports that leave their layer, since cross-layer imports use `#/`. Every layer except `/src/lib` is
+// one directory deep, so `../` escapes it (a separate restriction covers `/src/lib`).
 const CROSS_LAYER_RELATIVE_IMPORT_RESTRICTION: ImportPattern = {
   regex: String.raw`^\.\./`,
   message: "Relative imports must remain within their feature; use `#/` to access another layer.",
@@ -44,10 +42,8 @@ interface ImportRestrictionGroup {
   patterns: Array<ImportPattern>;
 }
 
-/**
- * Import patterns prohibited for each file group. Files use only the patterns from the first matching group, so each
- * group must list all restrictions that apply rather than relying on a broader group.
- */
+// Prohibited import patterns per file group. Each file matches only the first group, so each group must list all
+// applicable restrictions.
 const IMPORT_RESTRICTION_GROUPS: Array<ImportRestrictionGroup> = [
   {
     files: ["src/routes/api/**/*.{ts,tsx}", "src/server/**/*.{ts,tsx}", "src/worker.ts"],
@@ -117,11 +113,7 @@ const IMPORT_RESTRICTION_GROUPS: Array<ImportRestrictionGroup> = [
   { files: ["**/*.{ts,tsx}"], patterns: [] },
 ];
 
-/**
- * Each group gets its own config block and ignores files matched by earlier groups, ensuring that each file matches
- * only one block. Because flat config replaces rather than merges rule options, overlapping blocks would be
- * order-dependent.
- */
+// Each group ignores files matched by earlier groups so flat config rule options do not silently override each other.
 const IMPORT_RESTRICTION_BLOCKS: Array<Linter.Config> = IMPORT_RESTRICTION_GROUPS.map(({ files, patterns }, index) => ({
   files,
   ignores: IMPORT_RESTRICTION_GROUPS.slice(0, index).flatMap((earlierGroup) => earlierGroup.files),

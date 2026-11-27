@@ -3,10 +3,10 @@ import type { Rect } from "#/lib/geometry.ts";
 import styles from "./drag-outline.module.css";
 
 /**
- * The outline a window is dragged and resized by, while the window itself stays where it is until the gesture ends.
+ * Outline shown while dragging or resizing a window while the window itself stays put until release.
  *
- * It is a sibling of the windows so it shares their stacking context, and is stacked above all of them: a drag starts
- * by focusing its window, so the outline never crosses a window in front.
+ * Rendered as a sibling of the windows so it shares their stacking context and sits above them; a drag focuses its
+ * window first, so the outline never crosses behind another window.
  */
 export function DragOutline({ kind, rect, z }: { kind: "move" | "resize"; rect: Rect; z: number }) {
   return (

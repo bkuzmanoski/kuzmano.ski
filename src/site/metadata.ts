@@ -11,7 +11,7 @@ import type { AlternateRepresentations } from "./alternate-representations.ts";
 
 /** Alternate representations are advertised as `rel="alternate"` links and omitted when `null`. */
 export interface DocumentMetadata extends Partial<AlternateRepresentations> {
-  /** The document's own title, without the site suffix `documentTitle` adds. */
+  /** Document title without the site suffix added by `documentTitle`. */
   title: string;
   description: string;
   path: string;
@@ -36,10 +36,10 @@ export const documentTitle = (title: string) => `${title}—${AUTHOR_NAME}`;
 export const markdownUrl = (path: string) => canonicalUrl(markdownPath(path));
 
 /**
- * The head tags for a document.
+ * Builds the head tags for a document.
  *
- * `HeadContent` keys meta tags on `name ?? property` and lets the deepest match win, so a route overrides a tag from
- * the root by re-declaring it under the same key.
+ * `HeadContent` keys meta tags on `name ?? property` with deepest-match precedence, so a route overrides a root tag by
+ * re-declaring it under the same key.
  */
 export function documentHead({
   title,
@@ -99,7 +99,7 @@ export function documentHead({
   };
 }
 
-/** The head tags for a feature route without a document behind it. */
+/** Builds the head tags for a feature route without a backing document. */
 export function featureRouteHead(id: FeatureRouteId) {
   const { route, title, description, isIndexed } = FEATURE_ROUTE_SPECS[id];
   return documentHead({ title, description, path: route, noindex: !isIndexed });

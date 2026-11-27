@@ -9,9 +9,8 @@ import type { ContentNode, ContentParent, EntryVFile } from "./tree.ts";
 const SPAN_ATTRIBUTE_NAME = "data-content-span";
 
 /**
- * Throws if an entry renders an element whose `data-content-span` attribute is not one of `CONTENT_SPANS`. Checks
- * authored JSX and hast elements, such as the `<picture>` that `rehypeMedia` moves an authored `<img>`'s layout
- * attributes to.
+ * Throws if an entry renders an element with a `data-content-span` attribute outside `CONTENT_SPANS`. Checks both
+ * authored JSX and hast elements (including `<picture>` wrappers that received an `<img>`'s layout attributes).
  */
 export function rehypeContentSpans() {
   return function transform(tree: ContentParent, file: EntryVFile) {

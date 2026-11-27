@@ -2,7 +2,7 @@
 // `/vite.config.ts` loads it through `/build`.
 import type { StyleWithVars } from "./style.ts";
 
-/** The `--accent-*` colors declared in `/src/styles.css` in the order the theme color options list them. */
+/** `--accent-*` colors declared in `/src/styles.css`, in the order listed by the theme color options. */
 export const ACCENT_COLOR_NAMES = ["purple", "orange", "green", "turquoise", "red", "pink", "blue"] as const;
 
 /** One of the `--accent-*` colors declared in `/src/styles.css`. */

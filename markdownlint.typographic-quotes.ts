@@ -36,7 +36,7 @@ const WHITESPACE_PATTERN = /\s/;
 const PLACEHOLDER_CHARACTER = "x";
 const PHRASING_CONTAINER_TYPES = new Set(["paragraph", "heading", "tableCell"]);
 
-/** The attributes that contain prose on any element. A component lists its own in `CONTENT_COMPONENTS`. */
+// Prose attributes checked on any element; components declare additional ones in `CONTENT_COMPONENTS`.
 const PROSE_ATTRIBUTE_NAMES = new Set(["alt", "title", "label", "aria-label"]);
 
 const LITERAL_ELEMENT_NAMES = new Set(["code", "kbd", "pre", "samp"]);

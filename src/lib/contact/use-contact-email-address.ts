@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 import { readContactEmailAddress } from "./client.ts";
 
 /**
- * The published contact email address, or `null` if it has not been read.
+ * Returns the published contact email address, or `null` until loaded.
  *
- * The lookup runs after mount rather than during render, so the email address is absent from the prerendered page.
- * After the first read, it is served from the session cache, so reopening the window does not trigger a network
- * request.
+ * Fetches after mount so the address is omitted from prerendered HTML, then serves subsequent reads from the session
+ * cache.
  */
 export function useContactEmailAddress(): string | null {
   const [emailAddress, setEmailAddress] = useState<string | null>(null);

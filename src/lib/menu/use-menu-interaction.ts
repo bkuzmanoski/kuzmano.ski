@@ -23,7 +23,6 @@ export interface MenuInteractionItem {
   isEnabled: boolean;
 }
 
-/** The press that opened a menu. */
 export interface OpeningPress {
   /** Whether the press is still down when the menu opens, so its release can choose an item. */
   isPointerHeld: boolean;
@@ -31,8 +30,7 @@ export interface OpeningPress {
   origin: Position | null;
 }
 
-/** Closes the open menu when another opens, so only one menu stays open at a time. */
-let closeOpenMenu: (() => void) | null = null;
+let closeOpenMenu: (() => void) | null = null; // Ensures only one menu stays open at a time.
 
 const ITEM_INDEX_ATTRIBUTE = "data-index";
 const ITEM_SELECTOR = `[${ITEM_INDEX_ATTRIBUTE}]`;
@@ -48,11 +46,9 @@ export const menuItemSelector = (index: number) => `[${ITEM_INDEX_ATTRIBUTE}="${
 
 const itemIndexOf = (item: Element | null | undefined) => Number(item?.getAttribute(ITEM_INDEX_ATTRIBUTE) ?? -1);
 
-/**
- * The index of the item under a point, or -1 if the point is not over one. The point is hit-tested rather than read
- * from an event's target, because on iOS a tap near an item can be retargeted to it for the compatibility mouse events
- * and `click`, while the touch pointer events remain on the element under the finger.
- */
+// Returns the index of the item under `(x, y)`, or `-1` if none. Hit-tests coordinates instead of reading the event
+// target because iOS can retarget a nearby tap to an item for compatibility mouse and `click` events while touch
+// pointer events stay on the element under the finger.
 function indexAt(x: number, y: number): number {
   return itemIndexOf(document.elementFromPoint(x, y)?.closest(ITEM_SELECTOR));
 }
@@ -71,11 +67,11 @@ export function useMenuInteraction({
 }: {
   items: ReadonlyArray<MenuInteractionItem>;
   /**
-   * The element the menu opens from, treated as part of the menu for press, release, and focus interactions. Use `null`
-   * for a menu that opens at a point.
+   * Element the menu opens from, treated as part of the menu for press, release, and focus handling. Pass `null` for
+   * point-opened menus.
    */
   anchor: HTMLElement | null;
-  /** The element to focus when the menu closes with focus inside it, or `null` to let focus fall to the body. */
+  /** Element to focus when the menu closes while focused, or `null` to let focus fall back to the body. */
   focusReturnTarget: HTMLElement | null;
   listRef: RefObject<HTMLElement | null>;
   openingPress: OpeningPress;
@@ -150,10 +146,7 @@ export function useMenuInteraction({
     }
   }
 
-  /**
-   * Calls `onClose` only once. Returning the focus to an element outside the menu dispatches `focusin`, which would
-   * otherwise close the menu a second time.
-   */
+  // Calls `onClose` once; returning focus outside the menu dispatches `focusin`, which would otherwise close it twice.
   function close() {
     if (!hasClosedRef.current) {
       hasClosedRef.current = true;
@@ -161,7 +154,7 @@ export function useMenuInteraction({
     }
   }
 
-  /** Focuses `focusReturnTarget`, and returns whether it has the focus afterward. */
+  // Focuses `focusReturnTarget` and returns whether it received focus.
   function returnFocus(options?: FocusOptions) {
     focusReturnTarget?.focus(options);
     return focusReturnTarget !== null && document.activeElement === focusReturnTarget;

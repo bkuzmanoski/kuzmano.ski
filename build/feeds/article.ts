@@ -55,15 +55,8 @@ const linkParagraph = (value: string, href: string): Element => ({
   children: [{ type: "element", tagName: "a", properties: { href }, children: [{ type: "text", value }] }],
 });
 
-/**
- * Rewrites markup for output in a feed.
- *
- * Components can use the following attributes to control how the feed renders their markup:
- *
- * - `data-feed-omit` removes the element entirely
- * - `data-feed-text` replaces the element with a paragraph containing component-provided text, which links to the
- *   element's `href` for a link. A `<span>` becomes the text alone.
- */
+// Rewrites component UI markup for feeds: `data-feed-omit` removes the element, and `data-feed-text` replaces it with a
+// paragraph containing the text (linked to `href` for links, plain text for `<span>`).
 function replaceUIMarkup(article: Element) {
   visit(article, "element", (element, index, parent) => {
     if (!parent || index === undefined) {
@@ -170,13 +163,7 @@ function prepareMediaForReaders(article: Element) {
   });
 }
 
-/**
- * Sanitizing removes the attributes from the wrappers used for syntax highlighting and UI, leaving elements that
- * contain nothing but their children.
- *
- * This replaces a wrapper with its own children, so it returns a new list of nodes rather than visiting the tree in
- * place.
- */
+// Unwraps bare elements whose attributes were stripped by sanitization, returning a new node list.
 function unwrapPlainWrappers(children: Array<ElementContent>): Array<ElementContent> {
   return children.flatMap((child) => {
     if (child.type !== "element") {
@@ -220,7 +207,7 @@ function resolveRelativeUrls(article: Element, url: string) {
   });
 }
 
-/** The ID a URL's fragment names when the URL is the entry's own, or `null` for any other URL. */
+// Returns the fragment ID when `href` targets `entryUrl`, or `null` otherwise.
 function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
   try {
     const target = new URL(href);
@@ -232,12 +219,8 @@ function entryFragmentIdOf(href: string, entryUrl: URL): string | null {
   }
 }
 
-/**
- * A heading's ID is a fragment a user can link to from outside the feed, so this function preserves it. It preserves
- * any other ID only when an element in the article references it (a link names it as its fragment, or a table cell
- * lists it in its `headers` attribute). No element in the feed references an ID a component generates for an attribute
- * the sanitizer removes, such as `aria-labelledby`.
- */
+// Preserves heading IDs (external link targets) and IDs referenced within the article (fragment links or `headers`
+// attributes), stripping component-generated IDs whose referencing attributes (e.g., `aria-labelledby`) were sanitized.
 function removeUnreferencedIds(article: Element, url: string) {
   const entryUrl = new URL(url);
   const referencedIds = new Set<string>();

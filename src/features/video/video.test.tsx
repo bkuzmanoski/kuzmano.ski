@@ -106,7 +106,7 @@ afterEach(() => vi.useRealTimers());
 const renderVideo = () =>
   render(<Video src="/video.mp4" poster="/video.poster.webp" width={640} controls aria-label="A video" />);
 
-/** Renders a video with its slider laid out from `x` = 0, so a pointer at `thumbCenterAt(0.5)` is halfway along it. */
+// Renders a video with its slider laid out from `x = 0`, so `thumbCenterAt(0.5)` is halfway along it.
 function renderVideoWithLaidOutSlider() {
   vi.useFakeTimers(); // A drag reports its moves on animation frames.
 
@@ -127,18 +127,16 @@ function pressSliderAt(slider: HTMLElement, position: number, { pointerType = "m
   fireEvent.pointerDown(slider, { button: 0, pointerType, clientX: thumbCenterAt(position) });
 }
 
-/** Moves the pointer pressed on the slider to `position` along it, `dy` pixels below the slider's top edge. */
+// Moves the pressed pointer to `position` along the slider, `dy` pixels below its top edge.
 function dragSliderTo(slider: HTMLElement, position: number, { dy = 0 } = {}) {
   fireEvent.pointerMove(slider, { buttons: 1, clientX: thumbCenterAt(position), clientY: dy });
   advanceTimersBy(FRAME_MS);
 }
 
-/** Positions on the slider for a touch that moves by the drag threshold, and for one that moves past it. */
 const POSITION_WITHIN_DRAG_THRESHOLD = 0.25 + DRAG_THRESHOLD_PX / (TRACK_WIDTH_PX - THUMB_WIDTH_PX);
 const POSITION_PAST_DRAG_THRESHOLD = 0.5;
 
-/** Ends the gesture as a browser does when it claims a touch to scroll the page. */
-const cancelPointer = (slider: HTMLElement) => fireEvent.pointerCancel(slider);
+const cancelPointer = (slider: HTMLElement) => fireEvent.pointerCancel(slider); // Simulates browser scroll claim.
 
 function finishSeek(video: HTMLVideoElement) {
   playback.seeking = false;

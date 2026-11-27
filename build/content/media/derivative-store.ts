@@ -10,7 +10,7 @@ import { renditionSizeProblems } from "./problems.ts";
 import type { ImageDerivativeRendition, MediaRendition } from "./renditions.ts";
 
 interface ImageDerivativeStore {
-  /** The encoded byte length. */
+  /** Returns the encoded byte length, or `null` if already stored. */
   encodeIfMissing: (rendition: ImageDerivativeRendition) => Promise<number | null>;
   /** Keyed by file name, in listing order. */
   storedByteLengths: () => Promise<Map<string, number>>;

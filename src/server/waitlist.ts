@@ -11,16 +11,14 @@ import type { ServerLogEvent } from "./log.ts";
 
 const NOTION_API_URL = "https://api.notion.com/v1";
 
-/** The Notion API version, pinned because Notion changes the shape of a request between versions. */
-const NOTION_VERSION = "2026-03-11";
+const NOTION_VERSION = "2026-03-11"; // Pinned because Notion changes request shapes between versions.
 
-/** The properties the waitlist data source must define (see `/README.md`). */
+// Required properties on the Notion waitlist data source (see `/README.md`).
 const DATA_SOURCE_PROPERTY_NAMES = { emailAddress: "Email", list: "List", source: "Source" };
 
 const REQUEST_TIMEOUT_MS = 5_000;
 
-/** Rate limited; overloaded. */
-const RETRYABLE_STATUS_CODES = new Set([429, 529]);
+const RETRYABLE_STATUS_CODES = new Set([429, 529]); // Rate limited; overloaded.
 
 /**
  * `throttled` means Notion is rate limiting or overloaded, so the join may succeed on a retry. Every other failure is a
@@ -64,7 +62,7 @@ const postToNotion = (path: string, token: string, body: unknown) =>
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
-/** Whether the address is already on this waitlist. */
+// Returns whether the email address is already recorded on this waitlist.
 async function isAlreadyRecorded({ token, dataSourceId }: NotionCredentials, membership: Membership): Promise<boolean> {
   try {
     const response = await postToNotion(`/data_sources/${dataSourceId}/query`, token, {

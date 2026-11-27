@@ -18,7 +18,7 @@ export interface CompilerOptimizationFailure {
   reason: string;
 }
 
-/** A location is `GeneratedSource` (a symbol) for a node the compiler synthesized itself. */
+// `location` is a `GeneratedSource` symbol for compiler-synthesized nodes.
 const lineOf = (location: SourceLocation | null | undefined) =>
   typeof location === "object" && location !== null ? location.start.line : null;
 

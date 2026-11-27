@@ -13,7 +13,7 @@ beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
 });
 
-/** Starts two copies, of which the second starts while the first's write is pending. */
+// Starts a second copy while the first clipboard write is still pending.
 function startTwoCopies() {
   const firstWrite = deferWrite(writeText);
   const secondWrite = deferWrite(writeText);

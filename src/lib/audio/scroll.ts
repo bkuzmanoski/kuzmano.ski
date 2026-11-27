@@ -20,12 +20,12 @@ const gestures = new WeakMap<Element, ScrollGesture>();
 const viewportHeights = new WeakMap<Element, number>();
 const contentHeights = new WeakMap<Element, number>();
 
-/** Returns the scroll position of `element` clamped to its scroll range, so overscroll does not produce detents. */
+// Clamps `scrollTop` to the scroll range so overscroll bounce does not trigger detents.
 function getScrollTop(element: Element) {
   return clamp(element.scrollTop, 0, element.scrollHeight - element.clientHeight);
 }
 
-/** Starts a gesture a full detent along, so the first real movement plays a sound immediately. */
+// Starts a gesture a full detent along so the first real movement plays a sound immediately.
 function openGesture(top: number, at: number, silent = false): ScrollGesture {
   return { top, at, distance: DETENT_PX, silent };
 }
@@ -138,7 +138,7 @@ export function playScrollSound(element: Element) {
   playScrollDetentSound((movedDistance / elapsedMs) * 1000);
 }
 
-/** Records `height` and reports whether it differs from the element's previous height in `heights`. */
+// Records `height` and returns whether it changed from the element's previous value in `heights`.
 function recordHeight(element: Element, heights: WeakMap<Element, number>, height: number) {
   const previousHeight = heights.get(element);
 
@@ -147,12 +147,8 @@ function recordHeight(element: Element, heights: WeakMap<Element, number>, heigh
   return previousHeight !== undefined && previousHeight !== height;
 }
 
-/**
- * Plays a scroll sound unless the caller found that the element's size changed since its previous scroll.
- *
- * A size change identifies a scroll caused by layout rather than user input. This function records such a scroll
- * without a sound. The caller supplies the result because the relevant measurements differ by context.
- */
+// Plays a scroll sound unless the caller detected a size change (layout-driven scroll), in which case it records the
+// scroll silently. Callers compute `isResized` because the relevant dimension differs by context.
 function playScrollSoundUnlessResized(element: Element, isResized: boolean) {
   if (isResized) {
     recordScrollAt(element);

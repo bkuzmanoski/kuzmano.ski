@@ -26,8 +26,7 @@ const TRACK_TOP_PX = 50;
 const TRACK_HEIGHT_PX = 200;
 const THUMB_HEIGHT_PX = 20;
 const THUMB_TRAVEL_PX = TRACK_HEIGHT_PX - THUMB_HEIGHT_PX;
-/** A drag reports its move on the frame that follows the pointer. */
-const FRAME_MS = 16;
+const FRAME_MS = 16; // Drag moves are reported on the next animation frame.
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -37,7 +36,7 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-/** The wiring `ScrollPane` provides, repeated here because a component may not import a feature. */
+// Mirrors `ScrollPane`'s wiring, repeated here because components may not import features.
 function Harness() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const { metrics, measure } = useScrollMetrics(viewportRef);

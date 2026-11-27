@@ -20,10 +20,8 @@ export function edgeIndexOf(edge: "first" | "last", count: number, isEnabled: (i
   return -1;
 }
 
-/**
- * Finds the nearest enabled item in `direction` from `fromIndex`. When `fromIndex` is `-1`, it returns the first
- * enabled item when moving down or the last when moving up. If no eligible item is found, it returns `fromIndex`.
- */
+// Finds the nearest enabled item in `direction` from `fromIndex` (`-1` starts from the first/last enabled item),
+// returning `fromIndex` if none is eligible.
 function adjacentIndexOf(
   fromIndex: number,
   direction: 1 | -1,

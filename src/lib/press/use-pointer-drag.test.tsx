@@ -13,16 +13,11 @@ const PRESS = { x: 100, y: 50 };
 const POINTER_ID = MOUSE_PRESS_INIT.pointerId;
 const SECOND_POINTER_ID = SECOND_TOUCH_PRESS_INIT.pointerId;
 
-/** The hook reports a move on the animation frame after the pointer event. */
-const FRAME_MS = 16;
+const FRAME_MS = 16; // Moves are reported on the next animation frame.
 
-/**
- * `start` returns a value of the caller's choosing and the hook passes that same value to every move, so the tests
- * assert on its identity rather than its shape.
- */
+// Tests assert on reference identity because the hook passes `start`'s return value unchanged to every move.
 const START_VALUE = { origin: "press" };
 
-/** What `onEnd` receives for a drag that the browser did not cancel, whether or not it moved. */
 const UNCANCELED_END = { start: START_VALUE, isCanceled: false };
 
 const start = vi.fn<() => typeof START_VALUE | null>(() => START_VALUE);
@@ -36,10 +31,7 @@ interface HandleProps {
   canStart?: (event: ReactPointerEvent) => boolean;
 }
 
-/**
- * The hook returns a press handler and nothing else; the rest of a gesture arrives on `window`. A bare element that
- * spreads the handler is therefore the whole of a consumer.
- */
+// Minimal consumer: the hook only returns a press handler and listens for the rest of the gesture on `window`.
 function Handle({ threshold, preventDefault, endsOnSecondTouch, canStart }: HandleProps) {
   return (
     <div

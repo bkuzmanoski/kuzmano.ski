@@ -18,7 +18,7 @@ interface CommentNode {
   loc: { start: unknown; end: unknown };
 }
 
-/** An empty `text` is a blank line between paragraphs. */
+// An empty `text` represents a blank line between paragraphs.
 type CommentBlock =
   | { kind: "prose"; markerPrefix: string; continuationPrefix: string; words: Array<string> }
   | { kind: "verbatim"; text: string };
@@ -39,25 +39,20 @@ const ASTERISK_LINE_PATTERN = /^\s*\*(?: (.*))?$/;
 const CODE_FENCE = "```";
 const LIST_MARKER_PATTERN = /^(?:[-*]|\d+\.) /;
 
-/** The second alternative matches words (e.g., "iOS" and "en-AU"). */
-const PARAGRAPH_START_PATTERN = /^(?:[\p{Lu}\p{N}`"'(]|[\p{Ll}-]+\p{Lu})/u;
+const PARAGRAPH_START_PATTERN = /^(?:[\p{Lu}\p{N}`"'(]|[\p{Ll}-]+\p{Lu})/u; // Second branch matches mixed-case words (e.g., "iOS", "en-AU").
 
 const CONTINUATION_START_PATTERN = /^[\p{L}\p{N}`"'(]/u;
 const CODE_LINE_PATTERN = /(?:^(?:await|const|export|import|let|return|throw|type|var)\b|[=(]).*;$|[{}]$/;
 const CODE_SPAN_PATTERN = /`[^`]*`/g;
 const ALIGNMENT_SPACES_PATTERN = /\S {2,}\S/;
-/** Treats a code span as part of one word, so a line break does not split it. */
-const WORD_PATTERN = /(?:`[^`]*`|\S)+/g;
+const WORD_PATTERN = /(?:`[^`]*`|\S)+/g; // Keeps code spans atomic so line breaks do not split them.
 
 const { fill, group, hardline, ifBreak, join, line } = doc.builders;
 const estreePrinter = estreePrinters.estree;
 const postcssPrinter = postcssPrinters.postcss;
 const typescriptParser = typescriptParsers.typescript;
 
-/**
- * The doc of each comment the parser reflowed, keyed by node, as embedded TypeScript uses the same printer without the
- * reflow.
- */
+// Reflowed Prettier doc per comment node; embedded TypeScript shares the printer without running the reflow pass.
 const commentDocs = new WeakMap<CommentNode, Doc>();
 
 const wordsIn = (text: string): Array<string> => text.match(WORD_PATTERN) ?? [];
@@ -73,7 +68,7 @@ const canStartWrappedLine = (word: string, previousWord: string): boolean =>
   !word.startsWith(CODE_FENCE) &&
   !previousWord.endsWith(":");
 
-/** Joins each word that cannot start a wrapped line to the word before it, so `fill` breaks the line before both. */
+// Attaches words that cannot start a wrapped line to the preceding word so `fill` breaks before both.
 function lineUnitsFrom(words: Array<string>): Array<string> {
   const units: Array<string> = [];
 
@@ -100,10 +95,8 @@ function isProse(text: string, startPattern: RegExp): boolean {
   );
 }
 
-/**
- * Groups the text lines of a comment into paragraphs and list items, and marks every other line as verbatim. A line
- * ending in a colon ends its paragraph, as it introduces whatever follows it.
- */
+// Groups comment lines into prose paragraphs/list items and verbatim lines. Lines ending in a colon close their
+// paragraph.
 function commentBlocksFrom(lines: Array<string>): Array<CommentBlock> {
   const blocks: Array<CommentBlock> = [];
 
@@ -213,10 +206,7 @@ function isNextLineOf(previous: CommentNode, next: CommentNode, text: string): b
   return text.slice(previous.range[1], next.range[0]) === `\n${indentation}`;
 }
 
-/**
- * Prettier parses each line of a `//` comment as a comment of its own, so the plugin merges adjacent lines into one
- * comment before Prettier attaches comments to nodes. The merged comment has one range, so Prettier prints it once.
- */
+// Prettier parses each `//` line separately, so merge adjacent lines into one comment node before attachment.
 function commentsWithMergedLines(comments: Array<CommentNode>, text: string): Array<CommentNode> {
   const mergedComments: Array<CommentNode> = [];
 
@@ -242,13 +232,13 @@ function commentsWithMergedLines(comments: Array<CommentNode>, text: string): Ar
 
 const lineCommentTextOf = (commentLine: string): string => commentLine.replace(/^ /, "");
 
-/** Returns `null` for a line without a leading asterisk. */
+// Returns `null` for lines without a leading asterisk.
 function asteriskLineTextOf(commentLine: string): string | null {
   const match = ASTERISK_LINE_PATTERN.exec(commentLine);
   return match ? (match[1] ?? "") : null;
 }
 
-/** Returns `null` for a doc comment in any other shape, such as one with text on the line of its opening `/**`. */
+// Returns `null` for doc comments in other shapes (e.g., text on the opening `/**` line).
 function docCommentLinesFrom(value: string): Array<string> | null {
   const [firstLine = "", ...otherLines] = value.split("\n");
 
@@ -310,7 +300,7 @@ function recordCommentDocs(comments: Array<CommentNode>, text: string): void {
   }
 }
 
-/** Returns `null` for a comment in any other shape, such as one with its delimiters on lines of their own. */
+// Returns `null` for CSS comments in other shapes (e.g., delimiters on their own lines).
 function cssCommentLinesFrom(comment: string): Array<string> | null {
   const [firstLine = "", ...otherLines] = comment.slice(2, -2).split("\n");
   const textLines = otherLines.map(asteriskLineTextOf);
@@ -331,10 +321,7 @@ function printCssComment(comment: string, options: ParserOptions, start: number,
 
 const isEmbedded = ({ parentParser }: Options): boolean => parentParser !== undefined;
 
-/**
- * Prettier prefers the printers of the plugin that provides a file's parser, so each printer below takes effect only
- * when the plugin provides the parser too.
- */
+// Prettier prefers printers from the plugin that provides the parser, so each printer below also supplies its parser.
 const plugin = {
   parsers: {
     css: postcssParsers.css,

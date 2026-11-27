@@ -21,20 +21,20 @@ export interface FlightProfile {
 
 export interface FlightSettings {
   spriteSizePx: number;
-  /** How far a sprite descends for each pixel it flies left. */
+  /** Vertical descent per horizontal pixel flown left. */
   descentPerPx: number;
-  /** The minimum gap between two sprites' outlines. */
+  /** Minimum gap between two sprites' outlines. */
   clearancePx: number;
-  /** The number of random entry points a sprite compares when it enters. */
+  /** Number of random entry points compared when placing an entering sprite. */
   placementAttempts: number;
 }
 
 export interface FlightState extends Position {
   /** `false` while the sprite waits off screen to enter. */
   isFlying: boolean;
-  /** The horizontal speed at which the sprite flies when its path is clear. */
+  /** Horizontal flight speed when the sprite's path is clear. */
   speedPxPerS: number;
-  /** The time left before a waiting sprite tries to enter. At or below `0`, it tries on every step until it enters. */
+  /** Seconds until a waiting sprite tries to enter; at or below `0`, it retries every step. */
   timeToEntryS: number;
 }
 
@@ -42,7 +42,7 @@ export interface FlightState extends Position {
 export type FlightSprite<TProfile extends FlightProfile = FlightProfile> = TProfile & FlightState;
 
 export interface Flight<TProfile extends FlightProfile = FlightProfile> {
-  /** The sprites, in the order of the profiles that `createFlight` received. */
+  /** Sprites in the same order as the profiles passed to `createFlight`. */
   readonly sprites: ReadonlyArray<Readonly<FlightSprite<TProfile>>>;
   /**
    * Spaces the entries of the waiting sprites evenly, in random order, over the time the slowest of them takes to cross
@@ -51,7 +51,7 @@ export interface Flight<TProfile extends FlightProfile = FlightProfile> {
   stagger: () => void;
   /** Flies each flying sprite for `elapsedS`, and enters each waiting sprite with a `timeToEntryS` that has run out. */
   step: (elapsedS: number) => void;
-  /** Sets the viewport in which sprites enter and leave from the next step, without changing the number of sprites. */
+  /** Updates the viewport bounds for future steps without changing the sprite count. */
   resize: (viewport: Size) => void;
 }
 
@@ -63,10 +63,7 @@ export interface FlightOptions<TProfile extends FlightProfile = FlightProfile> {
   random: () => number;
 }
 
-/**
- * The rounding error within which the flight treats two sprites as touching, as a sprite stopped against another lands
- * on the boundary only to floating-point precision.
- */
+// Floating-point tolerance for treating two sprites as touching when one stops against another.
 const CONTACT_TOLERANCE_PX = 1e-6;
 
 // The directions in which the offset of another sprite moves, in lane coordinates, as a sprite flies forward or slides
@@ -82,8 +79,8 @@ const offsetAlong = (offset: Position, direction: Position, distancePx: number):
 });
 
 /**
- * Creates a flight in which sprites enter just beyond the viewport's top or right edge, fly left and downward, and wait
- * off screen again after leaving through its left or bottom edge.
+ * Creates a flight where sprites enter beyond the top or right edge, fly diagonally left and down, and recycle off
+ * screen after exiting the left or bottom edge.
  */
 export function createFlight<TProfile extends FlightProfile>({
   profiles,
@@ -106,13 +103,11 @@ export function createFlight<TProfile extends FlightProfile>({
 
   let currentViewport = viewport;
 
-  /**
-   * Returns the lane containing a point. Lanes descend `descentPerPx` for every pixel to the left. In lane coordinates,
-   * x is the column and y is the lane, so forward motion changes only x while changing lanes changes only y.
-   */
+  // Returns the lane containing a point. Lanes descend `descentPerPx` per pixel to the left, so in lane coordinates
+  // (x = column, y = lane) forward motion changes only x and lane changes change only y.
   const laneOf = ({ x, y }: Position) => y + descentPerPx * x;
 
-  /** Returns the offset in lane coordinates of `other` from `position`. */
+  // Returns `other`'s offset from `position` in lane coordinates.
   const offsetOf = (other: FlightSprite, position: Position): Position => ({
     x: other.x - position.x,
     y: laneOf(other) - laneOf(position),
@@ -160,12 +155,8 @@ export function createFlight<TProfile extends FlightProfile>({
     sprite.speedPxPerS = randomElementOf(sprite.speedsPxPerS, random);
   }
 
-  /**
-   * Compares `placementAttempts` random entry points and enters `sprite` at the clear one farthest from its nearest
-   * flying sprite, or leaves it waiting where each would bring it within the clearance of a flying sprite.
-   *
-   * Entering at the first clear entry point would leave clumps and gaps in the flock.
-   */
+  // Compares `placementAttempts` random entry points and places `sprite` at the clear one farthest from any flying
+  // sprite (avoiding clumps and gaps), or leaves it waiting if all violate clearance.
   function enter(sprite: FlightSprite, elapsedS: number) {
     const others = otherFlyingSprites(sprite);
 
@@ -190,10 +181,7 @@ export function createFlight<TProfile extends FlightProfile>({
     }
   }
 
-  /**
-   * Returns how far `sprite` can fly left along its lane, up to `distancePx`, and the sprite ahead that stops it short,
-   * if any.
-   */
+  // Returns how far `sprite` can fly left along its lane (up to `distancePx`) and the blocking sprite ahead, if any.
   function forwardStopOf(sprite: FlightSprite, distancePx: number) {
     let flownPx = distancePx;
     let spriteAhead: FlightSprite | null = null;
@@ -239,13 +227,8 @@ export function createFlight<TProfile extends FlightProfile>({
     sprite.y = lane - descentPerPx * sprite.x;
   }
 
-  /**
-   * Moves `sprite` straight up or down to another lane by up to `distancePx`, away from the middle of its overlap
-   * region with `spriteAhead`, and returns whether another sprite stopped it short.
-   *
-   * A sprite in the upper half of the region slides up, while one in the lower half slides down, moving each away from
-   * `spriteAhead`.
-   */
+  // Slides `sprite` vertically by up to `distancePx` away from the midpoint of its overlap region with `spriteAhead`
+  // (up if in the upper half, down if in the lower half), returning whether another sprite stopped it short.
   function slideAround(sprite: FlightSprite, spriteAhead: FlightSprite, distancePx: number, elapsedS: number) {
     const { top, bottom } = overlapRegionOf(sprite, spriteAhead);
     const isSlidingUp = offsetOf(spriteAhead, sprite).y > (top + bottom) / 2 + CONTACT_TOLERANCE_PX;
@@ -299,10 +282,8 @@ export function createFlight<TProfile extends FlightProfile>({
     step(elapsedS) {
       const movedSprites = new Set<FlightSprite>();
 
-      /**
-       * Moves `sprite` for `elapsedS` and returns `true`, or returns `false` without moving it where `canWait` is
-       * `true` and a sprite ahead that has yet to move stops it.
-       */
+      // Advances `sprite` by `elapsedS` and returns `true`, or returns `false` without moving if `canWait` is `true`
+      // and an unmoved sprite ahead blocks it.
       function move(sprite: FlightSprite, canWait: boolean) {
         if (sprite.isFlying) {
           const distancePx = sprite.speedPxPerS * elapsedS;

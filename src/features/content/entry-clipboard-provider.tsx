@@ -16,7 +16,7 @@ export function EntryClipboardProvider({ children }: { children: ReactNode }) {
   const { latestClipboardCopy, confirmedClipboardCopyNumber, copy, clearConfirmation, dismissFailure } =
     useCopyToClipboard<{
       copyControlId: string;
-      /** The copied content's label, displayed in the failure alert. */
+      /** Label for the copied content, shown in the failure alert. */
       entity: string;
     }>();
 

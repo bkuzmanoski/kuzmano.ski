@@ -42,10 +42,7 @@ async function entryMarkdown(
   });
 }
 
-/**
- * A collection's entries as a Markdown index, linking each entry's Markdown. A collection has no document of its own,
- * so the index is its Markdown representation.
- */
+// Builds a collection's Markdown index linking each entry's Markdown file (collections have no document of their own).
 function collectionMarkdown(name: string, entries: Array<AuthoredEntry>): string {
   // Widened because `name` may be a directory that is not a declared collection.
   const declaredCollections: Record<string, { title: string; description: string } | undefined> = COLLECTIONS;

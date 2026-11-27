@@ -1,4 +1,4 @@
-/** The failures the Worker logs, each as an object with an `event` property. */
+/** Structured failure events logged by the Worker. */
 export type ServerLogEvent =
   | "client_error"
   | "contact_binding_missing"

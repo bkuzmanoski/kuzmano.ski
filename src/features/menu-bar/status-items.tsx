@@ -111,9 +111,9 @@ export function SoundStatus() {
 }
 
 interface SiteTime {
-  /** The displayed minute as a valid global date and time string, in UTC. */
+  /** Displayed minute as a UTC global date and time string. */
   dateTime: string;
-  /** The hour, minute, and day period, without the time zone. */
+  /** Hour, minute, and day period without the time zone. */
   timeText: string;
   timeZoneName: string;
 }

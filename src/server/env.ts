@@ -9,12 +9,8 @@ async function proxiedEnv(): Promise<cloudflareWorkers.WorkerEnv> {
   return env;
 }
 
-/**
- * The `cloudflare:workers` module, or `null` outside Workers.
- *
- * `vite dev` runs this module in Node, where that specifier does not resolve, so it is imported dynamically rather than
- * statically.
- */
+// Dynamically imports `cloudflare:workers`, returning `null` outside Workers (`vite dev` runs in Node where that
+// specifier does not resolve).
 async function workersModule(): Promise<typeof cloudflareWorkers | null> {
   try {
     return await import("cloudflare:workers");
@@ -24,10 +20,9 @@ async function workersModule(): Promise<typeof cloudflareWorkers | null> {
 }
 
 /**
- * The bindings this request runs against, wherever it is running. Rejects if there are none.
+ * Returns the Worker bindings for the current environment, rejecting if unavailable.
  *
- * On Workers they come from `cloudflare:workers`. Under `vite dev`, the platform proxy supplies the same bindings
- * instead.
+ * Uses `cloudflare:workers` on Workers and the platform proxy under `vite dev`.
  */
 export async function workerEnv(): Promise<cloudflareWorkers.WorkerEnv> {
   const workers = await workersModule();

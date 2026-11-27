@@ -3,11 +3,7 @@ import { render } from "@testing-library/react";
 
 import type { ReactElement } from "react";
 
-/**
- * Provides the router context that `<Link>` needs to build its href. It has no route tree because these tests render
- * links without testing where they lead. Keep it shared so rerenders do not replace the router and reset the state the
- * links read.
- */
+// Shared empty router providing `<Link>` context without replacing the router or resetting link state across rerenders.
 const contextRouter = createRouter({ routeTree: createRootRoute(), history: createMemoryHistory() });
 
 /**

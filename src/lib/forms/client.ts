@@ -30,9 +30,9 @@ export type SubmissionOutcome<TFields> =
   { status: "accepted" } | InvalidResult<TFields> | { status: "failed"; message: string };
 
 interface PostOptions {
-  /** The message to show for a refusal the form handles itself, keyed by status. */
+  /** Error messages for form-handled HTTP error responses, keyed by status code. */
   messages?: Record<number, string>;
-  /** The message to show when no response arrived, or its status is not in `messages`. */
+  /** Fallback error message when no response arrives or its status is not in `messages`. */
   fallbackMessage: string;
   signal?: AbortSignal;
 }

@@ -129,10 +129,8 @@ export function startDitherBackdropAnimation({
     };
   };
 
-  /**
-   * Resizes the canvas and composes its dither field when the bitmap-pixel layout changes. Returns `false` without
-   * modifying either when the layout is unchanged.
-   */
+  // Resizes the canvas and recomposes the dither field when the bitmap-pixel layout changes; returns `false` if
+  // unchanged.
   const composeDitherFieldForLayout = (): boolean => {
     const bitmapPixelSizePx = bitmapPixelSizePxAt(devicePixelRatio);
     const layout: DitherFieldLayout = {

@@ -5,7 +5,6 @@ import { edgeIndexOf, navigationTargetOf } from "./list-navigation.ts";
 const COUNT = 5;
 const WRAPPING = { wraps: true };
 const CLAMPED = { wraps: false };
-/** Index 0 and index 4 (the ends) and index 2 are disabled. */
 const isEnabledBetweenDisabledEnds = (index: number) => index === 1 || index === 3;
 
 describe("navigationTargetOf", () => {

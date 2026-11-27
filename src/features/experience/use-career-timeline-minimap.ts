@@ -23,7 +23,6 @@ export interface CareerTimelineMinimapElements extends CareerTimelineLayoutEleme
   visibleRangeFrame: RefObject<HTMLSpanElement | null>;
 }
 
-/** The state of `CareerTimeline` that reorders or filters the list without scrolling the scroll pane. */
 export interface CareerTimelineListState {
   direction: CareerTimelineDirection;
   hiddenDisciplineIds: ReadonlySet<string>;
@@ -31,10 +30,10 @@ export interface CareerTimelineListState {
 
 interface ChartPress {
   layout: CareerTimelineLayout;
-  /** The fraction of the chart's axis that the visible-range frame centers on before the pointer travels. */
+  /** Chart axis fraction where the visible-range frame is centered before dragging. */
   pressCenter: number;
   isPressOnVisibleRangeFrame: boolean;
-  /** The scroll position to restore if the drag is canceled. */
+  /** Scroll position to restore if the drag is canceled. */
   startScrollTop: number;
   isScrollSoundSilenced: boolean;
 }
@@ -42,10 +41,8 @@ interface ChartPress {
 const scrollPaneOf = (listElement: HTMLElement | null): HTMLElement | null =>
   listElement?.closest(SCROLL_PANE_VIEWPORT_SELECTOR) ?? null;
 
-/**
- * Scrolls the scroll pane so the visible-range frame centers on `center`. The roles' positions are in the scroll pane's
- * scrolled coordinates, so a layout read at the start of a drag remains valid for the duration of the drag.
- */
+// Scrolls the pane so the visible-range frame centers on `center`. Role positions are in scrolled coordinates, so a
+// single layout read at drag start stays valid for the whole drag.
 function scrollToVisibleCareerTimelineCenter(layout: CareerTimelineLayout, center: number) {
   const scrollTop = scrollTopForVisibleCareerTimelineCenter(layout.viewport, center);
 
@@ -54,7 +51,7 @@ function scrollToVisibleCareerTimelineCenter(layout: CareerTimelineLayout, cente
   }
 }
 
-/** Scrolls the list so the visible-range frame centers on the press center moved by `delta` along the chart's axis. */
+// Scrolls the list so the visible-range frame centers on `press.pressCenter` shifted by `delta` along the chart axis.
 function scrollListAlongChart(press: ChartPress, { dx, dy }: DragDelta) {
   const { layout, pressCenter } = press;
   scrollToVisibleCareerTimelineCenter(

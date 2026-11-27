@@ -60,9 +60,9 @@ export function CopyButton({
 }
 
 /**
- * A copy control whose caller owns its copy, its `CopyAnnouncer`, and its failure alert, and passes the status of the
- * latest copy the control made as `copyStatus`, or `null` when there is none to display. The control calls `onDidHide`
- * when its tooltip hides, for the caller to end the confirmation the tooltip was showing.
+ * Controlled copy button whose caller owns clipboard writes, `CopyAnnouncer`, and failure alerts, passing the latest
+ * copy state via `copyStatus` (or `null` when idle). Calls `onDidHide` when the tooltip closes so the caller can clear
+ * the confirmation state.
  */
 export function ControlledCopyButton({
   copyStatus,

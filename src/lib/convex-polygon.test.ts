@@ -16,10 +16,7 @@ const RIGHT_DIRECTION: Position = { x: 1, y: 0 };
 const DOWN_DIRECTION: Position = { x: 0, y: 1 };
 const MARGIN_PX = 1e-6;
 
-/**
- * Returns the vertices of `polygon` as a set of `x,y` keys, for comparing polygons without regard to their start
- * vertex.
- */
+// Returns vertices as `x,y` keys to compare polygons regardless of starting vertex.
 const vertexKeysOf = (polygon: ConvexPolygon) => new Set(polygon.map(({ x, y }) => `${x},${y}`));
 
 describe("convexHullOf", () => {

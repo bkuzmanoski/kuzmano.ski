@@ -29,15 +29,14 @@ interface WebKitVideoElement extends HTMLVideoElement {
   webkitEnterFullscreen?: () => void;
 }
 
-/** State tracked while the user drags the seek slider. */
 interface Scrub {
   /** Whether playback was active when dragging began, so it can resume when dragging ends. */
   wasPlaying: boolean;
-  /** The playback time to restore if the scrub is canceled. */
+  /** Playback time to restore if the scrub is canceled. */
   startSeconds: number;
-  /** The playback time corresponding to the pointer position. */
+  /** Playback time at the current pointer position. */
   targetSeconds: number;
-  /** The latest requested seek time, or `null` until the first seek is requested. */
+  /** Most recently requested seek time, or `null` before the first seek. */
   requestedSeconds: number | null;
 }
 
@@ -248,7 +247,7 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     return () => video.removeEventListener("webkitendfullscreen", onWebKitEndFullScreen);
   }, []);
 
-  /** Returns whether a frame has loaded since mount or the last `emptied` event. */
+  // Returns whether a frame has loaded since mount or the last `emptied` event.
   function hasLoadedFrames(video: HTMLVideoElement) {
     // Chrome may temporarily report `HAVE_METADATA` during a seek. Treating that as unloaded could reload the video
     // when the network is idle or leave a pending seek unresolved when the network is loading, because `loadeddata` may
@@ -260,13 +259,9 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     return frameLoadStateRef.current === "loaded";
   }
 
-  /**
-   * Defers a seek until media frames arrive.
-   *
-   * Safari on iOS stops fetching after `HAVE_METADATA` (`NETWORK_IDLE`), so setting `currentTime` before frames load
-   * leaves `seeking` stuck at `true` without updating the displayed frame until playback begins. Calling `load()`
-   * fetches frames so `onLoadedData` can apply the seek while paused.
-   */
+  // Defers a seek until media frames arrive. Safari on iOS stops fetching after `HAVE_METADATA` (`NETWORK_IDLE`), so
+  // setting `currentTime` before frames load leaves `seeking` stuck at `true` without updating the displayed frame
+  // until playback begins. Calling `load()` fetches frames so `onLoadedData` can apply the seek while paused.
   function deferSeekUntilLoaded(video: HTMLVideoElement, seconds: number) {
     pendingSeekSecondsRef.current = seconds;
 
@@ -326,13 +321,9 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     }
   }
 
-  /**
-   * Seeks to the latest scrub target after the current seek completes. `onSeeked` invokes this again if the pointer
-   * moved while seeking.
-   *
-   * Updating `currentTime` during an active seek cancels it, so seeking on every pointer move can prevent frames from
-   * rendering. Setting `currentTime` instead of `fastSeek` updates frames even in short videos with sparse keyframes.
-   */
+  // Seeks to the latest scrub target once the current seek finishes; `onSeeked` calls this again if the pointer moved
+  // during the seek. Updating `currentTime` mid-seek cancels it and can prevent frames from rendering, and
+  // `currentTime` (unlike `fastSeek`) updates frames even in short videos with sparse keyframes.
   function seekToScrubTarget(video: HTMLVideoElement, scrub: Scrub) {
     if (!hasLoadedFrames(video)) {
       deferSeekUntilLoaded(video, scrub.targetSeconds);
@@ -363,7 +354,7 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
     }
   }
 
-  /** Ends the scrub at its target, or at the time it started from when the browser canceled the gesture. */
+  // Ends the scrub at its target, or restores the starting time if the browser canceled the gesture.
   function endScrub({ isCanceled }: { isCanceled: boolean }) {
     const video = videoRef.current;
     const scrub = scrubRef.current;

@@ -12,15 +12,15 @@ import type { Position } from "../geometry.ts";
 
 export const LONG_PRESS_DURATION_MS = 500;
 
-/** How far a long press can move from where it began before its timer stops. */
+/** Maximum pointer drift allowed before a long-press timer is canceled. */
 export const LONG_PRESS_TOLERANCE_PX = 10;
 
 export interface ContextMenuPress extends OpeningPress {
-  /** The pointer's position when the menu opens, where the press began or a long press has drifted to. */
+  /** Pointer position when the menu opens (press start or drifted long-press position). */
   origin: Position;
   /**
-   * The `pointerType` of the press, or of a `contextmenu` event without a tracked press, or `"mouse"` for a
-   * `contextmenu` event that does not have a tracked press (e.g., from the keyboard or a screen reader).
+   * `pointerType` of the tracked press or `contextmenu` event, falling back to `"mouse"` when none is reported (e.g.,
+   * from a keyboard or screen reader).
    */
   pointerType: string;
 }

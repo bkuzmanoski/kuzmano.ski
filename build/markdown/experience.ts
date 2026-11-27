@@ -38,7 +38,7 @@ function roleMarkdownNodesFrom(careerTimelineRole: CareerTimelineRole): Array<Co
   return nodes;
 }
 
-/** The roles the experience timeline renders from the experience record an entry imports, emitted as Markdown nodes. */
+/** Validates an experience record and returns its career timeline roles as Markdown nodes. */
 export function experienceMarkdownNodesFrom(value: unknown, quotedDataFilePath: string): Array<ContentNode> {
   const experience = value as Experience;
 

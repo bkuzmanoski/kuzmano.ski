@@ -1,6 +1,6 @@
 import { createContext, use } from "react";
 
-/** What the entry being rendered provides to the content inside it. Not the entry itself. */
+/** Context provided to an entry's rendered content (distinct from the entry record itself). */
 export interface RenderedEntry {
   route: string;
 }

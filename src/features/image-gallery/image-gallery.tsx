@@ -46,7 +46,7 @@ function galleryImagesIn(children: ReactNode): Array<ReactElement> {
   return images;
 }
 
-/** Scrolls only the thumbnail row; `scrollIntoView` would also scroll the page, potentially behind an open preview. */
+// Scrolls only the thumbnail row (`scrollIntoView` would also scroll the page behind an open preview).
 function scrollThumbnailIntoView(thumbnailList: HTMLElement, index: number) {
   const thumbnail = thumbnailList.children.item(index);
 

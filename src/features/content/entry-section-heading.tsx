@@ -14,10 +14,9 @@ import styles from "./entry-section-heading.module.css";
 
 import type { ComponentProps, MouseEvent, ReactElement, ReactNode } from "react";
 
-/** The levels an entry can use (see `heading-levels` in `/content/.markdownlint-cli2.jsonc`). */
-type HeadingLevel = 2 | 3;
+type HeadingLevel = 2 | 3; // Matches `heading-levels` in `/content/.markdownlint-cli2.jsonc`.
 
-/** The link the build appends to a heading, marked `data-heading-link`, whose `href` is the heading's fragment. */
+// Anchor appended to a heading by the build, with `href` set to the heading's fragment.
 type HeadingLinkElement = ReactElement<{ "data-heading-link": string; href?: string }>;
 
 const isHeadingLinkElement = (child: ReactNode): child is HeadingLinkElement =>

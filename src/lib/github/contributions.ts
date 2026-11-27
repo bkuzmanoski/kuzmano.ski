@@ -1,11 +1,10 @@
 import { formatDate, isIsoDate } from "../datetime.ts";
 import { isRecord } from "../guards.ts";
 
-/** The number of levels a count is rendered at, from no contributions to the busiest day. */
+/** Number of contribution intensity levels, from empty to busiest day. */
 export const CONTRIBUTION_LEVEL_COUNT = 5;
 
-/** A leading label for the first, partial month overlaps the next label when it is closer than this. */
-const MINIMUM_WEEKS_BETWEEN_MONTH_LABELS = 3;
+const MINIMUM_WEEKS_BETWEEN_MONTH_LABELS = 3; // Prevents a partial first-month label from overlapping the next.
 
 export interface ContributionDay {
   /** `YYYY-MM-DD`. */
@@ -78,7 +77,7 @@ export function contributionLevelOf(count: number, busiestCount: number): number
 export const busiestCountIn = (weeks: ContributionCalendar["weeks"]): number =>
   weeks.flat().reduce((busiest, { count }) => Math.max(busiest, count), 0);
 
-/** The day of the week `date` falls on, from 0 for Sunday to 6 for Saturday. */
+/** Returns the weekday of `date` (`0` for Sunday through `6` for Saturday). */
 export const weekdayOf = (date: string): number => new Date(`${date}T00:00:00Z`).getUTCDay();
 
 /**

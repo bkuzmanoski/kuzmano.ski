@@ -12,10 +12,7 @@ export function isBrowserHandledClick(event: ReactMouseEvent | MouseEvent): bool
 
 const PLACEHOLDER_ORIGIN = "https://placeholder.origin";
 
-/**
- * Resolves `value` against a placeholder origin, as a browser resolves an `href` against the document, or returns
- * `null` when it is not a valid URL.
- */
+// Resolves `value` against a placeholder origin (matching browser `href` resolution), or returns `null` if invalid.
 function resolvedAgainstSiteOrigin(value: string): URL | null {
   try {
     return new URL(value, PLACEHOLDER_ORIGIN);
@@ -35,7 +32,7 @@ export function isSitePath(value: string): boolean {
   return value.startsWith("/") && resolvedAgainstSiteOrigin(value)?.origin === PLACEHOLDER_ORIGIN;
 }
 
-/** The pathname, query string, and fragment of a path on this site (see `isSitePath`), as a URL parser splits them. */
+/** Splits a site path (see `isSitePath`) into its URL-parsed `pathname`, `search`, and `hash`. */
 export function sitePathPartsOf(sitePath: string): { pathname: string; search: string; hash: string } {
   const { pathname, search, hash } = new URL(sitePath, PLACEHOLDER_ORIGIN);
   return { pathname, search, hash };

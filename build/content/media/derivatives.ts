@@ -22,7 +22,7 @@ export interface ImageDerivative {
   quality?: number;
 }
 
-/** The derivatives a body image's `<picture>` lists in its `<source>`s, in preference order. */
+/** Derivatives listed in a body image's `<picture>` `<source>` elements, in preference order. */
 export const BODY_IMAGE_ALTERNATES: Array<ImageDerivative> = [{ format: "avif" }, { format: "webp" }];
 
 export const POSTER_IMAGE_DERIVATIVE: ImageDerivative = { format: "webp" };

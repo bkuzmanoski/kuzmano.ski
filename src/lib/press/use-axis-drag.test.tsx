@@ -26,8 +26,7 @@ const HANDLE_ID = "handle";
 const PRESS = { x: 100, y: 50 };
 const POINTER_ID = TOUCH_PRESS_INIT.pointerId;
 
-/** `usePointerDrag` reports a move on the animation frame after the pointer event. */
-const FRAME_MS = 16;
+const FRAME_MS = 16; // `usePointerDrag` reports moves on the next animation frame.
 
 const START_VALUE = { origin: "press" };
 const NO_TRAVEL = { dx: 0, dy: 0 };
@@ -55,7 +54,7 @@ function dragBy({ dx = 0, dy = 0 }) {
 
 const handle = () => screen.getByTestId(HANDLE_ID);
 
-/** Releases the pointer on the handle, matching touch's implicit pointer capture. */
+// Releases on the handle to match touch's implicit pointer capture.
 const release = () => fireEvent.pointerUp(handle(), { pointerId: POINTER_ID, button: 0 });
 
 const clickHandle = () => fireEvent.click(handle(), { detail: 1 });

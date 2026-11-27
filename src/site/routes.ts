@@ -10,7 +10,7 @@ import type { Collection } from "./catalog.ts";
 export { collectionRoute, entryRoute, isRootPath, pageRoute, parseContentPath } from "#/lib/content/paths.ts";
 export type { ContentPath } from "#/lib/content/paths.ts";
 
-/** The route of a page, with a `collection` of `null`, or of a collection entry. */
+/** Returns the route for a page (`collection: null`) or collection entry. */
 export const entryRouteOf = ({ collection, slug }: { collection: Collection | null; slug: string }) =>
   collection ? collection.routeOf(slug) : pageRoute(slug);
 

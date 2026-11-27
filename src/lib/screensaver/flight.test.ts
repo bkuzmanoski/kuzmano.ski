@@ -48,10 +48,10 @@ const MIXED_FLIGHT_PROFILE: FlightProfile = {
 };
 const RIGHT_EDGE_ENTRY: Position = { x: VIEWPORT.width, y: 100 };
 
-/** The horizontal distance between two sprites with `BOX_OUTLINE` on one lane, `clearancePx` apart. */
+// Horizontal spacing between two `BOX_OUTLINE` sprites on one lane, `clearancePx` apart.
 const CONTACT_SPACING_PX = BOX_BOUNDS.right - BOX_BOUNDS.left + FLIGHT_SETTINGS.clearancePx;
 
-/** The vertical distance between two sprites with `BOX_OUTLINE`, one directly above the other, `clearancePx` apart. */
+// Vertical spacing between two stacked `BOX_OUTLINE` sprites, `clearancePx` apart.
 const STACK_SPACING_PX = BOX_BOUNDS.bottom - BOX_BOUNDS.top + FLIGHT_SETTINGS.clearancePx;
 
 const laneOf = ({ x, y }: Position) => y + FLIGHT_SETTINGS.descentPerPx * x;
@@ -59,16 +59,13 @@ const positionOnLane = (lane: number, x: number): Position => ({ x, y: lane - FL
 
 const withoutGivingWay = (profile: FlightProfile): FlightProfile => ({ ...profile, givesWay: false });
 
-/** Returns each supplied value in order, then repeats the last value indefinitely. */
+// Returns each value in order, then repeats the last value indefinitely.
 function randomReturning(...values: Array<number>) {
   let index = 0;
   return () => values[Math.min(index++, values.length - 1)]!;
 }
 
-/**
- * Returns the random value that places a sprite at `position` when it enters from the right or top edge, as a flight
- * chooses uniformly among the lanes that cross the viewport.
- */
+// Returns the random value that enters a sprite at `position` (lanes crossing the viewport are chosen uniformly).
 function laneRandomAt(position: Position, { width, height }: Size = VIEWPORT) {
   const { spriteSizePx, descentPerPx } = FLIGHT_SETTINGS;
   const lowestOffsetPx = -spriteSizePx * (1 + descentPerPx);
@@ -80,7 +77,7 @@ function laneRandomAt(position: Position, { width, height }: Size = VIEWPORT) {
 const flightOf = (profiles: ReadonlyArray<FlightProfile>, random: () => number, viewport = VIEWPORT) =>
   createFlight({ profiles, viewport, settings: FLIGHT_SETTINGS, random });
 
-/** Places `sprite` in flight at `position` and `speedPxPerS`, without entering it. */
+// Places `sprite` directly in flight at `position` and `speedPxPerS`.
 function placeInFlight(sprite: Readonly<FlightSprite>, position: Position, speedPxPerS: number) {
   Object.assign(sprite, { isFlying: true, ...position, speedPxPerS });
 }
@@ -91,7 +88,7 @@ function stepTimes(flight: Flight, steps: number) {
   }
 }
 
-/** Advances `flight` until `isDone` is true, throwing after `maxSteps` steps. */
+// Advances `flight` until `isDone` returns `true`, throwing after `maxSteps` steps.
 function stepUntil(flight: Flight, isDone: () => boolean, maxSteps = 1000) {
   for (let step = 0; !isDone(); step++) {
     if (step === maxSteps) {
@@ -122,7 +119,7 @@ function distanceToSegment(point: Position, [start, end]: readonly [Position, Po
   return Math.hypot(point.x - start.x - t * (end.x - start.x), point.y - start.y - t * (end.y - start.y));
 }
 
-/** Returns the distance between two sprites' outlines, or `0` where they intersect. */
+// Returns the distance between two sprites' outlines, or `0` if they intersect.
 function gapBetween(a: FlightSprite, b: FlightSprite) {
   const aOutline = placedOutlineOf(a);
   const bOutline = placedOutlineOf(b);
@@ -148,7 +145,6 @@ function gapBetween(a: FlightSprite, b: FlightSprite) {
   );
 }
 
-/** Whether the gap between the outlines of two sprites is under `clearancePx`. */
 function isTooClose(a: FlightSprite, b: FlightSprite) {
   const { clearancePx, spriteSizePx } = FLIGHT_SETTINGS;
 
@@ -343,10 +339,8 @@ describe("step", () => {
       return { flight, slowSprite, fastSprite };
     }
 
-    /**
-     * Places a slow sprite, then a fast sprite with `fastProfile` in contact behind it on its lane, then a fast sprite
-     * with each of `followerProfiles` in contact behind the one before.
-     */
+    // Places a slow sprite, a fast sprite touching behind it on its lane, and each follower touching behind the
+    // previous.
     function lineUp(fastProfile: FlightProfile, followerProfiles: ReadonlyArray<FlightProfile> = []) {
       const flight = flightOf([SLOW_FLIGHT_PROFILE, fastProfile, ...followerProfiles], Math.random);
       const [slowSprite, fastSprite, ...followers] = flight.sprites as [
@@ -431,10 +425,7 @@ describe("step", () => {
   });
 
   describe("when a faster sprite approaches a slower one from another lane", () => {
-    /**
-     * Places a slow sprite, and a fast one clear behind it, `laneOffsetPx` above its lane (or below it, where
-     * negative), both with `outline`.
-     */
+    // Places a slow sprite and a fast one clear behind it, `laneOffsetPx` above (or below if negative) its lane.
     function approachFromLane(laneOffsetPx: number, outline = BOX_OUTLINE) {
       const flight = flightOf(
         [
@@ -456,10 +447,7 @@ describe("step", () => {
       return { flight, slowSprite, fastSprite };
     }
 
-    /**
-     * Steps `flight` until the image of `fastSprite` is wholly ahead of that of `slowSprite`, calling `onStep` before
-     * each step, and asserts that both stay flying more than `clearancePx` apart.
-     */
+    // Steps `flight` until `fastSprite` passes `slowSprite`, asserting they remain more than `clearancePx` apart.
     function stepUntilPassed(
       flight: Flight,
       slowSprite: FlightSprite,
@@ -537,11 +525,7 @@ describe("step", () => {
   });
 
   describe("when a sprite above stops a faster sprite from sliding up over a slower one", () => {
-    /**
-     * Places a slow sprite, and a fast sprite approaching its top-right corner from a lane above with another fast
-     * sprite in contact directly above it, so the sprite above stops the fast sprite from sliding up when it catches
-     * up.
-     */
+    // Places a slow sprite with a fast sprite approaching from above and another fast sprite blocking its upward slide.
     function blockSlide(aheadProfile: FlightProfile) {
       const flight = flightOf([aheadProfile, FAST_FLIGHT_PROFILE, FAST_FLIGHT_PROFILE], Math.random);
       const [ahead, behind, above] = flight.sprites as [FlightSprite, FlightSprite, FlightSprite];

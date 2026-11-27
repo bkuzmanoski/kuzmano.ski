@@ -1,6 +1,5 @@
 import type { FileRouteTypes } from "#/routeTree.gen.ts";
 
-/** The path every API route starts with. */
 export const API_PATH_PREFIX = "/api/";
 
 type ApiRoute = Extract<FileRouteTypes["fullPaths"], `${typeof API_PATH_PREFIX}${string}`>;

@@ -2,17 +2,11 @@ import { useEffect } from "react";
 
 import { isEditableTarget } from "../keys.ts";
 
-/**
- * Minimum difference between the layout and visual viewport heights that the hook treats as a software keyboard.
- * Rounding or a collapsing browser toolbar can produce a smaller difference, which the hook ignores.
- */
+// Minimum layout/visual viewport height gap treated as a software keyboard (ignores rounding and browser toolbars).
 const MIN_SOFTWARE_KEYBOARD_HEIGHT_PX = 24;
 
-/**
- * Delay before publishing an increase in the viewport height above the software keyboard. A decrease during this
- * interval cancels publishing the increase, so the desktop does not resize when iOS briefly removes and restores the
- * keyboard suggestion bar as the focus moves between fields.
- */
+// Debounces height increases so the desktop does not resize when iOS briefly toggles the keyboard suggestion bar while
+// moving focus between fields.
 const VIEWPORT_HEIGHT_INCREASE_DELAY_MS = 150;
 
 const readViewportHeightAboveSoftwareKeyboard = () =>

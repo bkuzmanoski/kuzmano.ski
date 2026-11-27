@@ -1,8 +1,8 @@
 import type { Rect, Size } from "../geometry.ts";
 
 /**
- * The windows the window manager can open, keyed by ID. The site declares them by augmenting this interface (see
- * `WINDOW_DOM_ORDER` in `/src/config/desktop.ts`) so the window manager does not depend on which windows exist.
+ * Registry of windows the window manager can open, keyed by ID. Augmented by the site (see `WINDOW_DOM_ORDER` in
+ * `/src/config/desktop.ts`) so the window manager stays decoupled from concrete window IDs.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Declaration merging fills it.
 export interface WindowIdRegistry {}
@@ -30,7 +30,7 @@ export type WindowSizing = "resizable" | "fixed" | "fitContentHeight";
 
 export interface WindowSpec {
   /**
-   * The window manager places a `"fitContentHeight"` window by this height until the window reports its content height.
+   * Initial size; for `"fitContentHeight"` windows, this height is used for placement until content height is measured.
    */
   defaultSize: Size;
   sizing: WindowSizing;

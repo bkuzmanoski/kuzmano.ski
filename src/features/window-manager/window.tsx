@@ -25,7 +25,7 @@ import styles from "./window.module.css";
 
 import type { PointerEvent, ReactNode } from "react";
 
-/** The id set on the focused window's content container, so the skip link has a stable target. */
+/** Element ID on the focused window's content container, giving the skip link a stable target. */
 export const FOCUSED_WINDOW_CONTENT_ID = "window-content";
 
 export type WindowSizingControls =
@@ -37,7 +37,7 @@ export type WindowSizingControls =
       onFitContentHeight: (height: number) => void;
     };
 
-/** Where a window is being dragged to, reported while the gesture runs so an outline can show the proposed position. */
+/** Proposed window geometry during an active move or resize gesture, used to position the drag outline. */
 export type WindowDrag = { kind: "move"; x: number; y: number } | { kind: "resize"; width: number; height: number };
 
 function TitleBarButton({

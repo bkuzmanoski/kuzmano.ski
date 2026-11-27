@@ -67,12 +67,12 @@ export function useFocusedWindow(): WindowId | null {
   return use(FocusContext);
 }
 
-/** The measured size of the desktop surface, or {0, 0} prior to the first measurement. */
+/** Returns the measured desktop surface size, or `{ width: 0, height: 0 }` before the first measurement. */
 export function useSurface(): Size {
   return use(SurfaceContext);
 }
 
-/** The route the desktop is reporting as missing, or `null` when the desktop is not showing a not-found route. */
+/** Returns the missing route currently shown as not found, or `null` when none is active. */
 export function useNotFoundRoute(): string | null {
   return use(NotFoundContext);
 }

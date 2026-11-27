@@ -91,7 +91,7 @@ function openWindow(setFocusedWindow: (id: WindowId | null) => void, id: WindowI
   (document.activeElement as HTMLElement | null)?.blur();
 }
 
-/** Drags the first icon away from its default position and returns the `left` style of that default position. */
+// Drags the first icon away from its default position and returns its original `left` style.
 function dragFirstIconAway() {
   const defaultLeft = icon(0).style.left;
 

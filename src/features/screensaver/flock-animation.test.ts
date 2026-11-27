@@ -48,7 +48,7 @@ const flightOf = (sprites: ReadonlyArray<Sprite>, random: () => number = () => 0
   createFlight({ profiles: sprites, viewport: viewportSize(), settings: FLIGHT_SETTINGS, random });
 const animate = (flight: ReturnType<typeof flightOf>) => startFlockAnimation(flight, document.createElement("canvas"));
 
-/** Runs the pending animation frame `elapsedMs` after the previous one. */
+// Runs the pending animation frame `elapsedMs` after the previous one.
 function runFrameAfter(elapsedMs: number) {
   const callback = pendingFrame;
 

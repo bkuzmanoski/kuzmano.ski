@@ -14,7 +14,7 @@ import { authoredRendition, imageDerivativeRendition } from "./renditions.ts";
 import type * as derivatives from "./derivatives.ts";
 import type { ImageDerivative } from "./derivatives.ts";
 
-/** Encoding returns fixed bytes so each test decides whether it fails, without decoding a real image. */
+// Returns fixed bytes so tests can control failures without decoding real images.
 const encodeImageDerivative = vi.hoisted(() => vi.fn<typeof derivatives.encodeImageDerivative>());
 
 vi.mock("./derivatives.ts", async (importOriginal) => ({

@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { createClientStore } from "./client-store.ts";
 
-/** The contract is about which snapshot React takes when, so the hook needs a real render to observe. */
+// Tests observe which snapshot React takes on each render, so this mounts a real component.
 function createStoreProbe(serverValue: string, read: () => string) {
   const store = createClientStore(serverValue, read);
   const Probe = () => <output>{store.useValue()}</output>;

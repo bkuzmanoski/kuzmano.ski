@@ -1,4 +1,4 @@
-/** The cover image of each entry that has one. */
+/** Cover image for each entry that defines one. */
 declare module "virtual:entry-cover-images" {
   import type { EntryKey } from "#/lib/content/entry-file.ts";
   import type { CoverImage } from "#/lib/content/media.ts";

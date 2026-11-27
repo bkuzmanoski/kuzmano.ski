@@ -22,7 +22,7 @@ export const EMPTY_MEMBERSHIP: WaitlistFields = { emailAddress: "" };
 export interface Membership extends WaitlistFields {
   emailAddress: string;
   list: string;
-  /** The path of the entry where the user joined the waitlist. */
+  /** Path of the entry where the user joined the waitlist. */
   source: string;
 }
 

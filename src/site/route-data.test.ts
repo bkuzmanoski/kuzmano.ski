@@ -62,8 +62,7 @@ const CONTENT_PRELOADED_FONT_FILE_NAMES = [
 
 const loadCollectionEntry = (slug: string) => contentRoute.loader({ params: { segment: "collection", slug } });
 
-/** A one-segment route: a page, or a collection listing. */
-const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } });
+const loadSegment = (segment: string) => contentRoute.loader({ params: { segment } }); // Page or collection listing.
 
 const preloadedFontFileNames = () =>
   preloadFont.mock.calls.map(([href]: Array<string>) => href?.split("/").at(-1)?.split("?")[0]);

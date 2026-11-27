@@ -7,7 +7,6 @@ import { remarkGfmSubset } from "./gfm.ts";
 
 import type { PluggableList } from "unified";
 
-/** Remark plugins for parsing an entry's body (the supported GFM subset). */
 const ENTRY_BODY_REMARK_PLUGINS: PluggableList = [remarkGfmSubset];
 
 /** Remark plugins for parsing entry MDX frontmatter and the supported GFM subset. */

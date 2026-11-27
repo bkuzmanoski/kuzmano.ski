@@ -45,7 +45,7 @@ function outlineRect(geometry: WindowGeometry, surface: Size, drag: WindowDrag):
     : resizeWindow(geometry, surface, drag);
 }
 
-/** The layer below re-renders on every pointer frame, but the windows that did not change compare equal here. */
+// Memoized because the layer re-renders on every pointer frame while unchanged windows keep equal props.
 const DesktopWindow = memo(function OpenWindow({
   id,
   route,
@@ -135,8 +135,8 @@ const DesktopWindow = memo(function OpenWindow({
 });
 
 /**
- * The surface that hosts the open windows, stacked back to front by `zIndex`. `children` is the router outlet. It does
- * not render visible output but keeps the matched route mounted for SSR and head tags.
+ * Surface hosting open windows stacked back to front by `zIndex`. `children` is the router outlet, rendered without
+ * visible output so the matched route stays mounted for SSR and head tags.
  */
 export function WindowLayer({ children }: { children: ReactNode }) {
   const surface = useSurface();

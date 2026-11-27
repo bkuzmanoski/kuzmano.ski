@@ -9,7 +9,7 @@ interface CodeFenceAttributeSpec {
   valuePattern: RegExp;
   /** Completes the "Expected …" message when `valuePattern` rejects a value. */
   valueDescription: string;
-  /** The `<pre>` attribute that `rehypeCodeFenceAttributes` assigns this value to. */
+  /** `<pre>` attribute assigned by `rehypeCodeFenceAttributes`. */
   preAttributeName: `data-${string}`;
 }
 

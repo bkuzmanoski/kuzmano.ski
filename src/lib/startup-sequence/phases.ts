@@ -1,6 +1,6 @@
 import { NON_GESTURE_KEYS } from "../audio/context.ts";
 
-/** The phases in sequence order, which `phaseFlags` derives each phase's flags from. */
+// Ordered startup phases; `phaseFlags` derives each phase's flags from its index here.
 const PHASES = [
   "loading",
   "waiting-for-input",
@@ -14,7 +14,7 @@ const PHASES = [
 
 export type Phase = (typeof PHASES)[number];
 
-/** The motion the stylesheet animates over. */
+/** Transition durations animated by the startup sequence stylesheet. */
 export const MOTION_DURATION_MS = {
   macintoshReveal: 900,
   stageZoom: 1200,
@@ -40,7 +40,7 @@ export const HOLD_DURATION_MS = {
   logo: 1400,
 };
 
-/** The shortest time the startup sequence shows the loading indicator for, so it does not flash on a warm load. */
+/** Minimum duration to show the loading indicator, preventing a flash on warm loads. */
 export const MIN_LOADING_DURATION_MS = 1000;
 
 export function phaseFlags(phase: Phase) {

@@ -34,7 +34,7 @@ import { ContentBody } from "./content-body.tsx";
 import { contentComponentNamesWhere } from "./content-components.ts";
 import { EntrySectionHeading } from "./entry-section-heading.tsx";
 
-/** The body the pages index loads for a page. */
+// Body module returned by the mocked pages index.
 const pageContent = vi.hoisted(() => ({ module: Promise.resolve({}) as Promise<MDXModule> }));
 
 const scrollIntoViewSilently = vi.hoisted(() => vi.fn());
@@ -79,10 +79,8 @@ afterEach(() => {
   window.location.hash = "";
 });
 
-/**
- * Renders `module` as the body of an entry titled `TITLE` (a collection entry in `collection`, or a page). A module
- * without `stylesheetClassNames` renders as an entry without a stylesheet.
- */
+// Renders `module` as the body of an entry titled `TITLE` (collection entry or page); omits `stylesheetClassNames` to
+// test entries without a stylesheet.
 const renderContent = async (
   module: Omit<MDXModule, "stylesheetClassNames"> & Partial<Pick<MDXModule, "stylesheetClassNames">>,
   collection: Collection | null = null,

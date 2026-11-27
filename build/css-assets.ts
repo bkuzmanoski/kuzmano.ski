@@ -12,13 +12,11 @@ import { SOURCE_DIRECTORY_PATH, fromRoot, isFileReference, toRootRelative } from
 
 import type { Plugin } from "vite";
 
-/**
- * Matches the first unescaped query or fragment delimiter. Escaped `\?` and `\#` remain part of the path. The pattern
- * does not distinguish escaped backslashes.
- */
+// Matches the first unescaped `?` or `#`; escaped `\?` and `\#` stay part of the path (does not track escaped
+// backslashes).
 const QUERY_OR_FRAGMENT = /(?<!\\)[?#]/;
 
-/** Matches a CSS escape: a one-to-six-digit code point or a literal character. */
+// Matches a CSS escape: a 1–6 hex-digit code point or a literal escaped character.
 const CSS_ESCAPE = /\\(?:([\da-f]{1,6})[ \t\n]?|([^\da-f]))/gi;
 
 function filePathOf(reference: string): string {

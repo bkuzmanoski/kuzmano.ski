@@ -38,7 +38,7 @@ const PROVIDED_COMPONENTS = {
   Waitlist,
 } satisfies Record<ContentComponentNameWith<{ provided: "everywhere" }>, ComponentType<never>>;
 
-/** The elements and components any entry can use without importing them. These load with every page. */
+// Elements and components available to every entry without imports; loaded with every page.
 const MDX_COMPONENTS: MDXComponents = {
   h2: (props: ComponentProps<"h2">) => <EntrySectionHeading level={2} {...props} />,
   h3: (props: ComponentProps<"h3">) => <EntrySectionHeading level={3} {...props} />,
@@ -60,10 +60,8 @@ export function ContentBody({ route, target }: { route: string; target: EntryTar
   const articleRef = useRef<HTMLElement | null>(null);
   const revealedInitialFragmentRef = useRef<string | null>(null);
 
-  /**
-   * React calls the body's ref callback first, setting rail clearances before this callback scrolls to the fragment
-   * target. This ensures the target's position accounts for the resulting layout shifts.
-   */
+  // React calls the body's ref callback first, setting rail clearances before scrolling to the fragment target so its
+  // position reflects those layout shifts.
   function setArticleRef(article: HTMLElement | null) {
     articleRef.current = article;
 

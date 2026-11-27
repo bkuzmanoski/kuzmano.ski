@@ -5,10 +5,9 @@ const SCREENSAVER_THEME_COLOR_SELECTOR = `meta[${SCREENSAVER_THEME_COLOR_ATTRIBU
 const SCREENSAVER_BACKDROP_PROPERTY = "--color-screensaver-backdrop";
 
 /**
- * The browser reads the first `theme-color` in tree order whose media matches, so the screensaver's goes ahead of the
- * pair `root-document.tsx` renders and comes back off on waking. One tag covers both schemes because the backdrop is
- * the same color in either. Its value is read from the stylesheet so that the chrome cannot drift from what the
- * screensaver renders.
+ * Prepends a `theme-color` meta tag for the screensaver backdrop (removed on wake), taking precedence over the pair
+ * rendered by `root-document.tsx`. One tag covers both color schemes and reads its color from the stylesheet so browser
+ * chrome stays in sync with the backdrop.
  */
 export function setScreensaverThemeColor() {
   if (document.querySelector(SCREENSAVER_THEME_COLOR_SELECTOR)) {

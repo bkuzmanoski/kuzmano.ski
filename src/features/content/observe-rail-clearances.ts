@@ -5,7 +5,7 @@ const END_RAIL_CLEARANCE_PROPERTY = "--content-body-end-rail-clearance";
 const LABELED_ELEMENT_SELECTOR = "h2, figure, table, blockquote";
 const MASTHEAD_SELECTOR = "[data-entry-masthead]";
 
-/** Matches the element `content-body.module.css` anchors the masthead to, with its `:--within-rail-span` expanded. */
+// Matches the element `content-body.module.css` anchors the masthead to (with `:--within-rail-span` expanded).
 const MASTHEAD_SUBJECT_SELECTOR =
   '[data-entry-masthead] + h1 + :is(p, h2):not([data-content-span="wide"], [data-content-span="pane"])';
 
@@ -48,9 +48,8 @@ function setRailClearance(element: HTMLElement, property: string, clearance: num
 }
 
 /**
- * The whole pixels to add to the space before an element so that the lowest of the rail items before it ends above
- * `rowTop`, the element's top less the space before it. Returns 0 when every rail item ends above it, or when
- * `railItemBottoms` is empty.
+ * Returns the whole pixels to add above an element so every preceding rail item ends above `rowTop` (the element's
+ * unpadded top). Returns `0` when no rail item extends past `rowTop` or `railItemBottoms` is empty.
  */
 export const railClearanceOf = (railItemBottoms: Array<number>, rowTop: number) =>
   Math.max(0, Math.ceil(Math.max(...railItemBottoms) - rowTop));

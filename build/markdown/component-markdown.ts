@@ -14,7 +14,7 @@ import type { ContentNode } from "../content/markup/tree.ts";
 // Fallback Markdown for React components and HTML elements in an entry.
 
 export interface MarkdownContext {
-  /** The URL of the entry for components that need to link back to it. */
+  /** The entry's URL, used by components that link back to it. */
   url?: string;
   entryDataExportOf: (element: ContentNode) => EntryDataExport;
 }
@@ -76,7 +76,7 @@ const CAPTIONED_IMAGES_MARKDOWN: ComponentMarkdown = {
 const waitlistFallbackParagraphFor = (url: string): ContentNode =>
   paragraphOf([textNode(FALLBACK_TEXT_BEFORE_URL), { type: "link", url, children: [textNode(url)] }]);
 
-/** Fallback Markdown for the HTML elements an entry renders, keyed by element name. */
+// Fallback Markdown for HTML elements rendered in entries, keyed by element name.
 const ELEMENT_MARKDOWN: Record<string, ComponentMarkdown> = {
   blockquote: {
     // Markdown cannot quote inside a sentence, so a quotation is replaced by its children.
@@ -150,7 +150,7 @@ export const COMPONENTS_REPLACED_BY_CHILDREN: ReadonlySet<string> = new Set(
   contentComponentNamesWhere(({ markdown }) => markdown === "children"),
 );
 
-/** Whether `name` names a React component, which the build checks, instead of an HTML element, which it does not. */
+// React components start with an uppercase letter (checked by the build); HTML elements do not.
 const isComponentName = (name: string) => /^[A-Z]/.test(name);
 
 /** Whether `name` names a component with neither fallback Markdown nor a listing in `componentsReplacedByChildren`. */

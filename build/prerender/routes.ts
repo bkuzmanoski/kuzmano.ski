@@ -22,9 +22,8 @@ interface PrerenderRoute {
   sitemap?: { lastmod?: string; exclude?: boolean };
 }
 
-/** A route claimed by content. */
 interface ContentRoute {
-  /** The file or directory name, which becomes a URL segment as authored. */
+  /** File or directory name, used verbatim as a URL segment. */
   name: string;
   path: string;
   /** Authored content file or directory, used in validation errors. */
@@ -152,14 +151,12 @@ export function routesFor({ pages, collections }: AuthoredContent): Array<Preren
   ];
 }
 
-/** The routes to prerender, read from the content on disk. */
 export const prerenderRoutes = (): Array<PrerenderRoute> => routesFor(readAuthoredContent());
 
 const contentProblemsOnDisk = () =>
   contentProblemsIn(readAuthoredContent(), calendarDateIn(SITE_TIME_ZONE, new Date()));
 
-/** How long the dev server waits after a change under `/content` for further changes before it rereads the content. */
-const CONTENT_CHANGES_SETTLE_DELAY_MS = 100;
+const CONTENT_CHANGES_SETTLE_DELAY_MS = 100; // Debounce window before rereading `/content` after edits.
 
 /** Validates content before prerendering, failing builds and reporting changed problems as dev-server warnings. */
 export function contentProblemsPlugin(): Plugin {
