@@ -629,6 +629,17 @@ test("a touch press on the slider that moves further vertically than horizontall
   expect(document.activeElement).not.toBe(slider);
 });
 
+test("a touch scrub claims its `touchmove` events after the touch strays vertically", () => {
+  const { slider } = renderVideoWithLaidOutSlider();
+  const touch = { clientX: thumbCenterAt(POSITION_PAST_DRAG_THRESHOLD), clientY: 200 };
+
+  pressSliderAt(slider, 0.25, { pointerType: "touch" });
+  dragSliderTo(slider, POSITION_PAST_DRAG_THRESHOLD);
+  dragSliderTo(slider, POSITION_PAST_DRAG_THRESHOLD, { dy: 200 });
+
+  expect(fireEvent.touchMove(slider, { touches: [touch], changedTouches: [touch] })).toBe(false);
+});
+
 test("a touch press on the slider canceled by the browser before it moves past the drag threshold does not seek or play the click sound", () => {
   const { slider } = renderVideoWithLaidOutSlider();
 

@@ -86,8 +86,8 @@
 .track {
   --video-progress: 0; /* Set from JS. */
 
-  /* Reserve horizontal drags for seeking. Vertical swipes scroll the page and trigger `pointercancel` to end
-   * scrubbing. */
+  /* Reserve horizontal drags for seeking. A vertical swipe scrolls the page, unless it strays from a scrub that has
+   * begun (see `useAxisDrag`). */
   touch-action: pan-y pinch-zoom;
 
   position: relative;

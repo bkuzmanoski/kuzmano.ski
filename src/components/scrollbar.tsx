@@ -7,6 +7,7 @@ import { cx } from "#/lib/class-names.ts";
 import type { ScrollMetrics } from "#/lib/hooks/use-scroll-metrics.ts";
 import { useTimer } from "#/lib/hooks/use-timer.ts";
 import { clamp } from "#/lib/math.ts";
+import { mergeRefs } from "#/lib/merge-refs.ts";
 import { isPrimaryPress, listenForPointerRelease } from "#/lib/press/press.ts";
 import { useAxisDrag } from "#/lib/press/use-axis-drag.ts";
 import type { DragDelta } from "#/lib/press/use-pointer-drag.ts";
@@ -202,7 +203,7 @@ export function Scrollbar({
   // Android's back gesture starts at the window edge and is later canceled by the browser. To avoid scrolling the
   // window and closing an open menu, touch presses wait for vertical movement or release before scrolling or playing
   // the click sound (see `useAxisDrag`).
-  const thumbHandlers = useAxisDrag({
+  const { ref: thumbDragRef, ...thumbHandlers } = useAxisDrag({
     axis: "y",
     preventDefault: true,
     start: () => ({ top: metrics.top, travel: thumbTravel() }),
@@ -232,7 +233,7 @@ export function Scrollbar({
     viewport.scrollTop = press.top;
   }
 
-  const trackHandlers = useAxisDrag<TrackPress>({
+  const { ref: trackDragRef, ...trackHandlers } = useAxisDrag<TrackPress>({
     axis: "y",
     preventDefault: true,
     threshold: DRAG_THRESHOLD_PX,
@@ -267,7 +268,7 @@ export function Scrollbar({
     >
       <ScrollArrow direction="up" hidden={!hasOverflow} onStep={(isRepeat) => step(-ARROW_STEP_PX, isRepeat)} />
       <div
-        ref={trackRef}
+        ref={mergeRefs(trackRef, trackDragRef)}
         className={cx(styles.track, hasOverflow && styles.filled)}
         role="scrollbar"
         aria-orientation="vertical"
@@ -278,7 +279,9 @@ export function Scrollbar({
         aria-valuetext={`${scrolledPercent}% scrolled`}
         {...trackHandlers}
       >
-        {hasOverflow && <div ref={thumbRef} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />}
+        {hasOverflow && (
+          <div ref={mergeRefs(thumbRef, thumbDragRef)} className={styles.thumb} style={thumbStyle} {...thumbHandlers} />
+        )}
       </div>
       <ScrollArrow direction="down" hidden={!hasOverflow} onStep={(isRepeat) => step(ARROW_STEP_PX, isRepeat)} />
       {resizeControl}

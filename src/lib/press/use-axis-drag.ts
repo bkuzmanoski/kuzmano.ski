@@ -11,6 +11,8 @@ export type DragAxis = "x" | "y";
 interface AxisPress<T> {
   value: T;
   axis: DragAxis;
+  x: number;
+  y: number;
   hasBegun: boolean;
   hasPassedThreshold: boolean;
 }
@@ -33,6 +35,10 @@ function isTravelAlong(axis: DragAxis, { dx, dy }: DragDelta) {
  * axis exceeds both `DRAG_THRESHOLD_PX` and cross-axis travel, or until a tap's `click`. Waiting for `click` avoids
  * beginning taps retargeted by iOS or Chrome long presses that produce no click. A second touch cancels the drag to
  * allow pinch-zooming.
+ *
+ * Once a touch's travel begins the drag, the hook calls `preventDefault` on its `touchmove` events, so the browser
+ * cannot claim the gesture for panning and cancel the drag when the touch strays across the axis. This requires the
+ * returned callback `ref` on the handle (merge it with the handle's own ref using `mergeRefs`).
  *
  * Return `null` from `start` to ignore a press. `axis` may be derived from the value returned by `start`.
  */
@@ -58,6 +64,7 @@ export function useAxisDrag<T>({
 }) {
   const trailingClick = useTrailingClick();
   const tapRef = useRef<AxisPress<T> | null>(null); // A touch that ended before beginning, pending its click.
+  const touchPressRef = useRef<AxisPress<T> | null>(null); // A touch in progress, whether or not it has begun.
 
   function begin(press: AxisPress<T>, delta: DragDelta) {
     press.hasBegun = true;
@@ -70,6 +77,7 @@ export function useAxisDrag<T>({
     canStart,
     start: (event) => {
       tapRef.current = null;
+      touchPressRef.current = null;
 
       const value = start(event);
 
@@ -81,11 +89,14 @@ export function useAxisDrag<T>({
       const press: AxisPress<T> = {
         value,
         axis: typeof axis === "function" ? axis(value) : axis,
+        x: event.clientX,
+        y: event.clientY,
         hasBegun: false,
         hasPassedThreshold: isTouch || threshold <= 0,
       };
 
       if (isTouch) {
+        touchPressRef.current = press;
         trailingClick.recordPress();
       } else {
         begin(press, NO_TRAVEL);
@@ -109,6 +120,8 @@ export function useAxisDrag<T>({
       }
     },
     onEnd: (_moved, { start: press, isCanceled }) => {
+      touchPressRef.current = null;
+
       if (press.hasBegun) {
         onEnd?.({ start: press.value, isCanceled });
       } else if (!isCanceled) {
@@ -117,8 +130,35 @@ export function useAxisDrag<T>({
     },
   });
 
+  function onTouchMove(event: TouchEvent) {
+    const press = touchPressRef.current;
+    const touch = event.touches.length === 1 ? event.touches[0] : undefined;
+
+    if (!press || !touch || !event.cancelable) {
+      return; // A second touch ends the drag (see `endsOnSecondTouch`), so a pinch keeps its default behavior.
+    }
+
+    // `usePointerDrag` reports pointer moves on the next animation frame, after the corresponding `touchmove`. Check
+    // travel here too so the move that starts the drag is claimed before `hasBegun` is set.
+    if (press.hasBegun || isTravelAlong(press.axis, { dx: touch.clientX - press.x, dy: touch.clientY - press.y })) {
+      // `touch-action` is fixed when the touch lands, so prevent default to claim the gesture once dragging begins.
+      event.preventDefault();
+    }
+  }
+
   return {
     ...pointerDragHandlers,
+    ref: (handle: HTMLElement | null) => {
+      if (!handle) {
+        return;
+      }
+
+      // Use a non-passive native listener so `onTouchMove` can prevent default. Keep it attached for the handle's
+      // lifetime because Chrome decides whether to wait for touch listeners when the touch begins.
+      handle.addEventListener("touchmove", onTouchMove, { passive: false });
+
+      return () => handle.removeEventListener("touchmove", onTouchMove);
+    },
     onPointerUp: trailingClick.onPointerUp,
     onClick: (event: ReactMouseEvent) => {
       const tap = tapRef.current;

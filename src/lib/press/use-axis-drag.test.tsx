@@ -57,6 +57,12 @@ const handle = () => screen.getByTestId(HANDLE_ID);
 // Releases on the handle to match touch's implicit pointer capture.
 const release = () => fireEvent.pointerUp(handle(), { pointerId: POINTER_ID, button: 0 });
 
+// Returns whether the handle claimed the `touchmove` event, which stops the browser from panning the page.
+function isTouchMoveClaimed({ dx = 0, dy = 0 }) {
+  const touch = { identifier: POINTER_ID, clientX: PRESS.x + dx, clientY: PRESS.y + dy };
+  return !fireEvent.touchMove(handle(), { touches: [touch], changedTouches: [touch] });
+}
+
 const clickHandle = () => fireEvent.click(handle(), { detail: 1 });
 const cancel = () => fireEvent.pointerCancel(window, { pointerId: POINTER_ID });
 
@@ -133,6 +139,49 @@ test("a move after the drag begins reports its travel from the press point", () 
   dragBy({ dx: 20, dy: 30 });
 
   expect(onDragMove).toHaveBeenCalledExactlyOnceWith({ dx: 20, dy: 30 }, START_VALUE);
+});
+
+test("a touch press claims its `touchmove` events once its travel along the axis exceeds the drag threshold and its travel across it", () => {
+  renderHandle();
+  press();
+
+  expect(isTouchMoveClaimed({ dx: DRAG_THRESHOLD_PX })).toBe(false);
+  expect(isTouchMoveClaimed({ dx: DRAG_THRESHOLD_PX + 2, dy: 20 })).toBe(false);
+  expect(isTouchMoveClaimed({ dx: DRAG_THRESHOLD_PX + 1 })).toBe(true); // Before the next frame begins the drag.
+});
+
+test("a touch drag that has begun claims its `touchmove` events after its travel across the axis exceeds its travel along it", () => {
+  renderHandle();
+  press();
+  dragBy({ dx: 10 });
+
+  expect(onBegin).toHaveBeenCalledOnce();
+
+  dragBy({ dx: 10, dy: 40 });
+
+  expect(isTouchMoveClaimed({ dx: 10, dy: 40 })).toBe(true);
+});
+
+test("a touch drag does not claim `touchmove` events after it ends", () => {
+  renderHandle();
+  press();
+  dragBy({ dx: 10 });
+  release();
+
+  expect(isTouchMoveClaimed({ dx: 10 })).toBe(false);
+});
+
+test("a touch drag does not claim a `touchmove` event with two touches", () => {
+  renderHandle();
+  press();
+  dragBy({ dx: 10 });
+
+  const touches = [
+    { identifier: POINTER_ID, clientX: PRESS.x + 10, clientY: PRESS.y },
+    { identifier: POINTER_ID + 1, clientX: PRESS.x, clientY: PRESS.y + 40 },
+  ];
+
+  expect(fireEvent.touchMove(handle(), { touches, changedTouches: touches })).toBe(true);
 });
 
 test("a tap's `click` event begins the drag with no travel, then ends it", () => {

@@ -629,6 +629,22 @@ describe("CareerTimeline", () => {
     expect(playClickSound).not.toHaveBeenCalled();
   });
 
+  test("claims the `touchmove` events of a touch drag on the chart after the touch strays across the chart's axis", () => {
+    vi.useFakeTimers();
+
+    const { chart } = renderChartScrolledTo(LIST_TOP_PX, layOutChartAboveList);
+    const pressX = horizontalChartXAt(FRACTION_AMONG_OLDEST_ROLES);
+    const touch = { clientX: pressX + 20, clientY: HORIZONTAL_LANES_TOP_PX + 200 };
+
+    press(chart, { clientX: pressX }, TOUCH_PRESS_INIT);
+    movePointerTo({ clientX: pressX + 20 });
+    movePointerTo(touch);
+
+    expect(fireEvent.touchMove(chart, { touches: [touch], changedTouches: [touch] })).toBe(false);
+
+    release();
+  });
+
   test("does not scroll the list or play the click sound for a touch press on the chart canceled by the browser before it travels past the drag threshold", () => {
     vi.useFakeTimers();
 

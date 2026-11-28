@@ -403,7 +403,7 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
 
   // The track lets the browser claim a vertical touch to scroll the page, so a touch press waits to begin the scrub
   // (see `useAxisDrag`).
-  const trackHandlers = useAxisDrag<SliderPress>({
+  const { ref: trackDragRef, ...trackHandlers } = useAxisDrag<SliderPress>({
     axis: "x",
     preventDefault: true,
     canStart: () => hasDuration,
@@ -550,7 +550,7 @@ function ControlledVideo({ className, style, onClick, onPointerDown, ref, ...pro
           {isPaused ? <PlayVideoIcon /> : <PauseVideoIcon />}
         </IconButton>
         <div
-          ref={trackRef}
+          ref={mergeRefs(trackRef, trackDragRef)}
           className={styles.track}
           role="slider"
           tabIndex={hasSiteControls ? 0 : -1}
