@@ -9,6 +9,7 @@ import { NotFoundAlert } from "#/features/window-manager/not-found-alert.tsx";
 import { WindowLayer } from "#/features/window-manager/window-layer.tsx";
 import { WindowManagerProvider } from "#/features/window-manager/window-manager-provider.tsx";
 import { useAudioUnlock } from "#/lib/audio/context.ts";
+import { useAudioSessionType } from "#/lib/audio/session.ts";
 import { usePreventViewportPanOnTextFieldFocus } from "#/lib/software-keyboard/use-prevent-viewport-pan-on-text-field-focus.ts";
 import { useViewportHeightAboveSoftwareKeyboard } from "#/lib/software-keyboard/use-viewport-height-above-software-keyboard.ts";
 import { useIsStartupSequenceComplete } from "#/lib/startup-sequence/lifecycle.ts";
@@ -22,6 +23,7 @@ import { SkipLink } from "./skip-link.tsx";
 /** Desktop environment, mounted once above the router outlet so it does not remount on navigation. */
 export function Desktop() {
   useAudioUnlock(); // The first gesture anywhere on the page readies the audio context (see `/src/lib/audio/context.ts`).
+  useAudioSessionType(); // Lets sound effects mix with other apps' audio unless a video plays with sound (see `/src/lib/audio/session.ts`).
   useViewportHeightAboveSoftwareKeyboard(); // Keeps the desktop within the space left by the software keyboard (see `/src/lib/software-keyboard/use-viewport-height-above-software-keyboard.ts`).
   usePreventViewportPanOnTextFieldFocus(); // Stops iOS from panning the page to reveal a focused field, which the resize above makes unnecessary (see `/src/lib/software-keyboard/use-prevent-viewport-pan-on-text-field-focus.ts`).
 

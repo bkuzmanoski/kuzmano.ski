@@ -2,6 +2,8 @@ import { useEffect } from "react";
 
 import { getSettings } from "../settings/settings.ts";
 
+import { syncAudioSessionTypeForSoundEffect } from "./session.ts";
+
 /** Keyboard keys that do not provide user activation for audio. */
 export const NON_GESTURE_KEYS = new Set([
   "Alt",
@@ -80,18 +82,6 @@ export function getGainNode(context: AudioContext): GainNode {
   return outputGainNode;
 }
 
-// Resumes the audio context when the page becomes visible again with sound effects on.
-//
-// Do not explicitly suspend the context when the page is hidden. iOS interrupts it automatically, and suspending it
-// caused audio to remain silent after returning from the background, switching tabs, or locking the device.
-function resumeAudioOnReturn(): void {
-  if (!audioContext || document.visibilityState !== "visible" || getSettings().soundEffects !== "on") {
-    return;
-  }
-
-  ensureResumed(audioContext);
-}
-
 export const needsAudioPriming = (): boolean =>
   getSettings().soundEffects === "on" && !(audioContext !== null && isRunning(audioContext));
 
@@ -113,21 +103,40 @@ export function primeAudio(): void {
   }
 }
 
+function primeAudioOnPointerDown(event: PointerEvent): void {
+  if (event.pointerType === "mouse") {
+    primeAudio();
+  }
+}
+
+function primeAudioOnPointerUp(event: PointerEvent): void {
+  if (event.pointerType !== "mouse") {
+    primeAudio();
+  }
+}
+
 function primeAudioOnKeyDown(event: KeyboardEvent): void {
   if (!NON_GESTURE_KEYS.has(event.key)) {
     primeAudio();
   }
 }
 
+/**
+ * Primes the audio context on each event that grants user activation (i.e., a mouse `pointerdown`, a touch or pen
+ * `pointerup`, and a `keydown` of a key outside `NON_GESTURE_KEYS`).
+ *
+ * The context is resumed only during a user gesture, not in response to visibility changes. iOS automatically
+ * interrupts it when the page is hidden and resumes it when visible again. Manually suspending or resuming it on
+ * visibility changes caused audio to remain silent after returning to the page or until the next tap.
+ */
 export function useAudioUnlock() {
   useEffect(() => {
     const controller = new AbortController();
     const listenerOptions = { capture: true, passive: true, signal: controller.signal };
 
-    document.addEventListener("pointerdown", primeAudio, listenerOptions); // Mouse clicks.
-    document.addEventListener("pointerup", primeAudio, listenerOptions); // Touch taps.
+    document.addEventListener("pointerdown", primeAudioOnPointerDown, listenerOptions);
+    document.addEventListener("pointerup", primeAudioOnPointerUp, listenerOptions);
     document.addEventListener("keydown", primeAudioOnKeyDown, listenerOptions);
-    document.addEventListener("visibilitychange", resumeAudioOnReturn, { signal: controller.signal });
 
     return () => controller.abort();
   }, []);
@@ -135,7 +144,7 @@ export function useAudioUnlock() {
 
 /**
  * Calls `play` synchronously with the audio context when sound effects are on and either the context is running or the
- * page has transient activation. Otherwise, the context is resumed and the sound is dropped.
+ * page has transient activation, resuming a context that is not running. Otherwise, the sound is dropped.
  *
  * A sound requested during a gesture on a context that is not running plays once the gesture's resume starts it, as
  * `currentTime` does not advance while the context is suspended. A sound requested outside a gesture is dropped instead
@@ -146,6 +155,8 @@ export function requestPlayback(play: (context: AudioContext) => void) {
   if (getSettings().soundEffects !== "on") {
     return;
   }
+
+  syncAudioSessionTypeForSoundEffect();
 
   const context = openAudioContext();
 
@@ -158,9 +169,8 @@ export function requestPlayback(play: (context: AudioContext) => void) {
     return;
   }
 
-  ensureResumed(context);
-
   if (hasTransientActivation()) {
+    ensureResumed(context); // For a gesture that `useAudioUnlock` does not listen for (e.g., a `click` that follows no pointer event).
     play(context);
   }
 }

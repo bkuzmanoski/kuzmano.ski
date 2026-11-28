@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { fireEvent, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { FakeAudioContext } from "#/test-utils/audio.ts";
@@ -29,6 +29,7 @@ beforeEach(() => {
 
   vi.stubGlobal("AudioContext", FakeAudioContext);
   setUserActivation();
+  Reflect.deleteProperty(navigator, "audioSession");
 });
 
 describe("requestPlayback", () => {
@@ -97,6 +98,15 @@ describe("requestPlayback", () => {
     expect(play).not.toHaveBeenCalled();
   });
 
+  test("outside a user gesture, does not resume a suspended audio context", async () => {
+    const { requestPlayback } = await loadContextModule();
+
+    requestPlayback(vi.fn());
+
+    // On iOS, a resume outside a user gesture kept the context silent until the next tap.
+    expect(FakeAudioContext.instances[0]!.resumeCount).toBe(0);
+  });
+
   test("creates one audio context for the session", async () => {
     FakeAudioContext.initialState = "running";
 
@@ -106,6 +116,19 @@ describe("requestPlayback", () => {
     requestPlayback(vi.fn());
 
     expect(FakeAudioContext.instances).toHaveLength(1);
+  });
+  test("sets the audio session type before playing the sound", async () => {
+    FakeAudioContext.initialState = "running";
+
+    const audioSession = { type: "playback" }; // Left by a video removed from the document while playing.
+
+    Object.defineProperty(navigator, "audioSession", { value: audioSession, configurable: true });
+
+    const { requestPlayback } = await loadContextModule();
+
+    requestPlayback(vi.fn());
+
+    expect(audioSession.type).toBe("ambient");
   });
 });
 
@@ -177,25 +200,46 @@ describe("needsAudioPriming", () => {
 });
 
 describe("useAudioUnlock", () => {
-  test("resumes a suspended audio context when the page becomes visible again", async () => {
-    FakeAudioContext.initialState = "running";
-
-    const setVisibilityState = stubVisibilityState();
-    const { primeAudio, useAudioUnlock } = await loadContextModule();
+  test.each([
+    ["a mouse `pointerdown`", () => fireEvent.pointerDown(document, { pointerType: "mouse" })],
+    ["a touch `pointerup`", () => fireEvent.pointerUp(document, { pointerType: "touch" })],
+    ["a `keydown` of the A key", () => fireEvent.keyDown(document, { key: "a" })],
+  ])("creates the audio context on %s", async (_event, dispatch) => {
+    const { useAudioUnlock } = await loadContextModule();
 
     renderHook(useAudioUnlock);
-    primeAudio();
+    dispatch();
 
-    const context = FakeAudioContext.instances[0]!;
-
-    setVisibilityState("hidden");
-    context.state = "suspended"; // The browser suspends or interrupts the context while the page is hidden.
-    setVisibilityState("visible");
-
-    expect(context.resumeCount).toBe(1);
+    expect(FakeAudioContext.instances).toHaveLength(1);
   });
 
-  test("does not resume a suspended audio context when the page becomes visible again with sound effects off", async () => {
+  test.each([
+    ["a touch `pointerdown`", () => fireEvent.pointerDown(document, { pointerType: "touch" })],
+    ["a mouse `pointerup`", () => fireEvent.pointerUp(document, { pointerType: "mouse" })],
+    ["a `keydown` of the Shift key", () => fireEvent.keyDown(document, { key: "Shift" })],
+  ])("does not create the audio context on %s", async (_event, dispatch) => {
+    const { useAudioUnlock } = await loadContextModule();
+
+    renderHook(useAudioUnlock);
+    dispatch();
+
+    expect(FakeAudioContext.instances).toHaveLength(0);
+  });
+
+  test("does not suspend the audio context when the page is hidden", async () => {
+    FakeAudioContext.initialState = "running";
+
+    const setVisibilityState = stubVisibilityState();
+    const { primeAudio, useAudioUnlock } = await loadContextModule();
+
+    renderHook(useAudioUnlock);
+    primeAudio();
+    setVisibilityState("hidden");
+
+    expect(FakeAudioContext.instances[0]!.suspendCount).toBe(0);
+  });
+
+  test("does not resume the audio context when the page becomes visible again", async () => {
     FakeAudioContext.initialState = "running";
 
     const setVisibilityState = stubVisibilityState();
@@ -207,10 +251,10 @@ describe("useAudioUnlock", () => {
     const context = FakeAudioContext.instances[0]!;
 
     setVisibilityState("hidden");
-    context.state = "suspended";
-    settings.soundEffects = "off";
+    context.state = "suspended"; // iOS interrupts the context while the page is hidden.
     setVisibilityState("visible");
 
+    // iOS resumes the context itself, and a resume outside a user gesture kept it silent until the next tap.
     expect(context.resumeCount).toBe(0);
   });
 });
