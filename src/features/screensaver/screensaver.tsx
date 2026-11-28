@@ -60,7 +60,7 @@ export function Screensaver() {
   const sleepState = useSleepState();
   const isStartupSequenceComplete = useIsStartupSequenceComplete();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const pressSoundHandlers = usePressSound();
+  const pressSoundHandlers = usePressSound({ defersTouchPressSound: true }); // A touch dismisses the screensaver at its `click`, so its sound waits for it.
 
   const isIdleSleepEnabled = isStartupSequenceComplete && !prefersReducedMotion && sleepState === "awake";
   const isUp = sleepState !== "awake";

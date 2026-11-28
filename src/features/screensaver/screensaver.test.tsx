@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { playClickSound, playKeyDownSound, playKeyUpSound } from "#/lib/audio/sounds.ts";
 import { FADE_IN_DURATION_MS, sleep, wake } from "#/lib/screensaver/lifecycle.ts";
 import { stubCanvasContext, stubImageLoad } from "#/test-utils/canvas.ts";
-import { pressWithMouse } from "#/test-utils/press.ts";
+import { SECOND_TOUCH_PRESS_INIT, TOUCH_PRESS_INIT, pressWithMouse } from "#/test-utils/press.ts";
 import { advanceTimersBy } from "#/test-utils/timers.ts";
 
 import { SPRITE_SIZE_PX, TOAST_SPEED_PX_PER_S } from "./flock.ts";
@@ -128,6 +128,22 @@ test("pressing the mouse button on the screensaver plays the click sound", () =>
   pressWithMouse(screensaver);
 
   expect(playClickSound).toHaveBeenCalledOnce();
+});
+
+test("a multi-touch press on the screensaver plays the click sound once, at the `click` event that dismisses it", () => {
+  const screensaver = raise();
+
+  fireEvent.pointerDown(screensaver, TOUCH_PRESS_INIT);
+  fireEvent.pointerDown(screensaver, SECOND_TOUCH_PRESS_INIT);
+  fireEvent.pointerUp(screensaver, SECOND_TOUCH_PRESS_INIT);
+  fireEvent.pointerUp(screensaver, TOUCH_PRESS_INIT);
+
+  expect(playClickSound).not.toHaveBeenCalled();
+
+  fireEvent.click(screensaver, { detail: 1 });
+
+  expect(playClickSound).toHaveBeenCalledOnce();
+  expect(screensaver.childElementCount).toBe(0);
 });
 
 test("pressing a key that dismisses the screensaver plays the key down sound, and releasing it plays the key up sound once", () => {
