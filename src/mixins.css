@@ -282,15 +282,30 @@
   letter-spacing: 1px; /* Use whole pixels so letters remain aligned to device pixels. */
 }
 
+/* Fills with `$color` through a dither mask built from conic gradients. Each gradient centers on a bitmap-pixel
+ * boundary and tiles in whole bitmap pixels, so every quadrant lands on whole bitmap pixels. Conic gradients avoid two
+ * SVG mask-tile issues:
+ *
+ * - An SVG `mask-image` decodes asynchronously, which can leave an element painted unmasked (as a solid fill) on its
+ *   first paint in Safari.
+ * - Firefox resamples an SVG mask tile into gray pixels at a fractional device pixel ratio.
+ *
+ * Every mask layer starts at the default origin without a per-layer offset, so a rule can align a pattern with a single
+ * `mask-position` (e.g., `right top`). */
 @define-mixin dither-fill $color {
   background: $color;
-  mask-size: calc(16 * var(--layout-bitmap-pixel)) calc(16 * var(--layout-bitmap-pixel));
+}
+
+/* Masks to one bitmap pixel at the top-left corner of each `$size`×`$size` bitmap-pixel tile (only the top-left
+ * quadrant is opaque). */
+@define-mixin dither-dot-tile $size {
+  mask-image: conic-gradient(at var(--layout-bitmap-pixel) var(--layout-bitmap-pixel), transparent 75%, #000 0);
+  mask-size: calc($size * var(--layout-bitmap-pixel)) calc($size * var(--layout-bitmap-pixel));
 }
 
 @define-mixin dither-06 $color: currentColor {
   @mixin dither-fill $color;
-
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='4' height='4' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+  @mixin dither-dot-tile 4;
 }
 
 /* Rounds the inline size down to 4n + 1 bitmap pixels, so a `dither-06` fill starts and ends on a column of dots. */
@@ -317,34 +332,59 @@
 
 @define-mixin dither-11 $color: currentColor {
   @mixin dither-fill $color;
-
-  /* Uses a 15-dot tile because the pattern's 3-dot period does not divide 16. */
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='3' height='3' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0z'/%3E%3C/pattern%3E%3Crect width='15' height='15' fill='url(%23p)'/%3E%3C/svg%3E");
-  mask-size: calc(15 * var(--layout-bitmap-pixel)) calc(15 * var(--layout-bitmap-pixel));
+  @mixin dither-dot-tile 3;
 }
 
 @define-mixin dither-13 $color: currentColor {
   @mixin dither-fill $color;
 
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='4' height='4' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0zM2 2h1v1H2z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+  /* Intersects a `dither-25` dot grid with a 2-bitmap-pixel checkerboard, retaining alternating dots on each row and
+   * column. */
+  mask-image:
+    conic-gradient(at var(--layout-bitmap-pixel) var(--layout-bitmap-pixel), transparent 75%, #000 0),
+    conic-gradient(
+      at calc(2 * var(--layout-bitmap-pixel)) calc(2 * var(--layout-bitmap-pixel)),
+      transparent 25%,
+      #000 0 50%,
+      transparent 0 75%,
+      #000 0
+    );
+  mask-size:
+    calc(2 * var(--layout-bitmap-pixel)) calc(2 * var(--layout-bitmap-pixel)),
+    calc(4 * var(--layout-bitmap-pixel)) calc(4 * var(--layout-bitmap-pixel));
+  mask-composite: intersect;
 }
 
 @define-mixin dither-25 $color: currentColor {
   @mixin dither-fill $color;
-
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='2' height='2' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+  @mixin dither-dot-tile 2;
 }
 
 @define-mixin dither-50 $color: currentColor {
   @mixin dither-fill $color;
 
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='2' height='2' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h1v1H0zM1 1h1v1H1z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+  /* Opaque in the top-left and bottom-right quadrants. */
+  mask-image: conic-gradient(
+    at var(--layout-bitmap-pixel) var(--layout-bitmap-pixel),
+    transparent 25%,
+    #000 0 50%,
+    transparent 0 75%,
+    #000 0
+  );
+  mask-size: calc(2 * var(--layout-bitmap-pixel)) calc(2 * var(--layout-bitmap-pixel));
 }
 
 @define-mixin dither-75 $color: currentColor {
   @mixin dither-fill $color;
 
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpattern id='p' width='2' height='2' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 0h2v1H1v1H0z'/%3E%3C/pattern%3E%3Crect width='16' height='16' fill='url(%23p)'/%3E%3C/svg%3E");
+  /* Transparent only in the bottom-right quadrant. */
+  mask-image: conic-gradient(
+    at var(--layout-bitmap-pixel) var(--layout-bitmap-pixel),
+    #000 25%,
+    transparent 0 50%,
+    #000 0
+  );
+  mask-size: calc(2 * var(--layout-bitmap-pixel)) calc(2 * var(--layout-bitmap-pixel));
 }
 
 /* Clears a 1px gap around text set over a dither fill, so the pattern stops short of the letterforms. */

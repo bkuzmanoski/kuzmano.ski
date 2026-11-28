@@ -22,7 +22,8 @@
   /* Safari 26+ uses the background of fixed or sticky elements near the viewport edge to fill the inset behind its
    * toolbar (e.g., the chart in `/src/features/experience/career-timeline.module.css`). That background remains after
    * the element scrolls out of view. Safari's hit testing ignores `pointer-events` and non-fixed, non-sticky elements,
-   * so this fixed cover absorbs the hit without receiving touches and resolves it to this host instead. */
+   * so this fixed cover absorbs the hit without receiving touches and resolves it to this host instead. At the top
+   * edge, `.safariTopEdgeColorFix` in `/src/app/desktop.module.css` sits above this cover. */
   &::after {
     pointer-events: none;
     content: "";

@@ -44,6 +44,7 @@ export function Desktop() {
         </WindowLayer>
         <NotFoundAlert />
       </div>
+      <div className={styles.safariTopEdgeColorFix} />
       <StartupSequence />
       <Screensaver />
     </WindowManagerProvider>

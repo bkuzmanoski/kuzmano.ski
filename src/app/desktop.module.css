@@ -17,6 +17,34 @@
   }
 }
 
+/* Works around an iOS Safari 27 bug that can leave the top-edge tint at an intermediate shade after the startup
+ * sequence unmounts on `/`. Without a fixed element at the top edge, Safari fades the tint from the startup backdrop to
+ * the desktop background over 100ms and can stall until the tint changes again. This fixed strip supplies the desktop
+ * background directly.
+ *
+ * Remove this rule and its element once disabling them no longer leaves the top-edge tint darker after the startup
+ * sequence on `/`. */
+.safariTopEdgeColorFix {
+  pointer-events: none; /* The strip overlaps the top 5px of the menu bar. */
+
+  position: fixed;
+
+  /* Above the window layer's fixed cover (see `/src/features/window-manager/window-layer.module.css`) and below the
+   * screensaver and startup sequence, which set the tint while covering the viewport. */
+  z-index: calc(var(--layer-desktop) + 1);
+  top: -7px; /* Leaves 5px inside the viewport, covering Safari's top-edge hit-test point at 4px. */
+  left: 0;
+
+  width: 100%; /* Safari ignores elements narrower than 90% of the viewport. */
+  height: 12px; /* Safari reads `background-color` only from elements taller than 10px. */
+
+  background-color: var(--color-desktop-background);
+
+  /* Hides the strip visually without disqualifying it from tinting. Safari ignores `visibility: hidden` and `opacity`
+   * below 0.1. */
+  mask-image: linear-gradient(transparent 0 0);
+}
+
 @media print {
   .desktop,
   .desktop:has([data-maximized]) {
@@ -24,5 +52,9 @@
     display: block;
     height: auto;
     border: 0;
+  }
+
+  .safariTopEdgeColorFix {
+    display: none;
   }
 }
